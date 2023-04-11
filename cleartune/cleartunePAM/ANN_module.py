@@ -26,7 +26,6 @@ min_activ_threshold = 0.1
 def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial):
 
     import os
-    #print(os.environ['STIMDIR'])
 
     # load currents
     Currents = np.genfromtxt(TrainTest_currents_file, delimiter=',', skip_header=True)
@@ -42,58 +41,16 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         ActivationResults_Monopolar21 = np.genfromtxt('Activations_over_iterations_Monopolar21_79.csv', delimiter=' ')
         Currents_Monopolar21 = np.genfromtxt('Current_protocols_0_Monopolars21_79.csv', delimiter=',', skip_header=True)
 
-    """To be removed"""
-
-    # #ActivationResults = np.genfromtxt('/home/konstantin/Downloads/Activations_over_iterations_TrainTest.csv', delimiter=' ')
-    # #ActivationResults = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Activations_over_iterations7287.csv', delimiter=' ')
-    # #Currents = np.genfromtxt('/home/konstantin/Downloads/Current_protocols_0.csv', delimiter=',', skip_header=True)
-    # Currents = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Current_protocols_0.csv', delimiter=',', skip_header=True)
-    # Currents = Currents[:7287,:]
-    #
-    # # additionally, test bipolar and monopolar settings
-    # ActivationResults_Bipolar1 = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Activations_over_iterationsBipolar1.csv', delimiter=' ')
-    # Currents_Bipolar1 = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Current_protocols_0_Bipolar1.csv', delimiter=',', skip_header=True)
-    # ActivationResults_Monopolar21 = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Activations_over_iterations_Monopolars_2_1.80.csv', delimiter=' ')
-    # Currents_Monopolar21 = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Current_protocols_0_Monopolars_2_1.csv', delimiter=',', skip_header=True)
-
-
 
     # this is defined by the PAM model
     # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
     from Pathways_Stats import get_simulated_pathways
     Pathways, axons_in_path = get_simulated_pathways(side)
 
-    # axons_in_path = np.array([250,250,250,250,250,100,100,100,100,100,100,100,100,250,500,500,250,250,250,250,500,500,250,250])
-    # Pathways = ['ACC_cp_right',
-    # 'M1_cf_face_right',
-    # 'M1_cf_lowerex_right',
-    # 'M1_cf_upperex_right',
-    # 'PreMotor_cf_right',
-    # 'R_ACC_hdp_right',
-    # 'R_M1_hdp_face_right',
-    # 'R_M1_hdp_lowerex_right',
-    # 'R_M1_hdp_upperex_right',
-    # 'R_PreMotor_hdp_right',
-    # 'R_SMA_hdp_right',
-    # 'R_dlPFC_hdp_right',
-    # 'R_vmPFC_hdp_right',
-    # 'SMA_cf_right',
-    # 'ansa_lenticularis_right',
-    # 'cerebellothalamic_right',
-    # 'dlPFC_cp_right',
-    # 'dmPFC_cp_right',
-    # 'gpe2stn_ass_right',
-    # 'gpe2stn_sm_right',
-    # 'lenticular_fasciculus_right',
-    # 'medial_lemniscus_right',
-    # 'vlPFC_cp_right',
-    # 'vmPFC_cp_right']
-
-
     ### Prepare the data
     X_train = Currents[:trainSize,:]
     X_test = Currents[trainSize:,:]
-    y_train_prelim = ActivationResults[:trainSize,1:] / axons_in_path # from 1, because 0 is the index of the protocol
+    y_train_prelim = ActivationResults[:trainSize,1:] / axons_in_path  # from 1, because 0 is the index of the protocol
     y_test_prelim = ActivationResults[trainSize:,1:] / axons_in_path
     y_train = -100 * np.ones((y_train_prelim.shape), float)
     y_test = -100 * np.ones((y_test_prelim.shape), float)

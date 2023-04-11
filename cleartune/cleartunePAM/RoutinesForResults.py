@@ -118,7 +118,7 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
                 format='png',
                 dpi=1000)
 
-def get_activation_prediction(current_protocol, activation_profile, pathways, symp_distances, profile_dict, Soft_SE_dict, side, score_symptom_metric='Canberra', estim_weights_and_total_score=0,fixed_symptom_weights=[]):
+def get_activation_prediction(current_protocol, activation_profile, pathways, symp_distances, profile_dict, Soft_SE_dict, side, plot_results = False, score_symptom_metric='Canberra', estim_weights_and_total_score=0,fixed_symptom_weights=[]):
 
     # # estimate the improvement: canberra distance at null activation vs the optimized
     # null_protocol = len(min_bound_per_contact) * [0.0]
@@ -129,12 +129,12 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
     null_activation_profile = np.zeros(activation_profile.shape[0])
 
     from Optim_strategies import get_symptom_distances
-    [__, null_symptom_diff] = get_symptom_distances(null_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
+    [__, null_symptom_diff, symptoms_list] = get_symptom_distances(null_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
 
 
     # also get symptom distances for 100% activation to estimate worst case scenario for soft-side effects
     max_activation_profile = 100.0 * np.ones(activation_profile.shape[0])
-    [__, max_symptom_diff] = get_symptom_distances(max_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
+    [__, max_symptom_diff, symptoms_list] = get_symptom_distances(max_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
 
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
     profile_dict.update(Soft_SE_dict)
@@ -187,4 +187,5 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
 
         symp_inx += 1
 
-    plot_results_with_weights(current_protocol, activation_profile, pathways, Impr_pred, symptom_labels_marked, side)
+    if plot_results == True:
+        plot_results_with_weights(current_protocol, activation_profile, pathways, Impr_pred, symptom_labels_marked, side)

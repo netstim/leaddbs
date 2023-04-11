@@ -1,7 +1,7 @@
 function ea_file2json(fname_in,fname_out)
 
-legacy_modalities = {'anat_t1','anat_t2','anat_pd','postop_ct','postop_tra','postop_cor','postop_sag','anat_fgatir','fa','dti','dti','dti','anat_t2star','anat_swi'};
-bids_modalities = {'T1w','T2w','PDw','CT','ax_MRI','cor_MRI','sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw','SWI'};
+legacy_modalities = {'anat_t1','anat_t2','anat_pd','postop_ct','postop_tra','postop_cor','postop_sag','anat_fgatir','anat_flair','fa','dti','dti','dti','anat_t2star','anat_swi'};
+bids_modalities = {'T1w','T2w','PDw','CT','ax_MRI','cor_MRI','sag_MRI','FGATIR','FLAIR','fa','dwi','dwi.bval','dwi.bvec','T2starw','SWI'};
 rawdata_containers = containers.Map(bids_modalities,legacy_modalities);
 opt.FileName = fname_out;
 [filepath,filename,~] = fileparts(fname_in);
@@ -21,9 +21,10 @@ json_mat = struct();
             coregdir_filenames = ea_regexpdir(coregDir,'.*.nii',0,'f');
             for i=1:length(coregdir_filenames)
                 if contains(coregdir_filenames{i},'acq-')
+                   
                     tmpmod = strsplit(coregdir_filenames{i},'acq-');
                     mod = strrep(tmpmod{end},'.nii','');
-                    tmpmod = regexprep(mod, '(_)?(iso|sag|tra|cor)\d?(_)?', '');
+                    tmpmod = regexprep(mod, '(_)?(iso|sag|ax|cor)\d?(_)?', '');
                     try
                         %now find this in the coregapproved file
                         if contains(mod,'_MRI')
@@ -42,18 +43,40 @@ json_mat = struct();
                     idx = cellfun(@(x)contains(x,legacymod),coreg_fieldnames);
                     if ~isempty(find(idx,1))
                         if length(find(idx)) > 1
-                            digit = regexp(mod,'\d','match');
-                            digit = digit{1};
+                            acq = strsplit(mod,'_');
+                            mod_woacq = acq{1};
+                            digit = regexp(mod_woacq, '\d', 'match');
                             if ~isempty(digit)
+                                digit = digit{1};
                                 corridx = find(idx);
                                 idx = corridx(str2double(digit));
-                            end
+                                json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
+                            else
+                                idx = cellfun(@(x)strcmp(x,legacymod),coreg_fieldnames);
+                                if any(idx)
+                                %quite difficult to find extreme cases. for
+                                %now, make their approval 0
+                                    json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
+                                else
+                                     json_mat.approval.(mod) = 0;
+                                     warning("One or more elements of the coreg fieldname were not transformed. Please review your desc_coregmethod.json file inside the derivatives/leaddbs/coregistration/log directory...")
+                                end
+                                
+                            end                        
+                        else
+                            json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
                         end
-                        json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
+                    else
+                        json_mat.approval.(mod) = 0;
+                        warning("One or more elements of the coreg fieldname were not transformed. Please review your desc_coregmethod.json file inside the derivatives/leaddbs/coregistration/log directory...")
                     end
                 end
             end
-            savejson('',json_mat,'approval',json_mat.approval,opt);   
+            if isfield(json_mat,'approval')
+                savejson('',json_mat,'approval',json_mat.approval,opt);   
+            else 
+                warning("Coregistration files were not transformed. Please review your BIDSified folders with caution")
+            end
             if exist(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'),'file')
                 temp_mat = load(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'));
                 method_used = generateMethod(temp_mat,'coregct_method_applied');
@@ -66,52 +89,9 @@ json_mat = struct();
                 modality = 'MR';
                 json_mat.method.(modality) = method_used;
             end
-%                 temp_fieldname = fieldnames(temp_mat);
-%                 for j=1:length(temp_fieldname)
-%                     if ~strcmp(temp_fieldname{j},'coregmr_method_applied')
-%                         no_of_fieldnames = length(strsplit(temp_fieldname{j},'_'));
-%                         if no_of_fieldnames > 2
-%                             split_fieldname = strsplit(temp_fieldname{j},'_');
-%                             new_fieldname = [split_fieldname{1},'_',split_fieldname{2}];
-%                             if ismember(new_fieldname,legacy_modalities)
-%                                 modality = rawdata_containers(new_fieldname);
-%                             elseif contains(new_fieldname, legacy_modalities)
-%                                 %try again because the coreg filename and .json
-%                                 %should be similar
-%                                 match_idx = find(cellfun(@(x) contains(new_fieldname, x), legacy_modalities));
-%                                 if length(match_idx) == 1
-%                                     modality = bids_modalities{match_idx};
-%                                 end
-%                             else
-%                                 if isvarname(upper(split_fieldname{end}))
-%                                     modality = upper(split_fieldname{end});
-%                                 else
-%                                     modality = upper(split_fieldname{end-1});
-%                                 end
-%                             end
-%                         else
-%                             if ismember(temp_fieldname{j},legacy_modalities)
-%                                 modality = rawdata_containers(temp_fieldname{j});
-%                             elseif contains(temp_fieldname{j}, legacy_modalities)
-%                                 %try again because the coreg filename and .json
-%                                 %should be similar
-%                                 match_idx = find(cellfun(@(x) contains(temp_fieldname{j}, x), legacy_modalities));
-%                                 if length(match_idx) == 1
-%                                     modality = bids_modalities{match_idx};
-%                                 end
-%                             else
-%                                 modality = strsplit(temp_fieldname{j},'_');
-%                                 modality = upper(modality{end});
-%                             end
-% 
-%                         end
-%                     end
-%                     flag = 'method';
-%                     [modality,json_mat] = add_mod(modality,json_mat,flag);
-%                     json_mat.method.(modality) = temp_mat.(temp_fieldname{j});
-%                 end
-%             end
-        savejson('',json_mat,'method',json_mat.method,opt);
+            if isfield(json_mat,'method')    
+                savejson('',json_mat,'method',json_mat.method,opt);
+            end
         elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
           input_mat = load(fname_in);  
           method_used = generateMethod(input_mat,'coregct_method_applied');
@@ -180,31 +160,12 @@ json_mat = struct();
              method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
          else
              method_used = '';
+             warning("We could not identify the normalization method used. Please edit it manually.\n" + ...
+                 " You will find the file under derivatives/leaddbs/normalization/log!");
          end
      else
          method_used = '';
+         warning("We could not identify the normalization method used. Please edit it manually.\n" + ...
+                 " You will find the file under derivatives/leaddbs/normalization/log!");
      end
      return
-function [new_mod,json_mat] = add_mod(modality,json_mat)
-if ~isempty(fieldnames(json_mat))
-    if isfield(json_mat.approval,modality)
-        replaced_old_modality = [modality,num2str(1)];
-        %replace old modality name with the new
-        json_mat.approval.(replaced_old_modality) = json_mat.approval.(modality);
-        json_mat.approval = rmfield(json_mat.approval,modality);
-        new_mod = [modality,num2str(2)];
-    elseif isfield(json_mat.approval,[modality,num2str(1)])
-        suffix = 2;
-        modality_to_check = [modality,num2str(suffix)];
-        while isfield(json_mat.approval,modality_to_check)
-            suffix = suffix + 1;
-            modality_to_check = [modality,num2str(suffix)];
-        end
-        new_mod = modality_to_check;
-    else
-        new_mod = modality;
-    end
-else
-    new_mod = modality;
-end
-return

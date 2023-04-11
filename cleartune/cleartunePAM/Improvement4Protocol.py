@@ -2,6 +2,7 @@ import json
 import os
 import sys
 
+
 def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combustion'):
 
     # create an output folder in the stim folder of the patient
@@ -60,7 +61,7 @@ def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combu
 
 def make_prediction(side, FF_dictionary, fixed_symptoms_dict):
 
-    profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(os.environ['STIMDIR'], side, FF_dictionary, disease='spontaneous human combustion')
+    profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combustion')
 
     # load fixed weights
     with open(fixed_symptoms_dict, 'r') as fp:
@@ -75,14 +76,14 @@ def make_prediction(side, FF_dictionary, fixed_symptoms_dict):
     from Optim_strategies import get_symptom_distances
     [__, symptom_diff] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
                                                fixed_symptom_weights, Pathways, side, score_symptom_metric='Canberra')
-    # symptom_diff is in the symptom space, not pathway! So it might have a smaller dimensionality
+    # symptom_diff is in the symptom space, not pathway! So it might have a different dimensionality
 
     from Pathways_Stats import get_current_protocol
     current_protocol = get_current_protocol(side)
 
     from RoutinesForResults import get_activation_prediction
     get_activation_prediction(current_protocol, activation_profile, Pathways, symptom_diff, profile_dict,
-                              Soft_SE_dict, side, score_symptom_metric='Canberra')
+                              Soft_SE_dict, side, plot_results=True, score_symptom_metric='Canberra')
 
 if __name__ == '__main__':
 
@@ -90,7 +91,7 @@ if __name__ == '__main__':
     # sys.argv[1] - stim folder
     # sys.argv[2] - side
     # sys.argv[3] - Activation Profile Dictionary based on Fiber Filtering
-    # sys.argv[4] - Fixed Symptoms
+    # sys.argv[4] - Fixed Symptoms Dictionary
 
     os.environ['STIMDIR'] = sys.argv[1]
-    make_prediction(sys.argv[2], sys.argv[3], sys.argv[4])
+    make_prediction(int(sys.argv[2]), sys.argv[3], sys.argv[4])

@@ -62,8 +62,15 @@ for view=[4,3,2,1]
     camlight(hl,'headlight');
     camlight(ll,'left');
     camlight(rl,'right');
+    eltext=getappdata(resultfig,'eltext');
+    if view==3
+        set(eltext, 'Visible', 'on');
+    end
     drawnow
     ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_',sprintf('%03.0f',cnt),'.png'],'ld', resultfig);
+    if view==3
+        set(eltext, 'Visible', 'off');
+    end
     cnt=cnt+1;
 end
  close(resultfig);

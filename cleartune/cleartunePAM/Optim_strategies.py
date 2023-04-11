@@ -2,7 +2,7 @@
 import pandas
 import numpy as np
 import os
-from scipy.spatial.distance import canberra
+from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, cosine
 
 def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric='Canberra'):
 
@@ -19,6 +19,7 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
     symp_distances = np.zeros(N_symptoms_side, float)
     symp_inx = 0
     sum_symp_others = 0
+    symptom_list = []
 
     for key in Target_profiles:
         if side == 0 and not ("_rh" in key):
@@ -48,17 +49,31 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
                     predicted_rates.append(activation_profile[inx])
             else: # if not a part of the approx model, assign the threshold (so that the distance is 0)
                 predicted_rates.append(Target_profiles[key][activ_target_profile[i]][0])
-                print("Percent activation was not found for pathway ",activ_target_profile[i], "assigning null distance")
+                print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
 
         if score_symptom_metric == 'Canberra':
             symp_distances[symp_inx] = canberra(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
+        elif score_symptom_metric == 'Manhattan':
+            symp_distances[symp_inx] = cityblock(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
+        elif score_symptom_metric == 'Euclidean':
+            symp_distances[symp_inx] = euclidean(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
+        elif score_symptom_metric == 'Cosine':
+            symp_distances[symp_inx] = cosine(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
+        elif score_symptom_metric == 'Bray-Curtis':
+            symp_distances[symp_inx] = braycurtis(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
+        else:
+            print("Metric is not supported")
+            raise SystemExit
+
+        symptom_list.append(key)
+
 
         if key not in fixed_symptom_weights:
             sum_symp_others += symp_distances[symp_inx]
 
         symp_inx += 1
 
-    return sum_symp_others, symp_distances
+    return sum_symp_others, symp_distances, symptom_list
 
 def choose_weights_minimizer(stim_vector, *args):
 
@@ -91,7 +106,7 @@ def choose_weights_minimizer(stim_vector, *args):
 
     # now we compute symptom distances
 
-    sum_symp_others, symp_distances = get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric)
+    sum_symp_others, symp_distances, symptoms_list = get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric)
 
     #print(symp_distances)
 

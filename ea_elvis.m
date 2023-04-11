@@ -156,6 +156,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         end
                     end
                 end
+                eltext=getappdata(resultfig,'eltext');
+
+                eltexttoggle=uitoggletool(ht, 'CData', ea_get_icn('electrode_segment'),...
+                    'TooltipString', 'Contact Labels',...
+                    'OnCallback', {@objvisible,eltext},...
+                    'OffCallback', {@objinvisible,eltext}, 'State','off');
+
+
             end
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                 % this part for brainbrowser support.

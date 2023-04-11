@@ -5,6 +5,7 @@ import numpy as np
 from scipy.stats import qmc
 import csv
 import h5py
+import json
 
 one_pol_current_threshold = 8.0  # in mA
 total_current_threshold = 8.0
@@ -103,6 +104,18 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
             else:
                 testSize_actual += 1
 
+    # create a json that describes Current protocols
+    StimSets_info = {
+        'trainSize_actual': trainSize_actual,
+        'testSize_actual': testSize_actual,
+        'el_type': el_type,
+        'conc_threshold': conc_threshold,
+        'segm_threshold': segm_threshold,
+        }
+
+    with open(stim_folder + '/StimSets_info.json', 'w') as save_as_dict:
+        json.dump(StimSets_info, save_as_dict)
+
     return trainSize_actual, testSize_actual
 
 
@@ -114,10 +127,9 @@ if __name__ == '__main__':
     # sys.argv[1] - stimfolder
     # sys.argv[2] - right electrode model (-1 if not implanted)
     # sys.argv[3] - left electrode model (-1 if not implanted)
-
     # sys.argv[4:] - min cylind, max cylind, min segm, max_segm
 
-    print(sys.argv[1:])
+    #print(sys.argv[1:])
 
     if sys.argv[2] != '-1':
         create_Training_Test_sets(sys.argv[1],sys.argv[2], [float(sys.argv[4]),float(sys.argv[5])], [float(sys.argv[6]),float(sys.argv[7])], 0)

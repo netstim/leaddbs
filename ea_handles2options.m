@@ -69,7 +69,7 @@ catch
 end
 
 try
-    options.overwriteapproved=get(handles.overwriteapproved,'Value');
+    options.overwriteapproved = handles.overwriteapproved.Value;
 end
 
 try
@@ -211,30 +211,27 @@ options.d3.expdf=0;
 options.numcontacts=4;
 
 try
-    options.entrypoint=get(handles.targetpopup,'String');
-    options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
-    options.entrypointn=get(handles.targetpopup,'Value');
+    options.entrypointn = handles.targetpopup.Value;
+    options.entrypoint = handles.targetpopup.String{options.entrypointn};
 end
 
 options.writeoutpm = 0;
 
 try
-    options.elmodeln = get(handles.electrode_model_popup,'Value');
-    string_list = get(handles.electrode_model_popup,'String');
-    options.elmodel=string_list{options.elmodeln};
+    options.elmodeln = handles.electrode_model_popup.Value;
+    options.elmodel = handles.electrode_model_popup.String{options.elmodeln};
 catch
-    elms=ea_resolve_elspec;
-    options.elmodel=elms{1};
+    elms = ea_resolve_elspec;
+    options.elmodel = elms{1};
 end
 
 try
-    options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
-    options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
-    options.atlassetn=get(handles.atlassetpopup,'Value');
+    options.atlassetn = handles.atlassetpopup.Value;
+    options.atlasset = handles.atlassetpopup.String{options.atlassetn};
 end
 
 try
-    if strcmp(options.atlasset,'Use none');
+    if strcmp(options.atlasset,'Use none')
         options.d3.writeatlases=0;
         options.d2.writeatlases=1;
     else

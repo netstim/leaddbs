@@ -71,7 +71,7 @@ Ihat_prediction = scores_test > scores_thresh;
 
 % get the confussion matrix (this can be done on the test set now)
 figure
-cm = confusionchart(Ihat_prediction,logical(Improvement(test)));
+cm = confusionchart(logical(Improvement(test)), Ihat_prediction);
 set(gcf,'color','w');
 
 tp = sum((Ihat_prediction == 1) & (Improvement(test) == 1));
