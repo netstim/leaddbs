@@ -1,4 +1,4 @@
-function ea_legacy2bids(source,dest,doOnlyRaw)
+function subjId = ea_legacy2bids(source,dest,doOnlyRaw)
 %%This function migrates a classic LEAD-DBS dataset, whether fully
 %%processed or raw into a BIDS-STYLE dataset.The BIDSified version is
 %%integral for the future releases of BIDS.
@@ -87,6 +87,7 @@ for patients = 1:length(source)
     end
     spaces_in_pat_name = isspace(patient_name);
     patient_name = patient_name(~spaces_in_pat_name);
+    subjId{patients} = {strrep(patient_name,'sub-','')};
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
     %creates a cell of the files to move, later, we can create

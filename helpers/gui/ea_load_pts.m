@@ -10,8 +10,13 @@ if isLegacyFolder(uipatdir{1})
     % Input folder is legacy patient folder
     opts.WindowStyle = 'modal';
     opts.Interpreter = 'tex';
-    msgbox('Please run \bf''lead import''\rm or \bfImport Legacy Folder to BIDS Dataset\rm from the \bfTools\rm menu.', 'Legacy Patient Folder Detected', 'help', opts);
-    return;
+    BIDSRoot = handles.datasetselect.String;
+    subjId = ea_legacy2bids(uipatdir,BIDSRoot,0);
+    if ~iscell(subjId)
+        subjId = {subjId};
+    end
+    %msgbox('Please run \bf''lead import''\rm or \bfImport Legacy Folder to BIDS Dataset\rm from the \bfTools\rm menu.', 'Legacy Patient Folder Detected', 'help', opts);
+    %return;
 elseif isBIDSFolder(uipatdir{1})
     % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
     [~, BIDSRoot, subjId] = isBIDSFolder(uipatdir{1});
@@ -137,8 +142,10 @@ else
     uipatdir = {'No Patient Selected'};
 end
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
-backgroundColor = repmat([1,1,1],length(bids.subjId),1);
-handles.patientlist.BackgroundColor = backgroundColor;
+if ~isempty(bids.subjId)
+    backgroundColor = repmat([1,1,1],length(bids.subjId),1);
+    handles.patientlist.BackgroundColor = backgroundColor;
+end
 if strcmp(handles.prod, 'dbs')
     handles.datasetselect.String = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
@@ -202,8 +209,7 @@ end
 
 ea_storeui(handles); % save in pt folder
 
-ea_addrecent(handles, {BIDSRoot}, 'datasets');
-ea_addrecent(handles, uipatdir, 'patients');
+ea_addrecent(handles, {BIDSRoot}, 'datasets');ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(uipatdir) == 1 && isfield(handles, 'side1')
