@@ -8,15 +8,18 @@ uipatdir = GetFullPath(uipatdir);
 
 if isLegacyFolder(uipatdir{1})
     % Input folder is legacy patient folder
-    opts.WindowStyle = 'modal';
-    opts.Interpreter = 'tex';
+    if  strcmp(handles.datasetselect.String, 'Choose Dataset Directory')
+        options.prefs = ea_prefs;
+        BIDSRoot = ea_getdataset(options, handles);
+        if ~BIDSRoot
+            return;
+        end
+    end
     BIDSRoot = handles.datasetselect.String;
-    subjId = ea_legacy2bids(uipatdir,BIDSRoot,0);
+    subjId = ea_legacy2bids(uipatdir, BIDSRoot, 0);
     if ~iscell(subjId)
         subjId = {subjId};
     end
-    %msgbox('Please run \bf''lead import''\rm or \bfImport Legacy Folder to BIDS Dataset\rm from the \bfTools\rm menu.', 'Legacy Patient Folder Detected', 'help', opts);
-    %return;
 elseif isBIDSFolder(uipatdir{1})
     % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
     [~, BIDSRoot, subjId] = isBIDSFolder(uipatdir{1});
@@ -29,9 +32,9 @@ elseif isBIDSSubjFolder(uipatdir{1})
         stack = dbstack;
         if any(contains({stack.name}, 'AddPatientButtonPushed'))
             answer = uiconfirm(handles.leadfigure,...
-               'Selected patients are from another dataset. What would you like to do?',...
+                'Selected patients are from another dataset. What would you like to do?',...
                 'Add Patient',...
-                 'Options', {'Copy the selected patients to the current dataset', 'Switch to the selected dataset', 'Cancel'},...
+                'Options', {'Copy the selected patients to the current dataset', 'Switch to the selected dataset', 'Cancel'},...
                 'DefaultOption', 2, 'CancelOption', 3);
             switch answer
                 case 'Copy the selected patients to the current dataset'
@@ -83,6 +86,7 @@ else % NIfTI or DICOM folder
                 return;
             end
         end
+
         BIDSRoot = handles.datasetselect.String;
         subjId = cell(length(uipatdir) ,1);
         
@@ -90,22 +94,14 @@ else % NIfTI or DICOM folder
 
             if isNIfTIFolder(uipatdir{i})
                 [~, subjId{i}] = isNIfTIFolder(uipatdir{i});
-                [found,subjId{i}] = checkValidity(subjId{i});
-                if found
-                    ea_cprintf('CmdWinWarnings', 'Incompatible subject name, please remove special characters: %s\n', subjId{i});
-                    return
-                end
+                subjId{i} = validateSubjId(subjId{i});
                 derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{i}]);
                 rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}]);
                 ea_mkdir({derivativesFolder; rawFolder});
                 copyfile(uipatdir{i}, fullfile(rawFolder, 'unsorted'));
             else
                 [checkFlag, subjId{i}] = isDICOMFolder(uipatdir{i});
-                [found,subjId{i}] = checkValidity(subjId{i});
-                if found
-                    ea_cprintf('CmdWinWarnings', 'Incompatible subject name, please remove special characters: %s\n', subjId{i});
-                    return
-                end
+                subjId{i} = validateSubjId(subjId{i});
                 if checkFlag
                     derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{i}]);
                     rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}]);
@@ -114,12 +110,13 @@ else % NIfTI or DICOM folder
 
                     if endsWith(uipatdir{i}, 'dicom', 'IgnoreCase', true)
                         ea_mkdir(fullfile(sourceFolder, 'DICOM'));
-                        ea_cprintf('CmdWinWarnings','Copying DICOM files from source folder..please wait..\n');
+                        ea_cprintf('CmdWinWarnings','Copying DICOM files from source folder...please wait...\n');
                         copyfile(fullfile(uipatdir{i}, '*'), fullfile(sourceFolder, 'DICOM'));
                     else
-                        ea_cprintf('CmdWinWarnings','Copying DICOM files from source folder..please wait..\n');
+                        ea_cprintf('CmdWinWarnings','Copying DICOM files from source folder...please wait...\n');
                         copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
                     end
+                    ea_cprintf('CmdWinWarnings','Done.\n');
                 else
                     ea_cprintf('CmdWinWarnings', 'Incompatible folder: %s\n', uipatdir{i});
                 end
@@ -130,8 +127,7 @@ else % NIfTI or DICOM folder
     end
 end
 
-
- % Initialize BIDS class
+% Initialize BIDS class
 bids = BIDSFetcher(BIDSRoot);
 setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
@@ -141,11 +137,14 @@ if ~isempty(bids.subjId)
 else
     uipatdir = {'No Patient Selected'};
 end
+
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
+
 if ~isempty(bids.subjId)
-    backgroundColor = repmat([1,1,1],length(bids.subjId),1);
+    backgroundColor = repmat([1,1,1], length(bids.subjId), 1);
     handles.patientlist.BackgroundColor = backgroundColor;
 end
+
 if strcmp(handles.prod, 'dbs')
     handles.datasetselect.String = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
@@ -163,10 +162,27 @@ if strcmp(handles.prod, 'dbs')
         subjDataOverview = bids.subjDataOverview;
         subjNotImported = subjDataOverview.Row(~subjDataOverview.hasRawimagesJson & (subjDataOverview.hasUnsortedRawdata | subjDataOverview.hasSourcedata));
         if ~isempty(subjNotImported)
-            subjId_notImported = find(ismember(bids.subjId', subjNotImported));
-            %highlight only the subjects not imported
-            backgroundColor([subjId_notImported],:) = repmat([249/255,174/255,174/255],length(subjId_notImported),1);
+            highlightInd = find(ismember(bids.subjId', subjNotImported));
+            % Highlight only the subjects not imported
+            backgroundColor(highlightInd,:) = repmat([249/255,174/255,174/255], length(highlightInd), 1);
             handles.patientlist.BackgroundColor = backgroundColor;
+
+            arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.registrationtab, 'Type', 'uicheckbox'));
+            arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.localizationtab, 'Type', 'uicheckbox'));
+            arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
+
+            handles.processtabgroup.SelectedTab = handles.importtab;
+            if any(subjDataOverview.hasSourcedata(subjNotImported))
+                handles.dicom2bidscheckbox.Value = 1;
+            else
+                handles.dicom2bidscheckbox.Value = 0;
+            end
+            if any(subjDataOverview.hasUnsortedRawdata(subjNotImported))
+                handles.nifti2bidscheckbox.Value = 1;
+            else
+                handles.nifti2bidscheckbox.Value = 0;
+            end
+
             handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import first.';
             handles.statustwo.String = '';
         else
@@ -209,7 +225,8 @@ end
 
 ea_storeui(handles); % save in pt folder
 
-ea_addrecent(handles, {BIDSRoot}, 'datasets');ea_addrecent(handles, uipatdir, 'patients');
+ea_addrecent(handles, {BIDSRoot}, 'datasets');
+ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(uipatdir) == 1 && isfield(handles, 'side1')
@@ -363,20 +380,8 @@ if ea_dcmquery(inputFolder) > 0
     end
 end
 
-function [found,subjId] = checkValidity(subjId)
-count=0;
-if iscell(subjId)
-    subjId = subjId{1};
-end
-
-found = ea_checkSpecialChars(subjId);
-is_underscore = regexp(subjId,'.*_|-|\s.*','match');
-if ~isempty(is_underscore)
+function subjId = validateSubjId(subjId)
+if ~isempty(regexp(subjId, '[\W_]', 'once'))
     subjId = regexprep(subjId, '[\W_]', '');
-    ea_cprintf('CmdWinWarnings', 'It looks like you have special chars in your dataset folder name: %s. We will use a cleaned version for BIDS.Please check manually',subjId);
-    found = 0;
-end
-if found
-    count=count+1;
-end
-
+    ea_cprintf('CmdWinWarnings', 'It looks like you have special chars in your subj folder name.\nWe will use a cleaned name ''%s'' for the BIDS dataset. Please check manually.\n', subjId);
+end 
