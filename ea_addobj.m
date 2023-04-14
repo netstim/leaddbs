@@ -21,7 +21,7 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         if ~isfield(options, 'prefs')
             options.prefs = ea_prefs;
         end
-         if options.prefs.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
+        if options.prefs.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
             if length(obj)<=32
                 str2eval = ['cmap = ', options.prefs.d3.roi.defaultcolormap, '(32);'];
             else
@@ -30,14 +30,18 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
             eval(str2eval);
             for i=1:length(obj)
                 pobj.color = cmap(i,:);
-                ea_roi(obj{i}, pobj);
+                roi = ea_roi(obj{i}, pobj);
+                centroid = mean(roi.fv.vertices(:,1:3));
+                addlabel(centroid, roi.Tag, addht);
             end
-         else
-             for i=1:length(obj)
-                 pobj.color = ea_uisetcolor;
-                 ea_roi(obj{i}, pobj);
-             end
-         end
+        else
+            for i=1:length(obj)
+                pobj.color = ea_uisetcolor;
+                roi = ea_roi(obj{i}, pobj);
+                centroid = mean(roi.fv.vertices(:,1:3));
+                addlabel(centroid, roi.Tag, addht);
+            end
+        end
     elseif all(cellfun(@numel, regexp(obj, '(\.fibfilt)$', 'match', 'once')))
         for i=1:length(obj)
             ea_discfiberexplorer(obj{i}, resultfig);
@@ -98,12 +102,16 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                     eval(str2eval);
                     for fi=1:length(roiName)
                         pobj.color = cmap(fi,:);
-                        ea_roi([roiPath, roiName{fi}], pobj);
+                        roi = ea_roi([roiPath, roiName{fi}], pobj);
+                        centroid = mean(roi.fv.vertices(:,1:3));
+                        addlabel(centroid, roi.Tag, addht);
                     end
                 else
                     for fi=1:length(roiName)
                         pobj.color = ea_uisetcolor;
-                        ea_roi([roiPath, roiName{fi}], pobj);
+                        roi = ea_roi([roiPath, roiName{fi}], pobj);
+                        centroid = mean(roi.fv.vertices(:,1:3));
+                        addlabel(centroid, roi.Tag, addht);
                     end
                 end
             end
@@ -278,6 +286,23 @@ axis fill
 [~, fina] = fileparts(obj);
 addbutn = uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on','UserData','tract');
 storeinfigure(resultfig,addht,addbutn,addobjr,obj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
+
+
+function objlabel = addlabel(location, label, addht)
+set(0, 'CurrentFigure', addht.Parent);
+toggle = findobj(addht.Children, 'Type', 'uitoggletool', 'Tag', 'Labels');
+objlabel = text(double(location(1)),double(location(2)),double(location(3)),...
+    ea_underscore2space(label),...
+    'Tag', label,...
+    'VerticalAlignment', 'Baseline',...
+    'HorizontalAlignment', 'Center',...
+    'FontWeight', 'bold',...
+    'FontSize', 12,...
+    'Color', 'w', ...
+    'Visible', toggle.State);
+toggle.OffCallback{2} = [toggle.OffCallback{2}; objlabel];
+toggle.OnCallback{2} = [toggle.OnCallback{2}; objlabel];
+setappdata(addht.Parent, 'addht', addht);
 
 
 function storeinfigure(resultfig,addht,addbutn,obj,path,name,type,data,replace,options)

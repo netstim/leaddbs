@@ -743,11 +743,10 @@ labelInd = arrayfun(@(x) isa(x, 'matlab.graphics.primitive.Text'), obj);
 if isempty(hobj)
     arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
 else
-    toggleTag = arrayfun(@(t) t.Tag, hobj.Parent.Children(1:end-3), 'Uni', 0);
-    toggleState = arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3), 'Uni', 0);
+    toggleState = flip(arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3)));
 
     if strcmp(onoff, 'on')
-        arrayfun(@(label) set(label,'Visible',toggleState{strcmp(label.Tag, toggleTag)}), obj(labelInd));
+        arrayfun(@(label, state) set(label,'Visible',state), obj(labelInd), toggleState);
     else
         arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
     end
