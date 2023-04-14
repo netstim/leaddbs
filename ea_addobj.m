@@ -1,16 +1,13 @@
 function ea_addobj(resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
-if ~isempty(addht) % sweep nonempty atlases toolbar
-    % delete(addht.Children(:));
-else
+if isempty(addht)
     addht=uitoolbar(resultfig);
     labelbutton=uitoggletool(addht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
     labelcolorbutton=uipushtool(addht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
 end
 
 setappdata(resultfig,'addht',addht)
-
 
 if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
     if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once'))) %tract
@@ -21,17 +18,18 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
     elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) %roi
         pobj.plotFigureH = resultfig;
         pobj.htH = addht;
-        prefs = ea_prefs;
-         if prefs.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
+        if ~isfield(options, 'prefs')
+            options.prefs = ea_prefs;
+        end
+         if options.prefs.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
             if length(obj)<=32
-                str2eval = ['cmap = ', prefs.d3.roi.defaultcolormap, '(32);'];
+                str2eval = ['cmap = ', options.prefs.d3.roi.defaultcolormap, '(32);'];
             else
-                str2eval = ['cmap = ', prefs.d3.roi.defaultcolormap, '(', num2str(length(obj)), ');'];
+                str2eval = ['cmap = ', options.prefs.d3.roi.defaultcolormap, '(', num2str(length(obj)), ');'];
             end
             eval(str2eval);
             for i=1:length(obj)
                 pobj.color = cmap(i,:);
-                pobj.Tag = 'roi';
                 ea_roi(obj{i}, pobj);
             end
          else
@@ -195,7 +193,7 @@ if numcoloredfibs
     % add toggle button:
     [~, tfina] = fileparts(tract);
     [~, rfina] = fileparts(weight);
-    uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
+    uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on','weightedtract');
     drawnow
 else
     ea_warning('No fibers selected by ROI');
@@ -278,7 +276,7 @@ addobjr = ea_showfiber(thisset,fibidx,c);
 axis fill
 
 [~, fina] = fileparts(obj);
-addbutn = uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
+addbutn = uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on','UserData','tract');
 storeinfigure(resultfig,addht,addbutn,addobjr,obj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
 
 

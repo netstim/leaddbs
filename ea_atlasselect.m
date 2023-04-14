@@ -613,7 +613,7 @@ resultfig=getappdata(handles.atlasselect,'resultfig');
 options=getappdata(handles.atlasselect,'options');
 
 % Clear atlas toolbar
-atlastoolbar = getappdata(resultfig,'atlht');
+atlastoolbar = getappdata(resultfig,'addht');
 arrayfun(@delete, atlastoolbar.Children);
 
 % surfaces

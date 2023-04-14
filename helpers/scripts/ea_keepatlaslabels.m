@@ -53,24 +53,11 @@ try
     set(0,'CurrentFigure',resultfig);
 
     % get app data
-    atlht = getappdata(resultfig,'atlht'); % atlas toolbar
     atlassurfs = getappdata(resultfig,'atlassurfs');
     colorbuttons = getappdata(resultfig,'colorbuttons');
 
-    addht = getappdata(resultfig,'addht'); % object toolbar; see ea_addobj
-    idx = zeros(size(addht.Children));
-    for i=1:length(addht.Children)
-        if strcmp(addht.Children(i).Tag,'roi')
-            idx(i) = 1;
-        elseif strcmp(addht.Children(i).Tag,'')
-            idx(i) = 2;
-        else
-            idx(i)=0;
-        end
-    end
-    rois = addht.Children(idx==1);
-    objects = addht.Children(idx==2);
-
+    addht = getappdata(resultfig,'addht');
+    rois = findobj(addht.Children, 'Type', 'uitoggletool', 'UserData', 'roi');
 
     % parse type and toggle
     switch type
@@ -143,27 +130,25 @@ try
                         rois(i).State='off';
                     end
             end
-
-
     end
 catch
-
     % LEGACY
     %
-% Small function to keep atlas labels given string
-%
-% Example:
-%
-%   ea_keepatlaslabels('on');
-%   ea_keepatlaslabels('off')
-%
-%   ea_keepatlaslabels('STN','RN','GPi','GPe')
-%   atlassurfs = ea_keepatlaslabels('STN','RN','GP')
+    % Small function to keep atlas labels given string
+    %
+    % Example:
+    %
+    %   ea_keepatlaslabels('on');
+    %   ea_keepatlaslabels('off')
+    %
+    %   ea_keepatlaslabels('STN','RN','GPi','GPe')
+    %   atlassurfs = ea_keepatlaslabels('STN','RN','GP')
+    
+    % _________________________________________________________________________
+    % Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
+    %
+    % Ari Kappel
 
-% _________________________________________________________________________
-% Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
-%
-% Ari Kappel
     H = findall(0,'type','figure');
     resultfig = H(contains({H(:).Name},{'Electrode-Scene'}));
     resultfig=resultfig(1); % Take the first if there are more.

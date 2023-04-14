@@ -75,11 +75,7 @@ classdef ea_roi < handle
                     [~,obj.name]=ea_niifileparts(obj.niftiFilename);
                 end
                 
-                try
-                    obj.Tag = pobj.Tag;
-                catch
-                    obj.Tag = obj.name;
-                end
+                obj.Tag = obj.name;
 
                 try
                     obj.plotFigureH=pobj.plotFigureH;
@@ -171,6 +167,10 @@ classdef ea_roi < handle
                 obj.patchH=patch;
 
                 obj.toggleH=uitoggletool;
+                stack = dbstack;
+                if ismember('ea_addobj', {stack.name})
+                    obj.toggleH.UserData = 'roi';
+                end
 
                 update_roi(obj);
                 breathelife(obj);
@@ -296,16 +296,9 @@ classdef ea_roi < handle
                 roiTag = obj.name;
             end
 
-            % Set obj name
-            if ~isempty(obj.name)
-                roiName = obj.name;
-            else
-                roiName = obj.Tag;
-            end
-
             set(obj.patchH,...
                 {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength','Tag'},...
-                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,roiName});
+                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,roiTag});
             if obj.binary || obj.usesolidcolor
                 set(obj.patchH,...
                     {'FaceColor'},...
@@ -319,7 +312,7 @@ classdef ea_roi < handle
             % add toggle button:
             set(obj.toggleH,...
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tag','Tooltip'},...
-                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag,roiName});
+                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag,roiTag});
         end
 
         function delete(obj)

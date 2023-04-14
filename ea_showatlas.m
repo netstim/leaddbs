@@ -40,7 +40,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
-    ht=getappdata(resultfig,'atlht');
+    ht=getappdata(resultfig,'addht');
 
     if ~exist([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'file')
         atlases = ea_genatlastable([],atlasFolder,options,mifix,resultfig);
@@ -648,7 +648,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
         setappdata(resultfig,'atlassurfs',atlassurfs);
         setappdata(resultfig,'colorbuttons',colorbuttons);
-        setappdata(resultfig,'atlht',ht);
+        setappdata(resultfig,'addht',ht);
         setappdata(resultfig,'labelbutton',labelbutton);
         setappdata(resultfig,'atlaslabels',atlaslabels);
     end
