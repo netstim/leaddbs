@@ -1,4 +1,4 @@
-function ea_legacy2bids(source,dest,doOnlyRaw)
+function subjId = ea_legacy2bids(source,dest,doOnlyRaw)
 %%This function migrates a classic LEAD-DBS dataset, whether fully
 %%processed or raw into a BIDS-STYLE dataset.The BIDSified version is
 %%integral for the future releases of BIDS.
@@ -34,7 +34,6 @@ end
 
 
 %define names of the new directorey structure
-
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
 fmri_keywords = {'(Yeo 2011)','HCP 612','HCP 1200','PPMI 74','Depression 38'};
 
@@ -47,7 +46,6 @@ rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 [~,brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,ftracking,lead_mapper] = ea_create_bids_mapping();
 %data structure for excel sheet later on
 derivatives_cell = {};
-
 %dir without dots is a modified dir command that with return the
 %directory contents without the dots. those evaluate to folders and
 %cause issues.
@@ -64,7 +62,6 @@ end
 
 %support for lead group
 
-ea_migrateGroupAnalysis(source{1},dest)
 
 for patients = 1:length(source)
     %source patient filepath
@@ -90,6 +87,7 @@ for patients = 1:length(source)
     end
     spaces_in_pat_name = isspace(patient_name);
     patient_name = patient_name(~spaces_in_pat_name);
+    subjId{patients} = {strrep(patient_name,'sub-','')};
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
     %creates a cell of the files to move, later, we can create
@@ -253,7 +251,7 @@ for patients = 1:length(source)
                         end
                         %find mod of the coreg and then check if you have a
                         %raw_anat_mod in the folder. 
-                       
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
 
                         %coregistration: log, no fixed naming pattern and hence
@@ -403,7 +401,10 @@ for patients = 1:length(source)
                                  copyfile(fullfile(source_patient,which_file),op_dir); 
                               end
                               movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
-                                  
+                              disp(['Renaming file ' which_file ' to ' bids_name])
+                              derivatives_cell{end+1,1} = fullfile(source_path,which_file);
+                              derivatives_cell{end,2} = fullfile(op_dir,bids_name);                                                               
+                               
                           end
                       elseif endsWith(which_file,'.mat')
                           mat_str = regexp(which_file,'[1-9].mat','split','once');
@@ -668,7 +669,7 @@ end
 toc;
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
     
-   
+
     if strcmp(which_pipeline,'coregistration')
         brainshift_log_dir = fullfile(new_path,'brainshift','log');
     end
@@ -745,7 +746,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         fname_in = fullfile(source_patient_path,which_file);
         [~,fname,~] = fileparts(bids_name);
         fname_out = fullfile(log_dir,[patient_name,'_',fname '.json']);
-        ea_file2json(fname_in,fname_out); %under leaddbs/helpers/file2json
+        file2json(fname_in,fname_out,derivatives_cell); %under leaddbs/helpers/file2json
         
     elseif endsWith(which_file,'.mat') || endsWith(which_file,'.gz') || endsWith(which_file,'.h5')
         
@@ -780,9 +781,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 derivatives_cell{end+1,1} = fullfile(old_path);
                 derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
                 movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-            end
-            
-            
+            end            
         end
     end
     
@@ -1021,7 +1020,7 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
                  bids_mod = rawdata_containers(modality_str);
                  break;
              elseif legacy_mod == length(legacy_modalities)
-                 bids_mod = regexprep(to_match,'(raw)|(anat)|(\d\w*)|_|(.nii)',''); %file should have an anat_ something                 catch
+                 bids_mod = regexprep(to_match,'(raw)|(anat)|(\d\w*)|_|(.nii)',''); %file should have an anat_ something catch
                  bids_mod = upper(bids_mod);
              end
          elseif endsWith(to_match,'.png')
@@ -1146,6 +1145,151 @@ end
 files_to_move = [files_to_move,newfiles];
 return
 
+function file2json(fname_in,fname_out,derivatives_cell)
 
+legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dti','dti.bval','dti.bvec','t2','flair','inv','swi'};
+%legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
+bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR','INV','SWI'};
+rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
+opt.FileName = fname_out;
+[~,filename,~] = fileparts(fname_in);
+json_mat = struct();
+%function to convert mat files and text
+opt.FileName = fname_out;
+[filepath,filename,~] = fileparts(fname_in);
+[op_dir,pt_name,ext] = fileparts(fname_out);
+pt_name = strsplit(pt_name,'_desc-');
+pt_name = pt_name{1};
+op_dir = strrep(op_dir,'transformation','anat');
+json_mat = struct();
+old = {derivatives_cell{:,1}};
+new = {derivatives_cell{:,2}};
+%function to convert mat files and text
+if endsWith(fname_in,'.mat')
+    %special case for legacy dataset
+    %read the input mat
+    %dealing with coregistration
+    if strcmp(filename,'ea_coreg_approved')
+        [coreg_filepath,~,~] = fileparts(fname_in);
+        [coregDir,~,~] = fileparts(fname_out);
+        coregDir = strrep(coregDir,'log','anat');
+        input_mat = load(fname_in);
+        coreg_fieldnames = fieldnames(input_mat);
+        %determine files inside the coreg files
+        for i=1:length(coreg_fieldnames)
+            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i},('_tra|_sag|_cor')))
+                if ismember(fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii']),old)
+                    indx = cellfun(@(x)strcmp(x,fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii'])),old);
+                    try_bids_name = new{indx};
+                    [~,bids_name,~] = fileparts(try_bids_name);
+                else
+                    %try to convert to bids mod
+                    bids_mod = add_mod([coreg_fieldnames{i},'.nii'],legacy_modalities,rawdata_containers);
+                    tag = ea_checkacq(fullfile(filepath,[coreg_fieldnames{i},'.nii']));
+                    bids_name = [pt_name,'_ses-preop_space-anchorNative_desc-preproc_acq-',tag,'_',bids_mod,'.nii'];
+                    bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                end
+                field_name = strsplit(bids_name,'acq-');
+                mod = regexprep(field_name{end},'.nii','');
+                json_mat.approval.(mod) = input_mat.(coreg_fieldnames{i});
+            end
+        end
+        if isfield(json_mat,'approval')
+            savejson('',json_mat,'approval',json_mat.approval,opt);
+        else
+            warning("Coregistration files were not transformed. Please review your BIDSified folders with caution")
+        end
+        if exist(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'),'file')
+            temp_mat = load(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'));
+            method_used = generateMethod(temp_mat,'coregct_method_applied');
+            modality = 'CT';
+            json_mat.method.(modality) = method_used;
+        end
+        if exist(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'),'file')
+            temp_mat = load(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'));
+            method_used = generateMethod(temp_mat,'coregmr_method_applied');
+            modality = 'MR';
+            json_mat.method.(modality) = method_used;
+        end
+        if isfield(json_mat,'method')
+            savejson('',json_mat,'method',json_mat.method,opt);
+        end
+    elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
+        input_mat = load(fname_in);
+        method_used = generateMethod(input_mat,'coregct_method_applied');
+        modality = 'CT';
+        json_mat.method.(modality) = method_used;
+        savejson('',json_mat,opt);
+    elseif strcmp(filename,'ea_coregmrmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
+        input_mat = load(fname_in);
+        method_used = generateMethod(input_mat,'coregmr_method_applied');
+        modality = 'MR';
+        json_mat.method.(modality) = method_used;
+        savejson('',json_mat,opt);
+    elseif strcmp(filename,'ea_normmethod_applied')
+        input_mat = load(fname_in);
+        normalize_fieldnames = fieldnames(input_mat);
+        for i=1:length(normalize_fieldnames)
+            method_used = generateMethod(input_mat,'norm_method_applied');
+            json_mat.approval = 1;
+            json_mat.method = method_used;
+        end
+        savejson('',json_mat,opt);
+    end
+
+end
+function method_used = generateMethod(input_mat,modality_field)
+if iscell(modality_field)
+    modality_field = modality_field{1};
+end
+if isfield(input_mat,modality_field)
+    if ischar(input_mat.(modality_field))
+        input_mat.(modality_field) = {input_mat.(modality_field)};
+    end
+    if strcmp(input_mat.(modality_field){end},'ea_normalize_apply_normalization')
+        j = length(input_mat.(modality_field));
+        for i=1:length(input_mat.(modality_field))
+            if ~strcmp(input_mat.(modality_field){j},'ea_normalize_apply_normalization')
+                modField = input_mat.(modality_field){j};
+                %need to get the first entry thats not
+                %ea_normalize_apply_normalization
+                break
+            end
+            j = j-1;
+        end
+    else
+        modField = input_mat.(modality_field){end};
+    end
+    if strcmp(modField,'ANTs') || contains(modField,'_ants')
+        method_used = ea_normalize_ants('promt');
+    elseif strcmp(modField,'BRAINSFit')
+        method_used = 'BRAINSFit (Johnson 2007)';
+    elseif strcmp(modField,'FLIRT')
+        method_used = 'FLIRT (Jenkinson 2001 & 2002)';
+    elseif strcmp(modField,'BBR')
+        method_used = 'FLIRT BBR (Greve and Fischl 2009)';
+    elseif strcmp(modField,'Hybrid SPM & ANTs')
+        method_used = 'Hybrid SPM & ANTs';
+    elseif strcmp(modField,'Hybrid SPM & BRAINSFIT')
+        method_used = 'Hybrid SPM & BRAINSFIT';
+    elseif strcmp(modField,'SPM') || contains(modField,'_spm')
+        method_used = 'SPM (Friston 2007)';
+    elseif strcmp(modField,'Hybrid SPM & FLIRT')
+        method_used = 'Hybrid SPM & FLIRT';
+    elseif strcmp(modField,'Schoenecker 2009')
+        method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
+    else
+        method_used = '';
+        warning("We could not identify the method used. Please take a closer look manually." + ...
+            " You will find the file under derivatives/leaddbs/normalization/log!" + ...
+            " or under derivatives/leaddbs/coregistration/transformation/");
+    end
+else
+    method_used = '';
+    warning("We could not identify the method used. Please take a closer look manually." + ...
+        " You will find the file under derivatives/leaddbs/normalization/log!" + ...
+        " or under derivatives/leaddbs/coregistration/transformation/");
+end
+return
 
 
