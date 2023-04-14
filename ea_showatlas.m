@@ -40,7 +40,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
-    ht=getappdata(resultfig,'atlht');
+    ht=getappdata(resultfig,'addht');
 
     if ~exist([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'file')
         atlases = ea_genatlastable([],atlasFolder,options,mifix,resultfig);
@@ -648,7 +648,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
         setappdata(resultfig,'atlassurfs',atlassurfs);
         setappdata(resultfig,'colorbuttons',colorbuttons);
-        setappdata(resultfig,'atlht',ht);
+        setappdata(resultfig,'addht',ht);
         setappdata(resultfig,'labelbutton',labelbutton);
         setappdata(resultfig,'atlaslabels',atlaslabels);
     end
@@ -743,11 +743,10 @@ labelInd = arrayfun(@(x) isa(x, 'matlab.graphics.primitive.Text'), obj);
 if isempty(hobj)
     arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
 else
-    toggleTag = arrayfun(@(t) t.Tag, hobj.Parent.Children(1:end-3), 'Uni', 0);
-    toggleState = arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3), 'Uni', 0);
+    toggleState = flip(arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3)));
 
     if strcmp(onoff, 'on')
-        arrayfun(@(label) set(label,'Visible',toggleState{strcmp(label.Tag, toggleTag)}), obj(labelInd));
+        arrayfun(@(label, state) set(label,'Visible',state), obj(labelInd), toggleState);
     else
         arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
     end

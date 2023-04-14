@@ -74,7 +74,7 @@ classdef ea_roi < handle
                 catch
                     [~,obj.name]=ea_niifileparts(obj.niftiFilename);
                 end
-
+                
                 obj.Tag = obj.name;
 
                 try
@@ -167,6 +167,10 @@ classdef ea_roi < handle
                 obj.patchH=patch;
 
                 obj.toggleH=uitoggletool;
+                stack = dbstack;
+                if ismember('ea_addobj', {stack.name})
+                    obj.toggleH.UserData = 'roi';
+                end
 
                 update_roi(obj);
                 breathelife(obj);
@@ -307,8 +311,8 @@ classdef ea_roi < handle
 
             % add toggle button:
             set(obj.toggleH,...
-                {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tooltip'},...
-                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag});
+                {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tag','Tooltip'},...
+                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag,roiTag});
         end
 
         function delete(obj)
