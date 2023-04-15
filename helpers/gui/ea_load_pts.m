@@ -110,10 +110,10 @@ else % NIfTI or DICOM folder
 
                     if endsWith(uipatdir{i}, 'dicom', 'IgnoreCase', true)
                         ea_mkdir(fullfile(sourceFolder, 'DICOM'));
-                        ea_cprintf('CmdWinWarnings','Copying DICOM files from source folder...please wait...\n');
+                        ea_cprintf('CmdWinWarnings','Copying DICOM files...\n');
                         copyfile(fullfile(uipatdir{i}, '*'), fullfile(sourceFolder, 'DICOM'));
                     else
-                        ea_cprintf('CmdWinWarnings','Copying DICOM files from source folder...please wait...\n');
+                        ea_cprintf('CmdWinWarnings','Copying DICOM files...\n');
                         copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
                     end
                     ea_cprintf('CmdWinWarnings','Done.\n');
@@ -183,7 +183,7 @@ if strcmp(handles.prod, 'dbs')
                 handles.nifti2bidscheckbox.Value = 0;
             end
 
-            handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import first.';
+            handles.statusone.String = 'Unsorted NIfTI/DICOM folder found (highlighted), please run Import first.';
             handles.statustwo.String = '';
         else
             handles.dicom2bidscheckbox.Value = 0;
