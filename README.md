@@ -18,7 +18,7 @@ LEAD-DBS is a MATLAB toolbox facilitating the:
 #### Prerequisites
 
 - Recommended RAM size: 32GB or more
-- MATLAB version: R2020b (MATLAB 9.9) or later
+- MATLAB version: R2021a (MATLAB 9.10) or later
 - MATLAB Curve Fitting Toolbox
 - MATLAB Image Processing Toolbox
 - MATLAB Signal Processing Toolbox
