@@ -1224,6 +1224,11 @@ if endsWith(fname_in,'.mat')
         input_mat = load(fname_in);
         method_used = generateMethod(input_mat,'coregmr_method_applied');
         modality = 'MR';
+        if isempty(method_used)
+            % Fallback to default method, since coregmr method is not
+            % properly stored in classic version of LeadDBS
+            method_used = 'SPM (Friston 2007)';
+        end
         json_mat.method.(modality) = method_used;
         savejson('',json_mat,opt);
     elseif strcmp(filename,'ea_normmethod_applied')
@@ -1280,15 +1285,15 @@ if isfield(input_mat,modality_field)
         method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
     else
         method_used = '';
-        warning("We could not identify the method used. Please take a closer look manually." + ...
-            " You will find the file under derivatives/leaddbs/normalization/log!" + ...
-            " or under derivatives/leaddbs/coregistration/transformation/");
+        ea_cprintf('CmdWinWarnings', "We could not identify the registration method used. Please take a closer look manually.\n" + ...
+            "You will find the file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
+            "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
     end
 else
     method_used = '';
-    warning("We could not identify the method used. Please take a closer look manually." + ...
-        " You will find the file under derivatives/leaddbs/normalization/log!" + ...
-        " or under derivatives/leaddbs/coregistration/transformation/");
+    ea_cprintf('CmdWinWarnings', "We could not identify the registration method used. Please take a closer look manually.\n" + ...
+        "You will find the method json file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
+        "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
 end
 return
 
