@@ -61,6 +61,26 @@ classdef (Abstract) ea_conda
             delete(installer_file);
             disp('mambaforge installed')
         end
+
+        function listenv
+            ymlFolder = fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments');
+            ymlFile = ea_regexpdir(ymlFolder, '\.yml', 0, 'f');
+            envName = regexp(ymlFile, ['(?<=environments\', filesep, ').*(?=\.yml$)'], 'match', 'once');
+            for i=1:length(envName)
+                env = ea_conda_env(envName{i});
+                if env.is_created
+                    envName{i} = [envName{i}, ' (Installed)'];
+                end
+            end
+            fprintf('%s\n', strjoin(envName, '\n'));
+        end
+
+        function update_base
+            conda = ea_conda.bin_file_path;
+            system([conda, ' update conda mamba -y']);
+            system([conda, ' update --all -y']);
+            fprintf('\n');
+        end
     end
 
     methods (Access = private, Static)

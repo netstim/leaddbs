@@ -18,6 +18,11 @@ classdef ea_conda_env
 
         function obj = ea_conda_env(ymlname)
             obj.yml = fullfile(fileparts(mfilename('fullpath')), 'environments', [ymlname '.yml']);
+            if ~isfile(obj.yml)
+                ea_cprintf('CmdWinErrors', 'Environment yml file doesn''t exist!\n');
+                obj.yml = [];
+                return;
+            end
             obj.name = regexp(fgetl(fopen(obj.yml)), '(?<=name:\s+).*', 'match', 'once');
             obj.path = fullfile(ea_conda.install_path, 'envs', obj.name);
         end
