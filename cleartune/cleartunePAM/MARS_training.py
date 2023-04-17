@@ -132,8 +132,8 @@ else:
 
 
 # we can just check the distance for one activation profile across all simulated fibers
-from NB_outline import load_AP_from_LeadDBS
-activation_profile, Pathways = load_AP_from_LeadDBS(side, inters_as_stim=False)
+from NB_outline import load_AP_from_OSSDBS
+activation_profile, Pathways = load_AP_from_OSSDBS(side, inters_as_stim=False)
 
 # get symptom-wise difference between activation and target profiles
 from Optim_strategies import get_symptom_distances

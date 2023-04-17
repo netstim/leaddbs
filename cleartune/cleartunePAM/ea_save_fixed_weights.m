@@ -1,11 +1,14 @@
 function ea_save_fixed_weights(stimfolder, opt_weights, fixed_weights_values, slider_name)
 
 % save weights that should not be changed during optimization (fixed weights)
+
 % opt_weights - adjustable weights
+% fixed_weights_values - from the sliders in ClearTune
+% slider_name - corresponds to the item (symptom) name
 
 % create a json with fixed symptoms and weights      
-for i = 1:length(app.tractset.subscore.weights) 
-    if opt_weights{i}.Value == 1
+for i = 1:length(fixed_weights_values) 
+    if opt_weights{i}.Value == 0
 
         % for now, weight the same for both sides
         jsonDict.fixed_symptom_weights.(genvarname([slider_name{i},'_rh'])) = fixed_weights_values(i);

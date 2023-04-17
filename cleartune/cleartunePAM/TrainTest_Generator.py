@@ -1,3 +1,9 @@
+'''
+    By K. Butenko
+    Generate training and test datasets for OSS-DBS to train ANN
+    Output: Current_protocols_ and StimSets_info.json in stim. folder
+'''
+
 
 import os
 import sys

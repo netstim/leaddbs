@@ -1,16 +1,25 @@
+'''
+    By K. Butenko
+    Functions for PathwayTune (see description in the headers)
+'''
+
+
 import json
 import os
 import sys
 
-
 def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combustion'):
+
+    ''' Either imports Activation Profile Dictionary from Fiber Filtering (FF_dictionary)
+        or takes a pre-defined dictionary for the given disease from TractSymptomLibrary
+        and saves them in separate dictionaries for modulated symptoms, "soft" side-effects and "hard" side-effects
+        in the stimulation folder / NB_ '''
 
     # create an output folder in the stim folder of the patient
     try:
         os.makedirs(os.environ['STIMDIR'] + '/NB_' + str(side))
     except:
         print("NB folder already exists")
-
 
     # retrieve activation profiles for the specific disease
     # "side" in the name does not actually play the role, it will be checked "on site"
@@ -61,20 +70,22 @@ def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combu
 
 def make_prediction(side, FF_dictionary, fixed_symptoms_dict):
 
+    ''' Predict symptom-profile improvement for a given activation profile based on the target activation profiles '''
+
     profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combustion')
 
-    # load fixed weights
+    # load fixed weights (they play role only for network blending, not simple prediction)
     with open(fixed_symptoms_dict, 'r') as fp:
         fixed_symptom_weights = json.load(fp)
     fp.close()
 
     # we can just check the distance for one activation profile across all simulated fibers
-    from NB_outline import load_AP_from_LeadDBS
-    activation_profile, Pathways = load_AP_from_LeadDBS(side, inters_as_stim=False)
+    from NB_outline import load_AP_from_OSSDBS
+    activation_profile, Pathways = load_AP_from_OSSDBS(side, inters_as_stim=False)
 
     # get symptom-wise difference between activation and target profiles
     from Optim_strategies import get_symptom_distances
-    [__, symptom_diff] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
+    [__, symptom_diff, symptom_list] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
                                                fixed_symptom_weights, Pathways, side, score_symptom_metric='Canberra')
     # symptom_diff is in the symptom space, not pathway! So it might have a different dimensionality
 
