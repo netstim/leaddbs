@@ -66,7 +66,7 @@ function options=ea_resolveparcseeds(options,modality)
 tmp = ea_getleadtempdir;
 uuid = ea_generate_uuid;
 
-[pth,fn,ext]=fileparts(options.lcm.seeds{1});
+[pth,fn,ext]=ea_niifileparts(options.lcm.seeds{1});
 options.lcm.parcSeedFolder = [pth, filesep];
 options.lcm.parcSeedName = regexprep(strrep(fn, ' ', '_'), '\W', '');
 
