@@ -61,8 +61,7 @@ if ~exist(log_path,'dir')
 end
 
 %support for lead group
-
-
+subjId = cell(length(source), 1);
 for patients = 1:length(source)
     %source patient filepath
     source_patient = source{patients};
@@ -87,7 +86,7 @@ for patients = 1:length(source)
     end
     spaces_in_pat_name = isspace(patient_name);
     patient_name = patient_name(~spaces_in_pat_name);
-    subjId{patients} = {strrep(patient_name,'sub-','')};
+    subjId{patients} = strrep(patient_name,'sub-','');
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
     %creates a cell of the files to move, later, we can create
@@ -844,7 +843,7 @@ function generate_rawImagejson(patient_name,dest)
     preop_files = {preop_files.name};
     preop_modalities = {};
     for comparing_files = 1:length(preop_files)
-        preop_file = regexprep(preop_files{comparing_files},'(.nii)|(.gz)','');
+        preop_file = regexprep(preop_files{comparing_files},'\.nii(\.gz)?$','');
         preop_mod = strsplit(preop_file,'_');
         preop_mod = preop_mod{end};
         preop_modalities{end+1} = preop_mod;
@@ -861,7 +860,7 @@ function generate_rawImagejson(patient_name,dest)
         coreg_preop_files = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
         coreg_preop_files = {coreg_preop_files.name};
         for coreg_files = 1:length(coreg_preop_files)
-            coreg_file = regexprep(coreg_preop_files{coreg_files}, '(.nii)|(.gz)', '');
+            coreg_file = regexprep(coreg_preop_files{coreg_files}, '\.nii(\.gz)?$', '');
             coreg_mod = strsplit(coreg_file,'_');
             coreg_mod = coreg_mod{end};
             if ~ismember(coreg_mod,preop_modalities) || isempty(preop_modalities)
@@ -885,7 +884,7 @@ function generate_rawImagejson(patient_name,dest)
 
     if ~isempty(preop_files)
         for i=1:length(preop_files)
-            json_val = regexprep(preop_files{i},'(.nii)|(.gz)','');
+            json_val = regexprep(preop_files{i},'\.nii(\.gz)?$','');
             if contains(preop_files{i},'acq-')
                 temp_tag = strsplit(json_val,'-');
                 modality_str = temp_tag{end};
@@ -903,7 +902,7 @@ function generate_rawImagejson(patient_name,dest)
     postop_files = {postop_files.name};
     postop_modalities = {};
     for comparing_files = 1:length(postop_files)
-        postop_file = regexprep(postop_files{comparing_files},'(.nii)|(.gz)','');
+        postop_file = regexprep(postop_files{comparing_files},'\.nii(\.gz)?$','');
         postop_mod = strsplit(postop_file,'-');
         postop_mod = postop_mod{end};
         postop_modalities{end+1} = postop_mod;
@@ -912,7 +911,7 @@ function generate_rawImagejson(patient_name,dest)
         coreg_postop_files = dir(fullfile(coreg_dir,'sub-*_ses-postop_space-anchorNative_desc-preproc_*.nii'));
         coreg_postop_files = {coreg_postop_files.name};
         for coreg_files = 1:length(coreg_postop_files)
-            coreg_file = regexprep(coreg_postop_files{coreg_files}, '(.nii)|(.gz)', '');
+            coreg_file = regexprep(coreg_postop_files{coreg_files}, '\.nii(\.gz)?$', '');
             coreg_mod = strsplit(coreg_file,'-');
             coreg_mod = coreg_mod{end};
             if ~ismember(coreg_mod,postop_modalities) || isempty(postop_modalities)
@@ -933,7 +932,7 @@ function generate_rawImagejson(patient_name,dest)
 
     end
     for i=1:length(postop_files)
-        json_val = regexprep(postop_files{i},'(.nii)|(.gz)','');
+        json_val = regexprep(postop_files{i},'\.nii(\.gz)?$','');
         if contains(postop_files{i},'ct','IgnoreCase',true)
             rawdata_fieldname = 'CT';
             anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
@@ -1020,7 +1019,7 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
                  bids_mod = rawdata_containers(modality_str);
                  break;
              elseif legacy_mod == length(legacy_modalities)
-                 bids_mod = regexprep(to_match,'(raw)|(anat)|(\d\w*)|_|(.nii)',''); %file should have an anat_ something catch
+                 bids_mod = regexp(to_match, '(?<=^(raw_)?anat_).*(?=\.nii$)', 'match', 'once'); % file should have a [raw_]anat_ something catch
                  bids_mod = upper(bids_mod);
              end
          elseif endsWith(to_match,'.png')
@@ -1044,6 +1043,8 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
              
     end
 return
+
+
 function model_name = add_model(stimFolder)
     stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
     if ~isempty(stimParams)
@@ -1054,6 +1055,8 @@ function model_name = add_model(stimFolder)
         model_name = 'simbio';
     end
 return
+
+
 function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
    %connectome_folder should be the full path of the connectome files,
    %mni_folder =
@@ -1063,7 +1066,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,s
    mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
    
    for mapper_file = 1:length(mapper_output_files)
-       matching_stim_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss)', '');
+       matching_stim_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss_)', '');
        matching_lm_file = ['_' matching_stim_file];
        if ismember(matching_lm_file,lead_mapper{:,1})
            if contains(mapper_output_files{mapper_file},'efield')
@@ -1130,6 +1133,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,s
    %ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
    %ea_delete(fullfile(connectome_folder));
 
+
 function files_to_move = reorderfiles(files_to_move)
 newfiles={};
 k=1;
@@ -1145,8 +1149,8 @@ end
 files_to_move = [files_to_move,newfiles];
 return
 
-function file2json(fname_in,fname_out,derivatives_cell)
 
+function file2json(fname_in,fname_out,derivatives_cell)
 legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dti','dti.bval','dti.bvec','t2','flair','inv','swi'};
 %legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR','INV','SWI'};
@@ -1190,7 +1194,7 @@ if endsWith(fname_in,'.mat')
                     bids_name = CheckifAlreadyExists(op_dir,bids_name);
                 end
                 field_name = strsplit(bids_name,'acq-');
-                mod = regexprep(field_name{end},'.nii','');
+                mod = regexprep(field_name{end},'\.nii$','');
                 json_mat.approval.(mod) = input_mat.(coreg_fieldnames{i});
             end
         end
@@ -1224,6 +1228,11 @@ if endsWith(fname_in,'.mat')
         input_mat = load(fname_in);
         method_used = generateMethod(input_mat,'coregmr_method_applied');
         modality = 'MR';
+        if isempty(method_used)
+            % Fallback to default method, since coregmr method is not
+            % properly stored in classic version of LeadDBS
+            method_used = 'SPM (Friston 2007)';
+        end
         json_mat.method.(modality) = method_used;
         savejson('',json_mat,opt);
     elseif strcmp(filename,'ea_normmethod_applied')
@@ -1236,8 +1245,9 @@ if endsWith(fname_in,'.mat')
         end
         savejson('',json_mat,opt);
     end
-
 end
+
+
 function method_used = generateMethod(input_mat,modality_field)
 if iscell(modality_field)
     modality_field = modality_field{1};
@@ -1280,15 +1290,15 @@ if isfield(input_mat,modality_field)
         method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
     else
         method_used = '';
-        warning("We could not identify the method used. Please take a closer look manually." + ...
-            " You will find the file under derivatives/leaddbs/normalization/log!" + ...
-            " or under derivatives/leaddbs/coregistration/transformation/");
+        ea_cprintf('CmdWinWarnings', "We could not identify the registration method used. Please take a closer look manually.\n" + ...
+            "You will find the file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
+            "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
     end
 else
     method_used = '';
-    warning("We could not identify the method used. Please take a closer look manually." + ...
-        " You will find the file under derivatives/leaddbs/normalization/log!" + ...
-        " or under derivatives/leaddbs/coregistration/transformation/");
+    ea_cprintf('CmdWinWarnings', "We could not identify the registration method used. Please take a closer look manually.\n" + ...
+        "You will find the method json file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
+        "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
 end
 return
 
