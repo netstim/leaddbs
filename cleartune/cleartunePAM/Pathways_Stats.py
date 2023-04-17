@@ -1,6 +1,8 @@
-""" This script allows OSS-DBS and Network Blending to retrieve original pathways from Lead-DBS connectomes"""
-
-
+'''
+    By K. Butenko
+    These functions allow to retrieve data about simulated pathways
+    (after Kuncel pre-filtering, but keeping original number of tracts!) and stimulation protocol
+'''
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -14,6 +16,8 @@ sys.path.insert(1, os.environ['PATIENTDIR'])
 
 
 def get_simulated_pathways(side):
+
+    ''' based on Lead-DBS files for OSS-DBS, get names of Kuncel filtered pathways and original number of fibers per pathway'''
 
     # later we should store connectome name in GUI_inp_dict.py
     # load parameters from the file prepared by Lead-DBS
@@ -64,11 +68,14 @@ def get_simulated_pathways(side):
     return name_original, number_original
 
 def get_current_protocol(index_side):
+
+    ''' based on Lead-DBS files for OSS-DBS, get the simulated current protocol (in A)'''
+
     file = h5py.File(os.environ['STIMDIR'] + '/oss-dbs_parameters.mat', mode='r')
 
-    if file['settings']['current_control'][0][index_side] != 1:
-        print('The imported protocol is not current-controlled!')
-        raise SystemExit
+    # if file['settings']['current_control'][0][index_side] != 1:
+    #    print('The imported protocol is not current-controlled!')
+    #    raise SystemExit
 
     Pulse_amp = file['settings']['Phi_vector'][:, index_side]
     Pulse_amp = Pulse_amp * 0.001  # because Lead-DBS uses mA as the input, switch to A here for consistency
@@ -77,6 +84,6 @@ def get_current_protocol(index_side):
     import math
     for i in range(len(Pulse_amp)):
         if math.isnan(Pulse_amp[i]):
-            Pulse_amp[i] = 0.0  # IMPORTANT: not grounding here, nut 0 A contact
+            Pulse_amp[i] = 0.0  # IMPORTANT: not grounding here, but a 0A contact
 
     return Pulse_amp

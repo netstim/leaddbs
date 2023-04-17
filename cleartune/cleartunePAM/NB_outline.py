@@ -1,5 +1,7 @@
-# this script is a sketch of a network blending algorithm
-
+'''
+    By K. Butenko
+    Functions for PathwayTune (see description in the headers)
+'''
 import numpy as np
 import json
 import os
@@ -7,8 +9,11 @@ import h5py
 from scipy.stats import qmc
 import csv
 import pandas
+import sys
 
 def determine_el_type(el_model):
+
+    ''' Checks electrode configuration based on the model '''
 
     concentric4 = ['PINS_Medical_L303','PINS_Medical_L302','PINS_Medical_L301', 'Medtronic_3389','Medtronic_3387','Medtronic_3391','St._Jude ActiveTip_(6142-6145)', 'St._Jude_ActiveTip_(6146-6149)']
     concentric8 = ['Boston_Scientific_Vercise']
@@ -24,13 +29,15 @@ def determine_el_type(el_model):
         return 'Not classified electrode model'
 
 
-def load_AP_from_LeadDBS(side, inters_as_stim=False):
-    """ if inters_as_stim == True, fibers inside encapsulation and/or outside of the domain will be treated as activated """
+def load_AP_from_OSSDBS(side, inters_as_stim=False):
 
-    # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
+    ''' Load activation profile and pathway labels from OSS-DBS results
+        if inters_as_stim == True, fibers inside encapsulation and/or outside of the domain will be treated as activated '''
+
+    # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
+    # this function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
     from Pathways_Stats import get_simulated_pathways
     Pathways, axons_in_path = get_simulated_pathways(side)
-    # we will take all pathways in this case
 
     if side == 0:
         res_folder = os.environ['STIMDIR'] + '/' + 'Results_rh/'
@@ -38,9 +45,7 @@ def load_AP_from_LeadDBS(side, inters_as_stim=False):
         res_folder = os.environ['STIMDIR'] + '/' + 'Results_lh/'
 
     hf = h5py.File(res_folder + 'Summary_status.h5', 'r')
-
     lst = list(hf.keys())
-
     if len(lst) != len(Pathways):
         print("Number of pathways passed to OSS-DBS and returned is not matching")
         raise SystemExit
@@ -69,10 +74,16 @@ def load_AP_from_LeadDBS(side, inters_as_stim=False):
 
 def launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_pathways):
 
-    ## Algorithm parameters
-    #similiarity_metric = 'Canberra'   # or Bray-Curtis, Euclidean, etc
-    #optim_alg = 'dual_annealing'      # or PSO
-    #num_iterations_ANN = 100  # number of ANN iterations to optimize current at the given electrode position
+    ''' Launch ANN-based optimization that will find optimal current protocol I while adjusting weights(!):
+        Global_score = W1 * DS1(I) + W2 * DS2(I) + ... , where
+        W1, W2 - symptom weights, including fixed and adjusted
+        DS1, DS2 - distances in pathway activation space from target profiles of symptom 1 and 2
+        to the activation profile for I '''
+
+    ## Default algorithm parameters
+    #netblend_dict['similiarity_metric'] = 'Canberra'  # or Bray-Curtis, Euclidean, etc
+    #netblend_dict['optim_alg'] = 'Dual Annealing'  # or PSO
+    #netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
 
     # load previously approved symptom-specific profiles
     with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
@@ -87,24 +98,8 @@ def launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_p
         SE_dict = json.load(fp)
     fp.close()
 
-    # el_type = determine_el_type(el_model)  # 'concentric4', 'concentric8', 'segmented8', etc
 
-    # if el_type == 'concentric4':
-    #     min_bound_per_contact = 4 * [I_lim_conc[0]]
-    #     max_bound_per_contact = 4 * [I_lim_conc[1]]
-    # elif el_type == 'concentric8':
-    #     min_bound_per_contact = 8 * [I_lim_conc[0]]
-    #     max_bound_per_contact = 8 * [I_lim_conc[1]]
-    # elif el_type == 'segmented8':
-    #     min_bound_per_contact = [I_lim_conc[0], I_lim_segm[0], I_lim_segm[0], I_lim_segm[0], I_lim_segm[0],
-    #                              I_lim_segm[0], I_lim_segm[0], I_lim_conc[0]]
-    #     max_bound_per_contact = [I_lim_conc[1], I_lim_segm[1], I_lim_segm[1], I_lim_segm[1], I_lim_segm[1],
-    #                              I_lim_segm[1], I_lim_segm[1], I_lim_conc[1]]
-    # else:
-    #     print('Electrode type is not recognized')
-    #     raise SystemExit
-
-    if netblend_dict['optim_alg'] == 'dual_annealing':
+    if netblend_dict['optim_alg'] == 'Dual Annealing':
 
         # optimize in respect to all symptoms with some weights W fixed
         # solve min(W*distance(main_symptoms) + (1-W)*sum(distance(others)))
@@ -138,5 +133,38 @@ def launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_p
 
     from RoutinesForResults import get_activation_prediction
     get_activation_prediction(res.x, activation_profile, approx_pathways, non_weighted_symptom_dist, profile_dict,
-                              Soft_SE_dict, side, score_symptom_metric='Canberra',
+                              Soft_SE_dict, side, plot_results=True, score_symptom_metric='Canberra',
                               estim_weights_and_total_score=estim_weights_and_total_score, fixed_symptom_weights=fixed_symptom_weights)
+
+
+
+if __name__ == '__main__':
+
+    # called from MATLAB
+    # sys.argv[1] - stim folder
+    # sys.argv[2] - side (0 - right hemisphere)
+
+    os.environ['STIMDIR'] = sys.argv[1]
+    side = int(sys.argv[2])
+
+
+    # load parameters from .json folder generated in previous steps
+    with open(os.environ['STIMDIR'] + '/netblend_dict_file.json', 'r') as fp:
+        netblend_dict = json.load(fp)
+    fp.close()
+    netblend_dict = netblend_dict['netblendict']
+
+    # load Fixed_symptoms
+    with open(os.environ['STIMDIR'] + '/Fixed_symptoms.json', 'r') as fp:
+        fixed_symptom_weights_dict = json.load(fp)
+    fp.close()
+    fixed_symptom_weights_dict = fixed_symptom_weights_dict['fixed_symptom_weights']
+
+    # load ANN approximated pathways
+    with open(os.environ['STIMDIR'] + '/ANN_abs_errors.json', 'r') as fp:
+        pathways_errors_dict = json.load(fp)
+    fp.close()
+    # IMPORTANT: the pathways' order is preserved as they were processed in ANN!
+    approx_pathways = list(pathways_errors_dict.keys())
+
+    launch_weight_optimizer(netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)

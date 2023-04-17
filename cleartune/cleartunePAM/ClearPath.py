@@ -25,19 +25,6 @@ import json
 if __name__ == '__main__':
 
 
-    # add more buttons to Currentune
-
-    # 0) Button: "choose a patient folder" with textbox
-        # a) Currentune creates its own stim folder in native
-    # 1) Predict patient button with a text above "Run this patient in Lead-DBS with the exported connectome"
-    # 2) Prepare training-test sets for ANN (calls create_Training_Test_sets(), stores in that folder)
-    # 3) Launch PAM calculation button
-        # a) Throws a message: It will take time! You can re-run training for your specific axon parameters via Lead-DBS
-        # b) Call ea_genvat_butenko with some hardcoded parameters. Try to save varargin{1} and {2} to Currentune folder
-        # c) Runs if ok is pressed. Upon completion, throws a "success" message
-    # 4) Launch Network Blending Button
-        # a) if all or all but one fixed, we should consider running current optimizer directly in OSS-DBS / Cleartune
-
     print(sys.argv[1:])
     #raise SystemExit
 
@@ -59,6 +46,9 @@ if __name__ == '__main__':
     netblend_dict['similiarity_metric'] = 'Canberra'  # or Bray-Curtis, Euclidean, etc
     netblend_dict['optim_alg'] = 'dual_annealing'  # or PSO
     netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
+
+
+
 
     # "hardwired" parameters
     one_pol_current_threshold = 8.0  # in mA

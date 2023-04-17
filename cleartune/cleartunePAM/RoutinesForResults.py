@@ -1,30 +1,37 @@
+'''
+    By K. Butenko
+    Estimate improvement for the given current protocol (either real or approximation model)
+    and plot the results in the stimulation folder / NB_
+'''
+
 import numpy as np
 import os
 
 
 def plot_results_with_weights(current_protocol, activation_profile, pathways, Impr_pred, symptom_labels_marked, side, NB_result=False):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    sns.set()
 
+    ''' call via get_activation_prediction() '''
+
+    import matplotlib.pyplot as plt
+    #import seaborn as sns
+    #sns.set()
+
+    #============= Plot predicted improvement and corresponding weights =============#
     pos = np.arange(len(symptom_labels_marked))  # the x locations for the groups
     pos_adjusted = pos  # - 0.5
 
-    fig, ax = plt.subplots(figsize=(12, 3))
+    fig, ax = plt.subplots(figsize=(12, 8))
     width = 0.25
-    colors_opt = ['C0', 'C1']
-    # labels_opt = ['Activated', 'Not Activated', 'Encapsulation', 'CSF', 'Other']
-    # bars_status =
-    # for i in range(Impr_pred.shape[1]):
-    #     ax.bar(pos_adjusted - 0.5 + i * width, Impr_pred[:, i] , width,
-    #            color=colors_opt[i])
+    colors_opt = ['C0', 'C1']  # different colors for predicted improvement and weights
 
+    # first bars for the improvement
     ax.bar(pos_adjusted - 0.5 * width, Impr_pred[:, 0] * 100.0, width,
            color=colors_opt[0])
     ax.set_ylabel("Improvement / worsening, %", color='C0')
     # ax.axhline(0)
     # ax.set_ylim(-100,100)
 
+    #seond bars for the weights
     ax2 = ax.twinx()
     ax2.bar(pos_adjusted + 0.5 * width, Impr_pred[:, 1], width,
             color=colors_opt[1])
@@ -48,15 +55,17 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
     # ax2.axhline(0)
 
     # ax.legend(loc='upper right', bbox_to_anchor=(0, 1.25, 1, 0), ncol=5, mode="expand", borderaxespad=0.)
-    ax.set_xticks(pos_adjusted)
-    ax.set_xticklabels(symptom_labels_marked)
     ax2.set_ylabel("Suggested symptom weights", color='C1')
+    ax.set_xticks(pos_adjusted)
+    ax.set_xticklabels(symptom_labels_marked, rotation=45)
     fig.tight_layout()
     plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Symptom_profiles_' + str(side) + '.png',
                 format='png',
                 dpi=1000)
 
-    # activation profile for optimized res.x, current protocol,
+
+    # ============= Plot activation profile and current procotol (Lead-DBS notation) =============#
+
     fig, ax = plt.subplots(figsize=(12, 8))
     width = 0.5
 
@@ -120,6 +129,8 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
 
 def get_activation_prediction(current_protocol, activation_profile, pathways, symp_distances, profile_dict, Soft_SE_dict, side, plot_results = False, score_symptom_metric='Canberra', estim_weights_and_total_score=0,fixed_symptom_weights=[]):
 
+    ''' call via Improvement4Protocol.py '''
+
     # # estimate the improvement: canberra distance at null activation vs the optimized
     # null_protocol = len(min_bound_per_contact) * [0.0]
     # null_activation_profile = approx_model.predict(np.reshape(np.array(null_protocol), (-1, len(null_protocol))), verbose=0)
@@ -139,19 +150,19 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
     profile_dict.update(Soft_SE_dict)
 
-    # plot predicted improvement and corresponding weights in a combined bar plot
-
+    # check how many symptoms / soft side-effects we have for that hemisphere
     N_symptoms_side = 0
     for key in profile_dict:
         if side == 0 and "_rh" in key:
             N_symptoms_side += 1
         elif side == 1 and "_lh" in key:
             N_symptoms_side += 1
-    Impr_pred = np.zeros((N_symptoms_side,2), float) # in the second dimension, we store the estimated weight
-    symp_inx = 0
+    Impr_pred = np.zeros((N_symptoms_side, 2), float)  # in the second dimension, we store the estimated weight
 
+    # iterate over symptoms to estimate symptom improvement (from null activation)
+    # or side-effect worsening (assuming the worst case at 100% activation)
     symptom_labels_marked = []
-
+    symp_inx = 0
     for symptom in profile_dict:
 
         if side == 0 and not ("_rh" in symptom):
@@ -159,9 +170,9 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
         elif side == 1 and not ("_lh" in symptom):
             continue
 
-        if symptom in Soft_SE_dict: # we assume there are no soft side-effects at null protocol
+        if symptom in Soft_SE_dict:  # we assume there are no soft side-effects at null protocol
 
-            # IMPORTANT: for soft-side effect we calculate predicted worsening to the maximum (100% activation worsening
+            # IMPORTANT: for soft-side effect we calculate predicted worsening in comparison to the maximum worsening at 100% activation
             if max_symptom_diff[symp_inx] == 0.0:
                 Impr_pred[symp_inx,0] = 0.0
             else:
@@ -172,7 +183,7 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
 
         # add info for weights if Network Blending was conducted
         if estim_weights_and_total_score != 0:
-            # estimated weight for the symptom, the order was preserved (we always iterate over symptom dictionary)
+            # estimated weight for the symptom, the order was preserved (we always iterate over the symptom dictionary)
             Impr_pred[symp_inx, 1] = estim_weights_and_total_score[-1,symp_inx]
 
             # mark fixed symptoms for plotting
@@ -182,7 +193,7 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
                 symptom_labels_marked.append(symptom)
 
         else:
-            Impr_pred[symp_inx, 1] = 1.0 # no weight optimization
+            Impr_pred[symp_inx, 1] = 1.0  # no weight optimization
             symptom_labels_marked.append(symptom + " (default)")
 
         symp_inx += 1

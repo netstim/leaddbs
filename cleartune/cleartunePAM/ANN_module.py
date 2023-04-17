@@ -44,6 +44,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
     # this is defined by the PAM model
     # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
+    # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
     from Pathways_Stats import get_simulated_pathways
     Pathways, axons_in_path = get_simulated_pathways(side)
 
@@ -148,12 +149,16 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
     import matplotlib
     matplotlib.rcParams['figure.dpi'] = 200
-
     plt.figure()
-    for i in range(len(pathway_filtered)):
 
+    pathways_max_errors = {}  # also store
+    for i in range(len(pathway_filtered)):
+        pathways_max_errors[pathway_filtered[i]] = np.max(abs(error_ANN[:, i]))
         if np.max(abs(error_ANN[:, i])) > 0.05:
             sns.kdeplot(error_ANN[:,i], bw_adjust=0.5, label=pathway_filtered[i])
+
+    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors.json', 'w') as save_as_dict:
+        json.dump(pathways_max_errors, save_as_dict)
 
     plt.legend()
     plt.title('Abs errors for ANN on Test')
@@ -225,7 +230,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
             else:
                 inx = pathway_filtered.index(activ_threshold_profile[i])
                 if np.any(error_ANN[:, inx] > SE_err_threshold):
-                    print('Error threshold for the side-effect implicated pathway activation was exceeded, the approximation model has to be revised')
+                    print('Error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
                     print(activ_threshold_profile[i])
                     return False
                 else:
@@ -234,7 +239,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
                     # refuse if > 1%
                     if N_half_errors > 0.01 * error_ANN.shape[0]:
                         print(
-                            '0.5 * error threshold for the side-effect implicated pathway activation was exceeded for more than 1% of tests, the approximation model has to be revised')
+                            '0.5 * error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded for more than 1% of tests, the approximation model has to be revised')
                         print(activ_threshold_profile[i])
                         print(max(error_ANN[:, inx]),SE_err_threshold)
                         return False
@@ -242,7 +247,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
                 if check_trivial == True:
                     if np.any(error_ANN_bi[:, inx] > SE_err_threshold) or np.any(error_ANN_mono[:, inx] > SE_err_threshold):
                         print(
-                            'Error threshold for the side-effect implicated pathway activation was exceeded, the approximation model has to be revised')
+                            'Error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
                         return False
 
 
@@ -266,21 +271,48 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
             else:
                 inx = pathway_filtered.index(activ_threshold_profile[i])
                 if np.any(error_ANN[:, inx] > Err_threshold):
-                    print('Error threshold for this pathway activation was exceeded, the model has to be revised')
+                    print('Error threshold for ', activ_threshold_profile[i],' was exceeded, the model has to be revised')
                     return False
                 else:
                     # check number of errors > half of the threshold
                     N_half_errors = (error_ANN[:, inx] > Err_threshold / 2.0).sum()
                     # refuse if > 1%
                     if N_half_errors > 0.01 * error_ANN.shape[0]:
-                        print('0.5 * error threshold for this pathway activation was exceeded for more than 1% of tests, the model has to be revised')
+                        print('0.5 * error threshold for ', activ_threshold_profile[i],' was exceeded for more than 1% of tests, the model has to be revised')
                         return False
 
                 if check_trivial == True:
                     if np.any(error_ANN_bi[:, inx] > Err_threshold) or np.any(error_ANN_mono[:, inx] > Err_threshold):
                         print(
-                            'Error threshold for the side-effect implicated pathway activation was exceeded, the approximation model has to be revised')
+                            'Error threshold for ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
                         return False
 
     model.save(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_approved_model')
     return pathway_filtered
+
+if __name__ == '__main__':
+
+    # called from MATLAB
+    # sys.argv[1] - stim folder
+    # sys.argv[2] - side (0 - right hemisphere)
+
+    os.environ['STIMDIR'] = sys.argv[1]
+    side = int(sys.argv[2])
+
+    TrainTest_currents_file = os.environ['STIMDIR'] + '/Current_protocols_' + str(side) + '.csv'  # current protocols
+    TrainTest_activation_file = os.environ['STIMDIR'] + '/Activations_over_StimSets_' + str(side) + '.csv'
+
+    # load parameters from .json folder generated in previous steps
+    with open(os.environ['STIMDIR'] + '/netblend_dict_file.json', 'r') as fp:
+        netblend_dict = json.load(fp)
+    fp.close()
+    netblend_dict = netblend_dict['netblendict']
+
+    # load StimSets_parameters (were created by Train_Test_Generator.py)
+    with open(os.environ['STIMDIR'] + '/StimSets_info.json', 'r') as fp:
+        StimSets_info = json.load(fp)
+    fp.close()
+
+    approx_pathways = train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, StimSets_info['trainSize_actual'],
+                   netblend_dict['Err_threshold'], netblend_dict['SE_err_threshold'], side, check_trivial=False)
+
