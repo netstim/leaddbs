@@ -544,16 +544,26 @@ options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
 options.d3.exportBB=0;	% don't export brainbrowser struct by default
 
 options.normregressor=M.ui.normregpopup;
-
+ptidx=get(handles.patientlist,'Value');
 % Prepare isomatrix (includes a normalization step if M.ui.normregpopup
 % says so:
 
 for reg=1:length(options.d3.isomatrix)
     try
         options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options);
+        %only use isomatrix for the selected patients
     end
 end
-
+for side = 1:length(options.sides)
+    for idx = 1:length(M.patient.list)
+        if ~ismember(idx,ptidx)
+           options.d3.isomatrix{1,1}{1,side}(idx,:) = NaN(1,length(options.d3.isomatrix{1,1}{1,side}(idx,:)));
+        end
+    end
+end
+for side = 1:length(options.sides)
+    options.d3.isomatrix{1,1}{1,side}(all(isnan(options.d3.isomatrix{1,1}{1,side}),2),:) = [];
+end
 if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
@@ -568,7 +578,7 @@ end
 options.groupmode=1;
 
 % overwrite active contacts information with new one from S (if present).
-ptidx=get(handles.patientlist,'Value');
+%ptidx=get(handles.patientlist,'Value');
 try
     for pt=1:length(M.elstruct)
         M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
