@@ -1,9 +1,11 @@
-function ea_create_surf_parcellation(parcname,erode)
+function ea_create_surf_parcellation(parcname,erode,smooth)
 
 if ~exist('erode', 'var')
     erode=0;
 end
-
+if ~exist('smooth', 'var')
+    smooth=0;
+end
 labfile=ea_niigz(fullfile(ea_space,'labeling',ea_rmext(parcname)));
 nii=ea_load_nii(labfile);
 
@@ -40,6 +42,9 @@ for id=idx'
         fvc=isocaps(X,Y,Z,permute(onii.img,[2,1,3]),0);
         fv(cnt).faces=[fv(cnt).faces;fvc.faces+size(fv(cnt).vertices,1)];
         fv(cnt).vertices=[fv(cnt).vertices;fvc.vertices];
+        if smooth
+            fv(cnt)=ea_smoothpatch(fv(cnt),1,smooth);
+        end
         cnt=cnt+1;
     end
     ea_dispercent(cnt/length(idx));
