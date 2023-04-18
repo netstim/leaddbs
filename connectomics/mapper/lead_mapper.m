@@ -278,8 +278,9 @@ function command_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns command contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from command
-if strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix') ...
-    && handles.dofunctional.Value == 1
+conn = handles.fmripopup.String{handles.fmripopup.Value};
+cmd = handles.command.String{handles.command.Value};
+if contains(cmd, 'matrix', 'IgnoreCase', true) && ~contains(conn, 'matrix', 'IgnoreCase', true)
     handles.exportgmtc.Visible = 'on';
 else
     handles.exportgmtc.Visible = 'off';
@@ -306,8 +307,9 @@ function dofunctional_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of dofunctional
-if handles.dofunctional.Value == 1 ...
-   && strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix')
+conn = handles.fmripopup.String{handles.fmripopup.Value};
+cmd = handles.command.String{handles.command.Value};
+if contains(cmd, 'matrix', 'IgnoreCase', true) && ~contains(conn, 'matrix', 'IgnoreCase', true)
     handles.exportgmtc.Visible = 'on';
 else
     handles.exportgmtc.Visible = 'off';
@@ -322,6 +324,13 @@ function fmripopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns fmripopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fmripopup
+conn = handles.fmripopup.String{handles.fmripopup.Value};
+cmd = handles.command.String{handles.command.Value};
+if contains(cmd, 'matrix', 'IgnoreCase', true) && ~contains(conn, 'matrix', 'IgnoreCase', true)
+    handles.exportgmtc.Visible = 'on';
+else
+    handles.exportgmtc.Visible = 'off';
+end
 
 
 % --- Executes during object creation, after setting all properties.
