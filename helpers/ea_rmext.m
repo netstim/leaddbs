@@ -12,6 +12,6 @@ function fn = ea_rmext(fn)
 if iscell(fn)
     fn = cellfun(@(x) regexp(x, '(.*)(?=\.nii(\.gz)?$)', 'match', 'once'), fn, 'UniformOutput', 0);
 else
-    fn = regexp(x, '(.*)(?=\.nii(\.gz)?$)', 'match', 'once');
+    fn = regexp(fn, '(.*)(?=\.nii(\.gz)?$)', 'match', 'once');
 end
 
