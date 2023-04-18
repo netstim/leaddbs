@@ -771,9 +771,14 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                     end
                     reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
                 end
-                ea_conv_antswarps(fullfile(new_path,which_file), reference);
-                outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
-                movefile(outfile,fullfile(new_path,bids_name));
+                try
+                    ea_conv_antswarps(fullfile(new_path,which_file), reference);
+                    outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
+                    movefile(outfile,fullfile(new_path,bids_name));
+                catch
+                    movefile(outfile,fullfile(new_path,bids_name));
+                    warning('Transform files could not be converted to nii.gz format. Please check that the files are not corrupt manually.');
+                end
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
