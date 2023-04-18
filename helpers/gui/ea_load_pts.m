@@ -91,7 +91,6 @@ else % NIfTI or DICOM folder
         subjId = cell(length(uipatdir) ,1);
         
         for i = 1:length(uipatdir)
-
             if isNIfTIFolder(uipatdir{i})
                 [~, subjId{i}] = isNIfTIFolder(uipatdir{i});
                 subjId{i} = validateSubjId(subjId{i});
@@ -371,7 +370,7 @@ subjId = '';
 
 if ea_dcmquery(inputFolder) > 0
     checkFlag = true;
-    if endsWith(inputFolder, 'dicom', 'IgnoreCase', true)
+    if strcmpi(inputFolder, 'dicom')
         % 'DICOM' folder detected, use parent folder name as subjId
         [~, subjId] = fileparts(fileparts(inputFolder));
     else
