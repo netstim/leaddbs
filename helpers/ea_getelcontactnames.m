@@ -49,7 +49,23 @@ switch model
                 directional=[0,1,1,1,1,1,1,0];
         end
     case 'Boston Scientific Vercise Cartesia HX'
+        switch side
+            case 1 % RH
+                contactnames={'R1','R2','R3','R4','R5','R6','R7','R8','R9','R10','R11','R12','R13','R14','R15','R16'};
+                directional=[1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0];
+            case 2 % LH
+                contactnames={'L1','L2','L3','L4','L5','L6','L7','L8','L9','L10','L11','L12','L13','L14','L15','L16'};
+                directional=[1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0];
+        end
     case 'Boston Scientific Vercise Cartesia X'
+        switch side
+            case 1 % RH
+                contactnames={'R1','R2','R3','R4','R5','R6','R7','R8','R9','R10','R11','R12','R13','R14','R15','R16'};
+                directional=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0];
+            case 2 % LH
+                contactnames={'L1','L2','L3','L4','L5','L6','L7','L8','L9','L10','L11','L12','L13','L14','L15','L16'};
+                directional=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0];
+        end
     case {'Abbott ActiveTip (6146-6149)','Abbott ActiveTip (6142-6145)'}
         switch side
             case 1 % RH
