@@ -1,15 +1,16 @@
 function ea_openpatdir(handles)
 
-outfolder=get(handles.patdir_choosebox,'String');
-
-if ismember(outfolder,{'No Patient Selected','Choose Patient Directory'})
+BIDSRoot = handles.datasetselect.String;
+%get(handles.datasetselect.String,'String');
+selectedSubj = strcat('sub-',handles.patientlist.Data.subjId(handles.patientlist.Selection));
+if ismember(BIDSRoot,{'No Patient Selected','Choose Dataset Directory'})
     msgbox('Please set the working directory first!', 'Error','error');
     return;
 end
 
-if startsWith(outfolder,'Multiple')
-   msgbox('Multiple patients selected');
+if length(selectedSubj) > 1
+   msgbox('Multiple patients selected! Please select one patient.');
    return;
 end
-
+outfolder = fullfile(BIDSRoot,'derivatives','leaddbs',selectedSubj);
 ea_opendir(outfolder);
