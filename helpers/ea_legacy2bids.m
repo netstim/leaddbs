@@ -771,9 +771,14 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                     end
                     reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
                 end
-                ea_conv_antswarps(fullfile(new_path,which_file), reference);
-                outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
-                movefile(outfile,fullfile(new_path,bids_name));
+                try
+                    ea_conv_antswarps(fullfile(new_path,which_file), reference);
+                    outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
+                    movefile(outfile,fullfile(new_path,bids_name));
+                catch
+                    movefile(outfile,fullfile(new_path,bids_name));
+                    warning('Transform files could not be converted to nii.gz format. Please check that the files are not corrupt manually.');
+                end
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
@@ -835,7 +840,14 @@ function generate_rawImagejson(patient_name,dest)
     coreg_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat');
     raw_preop_dir = fullfile(raw_data_path,'ses-preop','anat');
     raw_postop_dir = fullfile(raw_data_path,'ses-postop','anat');
+    if ~isfolder(raw_preop_dir)
+        mkdir(raw_preop_dir);
+    end
+    if ~isfolder(raw_postop_dir)
+        mkdir(raw_postop_dir);
+    end
     preprocessing_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','anat');
+    
     opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
     
@@ -943,7 +955,11 @@ function generate_rawImagejson(patient_name,dest)
         
         end
     end
-    savejson('',anat_files_selected,opt);
+    if exist('anat_files_selected','var')
+        savejson('',anat_files_selected,opt);
+    else
+        warning('No rawimages or coregistration files found, therefore no rawimages.json set!');
+    end
     
     
 
@@ -1152,19 +1168,17 @@ return
 
 function file2json(fname_in,fname_out,derivatives_cell)
 legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dti','dti.bval','dti.bvec','t2','flair','inv','swi'};
-%legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR','INV','SWI'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 opt.FileName = fname_out;
-[~,filename,~] = fileparts(fname_in);
 json_mat = struct();
 %function to convert mat files and text
 opt.FileName = fname_out;
 [filepath,filename,~] = fileparts(fname_in);
-[op_dir,pt_name,ext] = fileparts(fname_out);
+[op_dir,pt_name,~] = fileparts(fname_out);
 pt_name = strsplit(pt_name,'_desc-');
 pt_name = pt_name{1};
-op_dir = strrep(op_dir,'transformation','anat');
+op_dir = strrep(op_dir,'log','anat');
 json_mat = struct();
 old = {derivatives_cell{:,1}};
 new = {derivatives_cell{:,2}};
@@ -1175,8 +1189,6 @@ if endsWith(fname_in,'.mat')
     %dealing with coregistration
     if strcmp(filename,'ea_coreg_approved')
         [coreg_filepath,~,~] = fileparts(fname_in);
-        [coregDir,~,~] = fileparts(fname_out);
-        coregDir = strrep(coregDir,'log','anat');
         input_mat = load(fname_in);
         coreg_fieldnames = fieldnames(input_mat);
         %determine files inside the coreg files
@@ -1189,8 +1201,17 @@ if endsWith(fname_in,'.mat')
                 else
                     %try to convert to bids mod
                     bids_mod = add_mod([coreg_fieldnames{i},'.nii'],legacy_modalities,rawdata_containers);
-                    tag = ea_checkacq(fullfile(filepath,[coreg_fieldnames{i},'.nii']));
-                    bids_name = [pt_name,'_ses-preop_space-anchorNative_desc-preproc_acq-',tag,'_',bids_mod,'.nii'];
+                    if contains(bids_mod,'_MRI')
+                        bids_name = [pt_name,'_ses-postop_space-anchorNative_desc-preproc_',bids_mod,'.nii'];                    
+                    else
+                        try
+                            tag = ea_checkacq(fullfile(filepath,[coreg_fieldnames{i},'.nii']));
+                        catch
+                            warning("tag may not be set correctly, please recheck if you have issues with coregistration!");
+                            tag = 'iso';
+                        end
+                        bids_name = [pt_name,'_ses-preop_space-anchorNative_desc-preproc_acq-',tag,'_',bids_mod,'.nii'];
+                    end
                     bids_name = CheckifAlreadyExists(op_dir,bids_name);
                 end
                 field_name = strsplit(bids_name,'acq-');
