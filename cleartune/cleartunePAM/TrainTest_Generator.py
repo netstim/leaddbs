@@ -23,10 +23,12 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
     el_type = determine_el_type(Electrode_model)
     if el_type == 'concentric4':
         N_contacts = 4
-        sample_size = 5000  # half training, half test
+        #sample_size = 5000  # half training, half test
+        sample_size = 1000  # just to test
     else:
         N_contacts = 8
-        sample_size = 10000
+        #sample_size = 10000
+        sample_size = 2000
 
     # ## split to train and test and sample
     # # see "Test Set Sizing Via Random Matrix Theory" by A. Dubbs
@@ -131,15 +133,13 @@ if __name__ == '__main__':
 
     # passed from Currentune
     # sys.argv[1] - stimfolder
-    # sys.argv[2] - right electrode model (-1 if not implanted)
-    # sys.argv[3] - left electrode model (-1 if not implanted)
+    # sys.argv[2] - electrode model (-1 if not implanted)
+    # sys.argv[3] - side
     # sys.argv[4:] - min cylind, max cylind, min segm, max_segm
 
-    #print(sys.argv[1:])
-
     if sys.argv[2] != '-1':
-        create_Training_Test_sets(sys.argv[1],sys.argv[2], [float(sys.argv[4]),float(sys.argv[5])], [float(sys.argv[6]),float(sys.argv[7])], 0)
+        create_Training_Test_sets(sys.argv[1],sys.argv[2], [float(sys.argv[4]),float(sys.argv[5])], [float(sys.argv[6]),float(sys.argv[7])], sys.argv[3])
 
     if sys.argv[3] != '-1':
-        create_Training_Test_sets(sys.argv[1], sys.argv[3], [float(sys.argv[4]), float(sys.argv[5])],
-                                  [float(sys.argv[6]), float(sys.argv[7])], 1)
+        create_Training_Test_sets(sys.argv[1], sys.argv[2], [float(sys.argv[4]), float(sys.argv[5])],
+                                  [float(sys.argv[6]), float(sys.argv[7])], sys.argv[3])

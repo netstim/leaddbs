@@ -173,6 +173,9 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
         % Now bin within blocks based on val variance 
         pathway_index_list = cell(1,length(unique(groups)));
         pathway_mean_vals = cell(1,length(unique(groups)));
+        % sum val over the hemisphere to weight predictions across
+        % hemispheres
+        pathway_sum_vals = cell(1,length(unique(groups)));
 
         disp("Number of spatial groups "+string(length(unique(groups))))
 
@@ -232,10 +235,12 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
     
                 if metric == -1 % only one val per spatial pathway
                     pathway_index_list{1,group_i}{1,1} = idx_group;
-                    pathway_mean_vals{1,group_i}(1) = mean(input);                    
+                    pathway_mean_vals{1,group_i}(1) = mean(input); 
+                    pathway_sum_vals{1,group_i}(1) = sum(input);
                 else
                     pathway_index_list{1,group_i} = cell(1,length(thresh) + 1);
                     pathway_mean_vals{1,group_i} = zeros(1,length(thresh) + 1);
+                    pathway_sum_vals{1,group_i} = zeros(1,length(thresh) + 1);
 
                     % group to bins based on thresholds
                     for thresh_i = 1:length(thresh) + 1
@@ -243,6 +248,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                         if thresh_i == 1
         
                             pathway_mean_vals{1,group_i}(thresh_i) = mean(input(input < thresh(thresh_i)));
+                            pathway_sum_vals{1,group_i}(thresh_i) = sum(input(input < thresh(thresh_i)));
                             pathway_index_list{1,group_i}{thresh_i} = idx_group(input < thresh(thresh_i));
                                 
 %                             % alternatively, drop pathways with vals < 0.5 and N fibers < 10
@@ -255,6 +261,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                         elseif thresh_i == length(thresh) + 1
         
                             pathway_mean_vals{1,group_i}(thresh_i) = mean(input(input >= thresh(thresh_i-1)));
+                            pathway_sum_vals{1,group_i}(thresh_i) = sum(input(input >= thresh(thresh_i-1)));
                             pathway_index_list{1,group_i}{thresh_i} = idx_group(input >= thresh(thresh_i-1));
 
         %                     % alternatively, drop pathways with vals < 0.5 and N fibers < 10
@@ -265,6 +272,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
         %                     end
                         else 
                             pathway_mean_vals{1,group_i}(thresh_i) = mean(input(input >= thresh(thresh_i-1) & input < thresh(thresh_i)));
+                            pathway_sum_vals{1,group_i}(thresh_i) = sum(input(input >= thresh(thresh_i-1) & input < thresh(thresh_i)));
                             pathway_index_list{1,group_i}{thresh_i} = idx_group(input >= thresh(thresh_i-1) & input < thresh(thresh_i));
 
 %                             % alternatively, drop pathways with vals < 0.5 and N fibers < 10
@@ -280,6 +288,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
             else
                 % if one fiber per spatial pathway
                 pathway_mean_vals{1,group_i}(1) = vals{voter,side}(groups == group_i);
+                pathway_sum_vals{1,group_i}(1) = vals{voter,side}(groups == group_i);
                 pathway_index_list{1,group_i}{1,1} = gl_indices(groups == group_i);
             end
 
@@ -360,9 +369,9 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                 end
 
                 if negative_vals == 0
-                    jsonDict.profile_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [1.0, pathway_mean_vals{1,group_i}(bin_i)];
+                    jsonDict.profile_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [1.0, pathway_mean_vals{1,group_i}(bin_i), pathway_sum_vals{1,group_i}(bin_i)];
                 else
-                    jsonDict.Soft_SE_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [0.0, pathway_mean_vals{1,group_i}(bin_i)];
+                    jsonDict.Soft_SE_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [0.0, pathway_mean_vals{1,group_i}(bin_i), pathway_sum_vals{1,group_i}(bin_i)];
                 end
             end
         end

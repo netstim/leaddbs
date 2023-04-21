@@ -68,22 +68,27 @@ def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combu
     return profile_dict, Soft_SE_dict, SE_dict
 
 
-def make_prediction(side, FF_dictionary, fixed_symptoms_dict):
+def make_prediction(side, FF_dictionary, fixed_symptoms_dict=0):
 
-    ''' Predict symptom-profile improvement for a given activation profile based on the target activation profiles '''
+    ''' Predict symptom-profile improvement for a given activation profile based on the target activation profiles
+        fixed symptom dictionary is only needed for weight optimization'''
 
     profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combustion')
 
     # load fixed weights (they play role only for network blending, not simple prediction)
-    with open(fixed_symptoms_dict, 'r') as fp:
-        fixed_symptom_weights = json.load(fp)
-    fp.close()
+    if fixed_symptoms_dict == 0:
+        fixed_symptom_weights = []  # placeholder
+    else:
+        with open(fixed_symptoms_dict, 'r') as fp:
+            fixed_symptom_weights = json.load(fp)
+        fp.close()
 
     # we can just check the distance for one activation profile across all simulated fibers
     from NB_outline import load_AP_from_OSSDBS
     activation_profile, Pathways = load_AP_from_OSSDBS(side, inters_as_stim=False)
 
     # get symptom-wise difference between activation and target profiles
+    # we do not need non-fixed symptom distances here
     from Optim_strategies import get_symptom_distances
     [__, symptom_diff, symptom_list] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
                                                fixed_symptom_weights, Pathways, side, score_symptom_metric='Canberra')
@@ -105,4 +110,5 @@ if __name__ == '__main__':
     # sys.argv[4] - Fixed Symptoms Dictionary
 
     os.environ['STIMDIR'] = sys.argv[1]
-    make_prediction(int(sys.argv[2]), sys.argv[3], sys.argv[4])
+    # make_prediction(int(sys.argv[2]), sys.argv[3], sys.argv[4])
+    make_prediction(int(sys.argv[2]), sys.argv[3])

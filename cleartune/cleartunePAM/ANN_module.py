@@ -1,3 +1,11 @@
+'''
+    By K. Butenko
+    This script trains and test an ANN model to approximate pathway activation for a given electrode position
+    IMPORTANT: Based on tensorflow with a hard sigmoid swapped to abs(LeakyReLU) with alpha 1.25 (steeper slope for cathode)
+'''
+
+
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -21,7 +29,7 @@ from tensorflow.keras import optimizers
 # some ANN parameters
 learn_rate = 0.0025
 N_epochs = 2000
-min_activ_threshold = 0.1
+min_activ_threshold = 0.05   # if less than 5% of fibers in the pathway were activated over all StimSets, ANN will not train on it
 
 def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial):
 
@@ -29,11 +37,11 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
     # load currents
     Currents = np.genfromtxt(TrainTest_currents_file, delimiter=',', skip_header=True)
-
     # load activation results
     ActivationResults = np.genfromtxt(TrainTest_activation_file, delimiter=' ')
 
     # we can also estimate errors for some simple pre-defined protocols
+    check_trivial = False  # disable for now
     if check_trivial == True:
         ActivationResults_Bipolar1 = np.genfromtxt('Activations_over_iterationsBipolar.csv', delimiter=' ')
         Currents_Bipolar1 = np.genfromtxt('/home/cerebellum/Documents/Data/NetBlend/Current_protocols_0_Bipolar.csv', delimiter=',', skip_header=True)
@@ -42,18 +50,17 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         Currents_Monopolar21 = np.genfromtxt('Current_protocols_0_Monopolars21_79.csv', delimiter=',', skip_header=True)
 
 
-    # this is defined by the PAM model
     # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
     # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
     from Pathways_Stats import get_simulated_pathways
     Pathways, axons_in_path = get_simulated_pathways(side)
 
-    ### Prepare the data
+    #=============================================== Prepare the data =================================================#
     X_train = Currents[:trainSize,:]
     X_test = Currents[trainSize:,:]
     y_train_prelim = ActivationResults[:trainSize,1:] / axons_in_path  # from 1, because 0 is the index of the protocol
     y_test_prelim = ActivationResults[trainSize:,1:] / axons_in_path
-    y_train = -100 * np.ones((y_train_prelim.shape), float)
+    y_train = -100 * np.ones((y_train_prelim.shape), float)  # initialize with -100 to remove non-filled value later
     y_test = -100 * np.ones((y_test_prelim.shape), float)
 
     # optionally check some hardcoded trivial protocols
@@ -67,7 +74,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         y_bipolar = -100 * np.ones((y_bipolar_prelim.shape), float)
         y_monopolar = -100 * np.ones((y_monopolar_prelim.shape), float)
 
-    # only consider those pathways, where max activation > 5%
+    # only consider those pathways, where max activation >= min_activ_threshold
     pathway_filtered = []
 
     for i in range(y_train_prelim.shape[1]):
@@ -81,6 +88,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
                 y_bipolar[:,i] = y_bipolar_prelim[:,i]
                 y_monopolar[:, i] = y_monopolar_prelim[:, i]
 
+    # remove entries for pathways with max activation < min_activ_threshold
     y_train = y_train[:, ~np.all(y_train == -100.0, axis=0)]
     y_test = y_test[:, ~np.all(y_test == -100.0, axis=0)]
 
@@ -88,29 +96,28 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         y_bipolar = y_bipolar[:,~np.all(y_bipolar == -100.0, axis=0)]
         y_monopolar = y_monopolar[:,~np.all(y_monopolar == -100.0, axis=0)]
 
-    # inject 10% of zero protocols
+    # inject 10% of zero protocols to the training (poor solution)
     N_zero = int(0.1 * y_train.shape[0])
     y_train_exp = np.zeros((y_train.shape[0] + N_zero,y_train.shape[1]), float)
     X_train_exp = np.zeros((X_train.shape[0] + N_zero,X_train.shape[1]), float)
     y_train_exp[:y_train.shape[0],:] = y_train
     X_train_exp[:X_train.shape[0],:] = X_train
-    y_train = y_train_exp
-    X_train = X_train_exp
+    y_train = y_train_exp       # already from 0 to 1
+    X_train = X_train_exp       # normalization seems to be not necessary here
 
-    ### train ANN
-    # normalization seems to be not necessary here
+    #================================================== Train ANN =====================================================#
 
     model = Sequential(layers=None, name=None)
-    model.add(Dense(128, input_shape = (X_train.shape[1],), activation='linear'))
-    model.add(Dense(1024, activation='hard_sigmoid')) # actually abs(LeakyReLU) with alpha 1.25 (steeper slope for cathode)
-    model.add(Dense(y_train.shape[1], activation='tanh')) # we need 0 -> 0 (negative vals are removed on the previous level)
+    model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
+    model.add(Dense(1024, activation='hard_sigmoid'))       # actually abs(LeakyReLU) with alpha 1.25 (steeper slope for cathode)
+    model.add(Dense(y_train.shape[1], activation='tanh'))   # we need 0 -> 0 (negative vals are removed on the previous level)
 
     ## sigmoid produces a shift for monopolar and bipolar
     #model.add(Dense(y_train.shape[1], activation='sigmoid')) # we need 0 -> 0 (negative vals are removed on the previous level)
                                                                             #
     adam = optimizers.Adamax(lr = learn_rate)
-    model.compile(optimizer = adam, loss = 'mean_squared_error', metrics=['accuracy'])
-    model.fit(X_train, y_train, epochs = N_epochs, verbose = 1)
+    model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
+    model.fit(X_train, y_train, epochs=N_epochs, verbose=1)
     results = model.evaluate(X_test, y_test)
 
     # on Test
@@ -145,7 +152,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     #     MSEs[i] = mean_squared_error(y_bipolar[:,i], y_predicted_bi[:,i])
     #     print(Pathways[i], ": ", MSEs[i])
 
-    # ========================================= Plot the errors =======================================================#
+    # =========================================== Plot the errors =====================================================#
 
     import matplotlib
     matplotlib.rcParams['figure.dpi'] = 200
@@ -198,7 +205,6 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     # ====================================== Check if errors acceptable ===============================================#
 
     # iterate over each previously approved profile
-
     with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
         profile_dict = json.load(fp)
     fp.close()
@@ -300,7 +306,10 @@ if __name__ == '__main__':
     side = int(sys.argv[2])
 
     TrainTest_currents_file = os.environ['STIMDIR'] + '/Current_protocols_' + str(side) + '.csv'  # current protocols
-    TrainTest_activation_file = os.environ['STIMDIR'] + '/Activations_over_StimSets_' + str(side) + '.csv'
+    if side == 0:
+        TrainTest_activation_file = os.environ['STIMDIR'] + '/Activations_over_StimSets_rh.csv'
+    else:
+        TrainTest_activation_file = os.environ['STIMDIR'] + '/Activations_over_StimSets_lh.csv'
 
     # load parameters from .json folder generated in previous steps
     with open(os.environ['STIMDIR'] + '/netblend_dict_file.json', 'r') as fp:
