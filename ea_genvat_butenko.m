@@ -498,6 +498,14 @@ for side=0:1
         continue;
     end
 
+    if settings.stimSetMode && ~isfile(strcat(outputDir, filesep, 'Current_protocols_',string(side),'.csv'))
+        warning('off', 'backtrace');
+        warning('No stimulation set for %s side! Skipping...\n', sideStr);
+        warning('on', 'backtrace');
+        fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+        continue;        
+    end
+
     if settings.calcAxonActivation && ~any(fibersFound(:,side+1))
         warning('off', 'backtrace');
         warning('No fibers found for %s side! Skipping...\n', sideStr);

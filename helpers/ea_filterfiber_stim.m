@@ -7,10 +7,31 @@ fprintf('\nCollecting stimulation parameters...\n')
 if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     stimProtocol = S;
     stimProtocol = cellfun(@(f) table2array(readtable(f,'NumHeaderLines',1)), stimProtocol, 'Uni', 0)';
+    % special case for unilateral StimSets
+    % assign a null stim protocol for the other side
+    if size(stimProtocol,2) == 1
+        disp("StimProtocol exists only for one side")
+        N_contacts = size(stimProtocol{1,1},2);
+        [~,SetName,~] = fileparts(S);
+        if strcmp(SetName, 'Current_protocols_0')
+            N_contacts = size(stimProtocol{1,1},2);
+            stimProtocol{1,2} = zeros(1,N_contacts);
+        elseif strcmp(SetName, 'Current_protocols_1')
+            % swap sides
+            stimProtocol{1,2} = stimProtocol{1,1};
+            stimProtocol{1,1} = zeros(1,N_contacts);
+        else
+            disp("Unrecongnized protocol file name, exitting")
+            return
+        end
+    end
+
+
     activeContacts = cell(size(stimProtocol));
     for i=1:length(activeContacts)
         activeContacts{i} = find(~isnan(max(stimProtocol{i}))); % Find contact with stimulation input
     end
+
     
     stimAmplitudes = cell(size(stimProtocol));
     for i=1:length(stimAmplitudes)
