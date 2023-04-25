@@ -1318,10 +1318,13 @@ classdef ea_disctract < handle
                 if domultitract
                     obj.subscore.vis.pos_shown(group,1)=sum(vals{group,1}>0);
                     obj.subscore.vis.neg_shown(group,1)=sum(vals{group,1}<0);
-                    if (size(vals{group,2},1))>1 % bihemispheric usual case
+                    if size(vals{group},2)==1 % unihemispheric case, should then be pseudoM case
+                        obj.subscore.vis.pos_shown(group,2) = 0;
+                        obj.subscore.vis.neg_shown(group,2) = 0;
+                    elseif (size(vals{group,2},1))>1 % bihemispheric usual case
                         obj.subscore.vis.pos_shown(group,2)=sum(vals{group,2}>0);
                         obj.subscore.vis.neg_shown(group,2)=sum(vals{group,2}<0);
-                    elseif length(vals(group,:)) == 2 %in the case that it still exist
+                    elseif length(vals(group,:)) == 2 % in the case that it still exist
                         obj.subscore.vis.pos_shown(group,2) = 0;
                         obj.subscore.vis.neg_shown(group,2) = 0;
                     end
