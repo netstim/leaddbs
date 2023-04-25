@@ -22,7 +22,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Lambda
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve, auc
 from tensorflow.keras import optimizers
-
+from keras.layers import LeakyReLU
 
 ### Input
 
@@ -108,8 +108,8 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     #================================================== Train ANN =====================================================#
 
     model = Sequential(layers=None, name=None)
-    model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
-    model.add(Dense(1024, activation='hard_sigmoid'))       # actually abs(LeakyReLU) with alpha 1.25 (steeper slope for cathode)
+    model.add(Dense(64, input_shape=(X_train.shape[1],), activation='linear'))
+    model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=1.25)))  # alpha 1.25 to have a steeper slope for cathode
     model.add(Dense(y_train.shape[1], activation='tanh'))   # we need 0 -> 0 (negative vals are removed on the previous level)
 
     ## sigmoid produces a shift for monopolar and bipolar
@@ -121,18 +121,15 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     results = model.evaluate(X_test, y_test)
 
     # on Test
-    error_ANN = np.zeros(y_test.shape,float)
     y_predicted = model.predict(X_test)
     error_ANN = y_test - y_predicted
 
     if check_trivial == True:
 
-        error_ANN_bi = np.zeros(y_bipolar.shape,float)
         y_predicted_bi = model.predict(X_bipolar)
         error_ANN_bi = y_bipolar - y_predicted_bi
         results_bi = model.evaluate(X_bipolar, y_bipolar)
 
-        results_mono = model.evaluate(X_monopolar, y_monopolar)
         y_predicted_mono = model.predict(X_monopolar)
         error_ANN_mono = y_monopolar - y_predicted_mono
 
@@ -305,11 +302,16 @@ if __name__ == '__main__':
     os.environ['STIMDIR'] = sys.argv[1]
     side = int(sys.argv[2])
 
+    if side == 0:
+        res_folder = 'Results_rh/'
+    else:
+        res_folder = 'Results_lh/'
+
     TrainTest_currents_file = os.environ['STIMDIR'] + '/Current_protocols_' + str(side) + '.csv'  # current protocols
     if side == 0:
-        TrainTest_activation_file = os.environ['STIMDIR'] + '/Activations_over_StimSets_rh.csv'
+        TrainTest_activation_file = os.environ['STIMDIR'] + '/' + res_folder + 'Activations_over_StimSets_rh.csv'
     else:
-        TrainTest_activation_file = os.environ['STIMDIR'] + '/Activations_over_StimSets_lh.csv'
+        TrainTest_activation_file = os.environ['STIMDIR'] + '/' + res_folder + 'Activations_over_StimSets_lh.csv'
 
     # load parameters from .json folder generated in previous steps
     with open(os.environ['STIMDIR'] + '/netblend_dict_file.json', 'r') as fp:

@@ -166,17 +166,17 @@ def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_sig
 
         if scaling_index == 0:
             if d['Stim_side'] == 0:
-                with open(os.environ['PATIENTDIR'] + '/Activations_over_StimSets_rh.csv', 'w') as f_handle:
+                with open(os.environ['PATIENTDIR'] + '/' + stim_folder + 'Activations_over_StimSets_rh.csv', 'w') as f_handle:
                     np.savetxt(f_handle, iter_results)
             else:
-                with open(os.environ['PATIENTDIR'] + '/Activations_over_StimSets_lh.csv', 'w') as f_handle:
+                with open(os.environ['PATIENTDIR'] + '/' + stim_folder + 'Activations_over_StimSets_lh.csv', 'w') as f_handle:
                     np.savetxt(f_handle, iter_results)
         else:
             if d['Stim_side'] == 0:
-                with open(os.environ['PATIENTDIR'] + '/Activations_over_StimSets_rh.csv', 'a') as f_handle:
+                with open(os.environ['PATIENTDIR'] + '/' + stim_folder + 'Activations_over_StimSets_rh.csv', 'a') as f_handle:
                     np.savetxt(f_handle, iter_results)
             else:
-                with open(os.environ['PATIENTDIR'] + '/Activations_over_StimSets_lh.csv', 'a') as f_handle:
+                with open(os.environ['PATIENTDIR'] + '/' + stim_folder + 'Activations_over_StimSets_lh.csv', 'a') as f_handle:
                     np.savetxt(f_handle, iter_results)
 
     # results for the optimizer are stored in compute_similarity()

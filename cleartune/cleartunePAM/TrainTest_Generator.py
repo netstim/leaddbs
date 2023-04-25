@@ -23,12 +23,10 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
     el_type = determine_el_type(Electrode_model)
     if el_type == 'concentric4':
         N_contacts = 4
-        #sample_size = 5000  # half training, half test
-        sample_size = 1000  # just to test
+        sample_size = 5000  # half training, half test
     else:
         N_contacts = 8
-        #sample_size = 10000
-        sample_size = 2000
+        sample_size = 10000
 
     # ## split to train and test and sample
     # # see "Test Set Sizing Via Random Matrix Theory" by A. Dubbs
@@ -51,7 +49,7 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
 
     samples = np.concatenate((training_samples, test_samples), axis=0)
 
-    # scale sample [0 1] samples to [thresold0, threshold1]
+    # scale sample [0 1] samples to [threshold0, threshold1]
     if el_type == 'segmented8':
         samples[:, 0] = samples[:, 0] * (conc_threshold[1] - conc_threshold[0]) + conc_threshold[0]
         samples[:, 7] = samples[:, 7] * (conc_threshold[1] - conc_threshold[0]) + conc_threshold[0]
