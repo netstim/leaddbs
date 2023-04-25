@@ -328,7 +328,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                 ftr.orig_connectome = obj.connectome;
 
                 % remove period delimiter
-                pathway_name = char(compose('%s_%s_group_%d_val_%.3f.mat',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(i)));
+                pathway_name = char(compose('%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(i)));
                 if contains(pathway_name,'1.0')
                     pathway_name = erase(pathway_name,'.0'); % remove digits after comma
                 else   
