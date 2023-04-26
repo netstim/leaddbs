@@ -27,6 +27,7 @@ set(MODULE_PYTHON_SCRIPTS
 
 set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
+  Resources/Icons/WarpDrive1.png
   Resources/Icons/Add.png
   Resources/Icons/Delete.png
   Resources/Icons/Draw.png

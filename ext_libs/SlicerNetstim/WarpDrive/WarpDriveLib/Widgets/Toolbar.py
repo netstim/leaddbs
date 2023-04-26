@@ -312,6 +312,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     templateNode.GetDisplayNode().SetLevel(70)
     # set view
     slicer.util.setSliceViewerLayers(background=imageNode.GetID(), foreground=templateNode.GetID())
+    for sliceNode in slicer.util.getNodesByClass('vtkMRMLSliceNode'):
+      sliceNode.Modified()
     # set parameter
     self.parameterNode.SetParameter("modality", modality)
     self.parameterNode.SetNodeReferenceID("ImageNode", imageNode.GetID())
