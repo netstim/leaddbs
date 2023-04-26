@@ -305,9 +305,6 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.onChannelsNamesModified(node)
     elif subname == "DTT":
       self._parameterNode.SetNodeReferenceID("DistanceToTargetTransform", node.GetID())
-    elif subname == "RecordingSite":
-      self._parameterNode.SetNodeReferenceID("RecordingSiteMarkups", node.GetID())
-      node.GetDisplayNode().SetVisibility(0)
     elif isinstance(node,slicer.vtkMRMLTextNode):
       newFeature = {'name':subname, 'sourceNodeID':node.GetID(), 'projectTo':'Tube', 'property':'', 'visible':1}
       featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
@@ -326,7 +323,7 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
     for feature in featuresList:
       if node.GetID() == feature['sourceNodeID']:
-        self.logic.setUpFeature(recordingSitesMarkupsNodeID=self._parameterNode.GetNodeReferenceID("RecordingSiteMarkups"), **feature)
+        self.logic.setUpFeature(**feature)
         return
 
   @vtk.calldata_type(vtk.VTK_OBJECT)
@@ -412,7 +409,7 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     for i,feature in enumerate(featuresList):
       featureUpdated = self.ui.featuresTableWidget.updateFeatureFromNthRow(feature, i)
       if featureUpdated:
-        self.logic.setUpFeature(recordingSitesMarkupsNodeID=self._parameterNode.GetNodeReferenceID("RecordingSiteMarkups"), **feature)
+        self.logic.setUpFeature(**feature)
     self._parameterNode.SetParameter("FeaturesJson", json.dumps(featuresList))
 
     self._parameterNode.EndModify(wasModified)
@@ -642,11 +639,10 @@ class LeadORLogic(ScriptedLoadableModuleLogic):
     else:
       Trajectory.RemoveNthTrajectory(trajectoryNumber)
 
-  def setUpFeature(self, recordingSitesMarkupsNodeID=None, sourceNodeID=None, name='', projectTo='Tube', property='', visible=1):
-    if recordingSitesMarkupsNodeID is None or sourceNodeID is None:
+  def setUpFeature(self, sourceNodeID=None, name='', projectTo='Tube', property='', visible=1):
+    if sourceNodeID is None:
       return
     feature = Feature(projectTo)
-    feature.setRecordingSitesMarkupsNodeID(recordingSitesMarkupsNodeID)
     feature.addSourceNode(sourceNodeID, property, visible)
     feature.update()
 
@@ -693,9 +689,9 @@ class LeadORTest(ScriptedLoadableModuleTest):
     """Run as few or as many tests as needed here.
     """
     self.setUp()
-    self.test_LeadORWithOpenEphys()
+    # self.test_LeadORWithOpenEphys()
     # self.test_LeadORFeatures()
-    # self.test_LeadORFeaturesWithNan()
+    self.test_LeadORFeaturesWithNan()
     # self.test_LeadORFeaturesBasic()
 
   def test_LeadORFeaturesBasic(self):
@@ -705,18 +701,15 @@ class LeadORTest(ScriptedLoadableModuleTest):
     dttNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','DTT')
     dttNode.SetAndObserveTransformNodeID(planningNode.GetID())
 
-    recordingSitesNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode','RecordingSite')
-    recordingSitesNode.GetDisplayNode().SetVisibility(0)
-
     channelName = "Central"
 
     featureNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature1')
-    featureNode.SetText("RecordingSiteID,"+channelName)
+    featureNode.SetText("RecordingSiteDTT,"+channelName)
     
     logic = LeadORLogic()
 
     logic.setUpTrajectory(4, dttNode.GetID(), True, channelName, 0, 0, 0)
-    logic.setUpFeature(recordingSitesNode.GetID(), featureNode.GetID(), 'feature1', 'Tube', 'RadiusAndColor')
+    logic.setUpFeature(featureNode.GetID(), 'feature1', 'Tube', 'RadiusAndColor')
 
     self.delayDisplay('Test passed')
 
@@ -727,36 +720,24 @@ class LeadORTest(ScriptedLoadableModuleTest):
     dttNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','DTT')
     dttNode.SetAndObserveTransformNodeID(planningNode.GetID())
 
-    recordingSitesNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode','RecordingSite')
-    recordingSitesNode.GetDisplayNode().SetVisibility(0)
-    recordingSitesNode.AddControlPoint(0,0,10,'1')
-    recordingSitesNode.AddControlPoint(0,0,8,'2')
-    recordingSitesNode.AddControlPoint(0,0,7,'3')
-    recordingSitesNode.AddControlPoint(0,0,6,'4')
-    recordingSitesNode.AddControlPoint(0,0,5,'5')
-    recordingSitesNode.AddControlPoint(0,0,4,'6')
-    recordingSitesNode.AddControlPoint(0,0,3,'7')
-    recordingSitesNode.AddControlPoint(0,0,2,'8')
-    recordingSitesNode.AddControlPoint(0,0,1,'9')
-
     channelName = "Central"
 
     featureNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature1')
-    featureNode.SetText("RecordingSiteID,"+channelName+"\n\
-                          1,80\n\
-                          2,80\n\
-                          3,80\n\
-                          4,80\n\
-                          5,160\n\
-                          6,200\n\
-                          7,140\n\
-                          8,300\n\
-                          9,200")
+    featureNode.SetText("RecordingSiteDTT,"+channelName+"\n\
+                          10.0,80\n\
+                          9.0,80\n\
+                          8.0,80\n\
+                          7.0,80\n\
+                          6.0,160\n\
+                          5.0,200\n\
+                          4.0,140\n\
+                          3.0,300\n\
+                          2.0,200")
     
     logic = LeadORLogic()
 
     logic.setUpTrajectory(4, dttNode.GetID(), True, channelName, 0, 0, 0)
-    logic.setUpFeature(recordingSitesNode.GetID(), featureNode.GetID(), 'feature1', 'Tube', 'RadiusAndColor')
+    logic.setUpFeature(featureNode.GetID(), 'feature1', 'Tube', 'RadiusAndColor')
 
     self.delayDisplay('Test passed')
 
@@ -767,46 +748,34 @@ class LeadORTest(ScriptedLoadableModuleTest):
     dttNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','DTT')
     dttNode.SetAndObserveTransformNodeID(planningNode.GetID())
 
-    recordingSitesNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode','RecordingSite')
-    recordingSitesNode.GetDisplayNode().SetVisibility(0)
-    recordingSitesNode.AddControlPoint(0,0,10,'1')
-    recordingSitesNode.AddControlPoint(0,0,8,'2')
-    recordingSitesNode.AddControlPoint(0,0,7,'3')
-    recordingSitesNode.AddControlPoint(0,0,6,'4')
-    recordingSitesNode.AddControlPoint(0,0,5,'5')
-    recordingSitesNode.AddControlPoint(0,0,4,'6')
-    recordingSitesNode.AddControlPoint(0,0,3,'7')
-    recordingSitesNode.AddControlPoint(0,0,2,'8')
-    recordingSitesNode.AddControlPoint(0,0,1,'9')
-
     channelName = "Central"
 
     featureNode1 = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature1')
-    featureNode1.SetText("RecordingSiteID,"+channelName+"\n\
-                          1,80\n\
-                          3,80\n\
-                          4,80\n\
-                          5,160\n\
-                          6,200\n\
-                          8,300\n\
-                          9,200")
+    featureNode1.SetText("RecordingSiteDTT,"+channelName+"\n\
+                          10.0,80\n\
+                          8.0,80\n\
+                          7.0,80\n\
+                          6.0,160\n\
+                          5.0,200\n\
+                          4.0,300\n\
+                          2.0,200")
 
     featureNode2 = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature2')
-    featureNode2.SetText("RecordingSiteID,"+channelName+"\n\
-                          1,80\n\
-                          2,90\n\
-                          3,80\n\
-                          4,300\n\
-                          5,150\n\
-                          6,80\n\
-                          8,80\n\
-                          9,80")
+    featureNode2.SetText("RecordingSiteDTT,"+channelName+"\n\
+                          10.0,80\n\
+                          9.0,90\n\
+                          8.0,80\n\
+                          6.0,300\n\
+                          5.0,150\n\
+                          4.0,80\n\
+                          3.0,80\n\
+                          2.0,80")
     
     logic = LeadORLogic()
 
     logic.setUpTrajectory(4, dttNode.GetID(), True, channelName, 0, 0, 0)
-    logic.setUpFeature(recordingSitesNode.GetID(), featureNode1.GetID(), 'feature1', 'Tube', 'Radius')
-    logic.setUpFeature(recordingSitesNode.GetID(), featureNode2.GetID(), 'feature2', 'Tube', 'Color')
+    logic.setUpFeature(featureNode1.GetID(), 'feature1', 'Tube', 'Radius')
+    logic.setUpFeature(featureNode2.GetID(), 'feature2', 'Tube', 'Color')
 
     self.delayDisplay('Test passed')
 

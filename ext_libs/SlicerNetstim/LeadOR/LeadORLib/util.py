@@ -12,14 +12,6 @@ class Feature():
   def __init__(self, projectTo):
     self.projectTo = projectTo
   
-  def setRecordingSitesMarkupsNodeID(self, recordingSitesMarkupsNodeID):
-    recordingSitesNode = slicer.util.getNode(recordingSitesMarkupsNodeID)
-    self.recordingSitesIDs =  np.zeros((recordingSitesNode.GetNumberOfControlPoints(),))
-    self.recordingSitesPoints =  np.zeros((recordingSitesNode.GetNumberOfControlPoints(),3))
-    for i in range(recordingSitesNode.GetNumberOfControlPoints()):
-      self.recordingSitesIDs[i] = recordingSitesNode.GetNthControlPointLabel(i)
-      self.recordingSitesPoints[i,:] =  recordingSitesNode.GetNthControlPointPosition(i)
-
   def addSourceNode(self, sourceNodeID, property, visible):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     id = shNode.GetItemByDataNode(slicer.util.getNode(sourceNodeID))
@@ -28,48 +20,53 @@ class Feature():
     shNode.SetItemAttribute(id, 'Visible', str(int(bool(visible))))
 
   def update(self):
-    sourceNodesData = self.getSourceNodesData()  
-    channelNames = set([ch for sourceNodeData in sourceNodesData for ch in sourceNodeData['channelNames']])
+    sourceNodes,channelNames = self.getSourceNodesProjectingToChannels()
     for channelName in channelNames:
-      # Get Trajectory
       trajectory = Trajectory.GetTrajectoryFromChannelName(channelName)
       if trajectory is None:
         continue
-      featureValues = {'Radius':None, 'Color': None, 'Size':None}
-      # Populate feature values with source nodes data
-      for sourceNodeData in sourceNodesData:
-        if channelName in sourceNodeData['channelNames'] and sourceNodeData['visible']:
-          if sourceNodeData['property'] == 'RadiusAndColor':
-            keys = ['Radius', 'Color']
-          else:
-            keys = [sourceNodeData['property']]
-          for key in keys:
-            featureValues[key] = sourceNodeData['values'][sourceNodeData['channelNames'].index(channelName)]
-      # Hide when no data to map
-      if self.projectTo == 'Tube' and featureValues['Radius'] is None and featureValues['Color'] is None:
+      mergedData = self.getSourceNodesMergedDataForChannel(channelName, sourceNodes)
+      if mergedData is None:
         slicer.util.getNode(trajectory.featuresTubeModelNodeID).GetDisplayNode().SetVisibility(0)
+      else:
+        vtkArrays = {key:self.getNormalizedVTKArrayWithName(mergedData[key],key) for key in ['Radius','Color']}
+        # Map feature
+        if self.projectTo == 'Tube':
+          trajectory.updateTubeModelFromValues(mergedData['RecordingSiteDTT'], vtkArrays['Radius'], vtkArrays['Color'])
+          slicer.util.getNode(trajectory.featuresTubeModelNodeID).GetDisplayNode().SetVisibility(1)
+        if self.projectTo == 'Markups':
+          trajectory.updateMarkupsFromValues(mergedData['RecordingSiteDTT'], vtkArrays['Radius'], vtkArrays['Color'])
+          slicer.util.getNode(trajectory.featuresMarkupsNodeID).GetDisplayNode().SetVisibility(1)
+
+  def getSourceNodesMergedDataForChannel(self, channelName, sourceNodes):
+    try:
+      import pandas as pd
+    except:
+      slicer.util.pip_install('pandas')
+      import pandas as pd
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    mergedData = None
+    for sourceNode in sourceNodes:
+      id = shNode.GetItemByDataNode(sourceNode)
+      df = pd.read_csv(StringIO(sourceNode.GetText()))
+      if (channelName not in df.columns) or (not bool(int(shNode.GetItemAttribute(id, 'Visible')))):
         continue
-      elif self.projectTo == 'Markups' and featureValues['Size'] is None and featureValues['Color'] is None:
-        slicer.util.getNode(trajectory.featuresMarkupsNodeID).GetDisplayNode().SetVisibility(0)
-        continue
-      # Replace missing data with nans
-      for key,value in featureValues.items():
-        if value is None:
-          featureValues[key] = np.empty(np.shape(self.recordingSitesIDs))
-          featureValues[key][:] = np.nan
-      # Remove all nan entries and normalize
-      allNanIdx = np.all([np.isnan(val) for val in featureValues.values()], 0)
-      recordingSitesPoints = np.delete(self.recordingSitesPoints, allNanIdx, 0)
-      for key,value in featureValues.items():
-        valueAllNanRemoved = np.delete(value, allNanIdx)
-        featureValues[key] = self.getNormalizedVTKArrayWithName(valueAllNanRemoved, key)
-      # Map feature
-      if self.projectTo == 'Tube':
-        trajectory.updateTubeModelFromValues(recordingSitesPoints, featureValues['Radius'], featureValues['Color'])
-        slicer.util.getNode(trajectory.featuresTubeModelNodeID).GetDisplayNode().SetVisibility(1)
-      if self.projectTo == 'Markups':
-        trajectory.updateMarkupsFromValues(recordingSitesPoints, featureValues['Size'], featureValues['Color'])
-        slicer.util.getNode(trajectory.featuresMarkupsNodeID).GetDisplayNode().SetVisibility(1)    
+      df = df[['RecordingSiteDTT', channelName]]
+      df = df.rename({channelName : shNode.GetItemAttribute(id,'Property')}, axis='columns')
+      if mergedData is None:
+        mergedData = df
+      else:
+        mergedData = pd.merge(mergedData, df, on='RecordingSiteDTT')
+    if (mergedData is None) or (not pd.Series(['RadiusAndColor','Radius','Color']).isin(mergedData.columns).any()):
+      return
+    if 'RadiusAndColor' in mergedData.columns:
+      mergedData['Radius'] = mergedData.loc[:, 'RadiusAndColor']
+      mergedData['Color'] = mergedData.loc[:, 'RadiusAndColor']
+    if 'Radius' not in mergedData.columns:
+      mergedData['Radius'] = pd.Series(np.ones(mergedData.size))
+    if 'Color' not in mergedData.columns:
+      mergedData['Color'] = pd.Series(np.ones(mergedData.size))
+    return mergedData
 
   def getNormalizedVTKArrayWithName(self, npArray, name):
     with warnings.catch_warnings():
@@ -83,8 +80,9 @@ class Feature():
     vtkValuesArray.SetName(name)
     return vtkValuesArray
 
-  def getSourceNodesData(self):
-    sourceNodesData = []
+  def getSourceNodesProjectingToChannels(self):
+    sourceNodes = []
+    channelNames = []
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     vtk_ids = vtk.vtkIdList()
     shNode.GetItemChildren(shNode.GetSceneItemID(), vtk_ids, True)
@@ -92,31 +90,12 @@ class Feature():
     for ID in IDs:
       if 'LeadORFeature' in shNode.GetItemAttributeNames(ID):
         if shNode.GetItemAttribute(ID, 'LeadORFeature') == self.projectTo:
-          channelNames,channelValues = self.getChannelNamesValuesFromNodeText(shNode.GetItemDataNode(ID).GetText())
-          if channelNames is None:
-            continue
-          sourceNodesData.append({})
-          sourceNodesData[-1]['channelNames'] = channelNames
-          sourceNodesData[-1]['values'] = channelValues
-          sourceNodesData[-1]['visible'] = int(shNode.GetItemAttribute(ID, 'Visible'))
-          sourceNodesData[-1]['property'] = shNode.GetItemAttribute(ID, 'Property')
-    return sourceNodesData
+          sourceNode = shNode.GetItemDataNode(ID)
+          sourceNodes.append(sourceNode)
+          for ch in sourceNode.GetText().splitlines()[0].split(",")[1:]:
+            channelNames.append(ch)
+    return sourceNodes,set(channelNames)
 
-  def getChannelNamesValuesFromNodeText(self, sourceText):
-    sourceTextLines = sourceText.splitlines()
-    if len(sourceTextLines) < 3:
-      return None, None
-    channelValues = []
-    channelNames = sourceTextLines[0].split(",")[1:]
-    textData = np.genfromtxt(StringIO(sourceText), delimiter=',', skip_header=1)
-    recordingSitesIDs = np.array(textData[:,0], dtype=int).squeeze()
-    for channelName in channelNames:
-      textValues = textData[:,channelNames.index(channelName)+1].squeeze()
-      values = np.empty(np.shape(self.recordingSitesIDs))
-      values[:] = np.nan
-      values[np.where(np.in1d(self.recordingSitesIDs, recordingSitesIDs))[0]] = textValues[np.where(np.in1d(recordingSitesIDs, self.recordingSitesIDs))[0]]
-      channelValues.append(values)
-    return channelNames,channelValues
 
 #
 # Trajectory
@@ -292,7 +271,7 @@ class Trajectory():
     transformedPoint = np.zeros(4)
     samplePointsVTK = vtk.vtkPoints()
     for i in range(samplePoints.shape[0]):
-      matrix.MultiplyPoint(np.append(samplePoints[i,:],1.0), transformedPoint)
+      matrix.MultiplyPoint(np.array([0.0,0.0,samplePoints[i],1.0]), transformedPoint)
       samplePointsVTK.InsertNextPoint(transformedPoint[:-1])
     # line source
     polyLineSource = vtk.vtkPolyLineSource()
@@ -410,7 +389,7 @@ class VTASource():
       node.SetAndObserveTransformNodeID(transformNodeID)
     slicer.util.getNode(transformNodeID).AddObserver(slicer.vtkMRMLTransformNode.TransformModifiedEvent, lambda c,e: self.transformModified())
     self.transformModified()
-    
+
   def transformModified(self):
     p = [0]*3
     self.markupsNode.GetNthControlPointPositionWorld(0,p)
@@ -437,8 +416,9 @@ class VTASource():
     return sphereFun
 
   def createROI(self):
-    ROINode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLAnnotationROINode')
-    ROINode.SetDisplayVisibility(0)
+    ROINode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsROINode')
+    ROINode.CreateDefaultDisplayNodes()
+    ROINode.GetDisplayNode().SetVisibility(False)
     return ROINode
 
   def createVTAModel(self):
@@ -453,8 +433,9 @@ class VTASource():
   def setFibersVisibility(self, state):
     if slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLFiberBundleNode'):
       fiberBundleNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLFiberBundleNode')
-      fiberBundleNode.SetAndObserveAnnotationNodeID(self.ROINode.GetID())
-      fiberBundleNode.SetSelectWithAnnotation(True)
+      # TODO: test with SlicerDMRI extension after https://github.com/SlicerDMRI/SlicerDMRI/issues/158 is resolved
+      fiberBundleNode.SetAndObserveROINodeID(self.ROINode.GetID())
+      fiberBundleNode.SetSelectWithROI(True)
       fiberBundleNode.GetDisplayNode().SetVisibility(state)
       fiberBundleNode.GetExtractFromROI().SetImplicitFunction(self.sphereFunction)
 

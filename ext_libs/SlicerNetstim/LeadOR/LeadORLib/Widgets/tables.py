@@ -35,10 +35,7 @@ class PropertyComboDelegate(ComboDelegate):
 
   def createEditor(self, parent, option, index):
     projectTo = index.siblingAtColumn(self.columnNames.index("Project To")).data(qt.Qt.DisplayRole)
-    if projectTo == "Tube":
-      comboItems = ["", "RadiusAndColor", "Radius", "Color"]
-    elif projectTo == "Markups":
-      comboItems = ["", "Size", "Color"]    
+    comboItems = ["", "RadiusAndColor", "Radius", "Color"]
     combo = qt.QComboBox(parent)
     combo.addItems(comboItems)
     return combo
