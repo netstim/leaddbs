@@ -300,8 +300,8 @@ objlabel = text(double(location(1)),double(location(2)),double(location(3)),...
     'FontSize', 12,...
     'Color', 'w', ...
     'Visible', toggle.State);
-toggle.OffCallback{2} = [toggle.OffCallback{2}; objlabel];
-toggle.OnCallback{2} = [toggle.OnCallback{2}; objlabel];
+toggle.OffCallback{2} = [reshape(toggle.OffCallback{2}, [], 1); objlabel];
+toggle.OnCallback{2} = [reshape(toggle.OnCallback{2}, [], 1); objlabel];
 setappdata(addht.Parent, 'addht', addht);
 
 
