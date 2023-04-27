@@ -126,7 +126,7 @@ if refinewarp
     ea_addrefinewarp(cfg);
 else
     ea_conv_antswarps([cfg.outputbase, 'Composite.h5'], cfg.fixed, 'float');
-    ea_conv_antswarps(0[cfg.outputbase, 'InverseComposite.h5'], cfg.moving, 'float');
+    ea_conv_antswarps([cfg.outputbase, 'InverseComposite.h5'], cfg.moving, 'float');
 end
 
 
