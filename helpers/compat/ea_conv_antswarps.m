@@ -22,7 +22,7 @@ else
     applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.', computer('arch')]);
 end
 
-cmd = [applyTransforms ' -r ' reference ' -t ' transform_file_name ' -o [' out_file_name ',1]'];
+cmd = [applyTransforms ' -r ' ea_path_helper(reference) ' -t ' ea_path_helper(transform_file_name) ' -o [' ea_path_helper(out_file_name) ',1]'];
 
 if exist('float', 'var')
     if ischar(float) && strcmp(float, 'float') || float
