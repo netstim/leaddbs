@@ -223,7 +223,7 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 1;
 options.d2.bbsize = 10;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T1';
+options.d2.backdrop = 'MNI152NLin2009bAsym T1 (Fonov 2011)';
 options.d2.fid_overlay = 0;
 options.d2.write = 0;
 options.d2.atlasopacity = 0.15;
@@ -254,7 +254,6 @@ options.lcm.omask = [];
 options.lcm.struc.espace = 1;
 options.lcm.cmd = 1;
 options.uipatdirs = {''};
-
 options.lc.general.parcellation = 'AICHA reordered (Joliot 2015)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;

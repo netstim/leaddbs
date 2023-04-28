@@ -38,7 +38,7 @@ function description = generate_pipelineDescription(which_pipeline)
 if strcmp(which_pipeline,'coregistration')
     description = {'Co-registration performs linear registration between the anchor modality and the anat modality of your choice'};
 elseif strcmp(which_pipeline,'normalization')
-    description = {'Normalization performs registration between the anchor modality(pre & post-op) and the standard space (MNI_ICBM_2009b_NLIN_ASYM space) using registration algorithm specified'};
+    description = {'Normalization performs registration between the anchor modality(pre & post-op) and the standard space (MNI152NLin2009bAsym space) using registration algorithm specified'};
 elseif strcmp(which_pipeline,'brainshift')
     description = {'Brainshift correction refines the fit of subcortical structures by correcting between preop T1w and postop CT'};
 elseif strcmp(which_pipeline,'reconstruction')
@@ -52,7 +52,7 @@ elseif strcmp(which_pipeline,'miscellaneous')
 elseif strcmp(which_pipeline,'preprocessing')
     description = {'This folder contains minimally processed raw data - cropped and resliced used for running lead-DBS'};
 elseif strcmp(which_pipeline,'stimulations')
-    description = {'This folder contains Volume of tissue activated (vta) and E-fields files in MNI_ICBM_2009b_NLIN_ASYM space as well as in native space'};
+    description = {'This folder contains Volume of tissue activated (vta) and E-fields files in MNI152NLin2009bAsym space as well as in native space'};
 elseif strcmp(which_pipeline,'headmodel')
     description = {'This folder contains headmodel.mat files'};
 else

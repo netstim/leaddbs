@@ -2,7 +2,7 @@
 space = ea_space;
 root = ea_getearoot;
 
-if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
+if strcmp(ea_getspace,'MNI152NLin2009bAsym')
     if exist([root,'templates',filesep,'mni_hires_t1.nii'],'file');
         try movefile([root,'templates'], [root,'templates_temp']); end
         try mkdir([root,'templates',filesep,'space',filesep]); end

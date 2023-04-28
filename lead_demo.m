@@ -45,7 +45,7 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 1;
 options.d2.bbsize = 20;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T2 (Fonov 2011)';
+options.d2.backdrop = 'MNI152NLin2009bAsym T2 (Fonov 2011)';
 options.d2.fid_overlay = 1;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
@@ -150,9 +150,7 @@ options.ecog.extractsurface.do = 0;
 options.ecog.extractsurface.method = 1;
 options.uipatdirs = {fullfile(ea_getearoot,'helpers','demo_patient')};
 options.leadprod = 'dbs';
-
 options.prefs=ea_prefs;
-
 options.lc.general.parcellation = 'Cortical Area Parcellation from Resting-State Correlations (Gordon 2014)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;

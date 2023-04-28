@@ -113,7 +113,7 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 1;
 options.d2.bbsize = 25;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T2';
+options.d2.backdrop = 'MNI152NLin2009bAsym T2 (Fonov 2011)';
 options.d2.write = 0;
 options.d2.atlasopacity = 0.15;
 options.manualheightcorrection = 0;
@@ -208,5 +208,4 @@ options.lcm.struc.do = 1;
 options.lcm.struc.espace = 1;
 options.lcm.func.do = 1;
 options.lcm.cmd = 1;
-
 options.lc = [];
