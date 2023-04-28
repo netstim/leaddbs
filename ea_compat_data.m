@@ -22,9 +22,9 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
         try movefile([space,'mni_wires.mat'],[space,'wires.mat']); end
     end
 
-    if ~exist([space,'space_def.mat'],'file')
+    if ~exist([space,'spacedef.mat'],'file')
         try spacedef=ea_gendefspacedef; end
-        try save([space,'space_def.mat'],'spacedef'); end
+        try save([space,'spacedef.mat'],'spacedef'); end
 
     end
 
