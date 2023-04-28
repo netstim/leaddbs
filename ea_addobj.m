@@ -22,8 +22,8 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
             options.prefs = ea_prefs;
         end
         if options.prefs.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
-            if length(obj)<=32
-                str2eval = ['cmap = ', options.prefs.d3.roi.defaultcolormap, '(32);'];
+            if length(obj)<=8
+                str2eval = ['cmap = ', options.prefs.d3.roi.defaultcolormap, '(8);'];
             else
                 str2eval = ['cmap = ', options.prefs.d3.roi.defaultcolormap, '(', num2str(length(obj)), ');'];
             end
