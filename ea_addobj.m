@@ -300,9 +300,30 @@ objlabel = text(double(location(1)),double(location(2)),double(location(3)),...
     'FontSize', 12,...
     'Color', 'w', ...
     'Visible', toggle.State);
+if isempty(toggle.OffCallback)
+    toggle.OffCallback = {@atlabelsvisible; {}; 'off'};
+end
 toggle.OffCallback{2} = [reshape(toggle.OffCallback{2}, [], 1); objlabel];
+if isempty(toggle.OnCallback)
+    toggle.OnCallback = {@atlabelsvisible; {}; 'on'};
+end
 toggle.OnCallback{2} = [reshape(toggle.OnCallback{2}, [], 1); objlabel];
 setappdata(addht.Parent, 'addht', addht);
+
+
+function atlabelsvisible(hobj,~,obj,onoff)
+labelInd = arrayfun(@(x) isa(x, 'matlab.graphics.primitive.Text'), obj);
+if isempty(hobj)
+    arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
+else
+    toggleState = flip(arrayfun(@(t) t.State, hobj.Parent.Children(1:end-2)));
+
+    if strcmp(onoff, 'on')
+        arrayfun(@(label, state) set(label,'Visible',state), obj(labelInd), toggleState);
+    else
+        arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
+    end
+end
 
 
 function storeinfigure(resultfig,addht,addbutn,obj,path,name,type,data,replace,options)
