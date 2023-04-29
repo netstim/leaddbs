@@ -43,7 +43,7 @@ if __name__ == '__main__':
     with open(netblend_dict_file, 'r') as fp:
         netblend_dict = json.load(fp)
     fp.close()
-    netblend_dict['similiarity_metric'] = 'Canberra'  # or Bray-Curtis, Euclidean, etc
+    netblend_dict['similarity_metric'] = 'Canberra'  # or Bray-Curtis, Euclidean, etc
     netblend_dict['optim_alg'] = 'dual_annealing'  # or PSO
     netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
 

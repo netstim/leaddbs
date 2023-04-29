@@ -6,6 +6,7 @@
 
 import numpy as np
 import os
+import json
 
 
 def plot_results_with_weights(current_protocol, activation_profile, pathways, Impr_pred, symptom_labels_marked, side, NB_result=False):
@@ -97,7 +98,7 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
             r'$k_{3}=%.2f$' % (current_protocol[3]),
             r'$k_{2}=%.2f$' % (current_protocol[2]),
             r'$k_{1}=%.2f$' % (current_protocol[1]),
-            r'$k_{3}=%.2f$' % (current_protocol[0])))
+            r'$k_{0}=%.2f$' % (current_protocol[0])))
     elif len(current_protocol) == 8:
         textstr = '\n'.join((
             r'Optimized Currents (mA), Lead-DBS notation',
@@ -163,6 +164,7 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
     # or side-effect worsening (assuming the worst case at 100% activation)
     symptom_labels_marked = []
     symp_inx = 0
+    estim_symp_improv_dict = {}
     for symptom in profile_dict:
 
         if side == 0 and not ("_rh" in symptom):
@@ -181,6 +183,8 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
         else:
             Impr_pred[symp_inx,0] = (null_symptom_diff[symp_inx] - symp_distances[symp_inx]) / null_symptom_diff[symp_inx]
 
+        estim_symp_improv_dict[symptom] = Impr_pred[symp_inx,0]
+
         # add info for weights if Network Blending was conducted
         if estim_weights_and_total_score != 0:
             # estimated weight for the symptom, the order was preserved (we always iterate over the symptom dictionary)
@@ -197,6 +201,14 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
             symptom_labels_marked.append(symptom + " (default)")
 
         symp_inx += 1
+
+    # save json
+    if side == 0:
+        with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_symp_improv_rh.json', 'w') as save_as_dict:
+            json.dump(estim_symp_improv_dict, save_as_dict)
+    else:
+        with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_symp_improv_lh.json', 'w') as save_as_dict:
+            json.dump(estim_symp_improv_dict, save_as_dict)
 
     if plot_results == True:
         plot_results_with_weights(current_protocol, activation_profile, pathways, Impr_pred, symptom_labels_marked, side)

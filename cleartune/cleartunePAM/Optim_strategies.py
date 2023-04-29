@@ -8,6 +8,7 @@ import pandas
 import numpy as np
 import os
 from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, cosine
+import json
 
 def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric='Canberra'):
 
@@ -123,22 +124,47 @@ def choose_weights_minimizer(stim_vector, *args):
     # here we can have a soft-threshold analog. to the definition above
     # but for now we just store them all in symp_distances
 
+    # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
+    Target_profiles.update(Soft_SE_thresh)
+
+
     # estimated symptom weights (only for adjusted) and global score
     estim_symp_weights_norm = np.zeros(len(Target_profiles), float)
     total_estim_weighted_score = 0.0
 
+    # compute scaling coefficient
     symp_inx = 0
-    # weight here and not above just for clarity (but can be combined)
+    Rest_weight = (1 - sum(fixed_symptom_weights.values()))
+    scale_coef = 0.0
     for symptom in Target_profiles:
         if symptom not in fixed_symptom_weights:
-            # this is the key equation
-            estim_symp_weights_norm[symp_inx] = (1 - sum(fixed_symptom_weights.values())) * (1 - symp_distances[symp_inx] / sum_symp_nonfixed)
+            scale_coef = scale_coef + sum_symp_nonfixed / (symp_distances[symp_inx] * Rest_weight)
+
+        symp_inx += 1
+
+    # weight here and not above just for clarity (but can be combined)
+
+    estim_symp_weight_norm_dict = {}
+
+    symp_inx = 0
+    for symptom in Target_profiles:
+        if symptom not in fixed_symptom_weights:
+            # this is the key part
+            # do not make any val assumption at this point
+            estim_symp_weights_norm[symp_inx] = sum_symp_nonfixed / (symp_distances[symp_inx] * scale_coef)
+
+            #estim_symp_weights_norm[symp_inx] = Rest_weight * (1 - symp_distances[symp_inx] / sum_symp_nonfixed)
             total_estim_weighted_score += estim_symp_weights_norm[symp_inx] * symp_distances[symp_inx]
         else:
             estim_symp_weights_norm[symp_inx] = fixed_symptom_weights[symptom]
             total_estim_weighted_score += estim_symp_weights_norm[symp_inx] * symp_distances[symp_inx]
 
+        estim_symp_weight_norm_dict[symptom] = estim_symp_weights_norm[symp_inx]
+
         symp_inx += 1
+
+
+    # maybe save estim_symp_weights_norm in jsons instead of csv
 
 
     #print(symp_distances, sum_symp_others)
@@ -161,6 +187,14 @@ def choose_weights_minimizer(stim_vector, *args):
             estim_weights_and_total_score = np.append(estim_symp_weights_norm, total_estim_weighted_score)
             with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv', 'a') as f_handle:
                 np.savetxt(f_handle, np.vstack((estim_weights_and_total_score)).T)
+
+            # save json
+            if side == 0:
+                with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_rh.json', 'w') as save_as_dict:
+                    json.dump(estim_symp_weight_norm_dict, save_as_dict)
+            else:
+                with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_lh.json', 'w') as save_as_dict:
+                    json.dump(estim_symp_weight_norm_dict, save_as_dict)
 
             #np.savetxt(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_symp_weights.csv', estim_symp_weights, delimiter=" ")
     else:

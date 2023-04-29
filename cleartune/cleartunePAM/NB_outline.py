@@ -72,7 +72,7 @@ def load_AP_from_OSSDBS(side, inters_as_stim=False):
 
 
 
-def launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_pathways):
+def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_symptom_weights, side, approx_pathways):
 
     ''' Launch ANN-based optimization that will find optimal current protocol I while adjusting weights(!):
         Global_score = W1 * DS1(I) + W2 * DS2(I) + ... , where
@@ -85,18 +85,23 @@ def launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_p
     #netblend_dict['optim_alg'] = 'Dual Annealing'  # or PSO
     #netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
 
-    # load previously approved symptom-specific profiles
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
-        profile_dict = json.load(fp)
-    fp.close()
+    # better regenerate them
+    from Improvement4Protocol import create_NB_dictionaries
+    profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, activation_profile_dict,
+                                                                 disease='spontaneous human combustion')
 
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Soft_SE_dict.json', 'r') as fp:
-        Soft_SE_dict = json.load(fp)
-    fp.close()
-
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'r') as fp:
-        SE_dict = json.load(fp)
-    fp.close()
+    # # load previously approved symptom-specific profiles
+    # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
+    #     profile_dict = json.load(fp)
+    # fp.close()
+    #
+    # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Soft_SE_dict.json', 'r') as fp:
+    #     Soft_SE_dict = json.load(fp)
+    # fp.close()
+    #
+    # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'r') as fp:
+    #     SE_dict = json.load(fp)
+    # fp.close()
 
 
     if netblend_dict['optim_alg'] == 'Dual Annealing':
@@ -113,7 +118,7 @@ def launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_p
         from Optim_strategies import choose_weights_minimizer
         res = dual_annealing(choose_weights_minimizer,
                              bounds=list(zip(netblend_dict['min_bound_per_contact'], netblend_dict['max_bound_per_contact'])),
-                             args=[approx_model, fixed_symptom_weights, netblend_dict['similiarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways], maxfun=netblend_dict['num_iterations_ANN'], seed=42, visit=2.62,
+                             args=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways], maxfun=netblend_dict['num_iterations_ANN'], seed=42, visit=2.62,
                              no_local_search=True)
 
 
@@ -142,10 +147,12 @@ if __name__ == '__main__':
 
     # called from MATLAB
     # sys.argv[1] - stim folder
-    # sys.argv[2] - side (0 - right hemisphere)
+    # sys.argv[2] - Activation profile dictionary
+    # sys.argv[3] - side (0 - right hemisphere)
 
     os.environ['STIMDIR'] = sys.argv[1]
-    side = int(sys.argv[2])
+    activation_profile_dict = sys.argv[2]
+    side = int(sys.argv[3])
 
 
     # load parameters from .json folder generated in previous steps
@@ -167,4 +174,4 @@ if __name__ == '__main__':
     # IMPORTANT: the pathways' order is preserved as they were processed in ANN!
     approx_pathways = list(pathways_errors_dict.keys())
 
-    launch_weight_optimizer(netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)
+    launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)
