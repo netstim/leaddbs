@@ -12,14 +12,18 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
         %sides = 2;  % both sides implanted
         el_models{1} = strrep(reconst.reco.props(1).elmodel, ' ','_');
         el_models{2} = strrep(reconst.reco.props(2).elmodel, ' ','_');
+        if ~strcmp(el_models{1},el_models{2})
+            disp("Bilateral stim with different electrode models currently not supported")
+            return
+        end
     elseif reconst.reco.mni.markers(1).head(1) > 0.0
         %sides = 0; % right side
         el_models{1} = strrep(reconst.reco.props(1).elmodel, ' ','_');
         el_models{2} = -1;
     else
         %sides = 1; % left side
-        el_models{1} = -1;
-        el_models{2} = strrep(reconst.reco.props(1).elmodel, ' ','_');
+        el_models{2} = -1;
+        el_models{1} = strrep(reconst.reco.props(1).elmodel, ' ','_');
     end
 
     % electrode models, should be expanded
@@ -30,7 +34,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     % add a sanity check for current limits
 
     % use current thresholds to set amplitudes 
-    if any(contains(concentric4,el_models{side+1}))
+    if any(contains(concentric4,el_models{1}))
         min_bound_per_contact = ones(1,4) * min_conc;
         max_bound_per_contact = ones(1,4) * max_conc;
 
@@ -38,20 +42,26 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
             % we need to change S for 4-electrode
             load([ea_getearoot,'cleartune/cleartunePAM/S_4contact.mat']);
             if min_conc < 0.0
-                if side == 0
+                if length(side) == 2
                     S.Rs1.amp = 4 * (max_conc - min_conc);
+                    S.Ls1.amp = 4 * (max_conc - min_conc);
+                elseif side == 0
+                    S.Rs1.amp = 4 * (max_conc - min_conc); 
                 else
                     S.Ls1.amp = 4 * (max_conc - min_conc);
                 end
             else
-                 if side == 0
+                if length(side) == 2
+                    S.Rs1.amp = 4 * (max_conc);
+                    S.Ls1.amp = 4 * (max_conc);
+                elseif side == 0
                     S.Rs1.amp = 4 * (max_conc);
                 else
                     S.Ls1.amp = 4 * (max_conc);
-                 end   
+                end   
             end
         end
-    elseif any(contains(concentric8,el_models{side+1}))
+    elseif any(contains(concentric8,el_models{1}))
         min_bound_per_contact = ones(1,8) * min_conc;
         max_bound_per_contact = ones(1,8) * max_conc;
 
@@ -59,20 +69,26 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
             % we need to change S for 8-electrode same %
             load([ea_getearoot,'cleartune/cleartunePAM/S_8contact_conc.mat']);
             if min_conc < 0.0
-                if side == 0
+                if length(side) == 2
+                    S.Rs1.amp = 8 * (max_conc - min_conc);
+                    S.Ls1.amp = 8 * (max_conc - min_conc);
+                elseif side == 0
                     S.Rs1.amp = 8 * (max_conc - min_conc);
                 else
                     S.Ls1.amp = 8 * (max_conc - min_conc);
                 end
             else
-                 if side == 0
+                if length(side) == 2
+                    S.Rs1.amp = 8 * (max_conc);
+                    S.Ls1.amp = 8 * (max_conc);
+                elseif side == 0
                     S.Rs1.amp = 8 * (max_conc);
                 else
                     S.Ls1.amp = 8 * (max_conc);
-                 end   
+                end   
             end
         end
-    elseif any(contains(segmented8,el_models{side+1}))
+    elseif any(contains(segmented8,el_models{1}))
         min_bound_per_contact = ones(1,8);
         min_bound_per_contact(1,1) = min_conc;
         min_bound_per_contact(1,8) = min_conc;
@@ -86,24 +102,32 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
         if check_S == 1
             load([ea_getearoot,'cleartune/cleartunePAM/S_8contact_segm.mat']);
             if min_conc < 0.0  % we assume that both concentric and segmented will have either both or one polarity
-                if side == 0
+                if length(side) == 2
+                    S.Rs1.amp = 2 * (max_conc - min_conc) + 6 * (max_segm - min_segm);
+                    S.Ls1.amp = 2 * (max_conc - min_conc) + 6 * (max_segm - min_segm);
+                elseif side == 0
                     S.Rs1.amp = 2 * (max_conc - min_conc) + 6 * (max_segm - min_segm);
                 else
                     S.Ls1.amp = 2 * (max_conc - min_conc) + 6 * (max_segm - min_segm);
                 end
             else
-                 if side == 0
+                if length(side) == 2
+                    S.Rs1.amp = 2 * (max_conc) + 6 * (max_segm);
+                    S.Ls1.amp = 2 * (max_conc) + 6 * (max_segm);
+                elseif side == 0
                     S.Rs1.amp = 2 * (max_conc) + 6 * (max_segm);
                 else
                     S.Ls1.amp = 2 * (max_conc) + 6 * (max_segm);
-                 end   
+                end   
             end
         end
     else
         ea_warndlg('The electrode model is not supported')
     end
-
-    if side == 0
+    if length(side) == 2
+        S.amplitude{1,1}(1) = S.Rs1.amp;
+        S.amplitude{1,2}(1) = S.Ls1.amp;
+    elseif side == 0
         S.amplitude{1,1}(1) = S.Rs1.amp;
         S.amplitude{1,2}(1) = 0.0; % one side at a time
     else

@@ -135,9 +135,12 @@ if __name__ == '__main__':
     # sys.argv[3] - side
     # sys.argv[4:] - min cylind, max cylind, min segm, max_segm
 
-    if sys.argv[2] != '-1':
-        create_Training_Test_sets(sys.argv[1],sys.argv[2], [float(sys.argv[4]),float(sys.argv[5])], [float(sys.argv[6]),float(sys.argv[7])], sys.argv[3])
+    create_Training_Test_sets(sys.argv[1], sys.argv[2], [float(sys.argv[4]), float(sys.argv[5])],
+                              [float(sys.argv[6]), float(sys.argv[7])], sys.argv[3])
 
-    if sys.argv[3] != '-1':
-        create_Training_Test_sets(sys.argv[1], sys.argv[2], [float(sys.argv[4]), float(sys.argv[5])],
-                                  [float(sys.argv[6]), float(sys.argv[7])], sys.argv[3])
+    # if sys.argv[2] != '-1':
+    #     create_Training_Test_sets(sys.argv[1],sys.argv[2], [float(sys.argv[4]),float(sys.argv[5])], [float(sys.argv[6]),float(sys.argv[7])], sys.argv[3])
+    #
+    # if sys.argv[3] != '-1':
+    #     create_Training_Test_sets(sys.argv[1], sys.argv[2], [float(sys.argv[4]), float(sys.argv[5])],
+    #                               [float(sys.argv[6]), float(sys.argv[7])], sys.argv[3])

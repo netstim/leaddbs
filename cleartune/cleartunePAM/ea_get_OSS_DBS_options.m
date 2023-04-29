@@ -19,7 +19,7 @@ function options = ea_get_OSS_DBS_options(options, patientPath, N_tracts, Connec
 
     options.earoot=ea_getearoot;
     options.verbose=3;
-    options.sides= 1;  % hardwired atm
+    options.sides= 1;  % does this change anything?
     options.fiberthresh=1;
     options.writeoutstats=1;
     options.writeoutpm = 0;
