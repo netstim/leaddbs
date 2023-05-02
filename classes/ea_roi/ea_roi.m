@@ -81,7 +81,8 @@ classdef ea_roi < handle
                     obj.plotFigureH = pobj.plotFigureH;
                 else
                     currentfig = gcf;
-                    if contains(currentfig.Name, 'Electrode-Scene')
+                    stack = dbstack;
+                    if contains(currentfig.Name, 'Electrode-Scene') && ~ismember('ea_genatlastable', {stack.name})
                         % Set figure and toolbar only in elvis
                         obj.plotFigureH = currentfig;
                     end
