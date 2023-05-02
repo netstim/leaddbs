@@ -15,6 +15,16 @@ if strcmp(['No recent ' type ' found'], recentfolders)
 end
 
 if strcmp(type, 'datasets')
+    datasetdir = handles.recentdatasets.String{handles.recentdatasets.Value};
+    derivativesdir = fullfile(datasetdir, 'derivatives', 'leaddbs');
+    rawdatadir = fullfile(datasetdir, 'rawdata');
+    sourcedatadir = fullfile(datasetdir, 'sourcedata');
+    if ~isfolder(datasetdir) || ~isfolder(derivativesdir) || ~isfolder(rawdatadir) || ~isfolder(sourcedatadir)
+        ea_cprintf('CmdWinWarnings','Regenerated dataset folder structure since selected folder is missing or incomplete.\n');
+        ea_mkdir(derivativesdir);
+        ea_mkdir(rawdatadir);
+        ea_mkdir(sourcedatadir);
+    end
     ea_load_pts(handles, recentfolders);
 elseif strcmp(type, 'patients')
     ea_load_pts(handles, recentfolders);
