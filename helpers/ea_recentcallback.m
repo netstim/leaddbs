@@ -19,8 +19,8 @@ if strcmp(type, 'datasets')
     derivativesdir = fullfile(datasetdir, 'derivatives', 'leaddbs');
     rawdatadir = fullfile(datasetdir, 'rawdata');
     sourcedatadir = fullfile(datasetdir, 'sourcedata');
-    if ~isfolder(datasetdir) || ~isfolder(derivativesdir) || ~isfolder(rawdatadir) || ~isfolder(sourcedatadir)
-        ea_cprintf('CmdWinWarnings','Regenerated dataset folder structure since selected folder is missing or incomplete.\n');
+    if ~isfolder(datasetdir) || ~isfolder(derivativesdir) && ~isfolder(rawdatadir) && ~isfolder(sourcedatadir)
+        ea_cprintf('CmdWinWarnin','Regenerating dataset folder structure since selected folder is missing or empty.\n');
         ea_mkdir(derivativesdir);
         ea_mkdir(rawdatadir);
         ea_mkdir(sourcedatadir);
