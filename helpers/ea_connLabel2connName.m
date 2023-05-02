@@ -17,12 +17,12 @@ for c=1:length(datasetInfo)
     end
 
     if ~isfield(json, 'subsets')
-        if strcmp(connLabel, ea_getConnLabel(connNames{c}))
+        if strcmp(connLabel, ea_conn2connid(connNames{c}))
             connName = connNames{c};
             break;
         end
     else
-        if startsWith(connLabel, ea_getConnLabel(connNames{c}))
+        if startsWith(connLabel, ea_conn2connid(connNames{c}))
             connName = connNames{c};
             for s=1:length(json.subsets)
                 if endsWith(connLabel, regexprep(json.subsets{s}.name, '[\W_]', ''))
