@@ -100,18 +100,26 @@ for patients = 1:length(source)
     files_to_move = {files_in_pat_folder(~[files_in_pat_folder.isdir]).name}; 
     
     for j=1:length(files_to_move)
-        if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
-            if any(regexpi(files_to_move{j},'^raw_anat_.*\.nii$')) || any(regexpi(files_to_move{j},'^anat_.*\.nii$')) || doOnlyRaw  %we already know their tags in the case of cor,tra,sag
-                to_match = files_to_move{j};
-                bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-                tag = ea_checkacq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
-                tag_cell{end+1} = tag;
-                mod_cell{end+1} = bids_mod;
-            end
-        end
-       
+       if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
+           if any(regexpi(files_to_move{j},'raw_anat_.*.nii')) || any(regexpi(files_to_move{j},'^anat_.*.nii')) || doOnlyRaw  %we already know their tags in the case of cor,tra,sag
+               to_match = files_to_move{j};
+               bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
+               tag = ea_checkacq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
+               tag_cell{end+1} = tag;
+               mod_cell{end+1} = bids_mod;
+           end
+       end
     end
+    if ~doOnlyRaw
+        if any(ismember(files_to_move,'glpostop_tra.nii')) || any(ismember(files_to_move,'glpostop_sag.nii')) || any(ismember(files_to_move,'glpostop_cor.nii'))
+            MRCT = 1;
+        elseif any(ismember(files_to_move,'glpostop_ct.nii'))
+            MRCT = 2;
+        end
+    end
+
     files_to_move = reorderfiles(files_to_move);
+
     %collect directories inside the patient folder.
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name}; %deal with dir names
     new_path = fullfile(dest,'derivatives','leaddbs',patient_name);
@@ -176,6 +184,9 @@ for patients = 1:length(source)
                     if ismember(files_in_folder{file_in_folder},brainshift{:,1})
                         indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
                         bids_name = brainshift{1,2}{indx};
+                        if MRCT == 1
+                            bids_name = strrep(bids_name,'CT','MRI');
+                        end
                         if contains(bids_name,'acqTag')
                             bids_name = add_tag(bids_name,mod_cell,tag_cell);
                         end
@@ -255,7 +266,7 @@ for patients = 1:length(source)
 
                         %coregistration: log, no fixed naming pattern and hence
                         %in an elseif command
-                    elseif ~isempty(regexp(which_file,'^coreg.*\.log$'))
+                    elseif ~isempty(regexp(which_file,'^coreg.*.log'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',which_file);
                         if exist(fullfile(source_patient,which_file),'file')
@@ -273,7 +284,7 @@ for patients = 1:length(source)
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         %only for normalization
-                    elseif ~isempty(regexp(which_file,'^normalize_.*\.log$'))
+                    elseif ~isempty(regexp(which_file,'^normalize_.*.log'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{3},'log',which_file);
                         if exist(fullfile(source_patient,which_file),'file')
@@ -335,7 +346,7 @@ for patients = 1:length(source)
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
-                    elseif ~ismember(which_file,preprocessing{:,1}) && ~isempty(regexp(which_file,'^raw_.*\.nii$')) %support for other modalities in preproc
+                    elseif ~ismember(which_file,preprocessing{:,1}) && ~isempty(regexp(which_file,'raw_.*.nii')) %support for other modalities in preproc
                         %other raw files go to pre-processing folder.
                        
                         if endsWith(which_file,'.nii')
@@ -365,7 +376,7 @@ for patients = 1:length(source)
                             copyfile(fullfile(source_path,which_file),op_dir);
                         end
                         
-                  elseif ~ismember(which_file,coregistration{:,1}) && startsWith(which_file,'anat_') %support for other modalities in coreg
+                  elseif ~ismember(which_file,coregistration{:,1}) && ~isempty(regexp(which_file,'^anat_.*')) %support for other modalities in coreg
                       
                       if endsWith(which_file,'.nii')
                           ext = '.nii';
@@ -406,7 +417,7 @@ for patients = 1:length(source)
                                
                           end
                       elseif endsWith(which_file,'.mat')
-                          mat_str = regexp(which_file,'[1-9]\.mat$','split','once');
+                          mat_str = regexp(which_file,'[1-9].mat','split','once');
                           mat_str = mat_str{1};
                           tf = any(~cellfun('isempty',strfind(coregistration{:,1},mat_str)));
                           if tf
@@ -428,7 +439,7 @@ for patients = 1:length(source)
                       end
                       
                        
-                    elseif ~ismember(which_file,normalization{:,1}) && ~isempty(regexp(which_file,'^glanat_.*(\.nii|\.png)$')) %support for other modalities in normalization
+                    elseif ~ismember(which_file,normalization{:,1}) && ~isempty(regexp(which_file,'^glanat_.*(.nii|.png)$')) %support for other modalities in normalization
                         if endsWith(which_file,'.nii')
                             ext = '.nii';
                             op_dir = fullfile(new_path,pipelines{3},'anat');
@@ -544,7 +555,7 @@ for patients = 1:length(source)
                 %clean up the files to move (anything outside of nii not
                 %accepted)
                 for i=1:length(files_to_move)
-                    if isempty(regexpi(files_to_move{i},'\.nii(\.gz)?$','match'))
+                    if isempty(regexpi(files_to_move{i},'.*.(nii|nii.gz$)','match'))
                         files_to_move{i} = [];
                     end
                 end
@@ -626,7 +637,7 @@ for patients = 1:length(source)
                             elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
                                 disp("Migrating dwi data...")
                                 for files = 1:length(files_to_move)
-                                    if ~isempty(regexp(files_to_move{files},'^dti\.(bval|bvec|nii)$'))
+                                    if ~isempty(regexp(files_to_move{files},'^dti.[bval,bvec,nii]'))
                                         if exist(fullfile(source_patient,files_to_move{files}),'file')
                                             modality_str = strsplit(files_to_move{files},'_');
                                             modality_str = lower(modality_str{end});
@@ -724,7 +735,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             
         end
         
-    elseif endsWith(which_file,'.log') || ~isempty(regexp(which_file,'.*(_approved|_applied)\.mat$')) || endsWith(which_file,'.txt')
+    elseif endsWith(which_file,'.log') || ~isempty(regexp(which_file,'.*_approved||.*_applied.mat')) || endsWith(which_file,'.txt')
         if ~exist(log_dir,'dir')
             mkdir(log_dir)
         end
@@ -1193,7 +1204,7 @@ if endsWith(fname_in,'.mat')
         coreg_fieldnames = fieldnames(input_mat);
         %determine files inside the coreg files
         for i=1:length(coreg_fieldnames)
-            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i},'(_tra|_sag|_cor)'))
+            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i},('_tra|_sag|_cor')))
                 if ismember(fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii']),old)
                     indx = cellfun(@(x)strcmp(x,fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii'])),old);
                     try_bids_name = new{indx};
