@@ -20,6 +20,10 @@ try
     
     bids_name = ['dataset-' op_filename  '_analysis-' M.guid '.mat'];
 
+    if ~isfield(M.ui, 'mirrorsides')
+        M.ui.mirrorsides=0; 
+    end 
+
     for ii = 1:length(M.patient.list)
         
         [~, old_pname] = fileparts(M.patient.list{ii}); 
