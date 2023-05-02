@@ -38,6 +38,14 @@ end
 % load nifti
 nii=ea_load_nii(filename);
 
+if ~any(nii.img(:))
+    return
+end
+
+if all(isnan(nii.img(:)))
+    return
+end
+
 if nargin > 2 % exclude nans/zeros
     nstring = varargin{3};
     if isempty(nstring)
@@ -76,13 +84,16 @@ offset=[min(xx)-rim-1
     min(yy)-rim-1
     min(zz)-rim-1];
 
+try
 switch nstring
     case 'nz'
         X=zeros((bbim(1,2)-bbim(1,1))+1+2*rim,(bbim(2,2)-bbim(2,1))+1+2*rim,(bbim(3,2)-bbim(3,1))+1+2*rim);
     case 'nn'
         X=nan((bbim(1,2)-bbim(1,1))+1+2*rim,(bbim(2,2)-bbim(2,1))+1+2*rim,(bbim(3,2)-bbim(3,1))+1+2*rim);
 end
-
+catch
+    keyboard
+end
 tmat=eye(4);
 tmat(1:3,4)=offset(:,1);
 
