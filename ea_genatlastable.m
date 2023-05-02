@@ -292,7 +292,6 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
         
         ea_saveatlas(root,options.atlasset,atlases);
-        
     end
 end
 
