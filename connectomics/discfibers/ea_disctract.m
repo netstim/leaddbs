@@ -225,15 +225,6 @@ classdef ea_disctract < handle
                     end
                 end
             end
-            % check that this has not been calculated before:
-            if ~isempty(obj.results) % something has been calculated
-                if isfield(obj.results,ea_conn2connid(obj.connectome))
-                    answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                    if ~strcmp(answ,'Yes')
-                        return
-                    end
-                end
-            end
 
             % if multi_pathways = 1, assemble cfile from multiple
             % pathway.dat files in dMRI_MultiTract/Connectome_name/
