@@ -10,6 +10,7 @@ import os
 from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, cosine
 import json
 
+
 def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric='Canberra'):
 
     ''' Compute distances in pathway activation space from Target_profiles of symptoms and soft-side effects
@@ -41,6 +42,7 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
         weights_for_pathways = []
 
         activ_target_profile = list(Target_profiles[key].keys())
+
         for i in range(len(activ_target_profile)):
 
             target_rates.append(Target_profiles[key][activ_target_profile[i]][0])
@@ -51,14 +53,14 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
                 inx = approx_pathways.index(activ_target_profile[i])
 
                 # if the activation is below the threshold, assign the threshold (so that the distance is 0)
-
                 if key in Soft_SE_thresh and Target_profiles[key][activ_target_profile[i]][0] > activation_profile[inx]:
                     predicted_rates.append(Target_profiles[key][activ_target_profile[i]][0])
                 else:
                     predicted_rates.append(activation_profile[inx])
+
             else:  # if not a part of the approx model, assign the threshold (so that the distance is 0)
                 predicted_rates.append(Target_profiles[key][activ_target_profile[i]][0])
-                print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
+                #print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
 
         if score_symptom_metric == 'Canberra':
             symp_distances[symp_inx] = canberra(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
@@ -83,6 +85,7 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
         symp_inx += 1
 
     return sum_symp_nonfixed, symp_distances, symptom_list
+
 
 def choose_weights_minimizer(stim_vector, *args):
 
@@ -124,34 +127,59 @@ def choose_weights_minimizer(stim_vector, *args):
     # here we can have a soft-threshold analog. to the definition above
     # but for now we just store them all in symp_distances
 
+
+    null_activation_profile = np.zeros(activation_profile.shape[0])
+    [__, null_symptom_diff, symptoms_list] = get_symptom_distances(null_activation_profile, Target_profiles, Soft_SE_thresh, [], approx_pathways, side, score_symptom_metric)
+
+    # also get symptom distances for 100% activation to estimate worst case scenario for soft-side effects
+    max_activation_profile = 100.0 * np.ones(activation_profile.shape[0])
+    [__, max_symptom_diff, symptoms_list] = get_symptom_distances(max_activation_profile, Target_profiles, Soft_SE_thresh, [], approx_pathways, side, score_symptom_metric)
+
+    from RoutinesForResults import get_improvement_from_distance
+    Impr_pred, estim_symp_improv_dict, symptom_labels_marked = get_improvement_from_distance(Target_profiles, Soft_SE_thresh, side, symp_distances, max_symptom_diff, null_symptom_diff, estim_weights_and_total_score=0, fixed_symptom_weights=0)
+
+    # check improvement for non-fixed symptoms and remaining symtpom weight to be optimized
+    symp_inx = 0
+    Impr_non_fixed = 0.0
+    Rest_weight = 1.0
+    for symptom in Target_profiles:
+
+        if side == 0 and not ("_rh" in symptom):
+            continue
+        elif side == 1 and not ("_lh" in symptom):
+            continue
+
+        if symptom not in fixed_symptom_weights:
+            Impr_non_fixed = Impr_non_fixed + Impr_pred[symp_inx, 0]
+        else:
+            Rest_weight = Rest_weight - fixed_symptom_weights[symptom]
+
+        symp_inx += 1
+
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
     Target_profiles.update(Soft_SE_thresh)
-
 
     # estimated symptom weights (only for adjusted) and global score
     estim_symp_weights_norm = np.zeros(len(Target_profiles), float)
     total_estim_weighted_score = 0.0
 
-    # compute scaling coefficient
-    symp_inx = 0
-    Rest_weight = (1 - sum(fixed_symptom_weights.values()))
-    scale_coef = 0.0
-    for symptom in Target_profiles:
-        if symptom not in fixed_symptom_weights:
-            scale_coef = scale_coef + sum_symp_nonfixed / (symp_distances[symp_inx] * Rest_weight)
 
-        symp_inx += 1
 
     # weight here and not above just for clarity (but can be combined)
-
     estim_symp_weight_norm_dict = {}
 
     symp_inx = 0
     for symptom in Target_profiles:
+
+        if side == 0 and not ("_rh" in symptom):
+            continue
+        elif side == 1 and not ("_lh" in symptom):
+            continue
+
         if symptom not in fixed_symptom_weights:
             # this is the key part
             # do not make any val assumption at this point
-            estim_symp_weights_norm[symp_inx] = sum_symp_nonfixed / (symp_distances[symp_inx] * scale_coef)
+            estim_symp_weights_norm[symp_inx] = Rest_weight * estim_symp_improv_dict[symptom] / Impr_non_fixed
 
             #estim_symp_weights_norm[symp_inx] = Rest_weight * (1 - symp_distances[symp_inx] / sum_symp_nonfixed)
             total_estim_weighted_score += estim_symp_weights_norm[symp_inx] * symp_distances[symp_inx]
@@ -162,14 +190,6 @@ def choose_weights_minimizer(stim_vector, *args):
         estim_symp_weight_norm_dict[symptom] = estim_symp_weights_norm[symp_inx]
 
         symp_inx += 1
-
-
-    # maybe save estim_symp_weights_norm in jsons instead of csv
-
-
-    #print(symp_distances, sum_symp_others)
-    #print(estim_symp_weights)
-    #raise SystemExit
 
     # check if the result improved. If yes, update the output files
     if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv'):
@@ -207,5 +227,5 @@ def choose_weights_minimizer(stim_vector, *args):
 
     #print(weighted_symp_scores, sum(weighted_symp_scores), sum(symp_distances), total_estim_weighted_score)
     #return np.sum(weighted_symp_scores)  # + np.sum(soft_SE_scores)
-
+    #print(total_estim_weighted_score)
     return total_estim_weighted_score

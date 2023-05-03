@@ -168,7 +168,7 @@ if __name__ == '__main__':
     fixed_symptom_weights_dict = fixed_symptom_weights_dict['fixed_symptom_weights']
 
     # load ANN approximated pathways
-    with open(os.environ['STIMDIR'] + '/ANN_abs_errors.json', 'r') as fp:
+    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors.json', 'r') as fp:
         pathways_errors_dict = json.load(fp)
     fp.close()
     # IMPORTANT: the pathways' order is preserved as they were processed in ANN!
