@@ -91,7 +91,6 @@ else
     outputImage = [fileparts(fpath), filesep, prefix, fname, '.nii'];
     if gzinput
         gzip(outputImage);
-    else
         delete(outputImage);
     end
 end
