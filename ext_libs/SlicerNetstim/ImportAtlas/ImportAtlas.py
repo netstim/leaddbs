@@ -117,8 +117,11 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
 
   def getAtlasesPath(self):
     leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
-    for possibleName in ["MNI_ICBM_2009b_NLIN_ASYM", "MNI152NLin2009bAsym"]:
-      possiblePath = os.path.join(leadDBSPath, "templates", "space", possibleName, "atlases")
+    leadDBSSpace = slicer.util.settingsValue("NetstimPreferences/leadDBSSpace", "", converter=str)
+    if leadDBSPath and leadDBSSpace:
+      return os.path.join(leadDBSPath, "templates", "space", leadDBSSpace, "atlases")
+    for possibleSpace in ["MNI152NLin2009bAsym", "MNI_ICBM_2009b_NLIN_ASYM"]:
+      possiblePath = os.path.join(leadDBSPath, "templates", "space", possibleSpace, "atlases")
       if os.path.isdir(possiblePath):
         return possiblePath
     return ""

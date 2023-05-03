@@ -43,10 +43,14 @@ class NetstimPreferencesSettingsUI:
       layout = qt.QFormLayout(parent)
 
       self.leadDBSPathButton = ctk.ctkDirectoryButton()
-      self.leadDBSPathButton.directory = LeadDBSPath().getValue()
       self.leadDBSPathButton.setToolTip("Lead-DBS install directory")
       self.leadDBSPathButton.directoryChanged.connect(self.onLeadDBSPathChanged)
       layout.addRow("Lead-DBS Path: ", self.leadDBSPathButton)
+
+      self.leadDBSSpaceComboBox = qt.QComboBox()
+      self.leadDBSSpaceComboBox.setToolTip("Lead-DBS space")
+      self.leadDBSSpaceComboBox.currentTextChanged.connect(lambda t: LeadDBSSpace().setValue(t))
+      layout.addRow("Lead-DBS Space: ", self.leadDBSSpaceComboBox)
 
       self.useSmoothAtlasCheckBox = qt.QCheckBox()
       self.useSmoothAtlasCheckBox.checked = UseSmoothAtlas().getValue()
@@ -54,10 +58,26 @@ class NetstimPreferencesSettingsUI:
       self.useSmoothAtlasCheckBox.connect("toggled(bool)", self.onUseSmoothAtlasCheckBoxToggled)
       layout.addRow("Use smooth atlases: ", self.useSmoothAtlasCheckBox)
 
+      # initial set-up
+      previousSpace = LeadDBSSpace().getValue()
+      if previousSpace:
+        self.leadDBSSpaceComboBox.addItems([previousSpace])
+        self.leadDBSSpaceComboBox.setCurrentText(previousSpace)
+      self.leadDBSPathButton.directory = LeadDBSPath().getValue()
+
   def onLeadDBSPathChanged(self):
     newDir = self.leadDBSPathButton.directory
     LeadDBSPath().setValue(newDir)
-    if not os.path.isfile(os.path.join(newDir,"lead.m")):
+    if os.path.isfile(os.path.join(newDir,"lead.m")):
+      import glob
+      G = glob.glob(os.path.join(newDir, "templates", "space", "*", "atlases"))
+      spaces = [os.path.basename(os.path.dirname(g)) for g in G]
+      previousSpace = LeadDBSSpace().getValue()
+      self.leadDBSSpaceComboBox.clear()
+      self.leadDBSSpaceComboBox.addItems(spaces)
+      if previousSpace in spaces:
+        self.leadDBSSpaceComboBox.setCurrentText(previousSpace)
+    else:
       qt.QMessageBox().warning(qt.QWidget(), "Error", "Invalid leaddbs path. Select leaddbs root install directory")
 
   def onUseSmoothAtlasCheckBoxToggled(self, checked):
@@ -79,6 +99,13 @@ class LeadDBSPath(NetstimPreference):
       super().__init__()
       self.key = "leadDBSPath"
       self.default = ""
+      self.converter = str
+
+class LeadDBSSpace(NetstimPreference):
+  def __init__(self):
+      super().__init__()
+      self.key = "leadDBSSpace"
+      self.default = "MNI152NLin2009bAsym"
       self.converter = str
 
 class UseSmoothAtlas(NetstimPreference):
