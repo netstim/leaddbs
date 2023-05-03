@@ -1,4 +1,4 @@
-function vox = ea_mm2voxBound(mm, reference, base)
+function vox = ea_mm2voxBound(mm, reference, dim, base)
 % Converts mm-coordinates to voxel-coordinates and bound the coordinates
 % within the image dimension.
 % coords need to be row vector: N*3
@@ -9,7 +9,9 @@ if ischar(reference)
     end
     affine = ea_get_affine(reference, base);
 elseif isnumeric(reference)
-    ea_cprintf('CmdWinWarnings', 'Reference image has to be defined to bound the voxel coordinates!\n');
+    if ~exist('dim', 'var') || isempty(dim)
+        ea_cprintf('CmdWinWarnings', 'Reference image dimension has to be defined to bound the voxel coordinates!\n');
+    end
     affine = reference;
 else
     ea_cprintf('CmdWinErrors', 'Reference image has to be defined to bound the voxel coordinates!\n');
@@ -29,7 +31,9 @@ else % zero-based indexing
 end
 
 % Filter voxel coordinates outside of the image dimension
-if ischar(reference)
+if exist('dim', 'var') && ~isempty(dim)
+    vox(vox(:,1)>dim(1) | vox(:,2)>dim(2) | vox(:,3)>dim(3), :) = [];
+elseif ischar(reference)
     header = ea_fslhd(reference);
     vox(vox(:,1)>header.dim1 | vox(:,2)>header.dim2 | vox(:,3)>header.dim3, :) = [];
 end
