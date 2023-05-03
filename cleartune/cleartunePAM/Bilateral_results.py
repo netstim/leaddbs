@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, Target_profiles, Soft_SE_thresh):
+def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, Target_profiles, Soft_SE_thresh, fixed_symptom_weights_json):
 
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
     Target_profiles.update(Soft_SE_thresh)
@@ -44,39 +44,53 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, Target_profiles
         estim_w_lh = json.load(fp)
     fp.close()
 
+    with open(fixed_symptom_weights_json, 'r') as fp:
+        fixed_symptom_weights = json.load(fp)
+    fp.close()
+
     final_weights = {}
 
     total_weight_count = 0.0
 
     for key in estim_w_rh:
-        if key[:-3] in bilateral_symptoms:
+
+        # no need to re-adjust if fixed weight
+        if key in fixed_symptom_weights:
+            final_weights[key[:-3]] = fixed_symptom_weights[key]
+        elif key[:-3] in bilateral_symptoms:
 
             val_coef_rh = bilateral_symptoms[key[:-3]][0] / (bilateral_symptoms[key[:-3]][0] + bilateral_symptoms[key[:-3]][1])
             val_coef_lh = bilateral_symptoms[key[:-3]][1] / (bilateral_symptoms[key[:-3]][0] + bilateral_symptoms[key[:-3]][1])
 
             # this is the final estimation when we have distances on both sides
-            final_weights[key[:-3]] = val_coef_rh * estim_w_rh[key] + val_coef_lh * estim_w_lh[key]
+            final_weights[key[:-3]] = val_coef_rh * estim_w_rh[key] + val_coef_lh * estim_w_lh[key[:-3] + '_lh']
         else:
             final_weights[key[:-3]] = estim_w_rh[key]
+
         total_weight_count = total_weight_count + final_weights[key[:-3]]
 
     # check symptoms only defined for the left hemisphere
     for key in estim_w_lh:
-        if ~(key[:-3] in bilateral_symptoms):
-            final_weights[key[:-3]] = estim_w_lh[key]
+        if not(key[:-3] in final_weights):
+            if key in fixed_symptom_weights:
+                # might overwrite a value, but it is fine since fixed weights are the same for left and right
+                final_weights[key[:-3]] = fixed_symptom_weights[key]
+            elif not(key[:-3] in bilateral_symptoms):
+                final_weights[key[:-3]] = estim_w_lh[key]
 
-            total_weight_count = total_weight_count + final_weights[key[:-3]]
+                total_weight_count = total_weight_count + final_weights[key[:-3]]
 
-    # we need to normalize them
-    for key in final_weights:
-        final_weights[key] = final_weights[key] / total_weight_count
+
+    ## we need to normalize them
+    #for key in final_weights:
+    #    final_weights[key] = final_weights[key] / total_weight_count
 
     with open(os.environ['STIMDIR'] + '/Estim_weights_bilateral_norm.json', 'w') as save_as_dict:
         json.dump(final_weights, save_as_dict)
 
 
 
-def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, Target_profiles, Soft_SE_thresh):
+def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, Target_profiles, Soft_SE_thresh, fixed_symptom_weights_json):
 
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
     Target_profiles.update(Soft_SE_thresh)
@@ -125,7 +139,7 @@ def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, Target_
             val_coef_lh = bilateral_symptoms[key[:-3]][1] / (bilateral_symptoms[key[:-3]][0] + bilateral_symptoms[key[:-3]][1])
 
             # this is the final estimation when we have distances on both sides
-            final_imp[key[:-3]] = val_coef_rh * estim_imp_rh[key] + val_coef_lh * estim_imp_lh[key]
+            final_imp[key[:-3]] = val_coef_rh * estim_imp_rh[key] + val_coef_lh * estim_imp_lh[key[:-3] + '_lh']
         else:
             final_imp[key[:-3]] = estim_imp_rh[key]
 
@@ -170,17 +184,18 @@ if __name__ == '__main__':
         Soft_SE_dict = json.load(fp)
     fp.close()
 
+    fixed_symptom_weights_json = os.environ['STIMDIR'] + '/Fixed_symptoms.json'
 
     if reconcile_mode == 'improvement':
         # estimated improvements were stored in json
         estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_symp_improv_rh.json'
-        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_symp_improv_rh.json'
+        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_symp_improv_lh.json'
         fp.close()
         estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, profile_dict, Soft_SE_dict)
     elif reconcile_mode == 'weights':
         # estimated weights were stored in json
         estim_w_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_weights_rh.json'
         estim_w_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_weights_lh.json'
-        estimate_bilateral_weights(stim_dir, estim_w_rh_json, estim_w_lh_json, profile_dict, Soft_SE_dict)
+        estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, profile_dict, Soft_SE_dict, fixed_symptom_weights_json)
 
 

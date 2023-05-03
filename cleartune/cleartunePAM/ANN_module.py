@@ -37,6 +37,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
     # load currents
     Currents = np.genfromtxt(TrainTest_currents_file, delimiter=',', skip_header=True)
+
     # load activation results
     ActivationResults = np.genfromtxt(TrainTest_activation_file, delimiter=' ')
 
@@ -108,8 +109,11 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     #================================================== Train ANN =====================================================#
 
     model = Sequential(layers=None, name=None)
-    model.add(Dense(64, input_shape=(X_train.shape[1],), activation='linear'))
-    model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=1.25)))  # alpha 1.25 to have a steeper slope for cathode
+    model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
+    model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
+    model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))
+
+    # as many units as np.sum(axons_in_path) ???
     model.add(Dense(y_train.shape[1], activation='tanh'))   # we need 0 -> 0 (negative vals are removed on the previous level)
 
     ## sigmoid produces a shift for monopolar and bipolar

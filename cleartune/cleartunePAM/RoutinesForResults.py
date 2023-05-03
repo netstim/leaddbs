@@ -128,25 +128,8 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
                 format='png',
                 dpi=1000)
 
-def get_activation_prediction(current_protocol, activation_profile, pathways, symp_distances, profile_dict, Soft_SE_dict, side, plot_results = False, score_symptom_metric='Canberra', estim_weights_and_total_score=0,fixed_symptom_weights=[]):
 
-    ''' call via Improvement4Protocol.py '''
-
-    # # estimate the improvement: canberra distance at null activation vs the optimized
-    # null_protocol = len(min_bound_per_contact) * [0.0]
-    # null_activation_profile = approx_model.predict(np.reshape(np.array(null_protocol), (-1, len(null_protocol))), verbose=0)
-    # null_activation_profile = null_activation_profile[0]  # get the actual array
-
-    # or just assign directly. Note, the former might be more reasonable if damaged neurons are considered as activated!
-    null_activation_profile = np.zeros(activation_profile.shape[0])
-
-    from Optim_strategies import get_symptom_distances
-    [__, null_symptom_diff, symptoms_list] = get_symptom_distances(null_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
-
-
-    # also get symptom distances for 100% activation to estimate worst case scenario for soft-side effects
-    max_activation_profile = 100.0 * np.ones(activation_profile.shape[0])
-    [__, max_symptom_diff, symptoms_list] = get_symptom_distances(max_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
+def get_improvement_from_distance(profile_dict, Soft_SE_dict, side, symp_distances, max_symptom_diff, null_symptom_diff, estim_weights_and_total_score=0,fixed_symptom_weights=[]):
 
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
     profile_dict.update(Soft_SE_dict)
@@ -165,6 +148,7 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
     symptom_labels_marked = []
     symp_inx = 0
     estim_symp_improv_dict = {}
+
     for symptom in profile_dict:
 
         if side == 0 and not ("_rh" in symptom):
@@ -181,12 +165,17 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
                 # Here the value is always negative, i.e. worsening
                 Impr_pred[symp_inx,0] = (max_symptom_diff[symp_inx] - symp_distances[symp_inx]) / max_symptom_diff[symp_inx] - 1.0
         else:
-            Impr_pred[symp_inx,0] = (null_symptom_diff[symp_inx] - symp_distances[symp_inx]) / null_symptom_diff[symp_inx]
+            # we might have all pathways excluded for the symptom
+            # in this case predict zero improvement
+            if null_symptom_diff[symp_inx] == 0.0:
+                Impr_pred[symp_inx, 0] = 0.0
+            else:
+                Impr_pred[symp_inx,0] = (null_symptom_diff[symp_inx] - symp_distances[symp_inx]) / null_symptom_diff[symp_inx]
 
         estim_symp_improv_dict[symptom] = Impr_pred[symp_inx,0]
 
         # add info for weights if Network Blending was conducted
-        if estim_weights_and_total_score != 0:
+        if np.any(estim_weights_and_total_score != 0):
             # estimated weight for the symptom, the order was preserved (we always iterate over the symptom dictionary)
             Impr_pred[symp_inx, 1] = estim_weights_and_total_score[-1,symp_inx]
 
@@ -201,6 +190,29 @@ def get_activation_prediction(current_protocol, activation_profile, pathways, sy
             symptom_labels_marked.append(symptom + " (default)")
 
         symp_inx += 1
+
+    return Impr_pred, estim_symp_improv_dict, symptom_labels_marked
+
+def get_activation_prediction(current_protocol, activation_profile, pathways, symp_distances, profile_dict, Soft_SE_dict, side, plot_results = False, score_symptom_metric='Canberra', estim_weights_and_total_score=0,fixed_symptom_weights=[]):
+
+    ''' call via Improvement4Protocol.py '''
+
+    # # estimate the improvement: canberra distance at null activation vs the optimized
+    # null_protocol = len(min_bound_per_contact) * [0.0]
+    # null_activation_profile = approx_model.predict(np.reshape(np.array(null_protocol), (-1, len(null_protocol))), verbose=0)
+    # null_activation_profile = null_activation_profile[0]  # get the actual array
+
+    # or just assign directly. Note, the former might be more reasonable if damaged neurons are considered as activated!
+    null_activation_profile = np.zeros(activation_profile.shape[0])
+
+    from Optim_strategies import get_symptom_distances
+    [__, null_symptom_diff, symptoms_list] = get_symptom_distances(null_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
+
+    # also get symptom distances for 100% activation to estimate worst case scenario for soft-side effects
+    max_activation_profile = 100.0 * np.ones(activation_profile.shape[0])
+    [__, max_symptom_diff, symptoms_list] = get_symptom_distances(max_activation_profile, profile_dict, Soft_SE_dict, [], pathways, side, score_symptom_metric)
+
+    Impr_pred, estim_symp_improv_dict, symptom_labels_marked = get_improvement_from_distance(profile_dict, Soft_SE_dict, side, symp_distances, max_symptom_diff, null_symptom_diff, estim_weights_and_total_score,fixed_symptom_weights)
 
     # save json
     if side == 0:
