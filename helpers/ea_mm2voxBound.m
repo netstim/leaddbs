@@ -1,4 +1,4 @@
-function vox = ea_mm2voxBound(mm, reference, dim, base)
+function [vox, removed] = ea_mm2voxBound(mm, reference, dim, base)
 % Converts mm-coordinates to voxel-coordinates and bound the coordinates
 % within the image dimension.
 % coords need to be row vector: N*3
@@ -25,15 +25,18 @@ vox = round(vox);
 
 % Filter zero/negative voxel coordinates
 if ~exist('base', 'var') || base % one-based indexing
-    vox(~prod(vox>=1,2), :) = [];
+    removed = ~prod(vox>=1,2);
 else % zero-based indexing
-    vox(~prod(vox>=0,2), :) = [];
+    removed = ~prod(vox>=0,2);
 end
 
 % Filter voxel coordinates outside of the image dimension
 if exist('dim', 'var') && ~isempty(dim)
-    vox(vox(:,1)>dim(1) | vox(:,2)>dim(2) | vox(:,3)>dim(3), :) = [];
+    removed = removed | vox(:,1)>dim(1) | vox(:,2)>dim(2) | vox(:,3)>dim(3);
 elseif ischar(reference)
     header = ea_fslhd(reference);
-    vox(vox(:,1)>header.dim1 | vox(:,2)>header.dim2 | vox(:,3)>header.dim3, :) = [];
+    removed = removed | vox(:,1)>header.dim1 | vox(:,2)>header.dim2 | vox(:,3)>header.dim3;
 end
+
+vox(removed, :) = [];
+
