@@ -282,7 +282,7 @@ for group=groups
                     end
 
                     nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
+                    invals=full(gfibsval{side}(nonempty,gpatsel)');
                     if ~isempty(invals)
                         if exist('covars', 'var') && conventionalcorr % partial corrs only implemented for Pearson & Spearman
                             usecovars=[];
@@ -342,7 +342,7 @@ for group=groups
                 case 'Proportion Test (Chi-Square) / VTAs (binary vars)'
 
                     nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
+                    invals=full(gfibsval{side}(nonempty,gpatsel)');
                     if ~isempty(invals)
 
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
@@ -368,7 +368,7 @@ for group=groups
                     end
                 case 'Binomial Tests / VTAs (binary vars)'
                     nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0; % number of connected tracts
-                    invals=gfibsval{side}(nonempty,gpatsel)';
+                    invals=full(gfibsval{side}(nonempty,gpatsel)');
                     if ~isempty(invals)
 
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
@@ -390,7 +390,7 @@ for group=groups
                     end
                 case 'Reverse T-Tests / E-Fields (binary vars)'
                     nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
+                    invals=full(gfibsval{side}(nonempty,gpatsel)');
                     if ~isempty(invals)
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
