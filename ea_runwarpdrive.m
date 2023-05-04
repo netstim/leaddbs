@@ -10,7 +10,7 @@ if isempty(WARPDRIVE_SUBS)
 else
     WARPDRIVE_SUBS(end+1) = options.subj;
 end
-if options.pat < length(options.uipatdirs)
+if options.subjInd < length(options.uipatdirs)
     return
 end
 warpdrive_subs = WARPDRIVE_SUBS;

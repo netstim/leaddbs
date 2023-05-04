@@ -20,7 +20,7 @@ if isfield(options, 'leadfigure')
     subjId = getappdata(options.leadfigure, 'subjId');
     if ~isempty(bids)
         options.bids = bids;
-        if ~isempty(subjId{options.pat})
+        if ~isempty(subjId{options.subjInd})
             options.subj = bids.getSubj(subjId{options.pat}, options.modality);
         end
     end

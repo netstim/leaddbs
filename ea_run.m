@@ -57,19 +57,19 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~
     pp = parpool(options.prefs.pp.profile, options.prefs.pp.csize);
 
     opts = cell(1, length(uipatdirs));
-    for pat = 1:length(opts)
+    for i = 1:length(opts)
         % set patient specific options
-        opts{pat} = options;
-        opts{pat}.root = [fileparts(uipatdirs{pat}), filesep];
-        [~, opts{pat}.patientname] = fileparts(uipatdirs{pat});
+        opts{i} = options;
+        opts{i}.root = [fileparts(uipatdirs{i}), filesep];
+        [~, opts{i}.patientname] = fileparts(uipatdirs{i});
     end
 
-    parfor pat = 1:length(uipatdirs)
+    parfor i = 1:length(uipatdirs)
         % run main function
         try
-            ea_autocoord(opts{pat});
+            ea_autocoord(opts{i});
         catch
-            warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.']);
+            warning([opts{i}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.']);
         end
     end
 
@@ -86,12 +86,12 @@ else
             options.exportedJob = 1;
             ea_export(options);
         case 'run'
-            for pat = 1:length(uipatdirs)
+            for i = 1:length(uipatdirs)
 
                 % set patient specific options
-                options.root = [fileparts(uipatdirs{pat}),filesep];
-                [~, options.patientname] = fileparts(uipatdirs{pat});
-                options.pat=pat;
+                options.root = [fileparts(uipatdirs{i}),filesep];
+                [~, options.patientname] = fileparts(uipatdirs{i});
+                options.subjInd=i;
                 % run main function
                 if length(uipatdirs) > 1 % multi mode. Dont stop at errors.
                     try
