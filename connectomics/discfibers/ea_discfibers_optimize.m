@@ -294,7 +294,13 @@ tractset.save;
             end
         end
         Adj=reshape(Adj,[numfold,numvoter*numside*maxusedidx]);
-        sim=corr(Adj','rows','pairwise');
+        posAdj=Adj;
+        negAdj=Adj;
+        posAdj(Adj<0)=nan;
+        negAdj(Adj>0)=nan;
+        possim=corr(posAdj','rows','pairwise');
+        negsim=corr(negAdj','rows','pairwise');
+        sim=(possim+negsim)./2;
         sim=ea_nanmean(sim(logical(triu(ones(numfold),1)))); % take average of upper triangle
     end
 
