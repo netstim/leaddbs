@@ -1,25 +1,29 @@
 function  ea_pat2pdf(uipatdir,handles)
 
-options=ea_handles2options(handles);
-options.native=0; % MNI space only
+options = ea_handles2options(handles);
+options.native = 0; % MNI space only
 
-[options.root,options.patientname]=fileparts(uipatdir);
-options.root=[options.root,filesep];
-options=ea_resolve_elspec(options);
-options.prefs=ea_prefs(options.patientname);
+[options.root, options.patientname] = fileparts(uipatdir);
+options.root = [options.root,filesep];
+options = ea_resolve_elspec(options);
+options.prefs = ea_prefs(options.patientname);
 options.d2 = ea_tdhandles2options([], options.d2);
-options.d3.expdf=1;
-options.d3.verbose='off';
+options.d3.expdf = 1;
+options.d3.verbose = 'off';
+
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getLeadDBSDirs(subjId{1});
+options.subj.recon = bids.getRecon(subjId{1});
+options.subj.stats = bids.getStats(subjId{1});
 
 if ~ea_checkslicespresent(options)
     ea_writeplanes(options);
 end
 
+currentPath = pwd;
 ea_elvis(options);
-
-fname = [uipatdir, filesep, 'Lead-DBS_Electrode_Localization'];
-movefile([fname, '.u3d'], [uipatdir, filesep, 'export', filesep, 'pdf']);
-movefile([fname, '.pdf'], [uipatdir, filesep, 'export', filesep, 'pdf']);
+cd(currentPath);
 
 
 function present = ea_checkslicespresent(options)
