@@ -348,7 +348,6 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                     markers.head=tgt+(((options.elspec.tip_length/2)+(options.elspec.contact_length/2))*intraj);
                     markers.tail=tgt+(((3)*options.elspec.eldist)*intraj)+(((options.elspec.tip_length/2)+(options.elspec.contact_spacing))*intraj);
                 end
-
             end
 
             [xunitv, yunitv] = ea_calcxy(markers.head, markers.tail);
@@ -365,7 +364,6 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 case 'line'
                     [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
                 case 'electrode'
-
                     options=ea_defaultoptions(options);
                     options.sides=1;
                     options.colorMacroContacts=[];
