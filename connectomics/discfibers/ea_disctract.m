@@ -478,6 +478,9 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat, val_struct] = lno(obj, Iperm, silent)
+            if ~exist('silent','var')
+                silent=0;
+            end
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
             if ~exist('Iperm', 'var') || isempty(Iperm)
@@ -858,9 +861,6 @@ classdef ea_disctract < handle
                     % use saved weights to ensure consistency
                     coeff = obj.subscore.pcacoeff;
 
-                    if ~exist('silent','var')
-                        silent=0;
-                    end
                     if ~silent
                         % show predictions for PC scores
                         if ~exist('Iperm', 'var') || isempty(Iperm) % avoid plotting for each permutation if using permutations!
@@ -967,10 +967,10 @@ classdef ea_disctract < handle
                 for perm=1:numPerm+1
                     if perm==1
                         fprintf('Calculating without permutation\n\n');
-                        [~, Ihat{perm},val_struct{perm}] = lno(obj);
+                        [~, Ihat{perm},val_struct{perm}] = lno(obj, [], silent);
                     else
                         fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
-                        [~, Ihat{perm},val_struct{perm}] = lno(obj, Iperm(:, perm));
+                        [~, Ihat{perm},val_struct{perm}] = lno(obj, Iperm(:, perm), silent);
                     end
 
                     R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
