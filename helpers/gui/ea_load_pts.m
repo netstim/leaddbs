@@ -187,7 +187,10 @@ if strcmp(handles.prod, 'dbs')
         else
             handles.dicom2bidscheckbox.Value = 0;
             handles.nifti2bidscheckbox.Value = 0;
-            handles.processtabgroup.SelectedTab = handles.registrationtab;
+            stack = dbstack;
+            if ~ismember('ea_run', {stack.name})
+                handles.processtabgroup.SelectedTab = handles.registrationtab;
+            end
             handles.statusone.String = '';
             handles.statustwo.String = '';
         end
