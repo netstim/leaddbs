@@ -7,7 +7,7 @@ else % used in permutation based statistics - in this case the real improvement 
     I=Iperm;
 end
 
-fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
 
 % quickly recalc stats:
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
@@ -281,8 +281,8 @@ for group=groups
                         conventionalcorr=0;
                     end
 
-                    nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
-                    invals=full(gfibsval{side}(nonempty,gpatsel)');
+                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
+                    invals=gfibsval{side}(nonempty,gpatsel)';
                     if ~isempty(invals)
                         if exist('covars', 'var') && conventionalcorr % partial corrs only implemented for Pearson & Spearman
                             usecovars=[];
@@ -321,13 +321,13 @@ for group=groups
                                         if obj.showsignificantonly
                                             ea_error('Significance not implemented for Skipped correlations');
                                         else
-                                            outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Pearson'); % generate optimality values on all but left out patients
+                                            outvals=ea_skipped_correlation(invals,I(gpatsel,side),'Pearson'); % generate optimality values on all but left out patients
                                         end
                                     case 'skipped spearman'
                                         if obj.showsignificantonly
                                             ea_error('Significance not implemented for Skipped correlations');
                                         else
-                                            outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
+                                            outvals=ea_skipped_correlation(invals,I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
                                         end
                                 end
 
@@ -341,16 +341,16 @@ for group=groups
                     end
                 case 'Proportion Test (Chi-Square) / VTAs (binary vars)'
 
-                    nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
-                    invals=full(gfibsval{side}(nonempty,gpatsel)');
+                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
+                    invals=gfibsval{side}(nonempty,gpatsel)';
                     if ~isempty(invals)
 
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
                         ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        suminvals=full(sum(invals(ImpBinary == 1,:),1)); % for each fiber, how many vtas cover it of patients that also had the effect (binary outcome)
+                        suminvals=sum(invals(ImpBinary == 1,:),1); % for each fiber, how many vtas cover it of patients that also had the effect (binary outcome)
                         Ninvals=sum(ImpBinary == 1,1);
-                        sumoutvals=full(sum(invals(ImpBinary == 0,:),1)); % for each fiber, how many vtas cover it of patients that did not have the effect (binary var)
+                        sumoutvals=sum(invals(ImpBinary == 0,:),1); % for each fiber, how many vtas cover it of patients that did not have the effect (binary var)
                         Noutvals=sum(ImpBinary == 0,1);
 
                         prop=zeros(size(invals,2),1); %
@@ -367,15 +367,15 @@ for group=groups
                         end
                     end
                 case 'Binomial Tests / VTAs (binary vars)'
-                    nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0; % number of connected tracts
-                    invals=full(gfibsval{side}(nonempty,gpatsel)');
+                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0; % number of connected tracts
+                    invals=gfibsval{side}(nonempty,gpatsel)';
                     if ~isempty(invals)
 
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
                         ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        sum_coverage_createeffect=full(sum(invals(ImpBinary == 1,:),1)); % sum of coverage that creates the effect for all tracts
-                        sum_coverage_noeffect=full(sum(invals(ImpBinary == 0,:),1)); % sum of coverage that does not create the effect for all tracts
+                        sum_coverage_createeffect=sum(invals(ImpBinary == 1,:),1); % sum of coverage that creates the effect for all tracts
+                        sum_coverage_noeffect=sum(invals(ImpBinary == 0,:),1); % sum of coverage that does not create the effect for all tracts
 
                         prob_createeffect=ea_nansum(ImpBinary)/sum(~isnan(ImpBinary));
                         sum_coverage=sum_coverage_noeffect+sum_coverage_createeffect;
@@ -389,8 +389,8 @@ for group=groups
 
                     end
                 case 'Reverse T-Tests / E-Fields (binary vars)'
-                    nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
-                    invals=full(gfibsval{side}(nonempty,gpatsel)');
+                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
+                    invals=gfibsval{side}(nonempty,gpatsel)';
                     if ~isempty(invals)
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
@@ -399,11 +399,11 @@ for group=groups
                         downSet=invals(ImpBinary==0,:);
 
                         if obj.showsignificantonly
-                            [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
+                            [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
                             outvals=stats.tstat';
                             outps=ps;
                         else % no need to calc p-val here
-                            [~,~,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
+                            [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
                             outvals=stats.tstat';
                         end
 
