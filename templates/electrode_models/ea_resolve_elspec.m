@@ -1153,8 +1153,8 @@ switch elmodel
         elspec.forstimulation=0;
 end
 
-if ~isfield(elspec,'eldist') && isa(elspec.contact_spacing, 'cell')
-    elspec.eldist=elspec.contact_spacing{2}+elspec.contact_length;
+if ~isfield(elspec,'eldist') && numel(elspec.contact_spacing)>1
+    elspec.eldist=elspec.contact_spacing(2)+elspec.contact_length;
 elseif ~isfield(elspec,'eldist')
     elspec.eldist=elspec.contact_spacing+elspec.contact_length;
 end
