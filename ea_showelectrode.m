@@ -12,6 +12,7 @@ switch cmd
     case 'plan'
         resultfig=obj.plotFigureH;
         elstruct=obj.plan2elstruct;
+        elstruct.elmodel = obj.plan2elstruct_model;
         pt=1;
 end
 
