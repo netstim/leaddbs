@@ -41,10 +41,11 @@ fprintf(fID, '\n');
 
 
 optionsCode=ea_gencode(forwardvars);
-    fprintf(fID, '%s\n', [optionsCode{1},' % Specify patient folder(s) on which to base normalizations here.']);
-for e = 2:length(optionsCode)
+fprintf(fID, '%s\n', [optionsCode{1},' % Specify patient folder(s) on which to base normalizations here.']);
+for e = 2:length(optionsCode)-1
     fprintf(fID, '%s\n', optionsCode{e});
 end
+fprintf(fID, '%s\n', [optionsCode{length(optionsCode)},' % Exchange with path to an image that defines the reference space (resolution) to be mapped to.']);
 
 fprintf(fID, '%s\n', ['forwardvars=[forwardvars,...']);
 fprintf(fID, '%s\n', ['{''/file/to/map.nii''}]; % Specify nifti file to map here. A full path to the file indicates the same file']);
