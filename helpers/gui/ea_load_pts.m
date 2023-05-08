@@ -146,6 +146,7 @@ end
 
 if strcmp(handles.prod, 'dbs')
     handles.datasetselect.String = BIDSRoot;
+    handles.datasetselect.TooltipString = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
     if isempty(bids.subjId)
