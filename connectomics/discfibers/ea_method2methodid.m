@@ -3,19 +3,12 @@ if ~exist('efm','var')
     efm=obj.efieldmetric;
 end
 
-obj.compat_statmetric; % compatibility for old statmetric notation (used to be stored as integers).
-
-
-if strcmp(obj.statmetric,'T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)')
-    statmetric_cor = 'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)';
-else
-    statmetric_cor = obj.statmetric;
-end
+    obj.compat_statmetric; % compatibility for old statmetric notation (used to be stored as integers).
 
 switch obj.connectivity_type
     case 2 % PAM
-        switch statmetric_cor
-            case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}  % both refer to T-test atm
+        switch obj.statmetric
+            case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}  % both refer to T-test atm
                 id = 'PAM_Ttest'; 
             case 'Plain Connections'
                 id = 'plainconn';
@@ -23,7 +16,7 @@ switch obj.connectivity_type
                 disp('The metric is not supported by PAM')
         end
     otherwise
-        switch statmetric_cor
+        switch obj.statmetric
             case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}  % VTAs
                 id = 'VAT_Ttest';
             case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'}  % E-fields

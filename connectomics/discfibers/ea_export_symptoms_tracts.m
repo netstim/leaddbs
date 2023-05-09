@@ -179,16 +179,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
 
         disp("Number of spatial groups "+string(length(unique(groups))))
 
-        % we remove pathways with less than 10 fibers, because they are 
-        % not suitable for the analysis 
-        drop_pathway = zeros(length(unique(groups)), 1);
-
         for group_i = 1:length(unique(groups))
-
-            if length(vals{voter,side}(groups == group_i)) < 10
-                drop_pathway(group_i) = 1;
-                continue
-            end
 
             % do not attempt to val bin one fiber
             if length(vals{voter,side}(groups == group_i)) > 1
@@ -367,12 +358,6 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
         end
 
         for group_i = 1:size(pathway_mean_vals,2)
-
-            % skip dropped
-            if drop_pathway(group_i) == 1
-                continue
-            end
-
             for bin_i = 1:length(pathway_mean_vals{1,group_i})
 
                 % remove period delimiter
@@ -399,12 +384,6 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
 
     end
 end        
-
-if sum(drop_pathway) > 0
-    ea_warndlg("Pathways with less than 10 fibers were removed, check the terminal")
-    disp("Number of small pathways")
-    disp(sum(drop_pathway))
-end
 
 % check number or repetitions and copy to MultiTract/
 % use the same name as .json file for the folder

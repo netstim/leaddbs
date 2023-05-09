@@ -1,4 +1,4 @@
-function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname, templateresolution, targetfile)
+function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname, templateresolution)
 if ~exist('untouchedanchor','var')
     untouchedanchor = 0;
 end
@@ -7,15 +7,16 @@ if ~exist('templateresolution','var')
     templateresolution = 0;
 end
 
-if ~exist("targetfile",'var')
-    targetfile=0;
-end
-
 if templateresolution
     res = inputdlg('Specify voxel resolution of template space to warp into.','Template resolution',1,{'0.5'});
     templateresolution = str2double(res);
 end
 
+if untouchedanchor
+    interp = 0;
+else
+    interp = 4;
+end
 
 if ~exist('expdicom','var')
     expdicom = 0;
@@ -30,11 +31,8 @@ if ~iscell(handles)
 else
     uipatdir = handles; % direct supply of cell string.
 end
-if ~exist('fname','var')
-    fname=0;
-end
 
-if ~fname || isempty(fname)
+if ~exist('fname','var') || isempty(fname)
     if useinverse
         defaultPath = ea_space;
     else
@@ -45,37 +43,37 @@ if ~fname || isempty(fname)
         end
     end
     if ismac % macs file open dlg doesnt seem to support .nii/.nii.gz handling from matlab.
-        [fromfis, frompath] = uigetfile({'*'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+        [fis, path] = uigetfile({'*'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
     else
-        [fromfis, frompath] = uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+        [fis, path] = uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
     end
-    if ~ischar(fromfis) && ~iscell(fromfis)
-        if ~fromfis
+    if ~ischar(fis) && ~iscell(fis)
+        if ~fis
             return
         end
     end
 else
-    [frompath, fromfis, ext] = fileparts(fname);
-    if ~isempty(frompath)
-        frompath = fullfile(frompath, filesep);
+    [path, fis, ext] = fileparts(fname);
+    if ~isempty(path)
+        path = fullfile(path, filesep);
     else % local file
-        frompath = fullfile('.', filesep);
+        path = fullfile('.', filesep);
     end
-    fromfis = [fromfis, ext];
+    fis = [fis, ext];
 end
 
-if ischar(fromfis)
-    fromfis = {fromfis};
+if ischar(fis)
+    fis = {fis};
 end
-space=''; % default blank
+
 if useinverse % from template space to [untouched] achor space
     for pt=1:length(uipatdir)
         options = ea_getptopts(uipatdir{pt});
         presentfiles = fieldnames(options.subj.preopAnat);
         options.coregmr.method = get_coregmr_method;
 
-        from = cell(length(fromfis), 1);
-        to = cell(length(fromfis), 1);
+        from = cell(length(fis), 1);
+        to = cell(length(fis), 1);
 
         if untouchedanchor
             spaceTag = [options.subj.subjId, 'Native'];
@@ -83,35 +81,16 @@ if useinverse % from template space to [untouched] achor space
             spaceTag = [options.subj.subjId, 'anchorNative'];
         end
 
-        for i=1:length(fromfis)
-        
-                if isBIDSFileName(fromfis{i})
-                    to{i} = setBIDSEntity(fullfile(frompath, fromfis{i}), 'space', spaceTag);
-                else
-                    to{i} = strrep(fromfis{i}, '.nii', ['_space-', spaceTag, '.nii']);
-                end
-           
-                if targetfile % overwrite since will be supplied in better resolution
-                    if ischar(targetfile)
-                        to{i}=targetfile;
-                    elseif iscell(targetfile)
-                        to{i}=targetfile{i};
-                    else
-                        if length(fromfis)>1
-                            ea_error('Not supported for multiple images, please supply one by one.');
-                        end
-                        [spacefile,spacepath]=uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'},['Specify target space for image number ',num2str(i)]);
-                        space=fullfile(spacepath,spacefile);
-                    end
-                end
-            from{i} = fullfile(frompath, fromfis{i});
+        for i=1:length(fis)
+            if isBIDSFileName(fis{i})
+                to{i} = setBIDSEntity(fullfile(path, fis{i}), 'space', spaceTag);
+            else
+                to{i} = strrep(fis{i}, '.nii', ['_space-', spaceTag, '.nii']);
+            end
+            from{i} = fullfile(path, fis{i});
         end
-        if length(from)==1
-            interp='auto';
-        else
-            interp=1;
-        end
-        ea_apply_normalization_tofile(options, from, to, useinverse, interp, space);
+
+        ea_apply_normalization_tofile(options, from, to, useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
             tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'desc-preproc','desc-tmp');
@@ -157,14 +136,14 @@ else % from [untouched] achor space to template space
     presentfiles = fieldnames(options.subj.preopAnat);
     options.coregmr.method = get_coregmr_method;
 
-    to = cell(length(fromfis), 1);
-    for i=1:length(fromfis)
-        if isBIDSFileName(fromfis{i})
-            to{i} = setBIDSEntity(fullfile(frompath, fromfis{i}), 'space', ea_getspace);
+    to = cell(length(fis), 1);
+    for i=1:length(fis)
+        if isBIDSFileName(fis{i})
+            to{i} = setBIDSEntity(fullfile(path, fis{i}), 'space', ea_getspace);
         else
-            to{i} = strrep(fromfis{i}, '.nii', ['_space-', ea_getspace, '.nii']);
+            to{i} = strrep(fis{i}, '.nii', ['_space-', ea_getspace, '.nii']);
         end
-        copyfile(fullfile(frompath, fromfis{i}), to{i});
+        copyfile(fullfile(path, fis{i}), to{i});
     end
 
     if untouchedanchor % map from untouched anchor to anchor first
@@ -194,11 +173,7 @@ else % from [untouched] achor space to template space
     else
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
-    if length(from)==1
-        interp='auto';
-    else
-        interp=1;
-    end
+
     ea_apply_normalization_tofile(options, to, to, useinverse, interp, refim);
 end
 

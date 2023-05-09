@@ -7,21 +7,11 @@ if ~exist('interp', 'var')
     interp=4;
 end
 
-
-
-
-
 if ~exist('ref', 'var')
     ref='';
 end
 
 json = loadjson(options.subj.norm.log.method);
-
-if ischar(interp)
-    if strcmp(interp,'auto') % only works if one image supplied
-        interp=detinterp(from,contains(json.method, 'ANTs'));
-    end
-end
 
 if contains(json.method, 'ANTs')
     ea_ants_apply_transforms(options, from, to, useinverse, ref, '', interp);
@@ -142,35 +132,3 @@ elseif contains(json.method, 'SPM')
         end
     end
 end
-
-
-function interp=detinterp(from,ants)
-if length(from)>1
-    ea_error('Auto detection only implemented for single images.')
-end
-nii=ea_load_nii(from{1});
-outs=unique(nii.img(:));
-if ants
-    interp='LanczosWindowedSinc'; % default
-else
-    interp=1;
-end
-if length(outs)<3
-    if ants
-        interp='GenericLabel';
-    else
-        interp=0;
-    end
-end
-if length(outs)<100 % likely labeling file
-    if outs==round(outs) % integers only, pretty much certainly labeling file
-        if ants
-            interp='GenericLabel';
-        else
-            interp=0;
-        end
-    end
-end
-
-
-

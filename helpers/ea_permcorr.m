@@ -161,6 +161,16 @@ if nargin<7
     rows = 'complete';
 end
 
+% Only use rows without NaN values
+if strcmpi(rows, 'complete')
+    ind = ~any(isnan(dataX),2) & ~any(isnan(dataY),2);
+    if ~all(ind)
+        ea_cprintf('CmdWinWarnings', 'X or Y is missing values, using only rows without NaNs.\n');
+        dataX = dataX(ind);
+        dataY = dataY(ind);
+    end
+end
+
 if nargin<8
     reports = 0;
 end
@@ -172,23 +182,6 @@ if nargin<9 || isempty(seed_state)
     seed_state=defaultStream.State;
 else
     defaultStream.State=seed_state; % Reset random number generator to saved state
-end
-
-% Only use rows without NaN values
-if strcmpi(rows, 'complete')
-    ind = ~any(isnan(dataX),2) & ~any(isnan(dataY),2);
-    if ~any(ind)
-        ea_cprintf('CmdWinErrors', 'X or Y contains only NaNs!\n');
-        corr_obs = nan;
-        pval = nan;
-        crit_corr = [nan nan];
-        est_alpha = nan;
-        return;
-    elseif ~all(ind)
-        ea_cprintf('CmdWinWarnings', 'X or Y is missing values, using only rows without NaNs.\n');
-        dataX = dataX(ind);
-        dataY = dataY(ind);
-    end
 end
 
 [n_obsX, n_varX]=size(dataX);

@@ -115,10 +115,6 @@ if isempty(menuprobe)
         uimenu(backwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0},'Accelerator','Y');
         uimenu(backwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,1,0,0,0});
 
-        backwdspace=uimenu(backwd,'Label','Select target resolution...');
-        uimenu(backwdspace,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0,0,0,1});
-        uimenu(backwdspace,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,1,0,0,0,0,0,1});
-
         uimenu(f,'Label','Map file from untouched anchor space to template...','Callback',{@ea_applynormtofile_menu,handles,0,1});
         uimenu(f,'Label','Map file from template to untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1});
         uimenu(f,'Label','Export NII of overlay (template space) in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,0});

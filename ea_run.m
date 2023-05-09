@@ -104,14 +104,6 @@ else
                 end
             end
 
-            % Uncheck CheckBox after successful run
-            % handles = getappdata(options.leadfigure, 'handles');
-            % checkBoxes = findobj(handles.importtab.Children, 'Type', 'uicheckbox');
-            % checkBoxes = [checkBoxes; findobj(handles.registrationtab.Children, 'Type', 'uicheckbox')];
-            % checkBoxes = [checkBoxes; findobj(handles.localizationtab.Children, 'Type', 'uicheckbox')];
-            % checkBoxes = [checkBoxes; findobj(handles.optionaltab.Children, 'Type', 'uicheckbox')];
-            % arrayfun(@(x) set(x, 'Value', 0), checkBoxes);
-
             % Refresh GUI after all process is done
             if strcmp(options.leadprod, 'dbs') && ~isempty(options.uipatdirs)
                 ea_load_pts(getappdata(options.leadfigure, 'handles'), getappdata(options.leadfigure, 'uipatdir'));
