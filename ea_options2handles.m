@@ -21,8 +21,6 @@ else
 end
 
 if isfield(options, 'coregct')
-    set(handles.coreg_checkbox,'Value',options.coregct.do);
-    
     if ~isfield(options.coregct, 'method')
         index = [];
     else
@@ -37,8 +35,6 @@ if isfield(options, 'coregct')
 end
 
 if isfield(options, 'normalize')
-    set(handles.normalize_checkbox,'Value',options.normalize.do);
-
     if ~isfield(options.normalize, 'method')
         index = [];
     else
@@ -50,17 +46,6 @@ if isfield(options, 'normalize')
     else
         set(handles.normmethod,'Value',1);
     end
-end
-
-if isfield(options, 'checkreg')
-    set(handles.checkreg, 'Value', options.checkreg);
-else
-    set(handles.checkreg, 'Value', 0);
-end
-
-
-if isfield(options, 'normcheck')
-    set(handles.normcheck, 'Value', options.normcheck);
 end
 
 if isfield(options, 'modality')
@@ -77,27 +62,10 @@ if isfield(options, 'sides')
     end
 end
 
-if isfield(options, 'doreconstruction')
-    set(handles.doreconstruction_checkbox,'Value',options.doreconstruction);
-end
-
 if isfield(options, 'automask') && options.automask
     set(handles.maskwindow_txt,'String','auto')
 elseif isfield(options, 'maskwindow') && ~isempty(options.maskwindow)
     set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
-end
-
-if isfield(options, 'd2')
-    set(handles.writeout2d_checkbox,'Value',options.d2.write);
-end
-
-if isfield(options, 'd3')
-    set(handles.render_checkbox,'Value',options.d3.write);
-    set(handles.exportservercheck,'Value',options.d3.autoserver);
-end
-
-if isfield(options, 'manualheightcorrection')
-    set(handles.manualheight_checkbox,'Value',options.manualheightcorrection);
 end
 
 if isfield(options, 'entrypoint')

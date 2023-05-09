@@ -146,6 +146,7 @@ end
 
 if strcmp(handles.prod, 'dbs')
     handles.datasetselect.String = BIDSRoot;
+    handles.datasetselect.TooltipString = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
     if isempty(bids.subjId)
@@ -187,7 +188,10 @@ if strcmp(handles.prod, 'dbs')
         else
             handles.dicom2bidscheckbox.Value = 0;
             handles.nifti2bidscheckbox.Value = 0;
-            handles.processtabgroup.SelectedTab = handles.registrationtab;
+            stack = dbstack;
+            if ~ismember('ea_run', {stack.name})
+                handles.processtabgroup.SelectedTab = handles.registrationtab;
+            end
             handles.statusone.String = '';
             handles.statustwo.String = '';
         end

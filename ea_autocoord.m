@@ -21,7 +21,7 @@ if isfield(options, 'leadfigure')
     if ~isempty(bids)
         options.bids = bids;
         if ~isempty(subjId{options.subjInd})
-            options.subj = bids.getSubj(subjId{options.pat}, options.modality);
+            options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
         end
     end
 end

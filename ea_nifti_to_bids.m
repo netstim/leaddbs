@@ -265,30 +265,31 @@ uiapp.previewtree_postop_func.Children.delete;    % delete children
 
 % go through all of the items and automatically set columns based on others
 for i = 1:height(uiapp.niiFileTable.Data)
-    %ToDo handle this
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    session = char(uiapp.niiFileTable.Data.Session(i));
+
     if ~isempty(event) % check this only for the current selected one
         % set type automatically for anat modalities
-        indx = event.Indices(1);
-        mod2compare = char(uiapp.niiFileTable.Data.Modality(indx));
-        sess2compare = char(uiapp.niiFileTable.Data.Session(indx));
-        acq2compare = char(uiapp.niiFileTable.Data.Acquisition(indx));
-        if  strcmp(sess2compare,'postop')
-            if ~any(ismember(mod2compare,postop_modalities))
-                warning('For postop MRIs, the modality tag may only be set to <MRI> or <CT>.Setting to MRI for now');
-                uiapp.niiFileTable.Data.Modality(indx) = 'MRI';
+        if event.NewData == "postop" && ~strcmp(modality, 'CT') && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Modality(i) = 'MRI';
+        elseif event.NewData == "preop" && strcmp(modality, 'MRI') && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Modality(i) = 'T1w';
+            uialert(uiapp.UIFigure, 'Modality falls back to ''T1w'' by default when session changed to ''preop''. Please update the modality accordingly!', '');
+        elseif any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'anat';
+            uiapp.niiFileTable.Data.Session(i) = 'preop';
+            uiapp.niiFileTable.Data.Task(i) = '-';
+        % set type and session automatically for postop modalities
+        elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'anat';
+            uiapp.niiFileTable.Data.Session(i) = 'postop';
+            uiapp.niiFileTable.Data.Task(i) = '-';
+
+            % if current acquistion tag is not ax, cor or sag, reset it
+            if ~any(strcmp(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags)) && strcmp(modality, 'MRI')
+                uiapp.niiFileTable.Data.Acquisition(i) = 'ax';
+                uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to ''ax'' (must have) , ''sag'' or ''cor''.', 'Invalid acquisition tag for postop MRI');
             end
-            if ~any(contains(acq2compare, postop_acq_tags)) && strcmp(mod2compare, 'MRI')
-                warning('For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.Invalid acquisition tag in postop MRI');
-                uiapp.niiFileTable.Data.Acquisition(indx) = 'ax';
-            end
-        elseif strcmp(sess2compare,'preop')
-            if ~any(ismember(mod2compare,anat_modalities))
-                warning('For preop files, the modality tag may only be set to an anat modality like <T1w>, <T2w>, etc.Setting to T1w for now');
-                uiapp.niiFileTable.Data.Modality(indx) = 'T1w';
-            end
-        %% TODO: DWI data
+
         % set type to func for bold modality
         elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
@@ -301,7 +302,6 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Type(i) = 'func';
             uiapp.niiFileTable.Data.Task(i) = 'rest';
             uiapp.niiFileTable.UserData.task_set(i) = 1;
-       
         end
     else    % automatically set rest as task if func is detected (this is not covered by the lookupable as of yet)
         if strcmp(modality, 'bold') && uiapp.niiFileTable.UserData.task_set(i) == 0
@@ -536,23 +536,18 @@ if ~(nopostop_set == 1) && postop_mri_found == 1
         session = char(uiapp.niiFileTable.Data.Session(i));
         modality = char(uiapp.niiFileTable.Data.Modality(i));
         acq = char(uiapp.niiFileTable.Data.Acquisition(i));
-        %postop images can only be MRI
-        
 
         % check if postop images have the correct modality
         if strcmp(session, 'postop') && strcmp(modality, 'MRI')
             if ~any(strcmp(acq, postop_acq_tags))
                 uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
-                uiapp.niiFileTable.Data.Acquisition(i) = 'ax';
-                
+                return
             end
             if strcmp(acq, 'ax')
                 ax_postop_mri_found = 1;
             end
+
         end
-
-       
-
     end
 
     if ~(ax_postop_mri_found == 1)

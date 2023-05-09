@@ -79,7 +79,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     pathway_filtered = []
 
     for i in range(y_train_prelim.shape[1]):
-        # only compute for pathways with some percent activation
+        # only compute for pathways with some percent activation and minimal number of fibers
         if np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
             y_train[:,i] = y_train_prelim[:,i]
             y_test[:,i] = y_test_prelim[:,i]
@@ -111,15 +111,13 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     model = Sequential(layers=None, name=None)
     model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
     model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
-    #model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))
-
-    # as many units as np.sum(axons_in_path) ???
+    model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))
     model.add(Dense(y_train.shape[1], activation='tanh'))   # we need 0 -> 0 (negative vals are removed on the previous level)
 
     ## sigmoid produces a shift for monopolar and bipolar
     #model.add(Dense(y_train.shape[1], activation='sigmoid')) # we need 0 -> 0 (negative vals are removed on the previous level)
                                                                             #
-    adam = optimizers.Adamax(lr = learn_rate)
+    adam = optimizers.Adamax(lr=learn_rate)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
     model.fit(X_train, y_train, epochs=N_epochs, verbose=1)
     results = model.evaluate(X_test, y_test)
@@ -170,7 +168,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
     plt.legend()
     plt.title('Abs errors for ANN on Test')
-    #plt.xlim([-0.15,0.15])
+    plt.xlim([-0.25,0.25])
     plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors_on_Test_' + str(side) + '.png', format='png',
                 dpi=1000)
 
@@ -324,7 +322,7 @@ if __name__ == '__main__':
     netblend_dict = netblend_dict['netblendict']
 
     # load StimSets_parameters (were created by Train_Test_Generator.py)
-    with open(os.environ['STIMDIR'] + '/StimSets_info.json', 'r') as fp:
+    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/StimSets_info.json', 'r') as fp:
         StimSets_info = json.load(fp)
     fp.close()
 

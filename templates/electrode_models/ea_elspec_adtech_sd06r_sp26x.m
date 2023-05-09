@@ -1,14 +1,7 @@
-function electrode=ea_elspec_adtech_bf08r_sp61x(varargin)
-% This function creates the electrode specification for a certain
-% lead. Since this code is usually only executed once (to
-% establish the model), it is not optimized in any way. You can however use
-% this code to modify the electrode model and/or duplicate the function to
-% build a different model.
-% __________________________________________________________________________________
-% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
-% Andreas Horn
+function electrode=ea_elspec_adtech_sd06r_sp26x(varargin)
+% Generate electrode model of AdTech SD06R-SP26X
 
-options.elmodel='AdTech BF08R-SP61X';
+options.elmodel='AdTech SD06R-SP26X';
 
 if nargin
     vizz=0;
@@ -16,15 +9,13 @@ else
     vizz=1;
 end
 
-pt=1;
-
 options.sides=1;
 elstruct.name=options.elmodel;
 options=ea_resolve_elspec(options);
 elspec=options.elspec;
 
 % rescale for tetgen model generation
-rescaleratio = 50;
+rescaleratio = 25;
 elspec.lead_diameter = elspec.lead_diameter*rescaleratio;
 elspec.contact_length = elspec.contact_length*rescaleratio;
 elspec.contact_diameter = elspec.contact_diameter*rescaleratio;
@@ -33,9 +24,8 @@ elspec.tip_length = elspec.tip_length*rescaleratio;
 elspec.contact_spacing = elspec.contact_spacing*rescaleratio;
 
 resultfig=figure('visible','off');
-jetlist=othercolor('BuOr_12');
-%   jetlist=jet;
 N=10*rescaleratio; % resolution of electrode points
+lengthration = 40;
 
 for iside=1:length(options.sides)
     side=options.sides(iside);
@@ -46,21 +36,19 @@ for iside=1:length(options.sides)
         0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:2))+2*elspec.contact_length;...
         0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:3))+3*elspec.contact_length;...
         0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:4))+4*elspec.contact_length;...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:5))+5*elspec.contact_length;...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:6))+6*elspec.contact_length;...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:7))+7*elspec.contact_length];
+        0,0,elspec.tip_length+(elspec.contact_length/2)+sum(elspec.contact_spacing(1:5))+5*elspec.contact_length];
 
-    trajectory{side}=[zeros(50*rescaleratio,2),linspace(50*rescaleratio,0,50*rescaleratio)'];
+    trajectory{side}=[zeros(lengthration*rescaleratio,2),linspace(lengthration*rescaleratio,0,lengthration*rescaleratio)'];
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
 
     startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
     hold on
-    % draw patientname
-    lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
-    ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
 
+    % draw patientname
+    % lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
+    % ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
 
     % draw trajectory
     lowerpoint=coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2);
@@ -138,66 +126,45 @@ for iside=1:length(options.sides)
         ndiv=length(meshel.con{cntct}.vertices)/2;
         meshel.con{cntct}.endplates=[1:ndiv;ndiv+1:2*ndiv];
 
-
         % add endplates:
         p.vertices=[p.vertices;...
             coords_mm{side}(cntct,:)+[0,0,htd];...
             coords_mm{side}(cntct,:)-[0,0,htd]];
+
         for pt=2:2:(N-1)*2
             p.faces=[p.faces;pt,pt+2,length(p.vertices)-1];
         end
+
         for pt=1:2:(N-1)*2
             p.faces=[p.faces;pt,pt+2,length(p.vertices)];
         end
 
         elrender{side}(cnt)=patch(p);
         cnt=cnt+1;
-
     end
 
     % draw trajectory between contacts
     for cntct=1:elspec.numel-1
-        
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.lead_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
 
-        % separate calculation for first contact
-        if cntct == 1
-            cZ=cZ.*(elspec.contact_spacing(1)); % scale to fit tip-diameter
-            htd=(max(cZ(:))/2);
-            cZ=cZ-htd;
-            hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing(1)/2;
-            cZ=cZ+hait;
-        else
-            cZ=cZ.*(elspec.contact_spacing(2)); % scale to fit tip-diameter
-            htd=(max(cZ(:))/2);
-            cZ=cZ-htd;
-            hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing(2)/2;
-            cZ=cZ+hait;
-        end
+        cZ=cZ.*(elspec.contact_spacing(cntct)); % scale to fit tip-diameter
+        htd=(max(cZ(:))/2);
+        cZ=cZ-htd;
+        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing(cntct)/2;
+        cZ=cZ+hait;
 
         p=surf2patch(surf(cX,cY,cZ),'triangles');
-
 
         % add meshing-version to it
         [cX,cY,cZ] = ea_singlecylinder((diams),20);
 
-
-        % separate calculation for first contact
-        if cntct == 1
-            cZ=cZ.*(elspec.contact_spacing(1)); % scale to fit tip-diameter
-            htd=(max(cZ(:))/2);
-            cZ=cZ-htd;
-            hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing(1)/2;
-            cZ=cZ+hait;
-        else
-            cZ=cZ.*(elspec.contact_spacing(2)); % scale to fit tip-diameter
-            htd=(max(cZ(:))/2);
-            cZ=cZ-htd;
-            hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing(2)/2;
-            cZ=cZ+hait;
-        end
+        cZ=cZ.*(elspec.contact_spacing(cntct)); % scale to fit tip-diameter
+        htd=(max(cZ(:))/2);
+        cZ=cZ-htd;
+        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing(cntct)/2;
+        cZ=cZ+hait;
 
         a=surf2patch(surf(cX,cY,cZ));
         a=ea_reordercylinder(a,2);
@@ -206,14 +173,15 @@ for iside=1:length(options.sides)
         ndiv=length(meshel.ins{cntct+1}.vertices)/2;
         meshel.ins{cntct+1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
 
-
         % add endplates:
         p.vertices=[p.vertices;...
             [0,0,hait+htd];...
             [0,0,hait-htd]];
+
         for pt=2:2:(N-1)*2
             p.faces=[p.faces;pt,pt+2,length(p.vertices)-1];
         end
+
         for pt=1:2:(N-1)*2
             p.faces=[p.faces;pt,pt+2,length(p.vertices)];
         end
@@ -241,7 +209,6 @@ for iside=1:length(options.sides)
     X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
     X2=X1+trajvector*elspec.tip_length;
 
-
     cX=cX+X1(1);
     cY=cY+X1(2);
     cZ=cZ-(2*elspec.tip_length)/2+X1(3);
@@ -257,7 +224,6 @@ for iside=1:length(options.sides)
     % define two points to define cylinder.
     X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
     X2=X1+trajvector*elspec.tip_length;
-
 
     cX=cX+X1(1);
     cY=cY+X1(2);
@@ -289,7 +255,7 @@ for iside=1:length(options.sides)
     axis_rot=cross([0 0 -1],(X2-X1) );
 
     if any(axis_rot) || angle_X1X2
-        %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
+        % rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
     end
     ea_specsurf(elrender{side}(cnt),usecolor,aData);
 end
@@ -297,11 +263,11 @@ end
 if ~exist('elrender','var')
     elrender=nan;
 end
+
 axis equal
 view(0,0);
 
 % build model spec:
-
 cnt=1; cntcnt=1; inscnt=1;
 ea_dispercent(0,'Exporting electrode components');
 
@@ -328,7 +294,8 @@ ea_dispercent(1,'end');
 
 electrode.electrode_model=elstruct.name;
 electrode.head_position=[0,0,elspec.tip_length+0.5*elspec.contact_length];
-electrode.tail_position=[0,0,elspec.tip_length+4*elspec.contact_length+elspec.contact_spacing(1)+(4-2)*elspec.contact_spacing(2)-0.5*elspec.contact_length];
+% non-uniform spacing
+electrode.tail_position=[0,0,elspec.tip_length+elspec.numel*elspec.contact_length+sum(elspec.contact_spacing)-0.5*elspec.contact_length];
 
 electrode.x_position=[elspec.lead_diameter/2,0,elspec.tip_length+0.5*elspec.contact_length];
 electrode.y_position=[0,elspec.lead_diameter/2,elspec.tip_length+0.5*elspec.contact_length];
@@ -339,14 +306,13 @@ electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
 
+% visualize
 if vizz
-    % visualize
     cnt=1;
     g=figure;
     X=eye(4);
 
     for ins=1:length(electrode.insulation)
-
         vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
         electrode.insulation(ins).vertices=vs(1:3,:)';
         elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
@@ -358,8 +324,8 @@ if vizz
         ea_specsurf(elrender{side}(cnt),usecolor,aData);
         cnt=cnt+1;
     end
-    for con=1:length(electrode.contacts)
 
+    for con=1:length(electrode.contacts)
         vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
         electrode.contacts(con).vertices=vs(1:3,:)';
         elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
