@@ -12,5 +12,5 @@ if length(selectedSubj) > 1
    msgbox('Multiple patients selected! Please select one patient.');
    return;
 end
-outfolder = fullfile(BIDSRoot,'derivatives','leaddbs',selectedSubj);
+outfolder = fullfile(BIDSRoot,'derivatives','leaddbs',selectedSubj{1});
 ea_opendir(outfolder);

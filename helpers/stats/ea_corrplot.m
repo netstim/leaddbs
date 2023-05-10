@@ -58,7 +58,7 @@ if isrow(Y)
 end
 
 if ~exist('permutation', 'var')
-    permutation = 0;
+    permutation = nan;
 end
 
 if ~exist('labels', 'var')
@@ -227,7 +227,7 @@ if isempty(R_linear)
 end
 
 % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
-if isnumeric(permutation) && permutation <= 1
+if isnumeric(permutation) && ~isnan(permutation) && permutation <= 1
     p_external = permutation;
     labels = [labels, getPstr(p_external, 'p (external)')];
 end
