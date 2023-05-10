@@ -218,7 +218,7 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
 
     Estimate_In_Template = file['settings']['Estimate_In_Template'][0][0]
 
-    if abs(stretch - 1.0) < 0.01 or Electrode_type == 'ELAINE Rat Electrode' or Estimate_In_Template == 1:  # 1% tolerance or monopolar electrodes
+    if abs(stretch - 1.0) < 0.01 or Electrode_type == 'ELAINE Rat Electrode':  # 1% tolerance or monopolar electrodes
         input_dict["stretch"] = 1.0
     else:
         input_dict["stretch"] = stretch
