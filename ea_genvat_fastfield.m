@@ -72,8 +72,24 @@ for source=S.sources
     if amp1>0
         load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' Electrode_type '.mat']);
         count1=1;
+
         for cnt=1:length(cnts)
-            perc(cnt) = stimsource.(cnts{cnt}).perc;
+            % FastField only has monopolar (cathode) mode
+            % So, if VC, all have 100%, no splitting
+            if stimsource.(cnts{cnt}).pol==2
+                ea_warndlg("Anodes are not supported in FastField")
+                return
+            end
+
+            if stimsource.va==1
+                if stimsource.(cnts{cnt}).perc ~= 0.0
+                    perc(cnt) = 100;
+                else
+                    perc(cnt) = 0;
+                end
+            else
+                perc(cnt) = stimsource.(cnts{cnt}).perc;
+            end
             if perc(cnt)>0
                 Im(count1)=stimsource.(cnts{cnt}).imp;
                 count1=count1+1;
