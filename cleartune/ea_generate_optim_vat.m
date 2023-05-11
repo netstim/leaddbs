@@ -1,17 +1,14 @@
 function [Efields,S]=ea_generate_optim_vat(varargin)
 
 patselect = varargin{1};
-ampselectR = varargin{2};
-ampselectL = varargin{3};
-allvalsR = varargin{4};
-allvalsL = varargin{5};
-constcurr = varargin{6};
-
+ampselect = varargin{2};
+constcurr = varargin{4};
+side = varargin{5};
+writeVTA = varargin{6};
+modelVTA = varargin{7};
 %va = constcurr;
-concvalR = allvalsR(1:end-1);
-concvalL = allvalsL(1:end-1);
-casevalR = allvalsR(end);
-casevalL = allvalsL(end);
+concval = varargin{3}(2:9);
+caseval = varargin{3}(end);
 %% Load and define options
 options = ea_setopts_local;
 options.native = 0;
@@ -55,14 +52,13 @@ options.leadprod = 'group';
 options.patient_list=patselect;
 options.d3.mirrorsides=0;
 options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
-
+options.patientname = options.subj.subjId;
 setappdata(resultfig,'elstruct',elstruct);
 setappdata(resultfig,'options',options);
 setappdata(resultfig,'elspec',options.elspec);
 setappdata(resultfig,'resultfig',resultfig);
 
 %% Define stimulation settings
-ncnttmp = options.numcontacts;
 
 %allstims{1} = repmat(((1:ncnttmp)-1)',1,size(amps.min:amps.stepsize:amps.max,2));
 %allstims{2} = repmat(amps.min:amps.stepsize:amps.max,ncnttmp,1);
@@ -70,21 +66,26 @@ ncnttmp = options.numcontacts;
 %runs = 1:numel(allstims{1});
 t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname '.mat']); % defines electrode variable
 elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
-stimtmpR = [ampselectR,concvalR];
-stimtmpL = [ampselectL,concvalL];
-whichContactR = find(concvalR);
-if length(whichContactR) > 1
-    whichContactR = [num2str(whichContactR(1:end))];
-    whichContactR = whichContactR(~isspace(whichContactR));
+whichContact = find(concval);
+if length(whichContact) > 1
+    whichContact = [num2str(whichContact(1:end))];
+    whichContact = whichContact(~isspace(whichContact));
 end
-whichContactL = find(concvalL);
-if length(whichContactL) > 1
-    whichContactL = [num2str(whichContactL(1:end))];
-    whichContactL = whichContactL(~isspace(whichContactL));
+if side == 1
+    stimtmpR = [ampselect,concval];
+    tmp_ampsel = 0;
+    tmp_concval = zeros(1,length(concval));
+    stimtmpL = [tmp_ampsel,tmp_concval];
+elseif side == 2
+    stimtmpL = [ampselect,concval];
+    tmp_ampsel = 0;
+    tmp_concval = zeros(1,length(concval));
+    stimtmpR = [tmp_ampsel,tmp_concval];
 end
+    
 S = ea_initializeS(options);
 S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
-S.label = ['amp_R_L_',num2str(ampselectR,'%.2f'),'_',num2str(ampselectL,'%.2f'),'_contactR_L_',num2str(whichContactR,'%d'),'_',num2str(whichContactL,'%d')];
+S.label = ['amp_R_L_',num2str(ampselect,'%.2f'),'_',num2str(ampselect,'%.2f'),'_contactR_L_',num2str(whichContact,'%d'),'_',num2str(whichContact,'%d')];
 
 % Define the name of the folder for the nii to be saved in
 if va == 0
@@ -96,16 +97,54 @@ else
 end
 fname = [volcur, '_', num2str(round(options.prefs.machine.vatsettings.horn_cgm*100),'%02d'), '_', num2str(round(options.prefs.machine.vatsettings.horn_cwm*100),'%02d')];
 
-for side=1:2
-    disp([' ', newline, 'Patient ', patselect, newline,'Simulating efield: ', fname, ' side ', num2str(side),' | ', S.label])
+for hem=1:2
+    if hem == side
+        disp([' ', newline, 'Patient ', patselect, newline,'Simulating efield: ', fname, ' side ', num2str(hem),' | ', S.label])
+    end
     setappdata(resultfig,'elstruct',elstruct(1));
     setappdata(resultfig,'elspec',options.elspec);
-    Efields(side)=ea_genvat_cleartune_fastfield(S,side,options,fname,resultfig,t.electrode,elt);
-    ea_write_nii(Efields(side))
+    if strcmp(modelVTA,'Fastfield')
+        Efields(hem)=ea_genvat_cleartune_fastfield(S,hem,options,fname,resultfig,t.electrode,elt);
+        if hem == side && writeVTA
+            ea_write_nii(Efields(hem))
+        end
+    else
+        tic;
+        outputEfield = ea_genvat_cleartune_horn('',S,hem,options,fname,resultfig);
+        if isempty(outputEfield)
+            Vvate = createEmptyNii(t,elstruct,elt,side,fname);
+            Efields(hem) = Vvate;
+        else
+            Efields(hem) = outputEfield;
+        end
+        toc;
+    end
 end
 
 
 close(resultfig);
+function Vvate = createEmptyNii(t,elstruct,elt,side,fname)
+    % create nifti
+    [~, ~, endian] = computer;
+    switch endian
+        case 'L'
+            endian = 0;
+        case 'B'
+            endian = 1;
+    end
+    [trans_mat] = get_trans_mat(t.electrode,elstruct,elt.grid_vec,side);
+    gv=elt.grid_vec;
+    Vvate.img = zeros(100,100,100);
+    res=100;
+    chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
+    Vvate.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
+    Vvate.mat = trans_mat * Vvate.mat;
+    Vvate.dim=[res,res,res];
+    Vvate.dt = [16, endian];
+    Vvate.n=[1 1];
+    Vvate.fname = fname;
+    Vvate.descrip='lead dbs - vat';
+return
 
 
 function options=ea_setopts_local
