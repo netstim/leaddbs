@@ -111,12 +111,10 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     model = Sequential(layers=None, name=None)
     model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
     model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
-    model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))
-    model.add(Dense(y_train.shape[1], activation='tanh'))   # we need 0 -> 0 (negative vals are removed on the previous level)
+    model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))  # following the percent activation curves
+    #model.add(Dense(y_train.shape[1], activation='tanh'))
+    model.add(Dense(y_train.shape[1], activation='sigmoid'))  # check for monopolar
 
-    ## sigmoid produces a shift for monopolar and bipolar
-    #model.add(Dense(y_train.shape[1], activation='sigmoid')) # we need 0 -> 0 (negative vals are removed on the previous level)
-                                                                            #
     adam = optimizers.Adamax(lr=learn_rate)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
     model.fit(X_train, y_train, epochs=N_epochs, verbose=1)

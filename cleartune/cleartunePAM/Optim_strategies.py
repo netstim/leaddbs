@@ -62,6 +62,11 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
                 predicted_rates.append(Target_profiles[key][activ_target_profile[i]][0])
                 #print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
 
+        # within the symptom, weights_for_pathways should sum up to 1
+        # based on the acceptance of symptom-tract val equality
+        weights_for_pathways = np.array(weights_for_pathways) / sum(weights_for_pathways)
+
+        # distance in less important pathways is less penalized WITHIN the symptom
         if score_symptom_metric == 'Canberra':
             symp_distances[symp_inx] = canberra(predicted_rates, target_rates, w=weights_for_pathways) # / len(weights_for_pathways)
         elif score_symptom_metric == 'Manhattan':
@@ -163,8 +168,6 @@ def choose_weights_minimizer(stim_vector, *args):
     estim_symp_weights_norm = np.zeros(len(Target_profiles), float)
     total_estim_weighted_score = 0.0
 
-
-
     # weight here and not above just for clarity (but can be combined)
     estim_symp_weight_norm_dict = {}
 
@@ -191,6 +194,21 @@ def choose_weights_minimizer(stim_vector, *args):
 
         symp_inx += 1
 
+
+    # save estimated weights and total score to a file to trace progress
+    if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv'):
+        iter_data = np.genfromtxt(
+            os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv', dtype=float, delimiter=' ')
+        if len(iter_data.shape) == 1:
+            iter_now = 2
+        else:
+            iter_now = iter_data.shape[0] + 1
+
+    iter_estim_weights_and_total_score = np.append(estim_symp_weights_norm, total_estim_weighted_score)
+    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv', 'a') as f_handle:
+        np.savetxt(f_handle, np.vstack((iter_estim_weights_and_total_score)).T)
+
+
     # check if the result improved. If yes, update the output files
     if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv'):
         estim_weights_and_total_score = np.genfromtxt(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv', dtype=float, delimiter=' ')
@@ -201,6 +219,7 @@ def choose_weights_minimizer(stim_vector, *args):
         if total_estim_weighted_score < estim_weights_and_total_score[-1,-1]:
 
             #print(estim_weights_and_total_score[-1,:])
+            print("it: ", iter_now, ";  f_goal = ", total_estim_weighted_score)
 
             np.savetxt(os.environ['STIMDIR'] + '/NB_' + str(side) + '/NW_symptom_distances.csv', symp_distances, delimiter=" ")
 
@@ -227,5 +246,5 @@ def choose_weights_minimizer(stim_vector, *args):
 
     #print(weighted_symp_scores, sum(weighted_symp_scores), sum(symp_distances), total_estim_weighted_score)
     #return np.sum(weighted_symp_scores)  # + np.sum(soft_SE_scores)
-    #print(total_estim_weighted_score)
+
     return total_estim_weighted_score

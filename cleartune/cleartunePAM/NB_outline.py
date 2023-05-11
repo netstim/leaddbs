@@ -174,4 +174,10 @@ if __name__ == '__main__':
     # IMPORTANT: the pathways' order is preserved as they were processed in ANN!
     approx_pathways = list(pathways_errors_dict.keys())
 
+    # clean-up
+    if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv'):
+        os.remove(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv')
+    if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv'):
+        os.remove(os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv')
+
     launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)

@@ -336,8 +336,12 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                 ftr.glob_ind = fibers_glob_ind;
                 ftr.orig_connectome = obj.connectome;
 
-                % remove period delimiter
-                pathway_name = char(compose('%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(i)));
+                if negative_vals == 0
+                    pathway_name = char(compose('%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(i)));
+                else
+                    pathway_name = char(compose('SE_%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(i)));
+                end
+                
                 if contains(pathway_name,'1.0')
                     pathway_name = erase(pathway_name,'.0'); % remove digits after comma
                 else   
@@ -376,7 +380,12 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
             for bin_i = 1:length(pathway_mean_vals{1,group_i})
 
                 % remove period delimiter
-                pathway_name = char(compose('%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(bin_i)));
+                if negative_vals == 0
+                    pathway_name = char(compose('%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(bin_i)));
+                else
+                    pathway_name = char(compose('SE_%s_%s_group_%d_val_%.3f',symptoms_list{voter},prefix_side,group_i,pathway_mean_vals{1,group_i}(bin_i)));
+                end
+
                 if contains(pathway_name,'1.0')
                     pathway_name = erase(pathway_name,'.0'); % remove digits after comma
                 else   
