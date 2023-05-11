@@ -6,11 +6,11 @@ function ea_connectome_from_pathways(obj, connectomeName, N_voters, N_sides, neg
     % files!
     
     connectome_folder = [ea_getconnectomebase('dMRI_multitract'), connectomeName];
-    % add warning that the folder will be overwritten
-    if isfolder(connectome_folder)
-        rmdir(connectome_folder, 's')
+    % add pathways to the connectome if exists (Symptoms + side-effects)
+    if ~isfolder(connectome_folder)
+        mkdir(connectome_folder)
+        %rmdir(connectome_folder, 's')
     end
-    mkdir(connectome_folder)
 
     all_indices = []; % potentially slow
     disp("Copying pathways to dMRI_MultiTract/...")
