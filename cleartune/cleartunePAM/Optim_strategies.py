@@ -109,6 +109,7 @@ def choose_weights_minimizer(stim_vector, *args):
 
     # first check the strict thresholds
     for key in SE_thresh:
+
         if side == 0 and not ("_rh" in key):
             continue
         elif side == 1 and not ("_lh" in key):
@@ -120,7 +121,16 @@ def choose_weights_minimizer(stim_vector, *args):
             if activ_threshold_profile[i] in approx_pathways:  # else we assume that the activation is 0 (below threshold)
                 inx = approx_pathways.index(activ_threshold_profile[i])
                 if np.any(activation_profile[inx] > SE_thresh[key][activ_threshold_profile[i]][0]):  # [0] - activation rate, [1] - weight of the pathway
-                    #print('Error threshold for this pathway activation was exceeded, the model has to be revised')
+                    #print('Side-effect threshold for this pathway activation was exceeded, discarding the solution')
+
+
+                    # we need to create dummy output here
+                    iter_estim_weights_and_total_score = (len(Target_profiles) + len(Soft_SE_thresh) + 1) * [0.0]
+                    with open(
+                            os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv',
+                            'a') as f_handle:
+                        np.savetxt(f_handle, np.vstack((iter_estim_weights_and_total_score)).T)
+
                     return 1000000.0
             #else:
             #    print("Pathway ", activ_threshold_profile[i], " was not included to the approximation model")

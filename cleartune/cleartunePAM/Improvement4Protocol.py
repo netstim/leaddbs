@@ -47,7 +47,13 @@ def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combu
             json.dump(Soft_SE_dict, save_as_dict)
 
         # IMPORTANT: What about SE_dict? Take it from some prior studies?
-        SE_dict = {}
+        if 'SE_dict' in profiles.keys():
+            SE_dict = profiles['SE_dict']
+        else:
+            print("SE_dict is missing")
+            print("Will continue, but consider exporting negative tracts from FF")
+            SE_dict = {}
+
         with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'w') as save_as_dict:
             json.dump(SE_dict, save_as_dict)
 

@@ -151,7 +151,7 @@ def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, Target_
 
     # check symptoms only defined for the left hemisphere
     for key in estim_imp_lh:
-        if ~(key[:-3] in bilateral_symptoms):
+        if not (key[:-3] in final_imp):
             final_imp[key[:-3]] = estim_imp_lh[key]
 
             # cap at 100%
@@ -168,8 +168,7 @@ if __name__ == '__main__':
 
     # called from MATLAB
     # sys.argv[1] - stim folder
-    # sys.argv[2] - Activation profile dictionary
-    # sys.argv[3] - side (0 - right hemisphere)
+    # sys.argv[2] - reconcile_mode ('weights' or 'improvement')
 
     os.environ['STIMDIR'] = sys.argv[1]
     reconcile_mode = sys.argv[2]  # 'weights' or 'improvement'
@@ -191,7 +190,7 @@ if __name__ == '__main__':
         estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_symp_improv_rh.json'
         estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_symp_improv_lh.json'
         fp.close()
-        estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, profile_dict, Soft_SE_dict)
+        estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, profile_dict, Soft_SE_dict, fixed_symptom_weights_json)
     elif reconcile_mode == 'weights':
         # estimated weights were stored in json
         estim_w_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_weights_rh.json'
