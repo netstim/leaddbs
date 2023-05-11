@@ -166,7 +166,7 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
 end
 
 choice='y';
-numIters=120;
+numIters=120; % 120 by default, run 1000 at least once
 while 1
     switch choice
         case 'y'
@@ -380,6 +380,10 @@ tractset.save;
             try
 
                 [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+                for i=1:length(val_struct)
+                    val_struct{i}=val_struct{i}{1};
+                end
+
                 dissim=ea_compute_sim_val_struct(val_struct);
             end
 
@@ -400,6 +404,7 @@ tractset.save;
             Fval_cv=nan;
         end
         Fval=ea_nanmean([Fval_sim;Fval_cv]);
+        disp(['Similarities: ',num2str(sim),', Dissimilarities: ',num2str(dissim) ,', CV: ',num2str(Fval_cv),', Combined: ',num2str(Fval)])
 
     end
 
