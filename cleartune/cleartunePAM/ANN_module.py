@@ -57,8 +57,8 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     Pathways, axons_in_path = get_simulated_pathways(side)
 
     #=============================================== Prepare the data =================================================#
-    X_train = Currents[:trainSize,:] * 0.001  # convert to A
-    X_test = Currents[trainSize:,:] * 0.001
+    X_train = Currents[:trainSize,:]
+    X_test = Currents[trainSize:,:]
     y_train_prelim = ActivationResults[:trainSize,1:] / axons_in_path  # from 1, because 0 is the index of the protocol
     y_test_prelim = ActivationResults[trainSize:,1:] / axons_in_path
     y_train = -100 * np.ones((y_train_prelim.shape), float)  # initialize with -100 to remove non-filled value later
@@ -80,7 +80,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
     for i in range(y_train_prelim.shape[1]):
         # only compute for pathways with some percent activation and minimal number of fibers
-        if np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
+        if axons_in_path[i] > 9 and np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
             y_train[:,i] = y_train_prelim[:,i]
             y_test[:,i] = y_test_prelim[:,i]
             pathway_filtered.append(Pathways[i])
