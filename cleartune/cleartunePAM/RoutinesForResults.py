@@ -40,7 +40,6 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
 
     # autolimit to align axes (potentially buggy!)
     if np.any(Impr_pred[:, 0] < 0.0):
-        print('here')
         # lower_w_lim = np.min(Impr_pred[:, 0]) / np.max(Impr_pred[:, 0])
         lower_w_lim = np.min(Impr_pred[:, 0]) / 1.0
 
