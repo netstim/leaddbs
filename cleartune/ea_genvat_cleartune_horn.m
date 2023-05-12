@@ -364,7 +364,7 @@ indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 
 if ~options.native % VTA calculated in MNI space directly
-    [~,~,~,Vvate]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+    Vvate=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
     varargout{1} = Vvate;
     %     varargout{1}=vatfv;
 %     varargout{2}=vatvolume;

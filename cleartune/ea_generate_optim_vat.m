@@ -7,8 +7,9 @@ side = varargin{5};
 writeVTA = varargin{6};
 modelVTA = varargin{7};
 %va = constcurr;
-concval = varargin{3}(2:9);
-caseval = varargin{3}(end);
+%concval = varargin{3}(1:8);
+concval = varargin{3}(1:8);
+concval = [concval,100]; %switch this off for bipolar
 %% Load and define options
 options = ea_setopts_local;
 options.native = 0;
@@ -68,7 +69,7 @@ t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elsp
 elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
 whichContact = find(concval);
 if length(whichContact) > 1
-    whichContact = [num2str(whichContact(1:end))];
+    whichContact = [num2str(whichContact(1:end-1))];
     whichContact = whichContact(~isspace(whichContact));
 end
 if side == 1
@@ -105,8 +106,10 @@ for hem=1:2
     setappdata(resultfig,'elspec',options.elspec);
     if strcmp(modelVTA,'Fastfield')
         Efields(hem)=ea_genvat_cleartune_fastfield(S,hem,options,fname,resultfig,t.electrode,elt);
+        ea_write_nii(Efields(hem))
         if hem == side && writeVTA
             ea_write_nii(Efields(hem))
+            
         end
     else
         tic;

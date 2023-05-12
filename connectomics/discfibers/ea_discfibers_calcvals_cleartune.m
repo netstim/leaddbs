@@ -34,7 +34,9 @@ for side = 1:numSide
         % Trim connectome fibers
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
         vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
-
+        if isempty(vatmm)
+            continue;
+        end
         
         filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
 
