@@ -31,7 +31,7 @@ learn_rate = 0.0025
 N_epochs = 2000
 min_activ_threshold = 0.05   # if less than 5% of fibers in the pathway were activated over all StimSets, ANN will not train on it
 
-def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial):
+def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial, VAT_recruit = False):
 
     import os
 
@@ -50,11 +50,22 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         ActivationResults_Monopolar21 = np.genfromtxt('Activations_over_iterations_Monopolar21_79.csv', delimiter=' ')
         Currents_Monopolar21 = np.genfromtxt('Current_protocols_0_Monopolars21_79.csv', delimiter=',', skip_header=True)
 
-
-    # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
-    # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
-    from Pathways_Stats import get_simulated_pathways
-    Pathways, axons_in_path = get_simulated_pathways(side)
+    if VAT_recruit == True:
+        # load simulated pathways from json
+        with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/VAT_pathways.json', 'r') as fp:
+            vat_paths_dict = json.load(fp)
+        fp.close()
+        vat_paths_dict = vat_paths_dict['vat_paths_dict']
+        Pathways = []
+        axons_in_path = []
+        for key in vat_paths_dict:
+            Pathways.append(key)
+            axons_in_path.append(vat_paths_dict[key])
+    else:
+        # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
+        # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
+        from Pathways_Stats import get_simulated_pathways
+        Pathways, axons_in_path = get_simulated_pathways(side)
 
     #=============================================== Prepare the data =================================================#
     X_train = Currents[:trainSize,:] * 0.001  # convert to A
