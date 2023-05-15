@@ -300,6 +300,32 @@ for group=groups
 
                         vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
                         vals{group,side}(~nanidx)=R;
+                    case 'Reverse T-Tests (Binary Var)'
+
+                    nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
+                    invals=gval{side}(gpatsel,nonempty)';
+                    if ~isempty(invals)
+                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                        % restore nans
+                        ImpBinary(isnan(I(gpatsel,side)))=nan;
+                        upSet=invals(:,ImpBinary==1)';
+                        downSet=invals(:,ImpBinary==0)';
+
+                        if obj.showsignificantonly
+                            [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                            outps=ps;
+                        else % no need to calc p-val here
+                            [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                        end
+                        vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
+
+                        vals{group,side}(nonempty)=outvals;
+%                         if exist('outps','var') % only calculated if testing for significance.
+%                             pvals{group,side}(nonempty)=outps;
+%                         end
+                    end 
                 end
         end
     end
