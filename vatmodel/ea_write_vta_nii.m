@@ -1,4 +1,5 @@
-function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
+function varargout=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
+
 
 if ~isempty(resultfig)
     vatgrad=getappdata(resultfig,'vatgrad');
@@ -173,13 +174,21 @@ ea_savestimulation(S,options);
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
 Vvate.dt = [16, endian];
-ea_write_nii(Vvate);
-
+if ~strcmp(options.groupid,'cleartune')
+    ea_write_nii(Vvate);
+end
+%ea_write_nii(Vvate);
 Vvatne.img=neeg; %permute(neeg,[2,1,3]);
-ea_write_nii(Vvatne);
+if ~strcmp(options.groupid,'cleartune')
+    ea_write_nii(Vvatne);
+end
+%ea_write_nii(Vvatne);
 
 Vvat.img=eg; %permute(eg,[1,2,3]);
-ea_write_nii(Vvat);
+if ~strcmp(options.groupid,'cleartune')
+    ea_write_nii(Vvat);
+end
+%ea_write_nii(Vvat);
 
 ea_dispt('Calculating isosurface to display...');
 vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
@@ -219,8 +228,17 @@ Vvat.img=imfill(Vvat.img,'holes');
 SE = strel('sphere',3);
 Vvat.img = imerode(Vvat.img,SE);
 Vvat.img = imdilate(Vvat.img,SE);
-ea_write_nii(Vvat);
-
+if ~strcmp(options.groupid,'cleartune')
+    ea_write_nii(Vvat);
+end
+%ea_write_nii(Vvat);
+if strcmp(options.groupid,'cleartune')
+    varargout{1} = Vvate;
+else
+    varargout{1} = vatfv;
+    varargout{2} = vatvolume;
+    varargout{3} = radius;
+end 
 
 function vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec)
 

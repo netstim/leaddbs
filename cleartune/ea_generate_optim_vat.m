@@ -106,7 +106,6 @@ for hem=1:2
     setappdata(resultfig,'elspec',options.elspec);
     if strcmp(modelVTA,'Fastfield')
         Efields(hem)=ea_genvat_cleartune_fastfield(S,hem,options,fname,resultfig,t.electrode,elt);
-        ea_write_nii(Efields(hem))
         if hem == side && writeVTA
             ea_write_nii(Efields(hem))
             

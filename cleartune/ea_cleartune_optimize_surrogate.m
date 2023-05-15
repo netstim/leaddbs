@@ -81,7 +81,6 @@ optionsL=optimoptions('surrogateopt',...
 
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
-
 % check for parallel processing toolbox
 if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
     optionsR.UseParallel=true;
@@ -89,11 +88,54 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
     parpool('Processes',2);
 end
 
-
 % Solve problem
 objconstrR=@(x)struct('Fval',nestedfunR(app,x,patlist,1));
 objconstrL=@(x)struct('Fval',nestedfunL(app,x,patlist,2));
-%
+
+[XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
+%%store options
+options = setOPTS(patlist{1});
+writeVTA = 1;
+modelVTA = app.inputVars.modelVTA;
+newoptimR = reformatX(XOptimR);
+if ~isempty(newoptimR)
+    XOptimR = newoptimR;
+end
+inputsR = {patlist{1},XOptimR(1),XOptimR(2:end),0,1,writeVTA,modelVTA};
+ea_generate_optim_vat(inputsR{:});
+for i=1:size(ipR.X,1)
+    newR = reformatX(ipR.X(i,:));
+    if ~isempty(newR)
+        ipR.X(i,:) = newR;
+    end
+end
+save(fullfile(patlist{1},'optimize_status_surrogate_r.mat'),'ipR','XOptimR');
+
+
+[XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
+newoptimL = reformatX(XOptimL);
+if ~isempty(newoptimL)
+    XOptimL = newoptimL;
+end
+inputsL = {patlist{1},XOptimL(1),XOptimL(2:end),0,2,writeVTA,modelVTA};
+ea_generate_optim_vat(inputsL{:});
+for i=1:size(ipL.X,1)
+    newL = reformatX(ipL.X(i,:));
+    if ~isempty(newL)
+        ipL.X(i,:) = newL;
+    end
+end
+S = ea_initializeS(options);
+S = ea_cleartune_generateMfile([XOptimR(1),XOptimR(2:end)],[XOptimL(1),XOptimL(2:end)],S,0);
+save(fullfile(patlist{1},'optimize_status_surrogate_l.mat'),'ipL','XOptimL');
+save(fullfile(patlist{1},'desc-stimparameters.mat'),'S');
+avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
+disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
+warning on
+if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+    poolobj = gcp('nocreate'); delete(poolobj);
+end
+
 %choice='y';
 %numIters=500;
 %while 1
@@ -104,56 +146,16 @@ objconstrL=@(x)struct('Fval',nestedfunL(app,x,patlist,2));
 %                 numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
 %                 numIters = str2double(numIters);
 %             end
-[XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-[XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
-writeVTA = 1;
-modelVTA = app.inputVars.modelVTA;
-newoptimR = reformatX(XOptimR);
-if ~isempty(newoptimR)
-    XOptimR = newoptimR;
-end
-newoptimL = reformatX(XOptimL);
-if ~isempty(newoptimL)
-    XOptimL = newoptimL;
-end
-%%store options
-options = setOPTS(patlist{1});
-inputsR = {patlist{1},XOptimR(1),XOptimR(2:end),0,1,writeVTA,modelVTA};
-inputsL = {patlist{1},XOptimL(1),XOptimL(2:end),0,2,writeVTA,modelVTA};
-ea_generate_optim_vat(inputsR{:});
-ea_generate_optim_vat(inputsL{:});
-S = ea_initializeS(options);
-S = ea_cleartune_generateMfile([XOptimR(1),XOptimR(2:end)],[XOptimL(1),XOptimL(2:end)],S,0);
-for i=1:length(ipL.X)
-    newL = reformatX(ipL.X(i,:));
-    if ~isempty(newL)
-        ipL.X(i,:) = newL;
-    end
-    newR = reformatX(ipR.X(i,:));
-    if ~isempty(newR)
-        ipR.X(i,:) = newR;
-    end
-end
-save(fullfile(patlist{1},'optimize_status_surrogate.mat'),'ipR','ipL','XOptimR','XOptimL');
-save(fullfile(patlist{1},'desc-stimparameters.mat'),'S');
+
 %        otherwise
 %            break
 %    end
 %    choice = input(sprintf('%s\n\n',['Optimal predicted Ihat R = ',num2str(-1*fvalR),' Optimal predicted Ihat L = ',num2str(-1*fvalL),'.Do you wish to continue optimizing? (y/n)']),'s');
 %    clear numIters
 %end
-
-avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
-disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
-warning on
-if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
-    poolobj = gcp('nocreate'); delete(poolobj);
-end
-
 %tractsetclone.save;
 
 function [paramsR,paramsL] = genParams(app)
-
 
 %for bipolar also add this
 %bool_contact = repmat([0,1,1,0],app.inputVars.numContacts,1);
