@@ -590,7 +590,6 @@ classdef ea_disctract < handle
 
                 % now do LOO within the training group
                 if obj.nestedLOO
-
                     % use all patients, but outer loop left-out is always 0
                     if strcmp(obj.multitractmode,'Single Tract Analysis')
                         Ihat_inner = nan(length(patientsel),2);
@@ -599,7 +598,6 @@ classdef ea_disctract < handle
                         Ihat_inner = nan(length(patientsel),2,length(obj.subscore.vars));
                         Ihat_train_global_inner = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
                     end
-
                     for test_i = 1:length(training)
                         training_inner = training;
                         training_inner(test_i) = 0;
@@ -811,38 +809,41 @@ classdef ea_disctract < handle
 
             switch obj.multitractmode
                 case 'Split & Color By Subscore'
-                    % here we map back to the single response variable using a
-                    % weightmatrix
-                    if isempty(obj.customselection)
-                        selected_pts = obj.patientselection;
-                    else
-                        selected_pts = obj.customselection;
-                    end
-                    weightmatrix=zeros(size(Ihat));
-                    for voter=1:size(Ihat,3)
-                        if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
-                            weightmatrix(:,:,voter)=obj.subscore.weights(voter);
-                        else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
-                            weightmatrix(:,:,voter)=repmat(ea_minmax(obj.subscore.weightvars{voter}(selected_pts)),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
-                            weightmatrix(:,:,voter)=weightmatrix(:,:,voter)./max(obj.subscore.weightvars{voter}(selected_pts)); % weight for unnormalized data across voters *
-                            % *) e.g. in case one symptom - bradykinesia -
-                            % has a max of 20, while a second - tremor -
-                            % will have a max of 5, we want to equilize
-                            % those. We use minmax() in the line above to
-                            % get rid of negative values and use
-                            % ./ea_nansum below to take the average.
+                    if ~obj.CleartuneOptim
+                        % here we map back to the single response variable using a
+                        % weightmatrix
+                        if isempty(obj.customselection)
+                            selected_pts = obj.patientselection;
+                        else
+                            selected_pts = obj.customselection;
                         end
-                    end
-
-                    for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
-                        for yy=1:size(Ihat,2)
-                            %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
-                            %                         for yy=1:size(Ihat_voters,2)
-                            weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
+                        weightmatrix=zeros(size(Ihat));
+                        for voter=1:size(Ihat,3)
+                            if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
+                                weightmatrix(:,:,voter)=obj.subscore.weights(voter);
+                            else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
+                                weightmatrix(:,:,voter)=repmat(ea_minmax(obj.subscore.weightvars{voter}(selected_pts)),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
+                                weightmatrix(:,:,voter)=weightmatrix(:,:,voter)./max(obj.subscore.weightvars{voter}(selected_pts)); % weight for unnormalized data across voters *
+                                % *) e.g. in case one symptom - bradykinesia -
+                                % has a max of 20, while a second - tremor -
+                                % will have a max of 5, we want to equilize
+                                % those. We use minmax() in the line above to
+                                % get rid of negative values and use
+                                % ./ea_nansum below to take the average.
+                            end
                         end
-                    end
 
-                    Ihat=ea_nansum(Ihat.*weightmatrix,3);
+                        for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
+                            for yy=1:size(Ihat,2)
+                                %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                                %                         for yy=1:size(Ihat_voters,2)
+                                weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
+                            end
+                        end
+
+                        Ihat=ea_nansum(Ihat.*weightmatrix,3);
+
+                    end
                 case 'Split & Color By PCA'
 
                     Ihat=squeeze(ea_nanmean(Ihat,2));
@@ -893,6 +894,9 @@ classdef ea_disctract < handle
             if ~iscell(Ihat)
                 if cvp.NumTestSets == 1
                     Ihat = Ihat(test,:);
+                    if obj.CleartuneOptim
+                        Ihat = reshape(Ihat,2,4)';
+                    end
                     Improvement = Improvement(test);
                 end
 

@@ -10,6 +10,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
+    
 elseif nargin==6
     % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
@@ -364,11 +365,11 @@ indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 
 if ~options.native % VTA calculated in MNI space directly
-    [~,~,~,Vvate]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
-    varargout{1} = Vvate;
-    %     varargout{1}=vatfv;
+    Vvate=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+    % varargout{1}=vatfv;
 %     varargout{2}=vatvolume;
 %     varargout{3}=radius;
+    varargout{1} = Vvate;
     ea_dispt('');
 else % VTA calculated in native space and then transformed back to MNI
         % Write out native space VTA

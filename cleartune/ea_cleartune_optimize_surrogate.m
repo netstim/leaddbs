@@ -41,7 +41,7 @@ useparallel=0;
 
 warning off
 %app = ea_cleartune;
-% list of vars to optimize:
+%list of vars to optimize:
 
 [paramsR,paramsL] = genParams(app);
 
@@ -50,33 +50,36 @@ lbL = [paramsL(:,1)];
 ubR = [paramsR(:,2)];
 ubL = [paramsL(:,2)];
 intergCond=[paramsR(:,3)];
-%max 8 contacts activated
 
-A = [0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0;0 0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 0];
-b = [8;-1];
-Aeq = [];
-beq = [];
+%for bipolar
+%max 8 contacts activated
+%A = [0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0;0 0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 0];
+%b = [8;-1];
+
+A = [];
+b = [];
+Aeq = [0 1 1 1 1 1 1 1 1];
+beq = -100;
 
 % set up initial points with some good heuristics:
 startptsR = [paramsR(:,4)];
 startptsL = [paramsL(:,4)];% first initial point is activation in k2, with voltage of 0.5
 optionsR=optimoptions('surrogateopt',...
     'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
-    'MinSurrogatePoints',500,...
+    'MinSurrogatePoints',200,...
     'PlotFcn','surrogateoptplot',...
     'InitialPoints',startptsR,...
-    'MaxFunctionEvaluations',10,...
+    'MaxFunctionEvaluations',250,...
     'Display','iter');
 optionsL=optimoptions('surrogateopt',...
     'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
-    'MinSurrogatePoints',500,...
+    'MinSurrogatePoints',200,...
     'PlotFcn','surrogateoptplot',...
     'InitialPoints',startptsL,...
-    'MaxFunctionEvaluations',10,...
+    'MaxFunctionEvaluations',250,...
     'Display','iter');
 
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
-
 
 % check for parallel processing toolbox
 if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
@@ -85,44 +88,47 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
     parpool('Processes',2);
 end
 
-
 % Solve problem
 objconstrR=@(x)struct('Fval',nestedfunR(app,x,patlist,1));
 objconstrL=@(x)struct('Fval',nestedfunL(app,x,patlist,2));
-%
-choice='y';
-numIters=10;
-while 1
-    switch choice
-        case 'y'
-            %options.InitialPoints=ip;
-            if ~exist('numIters','var')
-                numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
-                numIters = str2double(numIters);
-            end
-            [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-            [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
-            writeVTA = 1;
-            XOptimR_reform = reformatX(XOptimR);
-            XOptimL_reform = reformatX(XOptimL);
-            inputsR = {patlist{1},XOptimR_reform(1),XOptimR_reform(2:end),0,1,writeVTA};
-            inputsL = {patlist{1},XOptimL_reform(1),XOptimL_reform(2:end),0,2,writeVTA};
-            ea_generate_optim_vat(inputsR{:});
-            ea_generate_optim_vat(inputsL{:});
-            XOptim = [XOptimR_reform,XOptimL_reform];
-            for i=1:length(ipL)
-                ip.X(i,:) = [ipR.X(i,:),ipL.X(i,:)];
-                ip.FvalR(i,1) = ipR.Fval(i,1);
-                ip.FvalL(i,1) = ipL.Fval(i,1);
-            end
-            save(fullfile(patlist{1},'optimize_status_surrogate.mat'),'ip','XOptim');
-        otherwise
-            break
-    end
-    choice = input(sprintf('%s\n\n',['Optimal predicted Ihat R = ',num2str(-1*fvalR),' Optimal predicted Ihat L = ',num2str(-1*fvalL),'.Do you wish to continue optimizing? (y/n)']),'s');
-    clear numIters
+
+[XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
+%%store options
+options = setOPTS(patlist{1});
+writeVTA = 1;
+modelVTA = app.inputVars.modelVTA;
+newoptimR = reformatX(XOptimR);
+if ~isempty(newoptimR)
+    XOptimR = newoptimR;
 end
-%tractsetclone=updatetractset(tractsetclone,XOptim);
+inputsR = {patlist{1},XOptimR(1),XOptimR(2:end),0,1,writeVTA,modelVTA};
+ea_generate_optim_vat(inputsR{:});
+for i=1:size(ipR.X,1)
+    newR = reformatX(ipR.X(i,:));
+    if ~isempty(newR)
+        ipR.X(i,:) = newR;
+    end
+end
+save(fullfile(patlist{1},'optimize_status_surrogate_r.mat'),'ipR','XOptimR');
+
+
+[XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
+newoptimL = reformatX(XOptimL);
+if ~isempty(newoptimL)
+    XOptimL = newoptimL;
+end
+inputsL = {patlist{1},XOptimL(1),XOptimL(2:end),0,2,writeVTA,modelVTA};
+ea_generate_optim_vat(inputsL{:});
+for i=1:size(ipL.X,1)
+    newL = reformatX(ipL.X(i,:));
+    if ~isempty(newL)
+        ipL.X(i,:) = newL;
+    end
+end
+S = ea_initializeS(options);
+S = ea_cleartune_generateMfile([XOptimR(1),XOptimR(2:end)],[XOptimL(1),XOptimL(2:end)],S,0);
+save(fullfile(patlist{1},'optimize_status_surrogate_l.mat'),'ipL','XOptimL');
+save(fullfile(patlist{1},'desc-stimparameters.mat'),'S');
 avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
 disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
 warning on
@@ -130,17 +136,38 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
     poolobj = gcp('nocreate'); delete(poolobj);
 end
 
-tractsetclone.save;
+%choice='y';
+%numIters=500;
+%while 1
+%     switch choice
+%         case 'y'
+%             %options.InitialPoints=ip;
+%             if ~exist('numIters','var')
+%                 numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
+%                 numIters = str2double(numIters);
+%             end
+
+%        otherwise
+%            break
+%    end
+%    choice = input(sprintf('%s\n\n',['Optimal predicted Ihat R = ',num2str(-1*fvalR),' Optimal predicted Ihat L = ',num2str(-1*fvalL),'.Do you wish to continue optimizing? (y/n)']),'s');
+%    clear numIters
+%end
+%tractsetclone.save;
 
 function [paramsR,paramsL] = genParams(app)
 
-perc_contactdist = repmat([-100, 100, 0, 0],app.inputVars.numContacts,1);
-bool_contact = repmat([0,1,1,0],app.inputVars.numContacts,1);
-perc_contactdist(app.inputVars.startContact,end) = 100;
-bool_contact(app.inputVars.startContact,end) = 1;
-case_contact = [0,1,1,1];
+%for bipolar also add this
+%bool_contact = repmat([0,1,1,0],app.inputVars.numContacts,1);
+%bool_contact(app.inputVars.startContact,end) = 1;
+%paramsR = [amplitude;perc_contactdist;bool_contact;case_contact];
+
+perc_contactdist = repmat([-100, 0, 0, 0],app.inputVars.numContacts,1);
+%case_contact = [100,100,1,100];
+perc_contactdist(app.inputVars.startContact,end) = -100;
+
 amplitude = [app.inputVars.minCurr, app.inputVars.maxCurr, 0, app.inputVars.minCurr];
-paramsR = [amplitude;perc_contactdist;bool_contact;case_contact];
+paramsR = [amplitude;perc_contactdist];
 paramsL = paramsR;
 
 return
@@ -172,57 +199,60 @@ return
 end
 
 function X = reformatX(X)
+
+% for bipolar
 %if the indicator is off, the contact should also be off
-for xx=10:17
-    if X(xx) == 0
-        X(xx-8) = 0;
-    end
-end
+% for xx=10:17
+%     if X(xx) == 0
+%         X(xx-8) = 0;
+%     end
+% end
 for xx=2:9
     if abs(X(xx)) < 10
         X(xx) = 0;
-        X(xx+8) = 0;
+%         X(xx+8) = 0;
     end
     
 end
+%Method 2 - scaling vars
 
-% Method 2 - scaling vars
+%doing it this way because harcoding indices is wrong and won't give us
+%flexibility for future
+%switch this on for bipolar setting
+% whichpos = X > 0;
+% whichpos(1) = 0;
+% whichpos(10:end) = 0;
+% if any(whichpos)
+%    sum_whichpos_r = sum(X(whichpos));
+%    X(whichpos) = (X(whichpos)*100)/(sum_whichpos_r);
+%    X(end) = 0;
+% else
+%    X(end) = 100;
+% end
+
 if all(~X(2:9)) %all contacts have zero % activation its not allowed
     X = [];
     return
 end
 
-%doing it this way because harcoding indices is wrong and won't give us
-%flexibility for future
-%right
-whichpos = X > 0;
-whichpos(1) = 0;
-whichpos(10:end) = 0;
 whichneg = X < 0;
 whichneg(1) = 0;
-whichneg(10:end) = 0;
-if any(whichpos)
-    sum_whichpos_r = sum(X(whichpos));
-    X(whichpos) = (X(whichpos)*100)/(sum_whichpos_r);
-    X(end) = 0;
-else
-    X(end) = 100;
-end
+% whichneg(10:end) = 0;
 if any(whichneg)
     sum_whichneg_r = sum(X(whichneg));
     X(whichneg) = (X(whichneg)*-100)/(sum_whichneg_r);
 end
-
+% X(end) = X(end)*100;
 return
 end
 
 function tractsetclone=updateStim(tractsetclone,X)
     disp('Parameters applied: ');
     fprintf('Amplitude:%d\n',X(1));
-    whichContact = find(X(10:17));
-    fprintf('Active contact: k0%d\n',whichContact-1)
-    fprintf('Percentage activation: %d\n',X(2:9));
-    fprintf('Case activation: %d\n',X(end));
+    whichContact = find(X(2:end));
+    fprintf('Active contact: k0%d\n',whichContact)
+    fprintf('Percentage activation: %d\n',X(2:end));
+    disp('Case activation:100%');
 end
 
 function Fval=getFval(app,X,patlist,constCurr,tractsetclone,side)
@@ -249,7 +279,7 @@ function Fval=getFval(app,X,patlist,constCurr,tractsetclone,side)
             app.fibfiltmodelpath,'.']);
     end
     preFval = calculateFval(tractsetclone,Ihat,actualimprovs,side);
-    Fval = -1*preFval(side);
+    Fval = -1*preFval;
 
     
 end
@@ -260,7 +290,7 @@ function preFval = calculateFval(tractsetclone,Ihat,actualimprovs,side)
     weightmatrix=zeros(size(actualimprovs,1),1); % in cleartune case always the same weights for any side and "patient" (which is VTA)
     for voter=1:length(weightmatrix)
          % same weight for all subjects in that voter (slider was used)
-            weightmatrix(voter)=tractsetclone.cleartunevars.weights(1,voter);
+            weightmatrix(voter)=tractsetclone.cleartunevars.weights(voter,side);
     end
     weightmatrix_sum = ea_nansum(weightmatrix);
     for xx=1:size(weightmatrix,1) % make sure voter weights sum up to 1
@@ -273,24 +303,53 @@ function preFval = calculateFval(tractsetclone,Ihat,actualimprovs,side)
             wt_Ihat(i,j) = Ihat(i,j).*weightmatrix(i);
         end
     end
-    preFval = ea_nansum(wt_Ihat,side); %should be the same since we are doing only one side now
+    preFval = ea_nansum(wt_Ihat(:,side)); %should be the same since we are doing only one side now
     return
 end
 
-%     for i=1:size(actualimprovs,1)
-%         for j=1:size(actualimprovs,2)
-%             wt_actualimprovs{i,j} = actualimprovs{i,j}.*weightmatrix(i);
-%         end
-%     end
-%     for side = 1:2
-%         wtavg_actualimprovs(:,side) = ea_nansum([wt_actualimprovs{1:size(wt_actualimprovs,1),side}],2);
-%     end
-%     for side=1:2
-%        maxImprv(side)=ea_nanmax(wtavg_actualimprovs(:,side));
-%     end
-%    preFval = maxImprv;
-%    return
-
-%end
-
-
+function options = setOPTS(patselect)
+    options = ea_setopts_local;
+    options.native = 0;
+    options.groupmode = 1;
+    options.groupid = 'cleartune';
+    va = 0; % 0 for constant curr
+    options = ea_getptopts(patselect, options);
+    [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+    elstruct(1).coords_mm=coords_mm;
+    elstruct(1).coords_acpc=coords_acpc;
+    elstruct(1).trajectory=trajectory;
+    elstruct(1).name = ['sub-', options.subj.subjId];
+    elstruct(1).markers=markers;
+    
+    options.numcontacts=size(coords_mm{1},1);
+    options.d3.verbose='off';
+    options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
+    options.d3.exportBB=0;	% don't export brainbrowser struct by default
+    options.d3.colorpointcloud=0;
+    options.d3.hlactivecontacts=1;
+    options.d3.showactivecontacts =1;
+    options.d3.showpassivecontacts=1;
+    options.d3.exportBB=0;
+    options.expstatvat.do=0;
+    options.leadprod = 'group';
+    options.patient_list=patselect;
+    options.d3.mirrorsides=0;
+    options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
+    options.patientname = options.subj.subjId;
+return
+end
+function options=ea_setopts_local
+    
+    options.earoot=ea_getearoot;
+    options.verbose=3;
+    options.sides=1:2; % re-check this later..
+    options.fiberthresh=1;
+    options.writeoutstats=1;
+    options.writeoutpm = 0;
+    options.colormap=jet;
+    options.d3.write=1;
+    options.d3.prolong_electrode=2;
+    options.d3.writeatlases=1;
+    options.macaquemodus=0;
+return
+end

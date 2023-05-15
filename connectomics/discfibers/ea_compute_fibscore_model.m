@@ -97,7 +97,9 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
     else
         lateral_score = false;
     end
-
+    if obj.CleartuneOptim
+       lateral_score = false;
+    end
     switch obj.modelNormalization
         case 'z-score'
             for s=1:length(vals)
