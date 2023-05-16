@@ -183,9 +183,11 @@ def compute_global_score(S_vector, *args):
     symptom_weights = json.load(fp)
     symptom_weights = symptom_weights['fixed_symptom_weights']
     remaining_weights = 1.0
+    N_fixed = 0
+    # is it iterating only across the correct side?
     for key in symptom_weights:
         remaining_weights = remaining_weights - symptom_weights[key]
-
+        N_fixed += 1
 
     # get symptom-wise difference between activation and target profiles
     from Optim_strategies import get_symptom_distances
@@ -194,7 +196,10 @@ def compute_global_score(S_vector, *args):
     # symptom_diff is in the symptom space, not pathway! So it will have a different dimensionality
 
     # compute weight for non-fixed as the equal distribution of what remained
-    rem_weight = remaining_weights / len(symptoms_list)
+    if len(symptoms_list) != N_fixed:
+        rem_weight = remaining_weights / (len(symptoms_list) - N_fixed)
+    else:
+        rem_weight = 0.0
 
     # for now, the global score is a simple summation (exactly like in Optim_strategies.py)
     loc_ind = 0

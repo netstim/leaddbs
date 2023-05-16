@@ -1,4 +1,4 @@
-function ea_compute_pathways_recruitment(connectome_name,stim_prot_file,stim_folder,side,VAT_thresh)
+function ea_compute_pathways_recruitment(connectome_name,stim_prot_file,pat_folder,stim_folder,side,VAT_thresh)
 
 %% Compute pathway recruitment based on VAT
 % The results are used to train ANN
@@ -9,6 +9,11 @@ function ea_compute_pathways_recruitment(connectome_name,stim_prot_file,stim_fol
 % stim_prot_file - array (N_protocols X N_contacts)
 % side           - 0-rh (OSS-DBS notation)
 
+% load csv as array
+stim_protocols = readtable(stim_prot_file);
+stim_protocols = table2array(stim_protocols);
+
+% output folders (OSS-DBS structure)
 if side == 0
     NB_folder = 'NB_0';
     res_folder = 'Results_rh';
@@ -17,7 +22,7 @@ else
     res_folder = 'Results_lh';
 end
 
-
+% get all pathways from the connectome
 pathways_files = dir([connectome_name,filesep,'*.mat']);
 if side == 0
     pathways_files = pathways_files(contains({pathways_files.name}, '_rh_'));
@@ -25,21 +30,35 @@ else
     pathways_files = pathways_files(contains({pathways_files.name}, '_lh_'));
 end
 
-% will be stored in Activations_over_StimSets
-percent_recruit = zeros(size(stim_prot_file,1),length(pathways_files) + 1);
+% will be stored in Results / Activations_over_StimSets
+N_recruited = zeros(size(stim_protocols,1),length(pathways_files) + 1);
 
-%stim_protocols = load(stim_prot_file);
 
-for stim_i = 1:size(stim_prot_file,1)
+for stim_i = 1:size(stim_protocols,1)
 
-    percent_recruit(stim_i,1) = stim_i;  % store iteration (for consistency with OSS-DBS)
+    N_recruited(stim_i,1) = stim_i - 1;  % store iteration (for consistency with OSS-DBS)
 
-        
-    % stim_vector = stim_protocols(stim_i,:)
+    % StimVector = stim_protocols(stim_i,:)
     % convert mA to perc
-    % stay with cathodic stim only for now
+    % stay with cathodic stim only for now (pol = 1 for all)
     % simply sum up all currents, recompute percentages
-    % Efield = ea_get_magic_Efield(stim_vector_perc, options, reconst)
+    % S = ea_add_StimVector_to_S(S, StimVector,side)
+
+    % just because all cathodic
+    if any(stim_protocols(:) > 0.0)
+        disp("Only cathodic stimulation is supported!")
+        return
+    else
+        ampselect = sum(abs(stim_protocols(stim_i,:)));
+    end
+    perc_val = zeros(1,8);
+    perc_val(1:size(stim_protocols,2)) = -100.0 * stim_protocols(stim_i,:)./ampselect;
+    constcurr = 0;  % 0 - CC, 1 - VC (Lead-DBS notation)
+    writeVTA = 0;
+    modelVTA = 'FieldTrip';
+
+    % Nanditha's script
+    [Efield,~] = ea_generate_optim_vat(pat_folder,ampselect,perc_val,constcurr,side+1,writeVTA,modelVTA);
 
     % Threshold the vat efield
     vatInd = find(abs(Efield.img(:)) > VAT_thresh);
@@ -50,7 +69,7 @@ for stim_i = 1:size(stim_prot_file,1)
     
     for path_i = 1:length(pathways_files)
 
-        pathway_file = fullfile(pathways_files(k).folder, pathways_files(k).name);
+        pathway_file = fullfile(pathways_files(path_i).folder, pathways_files(path_i).name);
         load(pathway_file, 'fibers', 'idx');
 
         filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
@@ -72,15 +91,14 @@ for stim_i = 1:size(stim_prot_file,1)
 
         % Find connected fibers
         connected = cellfun(@(fib) any(ismember(fib, vatInd)), fibVoxInd);
-        
-        % check!!!
-        percent_recruit(stim_i,path_i+1) = sum(connected);
+        N_recruited(stim_i,path_i+1) = sum(connected);
 
 
-        % save pathway name and number of fibers
-        % only needed once
         if stim_i == 1
-            jsonDict.vat_paths_dict.(genvarname(pathways_files(k).name)) = length(idx);
+            % save pathway name and number of fibers
+            % only needed once
+            % also save index to resort json later as Activations_over_StimSets
+            jsonDict.vat_paths_dict.(genvarname(pathways_files(path_i).name(1:end-4))) = [length(idx),path_i];
         end
     end
 end
@@ -93,8 +111,8 @@ fclose(fid);
 
 % save to .csv
 if side == 0
-    csvwrite([stim_folder,res_folder,filesep,'Activations_over_StimSets_rh.csv'],percent_recruit)
+    csvwrite([stim_folder,filesep,res_folder,filesep,'Activations_over_StimSets_rh.csv'],N_recruited)
 else
-    csvwrite([stim_folder,res_folder,filesep,'Activations_over_StimSets_lh.csv'],percent_recruit)
+    csvwrite([stim_folder,filesep,res_folder,filesep,'Activations_over_StimSets_lh.csv'],N_recruited)
 end
 

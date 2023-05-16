@@ -119,6 +119,9 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
         'segm_threshold': segm_threshold,
         }
 
+    if not os.path.exists(stim_folder + '/NB_' + str(side)):
+        os.mkdir(stim_folder + '/NB_' + str(side))
+
     with open(stim_folder + '/NB_' + str(side) + '/StimSets_info.json', 'w') as save_as_dict:
         json.dump(StimSets_info, save_as_dict)
 
