@@ -26,18 +26,26 @@ ea_run('run', options);
 %% Load in nifti files as matrix
 connLabel = ea_getConnLabel(cfile);
 for s=1:size(vatlist,1)
-        switch sf(ix)
-            case 1 % structural
+    switch sf(ix)
+        case 1 % structural
+            if isBIDSFileName(vatlist{s})
                 fingerprint = setBIDSEntity(vatlist{s}, 'conn', connLabel, 'suffix', 'strucmap');
-            case 2 % functional
+            else
+                fingerprint = strrep(vatlist{s}, '.nii', ['_conn-', connLabel, '_strucmap.nii']);
+            end
+        case 2 % functional
+            if isBIDSFileName(vatlist{s})
                 fingerprint = setBIDSEntity(vatlist{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
-        end
+            else
+                fingerprint = strrep(vatlist{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
+            end
+    end
 
-        nii = ea_load_nii(ea_niigz(fingerprint));
-        if ~exist('AllX','var')
-           AllX = zeros(size(vatlist,1),numel(nii.img));
-        end
-        AllX(s,:) = nii.img(:);
+    nii = ea_load_nii(ea_niigz(fingerprint));
+    if ~exist('AllX','var')
+       AllX = zeros(size(vatlist,1),numel(nii.img));
+    end
+    AllX(s,:) = nii.img(:);
 end
 
 
