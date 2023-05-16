@@ -51,26 +51,11 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         Currents_Monopolar21 = np.genfromtxt('Current_protocols_0_Monopolars21_79.csv', delimiter=',', skip_header=True)
 
     if VAT_recruit == True:
-        # load simulated pathways from json
-        with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/VAT_pathways.json', 'r') as fp:
-            vat_paths_dict = json.load(fp)
-        fp.close()
-        vat_paths_dict = vat_paths_dict['vat_paths_dict']
-        Pathways_fo = []
-        axons_in_path_fo = []
-        sort_inx = []
-        for key in vat_paths_dict:
-            Pathways_fo.append(key)
-            axons_in_path_fo.append(vat_paths_dict[key][0])
-            sort_inx.append(vat_paths_dict[key][1]-1)  # MATLAB to Python
 
-        # re-sort as in Activations_over_StimSets
-        # this is weird
-        Pathways = []
-        axons_in_path = []
-        for idx in range(len(sort_inx)):
-            Pathways.append(Pathways_fo[sort_inx.index(idx)])
-            axons_in_path.append(axons_in_path_fo[sort_inx.index(idx)])
+        from VAT_pathway_recruitment import remove_failed_protocols, get_VAT_pathways
+
+        Currents, ActivationResults = remove_failed_protocols(Currents, ActivationResults)
+        Pathways, axons_in_path = get_VAT_pathways(side)
     else:
         # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
         # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
@@ -235,6 +220,8 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         SE_dict = json.load(fp)
     fp.close()
 
+    # we can discard the error sign here
+    error_ANN = abs(error_ANN)
 
     # first check side-effects
     for key in SE_dict:
