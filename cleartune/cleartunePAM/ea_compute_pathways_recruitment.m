@@ -58,7 +58,13 @@ for stim_i = 1:size(stim_protocols,1)
     modelVTA = 'FieldTrip';
 
     % Nanditha's script
-    [Efield,~] = ea_generate_optim_vat(pat_folder,ampselect,perc_val,constcurr,side+1,writeVTA,modelVTA);
+    try
+        [Efield,~] = ea_generate_vat(pat_folder,ampselect,perc_val,constcurr,side+1,writeVTA,modelVTA);
+    catch
+        disp("Failed to compute Efield for this stim protocol, it will be marked")
+        N_recruited(stim_i,:) = -1.0;
+        continue
+    end
 
     % Threshold the vat efield
     vatInd = find(abs(Efield.img(:)) > VAT_thresh);
