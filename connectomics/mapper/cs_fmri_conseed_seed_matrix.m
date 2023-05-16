@@ -15,7 +15,6 @@ else
     end
 end
 
-
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -174,6 +173,13 @@ if ~exist('db','var')
     end
 end
 
+stack = dbstack;
+if ismember('ea_networkmapping_calcvals', {stack.name})
+    isNetworkMappingRun = 1;
+else
+    isNetworkMappingRun = 0;
+end
+
 disp('Iterating through subjects...');
 for subj = 1:numSubUse % iterate across subjects
     mcfi = usesubjects(subj);
@@ -223,10 +229,13 @@ for subj = 1:numSubUse % iterate across subjects
         mmap.img(:)=0;
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=Rw;
-        ea_write_nii(mmap);
-        if usegzip
-            gzip(mmap.fname);
-            delete(mmap.fname);
+
+        if ~isNetworkMappingRun
+            ea_write_nii(mmap);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
         end
 
         if ~isempty(outputfolder)

@@ -227,6 +227,13 @@ for sub=1:numsub % iterate across subjects
 end
 ea_dispercent(1,'end');
 
+stack = dbstack;
+if ismember('ea_networkmapping_calcvals', {stack.name})
+    isNetworkMappingRun = 1;
+else
+    isNetworkMappingRun = 0;
+end
+
 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     % export mean
     M=ea_nanmean(fX{s}',1);
@@ -246,10 +253,12 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
     end
 
-    ea_write_nii(mmap);
-    if usegzip
-        gzip(mmap.fname);
-        delete(mmap.fname);
+    if ~isNetworkMappingRun
+        ea_write_nii(mmap);
+        if usegzip
+            gzip(mmap.fname);
+            delete(mmap.fname);
+        end
     end
 
     % export variance
@@ -270,13 +279,15 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
     end
 
-    ea_write_nii(mmap);
-    if usegzip
-        gzip(mmap.fname);
-        delete(mmap.fname);
+    if ~isNetworkMappingRun
+        ea_write_nii(mmap);
+        if usegzip
+            gzip(mmap.fname);
+            delete(mmap.fname);
+        end
     end
 
-    if isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
         % lh surf
         lM=ea_nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -358,7 +369,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         delete(mmap.fname);
     end
 
-    if isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
         % lh surf
         lM=nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -427,16 +438,18 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             end
         end
 
-        spm_write_vol(tmap,tmap.img);
-        if usegzip
-            gzip(tmap.fname);
-            delete(tmap.fname);
+        if ~isNetworkMappingRun
+            spm_write_vol(tmap,tmap.img);
+            if usegzip
+                gzip(tmap.fname);
+                delete(tmap.fname);
+            end
         end
     catch
         ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map for seed:\n%s\n', sfile{s});
     end
 
-    if isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
         try
             % lh surf
             [~,~,~,ltstat]=ttest(lhfX{s}');
