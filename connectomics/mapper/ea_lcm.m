@@ -53,7 +53,7 @@ if options.lcm.func.do
 end
 
 % convert VTA seeds also if neither func or struc conn is chosen.
-if (~options.lcm.func.do) && (~options.lcm.struc.do)
+if ~options.lcm.func.do && ~options.lcm.struc.do
     if strcmp(options.lcm.seeddef,'vats')
         try ea_resolvevatseeds(options,'dMRI'); end
         try ea_resolvevatseeds(options,'fMRI'); end

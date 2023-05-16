@@ -3,7 +3,7 @@ function [AllX] = ea_networkmapping_calcvals(vatlist,cfile)
 %% Run Lead Mapper:
 % --------------------------------------
 options = getoptslocal;
-options.prefs=ea_prefs;
+options.prefs.lcm.vatseed = 'efield';
 options.lcm.seeds = vatlist(:);
 %%
 % determine whether connectome of use is structural or functional:
@@ -166,13 +166,11 @@ options.colormap = [0.2422 0.1504 0.6603
                     0.9769 0.9839 0.0805];
 %%
 options.dolc = 0;
-%%
 options.ecog.extractsurface.do = 0;
-%%
 options.uivatdirs = {};
-%%
 options.uipatdirs = {''};
 options.leadprod = 'mapper';
+options.prefs = ea_prefs;
 options.lc.general.parcellation = 'ABI_atlas_reduced_V2';
 options.lc.general.parcellationn = 2;
 options.lc.graph.struc_func_sim = 0;
