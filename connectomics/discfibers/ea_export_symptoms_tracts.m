@@ -395,7 +395,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                 if negative_vals == 0
                     jsonDict.profile_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [1.0, pathway_mean_vals{1,group_i}(bin_i), pathway_sum_vals{1,group_i}(bin_i)];
                 else
-                    jsonDict.Soft_SE_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [0.0, pathway_mean_vals{1,group_i}(bin_i), pathway_sum_vals{1,group_i}(bin_i)];
+                    jsonDict.Soft_SE_dict.(genvarname(['SE_',symptomName])).(genvarname(pathway_name)) = [0.0, pathway_mean_vals{1,group_i}(bin_i), pathway_sum_vals{1,group_i}(bin_i)];
                 end
             end
         end
