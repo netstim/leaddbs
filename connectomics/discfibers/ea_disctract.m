@@ -947,7 +947,7 @@ classdef ea_disctract < handle
                     end
                 end
 
-                R(isnan(R)) = 0.00001; % do not get rid of Nans
+                R(isnan(R)) = 1e-5; % do not get rid of Nans
 
                 % generate null distribution
                 R1 = R(1,:);
@@ -978,11 +978,9 @@ classdef ea_disctract < handle
                     end
 
                     R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
-                    % do not kick out NaN scores
-                    if isnan(R(perm))
-                        R(perm) = 0.00001;
-                    end
                 end
+
+                R(isnan(R)) = 1e-5;
 
                 % generate null distribution
                 R1 = R(1);
