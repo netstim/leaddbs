@@ -121,7 +121,6 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
                              args=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways], maxfun=netblend_dict['num_iterations_ANN'], seed=42, visit=2.62,
                              no_local_search=True)
 
-
     # ============================================ Ploting ============================================================#
 
     optim_stim = np.reshape(np.array(res.x), (-1, len(res.x)))

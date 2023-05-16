@@ -74,7 +74,7 @@ def create_NB_dictionaries(side, FF_dictionary, disease='spontaneous human combu
     return profile_dict, Soft_SE_dict, SE_dict
 
 
-def make_prediction(side, FF_dictionary, fixed_symptoms_dict=0):
+def make_prediction(side, FF_dictionary, score_symptom_metric, fixed_symptoms_dict=0):
 
     ''' Predict symptom-profile improvement for a given activation profile based on the target activation profiles
         fixed symptom dictionary is only needed for weight optimization'''
@@ -97,7 +97,7 @@ def make_prediction(side, FF_dictionary, fixed_symptoms_dict=0):
     # we do not need non-fixed symptom distances here
     from Optim_strategies import get_symptom_distances
     [__, symptom_diff, symptom_list] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
-                                               fixed_symptom_weights, Pathways, side, score_symptom_metric='Canberra')
+                                               fixed_symptom_weights, Pathways, side, score_symptom_metric=score_symptom_metric)
     # symptom_diff is in the symptom space, not pathway! So it might have a different dimensionality
 
     from Pathways_Stats import get_current_protocol
@@ -105,7 +105,7 @@ def make_prediction(side, FF_dictionary, fixed_symptoms_dict=0):
 
     from RoutinesForResults import get_activation_prediction
     get_activation_prediction(current_protocol, activation_profile, Pathways, symptom_diff, profile_dict,
-                              Soft_SE_dict, side, plot_results=True, score_symptom_metric='Canberra')
+                              Soft_SE_dict, side, plot_results=True, score_symptom_metric=score_symptom_metric)
 
 if __name__ == '__main__':
 
@@ -114,7 +114,8 @@ if __name__ == '__main__':
     # sys.argv[2] - side
     # sys.argv[3] - Activation Profile Dictionary based on Fiber Filtering
     # sys.argv[4] - Fixed Symptoms Dictionary
+    # sys.argv[5] - Score Symptom Metrix
 
     os.environ['STIMDIR'] = sys.argv[1]
     # make_prediction(int(sys.argv[2]), sys.argv[3], sys.argv[4])
-    make_prediction(int(sys.argv[2]), sys.argv[3])
+    make_prediction(int(sys.argv[2]),sys.argv[4], sys.argv[5], sys.argv[3])

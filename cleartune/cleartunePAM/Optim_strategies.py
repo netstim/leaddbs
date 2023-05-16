@@ -157,6 +157,11 @@ def choose_weights_minimizer(stim_vector, *args):
     symp_inx = 0
     Impr_non_fixed = 0.0
     Rest_weight = 1.0
+
+    # do not estimate weights for soft side-effects
+    Impr_pred_no_SSE = np.where(Impr_pred < 0.0, 0.001, Impr_pred)
+
+
     for symptom in Target_profiles:
 
         if side == 0 and not ("_rh" in symptom):
@@ -165,7 +170,7 @@ def choose_weights_minimizer(stim_vector, *args):
             continue
 
         if symptom not in fixed_symptom_weights:
-            Impr_non_fixed = Impr_non_fixed + Impr_pred[symp_inx, 0]
+            Impr_non_fixed = Impr_non_fixed + Impr_pred_no_SSE[symp_inx, 0]
         else:
             Rest_weight = Rest_weight - fixed_symptom_weights[symptom]
 
@@ -181,6 +186,7 @@ def choose_weights_minimizer(stim_vector, *args):
     # weight here and not above just for clarity (but can be combined)
     estim_symp_weight_norm_dict = {}
 
+
     symp_inx = 0
     for symptom in Target_profiles:
 
@@ -192,6 +198,9 @@ def choose_weights_minimizer(stim_vector, *args):
         if symptom not in fixed_symptom_weights:
             # this is the key part
             # do not make any val assumption at this point
+
+            if estim_symp_improv_dict[symptom] < 0.0:
+                estim_symp_improv_dict[symptom] = 0.0  # nullify here to avoid weight estimation for soft SE
             estim_symp_weights_norm[symp_inx] = Rest_weight * estim_symp_improv_dict[symptom] / Impr_non_fixed
 
             #estim_symp_weights_norm[symp_inx] = Rest_weight * (1 - symp_distances[symp_inx] / sum_symp_nonfixed)

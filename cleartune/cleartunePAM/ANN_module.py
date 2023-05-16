@@ -56,11 +56,21 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
             vat_paths_dict = json.load(fp)
         fp.close()
         vat_paths_dict = vat_paths_dict['vat_paths_dict']
+        Pathways_fo = []
+        axons_in_path_fo = []
+        sort_inx = []
+        for key in vat_paths_dict:
+            Pathways_fo.append(key)
+            axons_in_path_fo.append(vat_paths_dict[key][0])
+            sort_inx.append(vat_paths_dict[key][1]-1)  # MATLAB to Python
+
+        # re-sort as in Activations_over_StimSets
+        # this is weird
         Pathways = []
         axons_in_path = []
-        for key in vat_paths_dict:
-            Pathways.append(key)
-            axons_in_path.append(vat_paths_dict[key])
+        for idx in range(len(sort_inx)):
+            Pathways.append(Pathways_fo[sort_inx.index(idx)])
+            axons_in_path.append(axons_in_path_fo[sort_inx.index(idx)])
     else:
         # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
         # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
