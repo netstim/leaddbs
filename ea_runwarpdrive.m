@@ -44,7 +44,7 @@ end
 %
 
 s4l = ea_slicer_for_lead;
-if ~s4l.is_installed()
+if ~s4l.is_installed_and_up_to_date()
     s4l.install();
 end
 
