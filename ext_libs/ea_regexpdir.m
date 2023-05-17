@@ -1,13 +1,19 @@
-function [list, isdir] = ea_regexpdir(rootdir, expstr, recursive, type)
+function [list, isdir] = ea_regexpdir(rootdir, expstr, recursive, type, listHidden)
 % Wrapper for regexpdir (need to clear the persistent variable)
 
-if ~exist('recursive','var')
+% Recursive search by default
+if ~exist('recursive', 'var')
     recursive = true;
 end
 
 % Search file or folder
-if ~exist('type','var')
+if ~exist('type', 'var')
     type = 'file';
+end
+
+% Do not list hidden files by default
+if ~exist('listHidden', 'var')
+    listHidden = false;
 end
 
 % Rewrite pattern when '^STR$' used
@@ -39,4 +45,15 @@ end
 
 if ischar(list)
     list = {list};
+end
+
+if ~listHidden
+    [~, fname] = fileparts(list);
+    list(startsWith(fname, '.')) = [];
+    if ismember(type, {'a', 'all'})
+        isdir(startsWith(fname, '.')) = [];
+        if isempty(isdir)
+            isdir = 0;
+        end
+    end
 end
