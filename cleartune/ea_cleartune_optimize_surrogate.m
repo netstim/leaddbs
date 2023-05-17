@@ -58,7 +58,7 @@ intergCond=[paramsR(:,3)];
 
 A = [];
 b = [];
-Aeq = [0 1 1 1 1 1 1 1 1];
+Aeq = [0, ones(1,app.inputVars.numContacts)];
 beq = -100;
 
 % set up initial points with some good heuristics:
@@ -117,6 +117,7 @@ newoptimL = reformatX(XOptimL);
 if ~isempty(newoptimL)
     XOptimL = newoptimL;
 end
+writeVTA = 1;
 inputsL = {patlist{1},XOptimL(1),XOptimL(2:end),0,2,writeVTA,modelVTA};
 ea_generate_optim_vat(inputsL{:});
 for i=1:size(ipL.X,1)
@@ -180,7 +181,7 @@ if isempty(X)
     Fval = Inf;
     return
 end
-constCurr = 0;
+constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
 Fval=getFval(app,X,patlist,constCurr,tractsetclone,side);
 return
@@ -192,7 +193,7 @@ if isempty(X)
     Fval = Inf;
     return
 end
-constCurr = 0;
+constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
 Fval=getFval(app,X,patlist,constCurr,tractsetclone,side);
 return
@@ -215,25 +216,26 @@ for xx=2:9
     
 end
 %Method 2 - scaling vars
-
+if all(~X(2:9)) %all contacts have zero % activation its not allowed
+    X = [];
+    return
+end
 %doing it this way because harcoding indices is wrong and won't give us
 %flexibility for future
 %switch this on for bipolar setting
 % whichpos = X > 0;
 % whichpos(1) = 0;
-% whichpos(10:end) = 0;
+% %whichpos(10:end) = 0;
 % if any(whichpos)
 %    sum_whichpos_r = sum(X(whichpos));
 %    X(whichpos) = (X(whichpos)*100)/(sum_whichpos_r);
 %    X(end) = 0;
+% end
 % else
 %    X(end) = 100;
 % end
 
-if all(~X(2:9)) %all contacts have zero % activation its not allowed
-    X = [];
-    return
-end
+
 
 whichneg = X < 0;
 whichneg(1) = 0;
@@ -242,7 +244,7 @@ if any(whichneg)
     sum_whichneg_r = sum(X(whichneg));
     X(whichneg) = (X(whichneg)*-100)/(sum_whichneg_r);
 end
-% X(end) = X(end)*100;
+X(end) = X(end)*100;
 return
 end
 

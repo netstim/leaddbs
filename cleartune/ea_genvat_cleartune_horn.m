@@ -89,7 +89,7 @@ hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test 
 assignin('caller','hmchanged',hmchanged);
 if hmchanged
     disp('Headmodel needs to be re-calculated. This may take a while...');
-
+   
     cnt=1;
     mesh.tet=[];
     mesh.pnt=[];
@@ -104,8 +104,8 @@ if hmchanged
                 if ~isfield(atlases,'tissuetypes')
                     atlases.tissuetypes=ones(length(atlases.names),1);
                 end
-                for atlas=1:numel(atlases.roi)
-                    if isempty(atlases.roi{atlas}.fv) || (atlases.tissuetypes~=1)
+                for atlas=1:length(atlases.roi)
+                    if isempty(atlases.roi{atlas}.fv) || (atlases.tissuetypes(atlas)~=1)
                         continue
                     end
                     fv(cnt)=atlases.roi{atlas}.fv;

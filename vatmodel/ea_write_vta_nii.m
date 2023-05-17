@@ -1,5 +1,10 @@
 function varargout=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
-
+stack = dbstack;
+if any(ismember({'ea_generate_optim_vat', 'ea_generate_base_vats'}, {stack.name}))
+    isClearTuneRun = 1;
+else
+    isClearTuneRun = 0;
+end
 
 if ~isempty(resultfig)
     vatgrad=getappdata(resultfig,'vatgrad');
@@ -174,18 +179,18 @@ ea_savestimulation(S,options);
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
 Vvate.dt = [16, endian];
-if ~strcmp(options.groupid,'cleartune')
+if ~isClearTuneRun
     ea_write_nii(Vvate);
 end
 %ea_write_nii(Vvate);
 Vvatne.img=neeg; %permute(neeg,[2,1,3]);
-if ~strcmp(options.groupid,'cleartune')
+if ~isClearTuneRun
     ea_write_nii(Vvatne);
 end
 %ea_write_nii(Vvatne);
 
 Vvat.img=eg; %permute(eg,[1,2,3]);
-if ~strcmp(options.groupid,'cleartune')
+if ~isClearTuneRun
     ea_write_nii(Vvat);
 end
 %ea_write_nii(Vvat);
@@ -228,11 +233,11 @@ Vvat.img=imfill(Vvat.img,'holes');
 SE = strel('sphere',3);
 Vvat.img = imerode(Vvat.img,SE);
 Vvat.img = imdilate(Vvat.img,SE);
-if ~strcmp(options.groupid,'cleartune')
+if ~isClearTuneRun
     ea_write_nii(Vvat);
 end
 %ea_write_nii(Vvat);
-if strcmp(options.groupid,'cleartune')
+if isClearTuneRun
     varargout{1} = Vvate;
 else
     varargout{1} = vatfv;

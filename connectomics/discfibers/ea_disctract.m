@@ -895,7 +895,7 @@ classdef ea_disctract < handle
                 if cvp.NumTestSets == 1
                     Ihat = Ihat(test,:);
                     if obj.CleartuneOptim
-                        Ihat = reshape(Ihat,2,4)';
+                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
                     end
                     Improvement = Improvement(test);
                 end

@@ -9,14 +9,13 @@ modelVTA = varargin{7};
 %va = constcurr;
 %concval = varargin{3}(1:8);
 concval = varargin{3}(1:8);
-concval = [concval,100]; %switch this off for bipolar
 %% Load and define options
 options = ea_setopts_local;
 options.native = 0;
 options.groupmode = 1;
 options.groupid = 'cleartune';
 
-va = constcurr; % 0 for constant curr
+va = 2; % 0 for constant curr
                 % 1 for voltage
 
 % amps.min = min_amplitude;
@@ -66,10 +65,10 @@ setappdata(resultfig,'resultfig',resultfig);
 
 %runs = 1:numel(allstims{1});
 t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname '.mat']); % defines electrode variable
-elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
+%elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
 whichContact = find(concval);
 if length(whichContact) > 1
-    whichContact = [num2str(whichContact(1:end-1))];
+    whichContact = [num2str(whichContact)];
     whichContact = whichContact(~isspace(whichContact));
 end
 if side == 1
@@ -89,7 +88,7 @@ S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
 S.label = ['amp_R_L_',num2str(ampselect,'%.2f'),'_',num2str(ampselect,'%.2f'),'_contactR_L_',num2str(whichContact,'%d'),'_',num2str(whichContact,'%d')];
 
 % Define the name of the folder for the nii to be saved in
-if va == 0
+if va == 2
     volcur = 'mA';
 elseif va == 1
     volcur = 'V';
@@ -108,14 +107,21 @@ for hem=1:2
         Efields(hem)=ea_genvat_cleartune_fastfield(S,hem,options,fname,resultfig,t.electrode,elt);
         if hem == side && writeVTA
             ea_write_nii(Efields(hem))
-            
         end
     else
         tic;
         outputEfield = ea_genvat_cleartune_horn('',S,hem,options,fname,resultfig);
         if isempty(outputEfield)
-            Vvate = createEmptyNii(t,elstruct,elt,side,fname);
+            if hem == 2
+                indx = 1;
+            else
+                indx = 2;
+            end
+            Vvate = Efields(indx);
+            Vvate.img = zeros(size(Efields(indx).img));
             Efields(hem) = Vvate;
+            %Vvate = createEmptyNii(t,elstruct,elt,side,fname);
+           % Efields(hem) = Vvate;
         else
             Efields(hem) = outputEfield;
         end

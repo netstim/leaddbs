@@ -35,26 +35,31 @@ S.amplitude{1,2} = [leftsets(1),0,0,0];
 S.activecontacts{1,1} = abs(rightsets(2:end))>0;
 S.activecontacts{1,2} = abs(leftsets(2:end))>0;
 
-rsum = sum(rightsets(2:end));
-lsum = sum(leftsets(2:end));
+% rsum = sum(rightsets(2:end));
+% lsum = sum(leftsets(2:end));
+% S.Rs1.case.perc = abs(-rsum);
+% S.Ls1.case.perc = abs(-lsum);
+% if rsum<0
+%     S.Rs1.case.pol = 2;
+% elseif rsum>0
+%     S.Rs1.case.pol = 1;
+% else
+%     S.Rs1.case.pol = 0;
+% end
+% 
+% if lsum<0
+%     S.Ls1.case.pol = 2;
+% elseif lsum>0
+%     S.Ls1.case.pol = 1;
+% else
+%     S.Ls1.case.pol = 0;
+% end
 
-S.Rs1.case.perc = abs(-rsum);
-S.Ls1.case.perc = abs(-lsum);
-if rsum<0
-    S.Rs1.case.pol = 2;
-elseif rsum>0
-    S.Rs1.case.pol = 1;
-else
-    S.Rs1.case.pol = 0;
-end
-
-if lsum<0
-    S.Ls1.case.pol = 2;
-elseif lsum>0
-    S.Ls1.case.pol = 1;
-else
-    S.Ls1.case.pol = 0;
-end
+%for monopolar cases, pol is always 2 and case is always positive
+S.Rs1.case.perc = 100;
+S.Rs1.case.pol = 2;
+S.Ls1.case.perc = 100;
+S.Rs1.case.pol = 2;
 
 for cont = 1:8
     kr = ['k' num2str(cont-1)];
