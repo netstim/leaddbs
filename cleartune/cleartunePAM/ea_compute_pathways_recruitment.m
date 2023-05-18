@@ -32,7 +32,7 @@ end
 
 % will be stored in Results / Activations_over_StimSets
 N_recruited = zeros(size(stim_protocols,1),length(pathways_files) + 1);
-
+save_pathways_to_json = 1;
 
 for stim_i = 1:size(stim_protocols,1)
 
@@ -100,11 +100,12 @@ for stim_i = 1:size(stim_protocols,1)
         N_recruited(stim_i,path_i+1) = sum(connected);
 
 
-        if stim_i == 1
+        if stim_i == 1 || save_pathways_to_json == 1
             % save pathway name and number of fibers
             % only needed once
             % also save index to resort json later as Activations_over_StimSets
             jsonDict.vat_paths_dict.(genvarname(pathways_files(path_i).name(1:end-4))) = [length(idx),path_i];
+            save_pathways_to_json = 0;
         end
     end
 end
@@ -114,6 +115,10 @@ jsonText = jsonencode(jsonDict);
 fid = fopen([stim_folder,filesep,NB_folder,filesep,'VAT_pathways.json'], 'w');
 fprintf(fid, '%s', jsonText)
 fclose(fid);
+
+if ~exist([stim_folder,filesep,res_folder], 'dir')
+   mkdir([stim_folder,filesep,res_folder])
+end
 
 % save to .csv
 if side == 0

@@ -16,9 +16,16 @@ for i = 1:length(fixed_weights_values)
     end
 end
 
-json_file = [stimfolder,filesep,'Fixed_symptoms.json'];
+% if no fixed symptoms, create an empty dictionary
+if ~exist('jsonDict','var')
+    jsonDict.fixed_symptom_weights = [];
+    jsonText = jsonencode(jsonDict);
+    jsonText(end-2:end-1) = '{}';
+else
+    jsonText = jsonencode(jsonDict);
+end
 
-jsonText = jsonencode(jsonDict);
+json_file = [stimfolder,filesep,'Fixed_symptoms.json'];
 fid = fopen(json_file, 'w');
 fprintf(fid, '%s', jsonText)
 fclose(fid);

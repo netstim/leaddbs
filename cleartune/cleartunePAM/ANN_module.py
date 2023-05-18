@@ -56,6 +56,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
 
         Currents, ActivationResults = remove_failed_protocols(Currents, ActivationResults)
         Pathways, axons_in_path = get_VAT_pathways(side)
+        # note that the train size was not adjusted for the failed protocols!
     else:
         # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
         # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers

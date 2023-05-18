@@ -110,6 +110,7 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
         # solve min(W*distance(main_symptoms) + (1-W)*sum(distance(others)))
         # weights_others ~ 1/distance(others) - this will be stored in a separate file and read in
 
+        # ANN based
         from tensorflow.keras.models import load_model
         approx_model = load_model(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_approved_model')
 
@@ -121,9 +122,25 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
                              args=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways], maxfun=netblend_dict['num_iterations_ANN'], seed=42, visit=2.62,
                              no_local_search=True)
 
+        optimized_current = res.x  # in A!
+
+    if netblend_dict['optim_alg'] == 'PSO':
+
+        # ANN based
+        from tensorflow.keras.models import load_model
+        approx_model = load_model(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_approved_model')
+
+        from pyswarms.single.global_best import GlobalBestPSO
+        bounds = (netblend_dict['min_bound_per_contact'], netblend_dict['max_bound_per_contact'])
+        options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+        optimizer = GlobalBestPSO(n_particles=50, dimensions=len(netblend_dict['min_bound_per_contact']), options=options, bounds=bounds)
+
+        from Optim_strategies import prepare_swarm
+        cost, optimized_current = optimizer.optimize(prepare_swarm, iters=netblend_dict['num_iterations_ANN'], args_to_pass=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways])
+
     # ============================================ Ploting ============================================================#
 
-    optim_stim = np.reshape(np.array(res.x), (-1, len(res.x)))
+    optim_stim = np.reshape(np.array(optimized_current), (-1, len(optimized_current)))
     activation_profile = approx_model.predict(optim_stim, verbose=0)
     activation_profile = activation_profile[0]  # get the actual array
 
@@ -136,7 +153,7 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
         delimiter=' ')
 
     from RoutinesForResults import get_activation_prediction
-    get_activation_prediction(res.x, activation_profile, approx_pathways, non_weighted_symptom_dist, profile_dict,
+    get_activation_prediction(optimized_current, activation_profile, approx_pathways, non_weighted_symptom_dist, profile_dict,
                               Soft_SE_dict, side, plot_results=True, score_symptom_metric='Canberra',
                               estim_weights_and_total_score=estim_weights_and_total_score, fixed_symptom_weights=fixed_symptom_weights)
 

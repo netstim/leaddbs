@@ -1,6 +1,6 @@
 function varargout=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
 stack = dbstack;
-if any(ismember({'ea_generate_optim_vat', 'ea_generate_base_vats'}, {stack.name}))
+if any(ismember({'ea_generate_optim_vat', 'ea_generate_base_vats','ea_generate_vat'}, {stack.name}))
     isClearTuneRun = 1;
 else
     isClearTuneRun = 0;
