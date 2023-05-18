@@ -52,7 +52,8 @@ for stim_i = 1:size(stim_protocols,1)
         ampselect = sum(abs(stim_protocols(stim_i,:)));
     end
     perc_val = zeros(1,8);
-    perc_val(1:size(stim_protocols,2)) = -100.0 * stim_protocols(stim_i,:)./ampselect;
+    % keep original sign for perc here
+    perc_val(1:size(stim_protocols,2)) = 100.0 * stim_protocols(stim_i,:)./ampselect;
     constcurr = 0;  % 0 - CC, 1 - VC (Lead-DBS notation)
     writeVTA = 0;
     modelVTA = 'FieldTrip';
