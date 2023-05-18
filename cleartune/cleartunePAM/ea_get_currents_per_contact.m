@@ -27,9 +27,9 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     end
 
     % electrode models, should be expanded
-    concentric4 = ['PINS_Medical_L303','PINS_Medical_L302','PINS_Medical_L301', 'Medtronic_3389','Medtronic_3387','Medtronic_3391','St._Jude ActiveTip_(6142-6145)', 'St._Jude_ActiveTip_(6146-6149)'];
+    concentric4 = ['PINS_Medical_L303','PINS_Medical_L302','PINS_Medical_L301', 'Medtronic_3389','Medtronic_3387','Medtronic_3391','St._Jude ActiveTip_(6142-6145)', 'St._Jude_ActiveTip_(6146-6149)','Abbott ActiveTip (6146-6149)','Abbott ActiveTip (6142-6145)'];
     concentric8 = ['Boston_Scientific_Vercise'];
-    segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed'];
+    segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed','Abbott Directed 6172 (short)','Abbott Directed 6173 (long)', 'Medtronic B33005', 'Medtronic B33015'];
     
     % add a sanity check for current limits
 
@@ -122,17 +122,22 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
             end
         end
     else
-        ea_warndlg('The electrode model is not supported')
-    end
-    if length(side) == 2
-        S.amplitude{1,1}(1) = S.Rs1.amp;
-        S.amplitude{1,2}(1) = S.Ls1.amp;
-    elseif side == 0
-        S.amplitude{1,1}(1) = S.Rs1.amp;
-        S.amplitude{1,2}(1) = 0.0; % one side at a time
-    else
-        S.amplitude{1,2}(1) = S.Ls1.amp;
-        S.amplitude{1,1}(1) = 0.0; % one side at a time
+        ea_warndlg('The electrode model is not recongnized')
+        return
     end
 
+    if check_S == 1
+        if length(side) == 2
+            S.amplitude{1,1}(1) = S.Rs1.amp;
+            S.amplitude{1,2}(1) = S.Ls1.amp;
+        elseif side == 0
+            S.amplitude{1,1}(1) = S.Rs1.amp;
+            S.amplitude{1,2}(1) = 0.0; % one side at a time
+        else
+            S.amplitude{1,2}(1) = S.Ls1.amp;
+            S.amplitude{1,1}(1) = 0.0; % one side at a time
+        end
+    else
+        S = 0;  % won't be used
+    end
 end
