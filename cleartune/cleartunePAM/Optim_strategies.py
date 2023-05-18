@@ -10,7 +10,6 @@ import os
 from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, cosine
 import json
 
-
 def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric='Canberra'):
 
     ''' Compute distances in pathway activation space from Target_profiles of symptoms and soft-side effects
@@ -91,13 +90,35 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
 
     return sum_symp_nonfixed, symp_distances, symptom_list
 
+def prepare_swarm(x, args_to_pass=[]):
+    """Higher-level method to do forward_prop in the
+    whole swarm.
+
+    Inputs
+    ------
+    x: numpy.ndarray of shape (n_particles, dimensions)
+        The swarm that will perform the search
+
+    Returns
+    -------
+    numpy.ndarray of shape (n_particles, )
+        The computed loss for each particle
+    """
+    n_particles = x.shape[0]
+    j = [choose_weights_minimizer(x[i], args_to_pass[:]) for i in range(n_particles)]
+    return np.array(j)
 
 def choose_weights_minimizer(stim_vector, *args):
-
     ''' Compute estimated weights and global score based on symptom distances for the activation profile
         for stim_vector estimated with the approximation model '''
 
-    approx_model, fixed_symptom_weights, score_symptom_metric, Target_profiles, Soft_SE_thresh, SE_thresh, side, approx_pathways = args
+    mode_for_SSE = 'reverse'  # 'normal', 'reverse', 'exclude'
+
+    # quick fix
+    if len(args) == 1:
+        approx_model, fixed_symptom_weights, score_symptom_metric, Target_profiles, Soft_SE_thresh, SE_thresh, side, approx_pathways = args[0]
+    else:
+        approx_model, fixed_symptom_weights, score_symptom_metric, Target_profiles, Soft_SE_thresh, SE_thresh, side, approx_pathways = args
 
     # IMPORTANT: activation profile should be composed by the same order of pathways as PD_profiles
     #activation_profile = get_profiles_ANN(stim_vector)
@@ -161,7 +182,6 @@ def choose_weights_minimizer(stim_vector, *args):
     # do not estimate weights for soft side-effects
     Impr_pred_no_SSE = np.where(Impr_pred < 0.0, 0.001, Impr_pred)
 
-
     for symptom in Target_profiles:
 
         if side == 0 and not ("_rh" in symptom):
@@ -170,7 +190,18 @@ def choose_weights_minimizer(stim_vector, *args):
             continue
 
         if symptom not in fixed_symptom_weights:
-            Impr_non_fixed = Impr_non_fixed + Impr_pred_no_SSE[symp_inx, 0]
+            if mode_for_SSE == 'exclude':  # no weighting estimation for soft side-effects
+                Impr_non_fixed = Impr_non_fixed + Impr_pred_no_SSE[symp_inx, 0]
+            elif mode_for_SSE == 'normal':  # the less worsening the higher the weight
+                if Impr_pred[symp_inx, 0] < 0.0:  # soft side-effect, estimate improvement as 100% worsening  - predicted worsening
+                    Impr_non_fixed = Impr_non_fixed + (1.0 + Impr_pred[symp_inx, 0])
+                else:
+                    Impr_non_fixed = Impr_non_fixed + Impr_pred[symp_inx, 0]
+            elif mode_for_SSE == 'reverse':  # larger weight for larger worsening
+                if Impr_pred[symp_inx, 0] < 0.0:  # just flip the sign to assign higher weight for higher worsening
+                    Impr_non_fixed = abs(Impr_pred[symp_inx, 0])
+                else:
+                    Impr_non_fixed = Impr_non_fixed + Impr_pred[symp_inx, 0]
         else:
             Rest_weight = Rest_weight - fixed_symptom_weights[symptom]
 
@@ -200,7 +231,14 @@ def choose_weights_minimizer(stim_vector, *args):
             # do not make any val assumption at this point
 
             if estim_symp_improv_dict[symptom] < 0.0:
-                estim_symp_improv_dict[symptom] = 0.0  # nullify here to avoid weight estimation for soft SE
+                if mode_for_SSE == 'exclude':
+                    estim_symp_improv_dict[symptom] = 0.0  # nullify here to avoid weight estimation for soft SE
+                elif mode_for_SSE == 'normal':
+                    # soft side-effect, estimate improvement as 100% worsening  - predicted worsening
+                    estim_symp_improv_dict[symptom] = 1.0 + estim_symp_improv_dict[symptom]
+                elif mode_for_SSE == 'reverse':  # just flip the sign to assign higher weight for higher worsening
+                    estim_symp_improv_dict[symptom] = abs(estim_symp_improv_dict[symptom])
+
             estim_symp_weights_norm[symp_inx] = Rest_weight * estim_symp_improv_dict[symptom] / Impr_non_fixed
 
             #estim_symp_weights_norm[symp_inx] = Rest_weight * (1 - symp_distances[symp_inx] / sum_symp_nonfixed)
