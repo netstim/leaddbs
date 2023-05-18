@@ -979,7 +979,7 @@ switch elmodel
         elspec.contact_color=0.3;
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
-        elspec.tip_length=1;
+        elspec.tip_length=2;
         elspec.contact_spacing=0.71;
         elspec.numel=10;
         elspec.tipiscontact=0;
