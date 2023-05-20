@@ -115,7 +115,7 @@ options=optimoptions('surrogateopt',...
     'ObjectiveLimit',-0.9,... % optimal solution with average correlations of R~0.8 (rare to happen), lowest theoretical point is zero with an R of 1
     'MinSurrogatePoints',120,...
     'PlotFcn','surrogateoptplot',...
-    'Display','iter');
+    'Display','final');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
 % Solve problem
@@ -216,21 +216,16 @@ tractset.save;
     end
 
     function tractset=updatetractset(tractset,X)
+        verbose=1; % set to 2 to see everything
         tractset.posvisible=1; % hard coded to always set on - we will alternate the amounts though.
         tractset.negvisible=1;
 
         % resolve integer vars:
-        disp('Parameters applied: ');
 
         tractset.threshstrategy=resolve_threshstrategy(X(1));
         tractset.corrtype=resolve_corrtype(X(2));
         tractset.efieldmetric=resolve_efieldmetric(X(3));
         tractset.basepredictionon=resolve_basepredictionon(X(4));
-
-        fprintf('%s: %s\n','Threshold strategy',tractset.threshstrategy);
-        fprintf('%s: %s\n','Correlation type',tractset.corrtype);
-        fprintf('%s: %s\n','Efield metric',tractset.efieldmetric);
-        fprintf('%s: %s\n','Base prediction on',tractset.basepredictionon);
 
         % set continuous vars:
         switch tractset.threshstrategy
@@ -241,12 +236,9 @@ tractset.save;
                 tractset.showposamount=repmat(X(5),1,2);
                 tractset.shownegamount=repmat(X(6),1,2);
         end
-        fprintf('%s: %01.2f \n','Show Positive Amount',mean(tractset.showposamount));
-        fprintf('%s: %01.2f \n','Show Negative Amount',mean(tractset.shownegamount));
-
+    
 
         tractset.connthreshold=X(7);
-        fprintf('%s: %01.1f \n','Connectivity Threshold',tractset.connthreshold);
 
         switch tractset.efieldmetric % depending on efieldmetric, efieldthresholds should be scaled - input goes from 0 to 1
             case 'Sum'
@@ -264,7 +256,17 @@ tractset.save;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
         tractset.efieldthreshold=tractset.efieldthreshold*1000;
-        fprintf('%s: %01.1f \n','E-Field Threshold',tractset.efieldthreshold);
+        if verbose>1
+            disp('Parameters applied: ');
+            fprintf('%s: %s\n','Threshold strategy',tractset.threshstrategy);
+            fprintf('%s: %s\n','Correlation type',tractset.corrtype);
+            fprintf('%s: %s\n','Efield metric',tractset.efieldmetric);
+            fprintf('%s: %s\n','Base prediction on',tractset.basepredictionon);
+            fprintf('%s: %01.2f \n','Show Positive Amount',mean(tractset.showposamount));
+            fprintf('%s: %01.2f \n','Show Negative Amount',mean(tractset.shownegamount));
+            fprintf('%s: %01.1f \n','Connectivity Threshold',tractset.connthreshold);
+            fprintf('%s: %01.1f \n','E-Field Threshold',tractset.efieldthreshold);
+        end
 
     end
 
@@ -306,7 +308,7 @@ tractset.save;
 
 
     function Fval=getFval(tractset,cv,sd)
-
+        kfoldrestore=tractset.kfold;
         tractset.customselection = [];
         tractset.useExternalModel = false;
         cnt=1;
@@ -314,12 +316,9 @@ tractset.save;
         for k=1:length(ks)
             if ks(k)==1 % circular
                 if cv
-                    tractset.customselection=tractset.patientselection;
-                    cvp.training{1}=ones(1,length(tractset.customselection));
-                    cvp.test{1}=ones(1,length(tractset.customselection));
-                    cvp.NumTestSets=1;
                     try
-                        [I, Ihat]=tractset.crossval(cvp,[],0,1);
+                        tractset.kfold=ks(k);
+                        [I, Ihat]=ea_disctract_crossval(0,tractset,'k-fold (randomized)',1,0); % circular case with k==1
                         if iscell(I)
                             for entry=1:length(I)
                                 Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
@@ -338,16 +337,21 @@ tractset.save;
                 tractset.kfold = ks(k);
                 sim=nan; % initialize it.
                 try
-                    [I,Ihat,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
-                    if ea_nanmean(ea_nanmean(cellfun(@length,val_struct{2}.vals)')')<100 % Not too many fibers survive, solution not anatomically meaningful. Checking this in first fold since will be similar in the others
+                    tractset.kfold=ks(k);
+                    [I, Ihat, ~, val_struct]=ea_disctract_crossval(0,tractset,'k-fold (randomized)',1,0);
+                    if ea_nanmean(ea_nanmean(cellfun(@length,val_struct{1}{1}.vals)')')<100 % Not too many fibers survive, solution not anatomically meaningful. Checking this in first fold since will be similar in the others
                         Fval=1;
                         return
                     end
                     if sd
-                        % calc similarity index:
-                        sim(cnt)=ea_compute_sim_val_struct(val_struct);
+                        for entry=1:length(val_struct)
+                            % calc similarity index:
+                            simsub(entry)=ea_compute_sim_val_struct(val_struct{entry});
+                        end
+                        sim(cnt)=ea_nanmean(simsub(:));
                         cnt=cnt+1;
                     end
+                    
                     if cv
                         % calc cross-val indices
                         if iscell(I)
@@ -372,19 +376,22 @@ tractset.save;
             end
         end
         if sd
-            % similarities part:
+            % dissimilarities part:
             sim=ea_nanmean(sim(:));
 
             tractset.Nperm=numperm;
             dissim=nan;
             try
+                customconfig.permcorrtype='Pearson';
+                [~, ~, ~, val_struct]=ea_disctract_crossval(0,tractset,'Leave-Nothing-Out (Permutation-Based)',1,0,customconfig);
+                for g=1:length(val_struct)
+                    for i=1:length(val_struct{g})
+                        val_struct{g}{i}=val_struct{g}{i}{1};
+                    end
 
-                [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
-                for i=1:length(val_struct)
-                    val_struct{i}=val_struct{i}{1};
+                    dissim(g)=ea_compute_sim_val_struct(val_struct{g});
                 end
-
-                dissim=ea_compute_sim_val_struct(val_struct);
+                dissim=ea_nanmean(dissim(:));
             end
 
             Fval_sim=ea_nanmean([-sim;dissim]);
@@ -397,15 +404,14 @@ tractset.save;
             if isnan(R) % out of bound settings
                 R=-1; % minimal possible value
             end
-            fprintf('%s: %01.0f\n','=> Average Correlation',R);
-
+            
             Fval_cv=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
         else
             Fval_cv=nan;
         end
         Fval=ea_nanmean([Fval_sim;Fval_cv]);
-        disp(['Similarities: ',num2str(sim),', Dissimilarities: ',num2str(dissim) ,', CV: ',num2str(Fval_cv),', Combined: ',num2str(Fval)])
-
+        disp(['Combined Fval: ',num2str(Fval),' (CV R: ',num2str(R),', Similarities R: ',num2str(sim),', Dissimilarities R: ',num2str(dissim) ,')']);
+        tractset.kfold=kfoldrestore;
     end
 
 

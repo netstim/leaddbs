@@ -374,18 +374,18 @@ classdef ea_disctract < handle
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
 
-        function [I, Ihat] = loocv(obj)
+        function [I, Ihat] = loocv(obj,silent)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
-            [I, Ihat] = crossval(obj, cvp);
+            [I, Ihat] = crossval(obj, cvp,[],0,silent);
         end
 
-        function [I, Ihat] = lococv(obj)
+        function [I, Ihat] = lococv(obj,silent)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
                     'Leave-One-Cohort-Out-validation not possible.']));
             end
-            [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
+            [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection),[],0,silent);
         end
 
         function [I, Ihat, val_struct] = kfoldcv(obj,silent)
@@ -955,13 +955,13 @@ classdef ea_disctract < handle
                     R0(:,subvar) = sort(R(2:end,subvar), 'descend');
                     Rp95(subvar) = R0(round(0.05*numPerm),subvar);
                     pperm(subvar) = mean(abs(R0(:,subvar))>=abs(R1(subvar)));
-                    fprintf(['Permuted p for ' obj.subscore.labels{subvar} ' = ' num2str(pperm(subvar)) '.\n']);
+                    if ~silent; fprintf(['Permuted p for ' obj.subscore.labels{subvar} ' = ' num2str(pperm(subvar)) '.\n']); end
                 end
 
                 % Return only selected I
                 Iperm = Iperm(:,obj.patientselection,:);
 
-            else % any mode excepted PCA
+            else % any mode except PCA
                 Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
                 Iperm = [obj.responsevar, Iperm];
                 Ihat = cell(numPerm+1, 1);
@@ -970,10 +970,10 @@ classdef ea_disctract < handle
 
                 for perm=1:numPerm+1
                     if perm==1
-                        fprintf('Calculating without permutation\n\n');
+                        if ~silent; fprintf('Calculating without permutation\n\n'); end
                         [~, Ihat{perm},val_struct{perm}] = lno(obj, [], silent);
                     else
-                        fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
+                        if ~silent; fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm); end
                         [~, Ihat{perm},val_struct{perm}] = lno(obj, Iperm(:, perm), silent);
                     end
 
@@ -987,7 +987,7 @@ classdef ea_disctract < handle
                 R0 = sort((R(2:end)),'descend');
                 Rp95 = R0(round(0.05*numPerm));
                 pperm = mean(abs(R0)>=abs(R1));
-                disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
+                if ~silent; disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']); end
 
                 % Return only selected I
                 Iperm = Iperm(obj.patientselection,:);
@@ -1436,7 +1436,19 @@ classdef ea_disctract < handle
                                 end
                             else
                                 cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                                if obj.subscore.posvisible(group) && ~obj.subscore.negvisible(group)
+                                if obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
+                                    cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
+                                    cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
+                                    cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
+                                    cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                                    fibcmap{group} = [cmapLeft;cmapRight];
+                                    cmapind = ones(size(allvals))*gradientLevel/2;
+                                    cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
+                                    cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
+                                    % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
+                                elseif obj.subscore.posvisible(group) && ~obj.subscore.negvisible(group)
                                     fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
                                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                                     alphaind = ones(size(allvals));
@@ -1447,10 +1459,6 @@ classdef ea_disctract < handle
                                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                                     alphaind = ones(size(allvals));
                                     % alphaind = normalize(-allvals, 'range');
-                                else
-                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                                    return;
                                 end
                             end
                         otherwise
