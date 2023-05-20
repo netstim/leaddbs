@@ -1436,7 +1436,19 @@ classdef ea_disctract < handle
                                 end
                             else
                                 cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                                if obj.subscore.posvisible(group) && ~obj.subscore.negvisible(group)
+                                if obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
+                                    cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
+                                    cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
+                                    cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
+                                    cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                                    fibcmap{group} = [cmapLeft;cmapRight];
+                                    cmapind = ones(size(allvals))*gradientLevel/2;
+                                    cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
+                                    cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
+                                    % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
+                                elseif obj.subscore.posvisible(group) && ~obj.subscore.negvisible(group)
                                     fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
                                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                                     alphaind = ones(size(allvals));
@@ -1447,10 +1459,6 @@ classdef ea_disctract < handle
                                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                                     alphaind = ones(size(allvals));
                                     % alphaind = normalize(-allvals, 'range');
-                                else
-                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                                    return;
                                 end
                             end
                         otherwise
