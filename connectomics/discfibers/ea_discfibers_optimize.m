@@ -314,12 +314,8 @@ tractset.save;
         for k=1:length(ks)
             if ks(k)==1 % circular
                 if cv
-                    tractset.customselection=tractset.patientselection;
-                    cvp.training{1}=ones(1,length(tractset.customselection));
-                    cvp.test{1}=ones(1,length(tractset.customselection));
-                    cvp.NumTestSets=1;
                     try
-                        [I, Ihat]=tractset.crossval(cvp,[],0,1);
+                        [I, Ihat]=ea_disctract_crossval(0,tractset,'k-fold (randomized)',1,ks(k),0);
                         if iscell(I)
                             for entry=1:length(I)
                                 Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
@@ -338,7 +334,8 @@ tractset.save;
                 tractset.kfold = ks(k);
                 sim=nan; % initialize it.
                 try
-                    [I,Ihat,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
+                    [I, Ihat, ~, val_struct]=ea_disctract_crossval(0,tractset,'k-fold (randomized)',1,ks(k),0);
+
                     if ea_nanmean(ea_nanmean(cellfun(@length,val_struct{2}.vals)')')<100 % Not too many fibers survive, solution not anatomically meaningful. Checking this in first fold since will be similar in the others
                         Fval=1;
                         return

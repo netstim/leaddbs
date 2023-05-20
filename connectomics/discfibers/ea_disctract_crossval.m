@@ -1,4 +1,4 @@
-function [I,Ihat,cvs]=ea_disctract_crossval(viz,tractset,strategy,iterations,kfoldk,posthoccorrect,customconfig)
+function [I,Ihat,cvs,val_struct]=ea_disctract_crossval(viz,tractset,strategy,iterations,posthoccorrect,customconfig)
 
 if ~exist('customconfig','var')
     customconfig=[];
@@ -16,7 +16,7 @@ switch tractset.multitractmode
             thisgrouppatients=find(tractset.M.patient.group==usedgroups(g));
             is=ismember(allptsel,thisgrouppatients);
             tractset.patientselection=allptsel(is);
-            [I,Ihat,cvs,sel]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,kfoldk,customconfig);
+            [I{g},Ihat{g},cvs,sel,val_struct]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,customconfig);
             if viz
                 ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrect,sel,usedgroups(g));
             end
@@ -24,7 +24,7 @@ switch tractset.multitractmode
         tractset.multitractmode='Split & Color By Group';
         tractset.patientselection=allptsel;
     otherwise
-        [I,Ihat,cvs,sel]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,kfoldk,customconfig.trainonitems,customconfig.trainonvalues,customconfig.predictonitems,customconfig.predictonvalues);
+        [I,Ihat,cvs,sel,val_struct]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,customconfig);
         if viz
             ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrect,sel);
         end
@@ -32,8 +32,8 @@ end
 
 
 
-function [I,Ihat,cvs,sel]=ea_disctract_crossval_do(silent,tractset,strategy,iterations,kfoldk,customconfig)
-
+function [I,Ihat,cvs,sel,val_struct]=ea_disctract_crossval_do(silent,tractset,strategy,iterations,customconfig)
+val_struct=nan;
 switch strategy
     case 'Leave-Nothing-Out (Permutation-Based)'
         tractset.nestedLOO = false;
@@ -75,12 +75,24 @@ switch strategy
         cvs='lococv';
         sel=tractset.patientselection;
     case 'k-fold (randomized)'
-        tractset.customselection = [];
-        tractset.useExternalModel = false;
-        tractset.kIter = iterations;
-        [I,Ihat]=tractset.kfoldcv(silent);
-        cvs='kfoldcv';
-        sel=tractset.patientselection;
+        if tractset.kfold==1 % circular
+            tractset.nestedLOO = false;
+            tractset.useExternalModel = false;
+            tractset.customselection=tractset.patientselection;
+            cvp.training{1}=true(1,length(tractset.customselection));
+            cvp.test{1}=true(1,length(tractset.customselection));
+            cvp.NumTestSets=1;
+            [I, Ihat]=tractset.crossval(cvp,[],0,silent);
+            cvs='circular';
+            sel=tractset.patientselection;
+        else
+            tractset.customselection = [];
+            tractset.useExternalModel = false;
+            tractset.kIter = iterations;
+            [I,Ihat,val_struct]=tractset.kfoldcv(silent); % val_struct used for optimizer
+            cvs='kfoldcv';
+            sel=tractset.patientselection;
+        end
     case 'Custom (Patients)'
         if strcmp(tractset.multitractmode, 'Split & Color By PCA')
             ea_error('Please use a different CV strategy for PCA')
