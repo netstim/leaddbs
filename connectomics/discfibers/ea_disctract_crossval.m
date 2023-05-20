@@ -1,4 +1,38 @@
-function [I,Ihat,cvs]=ea_disctract_crossval(tractset,strategy,iterations,kfoldk,trainonitems,trainonvalues,predictonitems,predictonvalues)
+function [I,Ihat,cvs]=ea_disctract_crossval(viz,tractset,strategy,iterations,kfoldk,posthoccorrect,customconfig)
+
+if ~exist('customconfig','var')
+    customconfig=[];
+end
+
+switch tractset.multitractmode
+    case 'Split & Color By Group'
+        if ismember(strategy(1:6),{'Custom','Import'})
+            ea_error('Multi Group cross-val not implemented for Custom selections or Imported Models.')
+        end
+        usedgroups=unique(tractset.M.patient.group(tractset.patientselection));
+        allptsel=tractset.patientselection;
+        tractset.multitractmode='Single Tract Analysis';
+        for g=1:length(usedgroups)
+            thisgrouppatients=find(tractset.M.patient.group==usedgroups(g));
+            is=ismember(allptsel,thisgrouppatients);
+            tractset.patientselection=allptsel(is);
+            [I,Ihat,cvs,sel]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,kfoldk,customconfig);
+            if viz
+                ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrect,sel,usedgroups(g));
+            end
+        end
+        tractset.multitractmode='Split & Color By Group';
+        tractset.patientselection=allptsel;
+    otherwise
+        [I,Ihat,cvs,sel]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,kfoldk,customconfig.trainonitems,customconfig.trainonvalues,customconfig.predictonitems,customconfig.predictonvalues);
+        if viz
+            ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrect,sel);
+        end
+end
+
+
+
+function [I,Ihat,cvs,sel]=ea_disctract_crossval_do(silent,tractset,strategy,iterations,kfoldk,customconfig)
 
 switch strategy
     case 'Leave-Nothing-Out (Permutation-Based)'
@@ -44,7 +78,7 @@ switch strategy
         tractset.customselection = [];
         tractset.useExternalModel = false;
         tractset.kIter = iterations;
-        [I,Ihat]=tractset.kfoldcv;
+        [I,Ihat]=tractset.kfoldcv(silent);
         cvs='kfoldcv';
         sel=tractset.patientselection;
     case 'Custom (Patients)'
@@ -55,14 +89,14 @@ switch strategy
             tractset.useExternalModel = false;
             cvp.NumTestSets = 1;
             % training and test indices from the items list
-            training = find(ismember(trainonitems,trainonvalues));
-            test = find(ismember(predictonitems,predictonvalues));
+            training = find(ismember(customconfig.trainonitems,customconfig.trainonvalues));
+            test = find(ismember(customconfig.predictonitems,customconfig.predictonvalues));
             % Patient selected based on the training and test indices
             tractset.customselection = unique([training, test]);
             % Construct cvp struct
             cvp.training{1} = ismember(tractset.customselection, training);
             cvp.test{1} = ismember(tractset.customselection, test);
-            [I, Ihat]=tractset.crossval(cvp);
+            [I, Ihat]=tractset.crossval(cvp,[],0,silent);
             cvs = 'custom_pts';
             sel = test;
         end
@@ -70,9 +104,9 @@ switch strategy
         tractset.nestedLOO = false;
         cvp.NumTestSets = 1;
         % only test indices from the items list
-        test = find(ismember(predictonitems,predictonvalues));
+        test = find(ismember(customconfig.predictonitems,customconfig.predictonvalues));
         % also use them for training as a place holder
-        training = find(ismember(predictonitems,predictonvalues));
+        training = find(ismember(customconfig.predictonitems,customconfig.predictonvalues));
         tractset.useExternalModel = true;
         % Patient selected based on the training and test indices
         tractset.customselection = unique([training, test]);
@@ -90,8 +124,8 @@ switch strategy
             tractset.useExternalModel = false;
             cvp.NumTestSets = 1;
             % training and test indices from the items list
-            training = find(ismember(tractset.M.patient.group, str2double(trainonvalues)))';
-            test = find(ismember(tractset.M.patient.group,str2double(predictonvalues)))';
+            training = find(ismember(tractset.M.patient.group, str2double(customconfig.trainonvalues)))';
+            test = find(ismember(tractset.M.patient.group,str2double(customconfig.predictonvalues)))';
             % Patient selected based on the training and test indices
             tractset.customselection = unique([training, test]);
             % Construct cvp struct
@@ -106,13 +140,13 @@ switch strategy
         tractset.useExternalModel = false;
         cvp.NumTestSets = 1;
         % training and test indices from the items list
-        tsets = find(ismember(tractset.setlabels, trainonvalues));
+        tsets = find(ismember(tractset.setlabels, customconfig.trainonvalues));
         training=[];
         for ts=1:length(tsets)
             training = [training,find(tractset.setselections{tsets(ts)})];
         end
         training=unique(training);
-        tsets = find(ismember(tractset.setlabels, predictonvalues));
+        tsets = find(ismember(tractset.setlabels, customconfig.predictonvalues));
         test=[];
         for ts=1:length(tsets)
             test = [test,find(tractset.setselections{tsets(ts)})];
@@ -147,8 +181,8 @@ switch strategy
             rng(tractset.rngseed);
             cvpKfold = cvpartition(length(tractset.M.patient.list), 'KFold', str2double(kfoldk));
             % Calculate training and test indices based on the sets selected and the cvpartitions generated
-            trainSetInd = str2double(trainonvalues');
-            testSetInd = str2double(predictonvalues');
+            trainSetInd = str2double(customconfig.trainonvalues');
+            testSetInd = str2double(customconfig.predictonvalues');
             training = zeros(size(tractset.M.patient.list));
             test = zeros(size(tractset.M.patient.list));
             for i=1:length(trainSetInd)

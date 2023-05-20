@@ -1,7 +1,8 @@
-function ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrectforgroup)
+function ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrectforgroup,sel,group)
 
-
-sel=tractset.patientselection;
+if ~exist('group','var')
+    group=nan;
+end
 
 % check if groups exist:
 if length(unique(tractset.M.patient.group))>1 && posthoccorrectforgroup
@@ -61,15 +62,24 @@ if iscell(I)
         fibscorelabel = [strrep(tractset.subscore.labels{sc}, '_', ' '), ' (Predicted)'];
         empiricallabel=[strrep(tractset.subscore.labels{sc}, '_', ' '), ' (Empirical)'];
         % h=ea_corrbox(I{sc},Ihat{sc},0,{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},groupID,[],groupColors);
+        
+
         h=ea_corrbox(I{sc},Ihat{sc},0,{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel});
         try saveas(h,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.subscore.labels{sc},'_',cvs,'_',num2str(tractset.numpcs),'_factor_pca.png']); end
     end
 
 else
-    if exist('pperm', 'var')
-        h=ea_corrbox(I,Ihat,pperm,{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},groupID,[],groupColors);
+    if isnan(group)
+        title=['Disc. Fiber prediction ',upper(cvs)];
+        groupsuffx='';
     else
-        h=ea_corrbox(I,Ihat,'permutation',{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},groupID,[],groupColors);
+        title=['Group ',num2str(group),': Disc. Fiber prediction ',upper(cvs)];
+        groupsuffx=['_group_',num2str(group)];
     end
-    try saveas(h,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.responsevarlabel,'_',cvs,'.png']); end
+    if exist('pperm', 'var')
+        h=ea_corrbox(I,Ihat,pperm,{title,empiricallabel,fibscorelabel},groupID,[],groupColors);
+    else
+        h=ea_corrbox(I,Ihat,'permutation',{title,empiricallabel,fibscorelabel},groupID,[],groupColors);
+    end
+    try saveas(h,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.responsevarlabel,'_',cvs,groupsuffx,'.png']); end
 end

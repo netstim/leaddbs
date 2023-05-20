@@ -374,18 +374,18 @@ classdef ea_disctract < handle
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
 
-        function [I, Ihat] = loocv(obj)
+        function [I, Ihat] = loocv(obj,silent)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
-            [I, Ihat] = crossval(obj, cvp);
+            [I, Ihat] = crossval(obj, cvp,[],0,silent);
         end
 
-        function [I, Ihat] = lococv(obj)
+        function [I, Ihat] = lococv(obj,silent)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
                     'Leave-One-Cohort-Out-validation not possible.']));
             end
-            [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
+            [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection),[],0,silent);
         end
 
         function [I, Ihat, val_struct] = kfoldcv(obj,silent)
