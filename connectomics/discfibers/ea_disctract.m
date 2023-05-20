@@ -955,13 +955,13 @@ classdef ea_disctract < handle
                     R0(:,subvar) = sort(R(2:end,subvar), 'descend');
                     Rp95(subvar) = R0(round(0.05*numPerm),subvar);
                     pperm(subvar) = mean(abs(R0(:,subvar))>=abs(R1(subvar)));
-                    fprintf(['Permuted p for ' obj.subscore.labels{subvar} ' = ' num2str(pperm(subvar)) '.\n']);
+                    if ~silent; fprintf(['Permuted p for ' obj.subscore.labels{subvar} ' = ' num2str(pperm(subvar)) '.\n']); end
                 end
 
                 % Return only selected I
                 Iperm = Iperm(:,obj.patientselection,:);
 
-            else % any mode excepted PCA
+            else % any mode except PCA
                 Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
                 Iperm = [obj.responsevar, Iperm];
                 Ihat = cell(numPerm+1, 1);
@@ -970,10 +970,10 @@ classdef ea_disctract < handle
 
                 for perm=1:numPerm+1
                     if perm==1
-                        fprintf('Calculating without permutation\n\n');
+                        if ~silent; fprintf('Calculating without permutation\n\n'); end
                         [~, Ihat{perm},val_struct{perm}] = lno(obj, [], silent);
                     else
-                        fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
+                        if ~silent; fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm); end
                         [~, Ihat{perm},val_struct{perm}] = lno(obj, Iperm(:, perm), silent);
                     end
 
@@ -987,7 +987,7 @@ classdef ea_disctract < handle
                 R0 = sort((R(2:end)),'descend');
                 Rp95 = R0(round(0.05*numPerm));
                 pperm = mean(abs(R0)>=abs(R1));
-                disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
+                if ~silent; disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']); end
 
                 % Return only selected I
                 Iperm = Iperm(obj.patientselection,:);

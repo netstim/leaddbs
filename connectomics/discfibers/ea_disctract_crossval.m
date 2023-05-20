@@ -12,19 +12,23 @@ switch tractset.multitractmode
         usedgroups=unique(tractset.M.patient.group(tractset.patientselection));
         allptsel=tractset.patientselection;
         tractset.multitractmode='Single Tract Analysis';
-        for g=1:length(usedgroups)
-            thisgrouppatients=find(tractset.M.patient.group==usedgroups(g));
-            is=ismember(allptsel,thisgrouppatients);
-            tractset.patientselection=allptsel(is);
-            [I{g},Ihat{g},cvs,sel,val_struct]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,customconfig);
-            if viz
-                ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrect,sel,usedgroups(g));
+        try % this section is in try catch since dangerous if errors out (would then change patsel and multitractmode without the user knowing).
+            for g=1:length(usedgroups)
+                thisgrouppatients=find(tractset.M.patient.group==usedgroups(g));
+                is=ismember(allptsel,thisgrouppatients);
+                tractset.patientselection=allptsel(is);
+                [I{g},Ihat{g},cvs,sel,val_struct{g}]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,customconfig);
+                if viz
+                    ea_disctract_crossval_visualize(tractset,I{g},Ihat{g},cvs,posthoccorrect,sel,usedgroups(g));
+                end
             end
+        catch
+            disp('Multitract crossvalidation failed.');
         end
         tractset.multitractmode='Split & Color By Group';
         tractset.patientselection=allptsel;
     otherwise
-        [I,Ihat,cvs,sel,val_struct]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,customconfig);
+        [I,Ihat,cvs,sel,val_struct{1}]=ea_disctract_crossval_do(~viz,tractset,strategy,iterations,customconfig);
         if viz
             ea_disctract_crossval_visualize(tractset,I,Ihat,cvs,posthoccorrect,sel);
         end
@@ -39,27 +43,28 @@ switch strategy
         tractset.nestedLOO = false;
         tractset.useExternalModel = false;
         tractset.customselection = [];
-        [I,Ihat,R0,R1,pperm]=tractset.lnopb;
+        [I,Ihat,R0,R1,pperm,~,val_struct]=tractset.lnopb(customconfig.permcorrtype,silent);
+        if ~silent
+            if strcmp(tractset.multitractmode,'Split & Color By PCA')
+                I=mat2cell( squeeze(I(1,:,:)), length(tractset.patientselection), ones(1, length(tractset.subscore.vars)));
+                Ihat=Ihat{1};
+                for subvar = 1:length(tractset.subscore.vars)
+                    h1=ea_plothistperm([tractset.subscore.labels{subvar},' [Permutation-Based Test]'],[R1(subvar);R0(:,subvar)], ...
+                        {'Unpermuted prediction'},{1},1);
+                    try saveas(h1,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_PCA_',tractset.subscore.labels{subvar},'_',cvs,'_permtest.png']); end
+                end
 
-        if strcmp(tractset.multitractmode,'Split & Color By PCA')
-            I=mat2cell( squeeze(I(1,:,:)), length(tractset.patientselection), ones(1, length(tractset.subscore.vars)));
-            Ihat=Ihat{1};
-            for subvar = 1:length(tractset.subscore.vars)
-                cvs='lnopb';
-                sel=tractset.patientselection;
-                h1=ea_plothistperm([tractset.subscore.labels{subvar},' [Permutation-Based Test]'],[R1(subvar);R0(:,subvar)], ...
-                    {'Unpermuted prediction'},{1},1);
-                try saveas(h1,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_PCA_',tractset.subscore.labels{subvar},'_',cvs,'_permtest.png']); end
+            else
+                I = I(:,1);
+                Ihat = Ihat{1};
+                h1=ea_plothistperm([tractset.responsevarlabel,' [Permutation-Based Test]'],[R1;R0],{'Unpermuted prediction'},{1},1);
+                try saveas(h1,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.responsevarlabel,'_',cvs,'_permtest.png']); end
             end
-
-        else
-            I = I(:,1);
-            Ihat = Ihat{1};
-            cvs='lnopb';
-            sel=tractset.patientselection;
-            h1=ea_plothistperm([tractset.responsevarlabel,' [Permutation-Based Test]'],[R1;R0],{'Unpermuted prediction'},{1},1);
-            try saveas(h1,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.responsevarlabel,'_',cvs,'_permtest.png']); end
         end
+        sel=tractset.patientselection;
+
+        cvs='lnopb';
+
 
     case 'Leave-One-Patient-Out'
         tractset.customselection = [];
