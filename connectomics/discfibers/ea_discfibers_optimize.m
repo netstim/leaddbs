@@ -129,7 +129,7 @@ if exist('optFile', 'var') && ~isempty(optFile)
             [fval,ix]=min(priorstate.ip.Fval);
             XOptim=priorstate.ip.X(ix,:);
             tractset=updatetractset(tractset,XOptim);
-            disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
+            disp(['Optimal solution: Average Fval = ',num2str(fval),'.']);
             warning on
             tractset.save;
             return
@@ -181,14 +181,12 @@ while 1
         otherwise
             break
     end
-    choice = input(sprintf('%s\n\n',['Optimal solution: Average R = ',num2str(-fval),'. Do you wish to continue optimizing? (y/n)']),'s');
+    choice = input(sprintf('%s\n\n',['Optimal solution: Average Fval = ',num2str(fval),'. Do you wish to continue optimizing? (y/n)']),'s');
     clear numIters
 end
 tractset=updatetractset(tractset,XOptim);
 
 
-
-disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
 warning on
 
 if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
@@ -311,6 +309,7 @@ tractset.save;
         kfoldrestore=tractset.kfold;
         tractset.customselection = [];
         tractset.useExternalModel = false;
+        aggregate_sim_across_groups=1; % set to 0 to evaluate each on its own
         cnt=1;
         R=nan(length(ks),1);
         for k=1:length(ks)
@@ -344,6 +343,11 @@ tractset.save;
                         return
                     end
                     if sd
+                        if aggregate_sim_across_groups % ignore groups
+                            val_struct=cat(2,val_struct{:});
+                            val_struct{1}=val_struct;
+                            val_struct=val_struct(1);
+                        end
                         for entry=1:length(val_struct)
                             % calc similarity index:
                             simsub(entry)=ea_compute_sim_val_struct(val_struct{entry});
@@ -384,6 +388,11 @@ tractset.save;
             try
                 customconfig.permcorrtype='Pearson';
                 [~, ~, ~, val_struct]=ea_disctract_crossval(0,tractset,'Leave-Nothing-Out (Permutation-Based)',1,0,customconfig);
+                if aggregate_sim_across_groups % ignore groups
+                    val_struct=cat(2,val_struct{:});
+                    val_struct{1}=val_struct;
+                    val_struct=val_struct(1);
+                end
                 for g=1:length(val_struct)
                     for i=1:length(val_struct{g})
                         val_struct{g}{i}=val_struct{g}{i}{1};
