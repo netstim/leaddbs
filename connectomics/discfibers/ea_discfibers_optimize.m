@@ -40,7 +40,7 @@ end
 useparallel=0;
 
 warning off
-ks=[1,5,10]; %[1,2,7,10]; 1 being circular
+ks=[5,10,1]; %[1,2,7,10]; 1 being circular - it makes sense (speed) to run the circular one later.
 numperm=20; % number of iterations for permutation-based dissimilarity score.
 tractset.kIter=1; % make sure to run only 1 iteration.
 
@@ -147,8 +147,10 @@ elseif exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,
             priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
             [fval,ix]=min(priorstate.ip.Fval);
             XOptim=priorstate.ip.X(ix,:);
+            recalc_Fval=nestedfun(XOptim);
             tractset=updatetractset(tractset,XOptim);
-            disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
+            disp(['Optimal solution: Average Fval = ',num2str(fval),'.']);
+            disp(['Optimal solution: Average Fval (recalculated) = ',num2str(recalc_Fval),'.']);
             warning on
             tractset.save;
             return
@@ -166,7 +168,7 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
 end
 
 choice='y';
-numIters=120; % 120 by default, run 1000 at least once
+numIters=1000; % 120 by default, run 1000 at least once
 while 1
     switch choice
         case 'y'
@@ -338,7 +340,12 @@ tractset.save;
                 try
                     tractset.kfold=ks(k);
                     [I, Ihat, ~, val_struct]=ea_disctract_crossval(0,tractset,'k-fold (randomized)',1,0);
-                    if ea_nanmean(ea_nanmean(cellfun(@length,val_struct{1}{1}.vals)')')<100 % Not too many fibers survive, solution not anatomically meaningful. Checking this in first fold since will be similar in the others
+                    allval=[val_struct{:}];
+                    lens=[];
+                    for l=1:length(allval)
+                        lens=[lens,cellfun(@length,allval{l}.vals)];
+                    end
+                    if any(lens<100) % Not too many fibers survive, solution not anatomically meaningful.
                         Fval=1;
                         return
                     end
