@@ -215,13 +215,25 @@ class LeadDBSAtlasStructure:
 
 class ModelStructure(LeadDBSAtlasStructure):
   def __init__(self):
-    super().__init__()
-    self.facesVertices = None
+      super().__init__()
 
   def getStructureNode(self, sideIndex):
-    polyData = self.getPolyData(self.facesVertices[sideIndex]['Faces'], self.facesVertices[sideIndex]['Vertices'])
+    faces, vertices = self.getFacesVertices(sideIndex)
+    polyData = self.getPolyData(faces, vertices)
     modelNode = self.createNode(polyData)
     return modelNode
+
+  def getFacesVertices(self, sideIndex):
+    smooth = slicer.util.settingsValue("NetstimPreferences/useSmoothAtlas", True, converter=slicer.util.toBool)
+    import h5py
+    with h5py.File(self.atlasPath,'r') as atlasFile:
+      roi = atlasFile['atlases']['roi']
+      ref = roi[sideIndex][self.index]
+      fvKey = 'sfv' if (smooth and 'sfv' in atlasFile[ref].keys()) else 'fv'
+      fv = atlasFile[ref][fvKey]
+      vertices = fv['vertices'][()].transpose()
+      faces = fv['faces'][()].transpose()
+    return faces, vertices
 
   def getPolyData(self, faces, vertices):
     points = vtk.vtkPoints()
@@ -253,6 +265,7 @@ class ModelStructure(LeadDBSAtlasStructure):
     node.GetDisplayNode().SetVisibility2D(1)
     return node
 
+
 class FibersStructure(LeadDBSAtlasStructure):
   def __init__(self):
       super().__init__()
@@ -268,11 +281,11 @@ class FibersStructure(LeadDBSAtlasStructure):
       subFolder = 'rh' if sideIndex == 0 else 'lh'
       fibersPath = os.path.join(os.path.dirname(self.atlasPath), subFolder, self.name+'.mat')
     else:
+      import glob
       fibersPath = glob.glob(os.path.join(os.path.dirname(self.atlasPath), '*', self.name+'.mat'))[0]
-    import tables
-    fibersFile = tables.open_file(fibersPath, driver="H5FD_CORE")
-    points = fibersFile.root.fibers[:].transpose()
-    fibersFile.close()
+    import h5py
+    with h5py.File(fibersPath,'r') as fibersFile:
+      points = fibersFile['fibers'][()].transpose()
     return points
 
   def getPolyData(self, points):
@@ -315,30 +328,24 @@ class DiscFibersStructure(FibersStructure):
     return fiberNode
 
   def getPointsIdx(self, sideIndex):
+    import glob
     fibersPath = glob.glob(os.path.join(os.path.dirname(self.atlasPath), '*', self.name+'.mat'))[0]
-    import tables
+    import h5py
     fiberCount = 1
-    fibersFile = tables.open_file(fibersPath, driver="H5FD_CORE")
-    
-    # get the nodes by matlab type. cell used for fibers array and double for fibers values
-    # correspond each other based on the shape they have (the sorted part)
-    fib_nodes = sorted([n for n in fibersFile.iter_nodes(where='/#refs#') if n.attrs.MATLAB_class==b'cell'],   key=lambda n: n.shape[-1])
-    val_nodes = sorted([n for n in fibersFile.iter_nodes(where='/#refs#') if n.attrs.MATLAB_class==b'double'], key=lambda n: n.shape[-1])
-
-    for fib_node,val_node in zip(fib_nodes,val_nodes):
-      for i in range(fib_node.shape[-1]):
-        fiber = fib_node[0][i][0].transpose()
-        fiber = np.concatenate((fiber, fiberCount*np.ones((fiber.shape[0],1))), axis=1)
-        scalar = val_node[0][i]
-        if fiberCount == 1:
-          points = fiber
-          scalars = scalar * np.ones((fiber.shape[0],1))
-        else:
-          points = np.concatenate((points, fiber), axis=0)
-          scalars = np.concatenate((scalars, scalar * np.ones((fiber.shape[0],1))), axis=0)
-        fiberCount = fiberCount + 1
-
-    fibersFile.close()
+    with h5py.File(fibersPath,'r') as fibersFile:
+      for i in range(fibersFile['fibcell'].shape[0]):
+        ref = fibersFile['fibcell'][i,0]
+        for j in range(fibersFile[ref].shape[1]):
+          fiber = fibersFile[fibersFile[ref][0,j]][()].transpose()
+          fiber = np.concatenate((fiber, fiberCount*np.ones((fiber.shape[0],1))), axis=1)
+          scalar = fibersFile[fibersFile['vals'][i,0]][0][j]
+          if fiberCount == 1:
+            points = fiber
+            scalars = scalar * np.ones((fiber.shape[0],1))
+          else:
+            points = np.concatenate((points, fiber), axis=0)
+            scalars = np.concatenate((scalars, scalar * np.ones((fiber.shape[0],1))), axis=0)
+          fiberCount = fiberCount + 1
     return points, scalars
 
   def getPolyData(self, points, scalars):
@@ -367,28 +374,23 @@ class LeadDBSAtlas:
   def __init__(self, atlasPath):
 
     try:
-      import tables
+      import h5py
     except:
-      slicer.util.pip_install('tables')
-      import tables
-
-    atlasFile = tables.open_file(atlasPath, driver="H5FD_CORE")
+      slicer.util.pip_install('h5py')
+      import h5py
       
-    names = self.readNames(atlasFile)
-    colors = self.readColors(atlasFile)
-    types = self.readTypes(atlasFile)
-    showIndex = self.readShowIndex(atlasFile)
-    pixdimTypes = self.readPixdimType(atlasFile)
-    facesVertices = self.readFacesVertices(atlasFile, names)
-
-    atlasFile.close()
+    with h5py.File(atlasPath,'r') as atlasFile:
+      names = self.readNames(atlasFile)
+      colors = self.readColors(atlasFile)
+      types = self.readTypes(atlasFile)
+      showIndex = self.readShowIndex(atlasFile)
+      pixdimTypes = self.readPixdimType(atlasFile)
 
     self.structures = []
 
     for i, pixdimType in enumerate(pixdimTypes):
       if pixdimType == 'numeric':
         structure = ModelStructure()
-        structure.facesVertices = facesVertices[names[i]]
       elif pixdimType == 'fibers':
         structure = FibersStructure()
       elif pixdimType == 'discfibers':
@@ -404,76 +406,51 @@ class LeadDBSAtlas:
       structure.visibility = i in showIndex
       self.structures.append(structure)
 
-  def readFacesVertices(self, atlasFile, structureNames):
-    smooth = slicer.util.settingsValue("NetstimPreferences/useSmoothAtlas", True, converter=slicer.util.toBool)
-
-    refs_node = atlasFile.get_node('/#refs#')
-    groups = [g for g in refs_node.__iter__() if g.__module__=='tables.group' and hasattr(g,'nii')]
-    if not groups:
-      return None,None
-    
-    fileNames = [''.join(map(chr, np.squeeze(g.niftiFilename[:]))) for g in groups]
-    names = [os.path.basename(f).split('.')[0] for f in fileNames]
-
-    # check that names from faces vertices correspond with names from atlas file
-    for i,name in enumerate(names):
-      if name not in structureNames:
-        new_name = next(filter(lambda x: name.startswith(x), structureNames))
-        names[i] = new_name
-
-    facesVertices = {n:[] for n in set(names)}
-
-    for name,group in zip(names,groups):
-      data = getattr(group, 'sfv' if (smooth and hasattr(group,'sfv')) else 'fv')
-      facesVertices[name].append({'Vertices':data.vertices[()].transpose(), 'Faces':data.faces[()].transpose()})
-    
-    # Sort the data for the same structure so that they are ordered [right,left]
-    for val in facesVertices.values():
-      val.sort(key=lambda x: x['Vertices'][0][0], reverse=True)
-
-    return facesVertices
-
   def readColors(self, atlasFile):
-    colorIndex = atlasFile.root.atlases.colors[:].squeeze()
+    colorIndex = atlasFile['atlases']['colors'][()].squeeze()
     if not colorIndex.shape:
       colorIndex = np.array([colorIndex])
     colorIndex[np.isnan(colorIndex)] = 1
-    if 'colormap' in atlasFile.root.atlases:
-      colormap = atlasFile.root.atlases.colormap[:].transpose()
-    else:
+    try:
+      colormap = atlasFile['atlases']['colormap'][()].transpose()
+    except: # colormap not present
       colormap = np.array([[0.2422,0.1504,0.6603],[0.2504,0.1650,0.7076],[0.2578,0.1818,0.7511],[0.2647,0.1978,0.7952],[0.2706,0.2147,0.8364],[0.2751,0.2342,0.8710],[0.2783,0.2559,0.8991],[0.2803,0.2782,0.9221],[0.2813,0.3006,0.9414],[0.2810,0.3228,0.9579],[0.2795,0.3447,0.9717],[0.2760,0.3667,0.9829],[0.2699,0.3892,0.9906],[0.2602,0.4123,0.9952],[0.2440,0.4358,0.9988],[0.2206,0.4603,0.9973],[0.1963,0.4847,0.9892],[0.1834,0.5074,0.9798],[0.1786,0.5289,0.9682],[0.1764,0.5499,0.9520],[0.1687,0.5703,0.9359],[0.1540,0.5902,0.9218],[0.1460,0.6091,0.9079],[0.1380,0.6276,0.8973],[0.1248,0.6459,0.8883],[0.1113,0.6635,0.8763],[0.0952,0.6798,0.8598],[0.0689,0.6948,0.8394],[0.0297,0.7082,0.8163],[0.0036,0.7203,0.7917],[0.0067,0.7312,0.7660],[0.0433,0.7411,0.7394],[0.0964,0.7500,0.7120],[0.1408,0.7584,0.6842],[0.1717,0.7670,0.6554],[0.1938,0.7758,0.6251],[0.2161,0.7843,0.5923],[0.2470,0.7918,0.5567],[0.2906,0.7973,0.5188],[0.3406,0.8008,0.4789],[0.3909,0.8029,0.4354],[0.4456,0.8024,0.3909],[0.5044,0.7993,0.3480],[0.5616,0.7942,0.3045],[0.6174,0.7876,0.2612],[0.6720,0.7793,0.2227],[0.7242,0.7698,0.1910],[0.7738,0.7598,0.1646],[0.8203,0.7498,0.1535],[0.8634,0.7406,0.1596],[0.9035,0.7330,0.1774],[0.9393,0.7288,0.2100],[0.9728,0.7298,0.2394],[0.9956,0.7434,0.2371],[0.9970,0.7659,0.2199],[0.9952,0.7893,0.2028],[0.9892,0.8136,0.1885],[0.9786,0.8386,0.1766],[0.9676,0.8639,0.1643],[0.9610,0.8890,0.1537],[0.9597,0.9135,0.1423],[0.9628,0.9373,0.1265],[0.9691,0.9606,0.1064],[0.9769,0.9839,0.0805]])
     colors = [colormap[int(i)-1] for i in colorIndex]
     return colors
 
   def readNames(self, atlasFile):
     names = []
-    for column in atlasFile.root.atlases.names[:]:
-      name = ''.join(map(chr, np.squeeze(column[0][:])))
+    atlases = atlasFile['atlases']
+    for column in atlases['names']:
+      name = ''.join(map(chr, np.squeeze(atlases[column[0]][:])))
       names.append(name.split('.')[0])
     return names
   
   def readTypes(self, atlasFile):
-    types = atlasFile.root.atlases.types[()].squeeze()
+    types = atlasFile['atlases']['types'][()].squeeze()
     if not types.shape:
       types = np.array([types])
     return types
 
   def readShowIndex(self, atlasFile):
-    if 'presets' in atlasFile.root.atlases:
-      showIndex = atlasFile.root.atlases.presets.show[:].squeeze()
-      if not isinstance(showIndex[0], float):
-        showIndex = showIndex[0].squeeze()
-      showIndex = showIndex.astype('int') - 1 # -1 to fix index base
-    else:
-      showIndex = np.array(range(len(atlasFile.root.atlases.pixdim[0])))
+    import h5py
+    try:
+      if isinstance(atlasFile['atlases']['presets']['show'][0,0], h5py.h5r.Reference):
+        showIndexRef = atlasFile['atlases']['presets']['show'][0,0]
+        showIndex = atlasFile[showIndexRef][()].squeeze() - 1 # -1 to fix index base
+      else:
+        showIndex = atlasFile['atlases']['presets']['show'][()].squeeze() - 1 
+    except:
+      showIndex = np.array(range(len(atlasFile['atlases']['pixdim'][0])))
     if not showIndex.shape:
       showIndex = np.array([showIndex])
     return showIndex
 
   def readPixdimType(self, atlasFile):
     pixdimType = []
-    for i in range(atlasFile.root.atlases.pixdim.shape[1]):
-      data = atlasFile.root.atlases.pixdim[0][i][0]
+    for i in range(len(atlasFile['atlases']['pixdim'][0])):
+      ref = atlasFile['atlases']['pixdim'][0,i]
+      data = atlasFile[ref][()]
       if data.dtype == np.dtype('uint16'):
         pixdimType.append(''.join(map(chr, np.squeeze(data))))
       else:

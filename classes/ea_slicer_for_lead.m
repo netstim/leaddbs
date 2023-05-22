@@ -10,12 +10,15 @@ classdef ea_slicer_for_lead
         function obj = ea_slicer_for_lead()
             if ismac
                 os = 'macosx';
+                date = '2022-11-03';
             elseif ispc
                 os = 'win';
+                date = '2022-11-03';
             else
                 os = 'linux';
+                date = '2023-01-20';                
             end
-            obj.name = ['SlicerForLeadDBS-0.1.0-2023-05-12-' os '-amd64'];
+            obj.name = ['SlicerForLeadDBS-0.1.0-' date '-' os '-amd64'];
             obj.install_path = fullfile(ea_getearoot, 'ext_libs', obj.name);
             if ismac
                 obj.executable_path = fullfile(obj.install_path, 'SlicerForLeadDBS.app', 'Contents', 'MacOS', 'SlicerForLeadDBS');
@@ -40,7 +43,7 @@ classdef ea_slicer_for_lead
         
         function success = install(obj)
             destination = [obj.install_path '.zip'];
-            downloadurl = ['https://github.com/netstim/SlicerForLeadDBS/releases/download/v230512-beta/' obj.name '.zip'];
+            downloadurl = ['https://github.com/netstim/SlicerForLeadDBS/releases/download/v221103-beta/' obj.name '.zip'];
             webopts = weboptions('Timeout', Inf);
             % check install or update
             installed_apps = dir(fullfile(ea_getearoot, 'ext_libs', 'SlicerForLeadDBS*'));
