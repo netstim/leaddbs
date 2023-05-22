@@ -48,7 +48,7 @@ obj.roiprotocol.drawn=1;
 
 function redraw=ea_ddf_sr_need_redraw(obj)
 redraw=1;
-if ~isempty(obj.roiprotocol)
+if isfield(obj.roiprotocol, 'patsel')
     if isequal(obj.roiprotocol.patsel,obj.patientselection) && obj.roiprotocol.drawn==1
         redraw=0;
     end
@@ -57,7 +57,7 @@ end
 
 function recalcN=ea_ddf_sr_need_recalcN(obj)
 recalcN=1;
-if ~isempty(obj.roiprotocol)
+if isfield(obj.roiprotocol, 'patsel')
     if isequal(obj.roiprotocol.patsel,obj.patientselection)
         recalcN=0;
     end
