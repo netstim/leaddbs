@@ -14,16 +14,19 @@ if strcmp(subj.postopModality, 'CT')
         statusone = 'Coregistered post-op CT found. Please run normalization.';
     elseif isfile(subj.postopAnat.CT.raw)
         statusone = 'Raw post-op CT found. Please coregister to pre-op MRI first.';
+    else
+        statusone = 'Seems no post-op images found.';
     end
 elseif strcmp(subj.postopModality, 'MRI')
     fields = fieldnames(subj.postopAnat);
-
     if isMiniset
         statusone = 'Miniset is used.';
     elseif isfile(subj.postopAnat.(fields{1}).coreg)
         statusone = 'Coregistered post-op MRI found. Please run normalization.';
     elseif isfile(subj.postopAnat.(fields{1}).raw)
         statusone = 'Raw post-op MRI found. Please coregister to pre-op MRI first.';
+    else
+        statusone = 'Seems no post-op images found.';
     end
 elseif strcmp(subj.postopModality, 'None')
     statusone = 'No post-op images found.';
