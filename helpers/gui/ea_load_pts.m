@@ -20,9 +20,6 @@ if isLegacyFolder(uipatdir{1})
     if ~iscell(subjId)
         subjId = {subjId};
     end
-elseif isBIDSFolder(uipatdir{1})
-    % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
-    [~, BIDSRoot, subjId] = isBIDSFolder(uipatdir{1});
 elseif isBIDSSubjFolder(uipatdir{1})
     % Input folder is BIDS subj folder
     [~, BIDSRoot, subjId] = isBIDSSubjFolder(uipatdir);
@@ -76,6 +73,9 @@ elseif isBIDSSubjFolder(uipatdir{1})
             end
         end
     end
+elseif isBIDSFolder(uipatdir{1})
+    % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
+    [~, BIDSRoot, subjId] = isBIDSFolder(uipatdir{1});
 else % NIfTI or DICOM folder
     % Check if dataset has already been loaded
     if strcmp(handles.prod, 'dbs')
