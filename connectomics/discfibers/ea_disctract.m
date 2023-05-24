@@ -375,6 +375,9 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = loocv(obj,silent)
+            if ~exist('silent','var')
+                silent=0;
+            end
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
             [I, Ihat] = crossval(obj, cvp,[],0,silent);

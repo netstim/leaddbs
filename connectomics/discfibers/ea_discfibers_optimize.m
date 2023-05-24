@@ -168,7 +168,7 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
 end
 
 choice='y';
-numIters=1000; % 120 by default, run 1000 at least once
+numIters=3000; % 120 by default, run 1000 at least once
 while 1
     switch choice
         case 'y'
@@ -426,7 +426,13 @@ tractset.save;
             Fval_cv=nan;
         end
         Fval=ea_nanmean([Fval_sim;Fval_cv]);
-        disp(['Combined Fval: ',num2str(Fval),' (CV R: ',num2str(R),', Similarities R: ',num2str(sim),', Dissimilarities R: ',num2str(dissim) ,')']);
+        if cv && sd
+            disp(['Combined Fval: ',num2str(Fval),' (CV R: ',num2str(R),', Similarities R: ',num2str(sim),', Dissimilarities R: ',num2str(dissim) ,')']);
+        elseif cv
+            disp(['Fval: ',num2str(Fval),' (CV R: ',num2str(R),')']);
+        elseif sd
+            disp(['Fval: ',num2str(Fval),' (Similarities R: ',num2str(sim),', Dissimilarities R: ',num2str(dissim) ,')']);
+        end
         tractset.kfold=kfoldrestore;
     end
 
