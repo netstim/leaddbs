@@ -88,6 +88,7 @@ table_options = struct;
 table_options.Session = {'preop', 'postop'};
 table_options.Type = {'anat', 'func', 'dwi'};
 table_options.Modality = [anat_modalities, func_dwi_modalities, postop_modalities];
+table_options.Acquisition = [postop_acq_tags, 'iso'];
 
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 if ~exist('preset', 'var')
@@ -96,11 +97,10 @@ else
     nifti_table.Include = logical(preset);
 end
 [~, nifti_table.Filename] = cellfun(@ea_niifileparts, niiFiles, 'Uni', 0);
-nifti_table.Acquisition = repmat("-", [N_fnames,1]);
 nifti_table.Run = repmat("-", [N_fnames,1]);
 nifti_table.Task = repmat("-", [N_fnames,1]);
 
-nifti_table = orderfields(nifti_table, [4 5 1 7 8 2 3 6]);
+nifti_table = orderfields(nifti_table, [5 6 1 7 8 2 3 4]);
 nifti_table = struct2table(nifti_table);
 
 try
@@ -267,41 +267,76 @@ uiapp.previewtree_postop_func.Children.delete;    % delete children
 for i = 1:height(uiapp.niiFileTable.Data)
     modality = char(uiapp.niiFileTable.Data.Modality(i));
 
-    if ~isempty(event) % check this only for the current selected one
-        % set type automatically for anat modalities
-        if event.NewData == "postop" && ~strcmp(modality, 'CT') && event.Indices(1) == i
-            uiapp.niiFileTable.Data.Modality(i) = 'MRI';
-        elseif event.NewData == "preop" && strcmp(modality, 'MRI') && event.Indices(1) == i
+    if ~isempty(event)
+        % check only for the current selected row and exclude "Filename" and "Include" column
+        if event.Indices(1) ~= i || event.Indices(2) < 3
+            continue;
+        end
+
+        % set modality for anat image automatically when switching session to "preop"
+        if event.Indices(2) == 3 && event.NewData == "preop" && uiapp.niiFileTable.Data.Type(i) == "anat" && strcmp(modality, 'MRI')
             uiapp.niiFileTable.Data.Modality(i) = 'T1w';
             uialert(uiapp.UIFigure, 'Modality falls back to ''T1w'' by default when session changed to ''preop''. Please update the modality accordingly!', '');
-        elseif any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+
+        % set modality for anat image automatically when switching session to "postop"
+        elseif event.Indices(2) == 3 && event.NewData == "postop" && uiapp.niiFileTable.Data.Type(i) == "anat" && ~strcmp(modality, 'CT')
+            uiapp.niiFileTable.Data.Modality(i) = 'MRI';
+
+        % set task and modality for func image automatically when switching type to "func"
+        elseif event.Indices(2) == 6 && event.NewData == "anat"
+            uiapp.niiFileTable.Data.Task(i) = '-';
+            uiapp.niiFileTable.UserData.task_set(i) = 0;
+            uialert(uiapp.UIFigure, 'Modality falls back to ''T1w'' by default when type changed to ''anat''. Please update the modality accordingly!', '');
+            uiapp.niiFileTable.Data.Modality(i) = 'T1w';
+
+        % set task and modality for func image automatically when switching type to "func"
+        elseif event.Indices(2) == 6 && event.NewData == "func"
+            uiapp.niiFileTable.Data.Task(i) = 'rest';
+            uiapp.niiFileTable.UserData.task_set(i) = 1;
+            uiapp.niiFileTable.Data.Modality(i) = 'bold';
+
+        % set task and modality for func image automatically when switching type to "dwi"
+        elseif event.Indices(2) == 6 && event.NewData == "dwi"
+            uiapp.niiFileTable.Data.Task(i) = '-';
+            uiapp.niiFileTable.UserData.task_set(i) = 0;
+            uiapp.niiFileTable.Data.Modality(i) = 'dwi';
+
+        % set type, session, run and task for preop anat image automatically
+        elseif ismember(modality, anat_modalities)
             uiapp.niiFileTable.Data.Type(i) = 'anat';
             uiapp.niiFileTable.Data.Session(i) = 'preop';
             uiapp.niiFileTable.Data.Task(i) = '-';
-        % set type and session automatically for postop modalities
-        elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.UserData.task_set(i) = 0;
+
+        % set type, session, run and task for postop anat image automatically
+        elseif ismember(modality, postop_modalities)
             uiapp.niiFileTable.Data.Type(i) = 'anat';
             uiapp.niiFileTable.Data.Session(i) = 'postop';
             uiapp.niiFileTable.Data.Task(i) = '-';
+            uiapp.niiFileTable.UserData.task_set(i) = 0;
 
             % if current acquistion tag is not ax, cor or sag, reset it
-            if ~any(strcmp(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags)) && strcmp(modality, 'MRI')
+            if ~ismember(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags) && strcmp(modality, 'MRI')
+                if uiapp.niiFileTable.Data.Acquisition(i) ~= "-"
+                    uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to ''ax'' (must have) , ''sag'' or ''cor''.', 'Invalid acquisition tag for postop MRI');
+                end
                 uiapp.niiFileTable.Data.Acquisition(i) = 'ax';
-                uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to ''ax'' (must have) , ''sag'' or ''cor''.', 'Invalid acquisition tag for postop MRI');
             end
 
         % set type to func for bold modality
-        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 1
+        elseif strcmp(modality, 'bold') && uiapp.niiFileTable.UserData.task_set(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
-        % set type to dwi for dwi modality
-        elseif strcmp(modality, 'dwi') && event.Indices(2) > 2 && event.Indices(1) == i
-            uiapp.niiFileTable.Data.Type(i) = 'dwi';
-            uiapp.niiFileTable.Data.Task(i) = '-';
+
         % set task to rest if bold is selected and task is not set and has not been automatically set before (do this only once)
-        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 0
+        elseif strcmp(modality, 'bold') && uiapp.niiFileTable.UserData.task_set(i) == 0
             uiapp.niiFileTable.Data.Type(i) = 'func';
             uiapp.niiFileTable.Data.Task(i) = 'rest';
             uiapp.niiFileTable.UserData.task_set(i) = 1;
+
+        % set type to dwi for dwi modality
+        elseif strcmp(modality, 'dwi')
+            uiapp.niiFileTable.Data.Type(i) = 'dwi';
+            uiapp.niiFileTable.Data.Task(i) = '-';
         end
     else    % automatically set rest as task if func is detected (this is not covered by the lookupable as of yet)
         if strcmp(modality, 'bold') && uiapp.niiFileTable.UserData.task_set(i) == 0
@@ -319,7 +354,7 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     modality = char(uiapp.niiFileTable.Data.Modality(i));
 
     if ~isempty(event) % check this only for the current selected one
-        if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
+        if ~ismember('-', {session, type, modality}) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Include(i) = true;
         end
     end
@@ -337,11 +372,11 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     if strcmp(modality, "CT")
         uiapp.niiFileTable.Data.Acquisition(i) = "-";
     end
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    acq = char(uiapp.niiFileTable.Data.Acquisition(i));
 
-    if ~any(strcmp('-', {session, type, modality}))  % check whether everything has been properly defined befor updating uitree
+    if ~ismember('-', {session, type, modality})  % check whether everything has been properly defined befor updating uitree
 
-        fname = generate_bids_filename(subjID, session, run, task, desc, modality, []);
+        fname = generate_bids_filename(subjID, session, run, task, acq, modality, []);
         ui_field = ['previewtree_' session '_' type];
 
         % now check if there are duplicate filenames in the tree
@@ -359,9 +394,9 @@ for i = find(uiapp.niiFileTable.Data.Include)'
                 ped_dupl_row = get_phase_encoding_direction(imgs{row_idx_duplicate_filetable, 1}.json_sidecar);
 
                 if ~strcmp(ped_current_row, '') && ~strcmp(ped_dupl_row, '') && ~strcmp(ped_current_row, ped_dupl_row)   % if encoding directions have been found
-                    fname = generate_bids_filename(subjID, session, run, task, desc, modality, ped_current_row);
-                    uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
-                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_filetable) = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
+                    fname = generate_bids_filename(subjID, session, run, task, acq, modality, ped_current_row);
+                    uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = generate_bids_filename(subjID, session, run, task, acq, modality, ped_dupl_row);
+                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_filetable) = generate_bids_filename(subjID, session, run, task, acq, modality, ped_dupl_row);
                 else
                     fname = ['>> ', fname, ' <<'];  % change filename to indicate duplicate
                     uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = fname;  % set the other duplicate to this filename as well
@@ -504,13 +539,13 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     modality = char(uiapp.niiFileTable.Data.Modality(i));
 
     % check whether there is one that has not been defined properly
-    if any(strcmp('-', {session, type, modality}))
+    if ismember('-', {session, type, modality})
         uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Invalid file selection');
         return
     end
 
     % check if postop images have the correct modality
-    if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
+    if strcmp(session, 'postop') && ismember(modality, postop_modalities)
         postop_modality_found = 1;
     end
 
@@ -539,7 +574,7 @@ if ~(nopostop_set == 1) && postop_mri_found == 1
 
         % check if postop images have the correct modality
         if strcmp(session, 'postop') && strcmp(modality, 'MRI')
-            if ~any(strcmp(acq, postop_acq_tags))
+            if ~ismember(acq, postop_acq_tags)
                 uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
                 return
             end
@@ -566,7 +601,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     run = char(uiapp.niiFileTable.Data.Run(i));
     task = char(uiapp.niiFileTable.Data.Task(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    acq = char(uiapp.niiFileTable.Data.Acquisition(i));
 
     % depending on the modality, choose extensions of files to be copied
     if ~strcmp(modality, 'dwi')
@@ -596,10 +631,10 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 
     % generate key for .json file
-    if strcmp('-', desc) || strcmp('', desc)
+    if strcmp('-', acq) || strcmp('', acq)
         acq_mod = modality;
     else
-        acq_mod = [desc, '_', modality];
+        acq_mod = [acq, '_', modality];
     end
 
     % add file to sortedFiles
@@ -1198,9 +1233,9 @@ if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
 end
 
 %% misc helper functions
-function bids_fname = generate_bids_filename(subjID, session, run, task, desc, modality, phase_enc_dir)
+function bids_fname = generate_bids_filename(subjID, session, run, task, acq, modality, phase_enc_dir)
 
-tag_names = {{'ses' session}, {'run', run}, {'task', task}, {'acq', desc}};
+tag_names = {{'ses' session}, {'run', run}, {'task', task}, {'acq', acq}};
 
 bids_fname = sprintf('%s', subjID);
 
