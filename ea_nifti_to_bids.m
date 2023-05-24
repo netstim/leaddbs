@@ -282,7 +282,7 @@ for i = 1:height(uiapp.niiFileTable.Data)
         elseif event.Indices(2) == 3 && event.NewData == "postop" && uiapp.niiFileTable.Data.Type(i) == "anat" && ~strcmp(modality, 'CT')
             uiapp.niiFileTable.Data.Modality(i) = 'MRI';
 
-        % set task and modality for func image automatically when switching type to "func"
+        % set task and modality for anat image automatically when switching type to "anat"
         elseif event.Indices(2) == 6 && event.NewData == "anat"
             uiapp.niiFileTable.Data.Task(i) = '-';
             uiapp.niiFileTable.UserData.task_set(i) = 0;
@@ -295,7 +295,7 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.UserData.task_set(i) = 1;
             uiapp.niiFileTable.Data.Modality(i) = 'bold';
 
-        % set task and modality for func image automatically when switching type to "dwi"
+        % set task and modality for dwi image automatically when switching type to "dwi"
         elseif event.Indices(2) == 6 && event.NewData == "dwi"
             uiapp.niiFileTable.Data.Task(i) = '-';
             uiapp.niiFileTable.UserData.task_set(i) = 0;
@@ -428,6 +428,37 @@ image_types = fieldnames(lookup_table);
 
 % filenames
 for rowIdx = 1:height(table)
+    % Allocate based on file name if it's already using BIDS file naming
+    if isBIDSFileName([table.Filename{rowIdx}, '.nii'])
+        parsed = parseBIDSFilePath([table.Filename{rowIdx}, '.nii']);
+        if isfield(parsed, 'ses')
+            table_preallocated.Session(rowIdx) = parsed.ses;
+        end
+
+        if isfield(parsed, 'suffix')
+            table_preallocated.Modality(rowIdx) = parsed.suffix;
+            if strcmp(parsed.suffix, 'bold')
+                table_preallocated.Type(rowIdx) = 'func';
+            elseif strcmp(parsed.suffix, 'dwi')
+                table_preallocated.Type(rowIdx) = 'dwi';
+            else
+                table_preallocated.Type(rowIdx) = 'anat';
+            end
+        end
+
+        if isfield(parsed, 'run')
+            table_preallocated.Run(rowIdx) = parsed.run;
+        end
+
+        if isfield(parsed, 'task')
+            table_preallocated.Task(rowIdx) = parsed.task;
+        end
+
+        if isfield(parsed, 'acq')
+            table_preallocated.Acquisition(rowIdx) = parsed.acq;
+        end
+        continue;
+    end
 
     % Remove folder name from file name when populating the table
     fname = regexprep(table.Filename{rowIdx}, '^sub-[^\W_]+_', '');
