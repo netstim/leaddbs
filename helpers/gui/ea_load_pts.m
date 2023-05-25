@@ -220,6 +220,14 @@ end
 % Update ui from patient
 if ~ismember(handles.prod, {'mapper'})
     ea_getui(handles);
+else
+    if length(uipatdir) > 1
+        handles.patdir_choosebox.String = ['Multiple (', num2str(length(uipatdir)), ')'];
+        handles.patdir_choosebox.TooltipString = strjoin(uipatdir, '\n');
+    else
+        handles.patdir_choosebox.String = uipatdir{1};
+        handles.patdir_choosebox.TooltipString = uipatdir{1};
+    end
 end
 
 % Set up MR/CT popupmenu and status text
