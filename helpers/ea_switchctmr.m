@@ -65,8 +65,8 @@ if  ~strcmp(handles.prod, 'anatomy')
         case 1 % MR
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.coregctmethod,'Enable','off');
-            set(handles.doreconstruction_checkbox,'Enable','on');
-            set(handles.manualheight_checkbox,'Enable','on');
+            set(handles.doreconstruction,'Enable','on');
+            set(handles.refinelocalization,'Enable','on');
             set(handles.reconmethod,'String',{'TRAC/CORE (Horn 2015)','Manual', 'Slicer (Manual)'});
             % default TRAC/CORE:
             set(handles.reconmethod,'Enable','on');
@@ -79,8 +79,8 @@ if  ~strcmp(handles.prod, 'anatomy')
             set(handles.maskwindow_txt,'Enable','on');
         case 2 % CT
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
-            set(handles.doreconstruction_checkbox,'Enable','on');
-            set(handles.manualheight_checkbox,'Enable','on');
+            set(handles.doreconstruction,'Enable','on');
+            set(handles.refinelocalization,'Enable','on');
             set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)'});
             % default PaCER:
             set(handles.reconmethod,'Enable','on');
@@ -96,8 +96,8 @@ if  ~strcmp(handles.prod, 'anatomy')
             set(handles.coregctmethod,'Enable','off');
             set(handles.scrf,'Enable','off');
             set(handles.scrf,'Value',0);
-            set(handles.doreconstruction_checkbox,'Enable','off');
-            set(handles.manualheight_checkbox,'Enable','off');
+            set(handles.doreconstruction,'Enable','off');
+            set(handles.refinelocalization,'Enable','off');
             set(handles.reconmethod,'Enable','off');
             set(handles.targetpopup,'Enable','off');
             set(handles.maskwindow_txt,'Enable','off');

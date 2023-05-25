@@ -50,7 +50,7 @@ for i = 2:nargin
                 handles.normmethod.Value = 9;
                 handles.scrf.Value = 1;
                 handles.scrfmask.Value = 2;
-                handles.doreconstruction_checkbox.Value = 1;
+                handles.doreconstruction.Value = 1;
                 handles.reconmethod.Value = 3;
                 tryBIDS = true;
             else

@@ -332,7 +332,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         options.native=wasnative; % restore original setting.
     end
 
-    if options.manualheightcorrection
+    if options.refinelocalization
         poptions=ea_checkmanapproved(options);
         if ~isempty(poptions.sides)
             mcfig=figure('name',[options.subj.subjId,': Electrode Reconstruction'],'numbertitle','off');

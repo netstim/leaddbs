@@ -131,8 +131,8 @@ if ~isfield(options,'writeoutimages')
     options.writeoutimages=0;
 end
 
-if ~isfield(options,'manualheightcorrection')
-    options.manualheightcorrection=1;
+if ~isfield(options,'refinelocalization')
+    options.refinelocalization=1;
 end
 
 if ~isfield(options,'elmodel')

@@ -108,7 +108,7 @@ catch
     options.sides=1:2;
 end
 try
-    options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
+    options.doreconstruction=(get(handles.doreconstruction,'Value') == get(handles.doreconstruction,'Max'));
     if strcmp(get(handles.maskwindow_txt,'String'),'auto')
         options.maskwindow=10; % initialize at 10
         options.automask=1; % set automask flag
@@ -167,9 +167,9 @@ end
 options.d2.atlasopacity=0.15;
 
 try
-    options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
+    options.refinelocalization=(get(handles.refinelocalization,'Value') == get(handles.refinelocalization,'Max'));
 catch
-    options.manualheightcorrection=0;
+    options.refinelocalization=0;
 end
 
 try

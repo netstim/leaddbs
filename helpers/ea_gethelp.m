@@ -26,13 +26,13 @@ switch seltype
                 
             case 'normcheck'
                 
-            case 'doreconstruction_checkbox'
+            case 'doreconstruction'
                 
             case 'targetpopup'
                 
             case 'maskwindow_txt'
                 
-            case 'manualheight_checkbox'
+            case 'refinelocalization'
                 
             case 'include_lead_connectome_subroutine'
                 
