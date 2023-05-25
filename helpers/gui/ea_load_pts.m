@@ -259,12 +259,25 @@ if length(uipatdir) == 1 && isfield(handles, 'side1')
                     set(handles.(['side',num2str(el)]), 'Value', 1);
                 end
             end
-    
+
             try
-                elmodel=ea_get_first_notempty_elmodel(reco.props);
-                [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
-                set(handles.electrode_model_popup,'Value',locb);
-                clear locb
+                elmodel = ea_get_first_notempty_elmodel(reco.props);
+                uiprefs = load(bids.getPrefs(subjId{1}, 'uiprefs', 'mat'));
+                if ~strcmp(uiprefs.elmodel, elmodel)
+                    ea_cprintf('CmdWinErrors', ...
+                        ['Chosen electrode (%s) for patient "%s" doesn''t match stored reconstruction (%s)!\n', ...
+                        'Please rerun "Localize DBS electrodes".\n'], uiprefs.elmodel, subjId{1}, elmodel);
+                    handles.processtabgroup.SelectedTab = handles.localizationtab;
+                    % uialert(handles.leadfigure, ...
+                    %     sprintf(['Chosen electrode (%s) for patient "%s" doesn''t match stored reconstruction (%s)! ', ...
+                    %     'Please rerun "Localize DBS electrodes".\n'], uiprefs.elmodel, subjId{1}, elmodel), "Warning");
+                else
+                    [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
+                    set(handles.electrode_model_popup, 'Value', locb);
+                    clear locb
+                end
+            catch
+                ea_cprintf('CmdWinWarnings', 'Failed to determine the electrode model for patient "%s"\n', subjId{1});
             end
         end
     end

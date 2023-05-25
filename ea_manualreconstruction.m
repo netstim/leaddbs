@@ -37,7 +37,7 @@ if ~isfile(options.subj.recon.recon)
     return
 end
 
-[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+[~,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 setappdata(mcfig,'origtrajectory',trajectory);
 setappdata(mcfig,'manually_corrected',manually_corrected);
