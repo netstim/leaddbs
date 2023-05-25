@@ -39,17 +39,17 @@ for i = 1 : size(M.patient.list, 1)
     fprintf('Subject %d/%d: %s ...\n', i, size(M.patient.list, 1), patient_tag);
 
     newPatientFolder = fullfile(min_dataset_dir, 'derivatives', 'leaddbs', patient_tag);
-    mkdir(newPatientFolder);
+    ea_mkdir(newPatientFolder);
 
     % here min_dataset_dir should be substituted with 'local directory/Miniset'
     M_mini.patient.list{i} = newPatientFolder;
     
     newPrefsFolder = fullfile(newPatientFolder, 'prefs');
-    mkdir(newPrefsFolder);
+    ea_mkdir(newPrefsFolder);
     newReconstFolder = fullfile(newPatientFolder, 'reconstruction');
-    mkdir(newReconstFolder);
+    ea_mkdir(newReconstFolder);
     newStimFolder = fullfile(newPatientFolder, 'stimulations', ea_getspace, M.S(i).label);
-    mkdir(newStimFolder);
+    ea_mkdir(newStimFolder);
     
     % now we copy some essential files
     if isfile(fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-rawimages.json']))
@@ -61,6 +61,12 @@ for i = 1 : size(M.patient.list, 1)
     if isfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']))
         miniset.stats = 1;
         copyfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']), M_mini.patient.list{i});
+    end
+
+    % Copy stimulation parameters
+    stimParams = fullfile(M.patient.list{i}, 'stimulations', ea_getspace, M.S(i).label, [patient_tag,'_desc-stimparameters.mat']);
+    if isfile(stimParams)
+        copyfile(stimParams, newStimFolder);
     end
 
     % check if VATs were already computed 
