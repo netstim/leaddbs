@@ -28,7 +28,7 @@ switch peakmode
 end
 
 if posvisible && ~negvisible
-    vals = sort(vals, 'descend');
+    vals = sort(vals, 'descend', 'MissingPlacement', 'last');
     vals(vals<0) = nan; % Remove negative values
     peak = ea_nansum(vals(1:endInd,:), 1);
 elseif ~posvisible && negvisible
@@ -36,7 +36,7 @@ elseif ~posvisible && negvisible
     vals(vals>0) = nan; % Remove positive values
     peak = ea_nansum(vals(1:endInd,:), 1);
 elseif posvisible && negvisible
-    posvals = sort(vals, 'descend');
+    posvals = sort(vals, 'descend', 'MissingPlacement', 'last');
     posvals(posvals<0) = nan; % Remove negative values
     negvals = sort(vals, 'ascend');
     negvals(negvals>0) = nan; % Remove negative values
