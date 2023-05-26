@@ -17,21 +17,19 @@ def setApprovedData(normalizationMethodFile, value):
   with open(normalizationMethodFile, 'w') as f:
     json.dump(normalizationMethod, f)
 
-def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subjectWarpDrivePath, referenceVolumePath, useExternalInstance):
-
-  correctionsTransformNodeID = inputNode.GetTransformNodeID()
+def applyChanges(correctionsTransformNodeID, nativeReferencePath, templateReferencePath, forwardWarpPath, inverseWarpPath, subjectWarpDrivePath, useExternalInstance):
 
   forwardParams = {
     "inputTransform1File": forwardWarpPath,
     "inputTransform2Node": correctionsTransformNodeID,
-    "inputReferenceVolumeFile" : referenceVolumePath,
+    "inputReferenceVolumeFile" : templateReferencePath,
     "outputFileName" : forwardWarpPath
     } 
 
   inverseParams = {
     "inputTransform1Node": correctionsTransformNodeID,
     "inputTransform2File": inverseWarpPath,
-    "inputReferenceVolumeFile" : imageNode.GetStorageNode().GetFileName(),
+    "inputReferenceVolumeFile" : nativeReferencePath,
     "outputFileName" : inverseWarpPath
     }
 
@@ -129,8 +127,9 @@ def getAtlasesNamesInScene():
         names.append(folderNode.GetName())
   return names
 
-def saveSceneInfo(warpDriveSavePath):
+def saveSceneInfo(warpDriveSavePath, inverseApplied):
   info = {}
   info["atlasNames"] = getAtlasesNamesInScene()
+  info["inverseApplied"] = inverseApplied
   with open(os.path.join(warpDriveSavePath,'info.json'), 'w') as jsonFile:
     json.dump(info, jsonFile)

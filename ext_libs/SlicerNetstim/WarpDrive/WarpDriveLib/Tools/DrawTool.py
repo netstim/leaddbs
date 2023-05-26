@@ -17,10 +17,13 @@ class DrawToolWidget(AbstractToolWidget):
     nearestModelAction = qt.QAction('To Nearest Model', self.effectButton)
     nearestModelAction.setCheckable(True)
     nearestModelAction.setChecked(True)
+    fromNearestModelAction = qt.QAction('From Nearest Model', self.effectButton)
+    fromNearestModelAction.setCheckable(True)
     twoLinesAction = qt.QAction('To Following Line', self.effectButton)
     twoLinesAction.setCheckable(True)
     actionsGroup = qt.QActionGroup(self.effectButton)
     actionsGroup.addAction(nearestModelAction)
+    actionsGroup.addAction(fromNearestModelAction)
     actionsGroup.addAction(twoLinesAction)
     menu = qt.QMenu(self.effectButton)
     menu.addActions(actionsGroup.actions())
@@ -52,6 +55,9 @@ class DrawToolEffect(AbstractDrawEffect):
 
         if self.parameterNode.GetParameter("DrawMode") == 'To Nearest Model': # get target fiducial from nearest model 
           targetFiducial = self.getFiducialFromSlicedModel()
+        elif self.parameterNode.GetParameter("DrawMode") == 'From Nearest Model': # get target fiducial from nearest model 
+          targetFiducial = self.sourceFiducial
+          self.sourceFiducial = self.getFiducialFromSlicedModel()
         elif self.parameterNode.GetParameter("DrawMode") == 'To Following Line': # return and wait for following drawing
           self.sourceFiducial.GetDisplayNode().SetVisibility(1)
           self.resetDrawing()
@@ -155,6 +161,7 @@ class DrawToolEffect(AbstractDrawEffect):
     return fiducial
 
   def sliceClosestModel(self, point):
+    shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
     originalModel = None
     # set up plane
     sliceToRAS = self.sliceLogic.GetSliceNode().GetSliceToRAS()
@@ -175,7 +182,18 @@ class DrawToolEffect(AbstractDrawEffect):
     nModels = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')
     for i in range(nModels):
       model = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-      polyData = model.GetPolyData()
+      if model.GetTransformNodeID():
+        try:
+          clonedItemID = slicer.modules.subjecthierarchy.logic().CloneSubjectHierarchyItem(shNode, shNode.GetItemByDataNode(model))
+          tmpNode = shNode.GetItemDataNode(clonedItemID)
+          tmpNode.SetAndObserveTransformNodeID(model.GetTransformNodeID())
+        except:
+          continue
+        tmpNode.HardenTransform()
+        polyData = tmpNode.GetPolyData()
+      else:
+        polyData = model.GetPolyData()
+        tmpNode = None
       if model.GetDisplayNode() and model.GetDisplayNode().GetVisibility() and polyData.GetNumberOfCells() > 1 and model.GetName()!= 'auxSphereModel': # model visible and cells available
         cutter.SetInputData(polyData)
         cutter.Update()
@@ -190,6 +208,8 @@ class DrawToolEffect(AbstractDrawEffect):
             outPolyData.DeepCopy(cutterOutput)
             globalMinDistance = localMinDistance
             originalModel = model
+      if tmpNode:
+        slicer.mrmlScene.RemoveNode(tmpNode)
     # return in case no model found
     if not originalModel:
       return False, False
