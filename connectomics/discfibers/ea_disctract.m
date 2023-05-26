@@ -65,6 +65,7 @@ classdef ea_disctract < handle
         basepredictionon = 'Mean of Scores';
         fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
+        drawvals % weights of the fibers drown
         connfiberdrawn % struct contains white connected fibers
         conndrawobject % actial streamtube handle for the latter
         roidrawobject % actual patch handle for ROI/VTAs
@@ -1586,6 +1587,7 @@ classdef ea_disctract < handle
                         % Set fiber colors and alphas
                         [obj.drawobject{group,side}.FaceColor]=fibcolor{:};
                         [obj.drawobject{group,side}.FaceAlpha]=fibalpha{:};
+                        obj.drawvals{group,side} = vals{group,side};
                     end
                 end
 
