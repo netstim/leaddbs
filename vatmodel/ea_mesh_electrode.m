@@ -396,7 +396,11 @@ for reg=1:length(centroids)
 end
 
 % now we need to get surface nodes based on nbcyl:
+if isempty(which('rangesearch'))
+    ea_error('Matlab Statistics Toolbox not installed. This is (unfortunately) needed to calculate VTAs this way.');
+end
 wmboundary=rangesearch(nmesh,nbcyl,0.1);
+
 wmboundary=unique(cell2mat(wmboundary'));
 
 if vizz
