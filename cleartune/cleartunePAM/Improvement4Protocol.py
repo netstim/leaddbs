@@ -118,4 +118,4 @@ if __name__ == '__main__':
 
     os.environ['STIMDIR'] = sys.argv[1]
     # make_prediction(int(sys.argv[2]), sys.argv[3], sys.argv[4])
-    make_prediction(int(sys.argv[2]),sys.argv[4], sys.argv[5], sys.argv[3])
+    make_prediction(int(sys.argv[2]),sys.argv[3], sys.argv[5], sys.argv[4])
