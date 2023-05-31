@@ -67,7 +67,11 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
         % we can check and remove fibers that are too far away from the
         % target (but track the indices!)
         
-        gl_indices = obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{voter,side});
+        if obj.connectivity_type == 2
+            gl_indices = obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{voter,side});
+        else
+            gl_indices = obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{voter,side});
+        end
 
         % normalized to 0-1 if necessary (apply abs if negative)
         if min(vals{voter,side}) < 0 && max(vals{voter,side}) > 0
@@ -400,11 +404,15 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
             end
         end
 
-        % save to the same file
-        jsonText2 = jsonencode(jsonDict);
-        fid = fopen(symptomTractsfile, 'w');
-        fprintf(fid, '%s', jsonText2)
-        fclose(fid);
+        if all(drop_pathway == 1)
+            ea_warndlg("No pathways were exported for the symptom")
+        else
+            % save to the same file
+            jsonText2 = jsonencode(jsonDict);
+            fid = fopen(symptomTractsfile, 'w');
+            fprintf(fid, '%s', jsonText2)
+            fclose(fid);
+        end
 
     end
 end        
