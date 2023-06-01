@@ -156,6 +156,8 @@ class AtlasesTable(baseTable):
         ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(ImportAtlas.ImportAtlasLogic().getAtlasesPath(), atlasName, 'atlas_index.mat'))    
       finally:
         qt.QApplication.restoreOverrideCursor()
+    tb = next(filter(lambda x: isinstance(x,qt.QToolBar) and x.windowTitle=='LeadDBS', slicer.util.mainWindow().children()))
+    tb.invertAtlases(WarpDrive.WarpDriveLogic().getParameterNode().GetNodeReference("InputNode"))
     self.updateTable()
 
   def onRemoveButton(self):

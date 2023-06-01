@@ -158,7 +158,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), atlasName)
     self.createFolderDisplayNode(folderID, opacity=0.8)
-    shNode.SetItemAttribute(folderID, 'atlas', '1')
+    shNode.SetItemAttribute(folderID, 'atlas', 'template')
 
     atlas = LeadDBSAtlas(atlasPath)
 
@@ -171,7 +171,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
         self.createFolderDisplayNode(subFolderID, structure.color)
         shNode.SetItemDisplayVisibility(subFolderID, structure.visibility)
         shNode.SetItemExpanded(subFolderID, 0)
-        shNode.SetItemAttribute(subFolderID, 'atlas', '1')
+        shNode.SetItemAttribute(subFolderID, 'atlas', 'template')
       else:
         subName = [structure.name]
         sideIndexes = [1] if structure.type == 2 else [0]
@@ -181,7 +181,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
         node = structure.getStructureNode(sideIndex)
         node.SetName(sideName)
         shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
-        shNode.SetItemAttribute(shNode.GetItemByDataNode(node), 'atlas', '1')
+        shNode.SetItemAttribute(shNode.GetItemByDataNode(node), 'atlas', 'template')
 
     return folderID
 
