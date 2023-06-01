@@ -122,7 +122,8 @@ def getAtlasesNamesInScene():
   names = []
   for i in range(folderNodes.GetNumberOfItems()):
     folderNode = folderNodes.GetItemAsObject(i)
-    if 'atlas' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(folderNode)):
+    folderItem = shNode.GetItemByDataNode(folderNode)
+    if 'atlas' in shNode.GetItemAttributeNames(folderItem) and shNode.GetItemAttribute(folderItem,'atlas') == 'template':
       if  shNode.GetItemParent(shNode.GetItemByDataNode(folderNode)) == shNode.GetSceneItemID():
         names.append(folderNode.GetName())
   return names

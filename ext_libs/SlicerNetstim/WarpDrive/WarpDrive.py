@@ -9,7 +9,7 @@ import numpy as np
 
 from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
 from WarpDriveLib.Helpers import GridNodeHelper, LeadDBSCall
-from WarpDriveLib.Widgets import Tables, Toolbar
+from WarpDriveLib.Widgets import Tables, Toolbar, Buttons
 
 #
 # WarpDrive
@@ -88,10 +88,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     correctionsLayout = qt.QVBoxLayout(self.ui.correctionsFrame)
     correctionsLayout.addWidget(Tables.WarpDriveCorrectionsManager())
 
-    atlasesTable = Tables.AtlasesTable()
+    self.atlasesTable = Tables.AtlasesTable()
     atlasesLayout = qt.QVBoxLayout(self.ui.atlasesFrame)
-    atlasesLayout.addWidget(atlasesTable)
-    self.ui.tabWidget.currentChanged.connect(lambda i,a=atlasesTable: a.updateTable())
+    atlasesLayout.addWidget(self.atlasesTable)
+    self.ui.tabWidget.currentChanged.connect(lambda i,a=self.atlasesTable: a.updateTable())
 
     # add cli progress bar
     self.ui.landwarpWidget = slicer.modules.fiducialregistrationvariablerbf.createNewWidgetRepresentation()
@@ -197,6 +197,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Add custom ToolBar
     slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
+    # Add add segmentation button
+    button = Buttons.addSegmentationButton()
+    self.atlasesTable.buttonsFrame.layout().insertWidget(1,button,1)
+    button.clicked.connect(self.atlasesTable.updateTable)
     # Put all toolbars in same row
     for tb in slicer.util.mainWindow().findChildren('QToolBar'):
       slicer.util.mainWindow().removeToolBarBreak(tb)

@@ -290,7 +290,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     folderNodes.UnRegister(slicer.mrmlScene)
     for i in range(folderNodes.GetNumberOfItems()):
       folderNode = folderNodes.GetItemAsObject(i)
-      if ('atlas' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(folderNode))) and (folderNode.GetName() in atlasNames):
+      folderItem = shNode.GetItemByDataNode(folderNode)
+      if ('atlas' in shNode.GetItemAttributeNames(folderItem) and shNode.GetItemAttribute(folderItem,'atlas') == 'template') and (folderNode.GetName() in atlasNames):
         atlasNames.pop(atlasNames.index(folderNode.GetName()))
     for name in atlasNames:
       print("Loading atlas %s" % name)
@@ -388,13 +389,18 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.parameterNode.SetParameter("Update", "true")
     self.parameterNode.EndModify(wasModified)
 
-  def invertAtlases(self, inputNode, useInverse):
+  def invertAtlases(self, inputNode, useInverse=None):
+    useInverse = useInverse if useInverse is not None else self.inverseAction.checked
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     nModels = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')
     for i in range(nModels):
       modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-      if 'atlas' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(modelNode)):
-        modelNode.SetAndObserveTransformNodeID(inputNode.GetID() if useInverse else None)
+      modelItem = shNode.GetItemByDataNode(modelNode)
+      if 'atlas' in shNode.GetItemAttributeNames(modelItem):
+        if shNode.GetItemAttribute(modelItem,'atlas') == 'template':
+          modelNode.SetAndObserveTransformNodeID(inputNode.GetID() if useInverse else None)
+        elif shNode.GetItemAttribute(modelItem,'atlas') == 'native':
+          modelNode.SetAndObserveTransformNodeID(None if useInverse else inputNode.GetID())
 
   def invertSourceTargetNodes(self, sourceFiducialNode, targetFiducialNode, transformNode):
     sourcePoints = vtk.vtkPoints()
