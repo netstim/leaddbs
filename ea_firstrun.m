@@ -63,6 +63,10 @@ if ~isfield(options.prefs,'firstrun') % first run.
 
     ea_injectprefstring('firstrun','off');
 
+    if ~isdeployed
+        ea_clear_xattr;
+    end
+
     % check dataset isntallation
     if ~exist([ea_space,'bb.nii'], 'file')
         fprintf(['\nIt seems that you don''t have LEAD dataset installed.\n' ...
