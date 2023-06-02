@@ -11,7 +11,9 @@ if ~isdeployed
         
         % check for spm binary executables that are not executable due to
         % macOS file quarantine
-        checkMacOSFileQuarantine(SPMDir)
+        if(ismac)
+           checkMacOSFileQuarantine(SPMDir)
+        end
     catch
         ea_error('SPM seems not installed. Please install SPM12 and add it to the Matlab path before using Lead-DBS.');
     end
