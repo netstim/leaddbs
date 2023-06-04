@@ -329,7 +329,7 @@ end
 
 function success=ea_downloadasset(assetname,destination,id)
 
-if strcmp(assetname,'Lead Datafiles')
+if strcmp(assetname,'LeadDBS Data Files')
     ea_update_data('full');
     success=1;
 else
