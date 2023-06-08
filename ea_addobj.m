@@ -201,7 +201,7 @@ if numcoloredfibs
     % add toggle button:
     [~, tfina] = fileparts(tract);
     [~, rfina] = fileparts(weight);
-    uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on','weightedtract');
+    uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@(src, evt) ea_atlasvisible(addobjr)},'OffCallback',{@(src, evt) ea_atlasinvisible(addobjr)},'State','on','UserData','weightedtract');
     drawnow
 else
     ea_warning('No fibers selected by ROI');
@@ -284,7 +284,7 @@ addobjr = ea_showfiber(thisset,fibidx,c);
 axis fill
 
 [~, fina] = fileparts(obj);
-addbutn = uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on','UserData','tract');
+addbutn = uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@(src, evt) ea_atlasvisible(addobjr)},'OffCallback',{@(src, evt) ea_atlasinvisible(addobjr)},'State','on','UserData','tract');
 storeinfigure(resultfig,addht,addbutn,addobjr,obj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
 
 

@@ -1,3 +1,3 @@
-function ea_atlasvisible(hobj,ev,atls)
-set(atls, 'Visible', 'on');
-%disp([atls,'visible clicked']);
+function ea_atlasvisible(atlas)
+set(atlas, 'Visible', 'on');
+% disp([atlas,'visible clicked']);
