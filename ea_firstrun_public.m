@@ -63,7 +63,7 @@ if ~isfield(options.prefs,'firstrun') % first run.
 
     ea_injectprefstring('firstrun','off');
 
-    if ~isdeployed
+    if ~isdeployed && ismac
         ea_clear_xattr;
     end
 
