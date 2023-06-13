@@ -2,27 +2,19 @@ function [Efields,S]=ea_generate_optim_vat(varargin)
 
 patselect = varargin{1};
 ampselect = varargin{2};
-constcurr = varargin{4};
+concval = varargin{3};
+va = varargin{4};
 side = varargin{5};
 writeVTA = varargin{6};
 modelVTA = varargin{7};
 %va = constcurr;
 %concval = varargin{3}(1:8);
-concval = varargin{3}(1:8);
+
 %% Load and define options
 options = ea_setopts_local;
 options.native = 0;
 options.groupmode = 1;
 options.groupid = 'cleartune';
-
-va = 2; % 0 for constant curr
-                % 1 for voltage
-
-% amps.min = min_amplitude;
-% amps.max = max_amplitude;
-% amps.stepsize = stepsize;
-% multset = 'mon';
-
 resultfig=figure('visible','off');
 
 %% Start iterating through patients
@@ -53,6 +45,7 @@ options.patient_list=patselect;
 options.d3.mirrorsides=0;
 options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
 options.patientname = options.subj.subjId;
+options.writeVTA = writeVTA;
 setappdata(resultfig,'elstruct',elstruct);
 setappdata(resultfig,'options',options);
 setappdata(resultfig,'elspec',options.elspec);
@@ -65,7 +58,7 @@ setappdata(resultfig,'resultfig',resultfig);
 
 %runs = 1:numel(allstims{1});
 t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname '.mat']); % defines electrode variable
-%elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
+elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
 whichContact = find(concval);
 if length(whichContact) > 1
     whichContact = [num2str(whichContact)];
@@ -88,7 +81,7 @@ S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
 S.label = ['amp_R_L_',num2str(ampselect,'%.2f'),'_',num2str(ampselect,'%.2f'),'_contactR_L_',num2str(whichContact,'%d'),'_',num2str(whichContact,'%d')];
 
 % Define the name of the folder for the nii to be saved in
-if va == 2
+if va == 0
     volcur = 'mA';
 elseif va == 1
     volcur = 'V';
@@ -117,13 +110,19 @@ for hem=1:2
             else
                 indx = 2;
             end
-            Vvate = Efields(indx);
-            Vvate.img = zeros(size(Efields(indx).img));
-            Efields(hem) = Vvate;
-            %Vvate = createEmptyNii(t,elstruct,elt,side,fname);
-           % Efields(hem) = Vvate;
         else
-            Efields(hem) = outputEfield;
+            if hem == 1
+                % we should return only one Efield, but just as a crutch
+                Vvate = outputEfield;
+                Vvate.img = zeros(size(outputEfield.img));
+                Efields(2) = Vvate;
+                Efields(1) = outputEfield;
+            else
+                Vvate = outputEfield;
+                Vvate.img = zeros(size(outputEfield.img));
+                Efields(1) = Vvate;
+                Efields(2) = outputEfield;
+            end
         end
         toc;
     end

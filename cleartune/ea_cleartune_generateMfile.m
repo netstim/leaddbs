@@ -55,11 +55,32 @@ S.activecontacts{1,2} = abs(leftsets(2:end))>0;
 %     S.Ls1.case.pol = 0;
 % end
 
-%for monopolar cases, pol is always 2 and case is always positive
-S.Rs1.case.perc = 100;
-S.Rs1.case.pol = 2;
-S.Ls1.case.perc = 100;
-S.Rs1.case.pol = 2;
+% %for monopolar cases, pol is always 2 and case is always positive
+% S.Rs1.case.perc = 100;
+% S.Rs1.case.pol = 2;
+% S.Ls1.case.perc = 100;
+% S.Rs1.case.pol = 2;
+
+% compute case perc and polarity from amp and other contacts
+S.Rs1.case.perc = -1.0 * sum(rightsets(2:end));
+if S.Rs1.case.perc > 0.0
+    S.Rs1.case.pol = 2;  % anode
+elseif S.Rs1.case.perc < 0.0
+    S.Rs1.case.pol = 1;  % cathode
+else
+    S.Rs1.case.pol = 0;
+end
+
+S.Ls1.case.perc = -1.0 * sum(leftsets(2:end));
+if S.Ls1.case.perc > 0.0
+    S.Ls1.case.pol = 2;  % anode
+elseif S.Ls1.case.perc < 0.0
+    S.Ls1.case.pol = 1;  % cathode
+else
+    S.Ls1.case.pol = 0;
+end
+
+
 
 for cont = 1:8
     kr = ['k' num2str(cont-1)];

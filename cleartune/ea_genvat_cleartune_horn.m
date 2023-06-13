@@ -73,12 +73,13 @@ coords = coords_mm{side};
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
 % changed. Larger stim amplitudes need larger bounding boxes so
 % stretchfactor must be incorporated here.
-if max(S.amplitude{side})>4
-    elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
-else
-    elstruct.stretchfactor=0.5;
-end
-
+% if max(S.amplitude{side})>4
+%     elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
+% else
+%     elstruct.stretchfactor=0.5;
+% end
+%elstruct.stretchfactor=0.5*(max(S.amplitude{side})/2.5);
+elstruct.stretchfactor = 0.5;
 stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
 ea_mkdir(stimDir);
 headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
@@ -141,10 +142,18 @@ if hmchanged
             % The VTA model has led to an intersection of meshes, which
             % can sometimes happen. We will introduce a small jitter to
             % the electrode and try again.
-            Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
-            if attempt>2
-                fv=ea_fem_getmask(options,1); % try no surface smoothing for atlas fv - in rare cases this has led to conflicts for tetgen.
-            end
+            %Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.            % rotate by 1 degree around Z
+            %OZ = 45;
+            OZ = 1 * pi /180.0;
+            rot_OZ = [cos(OZ), -1*sin(OZ), 0, 0
+                    sin(OZ), cos(OZ), 0, 0
+                    0, 0, 1, 0
+                    0, 0, 0, 1];
+            Ymod = rot_OZ * Ymod;
+%             Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
+             if attempt>2
+                 fv=ea_fem_getmask(options,1); % try no surface smoothing for atlas fv - in rare cases this has led to conflicts for tetgen.
+             end
             if vizz
                 h=figure;
                 telfv=elfv;

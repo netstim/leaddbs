@@ -15,12 +15,13 @@ if vizz
     end
 end
 
-if max(S.amplitude{side})>4
-    stretchfactor=0.75*(max(S.amplitude{side})/2.5);
-else
-    stretchfactor=0.5;
-end
-
+% if max(S.amplitude{side})>4
+%     stretchfactor=0.75*(max(S.amplitude{side})/2.5);
+% else
+%     stretchfactor=0.5;
+% end
+%stretchfactor=0.5*(max(S.amplitude{side})/2.5);
+stretchfactor=0.5;
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
 

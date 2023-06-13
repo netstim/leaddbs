@@ -59,7 +59,7 @@ classdef ea_disctract < handle
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
         CleartuneOptim = 0;
-        cleartunevars
+        symptomWeightVar = {};
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -495,6 +495,7 @@ classdef ea_disctract < handle
         end
 
         function [Improvement, Ihat, actualimprovs, val_struct] = crossval(obj, cvp, Iperm, shuffle, silent)
+            disp(['Method:',obj.basepredictionon]);
             if ~exist('silent','var')
                 silent=0;
             end
@@ -522,7 +523,6 @@ classdef ea_disctract < handle
             switch obj.multitractmode
                 case 'Split & Color By PCA'
                     if ~exist('Iperm', 'var') || isempty(Iperm)
-                        %Improvement = obj.subscore.vars;
                         for i=1:length(obj.subscore.vars)
                             Improvement{i} = obj.subscore.vars{i}(patientsel);
                         end
@@ -839,14 +839,38 @@ classdef ea_disctract < handle
 
                         for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
                             for yy=1:size(Ihat,2)
-                                %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                                % for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
                                 %                         for yy=1:size(Ihat_voters,2)
                                 weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
                             end
                         end
 
                         Ihat=ea_nansum(Ihat.*weightmatrix,3);
-
+                    elseif obj.CleartuneOptim == 0.5 %for prediction
+                        Ihat = Ihat(test,:,:);
+                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
+                        weightmatrix=zeros(size(actualimprovs,1),1); % in cleartune case always the same weights for any side and "patient" (which is VTA)
+                        for voter=1:length(weightmatrix)
+                            % same weight for all subjects in that voter (slider was used)
+                            weightmatrix(voter)=obj.symptomWeightVar{pt}(voter,side);
+                        end
+                        weightmatrix_sum = ea_nansum(weightmatrix);
+                        for xx=1:size(weightmatrix,1) % make sure voter weights sum up to 1
+                            % for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                            % for yy=1:size(Ihat_voters,2)
+                            weightmatrix(xx)=weightmatrix(xx)./weightmatrix_sum;
+                        end
+                        for i=1:size(Ihat,1)
+                            for j=1:size(Ihat,2)
+                                wt_Ihat(i,j) = Ihat(i,j).*weightmatrix(i);
+                            end
+                        end
+                        Ihat = ea_nansum(wt_Ihat(:,side)); %should be the same since we are doing only one side now
+                    else
+                        Ihat = Ihat(test,:,:);
+                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
+                        Improvement = Improvement(test);
+                        return
                     end
                 case 'Split & Color By PCA'
 
@@ -896,11 +920,8 @@ classdef ea_disctract < handle
                     %Ihat=squeeze(Ihat_voters);
             end
             if ~iscell(Ihat)
-                if cvp.NumTestSets == 1
+                if cvp.NumTestSets == 1 && ~obj.CleartuneOptim
                     Ihat = Ihat(test,:);
-                    if obj.CleartuneOptim
-                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
-                    end
                     Improvement = Improvement(test);
                 end
 

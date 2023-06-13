@@ -42,120 +42,145 @@ useparallel=0;
 warning off
 %app = ea_cleartune;
 %list of vars to optimize:
+% [paramsR,paramsL] = genParams(app);
+% 
+% lbR = [paramsR(:,1)];
+% lbL = [paramsL(:,1)];
+% ubR = [paramsR(:,2)];
+% ubL = [paramsL(:,2)];
 
-[paramsR,paramsL] = genParams(app);
-
-lbR = [paramsR(:,1)];
-lbL = [paramsL(:,1)];
-ubR = [paramsR(:,2)];
-ubL = [paramsL(:,2)];
-intergCond=[paramsR(:,3)];
 
 %for bipolar
 %max 8 contacts activated
 %A = [0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0;0 0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 0];
 %b = [8;-1];
 
-A = [];
-b = [];
-Aeq = [0, ones(1,app.inputVars.numContacts)];
-beq = -100;
-
+% A = [];
+% b = [];
+% 8 mA if cathodic stimulation
 % set up initial points with some good heuristics:
-startptsR = [paramsR(:,4)];
-startptsL = [paramsL(:,4)];% first initial point is activation in k2, with voltage of 0.5
-optionsR=optimoptions('surrogateopt',...
-    'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
-    'MinSurrogatePoints',200,...
-    'PlotFcn','surrogateoptplot',...
-    'InitialPoints',startptsR,...
-    'MaxFunctionEvaluations',250,...
-    'Display','iter');
-optionsL=optimoptions('surrogateopt',...
-    'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
-    'MinSurrogatePoints',200,...
-    'PlotFcn','surrogateoptplot',...
-    'InitialPoints',startptsL,...
-    'MaxFunctionEvaluations',250,...
-    'Display','iter');
+% startptsR = [paramsR(:,4)];
+% startptsL = [paramsL(:,4)];% first initial point is activation in k2, with voltage of 0.5
 
-%    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
-% check for parallel processing toolbox
-if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
-    optionsR.UseParallel=true;
-    optionsL.UseParallel=true;
-    parpool('Processes',2);
-end
+% New way to defide the stimulation window
+% we assume one patient
+% check the reconstruction file (we are assuming the same model on both sides)
 
-% Solve problem
-objconstrR=@(x)struct('Fval',nestedfunR(app,x,patlist,1));
-objconstrL=@(x)struct('Fval',nestedfunL(app,x,patlist,2));
-
-[XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-%%store options
-options = setOPTS(patlist{1});
-writeVTA = 1;
-modelVTA = app.inputVars.modelVTA;
-newoptimR = reformatX(XOptimR);
-if ~isempty(newoptimR)
-    XOptimR = newoptimR;
-end
-inputsR = {patlist{1},XOptimR(1),XOptimR(2:end),0,1,writeVTA,modelVTA};
-ea_generate_optim_vat(inputsR{:});
-for i=1:size(ipR.X,1)
-    newR = reformatX(ipR.X(i,:));
-    if ~isempty(newR)
-        ipR.X(i,:) = newR;
+for pt = 1:length(patlist)
+    ptindx = pt;
+    reconstruction_file = dir([patlist{pt},filesep,'reconstruction',filesep,'*desc-reconstruction.mat']);
+    reconstruction_file_path = [reconstruction_file.folder,filesep,reconstruction_file.name];
+    [reconst, ~, ~, ~] = ea_get_reconstruction(reconstruction_file_path);
+    % do not update S here, just get the bounds in mA!
+    [min_bound_per_contact, max_bound_per_contact, ~] = ea_get_currents_per_contact(app.MinCylindricEditField_2.Value,app.MaxCylindricEditField.Value, app.MinSegmentedEditField.Value, app.MaxSegmentedEditField.Value, reconst, 0, 0);
+    startptsR = zeros(1,app.inputVars.numContacts);
+    startptsL = zeros(1,app.inputVars.numContacts);
+    % set third contact (k2) to the middle of the higher current bound
+    if abs(max_bound_per_contact(3)) > abs(min_bound_per_contact(3))
+        startptsR(3) = max_bound_per_contact(3) / 2.0;
+    else
+        startptsR(3) = min_bound_per_contact(3) / 2.0;
     end
-end
-save(fullfile(patlist{1},'optimize_status_surrogate_r.mat'),'ipR','XOptimR');
+    startptsL(3) = startptsR(3);
+    lbR = min_bound_per_contact;
+    lbL = min_bound_per_contact;
+    ubR = max_bound_per_contact;
+    ubL = max_bound_per_contact;
+    intergCond = zeros(1,app.inputVars.numContacts);
+    A = repmat(-1,1,app.inputVars.numContacts);
+    b = 5;
+    Aeq = [];
+    beq = [];
 
+    optionsR=optimoptions('surrogateopt',...
+        'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
+        'MinSurrogatePoints',200,...
+        'PlotFcn','surrogateoptplot',...
+        'InitialPoints',startptsR,...
+        'MaxFunctionEvaluations',5,...
+        'Display','iter');
+    optionsL=optimoptions('surrogateopt',...
+        'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
+        'MinSurrogatePoints',200,...
+        'PlotFcn','surrogateoptplot',...
+        'InitialPoints',startptsL,...
+        'MaxFunctionEvaluations',5,...
+        'Display','iter');
 
-[XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
-newoptimL = reformatX(XOptimL);
-if ~isempty(newoptimL)
-    XOptimL = newoptimL;
-end
-writeVTA = 1;
-inputsL = {patlist{1},XOptimL(1),XOptimL(2:end),0,2,writeVTA,modelVTA};
-ea_generate_optim_vat(inputsL{:});
-for i=1:size(ipL.X,1)
-    newL = reformatX(ipL.X(i,:));
-    if ~isempty(newL)
-        ipL.X(i,:) = newL;
+    %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
+
+    % check for parallel processing toolbox
+    if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+        optionsR.UseParallel=true;
+        optionsL.UseParallel=true;
+        parpool('Processes',2);
     end
+
+    if all(ubR(:) <= 0.0)
+        objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist{pt},ptindx));
+        [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
+    else
+        objconstrR=@(x)struct('Fval',nestedfunR(x,patlist{pt},ptindx));
+        [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
+    end
+
+    writeVTA = 1;
+    modelVTA = app.inputVars.modelVTA;
+    %remove very small currents
+    XOptimR(abs(XOptimR) < 0.000001) = 0.0;
+    newoptimR = reformatX(XOptimR);
+    if ~isempty(newoptimR)
+        XOptimR = newoptimR;
+    end
+    for i=1:size(ipR.X,1)
+        newR = reformatX(ipR.X(i,:));
+        if ~isempty(newR)
+            ipR.X(i,:) = newR;
+        end
+    end
+    save(fullfile(patlist{pt},'optimize_status_surrogate_R.mat'),'ipR','XOptimR');
+    % new way to define inputs
+    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist{pt},XOptimR, modelVTA,writeVTA,1);
+    ea_generate_optim_vat(inputsR{:});
+
+    if all(ubL(:) <= 0.0)
+        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist{pt},ptindx));
+        [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
+    else
+        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist{pt},ptindx));
+        [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,optionsL);
+    end
+
+    % remove very small currents
+    XOptimL(abs(XOptimL) < 0.000001) = 0.0;
+
+    newoptimL = reformatX(XOptimL);
+    if ~isempty(newoptimL)
+        XOptimL = newoptimL;
+    end
+    writeVTA = 1;
+    for i=1:size(ipL.X,1)
+        newL = reformatX(ipL.X(i,:));
+        if ~isempty(newL)
+            ipL.X(i,:) = newL;
+        end
+    end
+    save(fullfile(patlist{pt},'optimize_status_surrogate_L.mat'),'ipL','XOptimL');
+    [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
+    ea_generate_optim_vat(inputsL{:});
+    options = setOPTS(patlist{pt});
+    S = ea_initializeS(options);
+    S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
+    save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
+    avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
+    disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
+    warning on
+    if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+        poolobj = gcp('nocreate'); delete(poolobj);
+    end
+
 end
-S = ea_initializeS(options);
-S = ea_cleartune_generateMfile([XOptimR(1),XOptimR(2:end)],[XOptimL(1),XOptimL(2:end)],S,0);
-save(fullfile(patlist{1},'optimize_status_surrogate_l.mat'),'ipL','XOptimL');
-save(fullfile(patlist{1},'desc-stimparameters.mat'),'S');
-avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
-disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
-warning on
-if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
-    poolobj = gcp('nocreate'); delete(poolobj);
-end
-
-%choice='y';
-%numIters=500;
-%while 1
-%     switch choice
-%         case 'y'
-%             %options.InitialPoints=ip;
-%             if ~exist('numIters','var')
-%                 numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
-%                 numIters = str2double(numIters);
-%             end
-
-%        otherwise
-%            break
-%    end
-%    choice = input(sprintf('%s\n\n',['Optimal predicted Ihat R = ',num2str(-1*fvalR),' Optimal predicted Ihat L = ',num2str(-1*fvalL),'.Do you wish to continue optimizing? (y/n)']),'s');
-%    clear numIters
-%end
-%tractsetclone.save;
-
 function [paramsR,paramsL] = genParams(app)
 
 %for bipolar also add this
@@ -175,32 +200,89 @@ return
 end
 
 % Nested function that computes the objective function
-function Fval = nestedfunR(app,X,patlist,side)
+function f = nestedfunR(X,pt,ptindx)
+
+% limit to 8mA
+if sum(X(X>0)) > sum(abs(X(X<0)))
+    f.Ineq = sum(X(X>0)) - 8.0;
+else
+    f.Ineq = sum(abs(X(X<0))) - 8.0;
+end
+
 X = reformatX(X);
+
 if isempty(X)
-    Fval = Inf;
+    f.Fval = Inf;
     return
 end
 constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,patlist,constCurr,tractsetclone,side);
+f.Fval=getFval(app,X,pt,1,ptindx);
+
 return
 end
 
-function Fval = nestedfunL(app,X,patlist,side)
+function f = nestedfunL(X,pt,ptindx)
 X = reformatX(X);
+
+if sum(X(X>0)) > sum(abs(X(X<0)))
+    f.Ineq = sum(X(X>0)) - 8.0;
+else
+    f.Ineq = sum(abs(X(X<0))) - 8.0;
+end
+
 if isempty(X)
-    Fval = Inf;
+    f.Fval = Inf;
     return
 end
 constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,patlist,constCurr,tractsetclone,side);
+f.Fval=getFval(app,X,pt,2,ptindx);
+% limit to 8mA
+
 return
 end
+
+
+% Nested function that computes the objective function
+function Fval = nestedfunR_Monopolar(X,pt,ptindx)
+
+X = reformatX(X);
+
+if isempty(X)
+    Fval = Inf;
+    return
+end
+tractsetclone=updateStim(tractsetclone,X);
+Fval=getFval(app,X,pt,1,ptindx);
+
+return
+end
+
+function Fval = nestedfunL_Monopolar(X,pt,ptindx)
+X = reformatX(X);
+
+if isempty(X)
+    Fval = Inf;
+    return
+end
+
+tractsetclone=updateStim(tractsetclone,X);
+Fval=getFval(app,X,pt,2,ptindx);
+% limit to 8mA
+
+return
+end
+
 
 function X = reformatX(X)
-
+    if all(~X(1:8)) %all contacts have zero % activation its not allowed
+        X = [];
+        return
+    end
+return
+end
+% best fix ever
 % for bipolar
 %if the indicator is off, the contact should also be off
 % for xx=10:17
@@ -208,18 +290,6 @@ function X = reformatX(X)
 %         X(xx-8) = 0;
 %     end
 % end
-for xx=2:9
-    if abs(X(xx)) < 10
-        X(xx) = 0;
-%         X(xx+8) = 0;
-    end
-    
-end
-%Method 2 - scaling vars
-if all(~X(2:9)) %all contacts have zero % activation its not allowed
-    X = [];
-    return
-end
 %doing it this way because harcoding indices is wrong and won't give us
 %flexibility for future
 %switch this on for bipolar setting
@@ -234,65 +304,72 @@ end
 % else
 %    X(end) = 100;
 % end
-
-
-
-whichneg = X < 0;
-whichneg(1) = 0;
-% whichneg(10:end) = 0;
-if any(whichneg)
-    sum_whichneg_r = sum(X(whichneg));
-    X(whichneg) = (X(whichneg)*-100)/(sum_whichneg_r);
-end
-X(end) = X(end)*100;
-return
-end
+% whichneg = X < 0;
+% whichneg(1) = 0;
+% % whichneg(10:end) = 0;
+% if any(whichneg)
+%     sum_whichneg_r = sum(X(whichneg));
+%     X(whichneg) = (X(whichneg)*-100)/(sum_whichneg_r);
+% end
+% X(end) = X(end)*100;
+% return
+% end
 
 function tractsetclone=updateStim(tractsetclone,X)
     disp('Parameters applied: ');
-    fprintf('Amplitude:%d\n',X(1));
-    whichContact = find(X(2:end));
-    fprintf('Active contact: k0%d\n',whichContact)
-    fprintf('Percentage activation: %d\n',X(2:end));
-    disp('Case activation:100%');
+    %fprintf('Amplitude:%d\n',X(1));
+    whichContact = find(X(1:end));
+    fprintf('Active contact: k0%d\n',whichContact-1)
+    fprintf('Current, mA: %d\n',X(1:end));
+    %disp('Case activation:100%');
 end
 
-function Fval=getFval(app,X,patlist,constCurr,tractsetclone,side)
-    
+function Fval=getFval(app,X,pt,side,ptindx)
+      
     %create a vta inside this function, send it to cleartune, get Ihat out and return it as
     %Fval
-    for yy=1:length(patlist)
-        ampsel = X(1);
-        concsel = [X(2:end)];
-        writeVTA = 0;
-        modelVTA = app.inputVars.modelVTA;
-        inputs = {patlist{yy},ampsel,concsel,constCurr,side,writeVTA,modelVTA};
+    
+    % remove very small currents
+    X(abs(X) < 0.000001) = 0.0;
+    writeVTA = 0;
+    modelVTA = app.inputVars.modelVTA;
+
+    % new way to define inputs
+    inputs = ea_get_inputs_for_optimizer(pt,X, app.inputVars.modelVTA,writeVTA,side);
+    try
         [Efields,allS]=ea_generate_optim_vat(inputs{:});
-        app.protocol{yy}.inputs=inputs;
-        app.protocol{yy}.Efields=Efields;
-        app.protocol{yy}.allS=allS;
-        tractsetclone=ea_disctract;
-        app.tractset.copyobj(tractsetclone);
+    catch ME
+        if (contains(ME.message,'Despite all attempts the VTA model could not be created'))
+            %try once more
+            [Efields,allS]=ea_generate_optim_vat(inputs{:});
+            %Fval =  NaN;
+
+        end
     end
-    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,side);
+    app.protocol{ptindx}.inputs=inputs;
+    app.protocol{ptindx}.Efields=Efields;
+    app.protocol{ptindx}.allS=allS;
+    tractsetclone=ea_disctract;
+    app.tractset.copyobj(tractsetclone);
+    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,{pt},side);
     Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
     if sum(isnan(Ihat(:)))/length(Ihat(:))>0.3
         ea_warning(['Many (',num2str(sum(isnan(Ihat(:)))*100/length(Ihat(:))),' percent) stimulation settings were not covered well by the model. Stimulation suggestions may not be meaningful. Please adjust model parameters in ',...
             app.fibfiltmodelpath,'.']);
     end
-    preFval = calculateFval(tractsetclone,Ihat,actualimprovs,side);
+    preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
     Fval = -1*preFval;
-
+return
     
 end
 
 end
 
-function preFval = calculateFval(tractsetclone,Ihat,actualimprovs,side)
+function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
     weightmatrix=zeros(size(actualimprovs,1),1); % in cleartune case always the same weights for any side and "patient" (which is VTA)
     for voter=1:length(weightmatrix)
          % same weight for all subjects in that voter (slider was used)
-            weightmatrix(voter)=tractsetclone.cleartunevars.weights(voter,side);
+            weightmatrix(voter)=app.symptomWeightVar{ptindx}(voter,side);
     end
     weightmatrix_sum = ea_nansum(weightmatrix);
     for xx=1:size(weightmatrix,1) % make sure voter weights sum up to 1
