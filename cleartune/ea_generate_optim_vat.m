@@ -99,7 +99,7 @@ if side == 1
          toc;
     end
     emptyVvate = Vvate;
-    emptyVvate.img = zeros(size(emptyVvate));
+    emptyVvate.img = zeros(size(emptyVvate.img));
     if writeVTA
         ea_write_nii(Vvate)
     end
