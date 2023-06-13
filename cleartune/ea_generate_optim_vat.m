@@ -90,43 +90,39 @@ else
 end
 fname = [volcur, '_', num2str(round(options.prefs.machine.vatsettings.horn_cgm*100),'%02d'), '_', num2str(round(options.prefs.machine.vatsettings.horn_cwm*100),'%02d')];
 
-for hem=1:2
-    if hem == side
-        disp([' ', newline, 'Patient ', patselect, newline,'Simulating efield: ', fname, ' side ', num2str(hem),' | ', S.label])
-    end
-    setappdata(resultfig,'elstruct',elstruct(1));
-    setappdata(resultfig,'elspec',options.elspec);
+if side == 1
     if strcmp(modelVTA,'Fastfield')
-        Efields(hem)=ea_genvat_cleartune_fastfield(S,hem,options,fname,resultfig,t.electrode,elt);
-        if hem == side && writeVTA
-            ea_write_nii(Efields(hem))
-        end
+         Vvate=ea_genvat_cleartune_fastfield(S,side,options,fname,resultfig,t.electrode,elt);
+    else
+         tic;
+         Vvate = ea_genvat_cleartune_horn('',S,side,options,fname,resultfig);
+         toc;
+    end
+    emptyVvate = Vvate;
+    emptyVvate.img = zeros(size(emptyVvate));
+    if writeVTA
+        ea_write_nii(Vvate)
+    end
+    Efields(1) = Vvate;
+    Efields(2) = emptyVvate;
+else
+    if strcmp(modelVTA,'Fastfield')
+        Vvate=ea_genvat_cleartune_fastfield(S,side,options,fname,resultfig,t.electrode,elt);
     else
         tic;
-        outputEfield = ea_genvat_cleartune_horn('',S,hem,options,fname,resultfig);
-        if isempty(outputEfield)
-            if hem == 2
-                indx = 1;
-            else
-                indx = 2;
-            end
-        else
-            if hem == 1
-                % we should return only one Efield, but just as a crutch
-                Vvate = outputEfield;
-                Vvate.img = zeros(size(outputEfield.img));
-                Efields(2) = Vvate;
-                Efields(1) = outputEfield;
-            else
-                Vvate = outputEfield;
-                Vvate.img = zeros(size(outputEfield.img));
-                Efields(1) = Vvate;
-                Efields(2) = outputEfield;
-            end
-        end
+        Vvate = ea_genvat_cleartune_horn('',S,side,options,fname,resultfig);
         toc;
     end
+    emptyVvate = Vvate;
+    emptyVvate.img = zeros(size(emptyVvate.img));
+    if writeVTA
+        ea_write_nii(Vvate)
+    end
+    Efields(1) = emptyVvate;
+    Efields(2) = Vvate;
+
 end
+
 
 
 close(resultfig);

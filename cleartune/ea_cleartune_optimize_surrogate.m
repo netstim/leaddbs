@@ -332,7 +332,6 @@ function Fval=getFval(app,X,pt,side,ptindx)
     % remove very small currents
     X(abs(X) < 0.000001) = 0.0;
     writeVTA = 0;
-    modelVTA = app.inputVars.modelVTA;
 
     % new way to define inputs
     inputs = ea_get_inputs_for_optimizer(pt,X, app.inputVars.modelVTA,writeVTA,side);
@@ -359,6 +358,8 @@ function Fval=getFval(app,X,pt,side,ptindx)
     end
     preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
     Fval = -1*preFval;
+    %add penalty function if user chooses
+   % Fval = penaltyFunc(Fval);
 return
     
 end
@@ -369,7 +370,7 @@ function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
     weightmatrix=zeros(size(actualimprovs,1),1); % in cleartune case always the same weights for any side and "patient" (which is VTA)
     for voter=1:length(weightmatrix)
          % same weight for all subjects in that voter (slider was used)
-            weightmatrix(voter)=app.symptomWeightVar{ptindx}(voter,side);
+            weightmatrix(voter)=app.symptomWeightVar{ptindx,side}(voter);
     end
     weightmatrix_sum = ea_nansum(weightmatrix);
     for xx=1:size(weightmatrix,1) % make sure voter weights sum up to 1
@@ -383,8 +384,11 @@ function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
         end
     end
     preFval = ea_nansum(wt_Ihat(:,side)); %should be the same since we are doing only one side now
+    
     return
 end
+
+
 
 function options = setOPTS(patselect)
     options = ea_setopts_local;
