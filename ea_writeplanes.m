@@ -27,20 +27,11 @@ if nargin==1
     % load prior results
     coords_mm=ea_load_reconstruction(options);
     % If there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-    elstruct(1).coords_mm=coords_mm;
-    % Fill missing sides with nans, matching it to the other present side.
-    % At least one side should be present, which should be always the case.
-    elstruct=ea_elstruct_match_and_nanfill(elstruct);
-    clear coords_mm
-    ave_coords_mm=ea_ave_elstruct(elstruct,options);
+    elstruct(1).coords_mm = coords_mm;
+    ave_coords_mm = coords_mm;
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
         elstruct=varargin{2};
-        % Fill missing sides with nans, matching it to the other present
-        % side. At least one side should be present, which should be always
-        % the case.
-        elstruct=ea_elstruct_match_and_nanfill(elstruct);
-        % average coords_mm for image slicing
         ave_coords_mm=ea_ave_elstruct(elstruct,options);
     else % concrete height is being supplied (without electrode star plotting).
         elstruct=varargin{2};
@@ -447,30 +438,61 @@ if svfig
 end
 
 
-function coords_mm=ea_ave_elstruct(elstruct,options)
-% simply averages coordinates of a group to one coords_mm 1x2 cell
-coords_mm=elstruct(1).coords_mm; % initialize mean variable
-for side=1:length(coords_mm)
-    for xx=1:size(coords_mm{side},1)
-        for yy=1:size(coords_mm{side},2)
-            vals=zeros(length(elstruct),1);
-            for vv=1:length(elstruct)
-                if ~isempty(elstruct(vv).coords_mm{side})
-                    vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
-                end
-            end
-            coords_mm{side}(xx,yy)=ea_robustmean(vals);
+function meanCoords = ea_ave_elstruct(elstruct, options)
+% Calculate the mean coordinates of a group of patients
+
+coords = {elstruct.coords_mm}';
+
+% Get max number of electrodes for the group of patients
+numSides = max(cellfun(@length, coords));
+
+% Get max number of contacts for the group of patients
+numContacts = zeros(1, numSides);
+for p = 1:length(coords)
+    for s = 1:numSides
+        if length(coords{p}) >= s && size(coords{p}{s},1) > numContacts(s)
+            numContacts(s) = size(coords{p}{s},1);
         end
     end
 end
 
-if options.shifthalfup
-    for side=1:length(coords_mm)
-        for c=1:length(coords_mm{side})-1
-            scoords_mm{side}(c,:)=mean([coords_mm{side}(c,:);coords_mm{side}(c+1,:)],1);
+% Reformat coordinates matrix to the same [maximum] size
+for p = 1:length(coords)
+    for s = 1:numSides
+        temp = nan(numContacts(s),3);
+        if length(coords{p}) < s
+            coords{p}{s} = temp;
+        elseif size(coords{p}{s},1) < numContacts(s)
+            temp(1:size(coords{p}{s},1), :) = coords{p}{s};
+            coords{p}{s} = temp;
         end
     end
-    coords_mm=scoords_mm;
+end
+
+% Reshap coordinates to P x S cell array
+coords = vertcat(coords{:});
+
+% Calculate the mean coordinates
+meanCoords = cell(1, numSides);
+for s = 1:numSides
+    meanCoords{s} = nan(numContacts(s),3);
+    temp = cat(3, coords{:,s});
+    for c = 1:numContacts(s)
+        for d = 1:3
+           meanCoords{s}(c,d) = ea_robustmean(squeeze(temp(c,d,:)));
+        end
+    end
+end
+
+% Shift-up option
+if options.shifthalfup
+    shiftedMeanCoords = cell(size(meanCoords));
+    for side = 1:length(meanCoords)
+        for c = 1:size(meanCoords{side},1)-1
+            shiftedMeanCoords{side}(c,:) = mean([meanCoords{side}(c,:); meanCoords{side}(c+1,:)], 1);
+        end
+    end
+    meanCoords = shiftedMeanCoords;
 end
 
 
