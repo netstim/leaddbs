@@ -59,6 +59,7 @@ classdef ea_disctract < handle
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
         CleartuneOptim = 0;
+        cleartunevars 
         symptomWeightVar = {};
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
