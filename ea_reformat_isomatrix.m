@@ -7,32 +7,25 @@ function isom=ea_reformat_isomatrix(isom,M,options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+stimmat = cell(1, length(options.sides));
 if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
-    if min(size(isom))==1 && length(size(isom))==2 % single vector (1 value for each patient)
+    if size(isom,1) == length(M.patient.list) && size(isom,2) == 1
+        % single vector (1 value for each patient)
         for iside=1:length(options.sides)
             side=options.sides(iside);
-            try
-                stimmat{side}=cat(1,M.stimparams(:,1).U);
-            catch
-                stimmat{side}=ones(length(M.patient.list),4);
-            end
-            stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
+            stimmat{side}=init_isoMatrixMask(M.elstruct, side);
+            stimmat{side}=bsxfun(@times,stimmat{side},isom);
         end
-    elseif min(size(isom))==2 && length(size(isom))==2 % 2xn matrix (1 value for each hemisphere)
+    elseif size(isom,1) == length(M.patient.list) && size(isom,2) == length(options.sides)
+        % nx2 matrix (1 column for each hemisphere)
         for iside=1:length(options.sides)
             side=options.sides(iside);
-            try
-                stimmat{side}=cat(1,M.stimparams(:,1).U);
-            catch
-                stimmat{side}=ones(length(M.patient.list),4);
-            end
-            stimmat{side}=bsxfun(@times,stimmat{side}>0,isom(:,side));
+            stimmat{side}=init_isoMatrixMask(M.elstruct, side);
+            stimmat{side}=bsxfun(@times,stimmat{side},isom(:,side));
         end
-    elseif (min(size(isom))==6 || min(size(isom))==8) && max(size(isom))==length(M.patient.list) % 6 (1 value for each contact pair) or 8 (1 value for each contact) * patientlist
-        if size(isom,2)==length(M.patient.list)
-            isom=isom';
-        end
-
+    elseif size(isom,1) == length(M.patient.list) && ...
+            (size(isom,2) == (get_maxNumContacts(M.elstruct)-1)*2 || size(isom,2) == get_maxNumContacts(M.elstruct)*2)
+        % (1 value for each contact pair) or (1 value for each contact) * patientlist
         stimmat{1}=isom(:,1:size(isom,2)/2);
         stimmat{2}=isom(:,(size(isom,2)/2)+1:end);
     else
@@ -52,7 +45,6 @@ if options.normregressor>1 % apply normalization to regressor data
             stimmat{side}(nanidx)=nan;
         end
     end
-
 end
 
 isom=stimmat;
@@ -64,3 +56,37 @@ datawonan = data(~isnan(data));
 datamean = mean(datawonan);
 datasd = std(datawonan);
 z = (data-datamean)/datasd;
+
+
+function maxNumContacts = get_maxNumContacts(elstruct, side)
+if ~exist('side', 'var') % Check both sides
+    coords = {elstruct.coords_mm};
+    coords = horzcat(coords{:})';
+    maxNumContacts = max(cellfun(@(x) size(x,1), coords));
+    return;
+end
+
+coords = {elstruct.coords_mm}';
+
+% Get max number of contacts for the group of patients
+maxNumContacts = 0;
+for p = 1:length(coords)
+    for s = side
+        if size(coords{p}{side},1) > maxNumContacts
+            maxNumContacts = size(coords{p}{side},1);
+        end
+    end
+end
+
+
+function isoMatrixMask = init_isoMatrixMask(elstruct, side)
+
+coords = {elstruct.coords_mm}';
+
+% Get max number of contacts for the group of patients
+maxNumContacts = get_maxNumContacts(elstruct, side);
+
+isoMatrixMask = nan(length(coords), maxNumContacts);
+for p = 1:length(coords)
+    isoMatrixMask(p, 1:size(coords{p}{side},1)) = 1;
+end

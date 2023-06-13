@@ -8,14 +8,14 @@ function ea_exportisovolume(elstruct,options)
 
 disp('*** Exporting isovolume to nifti files.');
 
-if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
+if size(options.d3.isomatrix{1},2)==get_maxNumContacts(elstruct)-1 % number of contact pairs
     shifthalfup=1;
-elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
+elseif size(options.d3.isomatrix{1},2)==get_maxNumContacts(elstruct) % number of contacts
     shifthalfup=0;
 else
-    
-    ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
+    ea_cprintf('CmdWinErrors', 'Be careful! Isomatrix might have wrong size, or numbers of contacts are not consistent across patients.\n');
 end
+
 for iside=1:length(options.sides)
     side=options.sides(iside);
 
@@ -247,13 +247,10 @@ for iside=1:length(options.sides)
 
                                 Fsig.ExtrapolationMethod='none';
                                 warning('on');
-
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
                     end
                 end
-
-
             end
         end
 
@@ -302,3 +299,9 @@ else
     fprintf(fid,['No significant positive relationship in data found (R=',num2str(R),', p=',num2str(p),').']);
 end
 fclose(fid);
+
+
+function maxNumContacts = get_maxNumContacts(elstruct)
+coords = {elstruct.coords_mm};
+coords = horzcat(coords{:})';
+maxNumContacts = max(cellfun(@(x) size(x,1), coords));

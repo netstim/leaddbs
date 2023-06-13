@@ -6,13 +6,16 @@ function xyzv=ea_buildxyzv(M,varnum)
 if ~exist('varnum','var')
     varnum='contacts';
 end
+
+maxNumContacts = get_maxNumContacts(M.elstruct);
+
 if ischar(varnum) % simply return coordinate list
     switch varnum
         case 'contacts'
-            ixx=1:4;
+            ixx=1:maxNumContacts;
             meannec=0;
         case 'pairs'
-            ixx=1:3;
+            ixx=1:maxNumContacts-1;
             meannec=1;
     end
     cnt=1;
@@ -31,14 +34,12 @@ if ischar(varnum) % simply return coordinate list
 else
     cnt=1;
     switch size(M.clinical.vars{varnum},2)
-        
-        case {6,8} % contacts / contact pairs
-            
-            if size(M.clinical.vars{varnum},2)==6
-                ixx=1:3;
+        case {(maxNumContacts-1)*2, maxNumContacts*2} % contacts / contact pairs
+            if size(M.clinical.vars{varnum},2)==(maxNumContacts-1)*2
+                ixx=1:maxNumContacts-1;
                 meannec=1;
             else
-                ixx=1:4;
+                ixx=1:maxNumContacts;
                 meannec=0;
             end
             
@@ -56,9 +57,7 @@ else
                 end
             end
         case 1 % patient
-           
             for pt=1:length(M.patient.list)
- 
                     xyzv(pt,:)=[mean([M.elstruct(pt).coords_mm{1}(find(M.S(pt).activecontacts{1}),:);... % right coordinate
                         ea_flip_lr_nonlinear(M.elstruct(pt).coords_mm{2}(find(M.S(pt).activecontacts{2}),:))],1),... % nonlinearly flipped left coordinate
                         M.clinical.vars{varnum}(pt)]; % value
@@ -72,3 +71,9 @@ else
             end
     end
 end
+
+
+function maxNumContacts = get_maxNumContacts(elstruct)
+coords = {elstruct.coords_mm};
+coords = horzcat(coords{:})';
+maxNumContacts = max(cellfun(@(x) size(x,1), coords));

@@ -18,12 +18,12 @@ else % default blue to red colormap
     cmap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
 end
 
-if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
+if size(options.d3.isomatrix{1},2)==get_maxNumContacts(elstruct)-1 % number of contact pairs
     shifthalfup=1;
-elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
+elseif size(options.d3.isomatrix{1},2)==get_maxNumContacts(elstruct) % number of contacts
     shifthalfup=0;
 else
-    ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
+    ea_cprintf('CmdWinErrors', 'Be careful! Isomatrix might have wrong size, or numbers of contacts are not consistent across patients.\n');
 end
 
 for iside=1:length(options.sides)
@@ -157,3 +157,9 @@ set(atls, 'Visible', 'on');
 function isoinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
+
+
+function maxNumContacts = get_maxNumContacts(elstruct)
+coords = {elstruct.coords_mm};
+coords = horzcat(coords{:})';
+maxNumContacts = max(cellfun(@(x) size(x,1), coords));
