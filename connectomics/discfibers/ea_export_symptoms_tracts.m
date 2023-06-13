@@ -74,7 +74,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
         end
 
         % normalized to 0-1 if necessary (apply abs if negative)
-        if min(vals{voter,side}) < 0 && max(vals{voter,side}) > 0
+        if any(min(vals{voter,side}) < 0) && any(max(vals{voter,side}) > 0)
             disp("Choose only positive or negative tracts!")
             return;
         elseif min(vals{voter,side}) < 0
