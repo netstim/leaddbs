@@ -8,14 +8,14 @@ function ea_exportisovolume(elstruct,options)
 
 disp('*** Exporting isovolume to nifti files.');
 
-if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
+if size(options.d3.isomatrix{1},2)==get_maxNumContacts(elstruct)-1 % number of contact pairs
     shifthalfup=1;
-elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
+elseif size(options.d3.isomatrix{1},2)==get_maxNumContacts(elstruct) % number of contacts
     shifthalfup=0;
 else
-    
-    ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
+    warning('Be careful! Isomatrix might have wrong size, or numbers of contacts are not consistent across patients.');
 end
+
 for iside=1:length(options.sides)
     side=options.sides(iside);
 
@@ -92,9 +92,6 @@ for iside=1:length(options.sides)
     nii{side}(xix{side},yix{side},zix{side})=F({xix{side},yix{side},zix{side}});
     nii2{side}=nii{side};
 
-    
-
-
     switch side
         case 1
             lr='right';
@@ -115,8 +112,6 @@ for iside=1:length(options.sides)
     %         spm_jobman('run',jobs);
     %         clear jobs matlabbatch
 
-
-
     if side==2 % write out combined volume with separate interpolations for each side.
         %% old part
         Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'];
@@ -126,7 +121,6 @@ for iside=1:length(options.sides)
         %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'','nn');
 
         % smooth image.
-
 
         matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii,1']};
         matlabbatch{1}.spm.spatial.smooth.fwhm = [0.7 0.7 0.7];
@@ -170,25 +164,18 @@ for iside=1:length(options.sides)
             clear XI YI ZI
             [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
 
-
-
             warning('off');
 
             nanix=[(~isnan(V{1}));(~isnan(V{2}))];
             AllV=[V{1};V{2}];
             F = scatteredInterpolant(XYZ(nanix,1),XYZ(nanix,2),XYZ(nanix,3),double(AllV(nanix)),'natural');
 
-
             F.ExtrapolationMethod='none';
             warning('on');
-
-
-
 
             xixc=bb(1,1):bb(1,2); yixc=bb(2,1):bb(2,2); zixc=bb(3,1):bb(3,2);
 
             niic.img(xixc,yixc,zixc)=F({xixc,yixc,zixc});
-
 
             %% write out significant volume:
 
@@ -257,14 +244,10 @@ for iside=1:length(options.sides)
 
                                 Fsig.ExtrapolationMethod='none';
                                 warning('on');
-
-
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
                     end
                 end
-
-
             end
         end
 
@@ -273,7 +256,6 @@ for iside=1:length(options.sides)
         %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'','nn');
         % smooth image.
 
-        
         clear jobs matlabbatch
 
         %% write out significant volume:
@@ -299,13 +281,7 @@ for iside=1:length(options.sides)
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
         jobs{1}=matlabbatch;
         spm_jobman('run',jobs);
-
     end
-
-
-
-
-
 end
 
 disp('*** Done exporting isovolume to nifti files.');
@@ -320,3 +296,9 @@ else
     fprintf(fid,['No significant positive relationship in data found (R=',num2str(R),', p=',num2str(p),').']);
 end
 fclose(fid);
+
+
+function maxNumContacts = get_maxNumContacts(elstruct)
+coords = {elstruct.coords_mm};
+coords = horzcat(coords{:})';
+maxNumContacts = max(cellfun(@(x) size(x,1), coords));

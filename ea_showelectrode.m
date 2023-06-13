@@ -212,12 +212,12 @@ for side=options.sides
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
         try % sometimes isomatrix not defined.
-            if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % 3 contact pairs
+            if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % number of contact pairs
                 shifthalfup=1;
-            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % 4 contacts
+            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % number of contacts
                 shifthalfup=0;
             else
-                ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
+                warning('Be careful! Isomatrix might have wrong size, or numbers of contacts are not consistent across patients.');
             end
         end
 
