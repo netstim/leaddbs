@@ -118,7 +118,7 @@ end
 for group=groups
     gfibsval=fibsval; %refresh fibsval
     if dogroups
-        groupspt=find(obj.M.patient.group==group);
+        groupspt=find((obj.M.patient.group)'==group);
         gpatsel=groupspt(ismember(groupspt,patsel));
     elseif dosubscores
         gpatsel=patsel;
