@@ -98,14 +98,14 @@ for pt = 1:length(patlist)
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsR,...
-        'MaxFunctionEvaluations',5,...
+        'MaxFunctionEvaluations',1,...
         'Display','iter');
     optionsL=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsL,...
-        'MaxFunctionEvaluations',5,...
+        'MaxFunctionEvaluations',1,...
         'Display','iter');
 
     %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
@@ -173,6 +173,7 @@ for pt = 1:length(patlist)
     S = ea_initializeS(options);
     S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
     save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
+    createIhatAmpPlot(app,inputsR,inputsL)
     avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
     disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
     warning on
@@ -351,7 +352,7 @@ function Fval=getFval(app,X,pt,side,ptindx)
     tractsetclone=ea_disctract;
     app.tractset.copyobj(tractsetclone);
     [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,{pt},side);
-    Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
+    %Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
     if sum(isnan(Ihat(:)))/length(Ihat(:))>0.3
         ea_warning(['Many (',num2str(sum(isnan(Ihat(:)))*100/length(Ihat(:))),' percent) stimulation settings were not covered well by the model. Stimulation suggestions may not be meaningful. Please adjust model parameters in ',...
             app.fibfiltmodelpath,'.']);
@@ -359,7 +360,7 @@ function Fval=getFval(app,X,pt,side,ptindx)
     preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
     Fval = -1*preFval;
     %add penalty function if user chooses
-   % Fval = penaltyFunc(Fval);
+    Fval = penaltyFunc(app,X,Fval);
 return
     
 end
@@ -387,8 +388,37 @@ function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
     
     return
 end
+function Fval = penaltyFunc(app,X,Fval)
+    if strcmp(app.ApplypenaltyusingDropDown.Value,'Quadratic curve')
+        xx = app.SweetspotamplitudeEditField.Value;
+        yy = abs(sum(X));
+        Fval = Fval + ((yy-xx)^2)/100;
+    elseif strcmp(app.ApplypenaltyusingDropDown.Value,'Range of amplitudes')
+        if sum(abs(X)) > 3 || sum(abs(X)) < 2
+            Fval = Fval + app.ApplyapenaltyvalueofEditField.Value;
+        end
+    else
+        return 
+    end
+end
+function createIhatAmpPlot(app,inputsR,inputsL)
+    startamp = 1;
+    inputsR{6} = 1; %writeVTA
+    inputsL{6} = 1; %writeVTA
+    for i=1:9
+        inputsR{2} = startamp;
+        inputsL{2} = startamp;
+        ea_generate_optim_vat(inputsR{:});
+        ea_generate_optim_vat(inputsL{:});
+        stimfolder = 'mA_33_14';
+        Ihatvector(i) = predictImprovement(app,inputsR{2},stimfolder,1);
+        amplitudevector(i) = startamp;
+        startamp = startamp + 0.5;
+    end
+   figure;
+   plot(amplitudevector,Ihatvector,'o-','linewidth',2,'markersize',5,'Color',[120/255,0,128/255]);
 
-
+end
 
 function options = setOPTS(patselect)
     options = ea_setopts_local;

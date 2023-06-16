@@ -78,7 +78,7 @@ end
     
 S = ea_initializeS(options);
 S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
-S.label = ['amp_R_L_',num2str(ampselect,'%.2f'),'_',num2str(ampselect,'%.2f'),'_contactR_L_',num2str(whichContact,'%d'),'_',num2str(whichContact,'%d')];
+S.label = ['amplitude',num2str(ampselect,'%.2f'),'_contact_',num2str(whichContact,'%d'),'_side_',num2str(side,'%d')];
 
 % Define the name of the folder for the nii to be saved in
 if va == 0

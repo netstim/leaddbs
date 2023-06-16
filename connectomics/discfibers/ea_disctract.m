@@ -849,7 +849,10 @@ classdef ea_disctract < handle
                         Ihat=ea_nansum(Ihat.*weightmatrix,3);
                     else
                         Ihat = Ihat(test,:,:);
-                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
+                        if size(Ihat,1) == 1
+                            Ihat = squeeze(Ihat);
+                            Ihat = Ihat';
+                        end
                         Improvement = Improvement(test);
                         return
                     end
