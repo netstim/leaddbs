@@ -61,6 +61,8 @@ else
     elmodel = options.elmodel;
 end
 
+elspec.elmodel = elmodel;
+
 switch elmodel
     case 'Medtronic 3389'
         elspec.matfname='medtronic_3389';
@@ -851,7 +853,7 @@ switch elmodel
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
-        elspec.isdirected=1;
+        elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);

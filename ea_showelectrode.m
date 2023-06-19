@@ -153,10 +153,10 @@ for side=options.sides
         end
 
         eltext=getappdata(resultfig,'eltext');
+        [contactnames,directional]=ea_getelcontactnames(elspec,side);
         for con=1:size(coords_mm{side},1)
             % add text:
             centroid=coords_mm{side}(con,:)+0.01;
-            [contactnames,directional]=ea_getelcontactnames(elstruct.elmodel,side);
 
             % find intersection point S on line defined by tail and head
             Xpt = centroid;
