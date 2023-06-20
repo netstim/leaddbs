@@ -134,3 +134,34 @@ def saveSceneInfo(warpDriveSavePath, inverseApplied):
   info["inverseApplied"] = inverseApplied
   with open(os.path.join(warpDriveSavePath,'info.json'), 'w') as jsonFile:
     json.dump(info, jsonFile)
+
+def saveSegmentation(segmentationsDir):
+  shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+  modelNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
+  modelNodes.UnRegister(slicer.mrmlScene)
+  for i in range(modelNodes.GetNumberOfItems()):
+    modelNode = modelNodes.GetItemAsObject(i)
+    modelItem = shNode.GetItemByDataNode(modelNode)
+    if modelNode.GetDisplayNode().GetVisibility() and 'atlas' in shNode.GetItemAttributeNames(modelItem) and shNode.GetItemAttribute(modelItem,'atlas') == 'template':
+      # construct name
+      name = modelNode.GetName()
+      node = modelNode
+      while shNode.GetItemParent(shNode.GetItemByDataNode(node)) != shNode.GetSceneItemID():
+        node = shNode.GetItemDataNode(shNode.GetItemParent(shNode.GetItemByDataNode(node)))
+        name = os.path.join(node.GetName(), name)
+      # save segmentation
+      modelNode.HardenTransform()
+      labelNode = modelToLabel(modelNode)
+      os.makedirs(os.path.dirname(name), exist_ok=True)
+      slicer.util.saveNode(labelNode, os.path.join(segmentationsDir, name + '.nii.gz'))      
+      slicer.mrmlScene.RemoveNode(labelNode)
+      slicer.mrmlScene.RemoveNode(modelNode)
+
+def modelToLabel(model_node):
+  segmentationsLogic = slicer.modules.segmentations.logic()
+  segmentNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', 'segmentation')
+  labelNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode', 'label')
+  segmentationsLogic.ImportModelToSegmentationNode(model_node, segmentNode)
+  segmentationsLogic.ExportAllSegmentsToLabelmapNode(segmentNode, labelNode)
+  slicer.mrmlScene.RemoveNode(segmentNode)
+  return labelNode

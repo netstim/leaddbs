@@ -60,6 +60,7 @@ if isempty(menuprobe)
         
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
 
+    uimenu(f,'Label','Run WarpDrive in Segment mode','Callback',{@ea_runwarpdrive_segment,handles});
     if ismember('leador',cmd)
         dbs=uimenu(f,'Label','Lead-OR');
         uimenu(dbs,'Label','Create OR Scene','Callback',{@ea_leador_create_or_scene,handles});
