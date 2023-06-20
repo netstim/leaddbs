@@ -243,7 +243,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.refine
-        ea_runwarpdrive(options);
+        ea_runwarpdrive(options, '0');
     end
 
     if options.ecog.extractsurface.do

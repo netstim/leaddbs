@@ -167,7 +167,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         n.SetParameter('sliceViewAnnotationsEnabled','0')
 
     # set name
-    slicer.util.mainWindow().setWindowTitle("Warp Drive")
+    if int(WarpDriveLogic().getParameterNode().GetParameter('SegmentMode')):
+      slicer.util.mainWindow().setWindowTitle("Warp Drive - Segment")
+    else:
+      slicer.util.mainWindow().setWindowTitle("Warp Drive")
     slicer.util.mainWindow().showMaximized()
     qt.QApplication.processEvents()
 
