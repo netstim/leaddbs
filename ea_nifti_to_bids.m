@@ -1196,6 +1196,7 @@ end
 if frm(1) == fs(1) % match sform_code or no match
     R = [hdr.srow_x; hdr.srow_y; hdr.srow_z; 0 0 0 1];
 else % match qform_code
+    quat2R = nii_viewer('func_handle', 'quat2R');
     R = quat2R(hdr);
 end
 end
