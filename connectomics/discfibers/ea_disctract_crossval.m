@@ -43,6 +43,10 @@ switch strategy
         tractset.nestedLOO = false;
         tractset.useExternalModel = false;
         tractset.customselection = [];
+
+        if ~isfield(customconfig, 'permcorrtype')
+            customconfig.permcorrtype = 'Spearman';
+        end
         [I,Ihat,R0,R1,pperm,~,val_struct]=tractset.lnopb(customconfig.permcorrtype,silent);
         if ~silent
             if strcmp(tractset.multitractmode,'Split & Color By PCA')
