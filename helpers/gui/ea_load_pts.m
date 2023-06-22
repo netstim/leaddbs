@@ -201,13 +201,17 @@ if strcmp(handles.prod, 'dbs')
         if length(handles.patientlist.Selection) == 1
             handles.AddDICOMsButton.Visible = 'on';
             handles.AddNIfTIsButton.Visible = 'on';
+            handles.UpdateNIfTIsButton.Visible = 'on';
             handles.AddDICOMsMenu.Visible = 'on';
             handles.AddNIfTIsMenu.Visible = 'on';
+            handles.UpdateNIfTIsMenu.Visible = 'on';
         else
             handles.AddDICOMsButton.Visible = 'off';
             handles.AddNIfTIsButton.Visible = 'off';
+            handles.UpdateNIfTIsButton.Visible = 'off';
             handles.AddDICOMsMenu.Visible = 'off';
             handles.AddNIfTIsMenu.Visible = 'off';
+            handles.UpdateNIfTIsMenu.Visible = 'off';
         end
 
         % Return when there are patients not imported yet

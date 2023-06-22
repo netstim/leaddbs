@@ -4,7 +4,7 @@ function tree = ea_struct2tree(S, tree, options)
 arguments
     S struct
     tree matlab.ui.container.Tree = uitree
-    options.expandAll logical {mustBeNumericOrLogical} = 0
+    options.expandAll logical {mustBeNumericOrLogical} = false
 end
 
 cellfun(@(f) addNode(tree, S, f), fieldnames(S));
