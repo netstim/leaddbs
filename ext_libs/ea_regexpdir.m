@@ -38,7 +38,7 @@ switch type
         isdir = 1;
     case {'a', 'all'}
         % Remove filesep from the end of the folder path
-        list(isfolder(list)) = erase(list(isfolder(list)), filesep + lineBoundary('end'));
+        list(isfolder(list)) = erase(list(isfolder(list)), filesep + textBoundary('end'));
         isdir = zeros(size(list));
         isdir(isfolder(list)) = 1;
 end

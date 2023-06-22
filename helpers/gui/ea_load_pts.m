@@ -332,7 +332,7 @@ checkFlag = isfile(fullfile(inputFolder, 'ea_ui.mat')) || isfile(fullfile(inputF
 function [checkFlag, BIDSRoot, subjId] = isBIDSFolder(inputFolder)
 % Check if input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
 
-inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+inputFolder = erase(inputFolder, filesep + textBoundary('end'));
 
 isBIDSSubfolder = endsWith(inputFolder, {'derivatives', ['derivatives', filesep, 'leaddbs'], 'rawdata', 'sourcedata'});
 isBIDSRootfolder = ~isempty(ea_regexpdir(inputFolder, '^(derivatives|rawdata|sourcedata)$', 0, 'd'));
@@ -366,7 +366,7 @@ if ischar(inputFolder)
     inputFolder = {inputFolder};
 end
 
-inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+inputFolder = erase(inputFolder, filesep + textBoundary('end'));
 
 checkFlag = false;
 subjId = {''};
@@ -383,7 +383,7 @@ end
 function [checkFlag, subjId] = isNIfTIFolder(inputFolder)
 % Check if input folder is NIfTI folder
 
-inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+inputFolder = erase(inputFolder, filesep + textBoundary('end'));
 
 checkFlag = ~isempty(ea_regexpdir(inputFolder, '.*\.nii(\.gz)?$', 0, 'f'));
 
@@ -393,7 +393,7 @@ checkFlag = ~isempty(ea_regexpdir(inputFolder, '.*\.nii(\.gz)?$', 0, 'f'));
 function [checkFlag, subjId] = isDICOMFolder(inputFolder)
 % Check if input folder is NIfTI folder
 
-inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+inputFolder = erase(inputFolder, filesep + textBoundary('end'));
 
 checkFlag = false;
 subjId = '';
