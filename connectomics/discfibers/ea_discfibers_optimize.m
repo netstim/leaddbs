@@ -120,8 +120,8 @@ options=optimoptions('surrogateopt',...
 
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
-if exist('optFile', 'var') && ~isempty(optFile)
-    ea_cprintf('CmdWinWarnings', 'Prior optimization loaded: %s ...', optFile);
+if exist('optFile', 'var') && isfile(optFile)
+    ea_cprintf('CmdWinWarnings', 'Prior optimization loaded:\n%s\n', optFile);
     priorstate = load(optFile);
     command = regexp(optFile, '(?<=optimize_status_)(cv|sim|comb)(?=[_.])', 'match', 'once');
     switch mode
@@ -129,6 +129,12 @@ if exist('optFile', 'var') && ~isempty(optFile)
             [fval,ix]=min(priorstate.ip.Fval);
             XOptim=priorstate.ip.X(ix,:);
             tractset=updatetractset(tractset,XOptim);
+            if isfield(priorstate.ip,"modelSettings")
+                tractset = update_modelSettingsInformation(tractset,priorstate.ip.modelSettings);
+            else
+                ea_cprintf('CmdWinWarnings', 'Missing tractset settings! Please check if the settings used for prior optimization match the current settings.\n'); 
+            end
+
             disp(['Optimal solution: Average Fval = ',num2str(fval),'.']);
             warning on
             tractset.save;
@@ -136,19 +142,24 @@ if exist('optFile', 'var') && ~isempty(optFile)
         case 'resume'
             ip=priorstate.ip;
     end
-elseif exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
+elseif isfile(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']))
     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Resume Optimization','Load saved optimum and stop','Start from scratch','Yes');
     switch choice
         case 'Start from scratch'
             outcopy=fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'_',ea_generate_uuid,'.mat']);
             copyfile(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),outcopy)
-            disp(['Starting from scratch. Backed up prior state to ',outcopy,'.']);
+            ea_cprintf('CmdWinWarnings', 'Starting from scratch. Backed up prior state to:\n%s\n', outcopy);
         case 'Load saved optimum and stop'
             priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
             [fval,ix]=min(priorstate.ip.Fval);
             XOptim=priorstate.ip.X(ix,:);
             recalc_Fval=nestedfun(XOptim);
             tractset=updatetractset(tractset,XOptim);
+            if isfield(priorstate.ip,"modelSettings")
+                tractset = update_modelSettingsInformation(tractset,priorstate.ip.modelSettings);
+            else
+                ea_cprintf('CmdWinWarnings', 'Missing tractset settings! Please check if the settings used for prior optimization match the current settings.\n'); 
+            end
             disp(['Optimal solution: Average Fval = ',num2str(fval),'.']);
             disp(['Optimal solution: Average Fval (recalculated) = ',num2str(recalc_Fval),'.']);
             warning on
@@ -157,6 +168,9 @@ elseif exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,
         case 'Resume Optimization'
             priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
             ip=priorstate.ip;
+            if isfield(ip,"modelSettings")
+                tractset=update_modelSettingsInformation(tractset,priorstate.ip.modelSettings);
+            end
     end
 end
 
@@ -168,10 +182,13 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
 end
 
 choice='y';
-numIters=3000; % 120 by default, run 1000 at least once
+numIters=3; % 120 by default, run 1000 at least once
 while 1
     switch choice
         case 'y'
+            if isfield(ip, 'modelSettings')
+                ip = rmfield(ip, 'modelSettings');
+            end
             options.InitialPoints=ip;
             if ~exist('numIters','var')
                 numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
@@ -179,6 +196,7 @@ while 1
             end
             options.MaxFunctionEvaluations=numIters;
             [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intcon),options);
+            ip.modelSettings = settingsInformation(tractset);
             save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip');
         otherwise
             break
@@ -256,6 +274,7 @@ tractset.save;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
         tractset.efieldthreshold=tractset.efieldthreshold*1000;
+
         if verbose>1
             disp('Parameters applied: ');
             fprintf('%s: %s\n','Threshold strategy',tractset.threshstrategy);
@@ -271,8 +290,20 @@ tractset.save;
     end
 
 
+    % Update the model settings based on what was saved in the optimization mat file
+    function tractset = update_modelSettingsInformation(tractset,modelsetting)
+        tractset.connectome = modelsetting.connectome;
+        tractset.responsevarlabel = modelsetting.responsevarlabel;
+        tractset.responsevar = modelsetting.responsevar;
+        tractset.multi_pathways = modelsetting.multi_pathways;
+        tractset.patientselection = modelsetting.patientselection;
+        tractset.covarlabels = modelsetting.covarlabels;
+        tractset.covars = modelsetting.covars;
+        tractset.mirrorsides = modelsetting.mirrorsides;
+    end
+
   
-  function sim=ea_compute_sim_val_struct(val_struct)
+    function sim=ea_compute_sim_val_struct(val_struct)
         numfold=length(val_struct);
         numvoter=size(val_struct{1}.vals,1);
         numside=size(val_struct{1}.vals,2);
@@ -729,7 +760,17 @@ tractset.save;
 
     end
 
-
+    % Adding the settings information to the optimization mat file
+    function modelSettings = settingsInformation(tractset)
+        modelSettings.connectome = tractset.connectome;
+        modelSettings.responsevarlabel = tractset.responsevarlabel;
+        modelSettings.multi_pathways = tractset.multi_pathways;
+        modelSettings.responsevar = tractset.responsevar;
+        modelSettings.patientselection = tractset.patientselection;
+        modelSettings.covars = tractset.covars;
+        modelSettings.covarlabels = tractset.covarlabels;
+        modelSettings.mirrorsides = tractset.mirrorsides;
+    end 
 
     function out=resolve_efieldmetric(out)
         if ischar(out)
