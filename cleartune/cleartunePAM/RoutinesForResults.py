@@ -7,6 +7,7 @@
 import numpy as np
 import os
 import json
+import copy
 
 
 def plot_results_with_weights(current_protocol, activation_profile, pathways, Impr_pred, symptom_labels_marked, side, NB_result=False):
@@ -131,11 +132,12 @@ def plot_results_with_weights(current_protocol, activation_profile, pathways, Im
 def get_improvement_from_distance(profile_dict, Soft_SE_dict, side, symp_distances, max_symptom_diff, null_symptom_diff, estim_weights_and_total_score=0,fixed_symptom_weights=[]):
 
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
-    profile_dict.update(Soft_SE_dict)
+    profile_dict_and_SE = copy.deepcopy(profile_dict)
+    profile_dict_and_SE.update(Soft_SE_dict)
 
     # check how many symptoms / soft side-effects we have for that hemisphere
     N_symptoms_side = 0
-    for key in profile_dict:
+    for key in profile_dict_and_SE:
         if side == 0 and "_rh" in key:
             N_symptoms_side += 1
         elif side == 1 and "_lh" in key:
@@ -148,7 +150,7 @@ def get_improvement_from_distance(profile_dict, Soft_SE_dict, side, symp_distanc
     symp_inx = 0
     estim_symp_improv_dict = {}
 
-    for symptom in profile_dict:
+    for symptom in profile_dict_and_SE:
 
         if side == 0 and not ("_rh" in symptom):
             continue

@@ -28,7 +28,7 @@ from keras.layers import LeakyReLU
 
 # some ANN parameters
 learn_rate = 0.0025
-N_epochs = 2000
+N_epochs = 5000
 min_activ_threshold = 0.05   # if less than 5% of fibers in the pathway were activated over all StimSets, ANN will not train on it
 
 def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial, VAT_recruit = False):
@@ -68,14 +68,15 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     X_test = Currents[trainSize:,:] * 0.001
     y_train_prelim = ActivationResults[:trainSize,1:] / axons_in_path  # from 1, because 0 is the index of the protocol
     y_test_prelim = ActivationResults[trainSize:,1:] / axons_in_path
+
     y_train = -100 * np.ones((y_train_prelim.shape), float)  # initialize with -100 to remove non-filled value later
     y_test = -100 * np.ones((y_test_prelim.shape), float)
 
     # optionally check some hardcoded trivial protocols
     if check_trivial == True:
 
-        X_bipolar = Currents_Bipolar1
-        X_monopolar = Currents_Monopolar21
+        X_bipolar = Currents_Bipolar1 * 0.001
+        X_monopolar = Currents_Monopolar21 * 0.001
 
         y_bipolar_prelim = ActivationResults_Bipolar1[:,1:] / axons_in_path
         y_monopolar_prelim = ActivationResults_Monopolar21[:,1:] / axons_in_path
@@ -86,7 +87,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     pathway_filtered = []
 
     for i in range(y_train_prelim.shape[1]):
-        # only compute for pathways with some percent activation and minimal number of fibers
+        # only compute for pathways with some percent activation and minimal number of fibers (10)
         if axons_in_path[i] > 9 and np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
             y_train[:,i] = y_train_prelim[:,i]
             y_test[:,i] = y_test_prelim[:,i]
@@ -120,7 +121,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
     model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))  # following the percent activation curves
     #model.add(Dense(y_train.shape[1], activation='tanh'))
-    model.add(Dense(y_train.shape[1], activation='sigmoid'))  # check for monopolar
+    model.add(Dense(y_train.shape[1], activation='sigmoid'))
 
     adam = optimizers.Adamax(lr=learn_rate)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
@@ -332,6 +333,10 @@ if __name__ == '__main__':
     with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/StimSets_info.json', 'r') as fp:
         StimSets_info = json.load(fp)
     fp.close()
+
+    # #better regenerate them
+    # from Improvement4Protocol import create_NB_dictionaries
+    # profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary)
 
     approx_pathways = train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, StimSets_info['trainSize_actual'],
                    netblend_dict['Err_threshold'], netblend_dict['SE_err_threshold'], side, check_trivial=False)

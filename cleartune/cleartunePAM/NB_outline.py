@@ -133,12 +133,12 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
         from pyswarms.single.global_best import GlobalBestPSO
         bounds = (netblend_dict['min_bound_per_contact'], netblend_dict['max_bound_per_contact'])
         options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
-        optimizer = GlobalBestPSO(n_particles=50, dimensions=len(netblend_dict['min_bound_per_contact']), options=options, bounds=bounds)
+        optimizer = GlobalBestPSO(n_particles=20, dimensions=len(netblend_dict['min_bound_per_contact']), options=options, bounds=bounds)
 
         from Optim_strategies import prepare_swarm
         cost, optimized_current = optimizer.optimize(prepare_swarm, iters=netblend_dict['num_iterations_ANN'], args_to_pass=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways])
 
-    # ============================================ Ploting ============================================================#
+    # ============================================ Plotting ===========================================================#
 
     optim_stim = np.reshape(np.array(optimized_current), (-1, len(optimized_current)))
     activation_profile = approx_model.predict(optim_stim, verbose=0)
