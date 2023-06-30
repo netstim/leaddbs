@@ -1028,7 +1028,7 @@ switch elmodel
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
         elspec.tip_length=1;
-        elspec.contact_spacing=7.71;
+        elspec.contact_spacing=5.71;
         elspec.numel=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
