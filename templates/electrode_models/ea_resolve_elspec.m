@@ -19,7 +19,7 @@ if ~nargin
         'PMT 2102-16-092', 'PMT 2102-16-093', 'PMT 2102-16-131', 'PMT 2102-16-142', ...
         '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', 'NeuroPace DL-344-10', ...
         'DIXI D08-05AM', 'DIXI D08-08AM', 'DIXI D08-10AM', 'DIXI D08-12AM', 'DIXI D08-15AM', 'DIXI D08-18AM', ...
-        'AdTech BF08R-SP05X', 'AdTech BF08R-SP21X', 'AdTech BF08R-SP61X', ...
+        'AdTech BF08R-SP05X', 'AdTech BF08R-SP21X', 'AdTech BF08R-SP61X', 'AdTech BF09R-SP61X-0BB', ...
         'AdTech RD08R-SP05X', 'AdTech RD10R-SP03X', 'AdTech RD10R-SP05X', 'AdTech RD10R-SP06X', 'AdTech RD10R-SP07X', 'AdTech RD10R-SP08X', ...
         'AdTech SD06R-SP26X', 'AdTech SD08R-SP05X', 'AdTech SD10R-SP05X', 'AdTech SD10R-SP05X Choi', 'AdTech SD14R-SP05X', ...
         'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead'}';
@@ -35,7 +35,7 @@ if ~nargin
         'pmt_2102_16_092', 'pmt_2102_16_093', 'pmt_2102_16_131', 'pmt_2102_16_142', ...
         'epc_05c', 'epc_15c', 'neuropace_dl_344_35', ...
         'dixi_d08_05am', 'dixi_d08_08am', 'dixi_d08_10am', 'dixi_d08_12am', 'dixi_d08_15am', 'dixi_d08_18am', ...
-        'adtech_bf08r_sp05x', 'adtech_bf08r_sp21x', 'adtech_bf08r_sp61x', ...
+        'adtech_bf08r_sp05x', 'adtech_bf08r_sp21x', 'adtech_bf08r_sp61x', 'adtech_bf09r_sp61x_0bb', ...
         'adtech_rd08r_sp05x', 'adtech_rd10r_sp03x', 'adtech_rd10r_sp05x', 'adtech_rd10r_sp06x', 'adtech_rd10r_sp07x', 'adtech_rd10r_sp08x', ...
         'adtech_sd08r_sp26x', 'adtech_sd08r_sp05x',  'adtech_sd10r_sp05x', 'adtech_sd10r_sp05x_choi', 'adtech_sd14r_sp05x', ...
         'elaine_rat_electrode', 'fhc_wu_rat_electrode', 'numed_minilead'}';
@@ -934,12 +934,12 @@ switch elmodel
         elspec.forstimulation=1;
     case 'AdTech BF08R-SP21X'
         elspec.matfname='adtech_bf08r_sp21x';
-        elspec.lead_diameter=1.3;
+        elspec.lead_diameter=1.28;
         elspec.lead_color=0.7;
         elspec.contact_length=1.57;
-        elspec.contact_diameter=1.3;
+        elspec.contact_diameter=1.28;
         elspec.contact_color=0.3;
-        elspec.tip_diameter=1.3;
+        elspec.tip_diameter=1.28;
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=[1.43, 3.93, 3.93, 3.93, 3.93, 3.93, 3.93];
@@ -954,12 +954,12 @@ switch elmodel
         elspec.forstimulation=1;
     case 'AdTech BF08R-SP61X'
         elspec.matfname='adtech_bf08r_sp61x';
-        elspec.lead_diameter=1.3;
+        elspec.lead_diameter=1.28;
         elspec.lead_color=0.7;
         elspec.contact_length=1.57;
-        elspec.contact_diameter=1.3;
+        elspec.contact_diameter=1.28;
         elspec.contact_color=0.3;
-        elspec.tip_diameter=1.3;
+        elspec.tip_diameter=1.28;
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=[1.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43];
@@ -967,6 +967,26 @@ switch elmodel
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'AdTech BF09R-SP61X-0BB'
+        elspec.matfname='adtech_bf09r_sp61x_0bb';
+        elspec.lead_diameter=1.28;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.57;
+        elspec.contact_diameter=1.28;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.28;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1;
+        elspec.contact_spacing=[1.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43];
+        elspec.numel=9;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)',...
+            'K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
