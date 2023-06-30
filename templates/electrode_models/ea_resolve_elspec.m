@@ -981,7 +981,7 @@ switch elmodel
         elspec.contact_color=0.3;
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
-        elspec.tip_length=1;
+        elspec.tip_length=2;
         elspec.contact_spacing=2.71;
         elspec.numel=8;
         elspec.tipiscontact=0;
@@ -1021,7 +1021,7 @@ switch elmodel
         elspec.contact_color=0.3;
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
-        elspec.tip_length=1;
+        elspec.tip_length=2;
         elspec.contact_spacing=2.71;
         elspec.numel=10;
         elspec.tipiscontact=0;
@@ -1041,7 +1041,7 @@ switch elmodel
         elspec.contact_color=0.3;
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
-        elspec.tip_length=1;
+        elspec.tip_length=2;
         elspec.contact_spacing=3.71;
         elspec.numel=10;
         elspec.tipiscontact=0;
@@ -1061,7 +1061,7 @@ switch elmodel
         elspec.contact_color=0.3;
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
-        elspec.tip_length=1;
+        elspec.tip_length=2;
         elspec.contact_spacing=4.71;
         elspec.numel=10;
         elspec.tipiscontact=0;
@@ -1081,7 +1081,7 @@ switch elmodel
         elspec.contact_color=0.3;
         elspec.tip_diameter=0.86;
         elspec.tip_color=0.7;
-        elspec.tip_length=1;
+        elspec.tip_length=2;
         elspec.contact_spacing=5.71;
         elspec.numel=10;
         elspec.tipiscontact=0;
