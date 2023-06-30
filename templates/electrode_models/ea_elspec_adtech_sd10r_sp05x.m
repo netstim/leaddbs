@@ -1,9 +1,7 @@
-function electrode=ea_elspec_adtech_sd10r_sp05x_choi(varargin)
+function electrode=ea_elspec_adtech_sd10r_sp05x(varargin)
 % Generate electrode model of AdTech SD10R-SP05X
-% Electrodes specs were provided by Ki Sueng Choi, which is different from
-% the standard AdTech SD10R-SP05X.
 
-options.elmodel='AdTech SD10R-SP05X Choi';
+options.elmodel='AdTech SD10R-SP05X';
 
 if nargin
     vizz=0;
@@ -19,7 +17,7 @@ options=ea_resolve_elspec(options);
 elspec=options.elspec;
 
 % rescale for tetgen model generation
-rescaleratio = 10;
+rescaleratio = 50;
 elspec.lead_diameter = elspec.lead_diameter*rescaleratio;
 elspec.contact_length = elspec.contact_length*rescaleratio;
 elspec.contact_diameter = elspec.contact_diameter*rescaleratio;
