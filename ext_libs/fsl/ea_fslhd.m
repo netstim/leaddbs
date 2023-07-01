@@ -47,17 +47,21 @@ cmdout = cellfun(@(x) strsplit(x, ' = '), strsplit(cmdout, ea_newline), 'Uni', 0
 % Construct header
 header = struct;
 for i=1:length(cmdout)
-    if isempty(cmdout{i}{2})
-        eval(['header.', cmdout{i}{1}, ' = '''';']);
-    elseif ~isempty(regexp(cmdout{i}{2}, '[0-9]', 'once')) && ...
-            isempty(regexp(cmdout{i}{2}, '[^0-9.+-e ]', 'once'))
-        try
-            eval(['header.', cmdout{i}{1}, ' = [', cmdout{i}{2}, '];']);
-        catch
+    if length(cmdout{i})==1
+        continue % shell init issue, skip this line
+    else
+        if isempty(cmdout{i}{2})
+            eval(['header.', cmdout{i}{1}, ' = '''';']);
+        elseif ~isempty(regexp(cmdout{i}{2}, '[0-9]', 'once')) && ...
+                isempty(regexp(cmdout{i}{2}, '[^0-9.+-e ]', 'once'))
+            try
+                eval(['header.', cmdout{i}{1}, ' = [', cmdout{i}{2}, '];']);
+            catch
+                eval(['header.', cmdout{i}{1}, ' = ''', cmdout{i}{2}, ''';']);
+            end
+        else
             eval(['header.', cmdout{i}{1}, ' = ''', cmdout{i}{2}, ''';']);
         end
-    else
-        eval(['header.', cmdout{i}{1}, ' = ''', cmdout{i}{2}, ''';']);
     end
 end
 
