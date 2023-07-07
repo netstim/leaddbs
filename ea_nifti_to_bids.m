@@ -46,38 +46,47 @@ for i=1:length(niiFiles)
 end
 
 jsonFiles = regexprep(niiFiles, '\.nii(\.gz)?$', '.json');
-N_fnames = length(niiFiles);
 
-imgs = cell(N_fnames,1);
-imgs_resolution = cell(N_fnames,1);
 h_wait = waitbar(0, 'Please wait while NIfTI images are being loaded');
 read_nii = nii_viewer('func_handle', 'read_nii');
-for image_idx = 1:N_fnames
-    imgs{image_idx} = struct();
-    [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(niiFiles{image_idx}, [], 0);
-    imgs{image_idx}.percentile = prctile(imgs{image_idx}.p.nii.img(:), 95, 'all');
-    imgs{image_idx}.img_thresholded = imgs{image_idx}.p.nii.img(:);
-    imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded > imgs{image_idx}.percentile) = nan;
-    imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded < median(imgs{image_idx}.p.nii.img(:))) = nan;
-    imgs{image_idx}.img_thresholded = imgs{image_idx}.img_thresholded(~isnan(imgs{image_idx}.img_thresholded));
-    imgs_resolution{image_idx} = [imgs{image_idx}.p.pixdim(1), imgs{image_idx}.p.pixdim(2), imgs{image_idx}.p.pixdim(3)];
+% cant initialize imgs and img_resolutions since some files might be corrupt /
+% not readable so we dont know the definitive length. This is fine and does
+% not lead to speed issues. / AH 2023
+cnt=1;
+for image_idx = 1:length(niiFiles)
+    imgs{cnt,1} = struct();
+    try
+        [imgs{cnt,1}.p, imgs{cnt,1}.frm, imgs{cnt,1}.rg, imgs{cnt,1}.dim] = read_nii(niiFiles{cnt}, [], 0);
+    catch
+        niiFiles(cnt)=[];
+        continue; % some images (e.g. 1-dimensional) will not be readable, skip them.
+    end
+    imgs{cnt,1}.percentile = prctile(imgs{cnt,1}.p.nii.img(:), 95, 'all');
+    imgs{cnt,1}.img_thresholded = imgs{cnt,1}.p.nii.img(:);
+    imgs{cnt,1}.img_thresholded(imgs{cnt,1}.img_thresholded > imgs{cnt,1}.percentile) = nan;
+    imgs{cnt,1}.img_thresholded(imgs{cnt,1}.img_thresholded < median(imgs{cnt,1}.p.nii.img(:))) = nan;
+    imgs{cnt,1}.img_thresholded = imgs{cnt,1}.img_thresholded(~isnan(imgs{cnt,1}.img_thresholded));
+    imgs_resolution{cnt,1} = [imgs{cnt,1}.p.pixdim(1), imgs{cnt,1}.p.pixdim(2), imgs{cnt,1}.p.pixdim(3)];
 
     % get .json and read it if possible
     if isfile(jsonFiles{image_idx})
         try
-            imgs{image_idx}.json_sidecar = loadjson(jsonFiles{image_idx});
-            imgs{image_idx}.json_found = 1;
+            imgs{cnt,1}.json_sidecar = loadjson(jsonFiles{image_idx});
+            imgs{cnt,1}.json_found = 1;
         catch
             warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', jsonFiles{image_idx})
-            imgs{image_idx}.json_found = 0;
+            imgs{cnt,1}.json_found = 0;
         end
     else
-        imgs{image_idx}.json_found = 0;
+        imgs{cnt,1}.json_found = 0;
     end
-
-    waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(niiFiles)));
+    cnt=cnt+1;
+    waitbar(image_idx / length(niiFiles), h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(niiFiles)));
 end
 close(h_wait);
+% refresh json files only from the readable niftis
+
+N_fnames = length(niiFiles);
 
 anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
 func_dwi_modalities = {'bold', 'sbref', 'dwi'};
