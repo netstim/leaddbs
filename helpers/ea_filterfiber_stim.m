@@ -187,6 +187,7 @@ r = 0;
 if U
     k = 0.22;
     Uo = 0.1;
+    U(U<0.1) = 0.1;  % fix for algorithm-based protocols
     r = sqrt((U-Uo)/k);
 end
 
