@@ -2267,13 +2267,10 @@ catch
     model=models{1};
 end
 
-switch options.elspec.numel
-    case 4
-        ea_viz_eight(handles,'off');
-    case 8
-        ea_viz_eight(handles,'on');
-    otherwise
-        warning('Only electrode models with 4 or 8 contacts are fully supported.');
+if options.elspec.numel > 8
+    warning('Only electrode with less than 8 contacts are fully supported.');
+else
+    ea_toggle_contacts(handles, options.elspec.numel);
 end
 
 %if strcmp(options.elspec.matfname,'boston_vercise_directed')
@@ -2436,19 +2433,27 @@ if options.elspec.numel>4
 end
 
 
-function ea_viz_eight(handles,cmd)
+function ea_toggle_contacts(handles, numel)
 
-for k=[4:7,12:15]
-    set(handles.(['k',num2str(k),'u']),'visible',cmd);
-    set(handles.(['k',num2str(k),'im']),'visible',cmd);
-    set(handles.(['k',num2str(k),'txt']),'visible',cmd);
-    handles2hide = [get(handles.(['k',num2str(k),'ax']),'Children')];
-    set(handles2hide,'visible',cmd)
+if numel == 8
+    status = 'on';
+else
+    status = 'off';
 end
-set(handles.perctext2,'visible',cmd);
-set(handles.kohmtext2,'visible',cmd);
-set(handles.perctext4,'visible',cmd);
-set(handles.kohmtext4,'visible',cmd);
+
+
+for k=[numel:7,numel+8:15]
+    set(handles.(['k',num2str(k),'u']),'visible',status);
+    set(handles.(['k',num2str(k),'im']),'visible',status);
+    set(handles.(['k',num2str(k),'txt']),'visible',status);
+    handles2hide = [get(handles.(['k',num2str(k),'ax']),'Children')];
+    set(handles2hide,'visible',status)
+end
+
+set(handles.perctext2,'visible',status);
+set(handles.kohmtext2,'visible',status);
+set(handles.perctext4,'visible',status);
+set(handles.kohmtext4,'visible',status);
 
 
 function ea_disable_vas(handles,options)
