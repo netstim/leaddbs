@@ -971,7 +971,7 @@ function generate_rawImagejson(patient_name,dest)
     if exist('anat_files_selected','var')
         savejson('',anat_files_selected,opt);
     else
-        warning('No rawimages or coregistration files found, therefore no rawimages.json set!');
+        ea_cprintf('CmdWinWarnings', 'No rawimages or coregistration files found, therefore no rawimages.json set!\n');
     end
     
     
