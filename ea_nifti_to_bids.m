@@ -64,14 +64,14 @@ for image_idx = 1:length(niiFiles)
                 imgs{cnt,1}.json_sidecar = loadjson(jsonFiles{cnt});
                 imgs{cnt,1}.json_found = 1;
             catch
-                warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', jsonFiles{cnt})
+                ea_cprintf('CmdWinWarnings', 'There was a problem while loading the .json file , please ensure correct .json format:\n%s\n', jsonFiles{cnt})
                 imgs{cnt,1}.json_found = 0;
             end
         else
             imgs{cnt,1}.json_found = 0;
         end
     catch
-        warning('There was a problem while loading the .nii file at %s, please ensure this is a correct .nii image.', niiFiles{cnt})
+        ea_cprintf('CmdWinWarnings', 'There was a problem while loading the .nii file, please ensure this is a correct .nii image:\n%s\n', niiFiles{cnt})
 
         % delete files that have failed to load from the list
         niiFiles(cnt) = [];       
@@ -100,7 +100,7 @@ close(h_wait);
 N_fnames = length(niiFiles);
 
 if N_fnames == 0
-    warning('No compatible nifti images could be found. Please check if the images are 3-D image files.');
+    ea_cprintf('CmdWinWarnings', 'No compatible nifti images could be found. Please check if the images are 3-D image files.\n');
     sortedFiles = [];
     returnCode = 'cancel';
     return;
@@ -685,7 +685,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         if isfile(source)
             copyfile(source, [destin_no_ext, extensions{j}])
         else
-            ea_cprintf('CmdWinWarnings', 'File %s not found!\n', source);
+            ea_cprintf('CmdWinWarnings', 'File not found:\n%s\n', source);
         end
     end
 

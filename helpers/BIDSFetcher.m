@@ -202,7 +202,7 @@ classdef BIDSFetcher
                 preferMRCT = 3;
                 bothMRCTPresent = 0;
                 return;
-            elseif isfield(rawImages, 'postop') && preferMRCT == 3 % update uiprefs modality if postop image is found but preferMRCT is still set to 3 in uiprefs, in this case update uiprefs to defaults
+            elseif preferMRCT == 3 % update uiprefs modality if postop image is found but preferMRCT is still set to 3 in uiprefs, in this case update uiprefs to defaults
                 preferMRCT = obj.settings.preferMRCT;
             end
 
