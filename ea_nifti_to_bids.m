@@ -72,8 +72,16 @@ for image_idx = 1:length(niiFiles)
         end
     catch
         warning('There was a problem while loading the .nii file at %s, please ensure this is a correct .nii image.', niiFiles{cnt})
-        niiFiles(cnt)=[];
-        jsonFiles(cnt)=[];
+
+        % delete files that have failed to load from the list
+        niiFiles(cnt) = [];       
+        jsonFiles(cnt) = [];
+
+        % also delete them from the preset
+        if exist('preset', 'var')
+            preset(cnt) = [];
+        end
+
         continue; % some images (e.g. 1-dimensional) will not be readable, skip them.
     end
     imgs{cnt,1}.percentile = prctile(imgs{cnt,1}.p.nii.img(:), 95, 'all');
