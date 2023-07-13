@@ -88,6 +88,13 @@ close(h_wait);
 
 N_fnames = length(niiFiles);
 
+if N_fnames == 0
+    warning('No compatible nifti images could be found. Please check if the images are 3-D image files.');
+    sortedFiles = [];
+    returnCode = 'cancel';
+    return;
+end
+
 anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
 func_dwi_modalities = {'bold', 'sbref', 'dwi'};
 postop_modalities = {'CT', 'MRI'};          % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
