@@ -57,8 +57,23 @@ for image_idx = 1:length(niiFiles)
     imgs{cnt,1} = struct();
     try
         [imgs{cnt,1}.p, imgs{cnt,1}.frm, imgs{cnt,1}.rg, imgs{cnt,1}.dim] = read_nii(niiFiles{cnt}, [], 0);
+
+        % get .json and read it if possible
+        if isfile(jsonFiles{cnt})
+            try
+                imgs{cnt,1}.json_sidecar = loadjson(jsonFiles{cnt});
+                imgs{cnt,1}.json_found = 1;
+            catch
+                warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', jsonFiles{cnt})
+                imgs{cnt,1}.json_found = 0;
+            end
+        else
+            imgs{cnt,1}.json_found = 0;
+        end
     catch
+        warning('There was a problem while loading the .nii file at %s, please ensure this is a correct .nii image.', niiFiles{cnt})
         niiFiles(cnt)=[];
+        jsonFiles(cnt)=[];
         continue; % some images (e.g. 1-dimensional) will not be readable, skip them.
     end
     imgs{cnt,1}.percentile = prctile(imgs{cnt,1}.p.nii.img(:), 95, 'all');
@@ -68,18 +83,6 @@ for image_idx = 1:length(niiFiles)
     imgs{cnt,1}.img_thresholded = imgs{cnt,1}.img_thresholded(~isnan(imgs{cnt,1}.img_thresholded));
     imgs_resolution{cnt,1} = [imgs{cnt,1}.p.pixdim(1), imgs{cnt,1}.p.pixdim(2), imgs{cnt,1}.p.pixdim(3)];
 
-    % get .json and read it if possible
-    if isfile(jsonFiles{image_idx})
-        try
-            imgs{cnt,1}.json_sidecar = loadjson(jsonFiles{image_idx});
-            imgs{cnt,1}.json_found = 1;
-        catch
-            warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', jsonFiles{image_idx})
-            imgs{cnt,1}.json_found = 0;
-        end
-    else
-        imgs{cnt,1}.json_found = 0;
-    end
     cnt=cnt+1;
     waitbar(image_idx / length(niiFiles), h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(niiFiles)));
 end
