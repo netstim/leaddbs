@@ -1,12 +1,6 @@
 function vatlist = ea_networkmapping_getvats(obj)
 % Return list of VATs
 
-if obj.M.ui.detached
-    pthprefix = [fileparts(obj.leadgroup),filesep];
-else
-    pthprefix = '';
-end
-
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,1);
 
@@ -23,7 +17,7 @@ disp('Construct VAT list...')
 for sub=1:numPatient
     [~, subPrefix] = fileparts([obj.allpatients{sub}, '_']);
     % Original VAT E-field
-    stimFolder = [pthprefix, obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
+    stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
     stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
     load(stimParams{1}, 'S');
     modelLabel = ea_simModel2Label(S.model);
@@ -44,11 +38,6 @@ end
 function rungenlocalmapper(obj,sub)
 
 ptdir=obj.allpatients{sub};
-if ~isfield(obj.M,'pseudoM') % could be M is not properly defined when using scripting (in this case there will be a pseudoM flag). See this as an optional correction step.
-    if obj.M.ui.detached
-        ptdir=fullfile(fileparts(obj.leadgroup),ptdir);
-    end
-end
 guid=['gs_',obj.M.guid];
 
 options = getoptslocal;

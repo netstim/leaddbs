@@ -3511,11 +3511,7 @@ if hObject.Value
         actpt = getappdata(handles.stimfig, 'actpt');
         resultfig = getappdata(handles.stimfig, 'resultfig');
         M = getappdata(resultfig, 'M');
-        if M.ui.detached
-            patdir = fullfile(M.root, M.patient.list{actpt});
-        else
-            patdir = M.patient.list{actpt};
-        end
+        patdir = M.patient.list{actpt};
         numContacts = size(M.elstruct(actpt).coords_mm{1}, 1);
     end
 

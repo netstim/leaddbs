@@ -25,7 +25,6 @@ M.ui.fibercounts=1;
 M.ui.elrendering=1;
 M.ui.statvat=0;
 M.ui.elmodelselect=1;
-M.ui.detached=0;
 M.ui.normregpopup=1;
 M.ui.colorpointcloudcheck=0;
 M.ui.mirrorsides=0;

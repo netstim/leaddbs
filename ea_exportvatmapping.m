@@ -55,11 +55,7 @@ for pt=1:length(M.patient.list)
     is_left_present=false;
     is_right_present=false;
 
-    if M.ui.detached % process locally in lead group directory
-        patStimDir = [options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
-    else
-        patStimDir = [M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
-    end
+    patStimDir = [M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
 
     fname_l = ea_regexpdir(patStimDir, ['_sim-binary_model-',modelLabel,'_hemi-L\.nii$']);
     fname_r = ea_regexpdir(patStimDir, ['_sim-binary_model-',modelLabel,'_hemi-R\.nii$']);

@@ -972,13 +972,8 @@ end
 
 for pt=selection
     % set pt specific options
-    if M.ui.detached
-        options.patientname = M.patient.list{pt};
-        options.root = M.root;
-    else
-        [options.root, options.patientname] = fileparts(M.patient.list{pt});
-        options.root = [options.root, filesep];
-    end
+    [options.root, options.patientname] = fileparts(M.patient.list{pt});
+    options.root = [options.root, filesep];
 
     options = ea_getptopts(fullfile(options.root, options.patientname), options);
 

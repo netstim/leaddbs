@@ -1,12 +1,6 @@
 function pamlist = ea_discfibers_getpams(obj)
 % Return list of VATs
 
-if obj.M.ui.detached
-    pthprefix = [fileparts(obj.leadgroup),filesep];
-else
-    pthprefix = '';
-end
-
 % For multiple protocols, we should look for indexed files in the stim
 % folder, but mark that they are from the same patient
 numPatient = length(obj.allpatients);
@@ -23,9 +17,9 @@ for sub=1:numPatient % Original VAT E-field
     [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
     subSimPrefix = [subj_tag, '_sim-'];
     
-    pamlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+    pamlist{sub,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
-    pamlist{sub,2} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+    pamlist{sub,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
 end
 

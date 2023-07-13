@@ -175,14 +175,6 @@ end
 
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 
-% hide detachbutton if already detached:
-try
-    if M.ui.detached
-        set(handles.detachbutton,'Visible','off');
-    else
-        set(handles.detachbutton,'Visible','on');
-    end
-end
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
@@ -217,13 +209,8 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
             options.sides=1:2;
             options.native=0;
             try
-                if M.ui.detached
-                    options.patientname = M.patient.list{pt};
-                    options.root = M.root;
-                else
-                    [options.root, options.patientname] = fileparts(M.patient.list{pt});
-                    options.root = [options.root, filesep];
-                end
+                [options.root, options.patientname] = fileparts(M.patient.list{pt});
+                options.root = [options.root, filesep];
                 
                 options.subj.recon.recon = fullfile(options.root, options.patientname, 'reconstruction', [options.patientname, '_desc-reconstruction.mat']);
                 options = ea_resolve_elspec(options);
@@ -272,10 +259,8 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
             catch
                 if pt>1 % first patient has worked but some other patient seems not to have worked.
                     try
-                        if ~M.ui.detached
-                            M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
-                            warning(['No reconstruction present for ',patientname,'. Please check.']);
-                        end
+                        M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
+                        warning(['No reconstruction present for ',patientname,'. Please check.']);
                     end
                 end
             end
