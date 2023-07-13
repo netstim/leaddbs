@@ -152,10 +152,9 @@ end
 if ~isempty(varargin) && isfile(GetFullPath(varargin{1})) % Path to group analysis file provided as input
     groupFilePath = GetFullPath(varargin{1});
     load(groupFilePath, 'M');
-    M.ui.groupdir = [fileparts(groupFilePath), filesep];
-    M.root = M.ui.groupdir;
-    set(handles.groupdir_choosebox,'String',M.ui.groupdir);
-    set(handles.groupdir_choosebox,'TooltipString', M.ui.groupdir);
+    M.root = [fileparts(groupFilePath), filesep];
+    set(handles.groupdir_choosebox,'String',M.root);
+    set(handles.groupdir_choosebox,'TooltipString', M.root);
     setappdata(handles.leadfigure, 'M', M);
     try
         setappdata(handles.leadfigure, 'S', M.S);
@@ -504,7 +503,7 @@ ea_busyaction('on',handles.leadfigure,'group');
 % set options
 options=ea_setopts_local(handles);
 options.leadprod = 'group';
-options.groupdir = M.ui.groupdir;
+options.groupdir = M.root;
 
 % set pt specific options
 [options.root, options.patientname] = fileparts(handles.groupdir_choosebox.String);
@@ -950,7 +949,7 @@ options=ea_setopts_local(handles);
 
 options.groupmode = 1;
 options.groupid = M.guid;
-options.groupdir = M.ui.groupdir;
+options.groupdir = M.root;
 
 if isfield(M.ui, 'stimSetMode') && M.ui.stimSetMode
     options.stimSetMode = 1;
@@ -975,7 +974,7 @@ for pt=selection
     % set pt specific options
     if M.ui.detached
         options.patientname = M.patient.list{pt};
-        options.root = M.ui.groupdir;
+        options.root = M.root;
     else
         [options.root, options.patientname] = fileparts(M.patient.list{pt});
         options.root = [options.root, filesep];
@@ -1023,7 +1022,7 @@ for pt=selection
         options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
         options.expstatvat.pt=pt;
     end
-    options.expstatvat.dir=M.ui.groupdir;
+    options.expstatvat.dir=M.root;
 
     % Step 1: Re-calculate closeness to subcortical atlases.
     options.leadprod = 'group';
@@ -1462,67 +1461,6 @@ M=getappdata(gcf,'M');
 
 M.ui.mer=get(handles.mercheck,'Value');
 setappdata(gcf,'M',M);
-
-
-% --- Executes on button press in detachbutton.
-function detachbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to detachbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-choice = questdlg({'Would you really like to detach the group data from the single-patient data?','','This means that changes to single-patient reconstructions will not be updated into the group analysis anymore. This should only be done once all patients have been finally localized and an analysis needs to be fixed (e.g. after publication or when working in collaborations).','','Please be aware that this step cannot be undone!'}, ...
-    'Detach Group data from single patient data...', ...
-    'No, abort.','Yes, copy localizations.','Yes, copy localizations and VTAs.','No, abort.');
-% Handle response
-switch choice
-    case 'No, abort.'
-        return
-    case 'Yes, copy localizations.'
-        M=getappdata(gcf,'M');
-
-        ea_dispercent(0,'Detaching group file');
-        for pt=1:length(M.patient.list)
-            [~, ptname] = fileparts(M.patient.list{pt});
-            odir=[M.ui.groupdir,ptname,filesep];
-            ea_mkdir(odir);
-            copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
-
-            M.patient.list{pt}=ptname;
-
-            ea_dispercent(pt/length(M.patient.list));
-        end
-        ea_dispercent(1,'end');
-
-        M.ui.detached=1;
-        setappdata(gcf,'M',M);
-        ea_refresh_lg(handles);
-    case 'Yes, copy localizations and VTAs.'
-        M=getappdata(gcf,'M');
-
-        ea_dispercent(0,'Detaching group file');
-        for pt=1:length(M.patient.list)
-            [~, ptname] = fileparts(M.patient.list{pt});
-            odir=[M.ui.groupdir,ptname,filesep];
-            ea_mkdir([odir,'stimulations']);
-            copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
-            if exist([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(0),'gs_',M.guid], 'dir')
-                ea_mkdir([odir,'stimulations',filesep,ea_nt(0)])
-                copyfile([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(0),'gs_',M.guid],[odir,'stimulations',filesep,ea_nt(0),'gs_',M.guid]);
-            end
-            if exist([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(1),'gs_',M.guid], 'dir')
-                ea_mkdir([odir,'stimulations',filesep,ea_nt(1)])
-                copyfile([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(1),'gs_',M.guid],[odir,'stimulations',filesep,ea_nt(1),'gs_',M.guid]);
-            end
-
-            M.patient.list{pt}=ptname;
-
-            ea_dispercent(pt/length(M.patient.list));
-        end
-        ea_dispercent(1,'end');
-
-        M.ui.detached=1;
-        setappdata(gcf,'M',M);
-        ea_refresh_lg(handles);
-end
 
 
 % --- Executes on selection change in normregpopup.

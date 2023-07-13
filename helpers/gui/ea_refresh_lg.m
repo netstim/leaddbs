@@ -13,7 +13,7 @@ if strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % not se
     return
 end
 
-M.root=[handles.groupdir_choosebox.String, filesep];
+M.root = fullfile(handles.groupdir_choosebox.String,filesep);
 
 if ~isfield(M,'guid') % only done once, legacy support.
     M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
@@ -42,8 +42,6 @@ catch
     M.isomatrix={};
     M.isomatrix_name={};
 end
-
-M.ui.groupdir = fullfile(handles.groupdir_choosebox.String,filesep);
 
 disp('Refreshing selections on VI / FC Lists...');
 
@@ -221,7 +219,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
             try
                 if M.ui.detached
                     options.patientname = M.patient.list{pt};
-                    options.root = M.ui.groupdir;
+                    options.root = M.root;
                 else
                     [options.root, options.patientname] = fileparts(M.patient.list{pt});
                     options.root = [options.root, filesep];

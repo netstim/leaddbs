@@ -159,7 +159,7 @@ if strcmp(target, 'groupDir')
     ea_busyaction('on',handles.leadfigure,'group');
 
     M = ea_initializeM_connectome;
-    M.ui.groupdir = groupdir;
+    M.root = groupdir;
 
     try % if file already exists, load it (and overwrite M).
         load([groupdir,'GroupConnectomeAnalysis.mat']);
@@ -602,7 +602,7 @@ catch % if not, store it saving M.
     save([groupdir,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
 end
 
-M.ui.groupdir=groupdir;
+M.root = groupdir;
 setappdata(handles.leadfigure,'M',M);
 
 ea_busyaction('off',handles.leadfigure,'group');
@@ -750,7 +750,7 @@ end
 
 end
 
-spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];
+spmdir = [M.root,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];
 if exist(spmdir, 'dir')
     rmdir(spmdir,'s');
 end
@@ -920,8 +920,8 @@ for sub=1:length(M.patient.list)
     ftrFiles{sub} = [M.patient.list{sub},filesep,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
 end
 
-if ~exist([M.ui.groupdir,'connectomes',filesep,'dMRI'], 'dir')
-    mkdir([M.ui.groupdir,'connectomes',filesep,'dMRI'])
+if ~exist([M.root,'connectomes',filesep,'dMRI'], 'dir')
+    mkdir([M.root,'connectomes',filesep,'dMRI'])
 end
 
 entries=get(handles.gcfilter,'String');
@@ -938,7 +938,7 @@ switch entry
 end
 
 ea_ftr_aggregate(ftrFiles, ...
-    [M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized], ...
+    [M.root,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized], ...
     howmanyfibs, 'number', filtermask);
 
 

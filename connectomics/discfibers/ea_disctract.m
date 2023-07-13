@@ -137,7 +137,6 @@ classdef ea_disctract < handle
                 if isfield(obj.M,'pseudoM')
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
-                    obj.M = ea_map_pseudoM(obj.M);
                     obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list = cell(size(obj.M.ROI.list,1), 1);
                     for i = 1:size(obj.M.ROI.list,1)

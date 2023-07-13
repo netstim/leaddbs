@@ -18,4 +18,4 @@ if ~M.ui.detached % Avoid to do it for group analysis in detached mode
 end
 
 % Save modified group analysis file
-save(ea_getGroupAnalysisFile(M.ui.groupdir), 'M');
+save(ea_getGroupAnalysisFile(M.root), 'M');

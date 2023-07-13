@@ -24,7 +24,7 @@ end
 ea_mkdir(groupdir);
 
 M = ea_initializeM(guid);
-M.ui.groupdir = groupdir;
+M.root = groupdir;
 
 % Get dataset name
 dataset = regexp(groupdir, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');

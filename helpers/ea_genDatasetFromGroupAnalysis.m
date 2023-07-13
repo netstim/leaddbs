@@ -31,8 +31,7 @@ ea_mkdir(groupdir);
 ea_mkdir(leaddbsFolder);
 
 load(analysisFile, 'M');
-M.ui.groupdir = groupdir;
-M.root = M.ui.groupdir;
+M.root = groupdir;
 
 miniset.name = dataset;
 miniset.numSubj = length(M.patient.list);

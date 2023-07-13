@@ -38,4 +38,4 @@ if isfield(M, 'stats')
 end
 
 % Save modified group analysis file
-save(ea_getGroupAnalysisFile(M.ui.groupdir), 'M');
+save(ea_getGroupAnalysisFile(M.root), 'M');

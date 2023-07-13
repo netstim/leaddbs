@@ -13,10 +13,7 @@ try
     load(source, 'M');
     groupFolder = fullfile(dest, 'derivatives', 'leadgroup', M.guid);
     ea_mkdir(groupFolder);
-    M.root = fullfile(dest, filesep); 
-    if isfield(M.ui,'groupdir')
-        M.ui.groupdir = fullfile(dest, filesep); 
-    end
+    M.root = fullfile(dest, filesep);
     
     bids_name = ['dataset-' op_filename  '_analysis-' M.guid '.mat'];
 

@@ -16,7 +16,7 @@ end
 
 % Check output folder
 if ~exist('outputfolder', 'var') || isempty(outputfolder)
-    outputfolder = M.ui.groupdir;
+    outputfolder = M.root;
 else
     if ~isfolder(outputfolder)
         mkdir(outputfolder);
