@@ -332,7 +332,7 @@ for patients = 1:length(source)
                         movefile(fullfile(new_path,'ea_stats.mat'),fullfile(new_path,bids_name));
                         
                     elseif strcmp(which_file,'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
-                        bids_name = [patient_name,'_','desc-','ea_methods.txt'];
+                        bids_name = [patient_name, '_desc-methods.txt'];
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{7},bids_name);
                         which_pipeline = pipelines{7};
@@ -378,7 +378,7 @@ for patients = 1:length(source)
                             copyfile(fullfile(source_path,which_file),op_dir);
                         end
                         
-                  elseif ~ismember(which_file,coregistration{:,1}) && ~isempty(regexp(which_file,'^anat_.*\.nii$')) %support for other modalities in coreg
+                  elseif ~ismember(which_file,coregistration{:,1}) && contains(which_file, "anat_" + alphanumericsPattern)
                       
                       if endsWith(which_file,'.nii')
                           ext = '.nii';
@@ -427,7 +427,6 @@ for patients = 1:length(source)
                               indx = find(~cellfun(@isempty,indx_arr));
                               if length(indx) == 1
                                 bids_name = [patient_name,'_',coregistration{1,2}{indx}];
-                                bids_name = CheckifAlreadyExists(op_dir,bids_name);
                                 copyfile(fullfile(source_path,which_file),op_dir);
                                 movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                               else
