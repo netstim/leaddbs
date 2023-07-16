@@ -13,11 +13,8 @@ ea_libs_helper;
 
 basedir = fileparts(mfilename('fullpath'));
 
-if ispc
-    ACPCDETECT = ea_path_helper([basedir, filesep, 'acpcdetect.exe']);
-else
-    ACPCDETECT = ea_path_helper([basedir, filesep, 'acpcdetect.', ea_getarch]);
-end
+ACPCDETECT = ea_path_helper([basedir, filesep, 'acpcdetect', ea_getBinExt]);
+
 
 cmd = [ACPCDETECT, ' -v -no-tilt-correction -noppm -nopng -notxt -i ', ea_path_helper(inputimage)];
 

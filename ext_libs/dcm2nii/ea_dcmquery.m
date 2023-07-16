@@ -12,11 +12,8 @@ end
 
 basedir = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', filesep);
 
-if ispc
-    dcm2niix = ea_path_helper([basedir, 'dcm2niix.exe']);
-else
-    dcm2niix = ea_path_helper([basedir, 'dcm2niix.', ea_getarch]);
-end
+dcm2niix = ea_path_helper([basedir, 'dcm2niix', ea_getBinExt]);
+
 
 cmd = [dcm2niix, ' -q ', queryOption, ' ', ea_path_helper(inputFolder)];
 

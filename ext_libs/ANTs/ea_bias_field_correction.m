@@ -5,11 +5,8 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection.exe']);
-else
-    N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection.', ea_getarch]);
-end
+N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection', ea_getBinExt]);
+
 
 cmd=[N4BiasFieldCorrection, ...
     ' --image-dimensionality 3' ...

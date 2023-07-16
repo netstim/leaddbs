@@ -122,12 +122,7 @@ end
 function [] = update_ants_transforms(subj)
     fprintf('Updating transform from .h5 to .nii.gz for subject: %s\n', subj.subjId);
 
-    if ispc
-        ext = 'exe';
-    else
-        ext = ea_getarch;
-    end
-    ants_apply = fullfile(ea_getearoot, 'ext_libs', 'ANTs', ['antsApplyTransforms.' ext]);
+    ants_apply = fullfile(ea_getearoot, 'ext_libs', 'ANTs', ['antsApplyTransforms' ea_getBinExt]);
 
     transforms_base = {subj.norm.transform.forwardBaseName, subj.norm.transform.inverseBaseName};
     references = {fullfile(ea_space, 't1.nii'), subj.coreg.anat.preop.(subj.AnchorModality)};

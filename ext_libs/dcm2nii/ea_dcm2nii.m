@@ -14,11 +14,8 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    dcm2nii = ea_path_helper([basedir, 'dcm2nii.exe']);
-else
-    dcm2nii = ea_path_helper([basedir, 'dcm2nii.', ea_getarch]);
-end
+dcm2nii = ea_path_helper([basedir, 'dcm2nii', ea_getBinExt]);
+
 
 cmd=[dcm2nii, ' -g n -x y ', ea_path_helper(inputimage)];
 

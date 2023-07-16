@@ -27,11 +27,8 @@ inputimage = ea_niifileparts(inputimage);
 [outputimage, ~, ext] = ea_niifileparts(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    BET = ea_path_helper([basedir, 'bet2.exe']);
-else
-    BET = ea_path_helper([basedir, 'bet2.', ea_getarch]);
-end
+BET = ea_path_helper([basedir, 'bet2', ea_getBinExt]);
+
 
 cmd = [BET, ...
        ' ', ea_path_helper(inputimage), ...

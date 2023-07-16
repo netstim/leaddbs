@@ -22,11 +22,8 @@ if ~exist([directory,'ttrackingmask.nii'],'file') || redo || ...
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
-if ispc
-    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
-else
-    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.', ea_getarch]);
-end
+DSISTUDIO = ea_path_helper([basedir, 'dsi_studio', ea_getBinExt]);
+
 
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     ea_roi2txt([directory,'ttrackingmask.nii'],[directory,'ttrackingmask.txt'],ea_resolve_usfactor(options.lc.struc.ft.upsample))

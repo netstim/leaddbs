@@ -76,11 +76,8 @@ else
 end
 
 basename = [fileparts(mfilename('fullpath')), filesep, 'BRAINSFit'];
-if ispc
-    BRAINSFit = [basename, '.exe '];
-else
-    BRAINSFit = [basename, '.', ea_getarch, ' '];
-end
+BRAINSFit = [basename, '', ea_getBinExt, ' '];
+
 
 ea_libs_helper
 for trial = 1:4

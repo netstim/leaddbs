@@ -28,11 +28,8 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.exe']);
-else
-    IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.', ea_getarch]);
-end
+IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord', ea_getBinExt]);
+
 
 cmd = [IMG2IMGCOORD, ...
        ' -src ' ea_path_helper(src), ...

@@ -32,11 +32,8 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    FLIRT = ea_path_helper([basedir, 'flirt.exe']);
-else
-    FLIRT = ea_path_helper([basedir, 'flirt.', ea_getarch]);
-end
+FLIRT = ea_path_helper([basedir, 'flirt', ea_getBinExt]);
+
 
 cmd = [FLIRT, ...
        ' -in ', ea_path_helper(movingimage), ...

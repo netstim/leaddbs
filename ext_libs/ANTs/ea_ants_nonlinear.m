@@ -132,11 +132,8 @@ outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
-else
-    ANTS = ea_path_helper([basedir, 'antsRegistration.', ea_getarch]);
-end
+ANTS = ea_path_helper([basedir, 'antsRegistration', ea_getBinExt]);
+
 
 rigidconvergence = apref.convergence.rigid;
 rigidshrinkfactors = apref.shrinkfactors.rigid;

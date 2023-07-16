@@ -13,11 +13,8 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    dcm2niix = ea_path_helper([basedir, 'dcm2niix.exe']);
-else
-    dcm2niix = ea_path_helper([basedir, 'dcm2niix.', ea_getarch]);
-end
+dcm2niix = ea_path_helper([basedir, 'dcm2niix', ea_getBinExt]);
+
 
 if strcmp(outdir(end),filesep)
     outdir = outdir(1:end-1);

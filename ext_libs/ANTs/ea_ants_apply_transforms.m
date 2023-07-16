@@ -131,11 +131,8 @@ if nargin == 1
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
-else
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', ea_getarch]);
-end
+applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms', ea_getBinExt]);
+
 
 for i = 1:length(input)
     if ~exist(input{i},'file')   % skip if unnormalized file doesn't exist

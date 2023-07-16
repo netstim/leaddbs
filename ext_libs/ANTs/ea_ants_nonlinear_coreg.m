@@ -55,11 +55,8 @@ outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
-else
-    ANTS = ea_path_helper([basedir, 'antsRegistration.', ea_getarch]);
-end
+ANTS = ea_path_helper([basedir, 'antsRegistration', ea_getBinExt]);
+
 
 rigidstage = [' --transform Rigid[', apref.rigid.gradientstep, ']', ...
     ' --metric ', apref.rigid.metric, '[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',', apref.rigid.metricparams, ']', ...

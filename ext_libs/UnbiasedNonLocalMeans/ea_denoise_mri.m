@@ -2,11 +2,8 @@ function ea_denoise_mri(input,output,sigma)
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 ea_dispt(['Denoising: ',input]);
-if ispc
-    UNLM = ea_path_helper([basedir, 'UnbiasedNonLocalMeans.exe']);
-else
-    UNLM = ea_path_helper([basedir, 'UnbiasedNonLocalMeans.', ea_getarch]);
-end
+UNLM = ea_path_helper([basedir, 'UnbiasedNonLocalMeans', ea_getBinExt]);
+
 
 if ~exist('sigma','var')
     sigma=5;

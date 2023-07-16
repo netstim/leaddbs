@@ -16,11 +16,8 @@ end
 out_file_name = strrep(transform_file_name, ext, out_ext);
 
 antsdir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
-if ispc
-    applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.exe']);
-else
-    applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.', ea_getarch]);
-end
+applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms', ea_getBinExt]);
+
 
 cmd = [applyTransforms ' -r ' ea_path_helper(reference) ' -t ' ea_path_helper(transform_file_name) ' -o [' ea_path_helper(out_file_name) ',1]'];
 

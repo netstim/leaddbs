@@ -55,11 +55,8 @@ if nargin == 1
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    APPLYWARP = ea_path_helper([basedir, 'applywarp.exe']);
-else
-    APPLYWARP = ea_path_helper([basedir, 'applywarp.', ea_getarch]);
-end
+APPLYWARP = ea_path_helper([basedir, 'applywarp', ea_getBinExt]);
+
 
 for i = 1:length(input)
     if isfile(input{i})

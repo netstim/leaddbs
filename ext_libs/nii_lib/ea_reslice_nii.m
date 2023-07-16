@@ -99,11 +99,7 @@ if tool==1 % Use SPM
     movefile(fullfile(pth,['r',fn,ext]),new_fn);
 elseif tool==2 % Use FSL
     basedir=[fullfile(ea_getearoot,'ext_libs','fsl'),filesep];
-    if ispc
-        FLIRT = ea_path_helper([basedir, 'flirt.exe']);
-    else
-        FLIRT = ea_path_helper([basedir, 'flirt.', ea_getarch]);
-    end
+    FLIRT = ea_path_helper([basedir, 'flirt', ea_getBinExt]);
     flirtcmd=[FLIRT,' -in ',old_fn,' -ref ',old_fn,' -out ',new_fn,' -nosearch -applyisoxfm ',num2str(mean(voxel_size)),' -interp ',ea_fslinterps(interp)];
     setenv('FSLOUTPUTTYPE','NIFTI');
     if ~ispc

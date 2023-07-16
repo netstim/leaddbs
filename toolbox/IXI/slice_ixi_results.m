@@ -1,11 +1,8 @@
 ixiids=ea_getIXI_IDs(564);
 
 fsldir = [ea_getearoot, filesep, 'ext_libs', filesep, 'fsl', filesep];
-if ispc
-    SLICER = [fsldir, 'slicer.exe'];
-else
-    SLICER = [fsldir, 'slicer.', ea_getarch];
-end
+SLICER = [fsldir, 'slicer', ea_getBinExt];
+
 
 setenv('FSLOUTPUTTYPE','NIFTI');
 
