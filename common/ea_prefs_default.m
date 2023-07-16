@@ -270,4 +270,5 @@ prefs.genetics.dbdir=[ea_space,'genetics',filesep];
 % If set to true it will add this path: fullfile(earoot,'ext_libs\support\glnxa64') to the LD_LIBRARY_PATH;
 prefs.platform.glnxa64.load_shipped_runtime=false;  % for Linux default is NOT loaded (using system libs)
 prefs.platform.maci64.load_shipped_runtime=false;    % for macOS default is NOT loaded
+prefs.platform.maca64.load_shipped_runtime=false;    % for macOS default is NOT loaded
 prefs.platform.win64.load_shipped_runtime=false;  % for Windows default is NOT loaded
