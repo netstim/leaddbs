@@ -179,6 +179,8 @@ for patients = 1:length(source)
                 end
                 this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
                 files_in_folder = {this_folder.name};
+                files_in_folder = files_in_folder(~contains(files_in_folder, 'rpostop_ct'));
+                files_in_folder = files_in_folder(~contains(files_in_folder, 'ea_methods'));
                 for file_in_folder=1:length(files_in_folder)
                     which_file = files_in_folder{file_in_folder};
                     if ismember(files_in_folder{file_in_folder},brainshift{:,1})
