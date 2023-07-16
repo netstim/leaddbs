@@ -23,6 +23,7 @@ CMakeLists.txt
 
 /ext_libs/mambaforge
 /ext_libs/conda
+/ext_libs/fastsurfer
 
 /ea_prefs_*.m
 
