@@ -254,7 +254,7 @@ for patients = 1:length(source)
                     %prevent errors of old datasets 
                     
                     %coregistration
-                    if ismember(files_to_move{files},coregistration{:,1})
+                    if ismember(which_file, coregistration{:,1})
                         which_pipeline = pipelines{2};
                         indx = cellfun(@(x)strcmp(x,which_file),coregistration{:,1});
                         bids_name = coregistration{1,2}{indx};
@@ -268,7 +268,7 @@ for patients = 1:length(source)
 
                         %coregistration: log, no fixed naming pattern and hence
                         %in an elseif command
-                    elseif ~isempty(regexp(which_file,'^coreg.*\.log$'))
+                    elseif ~isempty(regexp(which_file, '^coreg.*\.log$', 'once'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',which_file);
                         if exist(fullfile(source_patient,which_file),'file')
@@ -286,7 +286,7 @@ for patients = 1:length(source)
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         %only for normalization
-                    elseif ~isempty(regexp(which_file,'^normalize_.*\.log$'))
+                    elseif ~isempty(regexp(which_file, '^normalize_.*\.log$', 'once'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{3},'log',which_file);
                         if exist(fullfile(source_patient,which_file),'file')
@@ -348,7 +348,7 @@ for patients = 1:length(source)
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
-                    elseif ~ismember(which_file,preprocessing{:,1}) && ~isempty(regexp(which_file,'raw_.*\.nii$')) %support for other modalities in preproc
+                    elseif ~ismember(which_file,preprocessing{:,1}) && ~isempty(regexp(which_file, 'raw_.*\.nii$', 'once')) %support for other modalities in preproc
                         %other raw files go to pre-processing folder.
                        
                         if endsWith(which_file,'.nii')
@@ -441,7 +441,7 @@ for patients = 1:length(source)
                       end
                       
                        
-                    elseif ~ismember(which_file,normalization{:,1}) && ~isempty(regexp(which_file,'^glanat_.*(.nii|.png)$')) %support for other modalities in normalization
+                    elseif ~ismember(which_file,normalization{:,1}) && ~isempty(regexp(which_file, '^glanat_.*(.nii|.png)$', 'once')) %support for other modalities in normalization
                         if endsWith(which_file,'.nii')
                             ext = '.nii';
                             op_dir = fullfile(new_path,pipelines{3},'anat');
@@ -639,7 +639,7 @@ for patients = 1:length(source)
                             elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
                                 disp("Migrating dwi data...")
                                 for files = 1:length(files_to_move)
-                                    if ~isempty(regexp(files_to_move{files},'^dti\.(bval|bvec|nii)$'))
+                                    if ~isempty(regexp(files_to_move{files}, '^dti\.(bval|bvec|nii)$', 'once'))
                                         if exist(fullfile(source_patient,files_to_move{files}),'file')
                                             modality_str = strsplit(files_to_move{files},'_');
                                             modality_str = lower(modality_str{end});
@@ -1208,7 +1208,7 @@ if endsWith(fname_in,'.mat')
         coreg_fieldnames = fieldnames(input_mat);
         %determine files inside the coreg files
         for i=1:length(coreg_fieldnames)
-            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i},('_tra|_sag|_cor')))
+            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i}, ('_tra|_sag|_cor'), 'once'))
                 if ismember(fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii']),old)
                     indx = cellfun(@(x)strcmp(x,fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii'])),old);
                     try_bids_name = new{indx};
