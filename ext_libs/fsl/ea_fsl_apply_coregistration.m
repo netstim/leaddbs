@@ -35,7 +35,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     FLIRT = ea_path_helper([basedir, 'flirt.exe']);
 else
-    FLIRT = ea_path_helper([basedir, 'flirt.', computer('arch')]);
+    FLIRT = ea_path_helper([basedir, 'flirt.', ea_getarch]);
 end
 
 cmd = [FLIRT, ...

@@ -73,7 +73,7 @@ if slabsupport
                     ea_error(sprintf('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!\n%s', movingimage{mov}));
                 end
             end
-            sums(mov) = sum(mnii.img(:));            
+            sums(mov) = sum(mnii.img(:));
         else
             sums(mov) = nan;
         end
@@ -107,7 +107,7 @@ apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), optio
 % use fixed global correlations for fiducial helpers or segmentations
 ccnsettg = options.prefs.machine.normsettings;
 ccnsettg.ants_metric = 'Global Correlation';
-ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg); 
+ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg);
 ccpref.metric = 'MeanSquares';
 ccpref.metricsuffix = '';
 
@@ -135,7 +135,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
 else
-    ANTS = ea_path_helper([basedir, 'antsRegistration.', computer('arch')]);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.', ea_getarch]);
 end
 
 rigidconvergence = apref.convergence.rigid;

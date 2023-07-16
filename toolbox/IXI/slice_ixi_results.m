@@ -3,8 +3,8 @@ ixiids=ea_getIXI_IDs(564);
 fsldir = [ea_getearoot, filesep, 'ext_libs', filesep, 'fsl', filesep];
 if ispc
     SLICER = [fsldir, 'slicer.exe'];
-else 
-    SLICER = [fsldir, 'slicer.', computer('arch')];    
+else
+    SLICER = [fsldir, 'slicer.', ea_getarch];
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI');
@@ -15,10 +15,10 @@ for ixi=1:length(ixiids)
            ' ', ixiids{ixi}, filesep, 'glanat.nii.gz' ...
            ' ', ea_space, 't2.nii' ...
            ' -a', ' mono', ixibase, '.png'];
-    
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
-        system(cmd);    
+        system(cmd);
     end
 end

@@ -207,7 +207,7 @@ else
         if isfile(options.subj.coreg.log.method)
             json = loadjson(options.subj.coreg.log.method);
         end
-        
+
         % Extract image modality
         modality = ea_getmodality(currvol);
 
@@ -524,7 +524,7 @@ elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj
 else
     json = loadjson(options.subj.coreg.log.method);
     modality = ea_getmodality(currvol);
-        
+
     if ismember(currvol, preopCoregImages)
         try % Field might not exist.
             coregWasApproved = json.approval.(modality);
@@ -557,7 +557,7 @@ else
     end
 end
 
-if strcmp(computer('arch'),'maci64')
+if ismac
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',currvol]);
 end
 
@@ -723,7 +723,7 @@ else
     end
 end
 
-if strcmp(computer('arch'),'maci64')
+if ismac
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ', currvol]);
 end
 
@@ -808,7 +808,7 @@ else
 
     session = regexp(currvol, '(?<=_ses-)(preop|postop)', 'match', 'once');
     modality = ea_getmodality(currvol);
-    
+
     % Create checkreg fig
     fprintf('\nRegenerating checkreg figure...\n\n');
     ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.(session).(modality));

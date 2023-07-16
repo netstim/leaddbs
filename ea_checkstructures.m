@@ -813,7 +813,7 @@ if ~isempty(uuid)
     approved.(ea_stripext(options.prefs.gprenii))=0;
     save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
-    if strcmp(computer('arch'),'maci64')
+    if ismac
         system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(options.prefs.gprenii),'.nii'])]);
     end
 

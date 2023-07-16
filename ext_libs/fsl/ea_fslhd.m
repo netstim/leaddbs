@@ -16,7 +16,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     FSLHD = ea_path_helper([basedir, 'fslhd.exe']);
 else
-    FSLHD = ea_path_helper([basedir, 'fslhd.', computer('arch')]);
+    FSLHD = ea_path_helper([basedir, 'fslhd.', ea_getarch]);
 end
 
 cmd = [FSLHD, ' ', xmlarg, ' ', ea_path_helper(input), ];

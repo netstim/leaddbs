@@ -31,7 +31,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.exe']);
 else
-    IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.', computer('arch')]);
+    IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.', ea_getarch]);
 end
 
 cmd = [IMG2IMGCOORD, ...

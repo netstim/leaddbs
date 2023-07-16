@@ -110,8 +110,8 @@ if ispc
     FLIRT = ea_path_helper([basedir, 'flirt.exe']);
     COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.exe']);
 else
-    FLIRT = ea_path_helper([basedir, 'flirt.', computer('arch')]);
-    COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.', computer('arch')]);
+    FLIRT = ea_path_helper([basedir, 'flirt.', ea_getarch]);
+    COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.', ea_getarch]);
 end
 
 flirtcmd = [FLIRT, ...

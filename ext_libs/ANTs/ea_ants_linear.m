@@ -60,9 +60,9 @@ if ispc
     ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
     applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
-    HEADER = ea_path_helper([basedir, 'PrintHeader.', computer('arch')]);
-    ANTS = ea_path_helper([basedir, 'antsRegistration.', computer('arch')]);
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', computer('arch')]);
+    HEADER = ea_path_helper([basedir, 'PrintHeader.', ea_getarch]);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.', ea_getarch]);
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', ea_getarch]);
 end
 
 if ~ispc

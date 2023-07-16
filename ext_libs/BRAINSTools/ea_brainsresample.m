@@ -43,7 +43,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     BRAINSResample = ea_path_helper([basedir, 'BRAINSResample.exe']);
 else
-    BRAINSResample = ea_path_helper([basedir, 'BRAINSResample.', computer('arch')]);
+    BRAINSResample = ea_path_helper([basedir, 'BRAINSResample.', ea_getarch]);
 end
 
 cmd = [BRAINSResample, ...

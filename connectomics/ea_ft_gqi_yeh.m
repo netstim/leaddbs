@@ -25,7 +25,7 @@ basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
 if ispc
     DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
 else
-    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.', computer('arch')]);
+    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.', ea_getarch]);
 end
 
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
@@ -159,14 +159,14 @@ cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     cmd=[cmd,...
         ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
-    
+
     %% add methods dump:
     cits={
         'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
         'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
         };
     ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample))),' following the concept described in Dyrby et al. 2014 as implemented in DSI Studio (http://dsi-studio.labsolver.org/; Yeh et al. 2010).'],cits);
-    
+
     maskext='.txt';
 else
     maskext='.nii';

@@ -30,7 +30,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     BET = ea_path_helper([basedir, 'bet2.exe']);
 else
-    BET = ea_path_helper([basedir, 'bet2.', computer('arch')]);
+    BET = ea_path_helper([basedir, 'bet2.', ea_getarch]);
 end
 
 cmd = [BET, ...

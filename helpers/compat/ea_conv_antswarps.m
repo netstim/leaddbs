@@ -19,7 +19,7 @@ antsdir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 if ispc
     applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.exe']);
 else
-    applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.', computer('arch')]);
+    applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.', ea_getarch]);
 end
 
 cmd = [applyTransforms ' -r ' ea_path_helper(reference) ' -t ' ea_path_helper(transform_file_name) ' -o [' ea_path_helper(out_file_name) ',1]'];

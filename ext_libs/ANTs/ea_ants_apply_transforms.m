@@ -134,7 +134,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', computer('arch')]);
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', ea_getarch]);
 end
 
 for i = 1:length(input)
@@ -150,7 +150,7 @@ for i = 1:length(input)
         ' --float 1' ...
         ' --input ',ea_path_helper(input{i}), ...
         ' --output ',ea_path_helper(output{i})];
-    
+
     if isempty(ref)
         if useinverse
             ref = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
@@ -159,7 +159,7 @@ for i = 1:length(input)
             ref = [ea_space, spacedef.templates{1}, '.nii'];
         end
     end
-    
+
     cmd = [cmd, ...
         ' --reference-image ',ea_path_helper(ref),...
         ' --transform [',ea_path_helper(transform),',0]'];

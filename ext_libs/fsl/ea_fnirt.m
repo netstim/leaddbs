@@ -118,8 +118,8 @@ if ispc
     FNIRT = ea_path_helper([basedir, 'fnirt.exe']);
     INVWARP = ea_path_helper([basedir, 'invwarp.exe']);
 else
-    FNIRT = ea_path_helper([basedir, 'fnirt.', computer('arch')]);
-    INVWARP = ea_path_helper([basedir, 'invwarp.', computer('arch')]);
+    FNIRT = ea_path_helper([basedir, 'fnirt.', ea_getarch]);
+    INVWARP = ea_path_helper([basedir, 'invwarp.', ea_getarch]);
 end
 
 fnirtcmd = [FNIRT, fnirtstage];

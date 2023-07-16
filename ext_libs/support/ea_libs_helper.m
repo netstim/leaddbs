@@ -8,7 +8,7 @@ if nargin < 1 || isempty(libpath)
     prefs = ea_prefs;
 
     % Check and load runtime libs when needed
-    arch = computer('arch');
+    arch = ea_getarch;
     if eval(['prefs.platform.', arch, '.load_shipped_runtime'])
         libpath = fullfile(fileparts(mfilename('fullpath')), arch);
     else

@@ -58,7 +58,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
 else
-    ANTS = ea_path_helper([basedir, 'antsRegistration.', computer('arch')]);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.', ea_getarch]);
 end
 
 rigidstage = [' --transform Rigid[', apref.rigid.gradientstep, ']', ...

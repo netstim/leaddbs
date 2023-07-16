@@ -79,7 +79,7 @@ basename = [fileparts(mfilename('fullpath')), filesep, 'BRAINSFit'];
 if ispc
     BRAINSFit = [basename, '.exe '];
 else
-    BRAINSFit = [basename, '.', computer('arch'), ' '];
+    BRAINSFit = [basename, '.', ea_getarch, ' '];
 end
 
 ea_libs_helper
