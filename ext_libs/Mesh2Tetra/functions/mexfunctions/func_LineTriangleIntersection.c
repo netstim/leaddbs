@@ -12,7 +12,7 @@ bool LineTriangleIntersection(double *A, double *B, double *C, double *P1, doubl
     if(check) { return false; }
 
     
-    /* http:/*www.cs.brown.edu/~scd/facts.html */
+    /* http://www.cs.brown.edu/~scd/facts.html */
     
     /* Calculate normal of triangle */
     for(i=0; i<3; i++){
