@@ -149,6 +149,16 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                 options.primarytemplate, ... % Template to use
                 options.subj.preopAnat.(fields{1}).coreg, ... % Output pre-coregistered image
                 options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
+
+            % Check if anchor image has been properly pre-coregistered. If
+            % not, fallback to preproc image.
+            try
+                load_nii(options.subj.preopAnat.(fields{1}).coreg);
+            catch
+                ea_cprintf('CmdWinWarnings', 'Anchor image was not properly pre-coregistered. Fallback to preproc image instead.');
+                ea_delete(options.subj.coreg.transform.(fields{1}));
+                copyfile(options.subj.preopAnat.(fields{1}).preproc, options.subj.preopAnat.(fields{1}).coreg);
+            end
         end
     end
 
