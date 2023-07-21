@@ -8,11 +8,12 @@ else
     if isMatlabVer('<', [23,2])
         [~, cmdout] = system('uname -v');
         if contains(cmdout, 'ARM64')
-            arch = 'maci64';
+            arch = 'maca64';
         else
             arch = 'maci64';
         end
     else
         arch = computer('arch');
     end
+    arch = 'maci64';
 end
