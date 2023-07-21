@@ -1,6 +1,6 @@
 function XYZ=ea_flip_lr_nonlinear(from,to,interp)
-% flip files / coords nonlinearly from Left to Right hemisphere based on asymmetric
-% template
+% Flip files or coordinates (in mm) nonlinearly in the left-right direction
+% based on pre-calculated asymmetric fliplr transformation.
 
 ea_genflipspace; % will only perform if fliplr transformation doesn't exist
 
