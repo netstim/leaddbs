@@ -20,21 +20,22 @@ clear global WARPDRIVE_SUBS;
 % Check which subjects should run
 %
 
-remove_pts = false(length(warpdrive_subs),1);
-if ~ (isfield(options, 'overwriteapproved') && options.overwriteapproved)
-    for i = 1:length(warpdrive_subs)
-        if isfile(warpdrive_subs(i).norm.log.method)
-            approved_load = loadjson(warpdrive_subs(i).norm.log.method);
-            remove_pts(i) = ~isfield(approved_load,'approval') | (approved_load.approval == 0);
-            if ~contains(approved_load.method, 'ANTs')
-                remove_pts(i) = 1;
-                disp([warpdrive_subs(i).subjId ' was normalized using ' approved_load.method '. Use ANTs in order to run warpdrive.']);
-            end
+keep_pts = false(length(warpdrive_subs),1);
+for i = 1:length(warpdrive_subs)
+    if isfile(warpdrive_subs(i).norm.log.method)
+        approved_load = loadjson(warpdrive_subs(i).norm.log.method);
+        keep_pts(i) = ~( isfield(approved_load,'approval') && (approved_load.approval == 1) );
+        if isfield(options, 'overwriteapproved')
+            keep_pts(i) = keep_pts(i) || options.overwriteapproved;
+        end
+        if ~contains(approved_load.method, 'ANTs')
+            keep_pts(i) = 0;
+            disp([warpdrive_subs(i).subjId ' was normalized using ' approved_load.method '. Use ANTs in order to run warpdrive.']);
         end
     end
 end
 
-warpdrive_subs(remove_pts) = [];
+warpdrive_subs(~keep_pts) = [];
 if isempty(warpdrive_subs) % all subjects approved
     return
 end
@@ -62,8 +63,9 @@ for i = 1:length(warpdrive_subs)
     info_struct(i).anat_files = warpdrive_subs(i).coreg.anat.preop;
 
     d = dir([warpdrive_subs(i).norm.transform.forwardBaseName, 'ants*']);
-    if endsWith(d(1).name, '.h5')
-        update_ants_transforms(warpdrive_subs(i));
+    [~,~,ext] = fileparts(d(1).name);
+    if any(strcmp(ext,{'.h5','.mat'}))
+        update_ants_transforms(warpdrive_subs(i),ext);
     end
 
     info_struct(i).forward_transform = [warpdrive_subs(i).norm.transform.forwardBaseName, 'ants.nii.gz'];
@@ -119,8 +121,8 @@ function out = remove_last_filesep(filepath)
 end
 
 
-function [] = update_ants_transforms(subj)
-    fprintf('Updating transform from .h5 to .nii.gz for subject: %s\n', subj.subjId);
+function [] = update_ants_transforms(subj,transform_ext)
+    fprintf('Updating transform from %s to .nii.gz for subject: %s\n', transform_ext, subj.subjId);
 
     ants_apply = fullfile(ea_getearoot, 'ext_libs', 'ANTs', ['antsApplyTransforms' ea_getBinExt]);
 
@@ -128,8 +130,8 @@ function [] = update_ants_transforms(subj)
     references = {fullfile(ea_space, 't1.nii'), subj.coreg.anat.preop.(subj.AnchorModality)};
 
     for j = 1:length(transforms_base)
-
-        t = [transforms_base{j} 'ants.h5'];
+        
+        t = [transforms_base{j} 'ants' transform_ext];
         o = ['[' transforms_base{j} 'ants.nii.gz,1]'];
         r = references{j};
 
