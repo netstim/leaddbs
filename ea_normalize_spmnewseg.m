@@ -41,9 +41,10 @@ preopAnchorName = [preopAnchorName, '.nii'];
 disp('done.');
 
 % Rename Segmentations (c1, c2, c3)
-movefile([directory, 'c1', preopAnchorName], setBIDSEntity(preopImages{1}, 'label', 'GM', 'mod', options.subj.AnchorModality, 'suffix', 'mask'));
-movefile([directory, 'c2', preopAnchorName], setBIDSEntity(preopImages{1}, 'label', 'WM', 'mod', options.subj.AnchorModality, 'suffix', 'mask'));
-movefile([directory, 'c3', preopAnchorName], setBIDSEntity(preopImages{1}, 'label', 'CSF', 'mod', options.subj.AnchorModality, 'suffix', 'mask'));
+mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
+movefile([directory, 'c1', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'GM', 'suffix', 'mask'));
+movefile([directory, 'c2', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'WM', 'suffix', 'mask'));
+movefile([directory, 'c3', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'CSF', 'suffix', 'mask'));
 
 % Rename deformation fields
 ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));

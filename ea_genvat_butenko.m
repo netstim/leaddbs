@@ -63,9 +63,10 @@ if options.native
     anchorImageDir = [anchorImageDir, filesep];
     anchorImageName = [anchorImageName, '.nii'];
 
-    c1File = setBIDSEntity(anchorImage, 'label', 'GM', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
-    c2File = setBIDSEntity(anchorImage, 'label', 'WM', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
-    c3File = setBIDSEntity(anchorImage, 'label', 'CSF', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
+    mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
+    c1File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'GM', 'suffix', 'mask');
+    c2File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'WM', 'suffix', 'mask');
+    c3File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'CSF', 'suffix', 'mask');
     if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
         ea_newseg(anchorImage, 0, 1);
         movefile([anchorImageDir, 'c1', anchorImageName], c1File);

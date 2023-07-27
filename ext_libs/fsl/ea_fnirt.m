@@ -37,7 +37,7 @@ normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
     if isBIDSFileName(movingimage)
         parsedStruct = parseBIDSFilePath(movingimage);
-        movingimage_brainmask = setBIDSEntity(movingimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask');
+        movingimage_brainmask = setBIDSEntity(movingimage, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
     else
         movingimage_brainmask = [movPath, '_brainmask'];
     end
@@ -45,7 +45,7 @@ if normsettings.fsl_skullstrip % skullstripping is on
     fixedPath = ea_niifileparts(fixedimage);
     if isBIDSFileName(fixedimage)
         parsedStruct = parseBIDSFilePath(fixedimage);
-        fixedimage_brainmask = setBIDSEntity(fixedimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask');
+        fixedimage_brainmask = setBIDSEntity(fixedimage, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
     else
         fixedimage_brainmask = [fixedPath, '_brainmask'];
     end

@@ -31,7 +31,12 @@ normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
     % Set skullstripped file name
     if isBIDSFileName(movingimage)
-        inimage = ea_niifileparts(setBIDSEntity(movingimage, 'label', 'Brain'));
+        parsedStruct = parseBIDSFilePath(movingimage);
+        if isfield(parsedStruct, 'acq')
+            inimage = ea_niifileparts(setBIDSEntity(movingimage, 'acq', [], 'label', 'Brain', 'acq', parsedStruct.acq));
+        else
+            inimage = ea_niifileparts(setBIDSEntity(movingimage, 'label', 'Brain'));
+        end
     else
         inimage = [ea_niifileparts(movingimage), '_brain'];
     end
@@ -45,14 +50,19 @@ if normsettings.fsl_skullstrip % skullstripping is on
     ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
     if isBIDSFileName(movingimage)
         parsedStruct = parseBIDSFilePath(movingimage);
-        movefile([inimage, '_mask', ext], setBIDSEntity(movingimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+        movefile([inimage, '_mask', ext], setBIDSEntity(movingimage, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask'));
     else
         movefile([inimage, '_mask', ext], [ea_niifileparts(movingimage), '_brainmask', ext]);
     end
 
 	% Set skullstripped file name
     if isBIDSFileName(fixedimage)
-        refimage = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+        parsedStruct = parseBIDSFilePath(fixedimage);
+        if isfield(parsedStruct, 'acq')
+            refimage = ea_niifileparts(setBIDSEntity(fixedimage, 'acq', [], 'label', 'Brain', 'acq', parsedStruct.acq));
+        else
+            refimage = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+        end
     else
         refimage = [ea_niifileparts(fixedimage), '_brain'];
     end
@@ -66,7 +76,7 @@ if normsettings.fsl_skullstrip % skullstripping is on
     ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
     if isBIDSFileName(fixedimage)
         parsedStruct = parseBIDSFilePath(fixedimage);
-        movefile([refimage, '_mask', ext], setBIDSEntity(fixedimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+        movefile([refimage, '_mask', ext], setBIDSEntity(fixedimage, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask'));
     else
         movefile([refimage, '_mask', ext], [ea_niifileparts(fixedimage), '_brainmask', ext]);
     end

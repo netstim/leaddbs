@@ -26,7 +26,12 @@ end
 % Prepare bet image for flirt bbr
 fixedPath = ea_niifileparts(fixedimage);
 if isBIDSFileName(fixedimage)
-    fixedimage_bet = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+    parsedStruct = parseBIDSFilePath(fixedimage);
+    if isfield(parsedStruct, 'acq')
+        fixedimage_bet = ea_niifileparts(setBIDSEntity(fixedimage, 'acq', [], 'label', 'Brain', 'acq', parsedStruct.acq));
+    else
+        fixedimage_bet = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+    end
 else
     fixedimage_bet = [fixedPath, '_brain'];
 end
