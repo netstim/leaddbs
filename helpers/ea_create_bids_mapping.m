@@ -202,7 +202,9 @@ normalization{:,1}  = {'glpostop_ct.nii';
     'glanatComposite.nii.gz';
     'glanatInverseComposite.nii.gz';
     'glanatComposite.h5';
-    'glanatInverseComposite.h5'};
+    'glanatInverseComposite.h5';
+    'y_ea_normparams.nii';
+    'y_ea_inv_normparams.nii'};
                    
 normalization{:,2} = {'ses-postop_space-MNI152NLin2009bAsym_desc-preproc_CT.nii';
     'ses-postop_space-MNI152NLin2009bAsym_desc-preproc_acq-ax_MRI.nii';
@@ -228,7 +230,9 @@ normalization{:,2} = {'ses-postop_space-MNI152NLin2009bAsym_desc-preproc_CT.nii'
     'from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz';
     'from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz';
     'from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz';
-    'from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz'};
+    'from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz';
+    'from-anchorNative_to-MNI152NLin2009bAsym_desc-spm.nii';
+    'from-MNI152NLin2009bAsym_to-anchorNative_desc-spm.nii'};
 
 preprocessing{:,1} = {'postop_ct.nii';
     'raw_postop_tra.nii';
