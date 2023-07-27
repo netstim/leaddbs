@@ -173,6 +173,7 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     end
 
     json.approval = 0;
+    ea_mkdir(fileparts(options.subj.coreg.log.method));
     savejson('', json, options.subj.norm.log.method);
 
     checkregFig = options.subj.norm.checkreg.preop.(options.subj.AnchorModality);
@@ -189,6 +190,8 @@ else
     set(handles.anchortxt, 'String', 'Anchor modality (red wires):');
     set(handles.coregresultstxt, 'String', 'Coregistration results');
     set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Coregistration']);
+
+    ea_mkdir(fileparts(options.subj.coreg.log.method));
 
     if strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
         ea_init_coregctpopup(handles, options.prefs.ctcoreg.default, 'coregmrmethod');
