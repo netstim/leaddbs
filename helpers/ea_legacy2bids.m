@@ -379,14 +379,18 @@ for patients = 1:length(source)
                             ext = '.png';
                             op_dir = fullfile(new_path,pipelines{2},'checkreg');
                             source_path = fullfile(source_patient,'checkreg');
-                        elseif endsWith(files_to_move{files},'.mat')
+                        elseif endsWith(which_file,'.mat')
                             ext = '.mat';
                             op_dir = fullfile(new_path,pipelines{2},'transformations');
                             source_path = source_patient;
                         end
                         ea_mkdir(op_dir);
-                        if endsWith(files_to_move{files},'.nii') || endsWith(files_to_move{files},'.png')
-                            bids_mod = add_mod(files_to_move{files},legacy_modalities,rawdata_containers);
+                        if endsWith(which_file,'.nii') || endsWith(which_file,'.png')
+                            if endsWith(which_file,'.nii') && ~startsWith(which_file, "raw_anat" | "anat")
+                                bids_mod = 'misc';
+                            else
+                                bids_mod = add_mod(which_file,legacy_modalities,rawdata_containers);
+                            end
                             if strcmp(bids_mod,'misc')
                                 op_dir = fullfile(new_path,'miscellaneous');
                                 ea_mkdir(op_dir);
@@ -854,6 +858,7 @@ function generate_rawImagejson(patient_name,dest)
         %other preop files
         coreg_preop_files = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
         coreg_preop_files = {coreg_preop_files.name};
+        coreg_preop_files(endsWith(coreg_preop_files, '_mask.nii')) = [];
         for coreg_files = 1:length(coreg_preop_files)
             coreg_file = regexprep(coreg_preop_files{coreg_files}, '\.nii(\.gz)?$', '');
             coreg_mod = strsplit(coreg_file,'_');
@@ -947,8 +952,11 @@ function generate_rawImagejson(patient_name,dest)
 
 
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
-    bids_mod = strsplit(try_bids_name,'_');
-    [~,bids_mod,~] = fileparts(bids_mod{end});
+    if contains(try_bids_name, 'acqTag_mod-')
+        bids_mod = regexp(try_bids_name, '(?<=_mod-)[a-zA-Z0-9]+', 'match', 'once');
+    else
+        bids_mod = regexp(try_bids_name, '(?<=acqTag_)[a-zA-Z0-9]+', 'match', 'once');
+    end
     indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
     if isempty(find(indx,1))
         bids_name = strrep(try_bids_name,'acqTag_','');
