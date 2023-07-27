@@ -28,7 +28,7 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord', ea_getBinExt]);
+IMG2IMGCOORD = ea_getExec([basedir, 'img2imgcoord'], escapePath = 1);
 
 
 cmd = [IMG2IMGCOORD, ...

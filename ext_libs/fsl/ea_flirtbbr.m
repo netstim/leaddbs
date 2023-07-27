@@ -56,10 +56,10 @@ volumedir = [fileparts(ea_niifileparts(outputimage)), filesep];
 xfm = [movname, '2', fixname, '_flirtbbr'];
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-FAST = ea_path_helper([basedir, 'fast', ea_getBinExt]);
-FSLMATHS = ea_path_helper([basedir, 'fslmaths', ea_getBinExt]);
-FLIRT = ea_path_helper([basedir, 'flirt', ea_getBinExt]);
-COVERT_XFM = ea_path_helper([basedir, 'convert_xfm', ea_getBinExt]);
+FAST = ea_getExec([basedir, 'fast'], escapePath = 1);
+FSLMATHS = ea_getExec([basedir, 'fslmaths'], escapePath = 1);
+FLIRT = ea_getExec([basedir, 'flirt'], escapePath = 1);
+COVERT_XFM = ea_getExec([basedir, 'convert_xfm'], escapePath = 1);
 
 fixedimage_fast = [fixedPath, '_fslfast'];
 

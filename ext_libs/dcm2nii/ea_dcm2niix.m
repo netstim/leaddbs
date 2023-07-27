@@ -13,7 +13,7 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-dcm2niix = ea_path_helper([basedir, 'dcm2niix', ea_getBinExt]);
+dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
 
 
 if strcmp(outdir(end),filesep)

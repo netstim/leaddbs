@@ -76,12 +76,12 @@ else
 end
 
 basename = [fileparts(mfilename('fullpath')), filesep, 'BRAINSFit'];
-BRAINSFit = [basename, '', ea_getBinExt, ' '];
+BRAINSFit = ea_getExec(basename, escapePath = 1);
 
 
 ea_libs_helper
 for trial = 1:4
-    cmd = [BRAINSFit, paramset{trial}];
+    cmd = [BRAINSFit, ' ', paramset{trial}];
     if ~ispc
         status = system(['bash -c "', cmd, '"']);
     else

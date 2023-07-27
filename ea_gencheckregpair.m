@@ -2,7 +2,7 @@ function ea_gencheckregpair(moving,fixed,outfn)
 % function that uses FSL SLICER tool to create a checkreg figure.
 
 basedir = [ea_getearoot,'ext_libs',filesep,'fsl',filesep];
-SLICER = ea_path_helper([basedir, 'slicer', ea_getBinExt]);
+SLICER = ea_getExec([basedir, 'slicer'], escapePath = 1);
 
 
 uuid = ea_generate_uuid;

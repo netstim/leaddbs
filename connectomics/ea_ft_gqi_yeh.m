@@ -22,7 +22,7 @@ if ~exist([directory,'ttrackingmask.nii'],'file') || redo || ...
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
-DSISTUDIO = ea_path_helper([basedir, 'dsi_studio', ea_getBinExt]);
+DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
 
 
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used

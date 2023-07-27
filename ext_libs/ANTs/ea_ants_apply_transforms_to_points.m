@@ -37,7 +37,7 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-applyTransformsToPoints = ea_path_helper([basedir, 'antsApplyTransformsToPoints', ea_getBinExt]);
+applyTransformsToPoints = ea_getExec([basedir, 'antsApplyTransformsToPoints'], escapePath = 1);
 
 
 uuid = ea_generate_uuid;

@@ -41,7 +41,7 @@ dimension = num2str(dimension);
 spacing = sprintf('% f', spacing);
 
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
-ResampleImageBySpacing = ea_path_helper([basedir, 'ResampleImageBySpacing', ea_getBinExt]);
+ResampleImageBySpacing = ea_getExec([basedir, 'ResampleImageBySpacing'], escapePath = 1);
 
 
 cmd = [ResampleImageBySpacing,' ',dimension, ...

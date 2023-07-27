@@ -131,7 +131,7 @@ if nargin == 1
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms', ea_getBinExt]);
+applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
 
 for i = 1:length(input)

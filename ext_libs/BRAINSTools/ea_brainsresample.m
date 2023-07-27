@@ -40,7 +40,7 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-BRAINSResample = ea_path_helper([basedir, 'BRAINSResample', ea_getBinExt]);
+BRAINSResample = ea_getExec([basedir, 'BRAINSResample'], escapePath = 1);
 
 
 cmd = [BRAINSResample, ...

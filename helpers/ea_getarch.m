@@ -15,5 +15,4 @@ else
     else
         arch = computer('arch');
     end
-    arch = 'maci64';
 end

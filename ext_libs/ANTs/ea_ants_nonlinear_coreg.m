@@ -55,7 +55,7 @@ outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-ANTS = ea_path_helper([basedir, 'antsRegistration', ea_getBinExt]);
+ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
 
 
 rigidstage = [' --transform Rigid[', apref.rigid.gradientstep, ']', ...

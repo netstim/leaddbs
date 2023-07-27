@@ -1,7 +1,7 @@
 ixiids=ea_getIXI_IDs(564);
 
 fsldir = [ea_getearoot, filesep, 'ext_libs', filesep, 'fsl', filesep];
-SLICER = [fsldir, 'slicer', ea_getBinExt];
+SLICER = ea_getExec([fsldir, 'slicer'], escapePath = 1);
 
 
 setenv('FSLOUTPUTTYPE','NIFTI');

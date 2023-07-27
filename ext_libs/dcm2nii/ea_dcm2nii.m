@@ -14,7 +14,7 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-dcm2nii = ea_path_helper([basedir, 'dcm2nii', ea_getBinExt]);
+dcm2nii = ea_getExec([basedir, 'dcm2nii'], escapePath = 1);
 
 
 cmd=[dcm2nii, ' -g n -x y ', ea_path_helper(inputimage)];

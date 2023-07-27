@@ -114,8 +114,8 @@ invwarpstage = [' --warp=', ea_path_helper([volumedir, warpprefix, 'WarpField.ni
                 ' --verbose'];
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-FNIRT = ea_path_helper([basedir, 'fnirt', ea_getBinExt]);
-INVWARP = ea_path_helper([basedir, 'invwarp', ea_getBinExt]);
+FNIRT = ea_getExec([basedir, 'fnirt'], escapePath = 1);
+INVWARP = ea_getExec([basedir, 'invwarp'], escapePath = 1);
 
 fnirtcmd = [FNIRT, fnirtstage];
 invwarpcmd = [INVWARP, invwarpstage];

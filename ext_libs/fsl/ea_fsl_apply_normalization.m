@@ -55,7 +55,7 @@ if nargin == 1
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-APPLYWARP = ea_path_helper([basedir, 'applywarp', ea_getBinExt]);
+APPLYWARP = ea_getExec([basedir, 'applywarp'], escapePath = 1);
 
 
 for i = 1:length(input)

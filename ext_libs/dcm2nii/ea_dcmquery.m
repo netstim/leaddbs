@@ -12,7 +12,7 @@ end
 
 basedir = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', filesep);
 
-dcm2niix = ea_path_helper([basedir, 'dcm2niix', ea_getBinExt]);
+dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
 
 
 cmd = [dcm2niix, ' -q ', queryOption, ' ', ea_path_helper(inputFolder)];

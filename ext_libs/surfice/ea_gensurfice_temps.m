@@ -1,7 +1,7 @@
 function ea_gensurfice_temps
 disp('Generating surfaces of template space (left/right hemisphere)');
 setenv('FSLOUTPUTTYPE', 'NIFTI');
-cmd=[ea_getearoot,'ext_libs',filesep,'fsl',filesep,'bet2',ea_getBinExt,' ',ea_space,'t1.nii ',ea_space,'t1b.nii'];
+cmd = [ea_getExec([ea_getearoot,'ext_libs',filesep,'fsl',filesep,'bet2'], escapePath = 1) ' ' ea_space 't1.nii ' ea_space 't1b.nii'];
 ea_dispt('Skullstripping T1');
 
 ea_submitcmd(cmd);

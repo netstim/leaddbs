@@ -11,7 +11,7 @@ function ea_gencheckregpair_deep(moving,fixed,outfn)
 %    outfn:     png file as a combination of the above two (fixed image shown as wireframe overlay)
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
-SLICER = ea_path_helper([basedir, 'slicer', ea_getBinExt]);
+SLICER = ea_getExec([basedir, 'slicer'], escapePath = 1);
 
 
 uuid=ea_generate_uuid;

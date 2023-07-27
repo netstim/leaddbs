@@ -27,7 +27,7 @@ inputimage = ea_niifileparts(inputimage);
 [outputimage, ~, ext] = ea_niifileparts(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-BET = ea_path_helper([basedir, 'bet2', ea_getBinExt]);
+BET = ea_getExec([basedir, 'bet2'], escapePath = 1);
 
 
 cmd = [BET, ...

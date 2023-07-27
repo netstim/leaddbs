@@ -5,7 +5,7 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection', ea_getBinExt]);
+N4BiasFieldCorrection = ea_getExec([basedir, 'N4BiasFieldCorrection'], escapePath = 1);
 
 
 cmd=[N4BiasFieldCorrection, ...

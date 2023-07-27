@@ -124,13 +124,13 @@ end
 function [] = update_ants_transforms(subj,transform_ext)
     fprintf('Updating transform from %s to .nii.gz for subject: %s\n', transform_ext, subj.subjId);
 
-    ants_apply = fullfile(ea_getearoot, 'ext_libs', 'ANTs', ['antsApplyTransforms' ea_getBinExt]);
+    ants_apply = ea_getExec(fullfile(ea_getearoot, 'ext_libs', 'ANTs', 'antsApplyTransforms'), escapePath = 1);
 
     transforms_base = {subj.norm.transform.forwardBaseName, subj.norm.transform.inverseBaseName};
     references = {fullfile(ea_space, 't1.nii'), subj.coreg.anat.preop.(subj.AnchorModality)};
 
     for j = 1:length(transforms_base)
-        
+
         t = [transforms_base{j} 'ants' transform_ext];
         o = ['[' transforms_base{j} 'ants.nii.gz,1]'];
         r = references{j};

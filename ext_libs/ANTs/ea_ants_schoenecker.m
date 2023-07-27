@@ -106,9 +106,9 @@ end
 outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-HEADER = ea_path_helper([basedir, 'PrintHeader', ea_getBinExt]);
-ANTS = ea_path_helper([basedir, 'antsRegistration', ea_getBinExt]);
-applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms', ea_getBinExt]);
+HEADER = ea_getExec([basedir, 'PrintHeader'], escapePath = 1);
+ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
+applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
 if ~ispc
     [~, imgsize] = system(['bash -c "', HEADER, ' ',fixedimage{1}, ' 2"']);

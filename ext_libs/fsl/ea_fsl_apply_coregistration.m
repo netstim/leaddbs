@@ -32,7 +32,7 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-FLIRT = ea_path_helper([basedir, 'flirt', ea_getBinExt]);
+FLIRT = ea_getExec([basedir, 'flirt'], escapePath = 1);
 
 
 cmd = [FLIRT, ...

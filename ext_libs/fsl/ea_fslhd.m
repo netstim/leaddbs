@@ -13,7 +13,7 @@ if ~isfile(input)
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-FSLHD = ea_path_helper([basedir, 'fslhd', ea_getBinExt]);
+FSLHD = ea_getExec([basedir, 'fslhd'], escapePath = 1);
 
 
 cmd = [FSLHD, ' ', xmlarg, ' ', ea_path_helper(input), ];

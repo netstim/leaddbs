@@ -155,7 +155,7 @@ end
 function ftr=track_seed_gqi(cfile,seedfile)
 
 basedir = [ea_getearoot, 'ext_libs',filesep,'dsi_studio',filesep];
-DSISTUDIO = ea_path_helper([basedir, 'dsi_studio', ea_getBinExt]);
+DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
 
 
 pth=fileparts(seedfile);

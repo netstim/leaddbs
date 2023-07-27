@@ -55,9 +55,9 @@ outputbase = ea_niifileparts(outputimage);
 volumedir = [fileparts(outputbase), filesep];
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-HEADER = ea_path_helper([basedir, 'PrintHeader', ea_getBinExt]);
-ANTS = ea_path_helper([basedir, 'antsRegistration', ea_getBinExt]);
-applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms', ea_getBinExt]);
+HEADER = ea_getExec([basedir, 'PrintHeader'], escapePath = 1);
+ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
+applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
 if ~ispc
     [~, imgsize] = system(['bash -c "', HEADER, ' ', ea_path_helper(fixedimage), ' 2"']);

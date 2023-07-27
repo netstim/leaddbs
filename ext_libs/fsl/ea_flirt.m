@@ -116,8 +116,8 @@ elseif runs > 0
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-FLIRT = ea_path_helper([basedir, 'flirt', ea_getBinExt]);
-COVERT_XFM = ea_path_helper([basedir, 'convert_xfm', ea_getBinExt]);
+FLIRT = ea_getExec([basedir, 'flirt'], escapePath = 1);
+COVERT_XFM = ea_getExec([basedir, 'convert_xfm'], escapePath = 1);
 
 flirtcmd = [FLIRT, ...
             ' -ref ', ea_path_helper(refimage), ...
