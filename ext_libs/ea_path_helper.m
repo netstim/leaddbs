@@ -9,14 +9,12 @@ else
 end
 
 for i=1:length(filepath)
-    if isempty(fileparts(filepath{i})) && ~strcmp(filepath{i},'.')
-        filepath{i} = ['.', filesep, filepath{i}];
-    end
+    filepath{i} = GetFullPath(filepath{i});
 
     if ispc
         filepath{i} = ['"',filepath{i},'"'];
     else
-        filepath{i} = regexprep(filepath{i},'[[''() &]]', '\\$0');
+        filepath{i} = regexprep(filepath{i},'[[](){}''"; &]', '\\$0');
     end
 end
 
