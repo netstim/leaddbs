@@ -15,7 +15,7 @@ for i=1:numel(object)
         delete(object{i});
     elseif isfolder(object{i})
         rmdir(object{i},'s');
-    elseif endsWith(object{i}, '*') && ~isempty(dir(object{i}))
+    elseif contains(object{i}, '*') && ~isempty(dir(object{i}))
         contents = dir(object{i});
         contents = contents(~ismember({contents.name}, {'.', '..'}));
         for c=1:length(contents)
