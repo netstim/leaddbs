@@ -37,7 +37,7 @@ end
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
 
-    ea_coregimages(options, moving{i}, anchor, output{i});
+    ea_coregimages(options, moving{i}, anchor, output{i},[],1);
 
     % Better slab support
     nii = ea_load_nii(output{i});

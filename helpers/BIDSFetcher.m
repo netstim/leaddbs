@@ -547,6 +547,14 @@ classdef BIDSFetcher
             fields = fieldnames(coregAnat.preop);
             coregTransform.(fields{1}) = [baseName, 'desc-precoreg_', fields{1}, '.mat'];
 
+            % Set pre-op MR transformation
+            if numel(fields) >1
+                for i = 2:numel(fields)
+                    coregTransform.(fields{i}).forwardBaseName = [baseName, 'from-', fields{i}, '_to-', obj.anchorSpace, '_desc-'];
+                    coregTransform.(fields{i}).inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-', fields{i}, '_desc-'];
+                end
+            end
+
             % Set post-op CT transformation
             if isfield(coregAnat, 'postop') && isfield(coregAnat.postop, 'CT')
                 coregTransform.CT.forwardBaseName = [baseName, 'from-CT_to-', obj.anchorSpace, '_desc-'];

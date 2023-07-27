@@ -152,6 +152,12 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
+% convert affinefile from txt to tmat
+for i = 1:numel(affinefile)
+    tmat = readmatrix(affinefile{i},'FileType','text');
+    save(affinefile{i},'tmat');
+end
+
 % Clean up BET image when skullstripping is on
 if normsettings.fsl_skullstrip
     ea_delete({inimage, refimage});

@@ -93,14 +93,16 @@ if ~writeoutmat
 else
     % save transform: mov vox to fix mm
     spmaffine = spm_get_space(moving); % affine from mov vox to fix mm already stored in the mov header after coreg
-    save([fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat');
+    tmat = inv(movingmat/spmaffine); % matrix from moving mm to fix mm
+    save([fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat', 'tmat');
 
     % save inverse transform: fix vox to mov mm, switch fixedmat and movingmat
     spmaffine = movingmat/spm_get_space(moving)*fixedmat;
     tmp = movingmat;
     movingmat = fixedmat;
     fixedmat = tmp;
-    save([fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat');
+    tmat = inv(movingmat/spmaffine); % matrix from fixed mm to moving mm
+    save([fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat', 'tmat');
 
     affinefile = {[fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat']
         [fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat']};
