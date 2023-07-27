@@ -2,7 +2,12 @@ function ea_refreshrecent(handles, type)
 % Refresh recent patients/group analyses popupmenu
 
 earoot = ea_getearoot;
-load([earoot, 'common', filesep, 'ea_recent', type, '.mat'], 'recentfolders');
+
+try
+    load([earoot,'common',filesep,'ea_recent',type,'.mat'], 'recentfolders');
+catch
+    recentfolders = {};
+end
 
 if ismember(['No recent ', type, ' found'], recentfolders) % No recent folder found, set to empty
     recentfolders = {};
