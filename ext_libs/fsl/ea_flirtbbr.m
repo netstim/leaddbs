@@ -118,34 +118,20 @@ if writeoutmat
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
-    system(['bash -c "', fastcmd, '"']);
-    system(['bash -c "', wmsegcmd, '"']);
-    system(['bash -c "', wmedgecmd, '"']);
 
-    fprintf('\n\nRunning FSL FLIRT Pre-alignment: %s\n\n', movingimage);
-    system(['bash -c "', flirtinitcmd, '"']);
+fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
+ea_submitcmd(fastcmd);
+ea_submitcmd(wmsegcmd);
+ea_submitcmd(wmedgecmd);
 
-    fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
-    system(['bash -c "', flirtbbrcmd, '"']);
-    if writeoutmat
-        system(['bash -c "', convertxfmcmd, '"']);
-    end
-else
-    fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
-    system(fastcmd);
-    system(wmsegcmd);
-    system(wmedgecmd);
+fprintf('\n\nRunning FSL FLIRT Pre-alignment: %s\n\n', movingimage);
+ea_submitcmd(flirtinitcmd);
 
-    fprintf('\n\nRunning FSL FLIRT Pre-alignment: %s\n\n', movingimage);
-    system(flirtinitcmd);
+fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
+ea_submitcmd(flirtbbrcmd);
 
-    fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
-    system(flirtbbrcmd);
-    if writeoutmat
-        system(convertxfmcmd);
-    end
+if writeoutmat
+    ea_submitcmd(convertxfmcmd);
 end
 
 % Apply the tranformation to other files

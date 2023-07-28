@@ -29,11 +29,7 @@ end
 
 cmd = [cmd, ' -v 1'];
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);
 
 ea_delete(transform_file_name)
 

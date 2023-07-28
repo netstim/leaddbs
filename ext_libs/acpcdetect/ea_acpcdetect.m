@@ -20,11 +20,7 @@ cmd = [ACPCDETECT, ' -v -no-tilt-correction -noppm -nopng -notxt -i ', ea_path_h
 
 setenv('ARTHOME', basedir);
 fprintf('\nacpcdetect ...\n\n');
-if ~ispc
-    [~, cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [~, cmdout] = system(cmd);
-end
+[~, cmdout] = ea_submitcmd(cmd);
 
 disp(cmdout);
 

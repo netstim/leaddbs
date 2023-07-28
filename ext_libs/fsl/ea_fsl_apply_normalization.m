@@ -109,10 +109,6 @@ for i = 1:length(input)
         [~, inputFileName] = ea_niifileparts(input{i});
         fprintf('\nNormalizing %s ...\n', inputFileName);
 
-        if ~ispc
-            system(['bash -c "', cmd, '"']);
-        else
-            system(cmd);
-        end
+        ea_submitcmd(cmd);
     end
 end

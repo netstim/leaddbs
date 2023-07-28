@@ -7,11 +7,7 @@ DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
 
 exportcmd = [DSISTUDIO, ' --action=exp --source=', ea_path_helper(GetFullPath(fibgz)), ' --export=', data];
 
-if ~ispc
-    [~, cmdout] = system(['bash -c "', exportcmd, '"']);
-else
-    [~, cmdout] = system(exportcmd);
-end
+[~, cmdout] = ea_submitcmd(exportcmd);
 
 disp(cmdout);
 

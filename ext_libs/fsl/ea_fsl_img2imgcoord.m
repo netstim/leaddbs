@@ -64,11 +64,7 @@ end
 cmd = [cmd, ' ', ea_path_helper(incoords)];
 
 setenv('FSLOUTPUTTYPE', 'NIFTI');
-if ~ispc
-    [status, cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [status, cmdout] = system(cmd);
-end
+[status, cmdout] = ea_submitcmd(cmd);
 
 if status == 0
     outcoords = cell2mat(textscan(cmdout, '%f %f %f', 'HeaderLines', 1));

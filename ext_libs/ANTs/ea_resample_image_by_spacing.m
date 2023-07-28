@@ -52,13 +52,9 @@ cmd = [ResampleImageBySpacing,' ',dimension, ...
                               ' ',addvox, ...
                               ' ',nninterp];
 
-ea_libs_helper;
-
 fprintf('\nResampling image spacing to [%s]: %s\n\n', spacing, inputimage);
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
-fprintf('\n');
 
+ea_libs_helper;
+ea_submitcmd(cmd);
+
+fprintf('\n');

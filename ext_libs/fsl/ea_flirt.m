@@ -133,13 +133,8 @@ convertxfmcmd = [COVERT_XFM, ...
               ' -inverse ', ea_path_helper([volumedir, xfm, num2str(runs+1), '.mat'])];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', flirtcmd, '"']);
-    system(['bash -c "', convertxfmcmd, '"']);
-else
-    system(flirtcmd);
-    system(convertxfmcmd);
-end
+ea_submitcmd(flirtcmd);
+ea_submitcmd(convertxfmcmd);
 
 if ~isempty(otherfiles)
     for fi = 1:numel(otherfiles)

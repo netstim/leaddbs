@@ -112,11 +112,7 @@ fid = fopen(antsCMDFile, 'a');
 fprintf(fid, '%s:\n%s\n\n', char(datetime('now')), cmd);
 fclose(fid);
 
-if ~ispc
-    status = system(['bash -c "', cmd, '"']);
-else
-    status = system(cmd);
-end
+status = ea_submitcmd(cmd);
 
 if status
     error(sprintf('ANTs normalization failed! Please check the log above for details.\nIn case it''s an out of memory error, reduce the number of threads in the ANTs settings might help.'));
@@ -157,16 +153,11 @@ cmd = [applyTransforms ' -r ' props.fixed ...
     ' -o [' ea_path_helper([props.outputbase 'Composite' outputformat]) ',1]' ...
     ' --float'];
 
-icmd = [applyTransforms ' -r ' props.moving ...
+invcmd = [applyTransforms ' -r ' props.moving ...
     ' -t '  ea_path_helper(props.initial_inv_transform) ...
     ' -t '  ea_path_helper([props.outputbase N 'InverseWarp.nii.gz']) ...
     ' -o [' ea_path_helper([props.outputbase 'InverseComposite' outputformat]) ',1]' ...
     ' --float'];
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-    system(['bash -c "', icmd, '"']);
-else
-    system(cmd);
-    system(icmd);
-end
+ea_submitcmd(cmd);
+ea_submitcmd(invcmd);

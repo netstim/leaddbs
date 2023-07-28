@@ -40,16 +40,14 @@ if outputmask
 end
 
 cmd = [cmd, ' -f ' ,num2str(fraintthreshold)];
+
 switch ext
     case '.nii'
         setenv('FSLOUTPUTTYPE','NIFTI');
     case '.nii.gz'
         setenv('FSLOUTPUTTYPE','NIFTI_GZ');
 end
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+
+ea_submitcmd(cmd);
 
 fprintf('\nFSL BET2 finished\n');

@@ -110,11 +110,8 @@ HEADER = ea_getExec([basedir, 'PrintHeader'], escapePath = 1);
 ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
 applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
-if ~ispc
-    [~, imgsize] = system(['bash -c "', HEADER, ' ',fixedimage{1}, ' 2"']);
-else
-    [~, imgsize] = system([HEADER, ' ', fixedimage{1}, ' 2']);
-end
+headercmd = [HEADER, ' ', fixedimage{1}, ' 2'];
+[~, imgsize] = ea_submitcmd(headercmd);
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
@@ -263,13 +260,8 @@ fid = fopen(antsCMDFile, 'a');
 fprintf(fid, '%s:\n%s\n\n', char(datetime('now')), cmd);
 fclose(fid);
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-    system(['bash -c "', invcmd, '"']);
-else
-    system(cmd);
-    system(invcmd);
-end
+ea_submitcmd(cmd);
+ea_submitcmd(invcmd);
 
 if exist('tmaskdir', 'var')
     ea_delete(tmaskdir);

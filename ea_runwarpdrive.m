@@ -136,11 +136,7 @@ function [] = update_ants_transforms(subj,transform_ext)
         r = references{j};
 
         cmd = [ants_apply, ' -r ' r ' -o ' o ' -t ' t ' -v 1 --float'];
-        if ~ispc
-            system(['bash -c "', cmd, '"']);
-        else
-            system(cmd);
-        end
+        ea_submitcmd(cmd);
 
         delete(t);
 

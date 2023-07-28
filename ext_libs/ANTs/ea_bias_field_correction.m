@@ -17,8 +17,5 @@ cmd=[N4BiasFieldCorrection, ...
     ' --convergence [50x50x50x50,0.000001]'];
 
 fprintf('\nBias field correction...\n\n')
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+
+ea_submitcmd(cmd);

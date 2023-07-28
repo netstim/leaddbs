@@ -10,12 +10,7 @@ if ~exist('sigma','var')
 end
 
 cmd=[UNLM,' --sigma ',num2str(sigma),' ',ea_path_helper(input),' ',ea_path_helper(output)];
-
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);
 
 [pth,inputfname]=fileparts(input);
 

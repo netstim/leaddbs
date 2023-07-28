@@ -121,13 +121,8 @@ fnirtcmd = [FNIRT, fnirtstage];
 invwarpcmd = [INVWARP, invwarpstage];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', fnirtcmd, '"']);
-    system(['bash -c "', invwarpcmd, '"']);
-else
-    system(fnirtcmd);
-    system(invwarpcmd);
-end
+ea_submitcmd(fnirtcmd);
+ea_submitcmd(invwarpcmd);
 
 % Clean up waro coef file
 ea_delete([volumedir, warpprefix, 'WarpCoef.nii'])

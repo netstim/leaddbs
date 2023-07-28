@@ -102,11 +102,7 @@ elseif tool==2 % Use FSL
     FLIRT = ea_getExec([basedir, 'flirt'], escapePath = 1);
     flirtcmd=[FLIRT,' -in ',old_fn,' -ref ',old_fn,' -out ',new_fn,' -nosearch -applyisoxfm ',num2str(mean(voxel_size)),' -interp ',ea_fslinterps(interp)];
     setenv('FSLOUTPUTTYPE','NIFTI');
-    if ~ispc
-        system(['bash -c "', flirtcmd, '"']);
-    else
-        system(flirtcmd);
-    end
+    ea_submitcmd(flirtcmd);
 
 elseif tool==3 % Use ANTs
     ea_resample_image_by_spacing(old_fn,voxel_size,0,bg,~interp,new_fn); % ~interp because 0 = linear and 1 = nn in ANTs.

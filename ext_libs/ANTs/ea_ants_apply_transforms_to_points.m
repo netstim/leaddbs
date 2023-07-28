@@ -54,11 +54,7 @@ cmd = [applyTransformsToPoints, ...
 
 ea_writecsv(input_file, input);
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);
 
 output = ea_readcsv(output_file);
 ea_delete(input_file);

@@ -19,13 +19,11 @@ dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
 if strcmp(outdir(end),filesep)
     outdir = outdir(1:end-1);
 end
+
 if strcmp(dicomdir(end),filesep)
     dicomdir = dicomdir(1:end-1);
 end
+
 cmd=[dcm2niix, ' --progress -f "%f_%p_%z_%t_%s_%d" -i y -b y -v 0 -z y -o ', ea_path_helper(outdir), ' ', ea_path_helper(dicomdir)];
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);

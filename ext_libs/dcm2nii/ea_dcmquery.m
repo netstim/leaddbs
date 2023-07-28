@@ -17,11 +17,7 @@ dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
 
 cmd = [dcm2niix, ' -q ', queryOption, ' ', ea_path_helper(inputFolder)];
 
-if ~ispc
-    [status, cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [status, cmdout] = system(cmd);
-end
+[status, cmdout] = ea_submitcmd(cmd);
 
 fileList = {};
 isCompressed = false;

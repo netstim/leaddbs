@@ -55,8 +55,4 @@ if inverse
     cmd = [cmd, ' --inverseTransform'];
 end
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);

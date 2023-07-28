@@ -27,10 +27,6 @@ if ~exist(basedir,'dir')
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI')
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);
 
 ea_delete([tempdir,'lead_temp',uuid,'.nii']);

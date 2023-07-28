@@ -45,8 +45,4 @@ cmd = [FLIRT, ...
        ' -v'];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);

@@ -82,11 +82,7 @@ BRAINSFit = ea_getExec(basename, escapePath = 1);
 ea_libs_helper
 for trial = 1:4
     cmd = [BRAINSFit, ' ', paramset{trial}];
-    if ~ispc
-        status = system(['bash -c "', cmd, '"']);
-    else
-        status = system(cmd);
-    end
+    status = ea_submitcmd(cmd);
 
     if status == 0
         fprintf(['\nBRAINSFit with parameter set ', num2str(trial), '\n']);

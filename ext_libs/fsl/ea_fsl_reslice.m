@@ -33,8 +33,4 @@ if verbose
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_submitcmd(cmd);

@@ -17,12 +17,7 @@ FSLHD = ea_getExec([basedir, 'fslhd'], escapePath = 1);
 
 
 cmd = [FSLHD, ' ', xmlarg, ' ', ea_path_helper(input), ];
-
-if ~ispc
-    [status, cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [status, cmdout] = system(cmd);
-end
+[status, cmdout] = ea_submitcmd(cmd);
 
 if status ~= 0
     error('%s', strip(cmdout));
@@ -45,7 +40,7 @@ cmdout = cellfun(@(x) strsplit(x, ' = '), strsplit(cmdout, ea_newline), 'Uni', 0
 header = struct;
 for i=1:length(cmdout)
     if length(cmdout{i})==1
-        continue % shell init issue, skip this line
+        continue % shell init issue on macOS, skip this line
     else
         if isempty(cmdout{i}{2})
             eval(['header.', cmdout{i}{1}, ' = '''';']);

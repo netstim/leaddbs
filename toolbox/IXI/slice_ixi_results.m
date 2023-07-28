@@ -13,9 +13,5 @@ for ixi=1:length(ixiids)
            ' ', ea_space, 't2.nii' ...
            ' -a', ' mono', ixibase, '.png'];
 
-    if ~ispc
-        system(['bash -c "', cmd, '"']);
-    else
-        system(cmd);
-    end
+    ea_submitcmd(cmd);
 end
