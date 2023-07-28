@@ -55,4 +55,4 @@ if inverse
     cmd = [cmd, ' --inverseTransform'];
 end
 
-ea_submitcmd(cmd);
+ea_runcmd(cmd);

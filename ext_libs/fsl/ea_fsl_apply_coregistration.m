@@ -45,4 +45,4 @@ cmd = [FLIRT, ...
        ' -v'];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-ea_submitcmd(cmd);
+ea_runcmd(cmd);

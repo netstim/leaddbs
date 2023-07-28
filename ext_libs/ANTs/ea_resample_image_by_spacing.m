@@ -55,6 +55,6 @@ cmd = [ResampleImageBySpacing,' ',dimension, ...
 fprintf('\nResampling image spacing to [%s]: %s\n\n', spacing, inputimage);
 
 ea_libs_helper;
-ea_submitcmd(cmd);
+ea_runcmd(cmd);
 
 fprintf('\n');

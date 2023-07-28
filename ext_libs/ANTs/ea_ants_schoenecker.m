@@ -111,7 +111,7 @@ ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
 applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
 headercmd = [HEADER, ' ', fixedimage{1}, ' 2'];
-[~, imgsize] = ea_submitcmd(headercmd);
+[~, imgsize] = ea_runcmd(headercmd);
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
@@ -260,8 +260,8 @@ fid = fopen(antsCMDFile, 'a');
 fprintf(fid, '%s:\n%s\n\n', char(datetime('now')), cmd);
 fclose(fid);
 
-ea_submitcmd(cmd);
-ea_submitcmd(invcmd);
+ea_runcmd(cmd);
+ea_runcmd(invcmd);
 
 if exist('tmaskdir', 'var')
     ea_delete(tmaskdir);

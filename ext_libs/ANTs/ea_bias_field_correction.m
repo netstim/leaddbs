@@ -18,4 +18,4 @@ cmd=[N4BiasFieldCorrection, ...
 
 fprintf('\nBias field correction...\n\n')
 
-ea_submitcmd(cmd);
+ea_runcmd(cmd);

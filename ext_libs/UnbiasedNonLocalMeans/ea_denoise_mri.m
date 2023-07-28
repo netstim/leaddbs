@@ -10,7 +10,7 @@ if ~exist('sigma','var')
 end
 
 cmd=[UNLM,' --sigma ',num2str(sigma),' ',ea_path_helper(input),' ',ea_path_helper(output)];
-ea_submitcmd(cmd);
+ea_runcmd(cmd);
 
 [pth,inputfname]=fileparts(input);
 

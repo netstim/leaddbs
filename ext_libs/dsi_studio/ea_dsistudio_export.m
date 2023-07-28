@@ -7,7 +7,7 @@ DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
 
 exportcmd = [DSISTUDIO, ' --action=exp --source=', ea_path_helper(GetFullPath(fibgz)), ' --export=', data];
 
-[~, cmdout] = ea_submitcmd(exportcmd);
+[~, cmdout] = ea_runcmd(exportcmd);
 
 disp(cmdout);
 

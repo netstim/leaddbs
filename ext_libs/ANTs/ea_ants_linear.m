@@ -60,7 +60,7 @@ ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
 applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
 headercmd = [HEADER, ' ', ea_path_helper(fixedimage), ' 2'];
-[~, imgsize] = ea_submitcmd(headercmd);
+[~, imgsize] = ea_runcmd(headercmd);
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
@@ -199,9 +199,9 @@ if writeoutmat % inverse only needed if matrix is written out.
         ' --output Linear[', ea_path_helper([outputbase, 'Inverse0GenericAffine.mat']),']'];
 end
 
-ea_submitcmd(antscmd);
+ea_runcmd(antscmd);
 if writeoutmat
-    ea_submitcmd(invaffinecmd);
+    ea_runcmd(invaffinecmd);
 end
 
 if ~isempty(otherfiles)

@@ -82,7 +82,7 @@ BRAINSFit = ea_getExec(basename, escapePath = 1);
 ea_libs_helper
 for trial = 1:4
     cmd = [BRAINSFit, ' ', paramset{trial}];
-    status = ea_submitcmd(cmd);
+    status = ea_runcmd(cmd);
 
     if status == 0
         fprintf(['\nBRAINSFit with parameter set ', num2str(trial), '\n']);

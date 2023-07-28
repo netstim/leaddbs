@@ -136,7 +136,7 @@ function [] = update_ants_transforms(subj,transform_ext)
         r = references{j};
 
         cmd = [ants_apply, ' -r ' r ' -o ' o ' -t ' t ' -v 1 --float'];
-        ea_submitcmd(cmd);
+        ea_runcmd(cmd);
 
         delete(t);
 

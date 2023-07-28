@@ -1,4 +1,5 @@
-function varargout = ea_submitcmd(cmd)
+function varargout = ea_runcmd(cmd)
+% Run system command constructed using external binaries.
 
 if isunix
     cmd = ['bash -c "', cmd, '"'];

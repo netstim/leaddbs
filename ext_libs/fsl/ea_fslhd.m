@@ -17,7 +17,7 @@ FSLHD = ea_getExec([basedir, 'fslhd'], escapePath = 1);
 
 
 cmd = [FSLHD, ' ', xmlarg, ' ', ea_path_helper(input), ];
-[status, cmdout] = ea_submitcmd(cmd);
+[status, cmdout] = ea_runcmd(cmd);
 
 if status ~= 0
     error('%s', strip(cmdout));

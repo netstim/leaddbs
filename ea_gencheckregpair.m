@@ -27,6 +27,6 @@ if ~exist(basedir,'dir')
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI')
-ea_submitcmd(cmd);
+ea_runcmd(cmd);
 
 ea_delete([tempdir,'lead_temp',uuid,'.nii']);

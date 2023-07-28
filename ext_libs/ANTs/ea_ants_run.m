@@ -112,7 +112,7 @@ fid = fopen(antsCMDFile, 'a');
 fprintf(fid, '%s:\n%s\n\n', char(datetime('now')), cmd);
 fclose(fid);
 
-status = ea_submitcmd(cmd);
+status = ea_runcmd(cmd);
 
 if status
     error(sprintf('ANTs normalization failed! Please check the log above for details.\nIn case it''s an out of memory error, reduce the number of threads in the ANTs settings might help.'));
@@ -159,5 +159,5 @@ invcmd = [applyTransforms ' -r ' props.moving ...
     ' -o [' ea_path_helper([props.outputbase 'InverseComposite' outputformat]) ',1]' ...
     ' --float'];
 
-ea_submitcmd(cmd);
-ea_submitcmd(invcmd);
+ea_runcmd(cmd);
+ea_runcmd(invcmd);

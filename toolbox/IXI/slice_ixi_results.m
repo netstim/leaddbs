@@ -13,5 +13,5 @@ for ixi=1:length(ixiids)
            ' ', ea_space, 't2.nii' ...
            ' -a', ' mono', ixibase, '.png'];
 
-    ea_submitcmd(cmd);
+    ea_runcmd(cmd);
 end

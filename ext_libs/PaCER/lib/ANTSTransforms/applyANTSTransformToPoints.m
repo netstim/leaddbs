@@ -51,7 +51,7 @@ end
 
 cmd = [cmd ' -o ' tempFileOut];
 
-ret = ea_submitcmd(cmd);
+ret = ea_runcmd(cmd);
 
 assert(ret == 0);
 points = readmatrix(tempFileOut);

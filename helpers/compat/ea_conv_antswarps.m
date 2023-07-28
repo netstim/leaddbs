@@ -29,7 +29,7 @@ end
 
 cmd = [cmd, ' -v 1'];
 
-ea_submitcmd(cmd);
+ea_runcmd(cmd);
 
 ea_delete(transform_file_name)
 

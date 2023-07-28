@@ -120,18 +120,18 @@ end
 setenv('FSLOUTPUTTYPE','NIFTI');
 
 fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
-ea_submitcmd(fastcmd);
-ea_submitcmd(wmsegcmd);
-ea_submitcmd(wmedgecmd);
+ea_runcmd(fastcmd);
+ea_runcmd(wmsegcmd);
+ea_runcmd(wmedgecmd);
 
 fprintf('\n\nRunning FSL FLIRT Pre-alignment: %s\n\n', movingimage);
-ea_submitcmd(flirtinitcmd);
+ea_runcmd(flirtinitcmd);
 
 fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
-ea_submitcmd(flirtbbrcmd);
+ea_runcmd(flirtbbrcmd);
 
 if writeoutmat
-    ea_submitcmd(convertxfmcmd);
+    ea_runcmd(convertxfmcmd);
 end
 
 % Apply the tranformation to other files

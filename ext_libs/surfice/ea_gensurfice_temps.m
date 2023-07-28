@@ -4,7 +4,7 @@ setenv('FSLOUTPUTTYPE', 'NIFTI');
 cmd = [ea_getExec([ea_getearoot,'ext_libs',filesep,'fsl',filesep,'bet2'], escapePath = 1) ' ' ea_space 't1.nii ' ea_space 't1b.nii'];
 ea_dispt('Skullstripping T1');
 
-ea_submitcmd(cmd);
+ea_runcmd(cmd);
 ea_dispt('Splitting T1 into left & right hemispheres');
 
 ea_split_nii_lr([ea_space,'t1b.nii']);

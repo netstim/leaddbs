@@ -73,7 +73,7 @@ trkcmd=[DSISTUDIO,' --action=trk',...
     ' --step_size=0.5',...
     ' --turning_angle=75'];
 
-err=ea_submitcmd(trkcmd);
+err=ea_runcmd(trkcmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
@@ -169,7 +169,7 @@ else
     maskext='.nii';
 end
 
-err=ea_submitcmd(cmd);
+err=ea_runcmd(cmd);
 
 if err || ~exist([directory,'dti.src.gz'],'file')
     ea_warning('DSI studio failed to generate .src file. Using Matlab code instead.');
@@ -184,7 +184,7 @@ cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']
     ' --num_fiber=5',...
     ' --odf_order=8'];
 
-err=ea_submitcmd(cmd);
+err=ea_runcmd(cmd);
 ea_delete([directory,'dti.src.gz']);
 
 if err

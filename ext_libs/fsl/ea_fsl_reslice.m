@@ -33,4 +33,4 @@ if verbose
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-ea_submitcmd(cmd);
+ea_runcmd(cmd);

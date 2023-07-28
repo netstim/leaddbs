@@ -26,4 +26,4 @@ end
 
 cmd=[dcm2niix, ' --progress -f "%f_%p_%z_%t_%s_%d" -i y -b y -v 0 -z y -o ', ea_path_helper(outdir), ' ', ea_path_helper(dicomdir)];
 
-ea_submitcmd(cmd);
+ea_runcmd(cmd);

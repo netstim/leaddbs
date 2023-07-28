@@ -54,7 +54,7 @@ cmd = [applyTransformsToPoints, ...
 
 ea_writecsv(input_file, input);
 
-ea_submitcmd(cmd);
+ea_runcmd(cmd);
 
 output = ea_readcsv(output_file);
 ea_delete(input_file);

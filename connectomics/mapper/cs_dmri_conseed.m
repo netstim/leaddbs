@@ -166,7 +166,7 @@ cmd=[DSISTUDIO,' --action=trk --source=',ea_path_helper(cfile),...
     ' --seed_count=10000',...
     ' --output=',ea_path_helper([pth,filesep,'temp.mat'])];
 
-err=ea_submitcmd(cmd);
+err=ea_runcmd(cmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end

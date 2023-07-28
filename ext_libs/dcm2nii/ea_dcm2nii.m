@@ -20,7 +20,7 @@ dcm2nii = ea_getExec([basedir, 'dcm2nii'], escapePath = 1);
 cmd=[dcm2nii, ' -g n -x y ', ea_path_helper(inputimage)];
 
 fprintf('\nReorient and crop image...\n\n');
-[~, cmdout] = ea_submitcmd(cmd);
+[~, cmdout] = ea_runcmd(cmd);
 
 disp(cmdout);
 
@@ -48,7 +48,7 @@ if contains(cmdout,'Crop 3D unsupported datatype.') ||...
 
     % Try again now
     fprintf('\nRetry reorienting and cropping...\n\n');
-    [~, cmdout] = ea_submitcmd(cmd);
+    [~, cmdout] = ea_runcmd(cmd);
 
     disp(cmdout);
 end

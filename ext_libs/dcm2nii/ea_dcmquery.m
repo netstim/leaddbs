@@ -17,7 +17,7 @@ dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
 
 cmd = [dcm2niix, ' -q ', queryOption, ' ', ea_path_helper(inputFolder)];
 
-[status, cmdout] = ea_submitcmd(cmd);
+[status, cmdout] = ea_runcmd(cmd);
 
 fileList = {};
 isCompressed = false;
