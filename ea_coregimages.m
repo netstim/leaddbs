@@ -32,17 +32,12 @@ end
 if ~exist('interp','var') || isempty(interp)
     interp = 4;
 end
-% get modality name of moving
-fields = fieldnames(options.subj.preproc.anat.preop);
-modality = fields{ismember(struct2cell(options.subj.preproc.anat.preop),moving)};
 
 switch lower(options.coregmr.method)
     case lower({'ANTs (Avants 2008)', 'ANTs'})
         affinefile = ea_ants_linear(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles,masks);
-        movefile(affinefile{1},[options.subj.coreg.transform.(modality).forwardBaseName, 'ants.mat']);
-        movefile(affinefile{2},[options.subj.coreg.transform.(modality).inverseBaseName, 'ants.mat']);
     case lower({'BRAINSFit (Johnson 2007)', 'BRAINSFit'})
         affinefile = ea_brainsfit(fixed,...
             moving,...
@@ -51,8 +46,6 @@ switch lower(options.coregmr.method)
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-        movefile(affinefile{1},[options.subj.coreg.transform.(modality).forwardBaseName, 'flirt.mat']);
-        movefile(affinefile{2},[options.subj.coreg.transform.(modality).inverseBaseName, 'flirt.mat']);
     case lower({'FLIRT BBR (Greve and Fischl 2009)', 'FLIRT BBR', 'FLIRTBBR'})
         affinefile = ea_flirtbbr(fixed,...
             moving,...
@@ -95,9 +88,6 @@ switch lower(options.coregmr.method)
             spmoutput = [fileparts(fpth), filesep, 'r', fname, ext];
             movefile(spmoutput, [fpth, ext]);
         end
-
-        movefile(affinefile{1},[options.subj.coreg.transform.(modality).forwardBaseName, 'spm.mat']);
-        movefile(affinefile{2},[options.subj.coreg.transform.(modality).inverseBaseName, 'spm.mat']);
     case lower({'ANTs Nonlinear Coregistration', 'ANTsNonLinear'})
         transforms = ea_ants_nonlinear_coreg(fixed, moving, ofile, ...
             options.prefs.machine.normsettings, 'NULL', 'NULL', 'ea_antspreset_ants_wiki');

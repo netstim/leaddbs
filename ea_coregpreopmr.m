@@ -37,7 +37,19 @@ end
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
 
-    ea_coregimages(options, moving{i}, anchor, output{i},[],1);
+    affinefile = ea_coregimages(options, moving{i}, anchor, output{i},[],1);
+    %% save Transforms
+    switch lower(options.coregmr.method)
+        case lower({'ANTs (Avants 2008)', 'ANTs'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants.mat']);
+        case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt.mat']);
+        case lower({'SPM (Friston 2007)', 'SPM'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm.mat']);
+    end
 
     % Better slab support
     nii = ea_load_nii(output{i});
