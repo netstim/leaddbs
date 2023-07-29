@@ -2,10 +2,21 @@ function ea_checkspm
 
 if ~isdeployed
     try
-        ver=spm('version');
-        spm_check_installation('basic'); % have SPM check its path and binaries and give proper warnings and hints to the user if something is not good
+        ver = spm('version');
     catch
-        ea_error('SPM seems not installed. Please install SPM12 and add it to the Matlab path before using Lead-DBS.');
+        ea_error('SPM12 seems not installed. Please install SPM12 and add it to the MATLAB path before using Lead-DBS.');
+    end
+
+    try
+        spm_check_installation('basic'); % have SPM check its path and binaries and give proper warnings and hints to the user if something is not good
+    catch ME
+        if strcmp(computer('arch'), 'maca64') && contains(ME.message, 'MEX files')
+            % Add maca64 MEX files from upstream
+            ea_cprintf('CmdWinWarnings', 'Adding missing maca64 MEX files for SPM12...\n');
+            unzip(fullfile(ea_getearoot, 'ext_libs', 'spm_mexmaca64.zip'), fileparts(which('spm')));
+        else
+            rethrow(ME);
+        end
     end
     
     if ~any(ismember(ver(8:11),'.')) % old version format
