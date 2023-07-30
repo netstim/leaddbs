@@ -14,6 +14,8 @@ if ~exist('showdlg', 'var')
     showdlg = 1;
 end
 
+msg = sprintf(msg);
+
 if showdlg
     errordlg(msg, title);
 end
