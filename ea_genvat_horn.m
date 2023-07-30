@@ -167,7 +167,12 @@ if hmchanged
     end
 
     if ~success
-       ea_error('Despite all attempts the VTA model could not be created. Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.');
+        if exist('ME', 'var')
+            ea_cprintf('CmdWinErrors', '%s\n', ME.message);
+        end
+        ea_error(['Despite all attempts the VTA model could not be created.\n' ...
+            'Please check MATLAB Command Window for detailed error information.\n' ...
+            'Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.']);
     end
 
     % replace wmboundary
