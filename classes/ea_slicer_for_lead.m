@@ -1,25 +1,18 @@
 classdef ea_slicer_for_lead
 
     properties
-        name
         install_path
         executable_path
+        release_tag = 'v230512-beta'
+        release_version = '0.1.0-2023-05-12'
+        installed_version
+        download_url
     end
-    
+
     methods
         function obj = ea_slicer_for_lead()
-            if ismac
-                os = 'macosx';
-                date = '2022-11-03';
-            elseif ispc
-                os = 'win';
-                date = '2022-11-03';
-            else
-                os = 'linux';
-                date = '2023-01-20';                
-            end
-            obj.name = ['SlicerForLeadDBS-0.1.0-' date '-' os '-amd64'];
-            obj.install_path = fullfile(ea_getearoot, 'ext_libs', obj.name);
+            obj.install_path = fullfile(ea_getearoot, 'ext_libs', 'SlicerForLeadDBS');
+
             if ismac
                 obj.executable_path = fullfile(obj.install_path, 'SlicerForLeadDBS.app', 'Contents', 'MacOS', 'SlicerForLeadDBS');
             elseif ispc
@@ -27,38 +20,50 @@ classdef ea_slicer_for_lead
             else
                 obj.executable_path = fullfile(obj.install_path, 'SlicerForLeadDBS');
             end
-        end
 
-
-        function out = is_installed_and_up_to_date(obj)
-            d = dir(fullfile(ea_getearoot, 'ext_libs', 'SlicerForLeadDBS*'));
-            if isempty(d)
-                out = 0;
-                return
+            ver_file = ea_regexpdir(obj.install_path, '^v.*', 0, 'f');
+            if ~isempty(ver_file)
+                obj.installed_version = erase(ver_file{1}, [obj.install_path, filesep, 'v']);
+            else
+                obj.installed_version = '';
             end
-            installed_version = regexp(d(1).name, '\d\d\d\d-\d\d-\d\d', 'match', 'once');
-            latest_version = regexp(obj.name, '\d\d\d\d-\d\d-\d\d', 'match', 'once');
-            out = strcmp(installed_version, latest_version);
+
+            if ismac
+                os = 'macosx';
+                arch = 'amd64';
+            elseif ispc
+                os = 'win';
+                arch = 'amd64';
+            else
+                os = 'linux';
+                arch = 'amd64';
+            end
+            download_file = ['SlicerForLeadDBS-' obj.release_version '-' os '-' arch '.zip'];
+            obj.download_url = ['https://github.com/netstim/SlicerForLeadDBS/releases/download/' obj.release_tag '/' download_file];
         end
-        
+
+
+        function up_to_date = is_installed_and_up_to_date(obj)
+            up_to_date = strcmp(obj.installed_version, obj.release_version);
+        end
+
         function success = install(obj)
             destination = [obj.install_path '.zip'];
-            downloadurl = ['https://github.com/netstim/SlicerForLeadDBS/releases/download/v221103-beta/' obj.name '.zip'];
             webopts = weboptions('Timeout', Inf);
             % check install or update
-            installed_apps = dir(fullfile(ea_getearoot, 'ext_libs', 'SlicerForLeadDBS*'));
+            installed_apps = ea_regexpdir([ea_getearoot, 'ext_libs'], '^SlicerForLeadDBS.*', 0, 'd');
             if isempty(installed_apps)
                 msg_start = 'Installing';
             else
                 warning('off','all')
-                cellfun(@(a,b) rmdir(fullfile(a,b),'s'), {installed_apps.folder}', {installed_apps.name}');
+                cellfun(@(x) rmdir(x, 's'), installed_apps);
                 warning('on','all')
                 msg_start = 'Updating';
             end
             f = msgbox([msg_start ' custom Slicer for Lead-DBS. This might take a while'], [msg_start '...'], 'help');
             % download
             try
-                websave(destination, downloadurl, webopts);
+                websave(destination, obj.download_url, webopts);
             catch
                 delete(f);
                 msgbox("Download error. Check you connection.", "Error", "error");
@@ -67,19 +72,29 @@ classdef ea_slicer_for_lead
             end
             % install
             unzip(destination, fileparts(obj.install_path));
+
+            % the zip file is packed with a subfolder inside it at the
+            % moment, so we need to rename it.
+            [~, extracted_folder] = fileparts(obj.download_url);
+            extracted_folder = fullfile(ea_getearoot, 'ext_libs', extracted_folder);
+            if isfolder(extracted_folder)
+                movefile(extracted_folder, obj.install_path);
+            end
+
             delete(destination)
+            fclose(fopen(fullfile(obj.install_path, ['v' obj.release_version]), 'w'));
             success = 1;
             delete(f)
             msgbox("Custom Slicer for Lead-DBS installed!", "Installed", "help");
         end
-        
+
         function [] = run(obj, command)
             if ~exist('command','var')
                 command='';
             end
             system([obj.executable_path ' ' command]);
         end
-        
+
     end
 end
 
