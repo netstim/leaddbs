@@ -46,8 +46,6 @@ if(~any(vol))
         error('no labeled regions found in the input volume.');
 end
 
-exesuff=getexeext;
-
 ang=30;
 ssize=6;
 approx=0.5;
@@ -78,7 +76,7 @@ if(ischar(maxvol))
 else
     format_maxvol='%f';
 end
-cmd=sprintf(['"%s%s" "%s" "%s" %f %f %f %f ' format_maxvol ' %d'],mcpath('cgalmesh'),exesuff,...
+cmd=sprintf(['"%s" "%s" "%s" %f %f %f %f ' format_maxvol ' %d'],ea_getExec(mcpath('cgalmesh')),...
     mwpath('pre_cgalmesh.inr'),mwpath('post_cgalmesh.mesh'),ang,ssize,...
     approx,reratio,maxvol,randseed);
 system(cmd);

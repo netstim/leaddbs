@@ -2,7 +2,7 @@ clear
 
 smesh = ea_regexpdir(pwd, '.*\.smesh$');
 for s=1:length(smesh)
-    system(['"', mcpath('tetgen'), getexeext, '" -pq -aA -g "', smesh{s}, '"']);
+    system(['"', ea_getExec(mcpath('tetgen')), '" -pq -aA -g "', smesh{s}, '"']);
 end
 
 ea_delete(ea_regexpdir(pwd, '.*\.edge$'));

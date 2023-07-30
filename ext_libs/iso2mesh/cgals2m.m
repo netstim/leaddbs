@@ -34,8 +34,6 @@ function [node,elem,face]=cgals2m(v,f,opt,maxvol,varargin)
 
 fprintf(1,'creating surface and tetrahedral mesh from a polyhedral surface ...\n');
 
-exesuff=getexeext;
-
 ang=30;
 ssize=6;
 approx=0.5;
@@ -65,7 +63,7 @@ if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_RANDSEED')))
         randseed=getvarfrom({'caller','base'},'ISO2MESH_RANDSEED');
 end
 
-cmd=sprintf('"%s%s" "%s" "%s" %.16f %.16f %.16f %.16f %.16f %d',mcpath('cgalpoly'),exesuff,...
+cmd=sprintf('"%s" "%s" "%s" %.16f %.16f %.16f %.16f %.16f %d',ea_getExec(mcpath('cgalpoly')),...
     mwpath('pre_cgalpoly.off'),mwpath('post_cgalpoly.mesh'),ang,ssize,...
     approx,reratio,maxvol,randseed);
 system(cmd);

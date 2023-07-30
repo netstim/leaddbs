@@ -30,8 +30,6 @@ function [node,elem,face,success]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,h
 
 fprintf(1,'generating tetrahedral mesh from closed surfaces ...\n');
 
-exesuff=getexeext;
-
 if(keepratio>1 | keepratio<0)
    warn(['The "keepratio" parameter is required to be between 0 and 1. '...
          'Your input is out of this range. surf2mesh will not perform '...
@@ -107,7 +105,7 @@ catch
     end
 end
 
-%  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+%  system([' "' ea_getExec(mcpath('tetgen')) '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 if ~ispc
     cmdsuffix='';
 else
@@ -115,10 +113,10 @@ else
 end
 
 if(isempty(cmdopt)) % default run
-    system([' "' mcpath('tetgen') exesuff '" -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
-    % system([' "' mcpath('tetgen') exesuff '" -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+    system([' "' ea_getExec(mcpath('tetgen')) '" -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
+    % system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 else
-	system([' "' mcpath('tetgen') exesuff '"  -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
+	system([' "' ea_getExec(mcpath('tetgen')) '"  -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
 end
 
 % read in the generated mesh
@@ -127,9 +125,9 @@ success=1;
     [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
 % 	fprintf(1,'volume mesh generation is complete\n');
 % catch
-%     system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-%     system([' "' mcpath('tetgen') exesuff '" -A -d -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-%     system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' ' mwpath('post_vmesh.1.face'),' ',mwpath('post_vmesh.1.node') '']);
+%     system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+%     system([' "' ea_getExec(mcpath('tetgen')) '" -A -d -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+%     system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' ' mwpath('post_vmesh.1.face'),' ',mwpath('post_vmesh.1.node') '']);
 %     try
 %         [node,elem,face]=readtetgen(mwpath('post_vmesh.2'));
 %         fprintf(1,'volume mesh generation is complete\n');

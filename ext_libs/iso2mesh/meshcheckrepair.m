@@ -54,12 +54,10 @@ if(nargin==3 && strcmp(opt,'open'))
     end
 end
 
-exesuff=getexeext;
-
 if(nargin<3 || strcmp(opt,'deep'))
     deletemeshfile(mwpath('post_sclean.off'));
     saveoff(node(:,1:3),elem(:,1:3),mwpath('pre_sclean.off'));
-    system([' "' mcpath('jmeshlib') exesuff '" "' mwpath('pre_sclean.off') '" "' mwpath('post_sclean.off') '"']);
+    system([' "' ea_getExec(mcpath('jmeshlib')) '" "' mwpath('pre_sclean.off') '" "' mwpath('post_sclean.off') '"']);
     [node,elem]=readoff(mwpath('post_sclean.off'));
 end
 
@@ -72,7 +70,7 @@ if(nargin>=3 && strcmp(opt,'meshfix'))
     deletemeshfile(mwpath('pre_sclean.off'));
     deletemeshfile(mwpath('pre_sclean_fixed.off'));
     saveoff(node,elem,mwpath('pre_sclean.off'));
-    system([' "' mcpath('meshfix') exesuff '" "' mwpath('pre_sclean.off') ...
+    system([' "' ea_getExec(mcpath('meshfix')) '" "' mwpath('pre_sclean.off') ...
         '" ' moreopt]);
     [node,elem]=readoff(mwpath('pre_sclean_fixed.off'));
 end
@@ -82,7 +80,7 @@ if(nargin>=3 && strcmp(opt,'intersect'))
     deletemeshfile(mwpath('pre_sclean.off'));
     deletemeshfile(mwpath('pre_sclean_inter.msh'));
     saveoff(node,elem,mwpath('pre_sclean.off'));
-    system([' "' mcpath('meshfix') exesuff '" "' mwpath('pre_sclean.off') ...
+    system([' "' ea_getExec(mcpath('meshfix')) '" "' mwpath('pre_sclean.off') ...
         '" ' moreopt]);
     %[node,elem]=readoff(mwpath('pre_sclean_inter.off'));
 end

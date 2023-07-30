@@ -10,7 +10,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    
+
 elseif nargin==6
     % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
@@ -89,7 +89,7 @@ hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test 
 assignin('caller','hmchanged',hmchanged);
 if hmchanged
     disp('Headmodel needs to be re-calculated. This may take a while...');
-   
+
     cnt=1;
     mesh.tet=[];
     mesh.pnt=[];
@@ -171,7 +171,8 @@ if hmchanged
                 h.Position=[1000          85         253        1253];
             end
         end
-        ea_kill('name', ['tetgen', getexeext]);
+        [~, tetgenName, tetgenExt] = fileparts(ea_getExec(mcpath('tetgen')));
+        ea_kill('name', [tetgenName, tetgenExt]);
     end
 
     if ~success

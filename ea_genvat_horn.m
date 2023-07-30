@@ -135,7 +135,7 @@ if hmchanged
                 success=1;
                 break
             end
-        catch
+        catch ME
             % The VTA model has led to an intersection of meshes, which
             % can sometimes happen. We will introduce a small jitter to
             % the electrode and try again.
@@ -162,7 +162,8 @@ if hmchanged
                 h.Position=[1000          85         253        1253];
             end
         end
-        ea_kill('name', ['tetgen', getexeext]);
+        [~, tetgenName, tetgenExt] = fileparts(ea_getExec(mcpath('tetgen')));
+        ea_kill('name', [tetgenName, tetgenExt]);
     end
 
     if ~success

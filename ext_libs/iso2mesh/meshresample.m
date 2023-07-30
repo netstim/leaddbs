@@ -42,27 +42,26 @@ function [node,elem]=domeshsimplify(node,elem,keepratio)
 
     if true
         %This is just forcing the checkrepair for manifold condition from iso2mesh toolbox (using CGAL tool <cgalsimp2>)
-        
+
         %Considering that its input is not always manifold in leaddbs (e.g. VATmodel/ea_mesh_electrode)
-        %we may have to force the checkrepair first. For now I am assuming 
+        %we may have to force the checkrepair first. For now I am assuming
         %<manifold> is not a guaranteed condition before resample (forcing check&repair+meshfix)
         [node,elem]=meshcheckrepair(node,elem);
-        [node,elem]=meshcheckrepair(node,elem,'meshfix');  
-        
-        exesuff=getexeext;
+        [node,elem]=meshcheckrepair(node,elem,'meshfix');
+
         saveoff(node,elem,mwpath('pre_remesh.off'));
         deletemeshfile(mwpath('post_remesh.off'));
-        cmd_str=[' "' mcpath('cgalsimp2') exesuff '" "' mwpath('pre_remesh.off') '" ' num2str(keepratio) ' "' mwpath('post_remesh.off') '"'];
+        cmd_str=[' "' ea_getExec(mcpath('cgalsimp2')) '" "' mwpath('pre_remesh.off') '" ' num2str(keepratio) ' "' mwpath('post_remesh.off') '"'];
         fprintf('command: %s\n',cmd_str);%useful for DEBUG
         system(cmd_str);
         [node,elem]=readoff(mwpath('post_remesh.off'));
     else
         %drop in replacement for mesh simplification. Using the mesh
         %simplification available in matlab.
-        %The original cgalsimp2 can be slower, and requires the input to be <manifold> 
+        %The original cgalsimp2 can be slower, and requires the input to be <manifold>
 
         %Considering that its input is not always manifold in leaddbs (e.g. VATmodel/ea_mesh_electrode)
-        %we may have to force the checkrepair first. For now I am assuming 
+        %we may have to force the checkrepair first. For now I am assuming
         %<manifold> is not a guaranteed condition before resample (forcing check&repair)
         [node,elem]=meshcheckrepair(node,elem);
 
@@ -70,7 +69,7 @@ function [node,elem]=domeshsimplify(node,elem,keepratio)
         nfv = reducepatch(node,elem,keepratio);
         elem=nfv.faces;
         node=nfv.vertices;
-        
+
         % Check/repair to make sure it is manifold (as matlab sometimes
         % reduces it to a non-manifold mesh. Used the matlab reducepatch
         % to reduce the number of dependancies.
@@ -80,6 +79,6 @@ function [node,elem]=domeshsimplify(node,elem,keepratio)
         [node,elem]=meshcheckrepair(node,elem);%runs options: dupnode, duplicated, isolated, deep
         %deep should have already been executed by the previous line. In case the toolbox changes, I enforce the removal non-manifold vertices
         [node,elem]=meshcheckrepair(node,elem,'deep');
-        [node,elem]=meshcheckrepair(node,elem,'meshfix');        
+        [node,elem]=meshcheckrepair(node,elem,'meshfix');
     end
 end
