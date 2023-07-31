@@ -257,10 +257,10 @@ for patients = 1:length(source)
                         %in an elseif command
                     elseif ~isempty(regexp(which_file, '^coreg.*\.log$', 'once'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                        derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',which_file);
+                        derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',[patient_name, '_desc-',erase(which_file,'_')]);
                         if exist(fullfile(source_patient,which_file),'file')
                             ea_mkdir(fullfile(new_path,pipelines{2},'log'));
-                            copyfile(fullfile(source_patient,which_file),fullfile(new_path,pipelines{2},'log'));
+                            copyfile(derivatives_cell{end,1},derivatives_cell{end,2});
                         end
 
                     elseif ismember(which_file,normalization{:,1})
@@ -276,10 +276,10 @@ for patients = 1:length(source)
                         %only for normalization
                     elseif ~isempty(regexp(which_file, '^normalize_.*\.log$', 'once'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                        derivatives_cell{end,2} = fullfile(new_path,pipelines{3},'log',which_file);
+                        derivatives_cell{end,2} = fullfile(new_path,pipelines{3},'log',[patient_name, '_desc-',erase(which_file,'alize_')]);
                         if exist(fullfile(source_patient,which_file),'file')
                             ea_mkdir(fullfile(new_path,pipelines{3},'log'));
-                            copyfile(fullfile(source_patient,which_file),fullfile(new_path,pipelines{3},'log'));
+                            copyfile(derivatives_cell{end,1},derivatives_cell{end,2});
                         end
                         %special case for recon
                     elseif ismember(which_file,reconstruction{:,1})
