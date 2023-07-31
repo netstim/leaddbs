@@ -1233,6 +1233,7 @@ if endsWith(fname_in,'.mat')
                 % Fallback to default method, since coregmr method is not
                 % properly stored in classic version of LeadDBS
                 method_used = 'SPM (Friston 2007)';
+                ea_cprintf('CmdWinWarnings', 'MR coregistration method fallbacks to default: ''%s''.\n', method_used);
             end
             modalities = setdiff(fieldnames(json_mat.approval), 'CT');
             for m=1:length(modalities)
@@ -1242,6 +1243,11 @@ if endsWith(fname_in,'.mat')
         if isfile(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'))
             temp_mat = load(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'));
             method_used = generateMethod(temp_mat,'coregct_method_applied');
+            if isempty(method_used)
+                % Fallback to default method, should never reach here
+                method_used = 'ANTs (Avants 2008)';
+                ea_cprintf('CmdWinWarnings', 'CT coregistration method fallbacks to default: ''%s''.\n', method_used);
+            end
             modality = 'CT';
             json_mat.method.(modality) = method_used;
         end
