@@ -21,7 +21,7 @@ else
 end
 
 if isfield(options, 'coregct')
-    if ~isfield(options.coregct, 'method')
+    if ~isfield(options.coregct, 'method') || isempty(options.coregct.method)
         index = [];
     else
         index = find(ismember(handles.coregctmethod.String, options.coregct.method), 1);
@@ -35,7 +35,7 @@ if isfield(options, 'coregct')
 end
 
 if isfield(options, 'normalize')
-    if ~isfield(options.normalize, 'method')
+    if ~isfield(options.normalize, 'method') || isempty(options.normalize.method)
         index = [];
     else
         index = find(ismember(handles.normmethod.String, options.normalize.method), 1);
