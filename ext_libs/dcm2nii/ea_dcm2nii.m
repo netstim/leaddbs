@@ -54,14 +54,16 @@ if contains(cmdout,'Crop 3D unsupported datatype.') ||...
 end
 
 % Check the output files of dcm2nii
-savedf = regexp(cmdout, 'Saving (.*?)\x{0A}','tokens');
+cmdout = strsplit(cmdout, '\x{0A}', 'DelimiterType', 'RegularExpression')';
+savedf = regexp(cmdout, '(?<=Saving )(.*?)$', 'match', 'once');
+savedf(cellfun(@isempty, savedf)) = [];
 
 if ~isempty(savedf)
-    movefile(savedf{end}{1}, inputimage);
+    movefile(savedf{end}, inputimage);
     if numel(savedf) == 2
-        delete(savedf{1}{1});
+        delete(savedf{1});
     end
-    tempf = savedf{end}{1};
+    tempf = savedf{end};
     disp('Reorientation and/or cropping applied.');
 else
     tempf = inputimage;
