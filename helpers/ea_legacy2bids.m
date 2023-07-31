@@ -475,6 +475,14 @@ for patients = 1:length(source)
 
                         %the stimulations folder should already be
                         %there in the dest directory.
+
+                        % Fix the legacy stimulation folder without space (MNI* or native) parent folder
+                        legacyStims = ea_regexpdir(fullfile(new_path,pipelines{folders}), '(?-i)^(?!(MNI|native)).+', 0, 'd');
+                        if ~isempty(legacyStims)
+                            templateStimFolder = ea_regexpdir(fullfile(new_path,pipelines{folders}), '(?-i)^MNI.+', 0, 'd');
+                            cellfun(@(x) movefile(x, templateStimFolder{1}), legacyStims);
+                        end
+
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
 
                             %pipeline = pipelines{folders};
