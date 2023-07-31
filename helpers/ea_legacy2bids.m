@@ -521,8 +521,8 @@ for patients = 1:length(source)
                                             tag_struct.modeltag = model_name;
                                             tag_struct.conntag = bids_connectome_name;
                                             generate_bidsConnectome_name(stimulation_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
-                                        catch
-                                            warning("Connectome name may not updated. See error report for further details..")
+                                        catch ME
+                                            ea_cprintf('CmdWinWarnings', 'Connectome name "%s" may not be updated. See error report for further details.\n', connectome_filename);
                                         end
                                     end
                                 end
@@ -1185,7 +1185,7 @@ if endsWith(fname_in,'.mat')
         coreg_fieldnames = fieldnames(input_mat);
         %determine files inside the coreg files
         for i=1:length(coreg_fieldnames)
-            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i}, ('_tra|_sag|_cor'), 'once'))
+            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i}, '_tra|_sag|_cor', 'once'))
                 if ismember(fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii']),old)
                     indx = cellfun(@(x)strcmp(x,fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii'])),old);
                     try_bids_name = new{indx};
@@ -1209,6 +1209,8 @@ if endsWith(fname_in,'.mat')
                 field_name = strsplit(bids_name,'acq-');
                 mod = regexprep(field_name{end},'\.nii$','');
                 json_mat.approval.(mod) = input_mat.(coreg_fieldnames{i});
+            elseif endsWith(coreg_fieldnames{i}, 'postop_ct')
+                json_mat.approval.('CT') = input_mat.(coreg_fieldnames{i});
             end
         end
         if isfield(json_mat,'approval')
@@ -1216,38 +1218,28 @@ if endsWith(fname_in,'.mat')
         else
             warning("Coregistration files were not transformed. Please review your BIDSified folders with caution")
         end
-        if exist(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'),'file')
+        if isfile(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'))
+            temp_mat = load(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'));
+            method_used = generateMethod(temp_mat,'coregmr_method_applied');
+            if isempty(method_used)
+                % Fallback to default method, since coregmr method is not
+                % properly stored in classic version of LeadDBS
+                method_used = 'SPM (Friston 2007)';
+            end
+            modalities = setdiff(fieldnames(json_mat.approval), 'CT');
+            for m=1:length(modalities)
+                json_mat.method.(modalities{m}) = method_used;
+            end
+        end
+        if isfile(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'))
             temp_mat = load(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'));
             method_used = generateMethod(temp_mat,'coregct_method_applied');
             modality = 'CT';
             json_mat.method.(modality) = method_used;
         end
-        if exist(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'),'file')
-            temp_mat = load(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'));
-            method_used = generateMethod(temp_mat,'coregmr_method_applied');
-            modality = 'MR';
-            json_mat.method.(modality) = method_used;
-        end
         if isfield(json_mat,'method')
             savejson('',json_mat,'method',json_mat.method,opt);
         end
-    elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
-        input_mat = load(fname_in);
-        method_used = generateMethod(input_mat,'coregct_method_applied');
-        modality = 'CT';
-        json_mat.method.(modality) = method_used;
-        savejson('',json_mat,opt);
-    elseif strcmp(filename,'ea_coregmrmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
-        input_mat = load(fname_in);
-        method_used = generateMethod(input_mat,'coregmr_method_applied');
-        modality = 'MR';
-        if isempty(method_used)
-            % Fallback to default method, since coregmr method is not
-            % properly stored in classic version of LeadDBS
-            method_used = 'SPM (Friston 2007)';
-        end
-        json_mat.method.(modality) = method_used;
-        savejson('',json_mat,opt);
     elseif strcmp(filename,'ea_normmethod_applied')
         input_mat = load(fname_in);
         normalize_fieldnames = fieldnames(input_mat);
@@ -1303,13 +1295,13 @@ if isfield(input_mat,modality_field)
         method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
     else
         method_used = '';
-        ea_cprintf('CmdWinWarnings', "We could not identify the registration method used. Please take a closer look manually.\n" + ...
+        ea_cprintf('CmdWinWarnings', "Failed to identify the registration method used. Please take a closer look manually.\n" + ...
             "You will find the file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
             "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
     end
 else
     method_used = '';
-    ea_cprintf('CmdWinWarnings', "We could not identify the registration method used. Please take a closer look manually.\n" + ...
+    ea_cprintf('CmdWinWarnings', "Failed to identify the registration method used. Please take a closer look manually.\n" + ...
         "You will find the method json file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
         "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
 end
