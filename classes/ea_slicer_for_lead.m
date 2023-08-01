@@ -1,12 +1,16 @@
 classdef ea_slicer_for_lead
 
     properties
+        installed_version
         install_path
         executable_path
-        release_tag = 'v230512-beta'
-        release_version = '0.1.0-2023-05-12'
-        installed_version
+        upstream_version
         download_url
+    end
+
+    properties (Access = private)
+        release_tag = 'v221103-beta'
+        release_version = struct('linux', '0.1.0-2023-01-20', 'mac', '0.1.0-2022-11-03', 'win', '0.1.0-2022-11-03')
     end
 
     methods
@@ -31,14 +35,17 @@ classdef ea_slicer_for_lead
             if ismac
                 os = 'macosx';
                 arch = 'amd64';
+                obj.upstream_version = obj.release_version.mac;
+            elseif isunix
+                os = 'linux';
+                arch = 'amd64';
+                obj.upstream_version = obj.release_version.linux;
             elseif ispc
                 os = 'win';
                 arch = 'amd64';
-            else
-                os = 'linux';
-                arch = 'amd64';
+                obj.upstream_version = obj.release_version.win;
             end
-            download_file = ['SlicerForLeadDBS-' obj.release_version '-' os '-' arch '.zip'];
+            download_file = ['SlicerForLeadDBS-' obj.upstream_version '-' os '-' arch '.zip'];
             obj.download_url = ['https://github.com/netstim/SlicerForLeadDBS/releases/download/' obj.release_tag '/' download_file];
         end
 
@@ -72,20 +79,23 @@ classdef ea_slicer_for_lead
             end
             % install
             unzip(destination, fileparts(obj.install_path));
+            delete(destination);
 
             % the zip file is packed with a subfolder inside it at the
             % moment, so we need to rename it.
             [~, extracted_folder] = fileparts(obj.download_url);
             extracted_folder = fullfile(ea_getearoot, 'ext_libs', extracted_folder);
-            if isfolder(extracted_folder)
+            try
                 movefile(extracted_folder, obj.install_path);
+                fclose(fopen(fullfile(obj.install_path, ['v' obj.upstream_version]), 'w'));
+                success = 1;
+                delete(f);
+                msgbox("Custom Slicer for Lead-DBS installed!", "Installed", "help");
+            catch ME
+                success = 0;
+                delete(f);
+                msgbox(["Failed to install custom Slicer for Lead-DBS!", ME.message], "Failed", "Error");
             end
-
-            delete(destination)
-            fclose(fopen(fullfile(obj.install_path, ['v' obj.release_version]), 'w'));
-            success = 1;
-            delete(f)
-            msgbox("Custom Slicer for Lead-DBS installed!", "Installed", "help");
         end
 
         function [] = run(obj, command)
