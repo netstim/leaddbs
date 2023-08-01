@@ -480,6 +480,11 @@ for patients = 1:length(source)
                         legacyStims = ea_regexpdir(fullfile(new_path,pipelines{folders}), '(?-i)^(?!(MNI|native)).+', 0, 'd');
                         if ~isempty(legacyStims)
                             templateStimFolder = ea_regexpdir(fullfile(new_path,pipelines{folders}), '(?-i)^MNI.+', 0, 'd');
+                            if isempty(templateStimFolder)
+                                % Create template folder in case it doesn't exist
+                                templateStimFolder = {fullfile(new_path,pipelines{folders}, 'MNI152NLin2009bAsym')};
+                                ea_mkdir(templateStimFolder);
+                            end
                             cellfun(@(x) movefile(x, templateStimFolder{1}), legacyStims);
                         end
 
