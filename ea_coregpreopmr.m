@@ -43,12 +43,30 @@ for i=1:length(moving)
         case lower({'ANTs (Avants 2008)', 'ANTs'})
             movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat']);
             movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants.mat']);
+            % convert ANTS matrices to 4x4
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants_4x4.mat'],'tmat')load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants_4x4.mat'],'tmat')
+    end
         case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
             movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt.mat']);
             movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt.mat']);
+            % convert affinefile from txt to tmat
+            tmat = readmatrix([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt.mat'],'FileType','text');
+            save(([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt_4x4.mat'],'tmat');
+            tmat = readmatrix([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt.mat'],'FileType','text');
+            save(([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt_4x4.mat'],'tmat');
         case lower({'SPM (Friston 2007)', 'SPM'})
             movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm.mat']);
             movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm.mat']);
+            % also store tmat separatly analogous to the the other methods
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm_4x4.mat'],'tmat')
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm_4x4.mat'],'tmat')
+    tmat = inv(movingmat/spmaffine); % matrix from fixed mm to moving mm
     end
 
     % Better slab support

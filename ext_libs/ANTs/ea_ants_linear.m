@@ -222,12 +222,7 @@ else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);
     movefile([outputbase, 'Inverse0GenericAffine.mat'], [volumedir, invxfm, num2str(runs+1), '.mat']);
     affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
-                  [volumedir, invxfm, num2str(runs+1), '.mat']};
-    for i = 1:numel(affinefile) % also include the 4x4tmat
-        load(affinefile{i})
-        tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-        save(affinefile{i},'AffineTransform_float_3_3','fixed','tmat')
-    end
+                  [volumedir, invxfm, num2str(runs+1), '.mat']};    
 end
 
 fprintf('\nANTs LINEAR registration done.\n');
