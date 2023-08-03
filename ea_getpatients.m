@@ -10,8 +10,13 @@ if exist('handles','var')
     ea_load_pts(handles,uipatdir);
 
     if isfield(handles,'atlassetpopup') % not present in connectome mapper
-        atlasset=get(handles.atlassetpopup,'String');
-        atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+        atlasset = handles.atlassetpopup.String;
+        try
+            atlasset = atlasset{handles.atlassetpopup.Value};
+        catch
+            prefs = ea_prefs;
+            atlasset =  prefs.machine.defaultatlas;
+        end
 
         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
     end
