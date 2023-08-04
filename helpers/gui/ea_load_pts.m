@@ -276,11 +276,25 @@ if length(uipatdir) == 1 && isfield(handles, 'side1')
 
             try
                 elmodel = ea_get_first_notempty_elmodel(reco.props);
-                uiprefs = load(bids.getPrefs(subjId{1}, 'uiprefs', 'mat'));
+                uiprefsFile = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
+                uiprefs = load(uiprefsFile);
                 if ~strcmp(uiprefs.elmodel, elmodel)
-                    ea_cprintf('CmdWinErrors', ...
-                        ['Chosen electrode (%s) for patient "%s" doesn''t match stored reconstruction (%s)!\n', ...
-                        'Please rerun "Localize DBS electrodes".\n'], uiprefs.elmodel, subjId{1}, elmodel);
+                    ea_cprintf('CmdWinWarnings', ...
+                        ['Chosen electrode in the GUI (%s) for patient "%s" doesn''t match the stored reconstruction (%s)!\n', ...
+                        'Reset to model in the stored recontruction now. Please rerun "Localize DBS electrodes" in case it''s not the correct model.\n'], ...
+                        uiprefs.elmodel, subjId{1}, elmodel);
+
+                    try
+                        handles.electrode_model_popup.Value = find(ismember(handles.electrode_model_popup.String, elmodel));
+                    catch
+                         ea_cprintf('CmdWinErrors', ...
+                             ['The stored electrode model (%s) for patient "%s" seems not compatible in the current release of LeadDBS.\n', ...
+                             'Please double check and choose a correct model.\n'], elmodel, subjId{1});
+                    end
+
+                    uiprefs.elmodel = elmodel;
+                    save(uiprefsFile, '-struct', 'uiprefs');
+
                     handles.processtabgroup.SelectedTab = handles.localizationtab;
                     % uialert(handles.leadfigure, ...
                     %     sprintf(['Chosen electrode (%s) for patient "%s" doesn''t match stored reconstruction (%s)! ', ...
