@@ -32,7 +32,6 @@ else
    end
 end
 
-
 %define names of the new directorey structure
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
 fmri_keywords = {'(Yeo 2011)','HCP 612','HCP 1200','PPMI 74','Depression 38'};
@@ -51,7 +50,6 @@ derivatives_cell = {};
 %cause issues.
 %by default, use the sub- prefix. If the patient already has a sub-, this
 %flag is set to zero.
-
 
 %perform moving for each pat
 tic
@@ -95,7 +93,8 @@ for patients = 1:length(source)
     mod_cell = {}; %initializing cell for the mods
 
     files_in_pat_folder = dir_without_dots(source_patient); %all the files which do not start with '.'
-    files_to_move = {files_in_pat_folder(~[files_in_pat_folder.isdir]).name};
+    files_to_move = {files_in_pat_folder(~[files_in_pat_folder.isdir]).name}';
+    files_to_move = filterLegacyFiles(files_to_move);
 
     for j=1:length(files_to_move)
        if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
@@ -795,7 +794,6 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         end
     end
 
-    return
 
 function move_raw2bids(source_patient_path,new_path,which_file,bids_name)
     tmp_path = fullfile(new_path,'tmp');
@@ -977,7 +975,7 @@ function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
         tag = tag_cell{indx};
         bids_name = strrep(try_bids_name,'acqTag',['acq-' tag]);
     end
-return
+
 
 function bids_name = CheckifAlreadyExists(path,try_bids_name)
     if contains(try_bids_name,'acq-')
@@ -1023,12 +1021,13 @@ function bids_name = CheckifAlreadyExists(path,try_bids_name)
     else
         bids_name = try_bids_name;
     end
-return
+
+
 function [matching_files,noMatch] = match_exact(cell_files,expr)
     tmp_cell = cellfun(@(x) ~isempty(x) && x(1) == 1,regexpi(cell_files, expr));
     matching_files = cell_files(tmp_cell);
     noMatch = cell_files(~tmp_cell);
-return
+
 
 function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
     to_match = regexprep(to_match, '[\s]', '');
@@ -1062,7 +1061,6 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
           end
 
     end
-return
 
 
 function model_name = add_model(stimFolder)
@@ -1074,7 +1072,6 @@ function model_name = add_model(stimFolder)
         ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
         model_name = 'simbio';
     end
-return
 
 
 function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
@@ -1168,7 +1165,6 @@ while k<= length(files_to_move)
     end
 end
 files_to_move = [files_to_move,newfiles];
-return
 
 
 function file2json(fname_in,fname_out,derivatives_cell)
@@ -1344,6 +1340,17 @@ else
         "You will find the method json file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
         "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
 end
-return
 
 
+function fileList = filterLegacyFiles(fileList)
+    startsWithPattern = {'lpostop', 'lanat', 'ea_pm', 'rc', 'u_rc', 'j_rc', ...
+        'v_rc', 'y_anat_', 'iy_anat_', 'F.', 'DICOMDIR', 'Thumbs', 'Icon'};
+    fileList(startsWith(fileList, startsWithPattern, 'IgnoreCase', true)) = [];
+
+    endsWithPattern = {'.ps'};
+    fileList(endsWith(fileList, endsWithPattern, 'IgnoreCase', true)) = [];
+
+    containsPattern = {'tmp', 'temp', 'copy', 'grid', 'seg8', 'ignore'};
+    fileList(contains(fileList, containsPattern, 'IgnoreCase', true)) = [];
+
+    fileList(endsWith(fileList, '.h5') & ~startsWith(fileList, 'glanat')) = [];
