@@ -59,8 +59,7 @@ classdef ea_disctract < handle
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
         CleartuneOptim = 0;
-        cleartunevars 
-        symptomWeightVar = {};
+        cleartunevars
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -137,6 +136,7 @@ classdef ea_disctract < handle
                 if isfield(obj.M,'pseudoM')
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
+                    obj.M = ea_map_pseudoM(obj.M);
                     obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list = cell(size(obj.M.ROI.list,1), 1);
                     for i = 1:size(obj.M.ROI.list,1)
@@ -495,7 +495,6 @@ classdef ea_disctract < handle
         end
 
         function [Improvement, Ihat, actualimprovs, val_struct] = crossval(obj, cvp, Iperm, shuffle, silent)
-            disp(['Method:',obj.basepredictionon]);
             if ~exist('silent','var')
                 silent=0;
             end
@@ -523,6 +522,7 @@ classdef ea_disctract < handle
             switch obj.multitractmode
                 case 'Split & Color By PCA'
                     if ~exist('Iperm', 'var') || isempty(Iperm)
+                        %Improvement = obj.subscore.vars;
                         for i=1:length(obj.subscore.vars)
                             Improvement{i} = obj.subscore.vars{i}(patientsel);
                         end
@@ -649,22 +649,20 @@ classdef ea_disctract < handle
 
             end
 
-            if ~iscell(Improvement) % skip for multitract modes 
-                % check if binary variable
-                if all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
-                    % average across sides. This might be wrong for capsular response.
-                    Ihat_av_sides = ea_nanmean(Ihat,2);
+            % check if binary variable
+            if all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
+                % average across sides. This might be wrong for capsular response.
+                Ihat_av_sides = ea_nanmean(Ihat,2);
 
-                    if isobject(cvp)
-                        % In-sample
-                        AUC = ea_logit_regression(0 ,Ihat_av_sides, Improvement, 1:size(Improvement,1), 1:size(Improvement,1));
-                    elseif isstruct(cvp)
-                        % actual training and test
-                        Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3); % in this case, dimens is (1, N, sides)
-                        AUC = ea_logit_regression(Ihat_train_global_av_sides(training)', Ihat_av_sides, Improvement, training, test);
-                    end
-
+                if isobject(cvp)
+                    % In-sample
+                    AUC = ea_logit_regression(0 ,Ihat_av_sides, Improvement, 1:size(Improvement,1), 1:size(Improvement,1));
+                elseif isstruct(cvp)
+                    % actual training and test
+                    Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3); % in this case, dimens is (1, N, sides)
+                    AUC = ea_logit_regression(Ihat_train_global_av_sides(training)', Ihat_av_sides, Improvement, training, test);
                 end
+
             end
 
             if ~silent
@@ -841,21 +839,14 @@ classdef ea_disctract < handle
 
                         for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
                             for yy=1:size(Ihat,2)
-                                % for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                                %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
                                 %                         for yy=1:size(Ihat_voters,2)
                                 weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
                             end
                         end
 
                         Ihat=ea_nansum(Ihat.*weightmatrix,3);
-                    else
-                        Ihat = Ihat(test,:,:);
-                        if size(Ihat,1) == 1
-                            Ihat = squeeze(Ihat);
-                            Ihat = Ihat';
-                        end
-                        Improvement = Improvement(test);
-                        return
+
                     end
                 case 'Split & Color By PCA'
 
@@ -905,8 +896,11 @@ classdef ea_disctract < handle
                     %Ihat=squeeze(Ihat_voters);
             end
             if ~iscell(Ihat)
-                if cvp.NumTestSets == 1 && ~obj.CleartuneOptim
+                if cvp.NumTestSets == 1
                     Ihat = Ihat(test,:);
+                    if obj.CleartuneOptim
+                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
+                    end
                     Improvement = Improvement(test);
                 end
 
@@ -1736,7 +1730,9 @@ classdef ea_disctract < handle
                 newObj.(props{i}) = thisObj.(props{i});
             end
         end
+
     end
+
     methods (Static)
         function changeevent(~,event)
             update_trajectory(event.AffectedObject,event.Source.Name);
