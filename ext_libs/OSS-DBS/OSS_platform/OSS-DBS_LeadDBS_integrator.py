@@ -57,7 +57,13 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
 
     path = os.path.normpath(settings_location)
     path.split(os.sep)
-    print('Patient: ', path.split(os.sep)[-5])
+
+    try:
+        patient_folder = path.split(os.sep)[-5]
+        print('Patient: ', path.split(os.sep)[-5])
+    except:
+        patient_folder = "John Doe"  # stim folder was passed, patient_folder not relevant
+
     patient_folder = path.split(os.sep)[-5]
 
     file = h5py.File(str(settings_location), 'r')
