@@ -241,9 +241,28 @@ for group=groups
                         nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
                         [~,ps,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
                         vals{group,side}=stats.tstat';
+
+                        % Comment this if you don't want the graphs
+                        % if you need negative fibers just use min here 
+                        [~, maxidx] = max(vals{group,side}); 
+                        imp_conn = fibsimpval(maxidx, :); 
+                        imp_nonconn = nfibsimpval(maxidx, :); 
+                        % [~,ps,~,stats]=ttest2(imp_conn', imp_nonconn'); 
+                        figure
+                        %swarmchart([ones(size(imp_conn)); ones(size(imp_conn))*2]',[imp_conn; imp_nonconn]'); 
+                        boxplot([imp_conn; imp_nonconn]');
+                        xticks(1:2)
+                        xticklabels({'Connected VTAs', 'Non-connected VTAs'}); 
+                        ylabel('Improvement')
+
+
+
                         if obj.showsignificantonly
                             pvals{group,side}=ps';
                         end
+
+                        %
+
 
                         %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                     end
