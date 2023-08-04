@@ -172,8 +172,9 @@ for patients = 1:length(source)
                 ea_mkdir(fullfile(new_path,which_pipeline));
                 this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
                 files_in_folder = {this_folder.name};
-                files_in_folder = files_in_folder(~contains(files_in_folder, 'rpostop_ct'));
-                files_in_folder = files_in_folder(~contains(files_in_folder, 'ea_methods'));
+                files_in_folder(contains(files_in_folder, 'rpostop_ct')) = [];
+                files_in_folder(contains(files_in_folder, 'ea_methods')) = [];
+                files_in_folder(ismember(files_in_folder, 'scrf.mat')) = [];
                 for file_in_folder=1:length(files_in_folder)
                     which_file = files_in_folder{file_in_folder};
                     if ismember(files_in_folder{file_in_folder},brainshift{:,1})
