@@ -1164,7 +1164,7 @@ while k<= length(files_to_move)
         k = k+1;
     end
 end
-files_to_move = [files_to_move,newfiles];
+files_to_move = [files_to_move; newfiles'];
 
 
 function file2json(fname_in,fname_out,derivatives_cell)
