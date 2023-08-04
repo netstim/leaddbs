@@ -1351,7 +1351,7 @@ function fileList = filterLegacyFiles(fileList)
     endsWithPattern = {'.ps'};
     fileList(endsWith(fileList, endsWithPattern, 'IgnoreCase', true)) = [];
 
-    containsPattern = {'tmp', 'temp', 'copy', 'grid', 'seg8', 'ignore'};
+    containsPattern = {'tmp', 'temp', 'copy', 'grid', 'seg8', 'ignore', 'backup'};
     fileList(contains(fileList, containsPattern, 'IgnoreCase', true)) = [];
 
     fileList(endsWith(fileList, '.h5') & ~startsWith(fileList, 'glanat')) = [];
