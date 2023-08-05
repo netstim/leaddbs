@@ -87,7 +87,6 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
     if file['settings']['current_control'][0][0] == 1 or file['settings']['current_control'][0][-1] == 1:
         input_dict['current_control'] = 1
         Pulse_amp = Pulse_amp * 0.001  # because Lead-DBS uses mA as the input
-        input_dict['el_order'] = 3
 
     Pulse_amp = list(Pulse_amp)
     import math
