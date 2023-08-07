@@ -1321,6 +1321,15 @@ function method_used = generateMethod(input_mat,modality_field)
 if iscell(modality_field)
     modality_field = modality_field{1};
 end
+
+if contains(modality_field, 'coregct')
+    regType = 'CT coregistration';
+elseif contains(modality_field, 'coregmr')
+    regType = 'MR coregistration';
+elseif contains(modality_field, 'norm')
+    regType = 'normalization';
+end
+
 if isfield(input_mat,modality_field)
     if ischar(input_mat.(modality_field))
         input_mat.(modality_field) = {input_mat.(modality_field)};
@@ -1359,15 +1368,11 @@ if isfield(input_mat,modality_field)
         method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
     else
         method_used = '';
-        ea_cprintf('CmdWinWarnings', "Failed to identify the registration method used. Please take a closer look manually.\n" + ...
-            "You will find the file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
-            "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
+        ea_cprintf('CmdWinWarnings', "Failed to identify the %s method used. Please take a closer look manually.\n", regType);
     end
 else
     method_used = '';
-    ea_cprintf('CmdWinWarnings', "Failed to identify the registration method used. Please take a closer look manually.\n" + ...
-        "You will find the method json file under 'derivatives/leaddbs/sub-XX/normalization/log'\n" + ...
-        "or 'derivatives/leaddbs/sub-XX/coregistration/log'.\n");
+    ea_cprintf('CmdWinWarnings', "Failed to identify the %s method used. Please take a closer look manually.\n", regType);
 end
 
 
