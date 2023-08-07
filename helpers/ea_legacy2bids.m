@@ -1241,12 +1241,12 @@ if endsWith(fname_in,'.mat')
 
         if isfile(fname_out)
             json_mat = loadjson(fname_out);
-            % Set approval status to 1 in case field is missing
-            if ~isfield(json_mat, 'approval') || ~isfield(json_mat.approval, modality)
-                json_mat.approval.(modality) = 1;
-            end
         end
 
+        % Set approval status to 1 in case field is missing
+        if ~isfield(json_mat, 'approval') || ~isfield(json_mat.approval, modality)
+            json_mat.approval.(modality) = 1;
+        end
         json_mat.method.(modality) = method_used;
 
         if isfield(json_mat,'method')
