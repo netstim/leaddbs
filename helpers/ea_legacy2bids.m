@@ -1261,10 +1261,36 @@ if endsWith(fname_in,'.mat')
             method_used = 'SPM (Friston 2007)';
             ea_cprintf('CmdWinWarnings', 'MR coregistration method fallbacks to default: ''%s''.\n', method_used);
         end
-        modalities = setdiff(fieldnames(json_mat.approval), 'CT');
 
         if isfile(fname_out)
             json_mat = loadjson(fname_out);
+        end
+
+        if isfield(json_mat, 'approval')
+            % If ea_coreg_approved.mat exists and was properly migrated,
+            % use MR modalities from the *_desc-coregmethod.json first.
+            modalities = setdiff(fieldnames(json_mat.approval), 'CT');
+        end
+
+        if isempty(modalities)
+            % In case modalities not found above, check the migrated MRIs
+            coregAnat = ea_regexpdir(fullfile(fileparts(fileparts(fname_out)), 'anat'), 'acq-.*\.nii$', 0, 'f');
+            modalities = regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once');
+            % Remove anchor modality
+            prefs = ea_prefs;
+            anchorModality = prefs.prenii_order{1};
+            if sum(contains(modalities, anchorModality)) == 1
+                % Only one anchor modality image exists
+                modalities(contains(modalities, anchorModality)) = [];
+            elseif sum(contains(modalities, anchorModality)) > 1
+                % Multiple anchor modality images exist, remove the first
+                % one according to the pre-defined order: iso, ax, cor, sag
+                otherModalities = modalities(~contains(modalities, anchorModality));
+                anchorModalities = setdiff(modalities, otherModalities);
+                [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
+                anchorModalities = anchorModalities(ind);
+                modalities = [anchorModalities(2:end); otherModalities];
+            end
         end
 
         for m=1:length(modalities)
