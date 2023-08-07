@@ -737,24 +737,26 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
 
         end
 
-    elseif endsWith(which_file,'.log') || ~isempty(regexp(which_file,'.*(_approved|_applied)\.mat$', 'once')) || endsWith(which_file,'.txt')
+    elseif ~isempty(regexp(which_file,'.*(_approved|_applied)\.mat$', 'once'))
         ea_mkdir(log_dir);
-        if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_methods.txt'))
-            bids_name = 'desc-brainshiftmethod.txt';
-        elseif strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
-            brainshift_log_dir = fullfile(new_path,'brainshift','log');
+        % Handle the special case for branshift correction since the json
+        % will be saved under brainshift/log instead of coregistration/log
+        if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
             coreg_mat = load(fullfile(source_patient_path,'ea_coreg_approved.mat'));
             if isfield(coreg_mat,'brainshift')
-                opt.FileName = fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']);
-                brainshift_method.approval = coreg_mat.brainshift;
+                brainshift_log_dir = fullfile(new_path,'brainshift','log');
                 ea_mkdir(brainshift_log_dir);
-                savejson('',brainshift_method,opt);
+                opt.FileName = fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']);
+                brainshiftLog.approval = coreg_mat.brainshift;
+                % Set default method to coarse mask
+                brainshiftLog.method = 'Coarse mask (Schönecker 2008)';
+                savejson('',brainshiftLog,opt);
             end
         end
         fname_in = fullfile(source_patient_path,which_file);
         [~,fname,~] = fileparts(bids_name);
         fname_out = fullfile(log_dir,[patient_name,'_',fname '.json']);
-        file2json(fname_in,fname_out,derivatives_cell); %under leaddbs/helpers/file2json
+        file2json(fname_in,fname_out,derivatives_cell);
 
     elseif endsWith(which_file,'.mat') || endsWith(which_file,'.gz') || endsWith(which_file,'.h5')
         ea_mkdir(transformations_dir);
@@ -1227,6 +1229,29 @@ if endsWith(fname_in,'.mat')
         else
             warning("Coregistration files were not transformed. Please review your BIDSified folders with caution")
         end
+    elseif strcmp(filename, 'ea_coregctmethod_applied')
+        temp_mat = load(fullfile(filepath,'ea_coregctmethod_applied.mat'));
+        method_used = generateMethod(temp_mat,'coregct_method_applied');
+        if isempty(method_used)
+            % Fallback to default method, should never reach here
+            method_used = 'ANTs (Avants 2008)';
+            ea_cprintf('CmdWinWarnings', 'CT coregistration method fallbacks to default: ''%s''.\n', method_used);
+        end
+        modality = 'CT';
+
+        if isfile(fname_out)
+            json_mat = loadjson(fname_out);
+            % Set approval status to 1 in case field is missing
+            if ~isfield(json_mat, 'approval') || ~isfield(json_mat.approval, modality)
+                json_mat.approval.(modality) = 1;
+            end
+        end
+
+        json_mat.method.(modality) = method_used;
+
+        if isfield(json_mat,'method')
+            savejson('',json_mat,'method',json_mat.method,opt);
+        end
     elseif strcmp(filename,'ea_coregmrmethod_applied')
         temp_mat = load(fullfile(filepath,'ea_coregmrmethod_applied.mat'));
         method_used = generateMethod(temp_mat,'coregmr_method_applied');
@@ -1239,7 +1264,7 @@ if endsWith(fname_in,'.mat')
         modalities = setdiff(fieldnames(json_mat.approval), 'CT');
 
         if isfile(fname_out)
-            json_mat = loadjson(json_mat);
+            json_mat = loadjson(fname_out);
         end
 
         for m=1:length(modalities)
@@ -1249,29 +1274,6 @@ if endsWith(fname_in,'.mat')
             end
             json_mat.method.(modalities{m}) = method_used;
         end
-
-        if isfield(json_mat,'method')
-            savejson('',json_mat,'method',json_mat.method,opt);
-        end
-    elseif strcmp(filename, 'ea_coregctmethod_applied')
-        temp_mat = load(fullfile(filepath,'ea_coregctmethod_applied.mat'));
-        method_used = generateMethod(temp_mat,'coregct_method_applied');
-        if isempty(method_used)
-            % Fallback to default method, should never reach here
-            method_used = 'ANTs (Avants 2008)';
-            ea_cprintf('CmdWinWarnings', 'CT coregistration method fallbacks to default: ''%s''.\n', method_used);
-        end
-        modality = 'CT';
-
-        if isfile(fname_out)
-            json_mat = loadjson(json_mat);
-            % Set approval status to 1 in case field is missing
-            if ~isfield(json_mat, 'approval') || ~isfield(json_mat.approval, modality)
-                json_mat.approval.(modality) = 1;
-            end
-        end
-
-        json_mat.method.(modality) = method_used;
 
         if isfield(json_mat,'method')
             savejson('',json_mat,'method',json_mat.method,opt);
