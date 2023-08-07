@@ -19,6 +19,7 @@ transformFinal = ea_flirt([options.subj.preopAnat.(options.subj.AnchorModality).
 
 ea_delete(transform1);
 
+ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 movefile(transformFinal{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat']);
 movefile(transformFinal{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'flirt.mat']);
 

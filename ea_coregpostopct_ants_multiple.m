@@ -25,6 +25,7 @@ transformFinal = ea_ants_linear([options.subj.preopAnat.(options.subj.AnchorModa
 
 ea_delete([transform1; transform2; transform3]);
 
+ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 movefile(transformFinal{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'ants.mat']);
 movefile(transformFinal{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'ants.mat']);
 
