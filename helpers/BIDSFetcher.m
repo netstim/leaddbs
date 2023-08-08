@@ -559,6 +559,9 @@ classdef BIDSFetcher
             if isfield(coregAnat, 'postop') && isfield(coregAnat.postop, 'CT')
                 coregTransform.CT.forwardBaseName = [baseName, 'from-CT_to-', obj.anchorSpace, '_desc-'];
                 coregTransform.CT.inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-CT_desc-'];
+            elseif isfield(coregAnat, 'postop') % Set post-op MRI transformation
+                coregTransform.postop_space.forwardBaseName = [baseName, 'from-postop_space_to-', obj.anchorSpace, '_desc-'];
+                coregTransform.postop_space.inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-postop_space_desc-'];
             end
         end
 

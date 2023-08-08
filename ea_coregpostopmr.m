@@ -44,7 +44,36 @@ end
 % Do coregistration
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
-    ea_coregimages(options, moving{i}, anchor, output{i}, [], options.prefs.mrcoreg.writeoutcoreg);
+    affinefile = ea_coregimages(options, moving{i}, anchor, output{i}, [], 1);
+    %% save Transforms
+    switch lower(options.coregmr.method)
+        case lower({'ANTs (Avants 2008)', 'ANTs'})
+            movefile(affinefile{1},[options.subj.coreg.transform.postop_space.forwardBaseName, 'ants.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.postop_space.inverseBaseName, 'ants.mat']);
+            % convert ANTS matrices to 4x4
+            load([options.subj.coreg.transform.postop_space.forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.postop_space.inverseBaseName, 'ants_4x4.mat'],'tmat')
+            load([options.subj.coreg.transform.postop_space.forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.postop_space.inverseBaseName, 'ants_4x4.mat'],'tmat')
+        case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
+            movefile(affinefile{1},[options.subj.coreg.transform.postop_space.forwardBaseName, 'flirt.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.postop_space.inverseBaseName, 'flirt.mat']);
+            % convert affinefile from txt to tmat
+            tmat = readmatrix([options.subj.coreg.transform.postop_space.forwardBaseName, 'flirt.mat'],'FileType','text');
+            save([options.subj.coreg.transform.postop_space.forwardBaseName, 'flirt_4x4.mat'],'tmat');
+            tmat = readmatrix([options.subj.coreg.transform.postop_space.inverseBaseName, 'flirt.mat'],'FileType','text');
+            save([options.subj.coreg.transform.postop_space.inverseBaseName, 'flirt_4x4.mat'],'tmat');
+        case lower({'SPM (Friston 2007)', 'SPM'})
+            movefile(affinefile{1},[options.subj.coreg.transform.postop_space.forwardBaseName, 'spm.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.postop_space.inverseBaseName, 'spm.mat']);
+            % also store tmat separatly analogous to the the other methods
+            load([options.subj.coreg.transform.postop_space.forwardBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.postop_space.forwardBaseName, 'spm_4x4.mat'],'tmat')
+            load([options.subj.coreg.transform.postop_space.inverseBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.postop_space.inverseBaseName, 'spm_4x4.mat'],'tmat')
+    end
 end
 
 if options.prefs.diary
