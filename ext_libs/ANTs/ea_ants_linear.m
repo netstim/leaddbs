@@ -222,7 +222,7 @@ else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);
     movefile([outputbase, 'Inverse0GenericAffine.mat'], [volumedir, invxfm, num2str(runs+1), '.mat']);
     affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
-                  [volumedir, invxfm, num2str(runs+1), '.mat']};    
+                  [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
 fprintf('\nANTs LINEAR registration done.\n');
