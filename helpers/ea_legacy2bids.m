@@ -467,9 +467,46 @@ for patients = 1:length(source)
                         catch
                             copyfile(fullfile(source_patient,'checkreg',which_file),fullfile(new_path,pipelines{11}));
                         end
-
                     end
                 end
+
+                % Double check the coregmethod.json file
+                modalities = checkModalities(fullfile(new_path, 'coregistration', 'anat'));
+                if ~isempty(ea_regexpdir(fullfile(new_path, 'coregistration', 'anat'), '_CT\.nii$', 0, 'f'))
+                    modalities = [modalities; 'CT'];
+                end
+
+                if ~isempty(modalities)
+                    [~, subjPrefix] = fileparts(new_path);
+                    coregMethodJson = fullfile(new_path, 'coregistration', 'log', [subjPrefix, '_desc-coregmethod.json']);
+                    json = struct;
+                    if isfile(coregMethodJson)
+                        json = loadjson(coregMethodJson); 
+                    end
+
+                    for m=1:numel(modalities)
+                        % Set approval status to 1 by default
+                        if ~isfield(json, 'approval') || ~isfield(json.approval, modalities{m}) || isempty(json.approval.(modalities{m}))
+                            json.approval.(modalities{m}) = 1;
+                        end
+
+                        if ~isfield(json, 'method') || ~isfield(json.method, modalities{m}) || isempty(json.method.(modalities{m}))
+                            if strcmp(modalities{m}, 'CT')
+                                % Fallback to default method, should never reach here
+                                json.method.(modalities{m}) = 'ANTs (Avants 2008)';
+                                ea_cprintf('CmdWinWarnings', 'CT coregistration method fallbacks to default: ''%s''.\n', json.method.(modalities{m}));
+                            else
+                                % Fallback to default method, since coregmr method is not
+                                % properly stored in classic version of LeadDBS
+                                json.method.(modalities{m}) = 'SPM (Friston 2007)';
+                                ea_cprintf('CmdWinWarnings', 'MR coregistration method fallbacks to default: ''%s''.\n', json.method.(modalities{m}));
+                            end
+                        end
+                    end
+                    ea_mkdir(fileparts(coregMethodJson));
+                    savejson('', json, struct('FileName', coregMethodJson));
+                end
+
                 for folders = 1:length(pipelines)
                     if strcmp(pipelines{folders},'stimulations')
 
@@ -684,12 +721,6 @@ toc;
 
 
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
-
-
-    if strcmp(which_pipeline,'coregistration')
-        brainshift_log_dir = fullfile(new_path,'brainshift','log');
-    end
-
     anat_dir = fullfile(new_path,which_pipeline,'anat');
     log_dir = fullfile(new_path,which_pipeline,'log');
 
@@ -1175,9 +1206,6 @@ legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dt
 bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR','INV','SWI'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 opt.FileName = fname_out;
-json_mat = struct();
-%function to convert mat files and text
-opt.FileName = fname_out;
 [filepath,filename,~] = fileparts(fname_in);
 [op_dir,pt_name,~] = fileparts(fname_out);
 pt_name = strsplit(pt_name,'_desc-');
@@ -1274,23 +1302,7 @@ if endsWith(fname_in,'.mat')
 
         if isempty(modalities)
             % In case modalities not found above, check the migrated MRIs
-            coregAnat = ea_regexpdir(fullfile(fileparts(fileparts(fname_out)), 'anat'), 'acq-.*\.nii$', 0, 'f');
-            modalities = regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once');
-            % Remove anchor modality
-            prefs = ea_prefs;
-            anchorModality = prefs.prenii_order{1};
-            if sum(contains(modalities, anchorModality)) == 1
-                % Only one anchor modality image exists
-                modalities(contains(modalities, anchorModality)) = [];
-            elseif sum(contains(modalities, anchorModality)) > 1
-                % Multiple anchor modality images exist, remove the first
-                % one according to the pre-defined order: iso, ax, cor, sag
-                otherModalities = modalities(~contains(modalities, anchorModality));
-                anchorModalities = setdiff(modalities, otherModalities);
-                [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
-                anchorModalities = anchorModalities(ind);
-                modalities = [anchorModalities(2:end); otherModalities];
-            end
+            modalities = checkModalities(fullfile(fileparts(fileparts(fname_out)), 'anat'));
         end
 
         for m=1:length(modalities)
@@ -1388,3 +1400,24 @@ function fileList = filterLegacyFiles(fileList)
     fileList(contains(fileList, containsPattern, 'IgnoreCase', true)) = [];
 
     fileList(endsWith(fileList, '.h5') & ~startsWith(fileList, 'glanat')) = [];
+
+
+function modalities = checkModalities(coregAnatFolder)
+    % In case modalities not found above, check the migrated MRIs
+    coregAnat = ea_regexpdir(coregAnatFolder, 'acq-.*\.nii$', 0, 'f');
+    modalities = unique(regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once'));
+    % Remove anchor modality
+    prefs = ea_prefs;
+    anchorModality = prefs.prenii_order{1};
+    if sum(contains(modalities, anchorModality)) == 1
+        % Only one anchor modality image exists
+        modalities(contains(modalities, anchorModality)) = [];
+    elseif sum(contains(modalities, anchorModality)) > 1
+        % Multiple anchor modality images exist, remove the first
+        % one according to the pre-defined order: iso, ax, cor, sag
+        otherModalities = modalities(~contains(modalities, anchorModality));
+        anchorModalities = setdiff(modalities, otherModalities);
+        [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
+        anchorModalities = anchorModalities(ind);
+        modalities = [anchorModalities(2:end); otherModalities];
+    end
