@@ -1,5 +1,8 @@
-function ea_discfibers2trk(disfiber, sel, outputName)
+function ea_discfibers2trk(disfiber, sel, outputName, LPS)
 % Convert discriminitive fibertracts to trk file
+%
+% If the trk is going to be visualized in Surf-Ice, LPS should be set to 1
+% to fix the orientation.
 
 if nargin < 2 || isempty(sel)
     sel = 'both';
@@ -65,4 +68,4 @@ save(fullfile(outputDir, [outputName, '.mat']), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', 'vals', '-v7.3');
 
 % FTR to TRK conversion
-ea_ftr2trk(fullfile(outputDir, [outputName, '.mat']));
+ea_ftr2trk(fullfile(outputDir, [outputName, '.mat']), [], LPS);

@@ -1,5 +1,8 @@
-function ea_dsistudiomat2ftr(matFile, refb0, outputName, outputTRK)
+function ea_dsistudiomat2ftr(matFile, refb0, outputName, outputTRK, LPS)
 % Convert the mat file exported from DSI-Studio to the FTR format in LEAD
+%
+% If the trk is going to be visualized in Surf-Ice, LPS should be set to 1
+% to fix the orientation.
 
 [directory, matName] = fileparts(matFile);
 if isempty(directory)
@@ -57,6 +60,6 @@ disp('Done.');
 
 if outputTRK
     fprintf('\nGenerating trk in b0 space...\n');
-    ea_ftr2trk([directory, filesep, outputName, '.mat'], refb0)
+    ea_ftr2trk([directory, filesep, outputName, '.mat'], refb0, LPS)
     disp('Done.');
 end
