@@ -52,8 +52,7 @@ rl=camlight('right');
 cnt=1;
 for view=[4,3,2,1]
     set(0,'CurrentFigure',resultfig);
-    ea_switchonatlaslabels(views(view).structures{:});
-    %ea_keepatlaslabels(target);
+    ea_keepatlaslabels(views(view).structures{:});
     set(0,'CurrentFigure',resultfig);
     ea_setplanes(views(view).planes.x,views(view).planes.y,views(view).planes.z);
     set(0,'CurrentFigure',resultfig);

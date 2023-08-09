@@ -1,4 +1,4 @@
-function ea_keepatlaslabels(varargin)
+function atlassurfs = ea_keepatlaslabels(varargin)
 %
 % Small function to keep atlas labels given string
 %
@@ -47,4 +47,3 @@ for i = 1:length(atlassurfs)
 end
 
 atlassurfs = atlassurfs(idx);
-end
