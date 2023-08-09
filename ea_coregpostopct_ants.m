@@ -17,11 +17,13 @@ transform = ea_ants_linear(options.subj.preopAnat.(options.subj.AnchorModality).
 ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'ants.mat']);
 movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'ants.mat']);
+
+% convert ANTS matrices to 4x4
 load([options.subj.coreg.transform.CT.forwardBaseName, 'ants.mat'])
 tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-save([options.subj.coreg.transform.CT.forwardBaseName, 'ants_4x4.mat'],'tmat')
+save([options.subj.coreg.transform.CT.forwardBaseName, 'ants44.mat'],'tmat')
 load([options.subj.coreg.transform.CT.inverseBaseName, 'ants.mat'])
 tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-save([options.subj.coreg.transform.CT.inverseBaseName, 'ants_4x4.mat'],'tmat')
+save([options.subj.coreg.transform.CT.inverseBaseName, 'ants44.mat'],'tmat')
 
 disp('Coregistration done.');
