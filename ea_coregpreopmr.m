@@ -37,7 +37,36 @@ end
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
 
-    ea_coregimages(options, moving{i}, anchor, output{i});
+    affinefile = ea_coregimages(options, moving{i}, anchor, output{i},[],1);
+    %% save Transforms
+    switch lower(options.coregmr.method)
+        case lower({'ANTs (Avants 2008)', 'ANTs'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants.mat']);
+            % convert ANTS matrices to 4x4
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants44.mat'],'tmat')
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants44.mat'],'tmat')
+        case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt.mat']);
+            % convert affinefile from txt to tmat
+            tmat = readmatrix([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt.mat'],'FileType','text');
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'flirt44.mat'],'tmat');
+            tmat = readmatrix([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt.mat'],'FileType','text');
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'flirt44.mat'],'tmat');
+        case lower({'SPM (Friston 2007)', 'SPM'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm.mat']);
+            % also store tmat separatly analogous to the the other methods
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm44.mat'],'tmat')
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm44.mat'],'tmat')
+    end
 
     % Better slab support
     nii = ea_load_nii(output{i});

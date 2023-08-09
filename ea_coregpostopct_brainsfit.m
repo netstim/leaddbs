@@ -19,4 +19,12 @@ ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'brainsfit.mat']);
 movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'brainsfit.mat']);
 
+% convert BRAINSFit matrices to 4x4
+load([options.subj.coreg.transform.CT.forwardBaseName, 'brainsfit.mat'])
+tmat = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+save([options.subj.coreg.transform.CT.forwardBaseName, 'brainsfit44.mat'],'tmat')
+load([options.subj.coreg.transform.CT.inverseBaseName, 'brainsfit.mat'])
+tmat = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+save([options.subj.coreg.transform.CT.inverseBaseName, 'brainsfit44.mat'],'tmat')
+
 disp('Coregistration done.');

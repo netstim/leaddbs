@@ -44,7 +44,37 @@ end
 % Do coregistration
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
-    ea_coregimages(options, moving{i}, anchor, output{i}, [], options.prefs.mrcoreg.writeoutcoreg);
+    affinefile = ea_coregimages(options, moving{i}, anchor, output{i}, [], 1);
+    %% save Transforms
+    modality = ea_getmodality(moving{i});
+    switch lower(options.coregmr.method)
+        case lower({'ANTs (Avants 2008)', 'ANTs'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(modality).forwardBaseName, 'ants.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(modality).inverseBaseName, 'ants.mat']);
+            % convert ANTS matrices to 4x4
+            load([options.subj.coreg.transform.(modality).forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.(modality).inverseBaseName, 'ants44.mat'],'tmat')
+            load([options.subj.coreg.transform.(modality).forwardBaseName, 'ants.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+            save([options.subj.coreg.transform.(modality).inverseBaseName, 'ants44.mat'],'tmat')
+        case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(modality).forwardBaseName, 'flirt.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(modality).inverseBaseName, 'flirt.mat']);
+            % convert affinefile from txt to tmat
+            tmat = readmatrix([options.subj.coreg.transform.(modality).forwardBaseName, 'flirt.mat'],'FileType','text');
+            save([options.subj.coreg.transform.(modality).forwardBaseName, 'flirt44.mat'],'tmat');
+            tmat = readmatrix([options.subj.coreg.transform.(modality).inverseBaseName, 'flirt.mat'],'FileType','text');
+            save([options.subj.coreg.transform.(modality).inverseBaseName, 'flirt44.mat'],'tmat');
+        case lower({'SPM (Friston 2007)', 'SPM'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(modality).forwardBaseName, 'spm.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(modality).inverseBaseName, 'spm.mat']);
+            % also store tmat separatly analogous to the the other methods
+            load([options.subj.coreg.transform.(modality).forwardBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.(modality).forwardBaseName, 'spm44.mat'],'tmat')
+            load([options.subj.coreg.transform.(modality).inverseBaseName, 'spm.mat'],'tmat')
+            save([options.subj.coreg.transform.(modality).inverseBaseName, 'spm44.mat'],'tmat')
+    end
 end
 
 if options.prefs.diary

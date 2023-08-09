@@ -18,6 +18,12 @@ ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat']);
 movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'flirt.mat']);
 
+% convert affinefile from txt to tmat
+tmat = readmatrix([options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat'],'FileType','text');
+save([options.subj.coreg.transform.CT.forwardBaseName, 'flirt44.mat'],'tmat');
+tmat = readmatrix([options.subj.coreg.transform.CT.inverseBaseName, 'flirt.mat'],'FileType','text');
+save([options.subj.coreg.transform.CT.inverseBaseName, 'flirt44.mat'],'tmat');
+
 %% transform FLIRT coregistration matrix to world matrix CT->native and native->CT
 [tmat, ~, ~] = flirtmat2worldmatPaCER(str2num(fileread([options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat'])),...
     [options.subj.postopAnat.CT.preproc], [options.subj.preopAnat.(options.subj.AnchorModality).coreg], 0);
