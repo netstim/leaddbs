@@ -4,7 +4,7 @@ function ea_createscrfmask(options)
 masks = {options.subj.brainshift.anat.secondstepmask
     options.subj.brainshift.anat.thirdstepmask};
 
-if ~all(isfile(masks))
+if ~all(isfile(masks)) || options.overwriteapproved
     disp('Registering subcortical mask (Schoenecker 2008) to subject pre-op anatomy...');
 
     copyfile([ea_space(options,'subcortical'), 'secondstepmask.nii'], masks{1});

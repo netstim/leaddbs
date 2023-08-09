@@ -27,7 +27,7 @@ switch refine
 end
 
 if isfield(options,'init') && options.init
-    if ~isfile(options.subj.brainshift.checkreg.(refkey))
+    if ~isfile(options.subj.brainshift.checkreg.(refkey)) || options.overwriteapproved
         ea_createrefineslice(options);
     end
 else
@@ -50,7 +50,7 @@ ea_gencheckregfigs(options, 'brainshift');
 
 % Prepare anchor and moving images for brain shift correction
 function ea_prepareImages(options)
-if ~isfile(options.subj.brainshift.anat.anchor)
+if ~isfile(options.subj.brainshift.anat.anchor) || options.overwriteapproved
     ea_mkdir([options.subj.brainshiftDir, filesep, 'anat']);
 
     from{1} = [ea_space,'bb.nii'];
@@ -78,7 +78,7 @@ end
 % In case using CT, apply tone-mapping if needed, keep only one image
 if strcmp(options.subj.postopModality, 'CT')
     if strcmp(options.prefs.scrf.tonemap, 'tp_')
-        if ~isfile(options.subj.coreg.anat.postop.tonemapCT) && isfile(options.subj.coreg.anat.postop.CT)
+        if (~isfile(options.subj.coreg.anat.postop.tonemapCT) || options.overwriteapproved) && isfile(options.subj.coreg.anat.postop.CT)
             ea_tonemapct(options, 'native');
         end
         options.subj.coreg.anat.postop = rmfield(options.subj.coreg.anat.postop, 'CT');

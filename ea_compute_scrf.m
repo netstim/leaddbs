@@ -9,7 +9,7 @@ if ~handles.mask0.Value % Use mask
     % Masks to be used
     masks = {options.subj.brainshift.anat.secondstepmask
         options.subj.brainshift.anat.thirdstepmask};
-    if ~all(isfile(masks))
+    if ~all(isfile(masks)) || options.overwriteapproved
         ea_createscrfmask(options);
     end
 end
