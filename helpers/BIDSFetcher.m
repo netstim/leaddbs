@@ -550,18 +550,25 @@ classdef BIDSFetcher
             % Set pre-op MR transformation
             if numel(fields) >1
                 for i = 2:numel(fields)
-                    coregTransform.(fields{i}).forwardBaseName = [baseName, 'from-', fields{i}, '_to-', obj.anchorSpace, '_desc-'];
-                    coregTransform.(fields{i}).inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-', fields{i}, '_desc-'];
+                    spaceTag = erase(fields{i}, '_');
+                    coregTransform.(fields{i}).forwardBaseName = [baseName, 'from-', spaceTag, '_to-', obj.anchorSpace, '_desc-'];
+                    coregTransform.(fields{i}).inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-', spaceTag, '_desc-'];
                 end
             end
 
             % Set post-op CT transformation
-            if isfield(coregAnat, 'postop') && isfield(coregAnat.postop, 'CT')
-                coregTransform.CT.forwardBaseName = [baseName, 'from-CT_to-', obj.anchorSpace, '_desc-'];
-                coregTransform.CT.inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-CT_desc-'];
-            elseif isfield(coregAnat, 'postop') % Set post-op MRI transformation
-                coregTransform.postop_space.forwardBaseName = [baseName, 'from-postop_space_to-', obj.anchorSpace, '_desc-'];
-                coregTransform.postop_space.inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-postop_space_desc-'];
+            if isfield(coregAnat, 'postop')
+                fields = fieldnames(coregAnat.postop);
+                for i = 1:numel(fields)
+                    if strcmp(fields{i}, 'CT')
+                        coregTransform.CT.forwardBaseName = [baseName, 'from-CT_to-', obj.anchorSpace, '_desc-'];
+                        coregTransform.CT.inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-CT_desc-'];
+                    else % Set post-op MRI transformation
+                        spaceTag = erase(fields{i}, '_');
+                        coregTransform.(fields{i}).forwardBaseName = [baseName, 'from-', spaceTag, '_to-', obj.anchorSpace, '_desc-'];
+                        coregTransform.(fields{i}).inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-', spaceTag, '_desc-'];
+                    end
+                end
             end
         end
 
