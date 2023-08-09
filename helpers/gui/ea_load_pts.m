@@ -66,6 +66,12 @@ elseif isBIDSSubjFolder(uipatdir{1})
                                 fullfile(handles.datasetselect.String, 'sourcedata', ['sub-', subjId{i}])};
                             cellfun(@(x, y) isfolder(x) && copyfile(x,y), src, dst, 'Uni', 0);
                         end
+                    else
+                        if ~isempty(handles.patientlist.Selection)
+                            subjId = handles.patientlist.Data.subjId(handles.patientlist.Selection);
+                        else
+                            subjId = handles.patientlist.Data.subjId(1);
+                        end
                     end
 
                     BIDSRoot = handles.datasetselect.String;
