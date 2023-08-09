@@ -374,8 +374,21 @@ if ~groupdir % user pressed cancel
 else
     if ~contains(groupdir, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(groupdir, 'derivatives'))
         analysisFile = ea_regexpdir(groupdir, '^dataset-[^\W_]+_analysis-[^\W_]+\.mat$', 0);
-        if ~isempty(analysisFile)
-           groupdir = ea_genDatasetFromGroupAnalysis(analysisFile{1});
+        if ~isempty(analysisFile) % Load group analysis outside of dataset
+            if length(analysisFile) > 1
+                [~, guid] = fileparts(fileparts(analysisFile));
+                index = listdlg('PromptString', 'Select Group Analysis', 'ListString', guid, 'SelectionMode', 'single', 'CancelString', 'Cancel');
+                if ~isempty(index)
+                    analysisFile = analysisFile(index);
+                else
+                    return;
+                end
+            end
+            groupdir = ea_genDatasetFromGroupAnalysis(analysisFile{1});
+        else % initialize group analysis in an empty folder.
+            ea_cprintf('CmdWinWarnings', 'Initialize new dataset folder: %s\n', groupdir);
+            ea_mkdir(fullfile(groupdir, 'derivatives', 'leaddbs'));
+            ea_mkdir(fullfile(groupdir, 'derivatives', 'leadgroup'));
         end
     end
     analysisFile = ea_getGroupAnalysisFile(groupdir);
