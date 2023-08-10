@@ -14,8 +14,9 @@ try
             ea_ptspecific_atl(toptions); % make sure atlas has been warped.
             nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,options.prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
     end
-catch
-    ea_error('The selected atlas set seems incompatible with this approach.');
+catch ME
+    ea_cprintf('CmdWinErrors', '\n%s\n\n', ME.message);
+    ea_error('Failed to load gray matter mask.', simpleStack = 1);
 end
 
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
