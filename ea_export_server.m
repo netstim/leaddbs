@@ -44,7 +44,7 @@ end
 % export model
 bbstruct=getappdata(gcf,'bbstruct');
 if ~isempty(bbstruct)
-    ea_savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_scene.json'],'ArrayToStruct',0);
+    savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_scene.json'],'ArrayToStruct',0);
     % export html
     copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
 else
@@ -78,7 +78,7 @@ if ~isempty(PL)
     save([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'stimparams.mat'],'stimparams','stimparamsstr');
 
     vatstruct=ea_viz2brainbrowser(PL.vatfv);
-    ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_vat.json'],'ArrayToStruct',0);
+    savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_vat.json'],'ArrayToStruct',0);
 
     % export html
     copyfile([options.earoot,'ls',filesep,'index_vat.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
@@ -99,7 +99,7 @@ if ~isempty(PL)
     try
         fibstruct=ea_viz2brainbrowser(PL.bbfibfv,'line');
         %fibstruct=rmfield(fibstruct,'normals');
-        ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);
+        savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);
 
         % export html
         copyfile([options.earoot,'ls',filesep,'index_fibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
