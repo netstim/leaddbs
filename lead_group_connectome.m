@@ -149,7 +149,7 @@ end
 
 if strcmp(target, 'groupDir')
     if length(folders) > 1 || ~exist(folders{1}, 'dir')
-        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
+        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', simpleStack = 1);
     end
 
     groupdir = [folders{1}, filesep];
@@ -174,7 +174,7 @@ if strcmp(target, 'groupDir')
     ea_refresh_lg_connectome(handles);
 else
     if strcmp(handles.groupdir_choosebox.String, 'Choose Group Directory')
-        ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+        ea_error('Please choose a group directory first to store the group analysis!', simpleStack = 1);
     end
 
     nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
@@ -247,7 +247,7 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if strcmp(handles.groupdir_choosebox.String, 'Choose Group Directory')
-    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+    ea_error('Please choose a group directory first to store the group analysis!', simpleStack = 1);
 end
 
 M=getappdata(handles.leadfigure,'M');

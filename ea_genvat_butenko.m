@@ -1,8 +1,8 @@
 function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS for VTA calculation
 
-% set to 1 if you only want to prep files for cluster comp. 
-prepFiles_cluster = 0; % for now hardcoded 
+% set to 1 if you only want to prep files for cluster comp.
+prepFiles_cluster = 0; % for now hardcoded
 
 if nargin==2
     S=varargin{1};
@@ -39,7 +39,7 @@ end
 
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
-    ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], 'Error', dbstack)
+    ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], simpleStack = 1);
 end
 
 % Set output path
@@ -504,7 +504,7 @@ for side=0:1
         warning('No stimulation set for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
         fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
-        continue;        
+        continue;
     end
 
     if settings.calcAxonActivation && ~any(fibersFound(:,side+1))
@@ -688,7 +688,7 @@ for side=0:1
 
                 if options.native % Generate fiber activation file in MNI space
                     fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
-                    
+
                     if startsWith(settings.connectome, 'Multi-Tract: ')
                         % load the particular pathway in MNI
                         [atlas_folder,~] = fileparts(tract);

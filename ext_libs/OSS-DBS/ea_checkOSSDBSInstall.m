@@ -28,7 +28,7 @@ if isempty(dockerPath)
             'sudo launchctl config user path /usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin']), ...
             'Error', dbstack, 0);
     else
-        ea_error('docker not found!', 'Error', dbstack, 0);
+        ea_error('docker not found!', showdlg = 0, simpleStack = 1);
     end
 else
     if ismac || ispc % Use upstream image since there's no permission issue

@@ -230,7 +230,7 @@ if strcmp(target, 'groupDir')
 
     % Multiple folder dragged or not a proper BIDS folder
     if length(folders) > 1
-        ea_error('Please drag either a dataset root folder or a group analysis folder into Lead Group!', 'Error', dbstack);
+        ea_error('Please drag either a dataset root folder or a group analysis folder into Lead Group!', simpleStack = 1);
     end
 
     if isfile(folders{1}) % Group analysis mat file dragged
@@ -253,7 +253,7 @@ if strcmp(target, 'groupDir')
             [groupdir, analysisFile] = ea_genDatasetFromGroupAnalysis(folders{1});
             load(analysisFile, 'M');
         else
-            ea_error('Not a Lead Group Analysis file!', 'Error', dbstack);
+            ea_error('Not a Lead Group Analysis file!', simpleStack = 1);
         end
     else % Dataset root folder or group analysis folder dragged
         if ~contains(folders{1}, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(folders{1}, 'derivatives'))
@@ -297,7 +297,7 @@ if strcmp(target, 'groupDir')
     ea_refresh_lg(handles);
 else
     if strcmp(handles.groupdir_choosebox.String, 'Choose Dataset Directory')
-        ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+        ea_error('Please choose a group directory first to store the group analysis!', simpleStack = 1);
     end
 
     nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
@@ -437,7 +437,7 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if strcmp(handles.groupdir_choosebox.String, 'Choose Dataset Directory')
-    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+    ea_error('Please choose a group directory first to store the group analysis!', simpleStack = 1);
 end
 
 M=getappdata(handles.leadfigure,'M');
