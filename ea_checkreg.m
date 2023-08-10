@@ -361,6 +361,10 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     json.approval = 0;
     savejson('', json, options.subj.norm.log.method);
 
+    if isfolder(options.subj.brainshiftDir)
+        ea_cprintf('CmdWinWarnings', 'Normalization has been rerun. Please also rerun brain shift correction!\n');
+    end
+
 elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
     % Get CT coregistration method
     options.coregct.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
@@ -376,6 +380,10 @@ elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj
     json = loadjson(options.subj.coreg.log.method);
     json.approval.CT = 0;
     savejson('', json, options.subj.coreg.log.method);
+
+    if isfolder(options.subj.brainshiftDir)
+        ea_cprintf('CmdWinWarnings', 'CT coregistration has been rerun. Please also rerun brain shift correction!\n');
+    end
 
 elseif strcmp(ea_stripext(options.prefs.fa2anat), 'FA') % FA
     options.coregmr.method=get(handles.coregmrmethod,'String');
@@ -425,6 +433,12 @@ else % MR
         json = loadjson(options.subj.coreg.log.method);
         json.approval.(modality) = 0;
         savejson('', json, options.subj.coreg.log.method);
+
+        if strcmp(session, 'postop') && isfolder(options.subj.brainshiftDir)
+            ea_cprintf('CmdWinWarnings', 'Postop MR coregistration has been rerun. Please also rerun brain shift correction!\n');
+        elseif strcmp(session, 'preop')
+            ea_cprintf('CmdWinWarnings', 'Preop MR coregistration has been rerun. Please also rerun normalization!\n');
+        end
     end
 end
 

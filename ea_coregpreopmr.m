@@ -78,4 +78,8 @@ if options.prefs.diary
     diary off;
 end
 
+if options.overwriteapproved
+    ea_cprintf('CmdWinWarnings', 'Preop MR coregistration has been rerun. Please also rerun normalization!\n');
+end
+
 done = 1;

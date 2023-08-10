@@ -46,4 +46,8 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
     if options.prefs.diary
         diary off;
     end
+
+    if options.overwriteapproved && isfolder(options.subj.brainshiftDir)
+        ea_cprintf('CmdWinWarnings', 'Normalization has been rerun. Please also rerun brain shift correction!\n');
+    end
 end
