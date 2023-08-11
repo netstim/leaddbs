@@ -374,7 +374,7 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
         end
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
-    [fibers,idx]=ea_loadfibertracts(fname,1);
+    [fibers,idx]=ea_loadfibertracts(fname);
     structure.fibers=fibers;
     structure.idx=idx;
 
@@ -387,14 +387,15 @@ elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
     end
 elseif strcmp(fname(end-3:end),'.mat')
     warning('off', 'MATLAB:load:variableNotFound');
-    if ~isempty(fieldnames(load(fname, 'ea_fibformat'))) % tracts in trk format
-        [fibers,idx]=ea_loadfibertracts(fname,1);
+
+    if ismember('ea_fibformat', who('-file', fname)) % tracts in trk format
+        [fibers,idx]=ea_loadfibertracts(fname);
         structure.fibers=fibers;
         structure.idx=idx;
-    elseif ~isempty(fieldnames(load(fname, 'vals'))) % discriminative fibers
+    elseif ismember('vals', who('-file', fname)) % discriminative fibers
         structure.isdiscfibers = 1;
         % Set default color (blue and red) if not found in mat.
-        if isempty(fieldnames(load(fname, 'fibcolor')))
+        if ismember('fibcolor', who('-file', fname))
             fibcolor = [0 0 1;1 0 0];
             save(fname, 'fibcolor', '-append');
         end

@@ -131,7 +131,7 @@ axis fill
 function addtractweighted(tract,weight,resultfig,addht,options)
 
 disp('Loading fibertracts...');
-[fibers,idx,voxmm,mat]=ea_loadfibertracts(tract);
+[fibers, idx] = ea_loadfibertracts(tract, 'ask');
 disp('Done.');
 
 disp('Loading weight...');
@@ -249,8 +249,7 @@ if ischar(obj) % addobj
         end
     elseif endsWith(obj, '.trk')
         disp('Converting .trk to ftr.')
-        [thisset,fibidx] = ea_trk2ftr(obj);
-        thisset = thisset';
+        [thisset,fibidx] = ea_trk2ftr(obj, 'ask');
     else
         error('File is neither a .mat nor .trk!')
     end
