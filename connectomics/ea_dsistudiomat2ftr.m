@@ -19,6 +19,10 @@ if ~exist('outputtrk', 'var')
     outputTRK = 1;
 end
 
+if ~exist('LPS', 'var')
+    LPS = 0;
+end
+
 fibinfo = load(matFile);
 fibers = fibinfo.tracts';
 idx = double(fibinfo.length)';
