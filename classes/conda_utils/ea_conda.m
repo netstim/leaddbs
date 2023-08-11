@@ -43,7 +43,7 @@ classdef (Abstract) ea_conda
             end
 
             mambaforge_installer_url =  ['https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-' osarch];
-            installer_file = fullfile(ea_conda.install_path, 'mambaforge');
+            installer_file = fullfile(ea_getearoot, 'mambaforge');
 
             if isunix
                 mambaforge_installer_url = [mambaforge_installer_url '.sh'];
