@@ -47,8 +47,8 @@ for k = 1:length(myFiles)
         else
             New_N = N_threshold;
         end
-        indices_picked = randi([1 length(ftr_full.idx)],1,New_N)';
-
+        
+        indices_picked = randperm(length(ftr_full.idx),New_N)';
         indices_picked = sort(indices_picked);
 
         % check how well this works for large dMRI connectomes
