@@ -51,7 +51,7 @@ classdef ea_slicer_for_lead
 
 
         function up_to_date = is_installed_and_up_to_date(obj)
-            up_to_date = strcmp(obj.installed_version, obj.release_version);
+            up_to_date = strcmp(obj.installed_version, obj.upstream_version);
         end
 
         function success = install(obj)
