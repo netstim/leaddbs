@@ -555,9 +555,9 @@ for patients = 1:length(source)
                                         [~,connectome_filename,ext] = fileparts(leadMapper_folder{k});
                                         try
                                             if contains(connectome_filename, fmri_keywords) % Functional connectome, subset in the name
-                                                connectome_filename = strsplit(connectome_filename, '_');
-                                                connectome = connectome_filename{1};
-                                                subset = connectome_filename{2};
+                                                connNameSplit = strsplit(connectome_filename, '_');
+                                                connectome = connNameSplit{1};
+                                                subset = connNameSplit{2};
                                                 bids_connectome_name = ea_getConnLabel(connectome, subset);
                                             else % Structural connectome
                                                 bids_connectome_name = ea_getConnLabel(connectome_filename);
