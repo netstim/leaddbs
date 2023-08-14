@@ -767,7 +767,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     print("\n Probing action potentials")
     start_neuron = time.time()
 
-    if d["Axon_Model_Type"] == 'McIntyre2002':
+    if d["Axon_Model_Type"] == 'McIntyre2002' or d["Axon_Model_Type"] == 'McIntyre2002_ds':
         with open(os.devnull, 'w') as FNULL:
             subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)   # might not work with remote hard drives
         with open(os.devnull, 'w') as FNULL:
