@@ -12,7 +12,7 @@ slicer_netstim_modules{end+1} = fullfile(ea_getearoot, 'ext_libs', 'SlicerNetsti
 slicer_netstim_modules{end+1} = fullfile(ea_getearoot, 'ext_libs', 'SlicerNetstim', 'ImportAtlas');
 
 s4l = ea_slicer_for_lead;
-if ~s4l.is_installed()
+if ~s4l.is_installed_and_up_to_date()
     s4l.install();
 end
 
@@ -30,10 +30,10 @@ for i = 1:length(uipatdirs)
     script_to_run = fullfile(uipatdirs{i}, 'leador', [mfilename '.py']);
     copyfile(script_source, script_to_run)
     
-    lines_to_append = [strcat("subjectAnatFiles=['", strjoin(subjectAnatFiles,"','"), "']"),...
-                       strcat("subjectDICOMFolder='", subjectDICOMFolder, "'"),...
-                       strcat("MNIToAnchorNativeFile='", MNIToAnchorNativeFile, "'"),...
-                       strcat("atlasPath='", atlasPath, "'")];
+    lines_to_append = [strcat("subjectAnatFiles=[r'", strjoin(subjectAnatFiles,"r','"), "']"),...
+                       strcat("subjectDICOMFolder=r'", subjectDICOMFolder, "'"),...
+                       strcat("MNIToAnchorNativeFile=r'", MNIToAnchorNativeFile, "'"),...
+                       strcat("atlasPath=r'", atlasPath, "'")];
     
     script_read = fileread(script_to_run);
     script_read = [char(strjoin(lines_to_append,newline)), newline, script_read];
