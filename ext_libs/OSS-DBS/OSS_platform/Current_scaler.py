@@ -92,7 +92,7 @@ def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_sig
     copytree(src, dst, symlinks=False, ignore=None)
     os.chdir(dst)  # we now operate in Axon_files/ in the stim folder
 
-    if d["Axon_Model_Type"] == 'McIntyre2002':
+    if d["Axon_Model_Type"] == 'McIntyre2002' or d["Axon_Model_Type"] == 'McIntyre2002_ds':
         with open(os.devnull, 'w') as FNULL: subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl axnode', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         
