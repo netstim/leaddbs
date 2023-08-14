@@ -5,29 +5,29 @@ updurl = 'https://www.lead-dbs.org/release/download.php';
 
 if nargin
     if strcmp(varargin{1},'full')
-    	id = 'data_pcloud';
+    	id = 'data_classic_pcloud';
     else
-        id = 'updates_data';
+        id = 'updates_data_classic';
     end
 else
-    id = 'updates_data';
+    id = 'updates_data_classic';
 end
 
 earoot = ea_getearoot;
 
-if strcmp(id, 'updates_data')
+if strcmp(id, 'updates_data_classic')
     status = getResponseCode(openConnection(java.net.URL([updurl,'?id=',id])));
     if status ~= 200
         info=sprintf(['No data update found!\n',...
                       'Alternatively, you can download the full data zip from:\n', ...
-                      'https://www.lead-dbs.org/release/download.php?id=data_pcloud or\n', ...
-                      'https://www.lead-dbs.org/release/download.php?id=data_onedrive']);
+                      'https://www.lead-dbs.org/release/download.php?id=data_classic_pcloud or\n', ...
+                      'https://www.lead-dbs.org/release/download.php?id=data_classic_onedrive']);
         disp(info);
         msgbox(info,'No Update','Help');
         return
     end
     disp('Downloading lead data update...');
-elseif strcmp(id, 'data')
+elseif strcmp(id, 'data_classic_pcloud')
     disp('Downloading lead data...');
 end
 

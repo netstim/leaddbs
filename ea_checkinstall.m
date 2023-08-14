@@ -13,7 +13,7 @@ end
 switch cmd
     case 'list' % simply return list of installable datasets
         success={'Redownload data files'
-                 'Install development version of Lead'
+                 'Install hotfix'
                  '2009b Nonlinear Flip Transform'
                  'Allan Institute Genetics Database'
                  '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
@@ -25,8 +25,8 @@ switch cmd
                  'Structural group connectome 85 PPMI PD-patients GQI v1.1 (Ewert 2017)'
                  'Functional group connectome 74 PPMI PD-patients, 15 controls (Horn 2017)'};
 
-        commands={'leaddata'
-                  'hotfix'
+        commands={'data_classic'
+                  'hotfix_classic'
                   'nlinflip'
                   'allengenetics'
                   '7tcgflash'
@@ -37,7 +37,7 @@ switch cmd
                   'groupconnectome2017'
                   'groupconnectome_ppmi2017'
                   'fgroupconnectome_ppmi2017'};
-    case 'leaddata'
+    case 'data_classic'
         checkf=[ea_space,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
@@ -294,7 +294,7 @@ switch cmd
         else
             disp('Functional Group Connectome (Horn 2017) is installed.')
         end
-    case 'hotfix'
+    case 'hotfix_classic'
         if ~checkonly
             success=ea_hotfix;
         end

@@ -16,20 +16,20 @@ updurl = 'https://www.lead-dbs.org/release/download.php';
 if hotfix
     try
         disp('*** Updating LEAD. Please do not quit MATLAB.');
-        ea_delete([earoot,'tmp',filesep,'hotfix']);
+        ea_delete([earoot,'tmp',filesep,'hotfix_classic']);
         if ~exist([earoot,'tmp'] ,'dir')
             mkdir([earoot,'tmp']);
         end
         disp('Downloading updated code...');
         try
             webopts=weboptions('Timeout',Inf);
-            websave([earoot,'tmp',filesep,'hotfix.zip'],updurl,'id','hotfix',webopts);
+            websave([earoot,'tmp',filesep,'hotfix_classic.zip'],updurl,'id','hotfix_classic',webopts);
         catch
             try
-                urlwrite([updurl,'?id=hotfix'],[earoot,'tmp',filesep,'hotfix.zip'],'Timeout',Inf);
+                urlwrite([updurl,'?id=hotfix_classic'],[earoot,'tmp',filesep,'hotfix_classic.zip'],'Timeout',Inf);
             catch
                 fprintf(['\nDownload error! You may try to download the file manually from:\n',...
-                         '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=hotfix']);
+                         '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=hotfix_classic']);
                 msgbox('Please check the command window for more information.','Download error!','Error')
                 return
             end
@@ -37,16 +37,16 @@ if hotfix
 
         disp('Extracting code...');
         try
-            unzip([earoot,'tmp',filesep,'hotfix.zip'],[earoot,'tmp',filesep,'hotfix']);
+            unzip([earoot,'tmp',filesep,'hotfix_classic.zip'],[earoot,'tmp',filesep,'hotfix_classic']);
         catch
-            system(['unzip -q ',earoot,'tmp',filesep,'hotfix.zip -d ', earoot,'tmp',filesep,'hotfix']);
+            system(['unzip -q ',earoot,'tmp',filesep,'hotfix_classic.zip -d ', earoot,'tmp',filesep,'hotfix_classic']);
         end
-        delete([earoot,'tmp',filesep,'hotfix.zip']);
+        delete([earoot,'tmp',filesep,'hotfix_classic.zip']);
 
         disp('Deleting outdated code...');
         try
-            if exist([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'], 'file')
-                dfid = fopen([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
+            if exist([earoot,'tmp',filesep,'hotfix_classic',filesep,'DELETE'], 'file')
+                dfid = fopen([earoot,'tmp',filesep,'hotfix_classic',filesep,'DELETE']);
                 dels=textscan(dfid,'%s');
                 fclose(dfid);
                 for f=1:length(dels{1})
@@ -56,14 +56,14 @@ if hotfix
                         delete([earoot,dels{1}{f}])
                     end
                 end
-                delete([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'])
+                delete([earoot,'tmp',filesep,'hotfix_classic',filesep,'DELETE'])
             end
         catch
             disp('Error while deleting some files. You may ignore this.');
         end
 
         disp('Copying new code...');
-        copyfile([earoot,'tmp',filesep,'hotfix',filesep,'*'],earoot,'f');
+        copyfile([earoot,'tmp',filesep,'hotfix_classic',filesep,'*'],earoot,'f');
         disp('Cleaning up...');
         rmdir([earoot,'tmp'],'s')
         disp('Done.');

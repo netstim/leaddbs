@@ -1,5 +1,5 @@
 function ea_update(varargin)
-% lead update
+% leaddbs update
 
 local=ea_getvsn('local');
 web=ea_getvsn('web');
@@ -25,7 +25,7 @@ updurl = 'https://www.lead-dbs.org/release/download.php';
 if update
     try
         if update==1 % full update
-            id='lead';
+            id='leaddbs_classic';
         elseif update==2 % incremental update
             id=['updates_',strrep(local,'.',''),'-',strrep(web,'.','')];
         end
