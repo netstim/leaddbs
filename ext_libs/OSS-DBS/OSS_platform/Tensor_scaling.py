@@ -61,8 +61,8 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,1],data_reshape[i,j,k,3]],   #if tensor is ordered xx,yx,yy,zx,zy,zz (NIFTI standard)
                                             [data_reshape[i,j,k,1],data_reshape[i,j,k,2],data_reshape[i,j,k,4]],
                                             [data_reshape[i,j,k,3],data_reshape[i,j,k,4],data_reshape[i,j,k,5]]])
-            elif tensor_order=="DTI_studio":
-                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,3],data_reshape[i,j,k,4]],   #if tensor is ordered xx,yy,zz,yx,zx,zy (DTI Studio)
+            elif tensor_order=="DSI_studio":
+                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,3],data_reshape[i,j,k,4]],   #if tensor is ordered xx,yy,zz,yx,zx,zy (DSI Studio)
                                              [data_reshape[i,j,k,3],data_reshape[i,j,k,1],data_reshape[i,j,k,5]],
                                              [data_reshape[i,j,k,4],data_reshape[i,j,k,5],data_reshape[i,j,k,2]]])
             elif tensor_order=="FSL":
@@ -137,7 +137,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
             #define a lower boundary for the eigenvalues:
             if np.any(eigVals_tensor*Sigma_iso_low<Sigma_iso_lowerBoundary):
 #                if np.any((eigVals*Sigma_iso_low)<Sigma_iso_lowerBoundary):
-                print("lower boundary detected at Voxel:")
+                print("Error, lower boundary detected at Voxel:")
                 print(i,j,k)
                 raise SystemExit
 
@@ -187,6 +187,9 @@ def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order
     img = nib.load(filepath)
     # img.shape
     DTI_data = img.get_fdata()
+    if np.any(np.isnan(DTI_data))
+        print("NaN detected in the DTI, please remove them!")
+        raise SystemExit
 
 #    #plot DTI data as test
 #    fig = plt.figure()
