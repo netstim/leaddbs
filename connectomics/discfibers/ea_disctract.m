@@ -844,9 +844,11 @@ classdef ea_disctract < handle
                                 weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
                             end
                         end
-
                         Ihat=ea_nansum(Ihat.*weightmatrix,3);
-
+                    else
+                        Ihat = Ihat(test,:,:);
+                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
+                        Improvement = Improvement(test);
                     end
                 case 'Split & Color By PCA'
 
