@@ -399,6 +399,16 @@ for i = find(uiapp.niiFileTable.Data.Include)'
 
     if strcmp(modality, "CT")
         uiapp.niiFileTable.Data.Acquisition(i) = "-";
+    else
+        % Ensure MRI has a proper acq tag set
+        if uiapp.niiFileTable.Data.Acquisition(i) == "-"
+            acq = ea_checkacq(imgs{i}.p.pixdim);
+            if ~ismember(acq, postop_acq_tags) && strcmp(modality, 'MRI')
+                ea_cprintf('CmdWinWarnings', '''%s'' acquisition tag detected.\nHowever, it may only be set to ''ax'' (must have) , ''sag'' or ''cor'' for postop MRIs.\nReset to ''ax'' now.\n', acq);
+                acq = "ax";
+            end
+            uiapp.niiFileTable.Data.Acquisition(i) = acq;
+        end
     end
     acq = char(uiapp.niiFileTable.Data.Acquisition(i));
 
