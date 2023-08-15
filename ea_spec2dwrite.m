@@ -161,7 +161,7 @@ function savebutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 d2=ea_tdhandles2options(handles);
-ea_storemachineprefs('d2',d2);
+ea_setprefs('d2',d2);
 delete(handles.ea_spec2dwrite);
 
 

@@ -350,7 +350,7 @@ options.macaquemodus=0;
 
 options.d2=ea_tdhandles2options(handles);
 
-% ea_storemachineprefs('d2',d2);
+% ea_setprefs('d2',d2);
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 if isempty(options.uipatdirs)
@@ -501,7 +501,7 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % d2=ea_tdhandles2options(handles);
-% ea_storemachineprefs('d2',d2);
+% ea_setprefs('d2',d2);
 
 delete(hObject);
 

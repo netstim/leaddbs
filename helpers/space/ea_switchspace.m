@@ -9,7 +9,7 @@ else
     answ='Sure';
 end
 if strcmp(answ,'Sure')
-    ea_storemachineprefs('space',spacename);
+    ea_setprefs('space',spacename);
 
     % Get space definitions
     spacedef = ea_getspacedef;
@@ -19,21 +19,21 @@ if strcmp(answ,'Sure')
         mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI152NLin2009bAsym'];
         load([mnispace, filesep, 'spacedef.mat'], 'spacedef');
     end
-    ea_storemachineprefs('togglestates', spacedef.togglestates);
+    ea_setprefs('togglestates', spacedef.togglestates);
 
     % Check if there's space specific view setting
     if ~isfield(spacedef, 'view') % Fallback
         mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI152NLin2009bAsym'];
         load([mnispace, filesep, 'spacedef.mat'], 'spacedef');
     end
-    ea_storemachineprefs('view', spacedef.view);
+    ea_setprefs('view', spacedef.view);
 
     % Check if there's space specific default atlas setting
     if ~isfield(spacedef, 'defaultatlas') % Fallback
         mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI152NLin2009bAsym'];
         load([mnispace, filesep, 'spacedef.mat'], 'spacedef');
     end
-    ea_storemachineprefs('defaultatlas', spacedef.defaultatlas);
+    ea_setprefs('defaultatlas', spacedef.defaultatlas);
 
     % Set tensorFileName here
     if strcmp(spacename, 'MNI152NLin2009bAsym')
