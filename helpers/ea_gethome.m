@@ -6,7 +6,7 @@ else
     home = getenv('HOME');
 end
 
-if ~strcmp(home(end), filesep)
+if ~endsWith(home, filesep)
     home = [home, filesep];
 end
 
