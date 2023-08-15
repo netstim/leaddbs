@@ -2,7 +2,7 @@ function ea_patch_spm
 % Patch SPM def, norm and shoot cfg file to make deformation file whose name does
 % not start with 'y_*' or 'iy_*' also recognizable.
 
-copyfile(fullfile(ea_getearoot, 'ext_libs', 'spm', 'patch', '*'), fileparts(which('spm')));
+unzip(fullfile(ea_getearoot, 'ext_libs', 'spm', 'cfg_patch.zip'), fileparts(which('spm')));
 
 % defCfgFile = [fileparts(which('spm')), filesep, 'config', filesep, 'spm_cfg_deformations.m'];
 % defCfg = fileread(defCfgFile);

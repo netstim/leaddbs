@@ -20,7 +20,10 @@ if ~isdeployed
     end
 
     % Patch SPM cfg files
-    ea_patch_spm;
+    cfg = dir(fullfile(fileparts(which('spm')), 'toolbox', 'Shoot', 'tbx_cfg_shoot.m'));
+    if cfg.bytes ~= 35562
+        ea_patch_spm;
+    end
 
     if ~any(ismember(ver(8:11),'.')) % old version format
         if str2double(ver(8:11))<6906
