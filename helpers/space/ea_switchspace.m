@@ -35,6 +35,15 @@ if strcmp(answ,'Sure')
     end
     ea_storemachineprefs('defaultatlas', spacedef.defaultatlas);
 
+    % Set tensorFileName here
+    if strcmp(spacename, 'MNI152NLin2009bAsym')
+        ea_setprefs('vatsettings.butenko_tensorFileName', 'IITMeanTensor.nii.gz');
+    elseif strcmp(spacename, 'WaxholmSpaceSDRat')
+        ea_setprefs('vatsettings.butenko_tensorFileName', 'JohnsonWS.nii.gz');
+    else
+        ea_setprefs('vatsettings.butenko_tensorFileName', '')
+    end
+
     if ~exist('mute','var')
         disp('Restarting Lead Neuroimaging Suite...');
         close all force
