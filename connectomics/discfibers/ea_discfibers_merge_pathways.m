@@ -55,7 +55,8 @@ end
 
 % store the merged pathways in the leadgroup folder for now
 filepath = fileparts(obj.leadgroup);
-cfile = [filepath,filesep,'merged_pathways.mat'];
+mkdir([filepath,filesep,obj.connectome])
+cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
 save(cfile, '-struct', 'ftr');
 
 if obj.connectivity_type ~= 2
