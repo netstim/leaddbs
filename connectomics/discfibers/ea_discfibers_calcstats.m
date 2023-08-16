@@ -7,12 +7,24 @@ else % used in permutation based statistics - in this case the real improvement 
     I=Iperm;
 end
 
-fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
 
-% quickly recalc stats:
+% quickly recalc stats
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
     patsel=obj.patientselection;
 end
+
+
+% fiber values can be sigmoid transform
+if obj.SigmoidTransform 
+    fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+    fibsval = fibsval_raw;  % initialize
+    for side = 1:size(fibsval_raw,2)
+        fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+    end
+else
+    fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+end
+
 
 if size(I,2)==1 % 1 entry per patient, not per electrode
     I=[I,I]; % both sides the same;
@@ -161,8 +173,13 @@ for group=groups
             switch obj.statmetric
                 case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}
                     sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
-                case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'}
-                    sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+                case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'}
+                    if obj.SigmoidTransform == 1 && (strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak'))
+                        % 0.5 V / mm -> 0.5 probability 
+                        sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold/1000.0),2);
+                    else
+                        sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+                    end
             end
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
@@ -241,7 +258,7 @@ for group=groups
                         nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
                         [~,ps,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
                         vals{group,side}=stats.tstat';
-
+                        
                         % Comment this if you don't want the graphs
                         % if you need negative fibers just use min here 
                         [~, maxidx] = max(vals{group,side}); 
@@ -253,17 +270,12 @@ for group=groups
                         boxplot([imp_conn; imp_nonconn]');
                         xticks(1:2)
                         xticklabels({'Connected VTAs', 'Non-connected VTAs'}); 
-                        ylabel('Improvement')
-
-
-
+                        ylabel('Improvement')                        
+                        
                         if obj.showsignificantonly
                             pvals{group,side}=ps';
                         end
-
-                        %
-
-
+                        
                         %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                     end
                 case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
@@ -431,6 +443,51 @@ for group=groups
                             pvals{group,side}(nonempty)=outps;
                         end
                     end
+                case 'Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'
+                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
+                    invals=gfibsval{side}(nonempty,gpatsel)';
+    
+                    %weighted_linear_regression_test = 'two-sample';
+                    %if strcmp('two-sample',weighted_linear_regression_test)
+                    if strcmp('2-Sample',obj.twoSampleWeighted)
+                        [outvals,outps] = ea_discfibers_TwoSample_weightedLinearRegression(invals,I(gpatsel,side),'t-value');
+                    else
+                        [outvals,outps] = ea_discfibers_weightedLinearRegression(invals,I(gpatsel,side),'mean','t-value'); % generate optimality values on all but left out patients
+                    end
+                    vals{group,side}(nonempty)=outvals;
+                    if exist('outps','var') % only calculated if testing for significance.
+                        pvals{group,side}(nonempty)=outps;
+                    end
+                case 'Odds Ratios / EF-Sigmoid (Jergas 2023)'
+
+                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0; % number of connected tracts
+                    invals=gfibsval{side}(nonempty,gpatsel)';
+
+                    if ~isempty(invals)
+                    
+                        Impr = I(gpatsel,side);
+
+                        if any(isnan(I(gpatsel,side)))
+                            ea_warndlg("NaNs in scores detected, removing...")
+                            %return
+                            % remove the whole row
+                            nan_scores = isnan(I(gpatsel,side));
+                            
+                            Impr(nan_scores,:) = [];
+                            invals(nan_scores,:) = [];
+                        end
+
+                        ImpBinary=logical((Impr)>0); % make sure variable is actually binary
+                        % restore nans
+
+                        [outvals,CI95_up,CI95_low,outps] = ea_discfibers_odds_ratios(invals,ImpBinary);
+             
+                        vals{group,side}(nonempty)=outvals;
+                        if exist('outps','var') % only calculated if testing for significance.
+                            pvals{group,side}(nonempty)=outps;
+                        end
+                    end
+                    
             end
         end
     end
