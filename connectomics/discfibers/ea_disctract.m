@@ -100,6 +100,8 @@ classdef ea_disctract < handle
         kIter = 1;
         % misc
         runwhite = 0; % flag to calculate connected tracts instead of stat tracts
+        SigmoidTransform = 0;  % flag to transform E-field to Sigmoids
+        twoSampleWeighted = 1;  % flag for two-sample weighted linear regression
     end
 
     properties (Access = private)
@@ -205,6 +207,10 @@ classdef ea_disctract < handle
                         obj.statmetric='Reverse T-Tests / E-Fields (binary vars)';
                     case 7
                         obj.statmetric='Plain Connections';
+                    case 8
+                        obj.statmetric='Odds Ratios / EF-Sigmoid (Jergas 2023)';
+                    case 9
+                        obj.statmetric='Weighted Linear Regression / EF-Sigmoid (Dembek 2023)';
                 end
             end
         end

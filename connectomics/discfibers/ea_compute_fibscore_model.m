@@ -41,7 +41,6 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
             end
         end
     end
-        
 
     if ~exist('Iperm', 'var') || isempty(Iperm)
         if obj.cvlivevisualize
@@ -275,7 +274,7 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     end
                                 end
                         end
-                    case {'Correlations / E-fields (Irmen 2020)', 'Reverse T-Tests / E-Fields (binary vars)'} % efields
+                    case {'Correlations / E-fields (Irmen 2020)', 'Reverse T-Tests / E-Fields (binary vars)', 'Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'} % efields
                         switch lower(obj.basepredictionon)
                             case 'profile of scores: spearman'
                                 if lateral_score == false
