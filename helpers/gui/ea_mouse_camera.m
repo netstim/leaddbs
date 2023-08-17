@@ -180,9 +180,10 @@ set(hfig, 'WindowScrollWheelFcn', {@(src, evt) zoom_fcn(evt)});
 
     function [] = up_fcn(hfig, evt)
         % Adjust light after rotating
-        if strcmp(evt.Source.SelectionType, 'normal')
-            ea_readjustlight(hfig);
-        end
+        % if strcmp(evt.Source.SelectionType, 'normal')
+        %     ea_readjustlight(hfig);
+        % end
+
         % reset motion and cursor
         set(hfig,'WindowButtonMotionFcn',[]);
         figLastPoint = [];
@@ -195,26 +196,5 @@ set(hfig, 'WindowScrollWheelFcn', {@(src, evt) zoom_fcn(evt)});
         c(3) = b(2)*a(1) - b(1)*a(2);
     end
 
-    function ea_readjustlight(hfig)
-        % get light handles
-        RightLight = getappdata(hfig, 'RightLight');
-        LeftLight = getappdata(hfig, 'LeftLight');
-        CeilingLight = getappdata(hfig, 'CeilingLight');
-        CamLight = getappdata(hfig, 'CamLight');
-
-        prefs=ea_prefs;
-
-        try
-            camlight(CamLight, 'headlight'); % move light object.
-        end
-        try
-            set(CeilingLight, 'Position', [0 0 10], 'style', 'local', 'Color', prefs.d3.ceilinglightcolor); % not modifiable, infinite light.
-        end
-        try
-            set(RightLight, 'Position', [-100 0 0], 'style', 'infinite', 'Color', prefs.d3.rightlightcolor); % not modifiable, infinite light.
-        end
-        try
-            set(LeftLight, 'Position', [100 0 0], 'style', 'infinite', 'Color', prefs.d3.leftlightcolor); % not modifiable, infinite light.
-        end
-    end
+    
 end
