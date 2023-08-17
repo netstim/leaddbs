@@ -23,22 +23,16 @@ end
 
 fprintf('\n\nRunning FSL BET2: %s\n\n', inputimage);
 
-inputimage = ea_path_helper(ea_niigz(inputimage));
-outputimage = ea_path_helper(ea_niigz(outputimage));
-
-% Remove the '.nii' or '.nii.gz' ext
-outputimage = ea_niifileparts(outputimage);
+inputimage = ea_niifileparts(inputimage);
+[outputimage, ~, ext] = ea_niifileparts(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    BET = ea_path_helper([basedir, 'bet2.exe']);
-else
-    BET = [basedir, 'bet2.', computer('arch')];
-end
+BET = ea_getExec([basedir, 'bet2'], escapePath = 1);
+
 
 cmd = [BET, ...
-       ' ', inputimage, ...
-       ' ', outputimage, ...
+       ' ', ea_path_helper(inputimage), ...
+       ' ', ea_path_helper(outputimage), ...
        ' --verbose'];
 
 if outputmask
@@ -47,11 +41,13 @@ end
 
 cmd = [cmd, ' -f ' ,num2str(fraintthreshold)];
 
-setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
+switch ext
+    case '.nii'
+        setenv('FSLOUTPUTTYPE','NIFTI');
+    case '.nii.gz'
+        setenv('FSLOUTPUTTYPE','NIFTI_GZ');
 end
+
+ea_runcmd(cmd);
 
 fprintf('\nFSL BET2 finished\n');

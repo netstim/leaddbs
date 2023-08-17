@@ -1,51 +1,37 @@
 function ea_compute_scrf(handles)
 
-options=getappdata(handles.scrf,'options');
-directory=getappdata(handles.scrf,'directory');
+options = getappdata(handles.scrf,'options');
 
-options.coregmr.method='ANTs';
+% Hard-code the coregistration method to ANTs
+options.coregmr.method = 'ANTs (Avants 2008)';
 
-if ~handles.mask0.Value
-    if ~exist([directory,'scrf',filesep,'bgmsk.nii'],'file')
-        ea_addtsmask(options,1);
-        for msk=1:2
-            if msk==2
-                btts='2';
-            else
-                btts='';
-            end
-            if ~exist([directory,'scrf',filesep],'dir')
-                mkdir([directory,'scrf',filesep]);
-            end
-            movefile([directory,'bgmsk',btts,'.nii'],[directory,'scrf',filesep,'bgmsk',btts,'.nii']);
-            ea_conformspaceto([directory,'scrf',filesep,options.prefs.prenii_unnormalized],[directory,'scrf',filesep,'bgmsk',btts,'.nii'],0);
-        end
-    end
-    for msk=1:2
-        if msk==2
-            btts='2';
-        else
-            btts='';
-        end
-        msks{msk}=[directory,'scrf',filesep,'bgmsk',btts,'.nii'];
+if ~handles.mask0.Value % Use mask
+    % Masks to be used
+    masks = {options.subj.brainshift.anat.secondstepmask
+        options.subj.brainshift.anat.thirdstepmask};
+    if ~all(isfile(masks)) || options.overwriteapproved
+        ea_createscrfmask(options);
     end
 end
-otherfiles={};
 
-if handles.mask1.Value
-   msks=msks(1); % only use first mask.
-end
-if ~exist('msks','var')
-    msks={};
+if handles.mask1.Value % Coarse mask
+    masks = masks(1); % only use first mask.
 end
 
-ea_backuprestore([directory,'scrf',filesep,'movim.nii']);
-ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
-    [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1,msks);
+if ~exist('masks','var')
+    masks = {};
+end
 
-%movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
-movefile([directory,'scrf',filesep,'raw_movim.nii'],[directory,'scrf',filesep,'movim.nii']);
+% Do subcortical coreigstration
+affineTransform = ea_coregimages(options, options.subj.brainshift.anat.moving, ...
+    options.subj.brainshift.anat.anchor, ...
+    options.subj.brainshift.anat.scrf, ...
+    {}, 1, masks);
 
-movefile([directory,'scrf',filesep,'movim2',ea_stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],[directory,'scrf',filesep,'scrf_instore.mat']);
-delete([directory,'scrf',filesep,ea_stripext(options.prefs.prenii_unnormalized),'2movim','_ants1.mat']);
-ea_refreshscrf(options,handles,directory);
+% Rename transformation file
+ea_mkdir(fileparts(options.subj.brainshift.transform.instore));
+movefile(affineTransform{1}, options.subj.brainshift.transform.instore);
+delete(affineTransform{2});
+
+% Refresh scrf status
+ea_refreshscrf(options, handles);

@@ -351,33 +351,29 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 %uipatdir=get(handles.patdir_choosebox,'String');
 
 options.earoot=[ea_getearoot];
-options.dicomimp.do = 0;
 
 options.normalize.do=1;
-options.normalize.method='ea_normalize_ants';
-options.normalize.methodn=1;
+options.normalize.method='ANTs (Avants 2008)';
 
-options.normalize.check=0;
+options.checkreg = false;
 
 
 % set modality (MR/CT) in options
 %options.modality = get(handles.MRCT,'Value');
 options.modality=1;
 if options.modality==2; % CT
-
     % coreg CT
     options.coregct.do=1;
     options.coregct.coregthreshs=[0.6,0.4];
-    options.coregct.method = 'ea_coregctmri_ants';
-    options.coregct.methodn = 9;
+    options.coregct.method = 'ANTs (Avants 2008)';
     options.coregct.coregthreshs = NaN;
     options.coregctcheck = 0;
-    options.coregmr.method = 1;
+    options.coregmr.method = 'SPM (Friston 2007)';
     options.coregctcheck=0;
 else
     options.coregct.do=0;
     options.coregctcheck=0;
-    options.coregmr.method = 1;
+    options.coregmr.method = 'SPM (Friston 2007)';
 end
 
 
@@ -398,11 +394,10 @@ options.axiscontrast=9; % if 8: use tra only but smooth it before. % if 9: use m
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
 options.atl.genpt=0; % generate patient specific atlases
-options.atl.normalize=0; % normalize patient specific atlasset.
 options.atl.can=1; % display canonical atlases
 options.atl.pt=0; % display patient specific atlases
 
-options.manualheightcorrection=0;
+options.refinelocalization=0;
 
 
 options.d2.write=0;
@@ -457,56 +452,20 @@ options.dolc=0;
 function options=ea_step2_normcheck_ct_options(handles)
 options.native=0;
 options.earoot=[ea_getearoot];
-%
-% %% some manual options that can be set:
-%
-%
-% options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
-% options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
-% options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
-% options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the threshold (more included pixels in tra process).
-% options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
-%
-%
-%
-%
-% %% set options
-%
-% %uipatdir=get(handles.patdir_choosebox,'String');
-%
-% options.earoot=[ea_getearoot];
-% options.dicomimp.do = 0;
-%
-% options.normalize.do=0;
-% options.normalize.method='SPM12 DARTEL nonlinear [MR/CT]';
-% options.normalize.methodn=0;
-%
-% options.normalize.check=1;
-%
-%
-% % set modality (MR/CT) in options
-% %options.modality = get(handles.MRCT,'Value');
-%
-% %if options.modality==2; % CT
-% %    options.coregctcheck=1;
-% end
 options.earoot=[ea_getearoot];
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
-options.dicomimp.do = 0;
 options.normalize.do = false;
-options.normalize.method = 'ea_normalize_spmdartel';
-options.normalize.methodn = 2;
-options.normalize.check = true;
+options.normalize.method = 'ANTs (Avants 2008)';
+options.checkreg = true;
 options.coregct.do = false;
-options.coregct.method = 'ea_coregctmri_ants';
-options.coregct.methodn = 9;
+options.coregct.method = 'ANTs (Avants 2008)';
 options.coregct.coregthreshs = NaN;
 options.coregctcheck = false;
-options.coregmr.method = 1;
+options.coregmr.method = 'SPM (Friston 2007)';
 options.modality = 2;
 options.verbose = 3;
 options.sides = [1 2];
@@ -517,7 +476,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -525,7 +483,7 @@ options.native = 0;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = false;
+options.refinelocalization = false;
 options.d3.write = false;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -540,7 +498,7 @@ options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypoint = 'STN, GPi or ViM';
 options.entrypointn = 1;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.atlassetn = 1;
 options.expstatvat.do = 0;
@@ -636,17 +594,14 @@ options.sprungwert = 4;
 options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
-options.dicomimp.do = 0;
 options.normalize.do = false;
-options.normalize.method = 'ea_normalize_ants';
-options.normalize.methodn = 6;
-options.normalize.check = true;
+options.normalize.method = 'ANTs (Avants 2008)';
+options.checkreg = true;
 options.coregct.do = false;
-options.coregct.method = 'ea_coregctmri_ants';
-options.coregct.methodn = 9;
+options.coregct.method = 'ANTs (Avants 2008)';
 options.coregct.coregthreshs = NaN;
 options.coregctcheck = 0;
-options.coregmr.method = 1;
+options.coregmr.method = 'SPM (Friston 2007)';
 options.modality = 1;
 options.verbose = 3;
 options.sides = [1 2];
@@ -657,7 +612,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -665,7 +619,7 @@ options.native = 0;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = false;
+options.refinelocalization = false;
 options.d3.write = false;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -679,7 +633,7 @@ options.d3.autoserver = 0;
 options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypointn = 3;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.atlassetn = 1;
 options.expstatvat.do = 0;
@@ -777,15 +731,13 @@ options.sprungwert = 4;
 options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
-options.dicomimp.do = 0;
 options.normalize.do = false;
 options.normalize.methodn = 6;
-options.normalize.check = false;
+options.checkreg = false;
 options.coregct.do = false;
-options.coregct.methodn = 9;
 options.coregct.coregthreshs = NaN;
 options.coregctcheck = 1;
-options.coregmr.method = 1;
+options.coregmr.method = 'SPM (Friston 2007)';
 options.modality = 2;
 options.verbose = 3;
 options.sides = [1 2];
@@ -796,7 +748,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -804,7 +755,7 @@ options.native = 0;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = false;
+options.refinelocalization = false;
 options.d3.write = false;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -819,7 +770,7 @@ options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypoint = 'STN, GPi or ViM';
 options.entrypointn = 1;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.atlassetn = 1;
 options.expstatvat.do = 0;
@@ -920,17 +871,14 @@ options.sprungwert = 4;
 options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
-options.dicomimp.do = 0;
 options.normalize.do = false;
-options.normalize.method = 'ea_normalize_ants';
-options.normalize.methodn = 6;
-options.normalize.check = false;
+options.normalize.method = 'ANTs (Avants 2008)';
+options.checkreg = false;
 options.coregct.do = false;
-options.coregct.method = 'ea_coregctmri_ants';
-options.coregct.methodn = 9;
+options.coregct.method = 'ANTs (Avants 2008)';
 options.coregct.coregthreshs = NaN;
 options.coregctcheck = 0;
-options.coregmr.method = 1;
+options.coregmr.method = 'SPM (Friston 2007)';
 options.modality = 1;
 options.verbose = 3;
 options.sides = [1 2];
@@ -941,7 +889,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -949,7 +896,7 @@ options.native = 0;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = true;
+options.refinelocalization = true;
 options.d3.write = false;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -964,7 +911,7 @@ options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypoint = 'Manual';
 options.entrypointn = 3;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.atlassetn = 1;
 options.expstatvat.do = 0;
@@ -1065,15 +1012,13 @@ options.sprungwert = 4;
 options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
-options.dicomimp.do = 0;
 options.normalize.do = false;
 options.normalize.methodn = 6;
-options.normalize.check = false;
+options.checkreg = false;
 options.coregct.do = false;
-options.coregct.methodn = 9;
 options.coregct.coregthreshs = NaN;
 options.coregctcheck = 0;
-options.coregmr.method = 1;
+options.coregmr.method = 'SPM (Friston 2007)';
 options.modality = 1;
 options.verbose = 3;
 options.sides = [1 2];
@@ -1084,7 +1029,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -1092,7 +1036,7 @@ options.native = 0;
 options.d2.write = true;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = false;
+options.refinelocalization = false;
 options.d3.write = false;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -1107,7 +1051,7 @@ options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypoint = 'STN, GPi or ViM';
 options.entrypointn = 1;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.atlassetn = 1;
 options.expstatvat.do = 0;
@@ -1214,15 +1158,12 @@ options.sprungwert = 4;
 options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
-options.dicomimp.do = 0;
 options.normalize.do = false;
-options.normalize.methodn = 6;
-options.normalize.check = false;
+options.checkreg = false;
 options.coregct.do = false;
-options.coregct.methodn = 9;
 options.coregct.coregthreshs = NaN;
 options.coregctcheck = 0;
-options.coregmr.method = 1;
+options.coregmr.method = 'SPM (Friston 2007)';
 options.modality = 1;
 options.verbose = 3;
 options.sides = [1 2];
@@ -1233,7 +1174,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -1241,7 +1181,7 @@ options.native = 0;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = false;
+options.refinelocalization = false;
 options.d3.write = true;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -1256,7 +1196,7 @@ options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypoint = 'STN, GPi or ViM';
 options.entrypointn = 1;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.atlassetn = 1;
 options.expstatvat.do = 0;

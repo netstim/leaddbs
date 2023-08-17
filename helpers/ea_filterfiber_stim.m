@@ -7,10 +7,37 @@ fprintf('\nCollecting stimulation parameters...\n')
 if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     stimProtocol = S;
     stimProtocol = cellfun(@(f) table2array(readtable(f,'NumHeaderLines',1)), stimProtocol, 'Uni', 0)';
+    % special case for unilateral StimSets
+    % assign a null stim protocol for the other side
+    if size(stimProtocol,2) == 1
+        disp("StimProtocol exists only for one side")
+        N_contacts = size(stimProtocol{1,1},2);
+        [~,SetName,~] = fileparts(S);
+        if strcmp(SetName, 'Current_protocols_0')
+            N_contacts = size(stimProtocol{1,1},2);
+            stimProtocol{1,2} = zeros(1,N_contacts);
+        elseif strcmp(SetName, 'Current_protocols_1')
+            % swap sides
+            stimProtocol{1,2} = stimProtocol{1,1};
+            stimProtocol{1,1} = zeros(1,N_contacts);
+        else
+            disp("Unrecongnized protocol file name, exitting")
+            return
+        end
+    end
+
+
     activeContacts = cell(size(stimProtocol));
     for i=1:length(activeContacts)
         activeContacts{i} = find(~isnan(max(stimProtocol{i}))); % Find contact with stimulation input
     end
+
+    
+    stimAmplitudes = cell(size(stimProtocol));
+    for i=1:length(stimAmplitudes)
+        stimAmplitudes{i} = max(abs(stimProtocol{i})); % Use maximum absolute amplitude
+    end
+    
 else % normal mode
     if ischar(S) && isfile(S) % stimparameters.mat provided
         load(S, 'S');
@@ -20,50 +47,28 @@ else % normal mode
     for i=1:length(activeContacts)
         activeContacts{i} = find(S.activecontacts{i});
     end
+    
+    % define the stim vector as in OSS-DBS (sources are merged)
+    stimAmplitudes = cell(size(S.amplitude));
+    eleNum = length(coords); % Number of electrodes
+    conNum = cellfun(@(x) size(x,1), coords); % Number of contacts per electrode
+    conNum = conNum(find(conNum, 1));
+    stimVector = ea_getStimVector(S, eleNum, conNum);
+    for side = 1:size(S.amplitude,2)
+        for cnt = 1:size(stimVector(side,:),2)
+            if isnan(stimVector(side,cnt))
+                stimAmplitudes{side}(cnt) = 0.0;
+            else 
+                stimAmplitudes{side}(cnt) = abs(stimVector(side,cnt)); % sign does not matter for Kuncel-VTA
+            end
+        end
+    end
 end
 
 % Active contacts coordinates
 stimCoords = cell(size(coords));
 for i=1:length(stimCoords)
     stimCoords{i} = coords{i}(activeContacts{i},:);
-end
-
-% Stimulation amplitude, V or mA.
-if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
-    stimAmplitudes = cell(size(stimProtocol));
-    for i=1:length(stimAmplitudes)
-        stimAmplitudes{i} = max(abs(stimProtocol{i})); % Use maximum absolute amplitude
-    end
-else % normal mode
-    stimAmplitudes = cell(size(S.amplitude));
-    for i=1:length(stimAmplitudes)
-        stimAmplitudes{i} = zeros(1, size(coords{1},1));
-    end
-
-    for side = 1:length(S.amplitude)
-        % Set stimulation source label and contacts labels
-        switch side
-            case 1
-                sideCode = 'R';
-                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
-            case 2
-                sideCode = 'L';
-                cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
-        end
-
-        % Index of stimulation source, only support 1 input source for now
-        sourceIndex = find(S.amplitude{side},1);
-        if ~isempty(sourceIndex)
-            stimSource = S.([sideCode, 's', num2str(sourceIndex)]);
-
-            % Collect stimulation amplitudes
-            for cnt = 1:length(stimAmplitudes{side})
-                if S.activecontacts{side}(cnt)
-                    stimAmplitudes{side}(cnt) = S.amplitude{side}(sourceIndex)*stimSource.(cntlabel{cnt}).perc/100;
-                end
-            end
-        end
-    end
 end
 
 % Only keep amplitudes for active contacts
@@ -84,6 +89,8 @@ switch lower(type)
         calcr = @(U) maedler12_eq3(U);
         fprintf('\nEstimating radius based on Maedler et al. 2012...\n')
 end
+
+
 
 % Calculate radius
 if ~exist('factor', 'var')
@@ -113,7 +120,7 @@ if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
     end
 end
 
-load([ea_space, 'ea_space_def.mat'], 'spacedef');
+load([ea_space, 'spacedef.mat'], 'spacedef');
 primarytemplate = spacedef.templates{1};
 
 % Reference image when construct the spherical ROI, use MNI t1 by default
@@ -180,6 +187,7 @@ r = 0;
 if U
     k = 0.22;
     Uo = 0.1;
+    U(U<0.1) = 0.1;  % fix for algorithm-based protocols
     r = sqrt((U-Uo)/k);
 end
 

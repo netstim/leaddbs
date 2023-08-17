@@ -70,9 +70,6 @@ function [newnode,newelem,newface]=meshrefine(node,elem,varargin)
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
-
-exesuff=getexeext;
-
 newpt=[];
 sizefield=[];
 if(size(node,2)==4)
@@ -183,15 +180,15 @@ if(isstruct(opt) && isfield(opt,'moreopt'))
 end
 
 if(size(elem,2)==3 && setquality==0)
-    system([' "' mcpath('gtsrefine') exesuff '" ' moreopt ' < "' ...
+    system([' "' ea_getExec(mcpath('gtsrefine')) '" ' moreopt ' < "' ...
           mwpath('pre_refine.gts') '" > "' mwpath('post_refine.gts') '"']);
     [newnode,newelem]=readgts(mwpath('post_refine.gts'));
     newface=newelem;
 elseif(size(elem,2)==3)
-    system([' "' mcpath('tetgen') exesuff '" ' moreopt ' -p -A "' mwpath('pre_refine.poly') '"']);
+    system([' "' ea_getExec(mcpath('tetgen')) '" ' moreopt ' -p -A "' mwpath('pre_refine.poly') '"']);
     [newnode,newelem,newface]=readtetgen(mwpath('pre_refine.1'));
 elseif(~isempty(moreopt))
-    system([' "' mcpath('tetgen') exesuff '" ' moreopt ' -r "' mwpath('pre_refine.1') '"']);
+    system([' "' ea_getExec(mcpath('tetgen')) '" ' moreopt ' -r "' mwpath('pre_refine.1') '"']);
     [newnode,newelem,newface]=readtetgen(mwpath('pre_refine.2'));
 else
     newnode=node;

@@ -15,7 +15,7 @@ X=logical(X);
 disp(['Sum is ',num2str(sum(X(:))),'.']);
 
 V.fname='tmni_gm_04.nii';
-V.dt=[16,0];
+V.dt(1) = 16;
 spm_write_vol(V,X);
 
 
@@ -62,7 +62,7 @@ for entry=1:length(XYZ_vx)
 fprintf(of,'%d %s \n',entry,[num2str(XYZ_mm(1,entry)),'_',num2str(XYZ_mm(2,entry)),'_',num2str(XYZ_mm(3,entry))]);
    cnt=cnt+1;
 end
-V.dt=[8,0];
+V.dt(1) = 8;
 spm_write_vol(V,X);
 fclose(of);
 of=fopen('mni_parcellation_04_t05.txt');

@@ -17,6 +17,7 @@ for i=1:numel(object)
         rmdir(object{i},'s');
     elseif contains(object{i}, '*') && ~isempty(dir(object{i}))
         contents = dir(object{i});
+        contents = contents(~ismember({contents.name}, {'.', '..'}));
         for c=1:length(contents)
             fd = [contents(c).folder, filesep, contents(c).name];
             if isfile(fd)

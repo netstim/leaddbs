@@ -1,105 +1,113 @@
-function [fibers,idx] = ea_trk2ftr(trk_in,type)
-% type can be:
-% 1 - 'DSI Studio / QSDR'
-% 2 - 'Normative Connectome / 2009b space'
-% 3 - 'Select .nii file'
-% or a filepath (string) pointing to the .nii file associated with the
-% tracts.
-% in case of 1 (DSI Studio / QSDR), heuristic transforms specified under
-% http://dsi-studio.labsolver.org/Manual/Reconstruction#TOC-Q-Space-Diffeomorphic-Reconstruction-QSDR-
-% are applied. In all other cases, vox2mm transform of a .nii header will
-% be applied.
+function [fibers, idx] = ea_trk2ftr(trkFile, ref, outputFile)
+% Convert trk to ftr (fibers format in Lead-DBS)
+%
+% ref can be:
+%   1        - Lead-DBS / MNI152 NLin 2009b Asym
+%   2        - Choose a reference NIfTI file
+%   3        - Interactively select ref type (1 or 2 above)
+%   [string] - Path of a NIfTI file defining the reference space
 
-% transforms .trk to fibers.
-% CAVE: fiber information in the trk needs to conform to the MNI space!
-if ~exist('type', 'var')
-    type = nan;
+if ~exist('ref', 'var')
+    ref = 'mni';
 end
 
-%% read .trk file
-[~, fn, ext] = fileparts(trk_in);
+if isnumeric(ref)
+    ref = num2str(ref);
+end
+
+if ~exist('outputFile', 'var')
+    outputFile = 0;
+end
+
+% read .trk file
+[~, fn, ext] = fileparts(trkFile);
 if strcmp(ext,'.gz')
     uuid = ea_generate_uuid;
     td = [ea_getleadtempdir, uuid];
     mkdir(td);
-    gunzip(trk_in, td);
-    trk_in = fullfile(td, fn);
-    [header,tracks] = ea_trk_read(trk_in);
+    gunzip(trkFile, td);
+    trkFile = fullfile(td, fn);
+    [header,tracks] = ea_trk_read(trkFile);
     rmdir(td, 's');
 else
-    [header, tracks] = ea_trk_read(trk_in);
+    [header, tracks] = ea_trk_read(trkFile);
 end
 
-%% create variables needed
-ea_fibformat = '1.0';
-idx = [tracks(:).nPoints]';
-idx2 = cumsum(idx);
-fibers = NaN(4, sum(idx));
-
-start = 1;
-fibercount = numel(idx);
-ea_dispercent(0, 'Converting trk to fibers.');
-for a=1:fibercount
-    ea_dispercent(a/fibercount);
-    stop = idx2(a);
-    fibers(1:3, start:stop) = tracks(a).matrix';
-    fibers(4, start:stop) = a;
-    start = stop+1;
-end
-ea_dispercent(1,'end');
-
-fibers(1:3,:) = fibers(1:3,:)./header.voxel_size';
-
-%% transform fibers to template origin
-if isnan(type)
-    answ = questdlg('Please select type of .trk data', 'Choose origin of .trk data', 'DSI Studio / QSDR', 'Normative Connectome / 2009b space', 'Select .nii file', 'DSI Studio / QSDR');
-else
-    if ischar(type)
-        answ = 'specified_image';
-    else
-        if type==1
-            answ = 'DSI Studio / QSDR';
-        elseif type==2
-            answ = 'Normative Connectome / 2009b space';
-        elseif type==3
-            answ = 'Select .nii file';
-        end
+% Get affine from reference
+if ismember(ref, {'3', 'select', 'ask', 'interactive'})
+    answer = questdlg('Please specify the reference space of the trk file.', '', 'Lead-DBS / MNI152 NLin 2009b Asym', 'Choose a reference NIfTI file', 'Lead-DBS / MNI152 NLin 2009b Asym');
+    if isempty(answer)
+        return;
+    elseif strcmp(answer, 'Lead-DBS / MNI152 NLin 2009b Asym')
+        ref = 'mni';
+    elseif strcmp(answer, 'Choose a reference NIfTI file')
+        ref = 'nii';
     end
 end
 
-switch answ
-    case 'DSI Studio / QSDR'
-        % http://dsi-studio.labsolver.org/Manual/Reconstruction#TOC-Q-Space-Diffeomorphic-Reconstruction-QSDR-
-        fibers(1,:) = 78.0 - fibers(1,:);
-        fibers(2,:) = 76.0 - fibers(2,:);
-        fibers(3,:) = -50.0 + fibers(3,:);
-    otherwise
-        switch answ
-            case 'specified_image'
-                nii = ea_load_nii(type); % load in image supplied to function.
-            case 'Normative Connectome / 2009b space'
-                spacedef = ea_getspacedef;
-                nii = ea_load_nii([ea_space, spacedef.templates{1}]);
-            case 'Select .nii file'
-                [fname, pathname] = uigetfile({'.nii','.nii.gz'}, 'Choose Nifti file for space definition');
-                nii = ea_load_nii(fullfile(pathname, fname));
-        end
-
-        tfib = [fibers(1:3,:); ones(1, size(fibers,2))];
-
-        tmat = header.vox_to_ras;
-        if isempty(find(tmat, 1))
-            % method Andreas (DSIStudio .trk)
-            tmat(1:3,4) = header.dim';
+switch ref
+    case {'1', 'lead', 'leaddbs', 'mni'}
+        % MNI space trk generated within Lead-DBS already has the vox_to_ras properly set
+        affine = header.vox_to_ras;
+    case {'2', 'nii', 'nifti', 'other'}
+        [fname, pathname] = uigetfile({'*.nii','*.nii.gz'}, 'Choose a reference NIfTI file');
+        if ischar(fname)
+            affine = ea_get_affine(fullfile(pathname, fname), 0);
         else
-            % method Till, in case vox_to_ras is null matrix (TrackVis?)
-            tmat = nii.mat;
-            tmat(1,1) = 1;
-            tmat(2,2) = 1;
-            tmat(3,3) = 1;
+            return;
         end
-        tfib = tmat*tfib;
-        fibers(1:3,:) = tfib(1:3,:);
+    otherwise
+        if isfile(ref)
+            affine = ea_get_affine(ref, 0);
+        else
+            ea_error('Unrecognized reference type!', 'simpleStack', true);
+        end
 end
 
-fibers = single(fibers');
+% Contruct fibers and idx needed for ftr mat
+idx = vertcat(tracks.nPoints);
+fibers = vertcat(tracks.matrix);
+fibers(:, 4) = repelem(1:length(idx), idx)';
+
+% Rescale
+fibers(:, 1:3) = fibers(:, 1:3)./header.voxel_size;
+
+% Flip L/R, P/A and I/S in case affine and pad2 doesn't match 
+if strcmp(header.pad2(1), 'L') && affine(1) > 0 || strcmp(header.pad2(1), 'R') && affine(1) < 0
+    % Flip L and R
+    fibers(:, 1) = header.dim(1) - 1 - fibers(:, 1);
+end
+
+if strcmp(header.pad2(2), 'P') && affine(6) > 0 || strcmp(header.pad2(2), 'A') && affine(6) < 0
+    % Flip P and A
+    fibers(:, 2) = header.dim(2) - 1 - fibers(:, 2);
+end
+
+if strcmp(header.pad2(3), 'I') && affine(11) > 0 || strcmp(header.pad2(3), 'S') && affine(11) < 0
+    % Flip I and S
+    fibers(:, 3) = header.dim(3) - 1 - fibers(:, 3);
+end
+
+% Convert voxel to mm 
+fibers(:, 1:3) = ea_vox2mm(fibers(:, 1:3), affine);
+
+fibers = single(fibers);
+
+% Optionally save ftr mat
+if outputFile
+    outputFile = replace(erase(trkFile, '.gz'), '.trk', '.mat');
+    if isfile(outputFile)
+        answer = questdlg('File already exists!', '', 'Overwrite', 'Specify a New Name', 'Overwrite');
+        if isempty(answer)
+            return;
+        elseif strcmp(answer, 'Specify a New Name')
+            [fname, pathname] = uiputfile({'*.mat'}, 'Choose a reference NIfTI file', outputFile);
+            outputFile = fullfile(pathname, fname);
+        end
+    end
+
+    ea_fibformat = '1.0';
+    fourindex = 1;
+    voxmm = 'mm';
+    save(outputFile, 'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
+end

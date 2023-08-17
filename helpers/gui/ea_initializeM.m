@@ -1,9 +1,13 @@
-function M=ea_initializeM
+function M=ea_initializeM(guid)
+if ~exist('guid', 'var') || isempty(guid)
+    guid = datestr(datevec(now), 'yyyymmddHHMMSS');
+end
+
 M=struct;
 M.patient.list={};
 M.patient.group=[];
 
-M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' ); % each lead groupanalysis needs a unique ID for VTA handling / identification.
+M.guid=guid; % each lead groupanalysis needs a unique ID for VTA handling / identification.
 M.clinical.vars={};
 M.clinical.labels={};
 M.vilist={};
@@ -21,7 +25,6 @@ M.ui.fibercounts=1;
 M.ui.elrendering=1;
 M.ui.statvat=0;
 M.ui.elmodelselect=1;
-M.ui.detached=0;
 M.ui.normregpopup=1;
 M.ui.colorpointcloudcheck=0;
 M.ui.mirrorsides=0;

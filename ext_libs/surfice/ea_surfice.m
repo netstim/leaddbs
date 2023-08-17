@@ -26,9 +26,9 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 
 % Get binary path
 if ismac
-    surfice = [basedir, SURFICE, '.app',filesep,'Contents',filesep,'MacOS',filesep,'surfice'];
+    surfice = ea_path_helper([basedir, SURFICE, '.app',filesep,'Contents',filesep,'MacOS',filesep,'surfice']);
 elseif isunix
-    surfice = [basedir, SURFICE];
+    surfice = ea_path_helper([basedir, SURFICE]);
 elseif ispc
     surfice = ea_path_helper([basedir, SURFICE, '.exe']);
 end

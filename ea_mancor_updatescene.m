@@ -157,8 +157,8 @@ if options.elspec.numel > 1
         case {'Medtronic B33005'
               'Medtronic B33015'
               'Boston Scientific Vercise Directed'
-              'St. Jude Directed 6172 (short)'
-              'St. Jude Directed 6173 (long)'}
+              'Abbott Directed 6172 (short)'
+              'Abbott Directed 6173 (long)'}
             for side=options.sides
                 coords_temp{side}(1,:) = coords_mm{side}(1,:);
                 coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
@@ -198,7 +198,7 @@ if isempty(elplot) % first time plot electrode contacts
     mplot(1,1)=plot3(markers(options.elside).head(1),markers(options.elside).head(2),markers(options.elside).head(3),'*','MarkerEdgeColor',[0.9 0.2 0.2],'MarkerFaceColor','none','MarkerSize',25);
     mplot(2,1)=plot3(markers(options.elside).tail(1),markers(options.elside).tail(2),markers(options.elside).tail(3),'*','MarkerEdgeColor',[0.2 0.9 0.2],'MarkerFaceColor','none','MarkerSize',25);
     for el=1:size(coords_mm{options.elside},1)
-        elplot(cnt)=plot3(coords_mm{options.elside}(el,1),coords_mm{options.elside}(el,2),coords_mm{options.elside}(el,3),'O','MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor','none','MarkerSize',25);
+        elplot(cnt)=plot3(coords_mm{options.elside}(el,1),coords_mm{options.elside}(el,2),coords_mm{options.elside}(el,3),'O','MarkerEdgeColor',[0.8 0 1],'MarkerFaceColor','none','MarkerSize',25);
         cnt=cnt+1;
     end
 
@@ -324,8 +324,8 @@ for doxx=0:1
 
     if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
 
-        if options.modality==1 % MR
-        elseif options.modality==2 % CT
+        if strcmp(options.subj.postopModality, 'MRI') % MR
+        elseif strcmp(options.subj.postopModality, 'CT') % CT
             lthresh=800; % initial guesses for CT
             uthresh=2800;
             try % try estimating a better guess..
@@ -434,10 +434,10 @@ for subpl=getsuplots(1)
         slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     end
     slice=ea_contrast(slice,contrast,offset);
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             [~,minix]=min(slice(:));
-        case 2 % CT
+        case 'CT'
             [~,minix]=max(slice(:));
     end
     [optxx,optyy]=ind2sub(size(slice),minix);
@@ -576,14 +576,14 @@ hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resoluti
 function V=getV(mcfig,ID,options)
 directory = [options.root,options.patientname,filesep];
 if options.native
-    addon='_unnormalized';
+    type='coreg';
 else
-    addon='';
+    type='norm';
 end
 
-switch options.modality
-    case 1 % MR
-        V=getappdata(mcfig,[ID,addon]);
+switch options.subj.postopModality
+    case 'MRI'
+        V=getappdata(mcfig,[ID,type]);
 
         if isempty(V)
             flags.interp=4;
@@ -592,41 +592,39 @@ switch options.modality
             switch ID
                 case 'Vcor'
                     try
-                        V=spm_vol([directory,options.prefs.(['cornii',addon])]);
+                        V=spm_vol(options.subj.(type).anat.postop.cor_MRI);
                     catch
-                        V=spm_vol([directory,options.prefs.(['tranii',addon])]);
+                        V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                     end
                 case 'Vtra'
-                    V=spm_vol([directory,options.prefs.(['tranii',addon])]);
+                    V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                 case 'Vsag'
                     try
-                        V=spm_vol([directory,options.prefs.(['sagnii',addon])]);
+                        V=spm_vol(options.subj.(type).anat.postop.sag_MRI);
                     catch
                         try
-                            V=spm_vol([directory,options.prefs.(['cornii',addon])]);
+                            V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                         catch
-                            V=spm_vol([directory,options.prefs.(['tranii',addon])]);
+                            V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                         end
                     end
             end
-            %             C=spm_bsplinc(V,d);
         end
-        setappdata(mcfig,[ID,addon],V);
-    case 2 % CT - ignore wishes, always feed out V as CT.
+        setappdata(mcfig,[ID,type],V);
+    case 'CT' % Always feed out V as CT.
         if options.native
             V=getappdata(mcfig,'VCTnative');
             if isempty(V)
-                options=ea_assignpretra(options);
                 [mat,ctfile]=ea_getrawct2preniimat(options,0);
                 V=spm_vol(ctfile);
                 V.mat=mat*V.mat;
                 setappdata(mcfig,'VCTnative',V);
             end
         else
-            V=getappdata(mcfig,'VCTmni');
+            V=getappdata(mcfig,'VCTnorm');
             if isempty(V)
-                V=spm_vol([directory,options.prefs.ctnii]);
-                setappdata(mcfig,'VCTmni',V);
+                V=spm_vol(options.subj.norm.anat.postop.CT);
+                setappdata(mcfig,'VCTnorm',V);
             end
         end
 end

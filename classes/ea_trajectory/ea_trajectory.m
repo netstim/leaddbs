@@ -183,6 +183,7 @@ classdef ea_trajectory < handle
                 addlistener(obj, 'showPlanning', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'hasPlanning', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'elmodel', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'elstruct', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'showMacro', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'showMicro', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'relateMicro', 'PostSet', @ea_trajectory.changeevent);
@@ -277,7 +278,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             coords=V.mat\[coords;1,1]; % go to voxel space in nativespace
             coords=ea_map_coords(coords, ...
                 [obj.options.root,obj.options.patientname,filesep,anats{1}], ...
-                [obj.options.root,obj.options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
+                [obj.options.root,obj.options.patientname,filesep,'inverseTransform'], ...
                 '');
             t.target=coords(:,1)';
             t.entry=coords(:,2)';
@@ -287,7 +288,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             V=ea_open_vol([ea_space,obj.options.primarytemplate]);
             coords=V.mat\[coords;1,1]; % go to voxel space in MNI template
             src=[obj.options.root,obj.options.patientname,filesep,anats{1}]; % assign src image as primary anat image here.
-            coords=ea_map_coords(coords, [ea_space,obj.options.primarytemplate], [obj.options.root,obj.options.patientname,filesep,'y_ea_normparams.nii'],...
+            coords=ea_map_coords(coords, [ea_space,obj.options.primarytemplate], [obj.options.root,obj.options.patientname,filesep,'forwardTransform'],...
                 src);
 
             t.target=coords(:,1)';
@@ -348,7 +349,6 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                     markers.head=tgt+(((options.elspec.tip_length/2)+(options.elspec.contact_length/2))*intraj);
                     markers.tail=tgt+(((3)*options.elspec.eldist)*intraj)+(((options.elspec.tip_length/2)+(options.elspec.contact_spacing))*intraj);
                 end
-
             end
 
             [xunitv, yunitv] = ea_calcxy(markers.head, markers.tail);
@@ -365,7 +365,6 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 case 'line'
                     [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
                 case 'electrode'
-
                     options=ea_defaultoptions(options);
                     options.sides=1;
                     options.colorMacroContacts=[];
@@ -394,7 +393,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         end
     end
 
-    if ismember(evtnm,{'all','elmodel','colorMacroContacts'})
+    if ismember(evtnm,{'all','elmodel','colorMacroContacts','elstruct'})
         if obj.showMacro
             try
                 delete(obj.elpatch);
@@ -406,7 +405,9 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.sides=obj.side;
             poptions.colorMacroContacts=obj.colorMacroContacts;
             el_render=getappdata(obj.plotFigureH,'el_render');
-
+            if strcmp(evtnm,'elstruct')
+                poptions.nowrite=1; % prevent from writing reconstruction to disk.
+            end
             [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj,'dbs',poptions);
             if isempty(el_render)
                 clear el_render
@@ -510,7 +511,7 @@ function ccoords=ea_convertfiducials(obj,coords)
                         thiscoordvox=V.mat\[thiscoord,1]';
                         ccoords(coord,:)=ea_map_coords(thiscoordvox,...
                             [obj.options.root,obj.options.patientname,filesep,obj.options.prefs.prenii_unnormalized],...
-                            [obj.options.root,obj.options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
+                            [obj.options.root,obj.options.patientname,filesep,'inverseTransform'], ...
                             [ea_space,obj.options.primarytemplate,'.nii'])';
                 end
             case 3 % planning in template space
@@ -521,7 +522,7 @@ function ccoords=ea_convertfiducials(obj,coords)
                         thiscoordvox=V.mat\[thiscoord,1]';
                         ccoords(coord,:)=ea_map_coords(thiscoordvox,...
                             [ea_space,obj.options.primarytemplate,'.nii'],...
-                            [obj.options.root,obj.options.patientname,filesep,'y_ea_normparams.nii'], ...
+                            [obj.options.root,obj.options.patientname,filesep,'forwardTransform'], ...
                             [obj.options.root,obj.options.patientname,filesep,obj.options.prefs.prenii_unnormalized])';
                     case 0 % leave coords as they are
                         ccoords(coord,:)=coords(coord,:);
@@ -541,9 +542,9 @@ function fn=stripext(fn)
 end
 
 
-function rightcallback(src, evnt, obj)
-    if evnt.getButton() == 3
-        
+function rightcallback(src, evt, obj)
+    if evt.getButton() == 3
+        ea_editfiducial(src,evt,obj)
     end
 end
 

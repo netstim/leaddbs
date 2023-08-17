@@ -64,8 +64,9 @@ switch lower(orientation)
             end
         else
             tick = get(target, 'ytick');
-            set(target, 'ytick', [0.5, tick]);
-            set(target, 'yticklabel', [0, tick]);
+            tick = tick(mod(tick,1)==0);
+            set(target, 'ytick', tick);
+            set(target, 'yticklabel', tick);
         end
 
     case {'h', 'horz', 'horizontal'}

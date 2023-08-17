@@ -27,20 +27,11 @@ if nargin==1
     % load prior results
     coords_mm=ea_load_reconstruction(options);
     % If there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-    elstruct(1).coords_mm=coords_mm;
-    % Fill missing sides with nans, matching it to the other present side.
-    % At least one side should be present, which should be always the case.
-    elstruct=ea_elstruct_match_and_nanfill(elstruct);
-    clear coords_mm
-    ave_coords_mm=ea_ave_elstruct(elstruct,options);
+    elstruct(1).coords_mm = coords_mm;
+    ave_coords_mm = coords_mm;
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
         elstruct=varargin{2};
-        % Fill missing sides with nans, matching it to the other present
-        % side. At least one side should be present, which should be always
-        % the case.
-        elstruct=ea_elstruct_match_and_nanfill(elstruct);
-        % average coords_mm for image slicing
         ave_coords_mm=ea_ave_elstruct(elstruct,options);
     else % concrete height is being supplied (without electrode star plotting).
         elstruct=varargin{2};
@@ -64,7 +55,9 @@ end
 
 scrsz = get(0,'ScreenSize');
 
-cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
+titilePrefix = erase(options.patientname, 'sub-');
+
+cuts=figure('name',[titilePrefix,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
 axis off
 set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');
@@ -88,7 +81,15 @@ else
     planedim=ea_getdims(manualtracor,1);
 end
 
-fid=fopen([options.root,options.patientname,filesep,'2D_cuts_export_coordinates.txt'],'w');
+if startsWith(options.patientname, 'gs_')
+    export_2D_folder = fullfile(options.root, options.patientname, '2D');
+else
+    export_2D_folder = fullfile(options.root, options.patientname, 'export', '2D');
+end
+ea_mkdir(export_2D_folder);
+fileBaseName = fullfile(export_2D_folder, [options.patientname, '_desc-2D_']);
+
+fid = fopen([fileBaseName 'viewplane.txt'],'w');
 for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
@@ -415,18 +416,21 @@ for iside=1:length(options.sides)
             expslice=ea_crop_img(expslice);
 
             if svfig==1 % only export if figure needs to be saved.
-                if options.d3.showisovolume
+                if options.d3.showisovolume % TODO: Fix export name
                     isofnadd=['_',options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
                 else
                     isofnadd='';
                 end
+                contactTag = strjoin(options.elspec.contactnames(el), '');
+                contactTag = erase(contactTag, {' ', '(', ')'});
+                desc = [contactTag, isofnadd];
                 switch tracor
                     case 1
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'view-ax_',desc,'.png'],'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'view-cor_',desc,'.png'],'myaa');
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'view-sag_',desc,'.png'],'myaa');
                 end
             end
             axis xy
@@ -447,30 +451,61 @@ if svfig
 end
 
 
-function coords_mm=ea_ave_elstruct(elstruct,options)
-% simply averages coordinates of a group to one coords_mm 1x2 cell
-coords_mm=elstruct(1).coords_mm; % initialize mean variable
-for side=1:length(coords_mm)
-    for xx=1:size(coords_mm{side},1)
-        for yy=1:size(coords_mm{side},2)
-            vals=zeros(length(elstruct),1);
-            for vv=1:length(elstruct)
-                if ~isempty(elstruct(vv).coords_mm{side})
-                    vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
-                end
-            end
-            coords_mm{side}(xx,yy)=ea_robustmean(vals);
+function meanCoords = ea_ave_elstruct(elstruct, options)
+% Calculate the mean coordinates of a group of patients
+
+coords = {elstruct.coords_mm}';
+
+% Get max number of electrodes for the group of patients
+numSides = max(cellfun(@length, coords));
+
+% Get max number of contacts for the group of patients
+numContacts = zeros(1, numSides);
+for p = 1:length(coords)
+    for s = 1:numSides
+        if length(coords{p}) >= s && size(coords{p}{s},1) > numContacts(s)
+            numContacts(s) = size(coords{p}{s},1);
         end
     end
 end
 
-if options.shifthalfup
-    for side=1:length(coords_mm)
-        for c=1:length(coords_mm{side})-1
-            scoords_mm{side}(c,:)=mean([coords_mm{side}(c,:);coords_mm{side}(c+1,:)],1);
+% Reformat coordinates matrix to the same [maximum] size
+for p = 1:length(coords)
+    for s = 1:numSides
+        temp = nan(numContacts(s),3);
+        if length(coords{p}) < s
+            coords{p}{s} = temp;
+        elseif size(coords{p}{s},1) < numContacts(s)
+            temp(1:size(coords{p}{s},1), :) = coords{p}{s};
+            coords{p}{s} = temp;
         end
     end
-    coords_mm=scoords_mm;
+end
+
+% Reshap coordinates to P x S cell array
+coords = vertcat(coords{:});
+
+% Calculate the mean coordinates
+meanCoords = cell(1, numSides);
+for s = 1:numSides
+    meanCoords{s} = nan(numContacts(s),3);
+    temp = cat(3, coords{:,s});
+    for c = 1:numContacts(s)
+        for d = 1:3
+           meanCoords{s}(c,d) = ea_robustmean(squeeze(temp(c,d,:)));
+        end
+    end
+end
+
+% Shift-up option
+if options.shifthalfup
+    shiftedMeanCoords = cell(size(meanCoords));
+    for side = 1:length(meanCoords)
+        for c = 1:size(meanCoords{side},1)-1
+            shiftedMeanCoords{side}(c,:) = mean([meanCoords{side}(c,:); meanCoords{side}(c+1,:)], 1);
+        end
+    end
+    meanCoords = shiftedMeanCoords;
 end
 
 

@@ -132,7 +132,7 @@ for f=1:length(overlay)
     overlayBasePath = ea_niifileparts(overlay{f});
     [overlayPath, overlayName] = fileparts(overlayBasePath);
 
-    overlayImages = ea_regexpdir(overlayPath, [overlayName, '_(r_lat|r_med|l_lat|l_med|cb|s)\.png'], 0);
+    overlayImages = ea_regexpdir(overlayPath, [overlayName, '_(r_lat|r_med|l_lat|l_med|cb|s)\.png$'], 0);
     for i=1:length(overlayImages)
         [image, transparency] = ea_crop_img(overlayImages{i}, 5);
         imwrite(image, overlayImages{i}, 'Alpha', transparency);

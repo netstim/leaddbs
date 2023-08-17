@@ -9,6 +9,7 @@ if isfield(prefs.lc,'datadir')
 else
     base=[ea_getearoot,'connectomes',filesep];
 end
+
 if exist('cmd','var')
     switch lower(cmd)
         case 'dmri'

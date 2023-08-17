@@ -8,8 +8,8 @@ from slicer.util import VTKObservationMixin
 import numpy as np
 
 from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
-from WarpDriveLib.Helpers import GridNodeHelper, WarpDriveUtil, LeadDBSCall
-from WarpDriveLib.Widgets import TreeView, Toolbar
+from WarpDriveLib.Helpers import GridNodeHelper, LeadDBSCall
+from WarpDriveLib.Widgets import Tables, Toolbar, Buttons
 
 #
 # WarpDrive
@@ -24,13 +24,22 @@ class WarpDrive(ScriptedLoadableModule):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "WarpDrive" 
     self.parent.categories = ["Netstim"]
-    self.parent.dependencies = ["MarkupsToModel", "plastimatch_slicer_landwarp"]
+    self.parent.dependencies = ["FiducialRegistrationVariableRBF"]
     self.parent.contributors = ["Simon Oxenford (Netstim Berlin)"]
     self.parent.helpText = """
 This module provides tools to manually fix misalignments after non linear registration
 """
     self.parent.helpText += self.getDefaultModuleDocumentationLink()  # TODO: verify that the default URL is correct or change it to the actual documentation
     self.parent.acknowledgementText = "" 
+    slicer.app.connect("startupCompleted()", setUpSliceNames)
+
+def setUpSliceNames():
+  if slicer.app.mainApplicationName == 'SlicerForLeadDBS':
+    for color,name in zip(['Red','Green','Yellow'],['Axial','Coronal','Sagittal']):
+      sliceWidget = slicer.app.layoutManager().sliceWidget(color)
+      if not sliceWidget:
+        continue
+      sliceWidget.mrmlSliceNode().SetName(name)
 
 #
 # WarpDriveWidget
@@ -76,12 +85,16 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.drawModeMenu = toolWidgets[2].effectButton.menu()
 
     # Add Tree View
-    dataControlTree = TreeView.WarpDriveTreeView()
-    dataControlLayout = qt.QVBoxLayout(self.ui.dataControlFrame)
-    dataControlLayout.addWidget(dataControlTree)
+    correctionsLayout = qt.QVBoxLayout(self.ui.correctionsFrame)
+    correctionsLayout.addWidget(Tables.WarpDriveCorrectionsManager())
 
-    # add plastimatch progress bar
-    self.ui.landwarpWidget = slicer.modules.plastimatch_slicer_landwarp.createNewWidgetRepresentation()
+    self.atlasesTable = Tables.AtlasesTable()
+    atlasesLayout = qt.QVBoxLayout(self.ui.atlasesFrame)
+    atlasesLayout.addWidget(self.atlasesTable)
+    self.ui.tabWidget.currentChanged.connect(lambda i,a=self.atlasesTable: a.updateTable())
+
+    # add cli progress bar
+    self.ui.landwarpWidget = slicer.modules.fiducialregistrationvariablerbf.createNewWidgetRepresentation()
     self.ui.calculateFrame.layout().addWidget(self.ui.landwarpWidget.children()[3], 2, 0, 1, 2) # progress bar
 
     # Set scene in MRML widgets. Make sure that in Qt designer
@@ -97,44 +110,32 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Connections
     self.ui.calculateButton.connect('clicked(bool)', self.onCalculateButton)
     self.ui.spacingSameAsInputCheckBox.toggled.connect(lambda b: self.ui.spacingSpinBox.setEnabled(not b))
-    self.ui.autoRBFRadiusCheckBox.toggled.connect(lambda b: self.ui.RBFRadiusSpinBox.setEnabled(not b))
 
     # These connections ensure that whenever user changes some settings on the GUI, that is saved in the MRML scene
     # (in the selected parameter node).
     self.ui.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+    self.ui.sourceFiducialsComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+    self.ui.targetFiducialsComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
     self.ui.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeChanged)
     self.ui.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-    self.ui.spreadSlider.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
+    self.ui.radiusSlider.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.spacingSameAsInputCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
     self.ui.spacingSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
-    self.ui.autoRBFRadiusCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
-    self.ui.RBFRadiusSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.stiffnessSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.drawModeMenu.triggered.connect(self.updateParameterNodeFromGUI)
     
     # MRML Scene
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
-    self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, dataControlTree.updateTree)
-
-    # check dependencies
-    if slicer.app.mainApplicationName != 'SlicerCustom':
-      if LeadDBSCall.checkExtensionInstall(extensionName = 'SlicerRT'):
-        return
-      if LeadDBSCall.checkExtensionInstall(extensionName = 'MarkupsToModel'):
-        return
+    # self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, correctionsTree.updateTree)
 
     # Initial GUI update
     self.updateGUIFromParameterNode()
 
-
-
-  def showSingleModule(self):
+  def initializeCustomUI(self):
     
-    singleModule = True
-
     # toolbars
-    slicer.util.setToolbarsVisible(not singleModule, [])
+    slicer.util.setToolbarsVisible(False, [])
 
     # customize view
     viewToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewToolBar')
@@ -144,34 +145,20 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       if action.text not in ['Four-Up', 'Tabbed slice']:
         layoutMenu.removeAction(action)
 
-    # customize mouse mode
-    mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
-    mouseModeToolBar.setVisible(1)
-    list(map(lambda a: mouseModeToolBar.removeAction(a), filter(lambda a: a.text=="Place Fiducial", mouseModeToolBar.actions())))
-
     # viewers
     viewersToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewersToolBar')
     viewersToolBar.setVisible(1)
 
     # slicer window
-    slicer.util.setMenuBarsVisible(not singleModule)
-    slicer.util.setApplicationLogoVisible(not singleModule)
-    slicer.util.setModuleHelpSectionVisible(not singleModule)
-    slicer.util.setModulePanelTitleVisible(not singleModule)
-    slicer.util.setDataProbeVisible(not singleModule)
-    slicer.util.setPythonConsoleVisible(not singleModule)
+    slicer.util.setMenuBarsVisible(False)
+    slicer.util.setApplicationLogoVisible(False)
+    slicer.util.setModuleHelpSectionVisible(False)
+    slicer.util.setModulePanelTitleVisible(False)
+    slicer.util.setDataProbeVisible(False)
+    slicer.util.setPythonConsoleVisible(False)
 
     # inputs area
-    self.ui.IOCollapsibleButton.setVisible(not singleModule)
-
-    if self.developerMode:
-      self.reloadCollapsibleButton.setVisible(not singleModule)
-
-    # slice controllers
-    for color in ["Red","Green","Yellow"]:
-      sliceController = slicer.app.layoutManager().sliceWidget(color).sliceController()
-      sliceController.pinButton().hide()
-      sliceController.viewLabel().hide()
+    self.ui.IOCollapsibleButton.setVisible(False)
 
     # data probe
     for i in range(slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLScriptedModuleNode")):
@@ -180,7 +167,54 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         n.SetParameter('sliceViewAnnotationsEnabled','0')
 
     # set name
-    slicer.util.mainWindow().setWindowTitle("Warp Drive")
+    if int(WarpDriveLogic().getParameterNode().GetParameter('SegmentMode')):
+      slicer.util.mainWindow().setWindowTitle("Warp Drive - Segment")
+    else:
+      slicer.util.mainWindow().setWindowTitle("Warp Drive")
+    slicer.util.mainWindow().showMaximized()
+    qt.QApplication.processEvents()
+
+    # Set linked slice views  in all existing slice composite nodes and in the default node
+    sliceCompositeNodes = slicer.util.getNodesByClass("vtkMRMLSliceCompositeNode")
+    defaultSliceCompositeNode = slicer.mrmlScene.GetDefaultNodeByClass("vtkMRMLSliceCompositeNode")
+    if not defaultSliceCompositeNode:
+      defaultSliceCompositeNode = slicer.mrmlScene.CreateNodeByClass("vtkMRMLSliceCompositeNode")
+      defaultSliceCompositeNode.UnRegister(None)  # CreateNodeByClass is factory method, need to unregister the result to prevent memory leaks
+      slicer.mrmlScene.AddDefaultNode(defaultSliceCompositeNode)
+    sliceCompositeNodes.append(defaultSliceCompositeNode)
+    for sliceCompositeNode in sliceCompositeNodes:
+      sliceCompositeNode.SetLinkedControl(True)
+
+    # start-up view
+    for name in ['Axial','Coronal','Sagittal']:
+      sliceWidget = slicer.app.layoutManager().sliceWidget(name)
+      if not sliceWidget:
+        continue
+      fov = sliceWidget.mrmlSliceNode().GetFieldOfView()
+      sliceWidget.mrmlSliceNode().SetFieldOfView(fov[0]/4,fov[1]/4,fov[2])
+      if name == 'Axial':
+        sliceWidget.mrmlSliceNode().SetXYZOrigin(0,-12,0)
+        sliceWidget.sliceLogic().SetSliceOffset(-8.4)
+
+    slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTabbedSliceView)
+
+    # Add custom ToolBar
+    slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
+    # Add add segmentation button
+    button = Buttons.addSegmentationButton()
+    self.atlasesTable.buttonsFrame.layout().insertWidget(1,button,1)
+    button.clicked.connect(self.atlasesTable.updateTable)
+    # Put all toolbars in same row
+    for tb in slicer.util.mainWindow().findChildren('QToolBar'):
+      slicer.util.mainWindow().removeToolBarBreak(tb)
+    # Customize mouse mode
+    mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
+    mouseModeToolBar.setVisible(1)
+    for a in mouseModeToolBar.actions():
+      if a.text in ["Fiducial", "Toggle Markups Toolbar"]:
+        mouseModeToolBar.removeAction(a)
+
+    qt.QApplication.processEvents()
 
   def cleanup(self):
     """
@@ -193,7 +227,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
     Called each time the user opens a different module.
     """
-    # Do not react to parameter node changes (GUI wlil be updated when the user enters into the module)
+    # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
     self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
     self.cleanTools()
 
@@ -203,10 +237,6 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
     # Make sure parameter node exists and observed
     self.initializeParameterNode()
-    # Lead-DBS call
-    if LeadDBSCall.updateParameterNodeFromArgs(self._parameterNode): # was called from command line
-      self.showSingleModule()
-      slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
 
   def onSceneStartClose(self, caller=None, event=None):
     """
@@ -250,7 +280,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if inputParameterNode:
       self.logic.setDefaultParameters(inputParameterNode)
 
-    # Unobserve previusly selected parameter node and add an observer to the newly selected.
+    # Unobserve previously selected parameter node and add an observer to the newly selected.
     # Changes of parameter node are observed so that whenever parameters are changed by a script or any other module
     # those are reflected immediately in the GUI.
     if self._parameterNode is not None:
@@ -261,6 +291,9 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Initial GUI update
     self.updateGUIFromParameterNode()
+
+  def customUIWasInitialized(self):
+    return len(list(filter(lambda x: isinstance(x,qt.QToolBar) and x.windowTitle=='LeadDBS', slicer.util.mainWindow().children())))
 
   def updateGUIFromParameterNode(self, caller=None, event=None):
     """
@@ -274,24 +307,30 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Make sure GUI changes do not call updateParameterNodeFromGUI (it could cause infinite loop)
     self._updatingGUIFromParameterNode = True
 
+    # Set up toolbar for LeadDBS call
+    if self._parameterNode.GetParameter("LeadSubjects") and not self.customUIWasInitialized():
+      self.initializeCustomUI()
+
     # Update each widget from parameter node
     # Need to temporarily block signals to prevent infinite recursion (MRML node update triggers
     # GUI update, which triggers MRML node update, which triggers GUI update, ...)
 
     self.ui.inputSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputNode"))
+    self.ui.sourceFiducialsComboBox.setCurrentNode(self._parameterNode.GetNodeReference("SourceFiducial"))
+    self.ui.targetFiducialsComboBox.setCurrentNode(self._parameterNode.GetNodeReference("TargetFiducial"))
     self.ui.outputSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputGridTransform"))
 
-    spread = float(self._parameterNode.GetParameter("Spread"))
-    self.ui.spreadSlider.value = spread
-    if spread < self.ui.spreadSlider.minimum or spread > self.ui.spreadSlider.maximum:
+    radius = float(self._parameterNode.GetParameter("Radius"))
+    self.ui.radiusSlider.value = radius
+    if radius < self.ui.radiusSlider.minimum or radius > self.ui.radiusSlider.maximum:
       self.updateParameterNodeFromGUI()
 
     self.ui.spacingSpinBox.value = float(self._parameterNode.GetParameter("Spacing"))
-    self.ui.RBFRadiusSpinBox.value = float(self._parameterNode.GetParameter("RBFRadius"))
     self.ui.stiffnessSpinBox.value = float(self._parameterNode.GetParameter("Stiffness"))
 
     self.ui.outputSelector.enabled = self._parameterNode.GetNodeReference("InputNode")
     self.ui.toolsCollapsibleButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
+    self.ui.tabWidget.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
     self.ui.outputCollapsibleButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
     self.ui.calculateButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
 
@@ -316,25 +355,27 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if self._parameterNode is None or self._updatingGUIFromParameterNode:
       return
 
+    currentInputNode = self.ui.inputSelector.currentNode()
+    if isinstance(currentInputNode, slicer.vtkMRMLTransformNode):
+      if not (isinstance(currentInputNode.GetTransformFromParent(), slicer.vtkOrientedGridTransform) or isinstance(currentInputNode.GetTransformToParent(), slicer.vtkOrientedGridTransform)):
+        qt.QMessageBox().warning(qt.QWidget(), "", "Select a Transform Node containing a Grid Transform")
+        return
+
     wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
     self._parameterNode.SetNodeReferenceID("InputNode", self.ui.inputSelector.currentNodeID)
+    self._parameterNode.SetNodeReferenceID("SourceFiducial", self.ui.sourceFiducialsComboBox.currentNodeID)
+    self._parameterNode.SetNodeReferenceID("TargetFiducial", self.ui.targetFiducialsComboBox.currentNodeID)
     self._parameterNode.SetNodeReferenceID("OutputGridTransform", self.ui.outputSelector.currentNodeID)
     self._parameterNode.SetParameter("DrawMode", next(filter(lambda a: a.checked, self.ui.drawModeMenu.actions())).text)
-    self._parameterNode.SetParameter("Spread", str(self.ui.spreadSlider.value))
+    self._parameterNode.SetParameter("Radius", "%.2f" % self.ui.radiusSlider.value)
     self._parameterNode.SetParameter("Stiffness", str(self.ui.stiffnessSpinBox.value))
     # spacing
     if self.ui.spacingSameAsInputCheckBox.checked:
-      size,origin,spacing = GridNodeHelper.getGridDefinition(self.ui.inputSelector.currentNode())
+      size,origin,spacing,directionMatrix = GridNodeHelper.getGridDefinition(currentInputNode)
     else:
       spacing = [self.ui.spacingSpinBox.value]
-    self._parameterNode.SetParameter("Spacing", str(spacing[0]))
-    # RBF radius
-    if self.ui.autoRBFRadiusCheckBox.checked:
-      radius = WarpDriveUtil.getMaxSpread()
-    else:
-      radius = self.ui.RBFRadiusSpinBox.value
-    self._parameterNode.SetParameter("RBFRadius", str(radius))    
+    self._parameterNode.SetParameter("Spacing", str(spacing[0])) 
 
     self._parameterNode.EndModify(wasModified)
 
@@ -346,7 +387,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       wasBlocked = self.ui.outputSelector.blockSignals(True)
       self.ui.outputSelector.currentNodeID = None
       self.ui.outputSelector.blockSignals(wasBlocked)
-    # obvserve
+    # observe
     if self.ui.inputSelector.currentNodeID:
       self.ui.inputSelector.currentNode().SetAndObserveTransformNodeID(self.ui.outputSelector.currentNodeID)
 
@@ -359,88 +400,66 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
     qt.QApplication.processEvents()
 
-    # update (sets the RBF value)
-    self.updateParameterNodeFromGUI()
-    # get source and target from points
-    sourcePoints = WarpDriveUtil.getPointsFromAttribute('source')
-    targetPoints = WarpDriveUtil.getPointsFromAttribute('target')
-    fixedPoints = WarpDriveUtil.getPointsFromAttribute('fixed')
-    # add fixed to source and target
-    sourcePoints.InsertPoints(sourcePoints.GetNumberOfPoints(), fixedPoints.GetNumberOfPoints(), 0, fixedPoints)
-    targetPoints.InsertPoints(targetPoints.GetNumberOfPoints(), fixedPoints.GetNumberOfPoints(), 0, fixedPoints)
     # create nodes
-    sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    sourceFiducial.SetControlPointPositionsWorld(sourcePoints)
-    sourceFiducial.GetDisplayNode().SetTextScale(0)
-    targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    targetFiducial.SetControlPointPositionsWorld(targetPoints)
-    targetFiducial.GetDisplayNode().SetVisibility(0)
+    sourceFiducial = self._parameterNode.GetNodeReference("SourceFiducial")
+    targetFiducial = self._parameterNode.GetNodeReference("TargetFiducial")
     # reference
-    size,origin,spacing = GridNodeHelper.getGridDefinition(self._parameterNode.GetNodeReference("InputNode"))
-    userSpacing = [float(self._parameterNode.GetParameter("Spacing"))] * 3
-    size = np.array(size) * (np.array(spacing) / np.array(userSpacing))
-    auxVolumeNode = GridNodeHelper.emptyVolume([int(s) for s in size], origin, userSpacing)
+    size,origin,spacing,directionMatrix = GridNodeHelper.getGridDefinition(self._parameterNode.GetNodeReference("InputNode"))
+    userSpacing = np.ones(3) * float(self._parameterNode.GetParameter("Spacing"))
+    size = size * (spacing / userSpacing)
+    auxVolumeNode = GridNodeHelper.emptyVolume(size.astype(int), origin, userSpacing, directionMatrix)
     # output
     outputNode = self._parameterNode.GetNodeReference("OutputGridTransform")
     # params
-    RBFRadius = float(self._parameterNode.GetParameter("Spread"))
+    RBFRadius = []
+    for i in range(targetFiducial.GetNumberOfControlPoints()):
+      if targetFiducial.GetNthControlPointSelected(i):
+        RBFRadius.append(targetFiducial.GetNthControlPointDescription(i))
+    RBFRadius = ",".join(RBFRadius)
     stiffness = float(self._parameterNode.GetParameter("Stiffness"))
-    # mask
-    maskVolume = WarpDriveUtil.getMaskVolume(auxVolumeNode)
 
     # save current state if leadDBS call in case of error
     if self._parameterNode.GetParameter("subjectPath") != '':
-      LeadDBSCall.saveCurrentScene(self._parameterNode.GetParameter("subjectPath"))
-
-    # unset current warp
-    self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(None)
+      LeadDBSCall.saveSourceTarget(self._parameterNode.GetParameter("subjectPath"), sourceFiducial, targetFiducial)
 
     # preview
-    visualizationNode = WarpDriveUtil.previewWarp(sourceFiducial, targetFiducial, outputNode)
+    visualizationNodes = self.logic.previewWarp(sourceFiducial, targetFiducial)
+    qt.QApplication.processEvents()
 
-    # run
     self._parameterNode.SetParameter("Running", "true")
-    cliNode = self.logic.run(auxVolumeNode, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume)
+    cliNode = self.logic.run(auxVolumeNode, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness)
 
     if cliNode is not None:
       # set up for UI
       self.ui.landwarpWidget.setCurrentCommandLineModuleNode(cliNode)
       # add observer
       cliNode.AddObserver(slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, \
-        lambda c,e,o=outputNode,m=maskVolume,v=visualizationNode,s=sourceFiducial,t=targetFiducial,a=auxVolumeNode: self.onStatusModifiedEvent(c,o,m,v,s,t,a))
+        lambda c,e,o=outputNode,v=visualizationNodes,a=auxVolumeNode: self.onStatusModifiedEvent(c,o,v,a))
     else:
-      self.onStatusModifiedEvent(None,outputNode,maskVolume,visualizationNode,sourceFiducial,targetFiducial,auxVolumeNode)
-
-    # cursor
-    qt.QApplication.setOverrideCursor(qt.Qt.ArrowCursor)
+      self.onStatusModifiedEvent(None,outputNode,visualizationNodes,auxVolumeNode)
     
   
-  def onStatusModifiedEvent(self, caller, outputNode, maskVolume, visualizationNode, sourceFiducial, targetFiducial, auxVolumeNode):
+  def onStatusModifiedEvent(self, caller, outputNode, visualizationNodes, auxVolumeNode):
     
     if isinstance(caller, slicer.vtkMRMLCommandLineModuleNode):
       if caller.GetStatusString() == 'Completed':
-        # apply mask
-        self.logic.applyMask(outputNode, maskVolume)
         # delete cli Node
         qt.QTimer.singleShot(1000, lambda: slicer.mrmlScene.RemoveNode(caller))
       else:
         return
 
-    # set new warp
     self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
     self._parameterNode.GetNodeReference("InputNode").Modified()
 
     # remove aux
-    slicer.mrmlScene.RemoveNode(maskVolume) 
-    slicer.mrmlScene.RemoveNode(visualizationNode)
-    slicer.mrmlScene.RemoveNode(sourceFiducial)
-    slicer.mrmlScene.RemoveNode(targetFiducial)
+    for node in visualizationNodes:
+      slicer.mrmlScene.RemoveNode(node)
     slicer.mrmlScene.RemoveNode(auxVolumeNode)
 
-    # set parameter
+    qt.QApplication.setOverrideCursor(qt.Qt.ArrowCursor)
+
     self._parameterNode.SetParameter("Running", "false")
 
-      
 
 
 #
@@ -480,8 +499,8 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
     """
     Initialize parameter node with default settings.
     """
-    if not parameterNode.GetParameter("Spread"):
-      parameterNode.SetParameter("Spread", "15.0")
+    if not parameterNode.GetParameter("Radius"):
+      parameterNode.SetParameter("Radius", "15.0")
     if not parameterNode.GetParameter("Spacing"):
       parameterNode.SetParameter("Spacing", "2.0")
     if not parameterNode.GetParameter("RBFRadius"):
@@ -493,55 +512,62 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
     if not parameterNode.GetParameter("Running"):
       parameterNode.SetParameter("Running", "false")
 
-  def run(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume):
+  def run(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
 
     # run landmark registration if points available
-    if sourceFiducial.GetNumberOfControlPoints():
+    if RBFRadius != "":
       cliNode = self.computeWarp(referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness)
     else:
-      GridNodeHelper.emptyGridTransform(referenceVolume.GetImageData().GetDimensions(), referenceVolume.GetOrigin(), referenceVolume.GetSpacing(), outputNode)
+      size, origin, spacing, directionMatrix = GridNodeHelper.getGridDefinition(referenceVolume)
+      GridNodeHelper.emptyGridTransform(size, origin, spacing, directionMatrix, outputNode)
       return
     return cliNode
 
-  def applyMask(self, node, maskVolumeNode):
-    # get arrays
-    transformArray = slicer.util.array(node.GetID())
-    maskArray = slicer.util.array(maskVolumeNode.GetID())
-    # mask
-    transformArray[:] = np.stack([transformArray[:,:,:,i] * maskArray for i in range(3)], 3).squeeze()
-    # modified
-    node.Modified()
-
   def computeWarp(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
-    """
-    Run the processing algorithm.
-    Can be used without GUI widget.
-    :param referenceVolume: Used to set grid definition
-    :param outputNode: output warp. will be observed by input node
-    :param sourceFiducial: source fiducials
-    :param targetFiducial: target fiducials
-    :param spread: used for RBF radius
-    """
 
-    if not referenceVolume or not outputNode:
-      raise ValueError("Input or output is invalid")
-
-    # Compute the warp with plastimatch landwarp
+    # Compute the warp with FiducialRegistrationVariableRBF
     cliParams = {
-      "plmslc_landwarp_fixed_volume" : referenceVolume.GetID(),
-      "plmslc_landwarp_moving_volume" : referenceVolume.GetID(),
-      "plmslc_landwarp_fixed_fiducials" : targetFiducial.GetID(),
-      "plmslc_landwarp_moving_fiducials" : sourceFiducial.GetID(),
-      "plmslc_landwarp_output_vf" : outputNode.GetID(),
-      "plmslc_landwarp_rbf_type" : "gauss",
-      "plmslc_landwarp_rbf_radius" : RBFRadius,
-      "plmslc_landwarp_stiffness" : stiffness,
+      "referenceVolume" : referenceVolume.GetID(),
+      "fixedFiducials" : targetFiducial.GetID(),
+      "movingFiducials" : sourceFiducial.GetID(),
+      "outputDisplacementField" : outputNode.GetID(),
+      "RBFRadius" : RBFRadius,
+      "stiffness" : stiffness,
       } 
 
-    cliNode = slicer.cli.run(slicer.modules.plastimatch_slicer_landwarp, None, cliParams, wait_for_completion=False, update_display=False)
+    cliNode = slicer.cli.run(slicer.modules.fiducialregistrationvariablerbf, None, cliParams, wait_for_completion=False, update_display=False)
 
     return cliNode
 
+  def previewWarp(self, source, target):
+    if isinstance(source, slicer.vtkMRMLMarkupsFiducialNode) and isinstance(target, slicer.vtkMRMLMarkupsFiducialNode):
+      sourcePoints = vtk.vtkPoints()
+      targetPoints = vtk.vtkPoints()
+      for i in range(target.GetNumberOfControlPoints()):
+        if target.GetNthControlPointSelected(i):
+          sourcePoints.InsertNextPoint(source.GetNthControlPointPosition(i))
+          targetPoints.InsertNextPoint(target.GetNthControlPointPosition(i))
+    else:
+      sourcePoints = source
+      targetPoints = target
+    sourceDisplayFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    sourceDisplayFiducial.GetDisplayNode().SetVisibility(0)
+    sourceDisplayFiducial.SetControlPointPositionsWorld(sourcePoints)
+    # thin plate
+    transform=vtk.vtkThinPlateSplineTransform()
+    transform.SetSourceLandmarks(sourcePoints)
+    transform.SetTargetLandmarks(targetPoints)
+    transform.SetBasisToR()
+    transform.Inverse()
+    transformNode=slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    transformNode.SetAndObserveTransformFromParent(transform)
+    # display
+    transformNode.CreateDefaultDisplayNodes()
+    transformNode.GetDisplayNode().SetVisibility(1)
+    transformNode.GetDisplayNode().SetVisibility3D(0)
+    transformNode.GetDisplayNode().SetAndObserveGlyphPointsNode(sourceDisplayFiducial)
+    transformNode.GetDisplayNode().SetVisibility2D(1)
+    return transformNode, sourceDisplayFiducial
 
 
 #
@@ -559,6 +585,9 @@ class WarpDriveTest(ScriptedLoadableModuleTest):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
     slicer.mrmlScene.Clear(0)
+    import WarpDrive
+    WarpDrive.WarpDriveLogic().getParameterNode().SetParameter('LeadSubjects','')
+
 
   def runTest(self):
     """Run as few or as many tests as needed here.
@@ -580,37 +609,19 @@ class WarpDriveTest(ScriptedLoadableModuleTest):
 
     self.delayDisplay("Starting the test")
 
-    # Get/create input data
+    json_txt = '[{"id":"leadDCM","warpdrive_path":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/warpdrive","normlog_file":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/log/sub-leadDCM_desc-normmethod.json","anat_files":{"iso_T1w":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/coregistration/anat/sub-leadDCM_ses-preop_space-anchorNative_desc-preproc_acq-iso_T1w.nii"},"forward_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz","inverse_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz"},{"id":"leadDCM","warpdrive_path":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/warpdrive","normlog_file":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/log/sub-leadDCM_desc-normmethod.json","anat_files":{"iso_T1w":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/coregistration/anat/sub-leadDCM_ses-preop_space-anchorNative_desc-preproc_acq-iso_T1w.nii"},"forward_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz","inverse_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz"}]'
+    # json_txt = '{"id":"leadDCM","warpdrive_path":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/warpdrive","normlog_file":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/log/sub-leadDCM_desc-normmethod.json","anat_files":{"iso_T1w":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/coregistration/anat/sub-leadDCM_ses-preop_space-anchorNative_desc-preproc_acq-iso_T1w.nii"},"forward_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz","inverse_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz"}'
+    
+    # import json
+    # json_txt = json.dumps(json.load(open("C:\\Users\\simon\\Desktop\\.warpdrive_tmp.json")))
+    # json_txt = json.dumps(json.load(open("C:\\Users\\simon\\Desktop\\.warpdrive_tmp2.json")))
 
-    import SampleData
-    InputNode = SampleData.downloadFromURL(
-      nodeNames='MRHead',
-      fileNames='MR-Head.nrrd',
-      uris='https://github.com/Slicer/SlicerTestingData/releases/download/MD5/39b01631b7b38232a220007230624c8e',
-      checksums='MD5:39b01631b7b38232a220007230624c8e')[0]
-    self.delayDisplay('Finished with download and loading')
-
-    inputScalarRange = InputNode.GetImageData().GetScalarRange()
-    self.assertEqual(inputScalarRange[0], 0)
-    self.assertEqual(inputScalarRange[1], 279)
-
-    OutputGridTransform = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-    threshold = 50
-
-    # Test the module logic
-
-    logic = WarpDriveLogic()
-
-    # Test algorithm with non-inverted threshold
-    logic.run(InputNode, OutputGridTransform, threshold, True)
-    outputScalarRange = OutputGridTransform.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], threshold)
-
-    # Test algorithm with inverted threshold
-    logic.run(InputNode, OutputGridTransform, threshold, False)
-    outputScalarRange = OutputGridTransform.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], inputScalarRange[1])
+    import WarpDrive
+    parameterNode = WarpDrive.WarpDriveLogic().getParameterNode()
+    wasModified = parameterNode.StartModify()
+    parameterNode.SetParameter('CurrentSubject','')
+    parameterNode.SetParameter('LeadSubjects',json_txt)
+    parameterNode.SetParameter('MNIPath','/Users/simon/repo/leaddbs/templates/space/MNI152NLin2009bAsym/')
+    parameterNode.EndModify(wasModified)
 
     self.delayDisplay('Test passed')

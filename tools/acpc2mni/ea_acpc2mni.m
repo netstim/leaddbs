@@ -37,24 +37,26 @@ end
 %disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
-
  %   ea_dispercent(pt/length(uidir));
     if ~strcmp(uidir{pt}(end), filesep)
         directory = [uidir{pt},filesep];
     else
         directory = uidir{pt};
     end
+    
+    options = ea_getptopts(directory);
+    coreg_files = cellfun(@(x) options.subj.coreg.anat.preop.(x), fieldnames(options.subj.coreg.anat.preop), 'uni', 0);
 
     if nargin>5 % determine whether to use manually or automatically defined AC/PC
         automan=varargin{6};
     else
-        if exist([directory,'ACPC.fcsv'],'file') % manual AC/PC definition present
+        if exist(options.subj.acpc.acpcManual,'file') % manual AC/PC definition present
             automan='manual';
         else
             automan='auto';
         end
     end
-
+    
     if nargin>2
         whichnormmethod=varargin{3};
         template=varargin{4};
@@ -64,21 +66,15 @@ for pt=1:length(uidir)
 
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
-    [options.root,options.patientname]=fileparts(uidir{pt});
-    options.root=[options.root,filesep];
-    options.prefs=ea_prefs(options.patientname);
-    options=ea_assignpretra(options,1);
-
     switch automan
         case 'auto' % auto AC/PC detection
-            if ~exist([directory,'ACPC_autodetect.mat'],'file')
-                % warp into patient space:
-
-                %     try
-                [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
-                %     catch
-                %         ea_error(['Please check deformation field in ',directory,'.']);
-                %     end
+            if ~exist(options.subj.acpc.acpcAutodetect,'file')
+                % warp into patient space
+                [fpinsub_mm] = ea_map_coords(fidpoints_vox', ...
+                                            template,...
+                                            [options.subj.subjDir,filesep,'forwardTransform'],...
+                                            coreg_files{1},...
+                                            whichnormmethod);
 
                 fpinsub_mm=fpinsub_mm';
 
@@ -91,17 +87,20 @@ for pt=1:length(uidir)
                 fid(pt).PC=fpinsub_mm(2,:);
                 fid(pt).MSP=fpinsub_mm(3,:);
                 acpc_fiducials=fid(pt); % save for later use
-                save([directory,'ACPC_autodetect.mat'],'-struct','acpc_fiducials'); clear acpc_fiducials
+                if ~isfolder(options.subj.acpcDir)
+                    mkdir(options.subj.acpcDir);
+                end
+                save(options.subj.acpc.acpcAutodetect,'-struct','acpc_fiducials'); clear acpc_fiducials
             else
-                tmp=load([directory,'ACPC_autodetect.mat']);
+                tmp=load(options.subj.acpc.acpcAutodetect);
                 fid(pt).AC=tmp.AC;
                 fid(pt).PC=tmp.PC;
                 fid(pt).MSP=tmp.MSP;
             end
 
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
-            copyfile([directory,'ACPC.fcsv'],[directory,'ACPC.dat'])
-            Ct=readtable([directory,'ACPC.dat']);
+            copyfile(options.subj.acpc.acpcManual,strrep(options.subj.acpc.acpcManual,'.fcsv','.dat'))
+            Ct=readtable(strrep(options.subj.acpc.acpcManual,'.fcsv','.dat'));
 
             % AC
             cnt=1;
@@ -131,7 +130,6 @@ for pt=1:length(uidir)
             end
 
         case 'mnidirect'
-
             fid(pt).AC=[0.25,   1.298,   -5.003];
             fid(pt).PC=[-0.188, -24.756,  -2.376];
             fid(pt).MSP=[0.25,   1.298,    55];
@@ -148,15 +146,9 @@ for pt=1:length(uidir)
     yvec=yvec/norm(yvec);
     yvec=-yvec; % this vector points to anterior of the AC!! (but acpc y coordinates are given with - sign).
 
-%     switch automan
-%         case {'manual','mnidirect'}
-            zvec=cross(xvec,yvec);
-            zvec=zvec/norm(zvec);
-%         case 'auto' % the above should also work here but it's simpler with the auto coords
-%             % z-dimension (just move from ac to msag plane by z dimension):
-%             zvec=(fid(pt).MSP-fid(pt).AC);
-%             zvec=zvec/norm(zvec);
-%     end
+    zvec=cross(xvec,yvec);
+    zvec=zvec/norm(zvec);
+
     switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=fid(pt).AC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
@@ -166,28 +158,23 @@ for pt=1:length(uidir)
             warpcoord_mm=fid(pt).PC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
     end
 
-    anat=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
+    anat=ea_load_nii(coreg_files{1});
     warpcoord_mm=[warpcoord_mm';1];
     warpcoord_vox=anat.mat\warpcoord_mm;
     warpcoord_vox=warpcoord_vox(1:3);
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
 
-    % check it inverse normparams file has correct voxel size.
-    if ~ismember(whichnormmethod,ea_getantsnormfuns)
-        Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
-        if ~isequal(Vinv.dim,anat.dim)
-            ea_redo_inv(directory,options);
-        end
-    end
-
-    % re-warp into MNI:
-
+    % re-warp into MNI
     if ~isfield(cfg,'native') || ~cfg.native % when working in native space, no need to warp acpc back to mni at all.
         switch automan
             case 'mnidirect'
                 fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';
             otherwise
-                [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
+                [warpinmni_mm] = ea_map_coords(warpcoord_vox,...
+                                 coreg_files{1},...
+                                 [options.subj.subjDir,filesep,'inverseTransform'],...
+                                 template,...
+                                 whichnormmethod);
                 try
                     warppts(pt,:)=warpinmni_mm';
                 catch
@@ -200,23 +187,21 @@ for pt=1:length(uidir)
     if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;
-        anat.fname=[directory,'ACPCquerypoint.nii'];
+        anat.fname=[options.subj.acpcDir,'ACPCquerypoint.nii'];
         spm_write_vol(anat,anat.img);
 
         % warp into nativespace
-        matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-        matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[directory,'ACPCquerypoint.nii']};
-        matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {directory};
+        matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.subj.norm.transform.forwardBaseName, 'spm.nii']};
+        matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[options.subj.acpcDir,'ACPCquerypoint.nii']};
+        matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {options.subj.acpcDir};
         matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
         matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
         matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
         spm_jobman('run',{matlabbatch});
         clear matlabbatch
-        wfis{pt}=[directory,'wACPCquerypoint.nii'];
+        wfis{pt}=[options.subj.acpcDir,'wACPCquerypoint.nii'];
     end
-
 end
-%ea_dispercent(1,'end');
 
 % create clear cut version:
 if cfg.mapmethod==1
@@ -249,7 +234,7 @@ elseif cfg.mapmethod==2
 end
 
 if cfg.mapmethod
-% smooth clear version:
+    % smooth clear version:
     matlabbatch{1}.spm.spatial.smooth.data = {[PathName,FileName,',1']};
     matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
@@ -271,18 +256,3 @@ function fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile)
 V=spm_vol(tempfile);
 fidpoints_vox=V(1).mat\[fidpoints_mm,ones(size(fidpoints_mm,1),1)]';
 fidpoints_vox=fidpoints_vox(1:3,:)';
-
-
-function o=cell2acpc(acpc)
-
-acpc=ea_strsplit(acpc{1},' ');
-if length(acpc)~=3
-    acpc=ea_strsplit(acpc{1},',');
-    if length(acpc)~=3
-        ea_error('Please enter 3 values separated by spaces or commas.');
-    end
-end
-
-for dim=1:3
-    o(dim,1)=str2double(acpc{dim});
-end

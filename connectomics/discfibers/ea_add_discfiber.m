@@ -8,13 +8,13 @@ if ismember('M', who('-file',leadgroup)) % Add new discfiber analysis
 
     ht=getappdata(resultfig,'ht');
     uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
-        'TooltipString', ['Explore discriminative fibertract ',tractId],...
-        'Tag', ['Explore discriminative fibertract ',tractId],...
+        'TooltipString', ['Explore fiber filtering analysis ',tractId],...
+        'Tag', ['Explore fiber filtering analysis ',tractId],...
         'ClickedCallback', {@ea_add_discfiber,[fileparts(leadgroup),filesep,'disctracts',filesep,tractId,'.fibfilt'],resultfig});
 
     Tags = arrayfun(@(tool) tool.Tag, ht.Children, 'Uni', 0);
-    isDiscFiberTool = contains(Tags, 'Explore discriminative fibertract');
-    isAddDiscFiberTool = contains(Tags, 'Add discriminative fibertract');
+    isDiscFiberTool = contains(Tags, 'Explore fiber filtering analysis');
+    isAddDiscFiberTool = contains(Tags, 'Add fiber filtering analysis');
     if any(isDiscFiberTool(2:end))
         insertInd = find(isDiscFiberTool(2:end),1);
     else

@@ -3,18 +3,20 @@ function fv=ea_electrode2ply(directory,side,handles)
 options=ea_handles2options(handles);
 options.native=0; % MNI space only
 
-if exist([directory,'ea_reconstruction.mat'],'file')
-    load([directory,'ea_reconstruction.mat'],'reco');
-    options.elmodel=ea_get_first_notempty_elmodel(reco.props);
-end
-options=ea_resolve_elspec(options);
 [options.root,options.patientname]=fileparts(directory);
 options.root=[options.root,filesep];
+
+if isfile([directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'])
+    load([directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'],'reco');
+    options.elmodel=ea_get_first_notempty_elmodel(reco.props);
+end
+
+options=ea_resolve_elspec(options);
 options.leadprod='dbs';
 options.sidecolor=1;
 options.prefs=ea_prefs;
 
-[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+[coords_mm,trajectory,markers]=ea_load_reconstruction(directory);
 elstruct(1).coords_mm=coords_mm;
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
@@ -50,7 +52,7 @@ fv=ea_mapcolvert2ind(fv);
 fv.faces=[fv.faces(:,2),fv.faces(:,1),fv.faces(:,3)];
 
 try
-    plywrite([directory,'export',filesep,'ply',filesep,sidec,'electrode.ply'],fv.faces,fv.vertices,fv.facevertexcdata)
+    plywrite([directory,filesep,'export',filesep,'ply',filesep,sidec,'electrode.ply'],fv.faces,fv.vertices,fv.facevertexcdata)
 catch
     keyboard
 end

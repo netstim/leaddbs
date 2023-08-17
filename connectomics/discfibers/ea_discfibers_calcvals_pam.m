@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
 % Extract fiber connection values from OSS-DBS results (for a particular connectome)
 
 disp('Load Connectome...');
@@ -16,6 +16,8 @@ fibsval5Peak = cell(1, numSide);
 
 fibcell = cell(1, numSide);
 connFiberInd = cell(1, numSide);
+
+totalFibers = length(idx); % total number of fibers in the connectome to work with global indices
 
 for side = 1:numSide
     fibsvalBin{side} = zeros(length(idx), numPatient);
@@ -39,12 +41,25 @@ for side = 1:numSide
             end
             
         else
-            % we need to add filtered out fibers as not activated
-            fib_state_raw = load(char(pamlist(pt,side)));
 
             load(cfile, 'fibers', 'idx');
             total_fibers = fibers(end,4); % load the actual .mat
             fib_state = zeros(total_fibers,1);
+
+            try
+                fib_state_raw = load(char(pamlist(pt,side)));
+            catch
+                disp("=================== WARNING ==================")
+                disp("fiberActivation was not found for this patient")
+                disp("perhaps Kuncel-VTA removed all fibers")
+                disp("assigning zero activation")
+                disp("==============================================")
+                continue
+            end
+                
+            %if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
+            %    error("=== Fiber activation was computed for another connectome!!! ===") 
+            %end    
 
             last_loc_i = 1;  
             sub_i = 1;
@@ -62,7 +77,7 @@ for side = 1:numSide
                 end
             end
         end
-        %fib_state
+
         
         %maybe this is a wrong way
         % Skip further calculation in case no fibers were activated

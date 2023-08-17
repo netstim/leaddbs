@@ -162,7 +162,7 @@ if ~exist(expfolder,'dir')
 end
 
 V.fname=[expfolder,exstr,'_',mode,'.nii'];
-V.dt=[64,1];
+V.dt(1) = 64;
 spm_write_vol(V,Y);
 
 % also write out .MAT file with values:

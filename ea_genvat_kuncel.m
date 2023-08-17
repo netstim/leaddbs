@@ -17,6 +17,7 @@ if nargin>=5
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Kuncel 2008';
+        varargout{2} = false; % Doesn't support directed lead
         return
     end
 end
@@ -87,36 +88,40 @@ XYZmm=[gvmm{1}(XYZv(1,:));...
     gvmm{3}(XYZv(3,:));...
     ones(1,length(XYZv))];
 mat=mldivide(XYZv',XYZmm')';
+
 for source=S.sources
     in=ea_intriangulation(VAT{source},K{source},XYZmm(1:3,:)');
     voxspace(sub2ind(size(voxspace),XYZv(1,in),XYZv(2,in),XYZv(3,in)))=1;
 end
 
 % write nifti of VAT
+[~, ~, endian] = computer;
+switch endian
+    case 'L'
+        endian = 0;
+    case 'B'
+        endian = 1;
+end
+
 Vvat.mat=mat;
 %voxspace=permute(voxspace,[2,1,3]);
 Vvat.dim=size(voxspace);
-Vvat.dt=[4,0];
+Vvat.dt = [4, endian];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
 
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
-end
-
-mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
-%S(side).volume=sum(volume);
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
 if side == 1
-    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
-    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_right.mat'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-kuncel_hemi-R.nii'];
 elseif side == 2
-    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
-    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_left.mat'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-kuncel_hemi-L.nii'];
 end
+
 ea_savestimulation(S,options);
 spm_write_vol(Vvat,voxspace);
-
 
 varargout{1}=VAT;
 varargout{2}=volume;

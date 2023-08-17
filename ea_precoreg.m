@@ -1,18 +1,32 @@
-function ea_precoreg(fname,tname,options)
-% pre-coreg predominant anat to MNI (without reslicing).
-% set save_tmet = 1 if you want to store the initial MRI-transformation in
-% the lead folder
+function ea_precoreg(anchorImage, templateModality, preCoregImage, preCoregTransform)
+% Pre-coregister pre-op anchor image to template (without reslicing).
+
+% Make dirs
+ea_mkdir(fileparts(preCoregImage));
+ea_mkdir(fileparts(preCoregTransform));
+
+% Copy anchor image to pre-coregistered image and leave anchor image untouched
+if ~isfile(preCoregImage)
+    copyfile(anchorImage, preCoregImage);
+end
+
+% Save transform
 save_tmat = 1;
-%%
+
+% Set flags for coregistration
 flags.cost_fun = 'nmi';
 flags.sep = [4 2];
 flags.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
 flags.fwhm = [7 7];
-tmp = spm_coreg([ea_space,tname,'.nii,1'],[fname,',1'],flags);
-tmat = spm_matrix(tmp(:)');
+
+% Coregister and save transform
+tmat = spm_coreg([ea_space,templateModality,'.nii,1'], [preCoregImage,',1'], flags);
+tmat = spm_matrix(tmat(:)');
 if save_tmat
-    save([options.root options.patientname filesep 'ea_precoregtransformation.mat'],'tmat');
+    save(preCoregTransform, 'tmat');
 end
-anat_t1_vol = spm_vol(fname);
-anat_t1_vol.mat = spm_get_space(fname, inv(tmat) * anat_t1_vol.mat);
-spm_write_vol(anat_t1_vol,spm_read_vols(anat_t1_vol));
+
+% Set affine matrix to pre-coregistered image
+preCoregVol = spm_vol(preCoregImage);
+preCoregVol.mat = spm_get_space(preCoregImage, tmat \ preCoregVol.mat);
+spm_write_vol(preCoregVol, spm_read_vols(preCoregVol));

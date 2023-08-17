@@ -8,7 +8,7 @@ signallength=length(V);
 %% run sequence of proxyfunctions (below):
 ea_realign_fmri(signallength,options); % realign fMRI
 
-ea_newseg(directory,options.prefs.prenii_unnormalized,0,options,1); % Segment anat
+ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,1); % Segment anat
 
 ea_coreg_pre2fmri(options); % register pre 2 fmri (for timecourse-extraction).
 
@@ -94,7 +94,7 @@ if numel(transform) == 0 || overwrite
         warning('Transformation not found! Running coregistration now!');
     end
 
-    transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
+    transform = ea_coregimages(options,[directory,options.prefs.prenii_unnormalized],...
         [directory,reference],...
         [directory,'r',ea_stripext(options.prefs.rest),'_',options.prefs.prenii_unnormalized],...
         [],1,[],1);

@@ -13,4 +13,13 @@ matlabbatch{1}.spm.spatial.smooth.prefix = 's';
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 delete(fullfile(pth,['k',fn,ext]));
-fina=fullfile(pth,['sk',fn,ext]);
+if ~isBIDSFileName(fina)
+    fina=fullfile(pth,['sk',fn,ext]);
+else
+    parsed = parseBIDSFilePath(fina);
+    if ~isfield(parsed, 'desc')
+        parsed.desc = '';
+    end
+    fina = setBIDSEntity(fina, 'desc', [parsed.desc,'NormSmooth']);
+    movefile(fullfile(pth,['sk',fn,ext]), fina);
+end

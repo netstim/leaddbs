@@ -3,6 +3,12 @@ function ea_genvat_wrapper(patientFolder, stimLabel, side, cathode, stimAmplitud
 % Only support single source evenly splitted SimBio model for now.
 % Contacts are indexed as 0-N. Case is indexed as -1.
 
+if endsWith(patientFolder, filesep)
+    patientFolder = patientFolder(1:end-1);
+end
+
+[~, patientName] = fileparts(patientFolder);
+
 % Create native space output folder
 nativeStimFolder = fullfile(patientFolder, 'stimulations', ea_nt(1), stimLabel);
 if ~isfolder(nativeStimFolder)
@@ -97,11 +103,11 @@ end
 
 % Save stimulation parameters in template space output folder
 S.template = 'direct';
-save(fullfile(templateStimFolder, 'stimparameters.mat'), 'S');
+save(fullfile(templateStimFolder, [patientName, '_desc-stimparameters.mat']), 'S');
 
 % Save stimulation parameters in native space output folder
 S.template = 'warp';
-save(fullfile(nativeStimFolder, 'stimparameters.mat'), 'S');
+save(fullfile(nativeStimFolder, [patientName, '_desc-stimparameters.mat']), 'S');
 
 % Fix missing atlasset in options
 options.atlasset = 'DISTAL Nano (Ewert 2017)';

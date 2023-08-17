@@ -3,7 +3,7 @@ clc;
 % set options
 options.leadprod = 'group';
 % set pt specific options
-options.root=M.ui.groupdir;
+options.root=M.root;
 options.patientname='';
 
 options.expstatvat.do=M.ui.statvat;

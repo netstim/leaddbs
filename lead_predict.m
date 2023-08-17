@@ -22,7 +22,7 @@ function varargout = lead_predict(varargin)
 
 % Edit the above text to modify the response to help lead_predict
 
-% Last Modified by GUIDE v2.5 11-Dec-2017 14:51:52
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:11:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,8 @@ function lead_predict_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   predictmetric line arguments to lead_predict (see VARARGIN)
 
+handles.prod = 'predict';
+handles.callingfunction = 'lead_predict';
 
 earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_predict.png']);
@@ -63,18 +65,15 @@ set(handles.leadfigure,'name','Lead Predict','color','w');
 % homedir=ea_gethome;
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
-% add recent patients...
-ea_initrecentpatients(handles, 'patients');
+% add recentpatients patients...
+ea_initrecent(handles, 'patients');
 
 ea_processguiargs(handles,varargin)
 
 ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'},ea_prefs);
 
-
 [mdl,sf]=ea_genmodlist;
 ea_updatemodpopups(mdl,sf,handles)
-
-
 
 pmodels=dir([ea_getearoot,'predict',filesep,'ea_predict_*.m']);
 for pmod=1:length(pmodels)
@@ -234,16 +233,6 @@ function seedbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to seedbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-p='/'; % default use root
-try
-    p=pwd; % if possible use pwd instead (could not work if deployed)
-end
-try % finally use last patient parent dir if set.
-    earoot=ea_getearoot;
-    load([earoot,'ea_recentpatients.mat']);
-    p=fileparts(fullrpts{1});
-end
 
 [seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
 
@@ -416,22 +405,22 @@ options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'predict');
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_busyaction('on',handles.leadfigure,'predict');
-ea_rcpatientscallback(handles, 'patients');
+ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'predict');
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

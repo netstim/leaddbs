@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 27-Apr-2020 21:36:34
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:11:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -95,11 +95,11 @@ end
 setappdata(gcf,'ftFunctions',ftFunctions);
 set(handles.ftmethod,'String',ftMethods);
 
-% add normmethods to menu
-ea_addnormmethods(handles,options,'normmethod');
+% Initialize norm methods popupmenu
+ea_init_normpopup(handles, options.prefs.normalize.default);
 
-% add recent patients...
-ea_initrecentpatients(handles, 'patients');
+% add recentpatients patients...
+ea_initrecent(handles, 'patients');
 
 % update UI:
 try
@@ -109,7 +109,7 @@ catch
 end
 lc2handles(lc,handles);
 
-ea_init_coregmrpopup(handles);
+ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
 
 if isempty(varargin) % "standard alone" mode, i.e. not dependend from lead
     isindependent=1;
@@ -128,6 +128,8 @@ if isindependent
 else
     handles.prod='dbs_connectome';
 end
+handles.callingfunction='lead_connectome';
+
 
 if isindependent
     %% add tools menu
@@ -140,6 +142,8 @@ end
 ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
+
+ea_ListBoxRenderer(handles.parcellation);
 
 ea_firstrun(handles,options);
 
@@ -598,7 +602,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
-ea_switchnormmethod(handles);
+ea_normsettings(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -621,17 +625,6 @@ function normcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normcheck
-
-
-% --- Executes on button press in dicomcheck.
-function dicomcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to dicomcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of dicomcheck
-ea_storeui(handles);
-ea_deselectall_dicom(handles);
 
 
 % --- Executes on button press in exportcode.
@@ -665,22 +658,22 @@ options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'connectome');
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_busyaction('on',handles.leadfigure,'connectome');
-ea_rcpatientscallback(handles, 'patients');
+ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'connectome');
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -710,14 +703,14 @@ function coreg_checkbox_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-% --- Executes on selection change in coregmrpopup.
-function coregmrpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+% --- Executes on selection change in coregmrmethod.
+function coregmrmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrmethod
 prefs = ea_prefs;
 if strcmp(hObject.String{hObject.Value}, 'ANTs') &&  prefs.env.dev
     set(handles.addSyN, 'Visible', 'on');
@@ -727,8 +720,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function coregmrpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+function coregmrmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -739,13 +732,22 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrmethod.
+function coregmrmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
 % --- Executes on button press in normsettings.
 function normsettings_Callback(hObject, eventdata, handles)
 % hObject    handle to normsettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
-ea_shownormsettings(currentNormMethod,handles)
+normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+feval(normsettingsfunc, handles);
 
 
 % --- Executes on button press in checkfigures.
@@ -763,16 +765,6 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_openpatdir(handles);
-
-
-% --- Executes on button press in assignnii.
-function assignnii_Callback(hObject, eventdata, handles)
-% hObject    handle to assignnii (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of assignnii
-ea_deselectall_dicom(handles);
 
 
 % --- Executes on button press in coregmrcheck.
@@ -830,15 +822,15 @@ if length(uipatdir)>1
    %ea_error('Selecting the previous patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    if iscell(fullrpts)
-        fullrpts=fullrpts(1);
+    if iscell(recentfolders)
+        recentfolders=recentfolders(1);
     end
 
-    if strcmp('No recent patients found',fullrpts)
+    if strcmp('No recent patients found',recentfolders)
         return
     end
 
-    ea_load_pts(handles,fullrpts);
+    ea_load_pts(handles,recentfolders);
     return
 end
 
@@ -881,18 +873,18 @@ uipatdir=getappdata(handles.leadfigure,'uipatdir');
 if length(uipatdir)>1 % still works
     %  ea_error('Selecting the next patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
-    % load recent patient then.
+    % load recentpatients patient then.
 
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    if iscell(fullrpts)
-        fullrpts=fullrpts(1);
+    if iscell(recentfolders)
+        recentfolders=recentfolders(1);
     end
 
-    if strcmp('No recent patients found',fullrpts)
+    if strcmp('No recent patients found',recentfolders)
         return
     end
 
-    ea_load_pts(handles,fullrpts);
+    ea_load_pts(handles,recentfolders);
     return
     %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
 end

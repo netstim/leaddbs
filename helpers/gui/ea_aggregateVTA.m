@@ -1,36 +1,32 @@
-function ea_aggregateVTA(~,~,handles,exportwhat)
+function ea_aggregateVTA(handles, exportType)
 
-
-suffx='';
-if ismember(exportwhat,{'vat_seed_compound_dMRI','vat_seed_compound_fMRI'})
-    prefs=ea_prefs;
-    switch prefs.lcm.vatseed
-        case 'binary'
-            suffx='';
-        case 'efield'
-            suffx='_efield';
-        case 'efield_gauss'
-            suffx='_efield_gauss';
-    end
+% Override export type using prefs when exporting dMRI/fMRI seed
+if contains(exportType, 'sim-binary_seed-')
+    prefs = ea_prefs;
+    exportType = strrep(exportType, 'binary', prefs.lcm.vatseed);
 end
 
-if ~strcmp(handles.seeddefpopup.String{handles.seeddefpopup.Value}(1:9),'Use VATs:')
-    ea_error('Please select a stimulation to export first.');
+if ~startsWith(handles.seeddefpopup.String{handles.seeddefpopup.Value}, 'Use VAT: ')
+    ea_error('Please select a stimulation first.');
 else
-    stimname=handles.seeddefpopup.String{handles.seeddefpopup.Value}(11:end);
+    stimLabel = erase(handles.seeddefpopup.String{handles.seeddefpopup.Value}, 'Use VAT: ');
 end
-uipatdir=getappdata(handles.leadfigure,'uipatdir');
-fname=uigetdir('','Select where to save files...');
-fname=[fname,filesep];
 
-tf=fopen([fname,'export.txt'],'w');
-options.native=0;
+uipatdir = getappdata(handles.leadfigure,'uipatdir');
+exportDir = uigetdir('','Select where to save files...');
+
+txt = fopen(fullfile(exportDir,'export.txt'), 'w');
 for pt=1:length(uipatdir)
-    [pth,ptname]=fileparts(uipatdir{pt});
-    copyfile([uipatdir{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,exportwhat,suffx,'.nii'],[fname,ptname,'.nii']);
-    fprintf(tf,'%s\n',[fname,ptname,'.nii']);
-end
-fclose(tf);
+    [~, subPrefix] = fileparts([uipatdir{pt}, '_']);
 
+    stimParams = ea_regexpdir(fullfile(uipatdir{pt}, 'stimulations', ea_nt(0), stimLabel), 'stimparameters\.mat$', 0);
+    load(stimParams{1}, 'S');
+    modelLabel = ea_simModel2Label(S.model);
+    exportType = regexprep(exportType, 'sim-([a-z]+)', ['sim-$1_model-', modelLabel]);
+
+    copyfile(fullfile(uipatdir{pt}, 'stimulations', ea_nt(0), stimLabel, [subPrefix, exportType, '.nii']), exportDir);
+    fprintf(txt, '%s\n', fullfile(exportDir, [subPrefix, exportType, '.nii']));
+end
+fclose(txt);
 
 msgbox('Files successfully exported.');

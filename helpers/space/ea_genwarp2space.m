@@ -9,7 +9,7 @@ if exist([ea_space,fromwhich],'dir') && exist([ea_space,fromwhich,filesep,'glana
 end
 
 foreignspaceroot=[ea_getearoot,'templates',filesep,'space',filesep,fromwhich,filesep];
-load([foreignspaceroot,'ea_space_def.mat'])
+load([foreignspaceroot,'spacedef.mat'])
 
 mkdir([ea_space,fromwhich]);
 for t=1:length(spacedef.templates)
@@ -27,7 +27,7 @@ options.patientname=fromwhich;
 options.prefs=ea_prefs('');
 options.earoot=ea_getearoot;
 options.modality=1;
-options.coregmr.method='ANTs';
+options.coregmr.method='ANTs (Avants 2008)';
 % temporarily switch back to from space to get warps
 [options,presentfiles]=ea_assignpretra(options);
 

@@ -14,6 +14,7 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 options.gencheckreg=1;
 
 options.leadprod = 'dbs';
+options.leadfigure=handles.leadfigure;
 
 ea_run('run',options);
 

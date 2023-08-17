@@ -15,26 +15,15 @@ class AbstractDrawEffect(AbstractCircleEffect):
 
     AbstractCircleEffect.__init__(self, sliceWidget)
 
+    self.drawnCurveNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsCurveNode")
+    self.drawnCurveNode.GetDisplayNode().SetPropertiesLabelVisibility(0)
+    self.drawnCurveNode.GetDisplayNode().SetLineThickness(1)
+    self.drawnCurveNode.GetDisplayNode().SetGlyphScale(1)
 
     # interaction state variables
     self.activeSlice = None
     self.lastInsertSLiceNodeMTime = None
     self.actionState = None
-
-    # initialization
-    self.xyPoints = vtk.vtkPoints()
-    self.rasPoints = vtk.vtkPoints()
-    self.polyData = self.createPolyData()
-
-    self.mapper = vtk.vtkPolyDataMapper2D()
-    self.actor = vtk.vtkActor2D()
-    self.mapper.SetInputData(self.polyData)
-    self.actor.SetMapper(self.mapper)
-    property_ = self.actor.GetProperty()
-    property_.SetColor(1,1,0)
-    property_.SetLineWidth(1)
-    self.renderer.AddActor2D( self.actor )
-    self.actors.append( self.actor )
 
     self.initialized = True
 
@@ -43,7 +32,7 @@ class AbstractDrawEffect(AbstractCircleEffect):
     call superclass to clean up actor
     """
     AbstractCircleEffect.cleanup(self)
-
+    slicer.mrmlScene.RemoveNode(self.drawnCurveNode)
 
   def processEvent(self, caller=None, event=None):
     """
@@ -72,78 +61,15 @@ class AbstractDrawEffect(AbstractCircleEffect):
         self.abortEvent(event)
 
     elif event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape'):
-      self.resetPolyData()
+      self.resetDrawing()
       self.actionState = None
-
-    self.positionActors()
-
-
-  def positionActors(self):
-    """
-    update draw feedback to follow slice node
-    """
-    sliceLogic = self.sliceWidget.sliceLogic()
-    sliceNode = sliceLogic.GetSliceNode()
-    rasToXY = vtk.vtkTransform()
-    rasToXY.SetMatrix( sliceNode.GetXYToRAS() )
-    rasToXY.Inverse()
-    self.xyPoints.Reset()
-    rasToXY.TransformPoints( self.rasPoints, self.xyPoints )
-    self.polyData.Modified()
-    self.sliceView.scheduleRender()
-
-  def createPolyData(self):
-    """make an empty single-polyline polydata"""
-
-    polyData = vtk.vtkPolyData()
-    polyData.SetPoints(self.xyPoints)
-
-    lines = vtk.vtkCellArray()
-    polyData.SetLines(lines)
-    idArray = lines.GetData()
-    idArray.Reset()
-    idArray.InsertNextTuple1(0)
-
-    polygons = vtk.vtkCellArray()
-    polyData.SetPolys(polygons)
-    idArray = polygons.GetData()
-    idArray.Reset()
-    idArray.InsertNextTuple1(0)
-
-    return polyData
-
-
-  def resetPolyData(self):
-    """return the polyline to initial state with no points"""
-    lines = self.polyData.GetLines()
-    idArray = lines.GetData()
-    idArray.Reset()
-    idArray.InsertNextTuple1(0)
-    self.xyPoints.Reset()
-    self.rasPoints.Reset()
-    lines.SetNumberOfCells(0)
-    self.activeSlice = None
 
   def addPoint(self,ras):
     """add a world space point to the current outline"""
-    # store active slice when first point is added
-    sliceLogic = self.sliceWidget.sliceLogic()
-    currentSlice = sliceLogic.GetSliceOffset()
-    if not self.activeSlice:
-      self.activeSlice = currentSlice
+    resampleDistance = 1.0
+    self.drawnCurveNode.AddControlPoint(vtk.vtkVector3d(ras))
+    if self.drawnCurveNode.GetCurveLengthWorld() > resampleDistance:
+      self.drawnCurveNode.ResampleCurveWorld(resampleDistance)
 
-    # don't allow adding points on except on the active slice (where
-    # first point was laid down)
-    if self.activeSlice != currentSlice: return
-
-    # keep track of node state (in case of pan/zoom)
-    sliceNode = sliceLogic.GetSliceNode()
-    self.lastInsertSliceNodeMTime = sliceNode.GetMTime()
-
-    p = self.rasPoints.InsertNextPoint(ras)
-    lines = self.polyData.GetLines()
-    idArray = lines.GetData()
-    idArray.InsertNextTuple1(p)
-    idArray.SetTuple1(0, idArray.GetNumberOfTuples()-1)
-    lines.SetNumberOfCells(1)
-
+  def resetDrawing(self):
+    self.drawnCurveNode.RemoveAllControlPoints()

@@ -1,5 +1,5 @@
 %% applyANTSTransformToPoints - transform points in world coordinats of a sourceRefImage to
-% world coordinates in targetRefImage applying a ANTS affine transformation 
+% world coordinates in targetRefImage applying a ANTS affine transformation
 %
 % Parameters: transPoints - Nx3 matrix of points in world cooridnates
 %             antsTransformFileStrings  -  '[antsTransformFile, useInverseFlag]' String with tuples of
@@ -8,7 +8,7 @@
 %                  pass a cell of transformation tuples. Note that the order is
 %                  ANTs-like, i.e. stacked (last is applied first), and that
 %                  ANTs specifies point transformations in the *inverse*
-%                  direction than non-point transformations, thus useInverseFlag must be 1 for 
+%                  direction than non-point transformations, thus useInverseFlag must be 1 for
 %                  a transform from A->B and 0 for a Transform A<-B.
 %                  Refer to ANTs documentation for details.
 %
@@ -27,7 +27,7 @@ try
 antspath = t(1:end-1); % remove line ending
 end
 if(~isempty(t))
-    applyTransformsToPointsCmd = [antspath 'antsApplyTransformsToPoints']; 
+    applyTransformsToPointsCmd = [antspath 'antsApplyTransformsToPoints'];
 else
     applyTransformsToPointsCmd = 'antsApplyTransformsToPoints'; % FIXME: Make multi-os compatabile and find bins automatically
 end
@@ -40,6 +40,7 @@ fclose(fileHandle);
 dlmwrite(tempFile,  [points zeros(size(points,1),3)], '-append');
 
 cmd = [applyTransformsToPointsCmd ' -d 3 -p 1 -i ' tempFile ];
+
 if(iscell(antsTransformFileStrings))
     for i=1:length(antsTransformFileStrings)
         cmd = [cmd ' -t ' antsTransformFileStrings{i}]; %#ok<AGROW>
@@ -47,15 +48,13 @@ if(iscell(antsTransformFileStrings))
 else
     cmd = [cmd ' -t ' antsTransformFileStrings];
 end
+
 cmd = [cmd ' -o ' tempFileOut];
 
-if(~ispc)
-    ret = system(['bash -c "' cmd '"']);
-else
-    ret = system(cmd);
-end
-assert(ret == 0); 
-points = dlmread(tempFileOut, ',', 1, 0);
+ret = ea_runcmd(cmd);
+
+assert(ret == 0);
+points = readmatrix(tempFileOut);
 delete(tempFileOut);
 delete(tempFile);
 

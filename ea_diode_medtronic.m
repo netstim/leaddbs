@@ -14,7 +14,7 @@ sides = {'right','left','3','4','5','6','7','8'};
 level1centerRelative = elspec.contact_length + elspec.contact_spacing;
 level2centerRelative = (elspec.contact_length + elspec.contact_spacing) * 2;
 markercenterRelative = elspec.markerpos - elspec.tip_length*~elspec.tipiscontact - elspec.contact_length/2;
-markercenterRelative = 12.75;
+
 load(elspec.matfname);
 
 %% load CTs
@@ -32,6 +32,7 @@ samplingvector_mm = vertcat([head_mm(1):unitvector_mm(1)./2:head_mm(1)+ samplele
 samplingvector_vx = round(tmat_vx2mm\samplingvector_mm);
 
 newcentervector_vx = nan(size(samplingvector_vx));
+
 % for each slice calculate center of mass, if more than one
 % center of mass is found, choose the one nearest to the
 % original lead position
@@ -158,9 +159,10 @@ Vnew = permute(ct.img,[2,1,3]);
 % direction of deviation for these slices with respect to anterior
 % orientation are calculated.
 extract_width = 5; % in mm
-samplingres = .2;
+samplingres = .1;
 
 %% lower marker
+disp('Inspecting lower marker');
 count = 1;
 for x = [-4:2*samplingres:0]
     center(count,:) = marker_mm + (x.*unitvector_mm);
@@ -191,16 +193,17 @@ for x = [-4:2*samplingres:0]
 end
 
 [~,bestslice] = max(distance);
-finalcenter{1} = center(bestslice,:);
-finalcenter_vx{1} = round(tmat_vx2mm\finalcenter{1}');
-finalCOG{1} = COG_mm(bestslice,:);
-finalCOG_vx{1} = round(tmat_vx2mm\[finalCOG{1} 1]');
-finalCOG_dir{1} = COG_dir(bestslice,:);
+finalcenter{2} = center(bestslice,:);
+finalcenter_vx{2} = round(tmat_vx2mm\finalcenter{2}');
+finalCOG{2} = COG_mm(bestslice,:);
+finalCOG_vx{2} = round(tmat_vx2mm\[finalCOG{2} 1]');
+finalCOG_dir{2} = COG_dir(bestslice,:);
 figure
 plot([-4:2*samplingres:0],distance)
-%     close
+close
 clear bestslice center COG_mm COG_dir distance count x
 %% upper marker
+disp('Inspecting upper marker');
 count = 1;
 for x = [0:2*samplingres:4]
     center(count,:) = marker_mm + (x.*unitvector_mm);
@@ -211,7 +214,7 @@ for x = [0:2*samplingres:4]
     COG_mm(count,:) = ea_diode_calculateCOG((myslice >= 2000),Xslice,Yslice,Zslice);
     COG_dir(count,:) = (COG_mm(count,1:3)-center(count,1:3))/norm((COG_mm(count,1:3)-center(count,1:3)));
     distance(count) = norm(COG_mm(count,1:3)-center(count,1:3));
-    
+
     %         COG_dir = (COG_mm-marker_mm(1:3))/norm((COG_mm-marker_mm(1:3)));
     %% slice visualization if needed
     %             figure
@@ -233,14 +236,14 @@ for x = [0:2*samplingres:4]
 end
 
 [~,bestslice] = max(distance);
-finalcenter{2} = center(bestslice,:);
-finalcenter_vx{2} = round(tmat_vx2mm\finalcenter{2}');
-finalCOG{2} = COG_mm(bestslice,:);
-finalCOG_vx{2} = round(tmat_vx2mm\[finalCOG{2} 1]');
-finalCOG_dir{2} = COG_dir(bestslice,:);
+finalcenter{1} = center(bestslice,:);
+finalcenter_vx{1} = round(tmat_vx2mm\finalcenter{1}');
+finalCOG{1} = COG_mm(bestslice,:);
+finalCOG_vx{1} = round(tmat_vx2mm\[finalCOG{1} 1]');
+finalCOG_dir{1} = COG_dir(bestslice,:);
 hold on
 plot([0:2*samplingres:4],distance)
-close
+% close
 clear bestslice center COG_mm COG_dir distance count x
 
 %% loop over markers
@@ -255,9 +258,9 @@ for x=1:2
     end
     %% extract intensity profile from marker artifact
     radius = 4;
-%     [angle{x}, intensity{x},vector{x}] = ea_diode_intensityprofile(finalartifact{x},...
-%         [(finalCOG_dir{x}(1) ./ ct.voxsize(1))+((size(finalartifact{x},1)+1)./2),(finalCOG_dir{x}(2) ./ ct.voxsize(2)) + ((size(finalartifact{x},2)+1)./2)],...
-%         ct.voxsize,radius);
+    %     [angle{x}, intensity{x},vector{x}] = ea_diode_intensityprofile(finalartifact{x},...
+    %         [(finalCOG_dir{x}(1) ./ ct.voxsize(1))+((size(finalartifact{x},1)+1)./2),(finalCOG_dir{x}(2) ./ ct.voxsize(2)) + ((size(finalartifact{x},2)+1)./2)],...
+    %         ct.voxsize,radius);
     [angle{x}, intensity{x},vector{x}] = ea_diode_intensityprofile(finalartifact{x},...
         [((size(finalartifact{x},1)+1)./2),((size(finalartifact{x},2)+1)./2)],...
         ct.voxsize,radius);
@@ -266,46 +269,71 @@ for x=1:2
     [valleyfft{x},~] = ea_diode_intensitypeaksFFT(-intensity{x},2);
     windowwidth = 20;
     for k = 1:length(valleyfft{x})
-        [~,loctemp] = min(intensity{x}(valleyfft{x}(k)-windowwidth:valleyfft{x}(k)+windowwidth));
+        tmpind = (valleyfft{x}(k)-windowwidth:valleyfft{x}(k)+windowwidth);
+        tmpind(tmpind<1) = tmpind(tmpind<1) +360;
+        tmpind(tmpind>360) = tmpind(tmpind>360) -360;
+        [~,loctemp] = min(intensity{x}(tmpind));
         valleyreal{x}(k) = valleyfft{x}(k)-windowwidth+loctemp;
-        clear loctemp
+        clear loctemp tmpind
     end
-    %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)    
+    valleyreal{x}(valleyreal{x}<1) = valleyreal{x}(valleyreal{x}<1) +360;
+    valleyreal{x}(valleyreal{x}>360) = valleyreal{x}(valleyreal{x}>360) -360;
+
+    %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)
     figure
     plot(rad2deg(angle{x}),intensity{x})
     hold on
-    plot(rad2deg(angle{x}),markerfft{x})    
-    scatter(rad2deg(angle{x}(valleyreal{x})), intensity{x}(valleyreal{x}),'r')
+    plot(rad2deg(angle{x}),markerfft{x})
+    scatter(rad2deg(angle{x}(valleyreal{x}-1)), intensity{x}(valleyreal{x}-1),'r')
     close
-    
-    valleycalc{x} = [round(mean(valleyfft{x}))-90, round(mean(valleyfft{x}))+90];    
+
+    valleycalc{x} = [round(mean(valleyfft{x}))-90, round(mean(valleyfft{x}))+90];
     valley_roll(x) = ea_diode_angle2roll(angle{x}(valleycalc{x}(1)),yaw,pitch);
-    marker_angles{x} = ea_diode_lightmarker(valley_roll(x),pitch,yaw,marker_mm);    
+    marker_angles{x} = ea_diode_lightmarker(valley_roll(x),pitch,yaw,marker_mm);
 end
-%
-% solution.peaks = peak;
-% solution.rolls_rad = [ea_diode_angle2roll(angle(peak(1)),yaw,pitch),ea_diode_angle2roll(angle(peak(2)),yaw,pitch)];
-% solution.rolls_deg = rad2deg(solution.rolls_rad);
-% solution.rolls_streak_deg = rad2deg(marker_angles);
 
-
-
-%%
+%% Angles from COG_dir
 finalangle(1) = rad2deg(atan2(norm(cross(finalCOG_dir{1},yvec_mm)),dot(finalCOG_dir{1},yvec_mm)));
 finalangle(2) = rad2deg(atan2(norm(cross(finalCOG_dir{2},yvec_mm)),dot(finalCOG_dir{2},yvec_mm)));
-diffangle = abs(diff(finalangle));
 
-
-if finalangle(2) <0 || finalangle(2) > 180
+if finalangle(1) <0 || finalangle(1) > 180
     keyboard
 end
-
-if finalCOG_dir{2}(1) > yvec_mm(1)
-    finalangle(2) = -finalangle(2);
-    finalangle(1) = finalangle(2) + diffangle;
+%% Protection against left<->right switches
+if finalCOG_dir{1}(1) > yvec_mm(1) && finalangle(1) > 0
+    finalangle(1) = -finalangle(1)+360;
+end
+if finalCOG_dir{2}(1) > yvec_mm(1) && finalangle(2) > 0
+    finalangle(2) = -finalangle(2)+360;
 end
 
+%% Angles from intensityprofile
+[~,tmpind] = min(abs(rad2deg(marker_angles{1})-finalangle(1)));
+finalintensityangle(1) = rad2deg(marker_angles{1}(tmpind));
+[~,tmpind] = min(abs(rad2deg(marker_angles{2})-finalangle(2)));
+finalintensityangle(2) = rad2deg(marker_angles{2}(tmpind));
+clear tmpind
+
+if finalangle(2) < finalangle(1)
+    finalangle(2) = finalangle(2) + 360;
+end
+if finalintensityangle(2) < finalintensityangle(1)
+    finalintensityangle(2) = finalintensityangle(2) + 360;
+end
+% finalangle(finalangle > 180) = finalangle(finalangle > 180) - 360;
+% finalintensityangle(finalintensityangle > 180) = finalintensityangle(finalintensityangle > 180) - 360;
+
+diffangle = abs(diff(finalangle));
+diffintensityangle = abs(diff(finalintensityangle));
 roll = deg2rad(mean(finalangle) -60);
+rollintensity = deg2rad(mean(finalintensityangle) -60);
+
+if roll > pi
+    roll = roll - 2*pi;
+end
+if rollintensity > pi
+    rollintensity = rollintensity - 2*pi;
+end
 
 %% Slice parralel for visualization
 % a 10mm slice with .1mm resolution is sampled vertically
@@ -323,252 +351,260 @@ Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-e
 Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
 finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
 finalslice = finalslice';
+finalslice = flipdim(finalslice,2);
 
-if rad2deg(roll) < 90 && rad2deg(roll) > -90
-    finalslice = flipdim(finalslice,2);
-end
+% if rad2deg(roll) < 90 && rad2deg(roll) > -90
+%     finalslice = flipdim(finalslice,2);
+% end
 %% darkstar method
-checkslices = [-2:0.5:2]; % check neighboring slices for marker
-
-% solution 1
-count = 1;
-myroll = roll;
-for x = checkslices
-    checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
-    checklocation_vx = round(tmat_vx2mm\checklocation_mm);
-    artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
-    if ct.mat(1,1) < 0
-        artifact_tmp = flip(artifact_tmp,1);
-    end
-    if ct.mat(2,2) < 0
-        artifact_tmp = flip(artifact_tmp,2);
-    end
-    center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
-    radius = 8;
-    
-    [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
-    %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
-    for k = 1:61
-        roll_shift = k-31;
-        rolltemp = myroll + deg2rad(roll_shift);
-        dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
-        [sumintensitynew{1}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
-        %                     rollangles{1}(count,k) = rolltemp;
-        rollangles{1}(count,k) = deg2rad(roll_shift);
-    end
-    count = count +1;
-end
-[~,darkstarangle(1)] = min(min(sumintensitynew{1},[],1));
-[~,darkstarslice(1)] = min(min(sumintensitynew{1},[],2));
-
-clear myroll roll_shift rolltemp dirnew_angles count
-
-% solution 2
-count = 1;
-myroll = roll + pi;
-for x = checkslices
-    checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
-    checklocation_vx = round(tmat_vx2mm\checklocation_mm);
-    artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
-    if ct.mat(1,1) < 0
-        artifact_tmp = flip(artifact_tmp,1);
-    end
-    if ct.mat(2,2) < 0
-        artifact_tmp = flip(artifact_tmp,2);
-    end
-    center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
-    radius = 8;
-    
-    [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
-    %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
-    for k = 1:61
-        roll_shift = k-31;
-        rolltemp = myroll + pi + deg2rad(roll_shift);
-        dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
-        [sumintensitynew{2}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
-        %                     rollangles{2}(count,k) = rolltemp;
-        rollangles{2}(count,k) = deg2rad(roll_shift);
-    end
-    count = count +1;
-end
-[~,darkstarangle(2)] = min(min(sumintensitynew{2},[],1));
-[~,darkstarslice(2)] = min(min(sumintensitynew{2},[],2));
-
-clear myroll roll_shift rolltemp dirnew_angles count
-
-% choose best slices and darkstar solution according to minimum
-% of sum intensity profile
-
-for k = 1:2
-    sumintensitynew{k} = sumintensitynew{k}(darkstarslice(k),:);
-    rollangles{k} = rollangles{k}(darkstarslice(k),:);
-end
-
-if min(sumintensitynew{1}(:)) < min(sumintensitynew{2}(:))
-    disp(['Darkstar decides for peak 1'])
-    solution.Darkstar = 1;
-else
-    disp(['Darkstar decides for peak 2'])
-    solution.Darkstar = 2;
-end
-
-%% Take peak
-peakangle(side) = rad2deg(roll);
-realsolution = 1;
-
-dirlevelnew_mm = dirlevelnew_mm + (unitvector_mm * checkslices(darkstarslice(realsolution)));
-dirlevelnew_vx = round(tmat_vx2mm\dirlevelnew_mm);
-
-artifact_dirnew = ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
-if ct.mat(1,1) < 0
-    artifact_dirnew = flip(artifact_dirnew,1);
-end
-if ct.mat(2,2) < 0
-    artifact_dirnew = flip(artifact_dirnew,2);
-end
-center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
-[anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
-
-rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
-dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
-dirnew_valleys = round(rad2deg(dirnew_angles) +1);
-dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
-
-%             sumintensitynew = sumintensitynew(darkstarslice,:);
-%             rollangles = rollangles(darkstarslice,:);
-
-
-
+% checkslices = [-2:0.5:2]; % check neighboring slices for marker
+% 
+% % solution 1
+% count = 1;
+% myroll = roll;
+% for x = checkslices
+%     checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
+%     checklocation_vx = round(tmat_vx2mm\checklocation_mm);
+%     artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
+%     if ct.mat(1,1) < 0
+%         artifact_tmp = flip(artifact_tmp,1);
+%     end
+%     if ct.mat(2,2) < 0
+%         artifact_tmp = flip(artifact_tmp,2);
+%     end
+%     center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
+%     radius = 8;
+% 
+%     [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
+%     %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
+%     for k = 1:61
+%         roll_shift = k-31;
+%         rolltemp = myroll + deg2rad(roll_shift);
+%         dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
+%         [sumintensitynew{1}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
+%         %                     rollangles{1}(count,k) = rolltemp;
+%         rollangles{1}(count,k) = deg2rad(roll_shift);
+%     end
+%     count = count +1;
+% end
+% [~,darkstarangle(1)] = min(min(sumintensitynew{1},[],1));
+% [~,darkstarslice(1)] = min(min(sumintensitynew{1},[],2));
+% 
+% clear myroll roll_shift rolltemp dirnew_angles count
+% 
+% % solution 2
+% count = 1;
+% myroll = roll + pi;
+% for x = checkslices
+%     checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
+%     checklocation_vx = round(tmat_vx2mm\checklocation_mm);
+%     artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
+%     if ct.mat(1,1) < 0
+%         artifact_tmp = flip(artifact_tmp,1);
+%     end
+%     if ct.mat(2,2) < 0
+%         artifact_tmp = flip(artifact_tmp,2);
+%     end
+%     center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
+%     radius = 8;
+% 
+%     [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
+%     %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
+%     for k = 1:61
+%         roll_shift = k-31;
+%         rolltemp = myroll + pi + deg2rad(roll_shift);
+%         dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
+%         [sumintensitynew{2}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
+%         %                     rollangles{2}(count,k) = rolltemp;
+%         rollangles{2}(count,k) = deg2rad(roll_shift);
+%     end
+%     count = count +1;
+% end
+% [~,darkstarangle(2)] = min(min(sumintensitynew{2},[],1));
+% [~,darkstarslice(2)] = min(min(sumintensitynew{2},[],2));
+% 
+% clear myroll roll_shift rolltemp dirnew_angles count
+% 
+% % choose best slices and darkstar solution according to minimum
+% % of sum intensity profile
+% 
+% for k = 1:2
+%     sumintensitynew{k} = sumintensitynew{k}(darkstarslice(k),:);
+%     rollangles{k} = rollangles{k}(darkstarslice(k),:);
+% end
+% 
+% if min(sumintensitynew{1}(:)) < min(sumintensitynew{2}(:))
+%     disp(['Darkstar decides for peak 1'])
+%     solution.Darkstar = 1;
+% else
+%     disp(['Darkstar decides for peak 2'])
+%     solution.Darkstar = 2;
+% end
+% 
+% %% Take peak
+% peakangle(side) = rad2deg(roll);
+% realsolution = 1;
+% 
+% dirlevelnew_mm = dirlevelnew_mm + (unitvector_mm * checkslices(darkstarslice(realsolution)));
+% dirlevelnew_vx = round(tmat_vx2mm\dirlevelnew_mm);
+% 
+% artifact_dirnew = ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
+% if ct.mat(1,1) < 0
+%     artifact_dirnew = flip(artifact_dirnew,1);
+% end
+% if ct.mat(2,2) < 0
+%     artifact_dirnew = flip(artifact_dirnew,2);
+% end
+% center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
+% [anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
+% 
+% rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
+% dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
+% dirnew_valleys = round(rad2deg(dirnew_angles) +1);
+% dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
 
 %% final figure
 fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w','Toolbar','none');
 
-if peakangle(side) > pi
-    tempangle = peakangle(side) - 2 * pi;
-else
-    tempangle = peakangle(side);
-end
-fig(side).txt1 = uicontrol('style','text','units','normalized','Position',[.8,.8,.3,.1],...
+fig(side).txt1 = uicontrol('style','text','units','normalized','Position',[.675,.75,.3,.15],...
     'Background','w', 'FontSize',12,'HorizontalAlignment','left',...
-    'string',sprintf(['Artifact Angle:\n' num2str(rad2deg(tempangle),'%.1f') ' deg\nMarker Angle:\n' num2str(rad2deg(roll),'%.1f') ' deg']));
+    'string',sprintf(['Upper Marker angle based on...\n...COG:\n' num2str(convertAngle(finalangle(1)),'%.1f') ' deg\n...Intensity Profiles:\n' num2str(convertAngle(finalintensityangle(1)),'%.1f') ' deg']));
 
-fig(side).txt3 = uicontrol('style','text','units','normalized','Position',[.8,.46,.3,.1],...
-    'Background','w','FontSize',12,'HorizontalAlignment','left',...
-    'string',sprintf(['Dir-Level Shift:\n' num2str(rad2deg(rollangles{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))),'%.1f') ' deg\n' 'Corrected Angle:\n' num2str(rad2deg(rollnew),'%.1f') ' deg']));
+fig(side).txt2 = uicontrol('style','text','units','normalized','Position',[.675,.5,.3,.15],...
+    'Background','w', 'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf(['Lower Marker angle based on...\n...COG:\n' num2str(convertAngle(finalangle(2)),'%.1f') ' deg\n...Intensity Profiles:\n' num2str(convertAngle(finalintensityangle(2)),'%.1f') ' deg']));
 
-fig(side).chk1 = uicontrol('style','checkbox','units','normalized','Position',[.8,.41,.3,.05],...
-    'string','Accept','FontSize',12,'Background','w');
-
-% fig(side).txt6 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,250,720,20],'FontSize',12,'HorizontalAlignment','left',...
-%     'string',sprintf([...
-%     'COM-Transversal Solution is: ' num2str(round(solution.rolls_deg(solution.COGtrans),1)) ' deg\n' ...
-%     ]));
-% if solution.COGsag ~= solution.COGtrans
-%     txtcolor = [1 .5 .25];
-% else
-%     txtcolor = 'k';
-% end
-% fig(side).txt7 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,230,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
-%     'string',sprintf([...
-%     'COM-Sagittal Solution is: ' num2str(round(solution.rolls_deg(solution.COGsag),1)) ' deg\n' ...
-%     ]));
-% if solution.Darkstar ~= solution.COGtrans
-%     txtcolor = [1 .5 .25];
-% else
-%     txtcolor = 'k';
-% end
-% fig(side).txt8 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,210,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
-%     'string',sprintf([...
-%     'STARS Solution is: ' num2str(round(solution.rolls_deg(solution.Darkstar),1)) ' deg\n' ...
-%     ]));
-% if solution.ASM ~= solution.COGtrans
-%     txtcolor = [1 .5 .25];
-% else
-%     txtcolor = 'k';
-% end
-% fig(side).txt9 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,190,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
-%     'string',sprintf([...
-%     'ASM Solution is: ' num2str(round(solution.rolls_deg(solution.ASM),1)) ' deg\n' ...
-%     ]));
-
-
-fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w',...
-    'position',[60,60,720,40],'FontSize',12,'HorizontalAlignment','left',...
-    'string',sprintf(['Use the checkboxes if the algorithm accurately detected the artifacts of the directional levels and if you want to use them to correct the marker angle. Then accept, manually refine, or discard the results.']));
-
-if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40
-    fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
-        'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
-        'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
-    % elseif rad2deg(abs(roll)) > 60
-    %     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
-    %         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
-    %         'string',sprintf(['WARNING: The orientation of the lead is far from ' defaultdirection '.\nPlease verify whether the correct marker orientation has been chosen.']));
+if diffangle > 100 && diffangle < 140
+    txtcolor = [34 177 75]./255;
+    fig(side).txt3 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[80,340,700,40],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'Angular difference between Upper and Lower Marker for COG is: ' num2str(diffangle,'%.1f') ' deg\nThis seems plausible!']));
 else
-    fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','k',...
-        'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
-        'string',sprintf(['No warnings: The polar angle and lead orientation are within normal ranges.']));
+    txtcolor = 'r';
+    fig(side).txt3 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[80,340,700,40],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'Angular difference between Upper and Lower Marker for COG is: ' num2str(diffangle,'%.1f') ' deg\nThis seems implausible!']));
 end
 
-SaveButton = uicontrol('Style', 'pushbutton', 'String', 'Accept & Save',...
-    'Position', [150 20 150 25],'FontSize',12,...
+if diffintensityangle > 100 && diffintensityangle < 140
+    txtcolor = [34 177 75]./255;
+    fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[80,300,700,40],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'Angular difference between Upper and Lower Marker for Intensity Profiles is: ' num2str(diffintensityangle,'%.1f') ' deg\nThis seems plausible!']));
+else
+    txtcolor = 'r';
+    fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[80,300,700,40],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'Angular difference between Upper and Lower Marker for Intensity Profiles is: ' num2str(diffintensityangle,'%.1f') ' deg\nThis seems implausible!']));
+end
+
+
+if abs(solution.polar1) <= 40
+    txtcolor = [34 177 75]./255;
+elseif abs(solution.polar1) > 40 && abs(solution.polar1) <= 55
+    txtcolor = [255 128 0]./255;
+elseif abs(solution.polar1) > 55
+    txtcolor = 'r';
+end
+
+fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[80,260,700,20],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'Polar Angle is: ' num2str(round(abs(solution.polar1))) ' deg\n' ...
+    ]));
+
+
+if abs(solution.polar1) > 40
+    fig(side).txt6 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+        'position',[80,220,700,40],'FontSize',12,'HorizontalAlignment','left',...
+        'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
+else
+    fig(side).txt6 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',[34 177 75]./255,...
+        'position',[80,220,700,40],'FontSize',12,'HorizontalAlignment','left',...
+        'string',sprintf(['No warnings: The polar angle is within normal range.']));
+end
+
+if max(ct.voxsize) < 1
+    txtcolor = [34 177 75]./255;
+else
+    txtcolor = 'r';
+end
+fig(side).txt7 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[80,200,700,20],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'CT Resolution is: ' num2str(round(ct.voxsize(1),2)) ' mm; ' num2str(round(ct.voxsize(2),2)) ' mm; ' num2str(round(ct.voxsize(3),2)) ' mm; '  '\n' ...
+    ]));
+
+if max(ct.voxsize) > 1
+    fig(side).txt8 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+        'position',[80,160,700,40],'FontSize',12,'HorizontalAlignment','left',...
+        'string',sprintf(['WARNING: CT resolution is larger than 1 mm and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
+else
+    fig(side).txt8 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',[34 177 75]./255,...
+        'position',[80,160,700,40],'FontSize',12,'HorizontalAlignment','left',...
+        'string',sprintf(['No warnings: CT resolution is within optimal range.']));
+end
+
+fig(side).txt9 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+    'position',[80,80,700,80],'FontSize',14,'HorizontalAlignment','left',...
+    'string',sprintf(['WARNING: DiODe for Medtronic leads was never validated in phantom measurements! Results might be bogus. If you want to help with development contact till.dembek@uk-koeln.de!']));
+
+
+
+COGButton = uicontrol('Style', 'pushbutton', 'String', ['COG solution: ' num2str(round(rad2deg(roll))) ' deg'],...
+    'Position', [80 20 240 25],'FontSize',12,...
     'Callback', @buttonPress);
-ManualButton = uicontrol('Style', 'pushbutton', 'String', 'Manual Refine',...
-    'Position', [325 20 150 25],'FontSize',12,...
+
+IntensityButton = uicontrol('Style', 'pushbutton', 'String', ['Intensity Profile solution: ' num2str(round(rad2deg(rollintensity))) ' deg'],...
+    'Position', [340 20 240 25],'FontSize',12,...
     'Callback', @buttonPress);
+
 DiscardButton = uicontrol('Style', 'pushbutton', 'String', 'Discard',...
-    'Position', [500 20 150 25],'FontSize',12,...
+    'Position', [600 20 140 25],'FontSize',12,...
     'Callback', @buttonPress);
-%% marker
+
+%% upper marker
 ax1 = subplot(3,3,1);
 hold on
-title(ax1,'Lower Marker')
+title(ax1,'Upper Marker')
 imagesc(finalartifact{1}')
+
 view(-180,-90)
 axis equal
 axis off
 colormap(gray)
 caxis manual
 caxis(cscale)
-
+% caxis([-50 600])
 
 centertmp = [(size(finalartifact{1},1)+1)./2, (size(finalartifact{1},2)+1)./2];
-% COGtmp = [(finalCOG_dir{1}(1) ./ ct.voxsize(1))+centertmp(1),(finalCOG_dir{1}(2) ./ ct.voxsize(2)) + centertmp(2)];
 scatter(ax1,centertmp(1),centertmp(2),'g');
-plot(ax1,vector{1}(:,1),vector{2}(:,2),'g','LineStyle',':')
+plot(ax1,vector{1}(:,1),vector{1}(:,2),'g','LineStyle',':')
 scatter(ax1,vector{1}(valleyreal{1},1), vector{1}(valleyreal{1},2),'r');
+tmpind = round(finalintensityangle(1))-1;
+if tmpind < 1
+    tmpind = tmpind +360;
+elseif tmpind > 360
+    tmpind = tmpind -360;
+end
+scatter(ax1,vector{1}(tmpind,1), vector{1}(tmpind,2),'g');
+clear tmpind
 plot(ax1,...
     [vector{1}(valleyreal{1}(1),1),vector{1}(valleyreal{1}(2),1)],...
     [vector{1}(valleyreal{1}(1),2),vector{1}(valleyreal{1}(2),2)],'r','LineStyle','--');
 quiver(centertmp(1),centertmp(2),(6./ct.voxsize(1))*finalCOG_dir{1}(1),(6./ct.voxsize(2))*finalCOG_dir{1}(2),2,'LineWidth',1,'Color','g','MaxHeadSize',2)
 
-% centershift = centertmp - [(size(finalartifact{1},1)+1)./2, (size(finalartifact{1},2)+1)./2];
-% plot(ax1,vector{1}(:,1)+centershift(1),vector{2}(:,2)+centershift(2),'g','LineStyle',':')
-% scatter(ax1,COGtmp(1),COGtmp(2),'r');
-% plot(ax1,...
-%     [(COGtmp(1) + 1.5 * (vector{1}(valleyreal{1}(1),1)-COGtmp(1))),(COGtmp(1) + 1.5 * (vector{1}(valleyreal{1}(2),1)-COGtmp(1)))],...
-%     [(COGtmp(2) + 1.5 * (vector{1}(valleyreal{1}(1),2)-COGtmp(2))),(COGtmp(2) + 1.5 * (vector{1}(valleyreal{1}(2),2)-COGtmp(2)))],'r','LineStyle','--');
-% scatter(ax1,vector{1}(valleyreal{1},1)+centershift(1), vector{1}(valleyreal{1},2)+centershift(2),'g','filled');
-% for k = 1:length(valleycalc{1})    
-%     plot(ax1,[centertmp(1) (centertmp(1) + 1.5 * (vector{1}(valleyreal{1}(k),1)-centertmp(1)))],...
-%         [centertmp(2) (centertmp(2) + 1.5 * (vector{1}(valleyreal{1}(k),2)-centertmp(2)))],'r','LineStyle','--')
-% end
+
 clear centertmp COGtmp COGdirtmp
-
-% xlimit = get(ax1,'Xlim');
-% ylimit = get(ax1,'Ylim');
-% text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-% text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-% text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-% text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-
+zoom(2)
+%% lower marker
 ax2 = subplot(3,3,2);
 hold on
-title(ax2,'Upper Marker')
+title(ax2,'Lower Marker')
 imagesc(finalartifact{2}')
 view(-180,-90)
 axis equal
@@ -576,116 +612,114 @@ axis off
 colormap(gray)
 caxis manual
 caxis(cscale)
+% caxis([-50 600])
+
 
 centertmp = [(size(finalartifact{2},1)+1)./2, (size(finalartifact{2},2)+1)./2];
-% COGtmp = [(finalCOG_dir{2}(1) ./ ct.voxsize(1))+centertmp(1),(finalCOG_dir{2}(2) ./ ct.voxsize(2)) + centertmp(2)];
 scatter(ax2,centertmp(1),centertmp(2),'g');
 plot(ax2,vector{2}(:,1),vector{2}(:,2),'g','LineStyle',':')
 scatter(ax2,vector{2}(valleyreal{2},1), vector{2}(valleyreal{2},2),'r');
+tmpind = round(finalintensityangle(2))-1;
+if tmpind < 1
+    tmpind = tmpind +360;
+elseif tmpind > 360
+    tmpind = tmpind -360;
+end
+scatter(ax2,vector{2}(tmpind,1), vector{2}(tmpind,2),'g');
+clear tmpind
 plot(ax2,...
     [vector{2}(valleyreal{2}(1),1),vector{2}(valleyreal{2}(2),1)],...
     [vector{2}(valleyreal{2}(1),2),vector{2}(valleyreal{2}(2),2)],'r','LineStyle','--');
 quiver(centertmp(1),centertmp(2),(6./ct.voxsize(1))*finalCOG_dir{2}(1),(6./ct.voxsize(2))*finalCOG_dir{2}(2),2,'LineWidth',1,'Color','g','MaxHeadSize',2)
 
-% centershift = centertmp - [(size(finalartifact{2},1)+1)./2, (size(finalartifact{2},2)+1)./2];
-% plot(ax2,vector{2}(:,1)+centershift(1),vector{2}(:,2)+centershift(2),'g','LineStyle',':')
-% scatter(ax2,COGtmp(1),COGtmp(2),'r');
-% plot(ax2,...
-%     [(COGtmp(1) + 1.5 * (vector{2}(valleyreal{2}(1),1)-COGtmp(1))),(COGtmp(1) + 1.5 * (vector{2}(valleyreal{2}(2),1)-COGtmp(1)))],...
-%     [(COGtmp(2) + 1.5 * (vector{2}(valleyreal{2}(1),2)-COGtmp(2))),(COGtmp(2) + 1.5 * (vector{2}(valleyreal{2}(2),2)-COGtmp(2)))],'r','LineStyle','--');
-% scatter(ax2,vector{2}(valleyreal{2},1)+centershift(1), vector{2}(valleyreal{2},2)+centershift(2),'g','filled');
-% for k = 1:length(valleycalc{2})    
-%     plot(ax2,[centertmp(1) (centertmp(1) + 1.5 * (vector{2}(valleyreal{2}(k),1)-centertmp(1)))],...
-%         [centertmp(2) (centertmp(2) + 1.5 * (vector{2}(valleyreal{2}(k),2)-centertmp(2)))],'r','LineStyle','--')
-% end
 clear centertmp COGtmp COGdirtmp
+
+zoom(2)
 %%
 ax3 = subplot(3,3,3);
 hold on
-title(ax3,'Sagittal View','FontWeight','normal')
+title(ax3,'Sagittal View','FontWeight','bold')
 
-imagesc(finalslice)
+imagesc(finalslice(:,round(size(finalslice,2)./4):3*round(size(finalslice,2)./4)+1));
 axis equal
 axis off
 caxis([1500 3000])
-if peakangle(side) < 90 || peakangle(side) > 270
-    quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-elseif peakangle(side) >= 90 && peakangle(side) <=270
-    quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, +round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-end
-scatter(ax3,round(size(finalslice,2)/2),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
-plot([round(size(finalslice,2)/2), round(size(finalslice,2)/2)], [round(size(finalslice,2)/2)-75, round(size(finalslice,2)/2)+100],'LineStyle','--','Color',[0 0.4470 0.7410])
+
+    quiver(round(size(finalslice,2)/4), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/16), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
+
+scatter(ax3,round(size(finalslice,2)/4),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
+plot(ax3,[round(size(finalslice,2)/4), round(size(finalslice,2)/4)], [round(size(finalslice,2)/2)-75, round(size(finalslice,2)/2)+100],'LineStyle','--','Color',[0 0.4470 0.7410])
 xlimit = get(ax3,'Xlim');
 ylimit = get(ax3,'Ylim');
-text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
 %% graphics dir level one
-ax4 = subplot(3,3,4);
-hold on
-title(ax4,'Directional Level')
-imagesc(artifact_dirnew')
-view(-180,-90)
-axis equal
-axis off
-colormap(gray)
-caxis manual
-caxis(cscale)
-plot(ax4,vectornew(:,1),vectornew(:,2),'g','LineStyle',':')
-scatter(ax4,vectornew(dirnew_valleys,1),vectornew(dirnew_valleys,2),'r')
-for k = 1:length(dirnew_valleys)
-    plot(ax4,[center_dirnew(1) (center_dirnew(1) + 1.5 * (vectornew(dirnew_valleys(k),1)-center_dirnew(1)))],...
-        [center_dirnew(2) (center_dirnew(2) + 1.5 * (vectornew(dirnew_valleys(k),2)-center_dirnew(2)))],'r','LineStyle','--')
-end
-scatter(ax4,center_dirnew(1),center_dirnew(2),[],[0 0.4470 0.7410],'filled')
-xlimit = get(ax4,'Xlim');
-ylimit = get(ax4,'Ylim');
-text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% ax4 = subplot(3,3,4);
+% hold on
+% title(ax4,'Directional Level')
+% imagesc(artifact_dirnew')
+% view(-180,-90)
+% axis equal
+% axis off
+% colormap(gray)
+% caxis manual
+% caxis(cscale)
+% plot(ax4,vectornew(:,1),vectornew(:,2),'g','LineStyle',':')
+% scatter(ax4,vectornew(dirnew_valleys,1),vectornew(dirnew_valleys,2),'r')
+% for k = 1:length(dirnew_valleys)
+%     plot(ax4,[center_dirnew(1) (center_dirnew(1) + 1.5 * (vectornew(dirnew_valleys(k),1)-center_dirnew(1)))],...
+%         [center_dirnew(2) (center_dirnew(2) + 1.5 * (vectornew(dirnew_valleys(k),2)-center_dirnew(2)))],'r','LineStyle','--')
+% end
+% scatter(ax4,center_dirnew(1),center_dirnew(2),[],[0 0.4470 0.7410],'filled')
+% xlimit = get(ax4,'Xlim');
+% ylimit = get(ax4,'Ylim');
+% text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+% 
+% ax5 = subplot(3,3,5);
+% hold on
+% title(ax5,'Intensity Profile','FontWeight','normal')
+% plot(ax5,rad2deg(anglenew),intensitynew)
+% scatter(ax5,rad2deg(anglenew(dirnew_valleys)), intensitynew(dirnew_valleys),'r');
+% set(ax5,'yticklabel',{[]})
+% 
+% ax6 = subplot(3,3,6);
+% hold on
+% title(ax6,'Similarity Index','FontWeight','normal')
+% plot(ax6,rad2deg(rollangles{[1 2] == realsolution}),sumintensitynew{[1 2] == realsolution})
+% plot(ax6,rad2deg(rollangles{[1 2] ~= realsolution}),sumintensitynew{[1 2] ~= realsolution},'r')
+% scatter(ax6,...
+%     rad2deg(rollangles{[1 2] == realsolution}(rollangles{[1 2] == realsolution} == 0)),...
+%     sumintensitynew{[1 2] == realsolution}(rollangles{[1 2] == realsolution} == 0),...
+%     'g','filled');
+% scatter(ax6,...
+%     rad2deg(rollangles{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))),...
+%     sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution)),...
+%     'r');
+% text(rad2deg(rollangles{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))),...
+%     sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution)),...
+%     ['\leftarrow HU = ' num2str(round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))))]);
+% set(ax6,'yticklabel',{[]})
 
-ax5 = subplot(3,3,5);
-hold on
-title(ax5,'Intensity Profile','FontWeight','normal')
-plot(ax5,rad2deg(anglenew),intensitynew)
-scatter(ax5,rad2deg(anglenew(dirnew_valleys)), intensitynew(dirnew_valleys),'r');
-set(ax5,'yticklabel',{[]})
-
-ax6 = subplot(3,3,6);
-hold on
-title(ax6,'Similarity Index','FontWeight','normal')
-plot(ax6,rad2deg(rollangles{[1 2] == realsolution}),sumintensitynew{[1 2] == realsolution})
-plot(ax6,rad2deg(rollangles{[1 2] ~= realsolution}),sumintensitynew{[1 2] ~= realsolution},'r')
-scatter(ax6,...
-    rad2deg(rollangles{[1 2] == realsolution}(rollangles{[1 2] == realsolution} == 0)),...
-    sumintensitynew{[1 2] == realsolution}(rollangles{[1 2] == realsolution} == 0),...
-    'g','filled');
-scatter(ax6,...
-    rad2deg(rollangles{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))),...
-    sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution)),...
-    'r');
-text(rad2deg(rollangles{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))),...
-    sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution)),...
-    ['\leftarrow HU = ' num2str(round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))))]);
-set(ax6,'yticklabel',{[]})
-
-%% Positioning of different sublots
+%% Positioning of different subplots
 % linkaxes([ax2 ax5],'xy');
-set(ax5,'Xlim',[0 360]);
-set(ax5,'Ylim',[min([intensitynew])-50 max([intensitynew])+50]);
+% set(ax5,'Xlim',[0 360]);
+% set(ax5,'Ylim',[min([intensitynew])-50 max([intensitynew])+50]);
 
-set(ax6,'Xlim',[rad2deg(rollangles{1}(1)) rad2deg(rollangles{1}(end))]);
-set(ax6,'Ylim',[-1000 1000]);
+% set(ax6,'Xlim',[rad2deg(rollangles{1}(1)) rad2deg(rollangles{1}(end))]);
+% set(ax6,'Ylim',[-1000 1000]);
 
-set(ax1,'Position',[0.13 0.75 0.2 0.2])
-set(ax2,'Position',[0.345 0.75 0.2 0.2])
-set(ax3,'Position',[0.56 0.75 0.2 0.2])
-set(ax4,'Position',[0.13 0.395 0.2 0.2])
-set(ax5,'Position',[0.345 0.395 0.2 0.2])
-set(ax6,'Position',[0.56 0.395 0.2 0.2])
+set(ax1,'Position',[0.45 0.75 0.2 0.2])
+set(ax2,'Position',[0.45 0.50 0.2 0.2])
+set(ax3,'Position',[0.1 0.475 0.445 0.5])
+% set(ax4,'Position',[0.13 0.395 0.2 0.2])
+% set(ax5,'Position',[0.345 0.395 0.2 0.2])
+% set(ax6,'Position',[0.56 0.395 0.2 0.2])
 
 %% graphics lead
-ax_elec = axes('Position',[0 0.3 0.1 0.75]);
+ax_elec = axes('Position',[0 0.2 0.1 0.75]);
 axis vis3d
 hold on
 for k = 1:length(electrode.insulation)
@@ -695,54 +729,56 @@ for k = 1:length(electrode.contacts)
     patch('Faces',electrode.contacts(k).faces,'Vertices',electrode.contacts(k).vertices,'Edgecolor','none','Facecolor',[electrode.contact_color electrode.contact_color electrode.contact_color]);
 end
 
-view(180,0)
+view(-90,0)
 ylim([-1 1])
 xlim([-1 1])
-zlim([0 max(electrode.insulation(end-1).vertices(:,3))])
+zlim([0 max(electrode.insulation(end-1).vertices(:,3))+2])
 axis off
 axis equal
 
-camorbit(-rad2deg(tempangle),0)
-tempvec = [0; 1; 0];
-temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
-tempvec = temp3x3 * tempvec;
-%         text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-%         text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-%         text(tempvec(1),tempvec(2),level2center,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-clear tempangle
+% if peakangle(side) > 180
+%     tempangle = peakangle(side) - 360;
+% else
+%     tempangle = peakangle(side);
+% end
 
-set(ax_elec,'Position',[-0.16 0.38 0.43 0.6])
+% camorbit(-rad2deg(tempangle),0)
+% tempvec = [0; 1; 0];
+% temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
+% tempvec = temp3x3 * tempvec;
+% clear tempangle
+
+set(ax_elec,'Position',[0.05 0.485 0.25 0.5])
 
 %% get results
-if round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))) <= -200
-    checkbox1 = set(fig(side).chk1,'Value',1);
-end
+% if round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))) <= -200
+%     checkbox1 = set(fig(side).chk1,'Value',1);
+% end
 
 uiwait
 
-if SaveButton.UserData == 1
+if COGButton.UserData == 1
     savestate = 1;
+    roll_y = roll;
+elseif IntensityButton.UserData == 1
+    savestate = 1;
+    roll_y = rollintensity;
 elseif DiscardButton.UserData == 1
     savestate = 0;
     retrystate = 0;
-elseif ManualButton.UserData == 1
-    savestate = 0;
-    retrystate = 1;
-    disp(['Retry with manual refinement!'])
-    [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec);
 end
 
 %% saving results
 if savestate == 1
-    clear x y
-    checkbox1 = get(fig(side).chk1,'Value');
-    if ~checkbox1
-        roll_y = roll;
-        disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' deg'])
-    elseif checkbox1
-        roll_y = rollnew;
-        disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(rollnew)) ' deg'])
-    end
+%     clear x y
+%     checkbox1 = get(fig(side).chk1,'Value');
+%     if ~checkbox1
+%         roll_y = roll;
+%         disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' deg'])
+%     elseif checkbox1
+%         roll_y = rollnew;
+%         disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(rollnew)) ' deg'])
+%     end
     %% calculate y
     [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,pitch,yaw);
     y = M * [0;1;0];
@@ -764,4 +800,15 @@ end
 function buttonPress(hObject,eventdata)
 hObject.UserData = 1;
 uiresume
+end
+
+function angleout = convertAngle(anglein)
+    %% converts deg-angles to range from -180 to +180
+    if anglein > 180
+        angleout = anglein - 360;
+    elseif anglein < -180
+        angleout = anglein + 360;
+    else
+        angleout = anglein;
+    end
 end

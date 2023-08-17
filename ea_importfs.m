@@ -3,7 +3,7 @@ function ea_importfs(varargin)
 % patient directory, and converts .pial files to cortex.mat
 %
 % External Dependencies:
-%       mri_convert (Freesurfer)
+%       mri_convert (FreeSurfer)
 %
 % Function:
 % 1) Locate freesurfer directory
@@ -90,13 +90,13 @@ if overwrite
     elseif strcmp(response,'Yes') && options.prefs.d3.fs.dev==1
         load([ptdir,'/ea_ui.mat'],'fsdir');
     else
-        % Choose Freesurfer Directory
-        fsdir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
+        % Choose FreeSurfer Directory
+        fsdir = ea_uigetdir(startdir,['Choose FreeSurfer Folder for ' patientname]);
     end
 end
 
 if ~exist('fsdir','var')
-     fsdir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
+     fsdir = ea_uigetdir(startdir,['Choose FreeSurfer Folder for ' patientname]);
 end
 if iscell(fsdir) && length(fsdir)==1
     fsdir = char(fsdir);
@@ -113,32 +113,32 @@ if ~exist([ptdir,'/cortex'],'dir')
     mkdir([ptdir,'/cortex'])
 end
 
-%% Parse Freesurfer Folder
+%% Parse FreeSurfer Folder
 
 if ~exist([fsdir '/mri/T1.mgz'],'file')
     msg = ['Missing: ' fsdir '/mri/T1.mgz'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose FreeSurfer Folder for ' patientname ' (' msg ')']));
 elseif ~exist([fsdir '/mri/aseg.mgz'],'file')
     msg = ['Missing: ' fsdir '/mri/aseg.mgz'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose FreeSurfer Folder for ' patientname ' (' msg ')']));
 elseif ~exist([fsdir '/surf/lh.pial'],'file')
     msg = ['Missing: ' fsdir '/mri/lh.pial'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose FreeSurfer Folder for ' patientname ' (' msg ')']));
 elseif ~exist([fsdir '/surf/rh.pial'],'file')
     msg = ['Missing: ' fsdir '/mri/rh.pial'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose FreeSurfer Folder for ' patientname ' (' msg ')']));
 elseif ~exist([fsdir '/label/lh.aparc.a2009s.annot'],'file')
     msg = ['Missing: ' fsdir '/mri/lh.aparc.a2009s.annot'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose FreeSurfer Folder for ' patientname ' (' msg ')']));
 elseif ~exist([fsdir '/label/rh.aparc.a2009s.annot'],'file')
     msg = ['Missing: ' fsdir '/mri/lh.aparc.a2009s.annot'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose FreeSurfer Folder for ' patientname ' (' msg ')']));
 end
 
 save([ptdir,filesep,'ea_ui.mat'],'fsdir','-append')
@@ -148,12 +148,12 @@ LhPial   = [fsdir '/surf/lh.pial'];
 RhPial   = [fsdir '/surf/rh.pial'];
 AsegFile = [fsdir '/mri/aseg.mgz'];
 
-% Convert T1.mgz to T1.nii (Freesurfer Dependent)
+% Convert T1.mgz to T1.nii (FreeSurfer Dependent)
 % if ~exist([fsdir '/mri/T1.nii'],'file')
 %     system(['mri_convert -i ' fsdir '/mri/T1.mgz ' -o ' fsdir '/mri/T1.nii -it mgz -ot nii'])
 % end
     % Notes: need to add PC functionality
-    % Notes: need to add ea_libs_helper for Freesurfer compatibility
+    % Notes: need to add ea_libs_helper for FreeSurfer compatibility
 
 lfs = dir([fsdir,filesep,'label']); % label_files
 
@@ -199,12 +199,12 @@ disp('Loading reconstruction...')
 T1nii=MRIread(MriFile);
 
 if isempty(T1nii)
-    ea_error('Error loading MriFile from Freesurfer.')
+    ea_error('Error loading MriFile from FreeSurfer.')
 end
 
 %% Translating into the appropriate space
 % FS to MRI
-CortexHiRes.raw.nativespace = ea_popupquest('In what space was your freesurfer brain reconstructed?',...
+CortexHiRes.raw.nativespace = ea_popupquest('In what space was your FreeSurfer brain reconstructed?',...
     '','Preop','Postop');
 disp(['Translating into native ' CortexHiRes.raw.nativespace ' space...'])
 aff = T1nii.vox2ras/T1nii.tkrvox2ras;
@@ -214,7 +214,7 @@ tform = affine3d(aff); CortexHiRes.raw.tform = tform;
 CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_lh);
 CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
 
-% freesurfer starts at 0 for indexing
+% FreeSurfer starts at 0 for indexing
 CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1;
 CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
 

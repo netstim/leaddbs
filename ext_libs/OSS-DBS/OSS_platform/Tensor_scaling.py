@@ -6,13 +6,10 @@ Created on Fri May 29 12:11:41 2020
 """
 
 import os
-#from nibabel.testing import data_path
 import nibabel as nib
 import matplotlib.pyplot as plt
 
-
-from multiprocessing import Pool #  Process pool
-from multiprocessing import sharedctypes,cpu_count
+from multiprocessing import sharedctypes,cpu_count,Pool
 from functools import partial
 
 import numpy as np
@@ -64,8 +61,8 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,1],data_reshape[i,j,k,3]],   #if tensor is ordered xx,yx,yy,zx,zy,zz (NIFTI standard)
                                             [data_reshape[i,j,k,1],data_reshape[i,j,k,2],data_reshape[i,j,k,4]],
                                             [data_reshape[i,j,k,3],data_reshape[i,j,k,4],data_reshape[i,j,k,5]]])
-            elif tensor_order=="DTI_studio":
-                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,3],data_reshape[i,j,k,4]],   #if tensor is ordered xx,yy,zz,yx,zx,zy (DTI Studio)
+            elif tensor_order=="DSI_studio":
+                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,3],data_reshape[i,j,k,4]],   #if tensor is ordered xx,yy,zz,yx,zx,zy (DSI Studio)
                                              [data_reshape[i,j,k,3],data_reshape[i,j,k,1],data_reshape[i,j,k,5]],
                                              [data_reshape[i,j,k,4],data_reshape[i,j,k,5],data_reshape[i,j,k,2]]])
             elif tensor_order=="FSL":
@@ -97,12 +94,12 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
 #                eigVals_scaled=eigVals/((data_reshape[i,j,k,0]+data_reshape[i,j,k,2]+data_reshape[i,j,k,5])/3)
 #                
 
-            elif scaling_method=='Norm_mapping':
+            elif scaling_method=='NormMapping':
             ##Normalized MAPPING approach as in Güllmar et al./Schmidt el al.
                 eigVals_scaled=eigVals/(eigVals[0]*eigVals[1]*eigVals[2])**(1/3.0)
 
             ##Load preservation method as in Howell, B., McIntyre, C.C., 2016.
-            elif scaling_method=='Load_preservation':
+            elif scaling_method=='LoadPreservation':
                 w12 = eigVals[0]/(eigVals[1]+eps)
                 w13 = eigVals[0]/(eigVals[1]+eps)
                 theta = theta_star(w12, w13)
@@ -140,7 +137,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
             #define a lower boundary for the eigenvalues:
             if np.any(eigVals_tensor*Sigma_iso_low<Sigma_iso_lowerBoundary):
 #                if np.any((eigVals*Sigma_iso_low)<Sigma_iso_lowerBoundary):
-                print("lower boundary detected at Voxel:")
+                print("Error, lower boundary detected at Voxel:")
                 print(i,j,k)
                 raise SystemExit
 
@@ -181,7 +178,7 @@ def main_part(tensor_order,scaling_method):
     normalized_DTI = np.ctypeslib.as_array(shared_array)
 
 
-def scale_tensor_data(tensor_data_name,scaling_method='Norm_mapping',tensor_order='NIFTI'):
+def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order='NIFTI'):
 
     global DTI_data
     #DTI_data=np.zeros((18,21,18,6),float)
@@ -190,6 +187,9 @@ def scale_tensor_data(tensor_data_name,scaling_method='Norm_mapping',tensor_orde
     img = nib.load(filepath)
     # img.shape
     DTI_data = img.get_fdata()
+    if np.any(np.isnan(DTI_data))
+        print("NaN detected in the DTI, please remove them!")
+        raise SystemExit
 
 #    #plot DTI data as test
 #    fig = plt.figure()

@@ -18,5 +18,8 @@ function [elmodel,first_notempty_side]=ea_get_first_notempty_elmodel(reco___prop
         %no model was found
         warning('No electrode model specified.');
         elmodel=[];
+    else
+        % Fix Abbott lead name
+        elmodel = strrep(elmodel, 'St. Jude', 'Abbott');
     end
 end

@@ -1,4 +1,4 @@
-function  ea_imshowpair(Img, options, addstring, callingfunction, helptext)
+function  ea_imshowpair(Img, options, title, callingfunction, helptext)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
 % truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
 %
@@ -15,26 +15,25 @@ end
 switch callingfunction
     case 'coregistration'
         wiresIX=3:5;
-        gridIX=nan;
     case {'normalization dbs', 'normalization connectome'}
         wiresIX=3;
-        gridIX=4;
 end
 
 if nargin == 1
     figtit = '';
 elseif nargin == 2
-    figtit = options.patientname;
+    figtit = options.subj.subjId;
 elseif nargin >= 3
-    figtit = strjoin(cellstr(strvcat({options.patientname, addstring}))', ', ');
+    figtit = strjoin(cellstr(strvcat({options.subj.subjId, title}))', ', ');
 end
 
 isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
 
 % bind drag-drop event
-dndobj = ea_bind_dragndrop(isp, @DropFcn, @DropFcn);
+ea_bind_dragndrop(isp, @DropFcn, @DropFcn);
 
-ea_maximize(isp);
+isp.WindowState = 'maximized';
+
 Img=single(Img);
 sno = size(Img);  % image size
 sno_a = sno(3);  % number of axial slices
@@ -54,68 +53,53 @@ MinV = 0;
 MaxV = ea_nanmax(Img(:));
 LevV = (double( MaxV) + double(MinV)) / 2;
 Win = double(MaxV) - double(MinV);
-WLAdjCoe = (Win + 1)/1024;
-FineTuneC = [1 1/16];    % Regular/Fine-tune mode coefficients
 
 if isa(Img,'uint8')
     MaxV = uint8(Inf);
     MinV = uint8(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'uint16')
     MaxV = uint16(Inf);
     MinV = uint16(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'uint32')
     MaxV = uint32(Inf);
     MinV = uint32(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'uint64')
     MaxV = uint64(Inf);
     MinV = uint64(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'int8')
     MaxV = int8(Inf);
     MinV = int8(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'int16')
     MaxV = int16(Inf);
     MinV = int16(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'int32')
     MaxV = int32(Inf);
     MinV = int32(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'int64')
     MaxV = int64(Inf);
     MinV = int64(-Inf);
     LevV = (double( MaxV) + double(MinV)) / 2;
     Win = double(MaxV) - double(MinV);
-    WLAdjCoe = (Win + 1)/1024;
 elseif isa(Img,'logical')
-    MaxV = 0;
-    MinV = 1;
     LevV =0.5;
     Win = 1;
-    WLAdjCoe = 0.1;
 end
 
 ImgO = Img; % ImgO will never be permuted. ImgCr and ImgSg won't be used anymore but generated on the fly via ImgO.
-%ImgCr = flip(permute(Img, [3 1 2 4]),1);   % Coronal view image
-%ImgSg = flip(permute(Img, [3 2 1 4]),1);   % Sagittal view image
 
 ImgZ=0; % zoomed or unzoomed state
 ImgZax{1}=1:size(ImgO,1); % axial zoomed out boundingboxes
@@ -133,18 +117,11 @@ ImgZsg{4}=round(size(ImgO,2)/4):round((size(ImgO,2)/4)*3); % saggital zoomed bou
 
 View = 'A';
 
-SFntSz = 9;
-LFntSz = 10;
-WFntSz = 10;
-VwFntSz = 10;
-LVFntSz = 9;
-WVFntSz = 9;
 BtnSz = 10;
-ChBxSz = 10;
 
 magnFactor = .1;    % standard magnification value that is used then left mouse button is clicked for the first time
 
-[Rmin Rmax] = WL2R(Win, LevV);
+[Rmin, Rmax] = WL2R(Win, LevV);
 
 hdl_im = axes('position',[0,0,1,1]);
 set(0,'CurrentFigure',isp);
@@ -161,39 +138,17 @@ end
 showhelptext(callingfunction, helptext);
 
 FigPos = get(gcf,'Position');
-S_Pos = [50 20 uint16(FigPos(3)-150)+1 20];
-Stxt_Pos = [50 90 uint16(FigPos(3)-100)+1 15];
-Wtxt_Pos = [20 20 60 20];
-Wval_Pos = [75 20 60 20];
-Ltxt_Pos = [140 20 45 20];
-Lval_Pos = [180 20 60 20];
 BtnStPnt = uint16(FigPos(3)-210)+1;
 if BtnStPnt < 360
     BtnStPnt = 360;
 end
-Btn_Pos = [BtnStPnt 20 80 20];
-ChBx_Pos = [BtnStPnt+90 20 100 20];
-Vwtxt_Pos = [255 20 35 20];
 VAxBtn_Pos = [490 20 15 20];
 VSgBtn_Pos = [510 20 15 20];
 VCrBtn_Pos = [530 20 15 20];
 
-if sno > 1
-%    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
-%    stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-else
-%    stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-end
-%ltxthand = uicontrol('Style', 'text','Position', Ltxt_Pos,'String','Level: ', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', LFntSz);
-%wtxthand = uicontrol('Style', 'text','Position', Wtxt_Pos,'String','Window: ', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', WFntSz);
-%lvalhand = uicontrol('Style', 'edit','Position', Lval_Pos,'String',sprintf('%6.0f',LevV), 'BackgroundColor', [1 1 1], 'FontSize', LVFntSz,'Callback', @WinLevChanged);
-%wvalhand = uicontrol('Style', 'edit','Position', Wval_Pos,'String',sprintf('%6.0f',Win), 'BackgroundColor', [1 1 1], 'FontSize', WVFntSz,'Callback', @WinLevChanged);
-%Btnhand = uicontrol('Style', 'pushbutton','Position', Btn_Pos,'String','Auto W/L', 'FontSize', BtnSz, 'Callback' , @AutoAdjust);
-%ChBxhand = uicontrol('Style', 'checkbox','Position', ChBx_Pos,'String','Fine Tune', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', ChBxSz);
-%Vwtxthand = uicontrol('Style', 'text','Position', Vwtxt_Pos,'String','View: ', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', LFntSz);
-VAxBtnhand = uicontrol('Style', 'pushbutton','Position', VAxBtn_Pos,'String','A', 'FontSize', BtnSz, 'Callback' , @AxialView);
-VSgBtnhand = uicontrol('Style', 'pushbutton','Position', VSgBtn_Pos,'String','S', 'FontSize', BtnSz, 'Callback' , @SagittalView);
-VCrBtnhand = uicontrol('Style', 'pushbutton','Position', VCrBtn_Pos,'String','C', 'FontSize', BtnSz, 'Callback' , @CoronalView);
+uicontrol('Style', 'pushbutton','Position', VAxBtn_Pos,'String','A', 'FontSize', BtnSz, 'Callback' , @AxialView);
+uicontrol('Style', 'pushbutton','Position', VSgBtn_Pos,'String','S', 'FontSize', BtnSz, 'Callback' , @SagittalView);
+uicontrol('Style', 'pushbutton','Position', VCrBtn_Pos,'String','C', 'FontSize', BtnSz, 'Callback' , @CoronalView);
 
 set (gcf, 'WindowScrollWheelFcn', @mouseScroll);
 set (gcf, 'ButtonDownFcn', @mouseClick);
@@ -207,39 +162,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 % -=< Figure resize callback function >=-
     function figureResized(object, eventdata)
         FigPos = get(gcf,'Position');
-        S_Pos = [50 45 uint16(FigPos(3)-100)+1 20];
-        Stxt_Pos = [50 65 uint16(FigPos(3)-100)+1 15];
         BtnStPnt = uint16(FigPos(3)-210)+1;
         if BtnStPnt < 360
             BtnStPnt = 360;
-        end
-        Btn_Pos = [BtnStPnt 20 80 20];
-        ChBx_Pos = [BtnStPnt+90 20 100 20];
-        if sno > 1
-           % set(shand,'Position', S_Pos);
-        end
-        %set(stxthand,'Position', Stxt_Pos);
-        %set(ltxthand,'Position', Ltxt_Pos);
-        %set(wtxthand,'Position', Wtxt_Pos);
-        %set(lvalhand,'Position', Lval_Pos);
-        %set(wvalhand,'Position', Wval_Pos);
-        %set(Btnhand,'Position', Btn_Pos);
-        %set(ChBxhand,'Position', ChBx_Pos);
-        %set(Vwtxthand,'Position', Vwtxt_Pos);
-        %set(VAxBtnhand,'Position', VAxBtn_Pos);
-        %set(VSgBtnhand,'Position', VSgBtn_Pos);
-        %set(VCrBtnhand,'Position', VCrBtn_Pos);
-    end
-
-% -=< Slice slider callback function >=-
-    function SliceSlider (hObj,event, Img)
-        S = round(get(hObj,'Value'));
-        set(ImHndl,'cdata',squeeze(Img(:,:,S,:)))
-        caxis([Rmin Rmax])
-        if sno > 1
-            %set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
-        else
-            %set(stxthand, 'String', '2D image');
         end
     end
 
@@ -251,12 +176,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S = 1;
         elseif (S > sno)
             S = sno;
-        end
-        if sno > 1
-         %   set(shand,'Value',S);
-%            set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
-        else
- %           set(stxthand, 'String', '2D image');
         end
         set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
     end
@@ -274,9 +193,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 'UserData',[], ...
                 'Pointer','arrow', ...
                 'CurrentAxes',a1);
-            if ~strcmp(get(f1,'SelectionType'),'alt'),
+            if ~strcmp(get(f1,'SelectionType'),'alt')
                 delete(a2);
-            end;
+            end
         end
     end
 
@@ -298,7 +217,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             
             i2 = get(a2,'Children');
             try
-            i2=i2(2);
+                i2=i2(2);
             end
 
             set(f1, ...
@@ -331,36 +250,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
             set(a2,'XLim',a1_cp(1)+(1/a2_param(1))*(a2_pos(3)/a1_pos(3))*diff(get(a1,'XLim'))*[-0.5 0.5]);
             set(a2,'YLim',a1_cp(2)+(1/a2_param(1))*(a2_pos(4)/a1_pos(4))*diff(get(a1,'YLim'))*[-0.5 0.5]);
-        end;
-    end
-
-% -=< Window and level mouse adjustment >=-
-    function WinLevAdj(varargin)
-        PosDiff = get(0,'PointerLocation') - InitialCoord;
-
-        Win = Win + PosDiff(1) * WLAdjCoe * FineTuneC(get(ChBxhand,'Value')+1);
-        LevV = LevV - PosDiff(2) * WLAdjCoe * FineTuneC(get(ChBxhand,'Value')+1);
-        if (Win < 1)
-            Win = 1;
         end
-
-        [Rmin, Rmax] = WL2R(Win,LevV);
-        caxis([Rmin, Rmax])
-        set(lvalhand, 'String', sprintf('%6.0f',LevV));
-        set(wvalhand, 'String', sprintf('%6.0f',Win));
-        InitialCoord = get(0,'PointerLocation');
-    end
-
-% -=< Window and level text adjustment >=-
-    function WinLevChanged(varargin)
-        LevV = str2double(get(lvalhand, 'string'));
-        Win = str2double(get(wvalhand, 'string'));
-        if (Win < 1)
-            Win = 1;
-        end
-
-        [Rmin, Rmax] = WL2R(Win,LevV);
-        caxis([Rmin, Rmax])
     end
 
 % -=< Window and level to range conversion >=-
@@ -372,25 +262,14 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
     end
 
-% -=< Window and level auto adjustment callback function >=-
-    function AutoAdjust(object,eventdata)
-        Win = double(max(Img(:))-min(Img(:)));
-        Win (Win < 1) = 1;
-        LevV = double(min(Img(:)) + (Win/2));
-        [Rmin, Rmax] = WL2R(Win,LevV);
-        caxis([Rmin, Rmax])
-        set(lvalhand, 'String', sprintf('%6.0f',LevV));
-        set(wvalhand, 'String', sprintf('%6.0f',Win));
-    end
-
     function KeyPressCallback(object,eventdata)
         H = get(gcf,'UserData');
 
         if ~isempty(H)
             f1 = H(1); a1 = H(2); a2 = H(3);
-            if (strcmp(get(f1,'CurrentCharacter'),'<') | strcmp(get(f1,'CurrentCharacter'),','))
+            if (strcmp(get(f1,'CurrentCharacter'),'<') || strcmp(get(f1,'CurrentCharacter'),','))
                 magnFactor = magnFactor/1.2;
-            elseif (strcmp(get(f1,'CurrentCharacter'),'>') | strcmp(get(f1,'CurrentCharacter'),'.'))
+            elseif (strcmp(get(f1,'CurrentCharacter'),'>') || strcmp(get(f1,'CurrentCharacter'),'.'))
                 magnFactor = magnFactor*1.2;
             end
             set(a2,'UserData',[1, magnFactor]);
@@ -417,22 +296,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 MainImage=wiresIX;
             elseif MainImage(1)==wiresIX(1)
                 MainImage=1;
-            elseif MainImage(1)==gridIX
-                MainImage=wiresIX;
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
-                        
-        elseif (strcmpi(eventdata.Key,'g'))
-            if size(Img,4)==4 && strfind(callingfunction,'normalization') % only do if grid is available.
-                if MainImage(1)==1
-                    MainImage=gridIX;
-                elseif MainImage(1)==gridIX
-                    MainImage=1;
-                elseif MainImage(1)==wiresIX
-                    MainImage=gridIX;
-                end
-                set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
-            end
         elseif (strcmpi(eventdata.Key,'z')) % toggles zoom in/out
             ImgZ=~ImgZ;
             switch View
@@ -443,29 +308,28 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 case 'S'
                     SagittalView([]);
             end
-        end;
+        end
         ButtonMotionCallback(gcf);
     end
 
     function SwitchModality(numkey,Mod)
-        if ~strfind(callingfunction,'normalization') % this on
+        if ~contains(callingfunction,'normalization') % this on
             return
         end
-
         ea_busyaction('on',gcf,'normcheck');
-        PostOpView=0;
-        PostOpLoaded={''};
+        PostOpView = 0;
+        PostOpLoaded = {''};
         if strcmp(Mod,'alt') % load templates
             SwitchTemplateMod(numkey)
         elseif isempty(Mod)
-            anchor=SwitchPatientMod(numkey);
+            anchor = SwitchPatientMod(numkey);
             SwitchTemplateMod(anchor)
         end
         ea_busyaction('off',gcf,'normcheck');
     end
 
     function SwitchPostop(update)
-        if ~strfind(callingfunction,'normalization') % this on
+        if ~contains(callingfunction,'normalization') % this on
             return
         end
 
@@ -477,55 +341,57 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         ea_busyaction('on',gcf,'normcheck');
 
-        switch options.modality
-            case 1 % MR
+        switch options.subj.postopModality
+            case 'MRI'
                 try
                     switch View
                         case 'A'
-                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gtranii]);
+                            pt=ea_load_nii(options.subj.norm.anat.postop.ax_MRI);
                             PostOpLoaded={'A'};
                         case 'C'
-                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gcornii]);
+                            pt=ea_load_nii(options.subj.norm.anat.postop.cor_MRI);
                             PostOpLoaded={'C'};
                         case 'S'
-                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gsagnii]);
+                            pt=ea_load_nii(options.subj.norm.anat.postop.sag_MRI);
                             PostOpLoaded={'S'};
                     end
                 catch % fallback to transversal acquisition
                     try
-                        pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gtranii]);
+                        pt=ea_load_nii(options.subj.norm.anat.postop.ax_MRI);
                         PostOpLoaded={'A','C','S'};
                     catch
-                        ea_error('No normalized postoperative acquisition seems available.');
+                        ea_error('Normalized post-op image seems not available.');
                     end
                 end
-            case 2 % CT
+            case 'CT'
                 try
-                    pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
+                    pt=ea_load_nii(options.subj.norm.anat.postop.tonemapCT);
                     PostOpLoaded={'A','C','S'};
                 catch
-                    ea_tonemapct_file(options,'mni');
+                    ea_tonemapct(options, 'norm');
                     try
-                        pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
+                        pt=ea_load_nii(options.subj.norm.anat.postop.tonemapCT);
                     catch
                         ea_error('No normalized postoperative acquisition seems available.');
                     end
                 end
         end
-        if options.modality==2 % only do windowing for MR
+
+        if strcmp(options.subj.postopModality, 'CT') % only do windowing for CT
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
             pt.img(pt.img>0.5) = 0.5;
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
         end
+
         ImgO(:,:,:,1)=pt.img;
 
-        w=load([ea_space,'wires.mat']);
-        w.wires=single(w.wires);
-        w.wires=w.wires/255;
-        w.wires=w.wires.*0.2;
-        w.wires=w.wires+0.8;
+        load([ea_space,'wires.mat'], 'wires');
+        wires=single(wires);
+        wires=wires/255;
+        wires=wires.*0.2;
+        wires=wires+0.8;
 
-        pt.img=pt.img.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+        pt.img=pt.img.*wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
         ImgO(:,:,:,3)=pt.img;
 
         switch View
@@ -536,7 +402,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 'A'
                 Img = ImgO;
         end
+
         PostOpView=1;
+
         if ~MainImage==wiresIX
             set(1,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         else
@@ -546,14 +414,14 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 keyboard
             end
         end
+
         SwitchTemplateMod('2') % set to T2 if available.
 
-        [~, fname] = ea_niifileparts(pt.fname);
-        switch options.modality
-            case 1
-                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative MRI (',fname,')']));
-            case 2
-                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative (tonemapped) CT (',fname,')']));
+        switch options.subj.postopModality
+            case 'MRI'
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', 'Postoperative MRI'));
+            case 'CT'
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', 'Postoperative (tonemapped) CT'));
         end
 
         ea_busyaction('off',gcf,'normcheck');
@@ -561,28 +429,28 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
     function SwitchTemplateMod(numkey)
         if isempty(numkey)
-            return
+            return;
+        else
+            numkey = str2double(numkey);
         end
 
-        options.sd=load([ea_space,'ea_space_def.mat'],'spacedef');
-        if str2double(numkey)>length(options.sd.spacedef.templates)
+        spacedef = ea_getspacedef;
+        if numkey > length(spacedef.templates)
             ea_busyaction('off',gcf,'normcheck');
             return
-        end
-        if str2double(numkey)==0
-            if options.sd.spacedef.hasfa
-                whichtemplate='fa.nii';
-            else
-                ea_busyaction('off',gcf,'normcheck');
-                return
-            end
+        elseif (numkey==0 || numkey==length(spacedef.templates)) && spacedef.hasfa
+            % When "0" is pressed, choose FA as the backdrop template
+            % Also suppose that FA is the last space template
+            template = 'fa';
         else
-            whichtemplate=options.sd.spacedef.templates{str2double(numkey)};
+            template = spacedef.templates{numkey};
         end
-        tnii=ea_load_nii([ea_space,whichtemplate]);
-        tnii.img(:)=zscore(tnii.img(:));
-        tnii.img=(tnii.img-min(tnii.img(:)))/(max(tnii.img(:))-min(tnii.img(:)));
-        ImgO(:,:,:,2)=tnii.img;
+
+        tnii = ea_load_nii([ea_space, template, '.nii']);
+        tnii.img(:) = zscore(tnii.img(:));
+        tnii.img = (tnii.img-min(tnii.img(:)))/(max(tnii.img(:))-min(tnii.img(:)));
+        ImgO(:,:,:,2) = tnii.img;
+
         switch View
             case 'S'
                 Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
@@ -591,65 +459,69 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 'A'
                 Img = ImgO;
         end
-        [~, fname] = fileparts(whichtemplate);
-        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=MNI )\w+', upper(fname)));
+
+        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=MNI )\w+', upper(template)));
     end
 
-    function anchor=SwitchPatientMod(numkey)
-        anchor=numkey; % just pass on numkey as default.
+    function anchor = SwitchPatientMod(numkey)
+        anchor = numkey; % just pass on numkey as default.
+        numkey = str2double(numkey);
 
         % load wires first
-        w=load([ea_space(options),'wires.mat']);
-        w.wires=single(w.wires);
-        w.wires=w.wires/255;
-        w.wires=w.wires.*0.2;
-        w.wires=w.wires+0.8;
+        load([ea_space,'wires.mat'], 'wires');
+        wires = single(wires);
+        wires = wires/255;
+        wires = wires.*0.2;
+        wires = wires+0.8;
 
-        [options,presentfiles] = ea_assignpretra(options);
-        if str2double(numkey)==1
-            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gprenii]);
-            sd=load([ea_space,'ea_space_def.mat']);
-            [~,anchor]=ismember(options.primarytemplate,sd.spacedef.templates); % in this case, "1" could e.g. be the T2 as well, so pass on the T2 in this case to also load the correct template.
-            anchor=num2str(anchor);
-        elseif str2double(numkey)>length(presentfiles)
+        preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
+
+        if numkey>length(preopCoregImages)
             ea_busyaction('off',gcf,'normcheck');
             anchor = [];
-            return
-        elseif str2double(numkey)==0
+            return;
+        elseif numkey==0
             if exist([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat],'file')
-                pt=ea_load_nii([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat]);
+                pt = ea_load_nii([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat]);
             else
                 ea_busyaction('off',gcf,'normcheck');
                 return
             end
-        elseif ~isnan(str2double(numkey))  % numkey is the index of the image in presentfiles cell
-            directory=[options.root,options.patientname,filesep];
-            toload=[directory,'gl',presentfiles{str2double(numkey)}];
-            if ~exist(toload,'file')
-                from{1}=[directory,presentfiles{str2double(numkey)}];
-                to{1}=toload;
-                ea_apply_normalization_tofile(options,from,to,directory,0);
+        elseif numkey==1
+            pt = ea_load_nii(options.subj.norm.anat.preop.(options.subj.AnchorModality));
+            spacedef = ea_getspacedef;
+            anchor = find(ismember(spacedef.templates, options.primarytemplate), 1);
+            anchor = num2str(anchor);
+        elseif ~isnan(numkey)  % numkey is the index of the preopCoregImages cell
+            normAnchor = options.subj.norm.anat.preop.(options.subj.AnchorModality);
+            modality = ea_getmodality(preopCoregImages{numkey});
+            normImage = strrep(normAnchor, options.subj.AnchorModality, modality);
+            if ~isfile(normImage)
+                ea_apply_normalization_tofile(options, preopCoregImages{numkey}, normImage, 0);
             end
-            pt=ea_load_nii(toload);
-        else    % numkey is actually the full path of the image (used by dragndrop)
-            pt=ea_load_nii(numkey);
-            if any(pt.dim~=size(w.wires))
-                msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'),'Warning','warn');
-                [fpath, fname, fext] = ea_niifileparts(numkey);
-                from{1}=numkey;
-                to{1}=[fileparts(fpath), filesep, 'gl', fname, fext];
-                ea_apply_normalization_tofile(options,from,to,fileparts(fpath),0);
-                pt=ea_load_nii(to{1});
+            pt = ea_load_nii(normImage);
+        else % isnan, numkey is actually the full path of the image (used by dragndrop)
+            imagePath = anchor; % Take the original numkey (char)
+            pt = ea_load_nii(anchor);
+            if any(pt.dim~=size(wires))
+                msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'), 'Warning', 'warn');
+                normAnchor = options.subj.norm.anat.preop.(options.subj.AnchorModality);
+                modality = ea_getmodality(imagePath);
+                normImage = strrep(normAnchor, options.subj.AnchorModality, modality);
+                if ~isfile(normImage)
+                    ea_apply_normalization_tofile(options, imagePath, normImage, 0);
+                end
+                pt = ea_load_nii(normImage);
             end
         end
 
-        pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        pt.img = (pt.img-min(pt.img(:)))/(max(pt.img(:)));
         pt.img(pt.img>0.5) = 0.5;
-        pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
-        ImgO(:,:,:,1)=pt.img;
+        pt.img = (pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        ImgO(:,:,:,1) = pt.img;
 
-        pt.img=pt.img.*w.wires; % shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
-        ImgO(:,:,:,3)=pt.img;
+        pt.img = pt.img .* wires; % shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+        ImgO(:,:,:,3) = pt.img;
 
         switch View
             case 'S'
@@ -660,14 +532,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 Img = ImgO;
         end
 
-        if ~MainImage==wiresIX
-            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
-        else
-            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
-        end
+        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
 
-        [~, fname] = ea_niifileparts(pt.fname);
-        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Preoperative MRI (',fname,')']));
+        modality = ea_getmodality(pt.fname);
+        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Preoperative MRI (',modality,')']));
     end
 
     % DragnDrop callback function
@@ -713,20 +581,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         showhelptext(callingfunction, helptext);
 
-        if sno > 1
-        %    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
-            %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-        else
-            %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-        end
-
         caxis([Rmin Rmax])
-        if sno > 1
-            %set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
-        else
-            %set(stxthand, 'String', '2D image');
-        end
-        if PostOpView && options.modality==1
+        if PostOpView && strcmp(options.subj.postopModality, 'MRI')
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
@@ -764,20 +620,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         showhelptext(callingfunction, helptext);
 
-        if sno > 1
-          %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
-            %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-        else
-            %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-        end
-
         caxis([Rmin Rmax])
-        if sno > 1
-%            set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
-        else
-%            set(stxthand, 'String', '2D image');
-        end
-        if PostOpView && options.modality==1
+
+        if PostOpView && strcmp(options.subj.postopModality, 'MRI')
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
@@ -793,7 +638,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S_s = S;
         end
         View = 'C';
-
 
         if ~ImgZ
             XImage=ImgZcr{1};
@@ -816,16 +660,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         showhelptext(callingfunction, helptext);
 
-        if sno > 1
-          %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
-            %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-        else
-            %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-        end
-
         caxis([Rmin Rmax])
 
-        if PostOpView && options.modality==1
+        if PostOpView && strcmp(options.subj.postopModality, 'MRI')
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
@@ -899,6 +736,6 @@ function [fig_pointer_pos, axes_pointer_val] = pointer2d(fig_hndl,axes_hndl)
     elseif (nargout == 2)
         axes_pointer_line = get(axes_hndl,'CurrentPoint');
         axes_pointer_val = sum(axes_pointer_line)/2;
-    end;
+    end
 end
 % -=< Maysam Shahedi (mshahedi@gmail.com), April 19, 2013>=-

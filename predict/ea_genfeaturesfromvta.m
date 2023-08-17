@@ -18,15 +18,7 @@ else
     allfeatsix=cell2mat(fts.idx');
 end
 
-switch options.prefs.lcm.vatseed
-    case 'binary'
-        efsx='';
-    case 'efield_gauss'
-        efsx='efield_gauss_';
-    case 'efield'
-        efsx='efield_';
-end
-
+vtaType = options.prefs.lcm.vatseed
 
 options.native=0;
 for pt=1:length(uipatdirs)
@@ -37,8 +29,14 @@ for pt=1:length(uipatdirs)
     for side=1:2
         acnt{side}=mean(coords_mm{side}(logical(S.activecontacts{side}),:),1);
     end
-    strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
-    funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
+
+    [~, subPrefix] = fileparts([thispt, '_']);
+    modelLabel = ea_simModel2Label(S.model);
+    fConnName = ea_getConnLabel(options.lcm.func.connectome);
+    dConnName = ea_getConnLabel(options.lcm.struc.connectome);
+    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,[subPrefix, 'sim-', vtaType, '_model-', modelLabel, '_seed-fMRI_conn-', fConnName, '_desc-AvgRFz_funcmap.nii']));
+    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,[subPrefix, 'sim-', vtaType, '_model-', modelLabel, '_seed-dMRI_conn-', dConnName, '_strucmap.nii']));
+
     % assign feature vector X:
     if iscell(allfeatsix)
        for c=1:length(allfeatsix)
@@ -92,10 +90,9 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
 options.normalize.do = 0;
 options.normalize.method = [];
-options.normalize.check = 0;
+options.checkreg = false;
 options.coregmr.method = '';
 options.coregct.do = 0;
 options.coregctcheck = 0;
@@ -107,7 +104,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = 0;
-options.atl.normalize = 0;
 options.atl.can = 1;
 options.atl.pt = 0;
 options.atl.ptnative = 0;
@@ -117,10 +113,10 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 1;
 options.d2.bbsize = 25;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T2';
+options.d2.backdrop = 'MNI152NLin2009bAsym T2 (Fonov 2011)';
 options.d2.write = 0;
 options.d2.atlasopacity = 0.15;
-options.manualheightcorrection = 0;
+options.refinelocalization = 0;
 options.d3.write = 0;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -134,7 +130,7 @@ options.d3.mirrorsides = 0;
 options.d3.autoserver = 0;
 options.d3.expdf = 0;
 options.numcontacts = 4;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.expstatvat.do = 0;
 options.fiberthresh = 10;
 options.writeoutstats = 1;
@@ -212,5 +208,4 @@ options.lcm.struc.do = 1;
 options.lcm.struc.espace = 1;
 options.lcm.func.do = 1;
 options.lcm.cmd = 1;
-
 options.lc = [];

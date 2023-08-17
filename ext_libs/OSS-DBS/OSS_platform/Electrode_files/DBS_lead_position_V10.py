@@ -9,9 +9,8 @@ import os
 
 from Electrode_files.Profile_Process_V6 import words_detect
 
-def create_geometry_script (Phi_vector,Brain_map,electrode_profile,Xt,Yt,Zt,X_2nd,Y_2nd,Z_2nd,OZ_angle,Xt2,Yt2,Zt2,OX_angle2,OY_angle2,OZ_angle2,encap_thickness,ROI_radial,Xm,Ym,Zm,Vertice_enable,Lead2nd_Enable,stretch=1.0):
+def create_geometry_script (d,Brain_map,electrode_profile,Impl_coords,Second_point_coords,ROI_radial,shift_to_PO,Vertice_enable):
 
-   #electrode_position=electrode_profile
    electrode_profile=electrode_profile
    # check parameters inputs
    name_idx=len(electrode_profile)
@@ -28,30 +27,23 @@ def create_geometry_script (Phi_vector,Brain_map,electrode_profile,Xt,Yt,Zt,X_2n
                if (var_list[0]):
                    line_replace =True; #replace the code
                    f2.write("##### VARIABLE LIST #####\n"
-                       +'Lead2nd_Enable = {}\n'.format(Lead2nd_Enable)
-                       +'Xm = {}\n'.format(Xm)
-                       +'Ym = {}\n'.format(Ym)
-                       +'Zm = {}\n'.format(Zm)
-                       +'Xt = {}\n'.format(Xt)
-                       +'Yt = {}\n'.format(Yt)
-                       +'Zt = {}\n'.format(Zt)
-                       +'X_2nd = {}\n'.format(X_2nd)
-                       +'Y_2nd = {}\n'.format(Y_2nd)
-                       +'Z_2nd = {}\n'.format(Z_2nd)
-                       +'OZ_angle = {}\n'.format(OZ_angle)
-                       +'encap_thickness = {}\n'.format(encap_thickness)
+                       +'Lead2nd_Enable = False\n'
+                       +'Xm = {}\n'.format(shift_to_PO[0])
+                       +'Ym = {}\n'.format(shift_to_PO[1])
+                       +'Zm = {}\n'.format(shift_to_PO[2])
+                       +'Xt = {}\n'.format(Impl_coords[0])
+                       +'Yt = {}\n'.format(Impl_coords[1])
+                       +'Zt = {}\n'.format(Impl_coords[2])
+                       +'X_2nd = {}\n'.format(Second_point_coords[0])
+                       +'Y_2nd = {}\n'.format(Second_point_coords[1])
+                       +'Z_2nd = {}\n'.format(Second_point_coords[2])
+                       +'OZ_angle = {}\n'.format(d["Rotation_Z"])
+                       +'encap_thickness = {}\n'.format(d["encap_thickness"])
                        +'ROI_radial = {}\n'.format(ROI_radial)
                        +'Vertice_enable = {}\n'.format(Vertice_enable)
                        +"Brain_map = '{}'\n".format(Brain_map)
-		       +"Phi_vector = {}\n".format(Phi_vector)
-		       +"stretch = {}\n".format(stretch)
-                       +'if(Lead2nd_Enable):\n'
-                       +'   Xt2 = {}\n'.format(Xt2)
-                       +'   Yt2 = {}\n'.format(Yt2)
-                       +'   Zt2 = {}\n'.format(Zt2)
-                       +'   OX_angle2 = {}\n'.format(OX_angle2)
-                       +'   OY_angle2 = {}\n'.format(OY_angle2)
-                       +'   OZ_angle2 = {}\n'.format(OZ_angle2)
+		       +"Phi_vector = {}\n".format(d["Pulse_amp"])
+		       +"stretch = {}\n".format(d["stretch"])
                          );
 
                if(line_replace == False): f2.write(line);

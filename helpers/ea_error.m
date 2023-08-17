@@ -1,31 +1,36 @@
-function ea_error(msg, title, backtrace, showdlg)
-% The general error message function.
-% 
-% set backtrace to 'dbstack' if needed.
-% __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
-% Andreas Horn
+function ea_error(msg, options)
+% Wrapper function for error which can also show errordlg and support
+% simplied stack information.
 
-if ~exist('title', 'var') || isempty(title)
-    title = 'Error';
+arguments
+    msg {mustBeTextScalar}
+    options.title {mustBeTextScalar} = 'Error'
+    options.showdlg {mustBeNumericOrLogical} = true
+    options.simpleStack {mustBeNumericOrLogical} = false
 end
 
-if ~exist('showdlg', 'var')
-    showdlg = 1;
+msg = sprintf(msg);
+
+if options.showdlg
+    errordlg(msg, options.title);
 end
 
-if showdlg
-    errordlg(msg, title);
-end
+% Construct errorStruct
+fprintf('\n');
+errorStruct.message = msg;
+errorStruct.identifier = '';
+errorStruct.stack = dbstack('-completenames');
 
-if ~exist('backtrace', 'var') % simple mode
-    error(msg);
-else % suppress complete backtrace, only keep the first one
-    fprintf('\n');
-    errstruct.message = msg;
-    errstruct.identifier = '';
-    errstruct.stack.file = backtrace(1).file;
-    errstruct.stack.name = backtrace(1).name;
-    errstruct.stack.line = backtrace(1).line;
-    error(errstruct);
+if length(errorStruct.stack) > 1 % Call from other function
+    % Override the first stack (which is ea_error itself)
+    errorStruct.stack(1) = errorStruct.stack(2);
+    
+    % Only keep the top stacks if simpleStack is set to true
+    if options.simpleStack
+        errorStruct.stack = errorStruct.stack(1:2);
+    end
+
+    error(errorStruct);
+else % Call directly
+    ea_cprintf('CmdWinErrors', '%s\n\n', msg);
 end

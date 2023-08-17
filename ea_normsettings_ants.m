@@ -99,7 +99,6 @@ if ix % if has prior selection
 end
 
 set(handles.includefa,'Value',prefs.machine.normsettings.ants_usefa);
-set(handles.reinforcetargets,'Value',prefs.machine.normsettings.ants_reinforcetargets);
 
 if ischar(prefs.machine.normsettings.ants_numcores)
     set(handles.restrcores,'Value',1);
@@ -110,7 +109,6 @@ else
 end
 
 set(handles.scrf,'Value',prefs.machine.normsettings.ants_scrf);
-set(handles.stagesep,'Value',prefs.machine.normsettings.ants_stagesep);
 
 set(handles.skullstripped,'Value',prefs.machine.normsettings.ants_skullstripped);
 
@@ -168,7 +166,6 @@ normsettings=prefs.machine.normsettings;
 normsettings.ants_preset=getappdata(handles.pcpopup,'funcell');
 normsettings.ants_preset=normsettings.ants_preset{get(handles.pcpopup,'Value')};
 normsettings.ants_scrf=get(handles.scrf,'Value');
-normsettings.ants_stagesep=get(handles.stagesep,'Value');
 
 normsettings.ants_metric=get(handles.metric,'String');
 normsettings.ants_metric=normsettings.ants_metric{get(handles.metric,'Value')};
@@ -179,8 +176,6 @@ normsettings.ants_strategy=normsettings.ants_strategy{get(handles.strategy,'Valu
 normsettings.ants_usefa=get(handles.includefa,'Value');
 
 normsettings.ants_skullstripped=get(handles.skullstripped,'Value');
-
-normsettings.ants_reinforcetargets=get(handles.reinforcetargets,'Value');
 
 normsettings.ants_usepreexisting=get(handles.usepreexisting,'Value');
 
@@ -203,7 +198,6 @@ function scrf_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of scrf
-set(handles.reinforcetargets,'enable',ea_bool2onoff(get(hObject,'Value')));
 
 % --- Executes on selection change in metric.
 function metric_Callback(hObject, eventdata, handles)
@@ -287,16 +281,6 @@ else
     set(handles.numcores,'enable','off');
 end
 
-
-% --- Executes on button press in stagesep.
-function stagesep_Callback(hObject, eventdata, handles)
-% hObject    handle to stagesep (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of stagesep
-
-
 % --- Executes on button press in includefa.
 function includefa_Callback(hObject, eventdata, handles)
 % hObject    handle to includefa (see GCBO)
@@ -313,16 +297,6 @@ function skullstripped_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of skullstripped
-
-
-% --- Executes on button press in reinforcetargets.
-function reinforcetargets_Callback(hObject, eventdata, handles)
-% hObject    handle to reinforcetargets (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of reinforcetargets
-
 
 % --- Executes on selection change in usepreexisting.
 function usepreexisting_Callback(hObject, eventdata, handles)

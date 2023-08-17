@@ -1,17 +1,16 @@
 if ismac
-    compflags = '';
-%     compflags = ' CXXFLAGS=''$CXXFLAGS -Wno-deprecated-register''';
+   compflags = '';
 elseif isunix
-    compflags = ' COMPFLAGS=''$COMPFLAGS -static-libstdc++''';
+   compflags = 'COMPFLAGS=''$COMPFLAGS -static-libstdc++''';
 elseif ispc
-    compflags = ' COMPFLAGS="$COMPFLAGS /MT"';
+   compflags = 'COMPFLAGS="$COMPFLAGS /MT"';
 end
 
-eval(['mex' compflags, ' AccumulateBilin.cpp']);
-eval(['mex' compflags, ' AccumulateBilinWeighted.cpp']);
-eval(['mex' compflags, ' anisoDiffusion.cpp']);
-eval(['mex' compflags, ' anisoDiffusionHomogenous.cpp']);
-eval(['mex' compflags, ' BuildFibres.cpp']);
-eval(['mex' compflags, ' CreateConnectivityMatrixROI.cpp']);
-eval(['mex' compflags, ' pcRJMCMC.cpp']);
-eval(['mex' compflags, ' reparametrize_arclen.cpp']);
+mex(compflags, 'AccumulateBilin.cpp');
+mex(compflags, 'AccumulateBilinWeighted.cpp');
+mex(compflags, 'anisoDiffusion.cpp');
+mex(compflags, 'anisoDiffusionHomogenous.cpp');
+mex('-compatibleArrayDims', compflags, 'BuildFibres.cpp');
+mex('-compatibleArrayDims', compflags, 'CreateConnectivityMatrixROI.cpp');
+mex('-compatibleArrayDims', compflags, 'pcRJMCMC.cpp');
+mex('-compatibleArrayDims', compflags, 'reparametrize_arclen.cpp');

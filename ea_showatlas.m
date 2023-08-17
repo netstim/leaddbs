@@ -34,13 +34,13 @@ for nativemni=nm % switch between native and mni space atlases.
             atlasFolder = ea_space(options,'atlases');
             mifix='';
         case 2 % native
-            atlasFolder = [options.root,options.patientname,filesep,'atlases',filesep];
+            atlasFolder = [options.root,options.patientname, filesep, 'atlases', filesep];
             mifix='';
     end
 
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
-    ht=getappdata(resultfig,'atlht');
+    ht=getappdata(resultfig,'addht');
 
     if ~exist([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'file')
         atlases = ea_genatlastable([],atlasFolder,options,mifix,resultfig);
@@ -57,8 +57,17 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
+        if isfield(options, 'subj')
+            statsFile = options.subj.stats;
+            statsBackupFile = strrep(options.subj.stats, 'stats.mat', 'stats_backup.mat');
+        else % Visualization button clicked in Lead Group
+            groupAnalysisFile = ea_getGroupAnalysisFile([options.root, options.patientname]);
+            statsFile = strrep(groupAnalysisFile, '.mat', '_desc-stats.mat');
+            statsBackupFile = strrep(groupAnalysisFile, '.mat', '_desc-stats_backup.mat');
+        end
+
         try
-            load([options.root,options.patientname,filesep,'ea_stats']);
+            load(statsFile, 'ea_stats');
             prioratlasnames=ea_stats.atlases.names;
         end
     end
@@ -178,8 +187,11 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
-                
-                while 1
+                if ~any(atlases.roi{atlas,side}.nii.img(:)) % empty nucleus
+                    continue
+                end
+                clear centroid
+                for iter=1:200
                     try
                         centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
                         break
@@ -187,6 +199,7 @@ for nativemni=nm % switch between native and mni space atlases.
                         atlases.roi{atlas,side}.threshold=atlases.roi{atlas,side}.threshold./2;
                     end
                 end
+            
                 set(0,'CurrentFigure',resultfig);
 
                 atlases.roi{atlas,side}.Visible='on';
@@ -266,6 +279,34 @@ for nativemni=nm % switch between native and mni space atlases.
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                     drawnow
                 end
+            elseif strcmp(atlases.pixdim{atlas,side}, 'surface')
+                
+                [~, surfTag] = fileparts(atlases.names{atlas});
+                surfTag=ea_stripext(surfTag);
+                visible='on';
+                if isfield(atlases,'presets')
+                    if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
+                        visible='off';
+                    end
+                end
+                atlassurfs{atlascnt,1}=patch('vertices',atlases.fv{atlas,side}.vertices,'faces',atlases.fv{atlas,side}.faces,...
+                    'FaceVertexCData',atlases.fv{atlas,side}.facevertexcdata,'FaceColor','interp','EdgeColor','none',...
+                    'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
+
+                colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlases.heatcolormap(end,:)),...
+                    'TooltipString',[surfTag,'_',sidestr{side}],...
+                    'ClickedCallback',{@atlasvisible,resultfig,atlascnt},...
+                    'State',visible);
+
+                % set Tags
+                try
+                    set(colorbuttons(atlascnt),'Tag', [surfTag,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'Tag',[surfTag,'_',sidestr{side}]);
+                catch
+                    keyboard
+                end
+                
+                atlascnt=atlascnt+1;
             elseif strcmp(atlases.pixdim{atlas,side}, 'fibers')
                 fv=atlases.fv{atlas,side};
 
@@ -441,7 +482,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     drawnow
                 end
             elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
-                tractPath = [ea_space([],'atlases'),options.atlasset,filesep,getsidec(side,sidestr)];
+                tractPath = [atlasFolder,options.atlasset,filesep,getsidec(side,sidestr)];
                 tractName = ea_stripext(atlases.names{atlas});
 
                 disctract = load([tractPath, filesep, atlases.names{atlas}]);
@@ -511,7 +552,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
 
                     % Plot fibers
-                    h = streamtube(fibcell{fibside},0.2);
+                    h = streamtube(fibcell{fibside}, options.prefs.d3.fiberwidth);
 
                     for fib=1:length(h)
                         if vals{fibside}(fib)>0
@@ -607,7 +648,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
         setappdata(resultfig,'atlassurfs',atlassurfs);
         setappdata(resultfig,'colorbuttons',colorbuttons);
-        setappdata(resultfig,'atlht',ht);
+        setappdata(resultfig,'addht',ht);
         setappdata(resultfig,'labelbutton',labelbutton);
         setappdata(resultfig,'atlaslabels',atlaslabels);
     end
@@ -631,19 +672,15 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
-        if exist('prioratlasnames','var')
-            if ~isequal(ea_stats.atlases.names,prioratlasnames)
-                warning('off', 'backtrace');
-                warning('%s: other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.', options.patientname);
-                warning('on', 'backtrace');
-                ds=load([options.root,options.patientname,filesep,'ea_stats']);
-                save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
-                save(fullfile([options.root,options.patientname],'ea_stats_backup'),'-struct','ds','-v7.3');
-            else
-                save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
-            end
+        if exist('prioratlasnames','var') && ~isequal(ea_stats.atlases.names, prioratlasnames)
+            warning('off', 'backtrace');
+            warning('%s: other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.', options.patientname);
+            warning('on', 'backtrace');
+            ds = load(statsFile, 'ea_stats');
+            save(statsFile, 'ea_stats', '-v7.3');
+            save(statsBackupFile, '-struct', 'ds', '-v7.3');
         else
-            save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
+            save(statsFile,'ea_stats','-v7.3');
         end
     end
 end
@@ -706,11 +743,10 @@ labelInd = arrayfun(@(x) isa(x, 'matlab.graphics.primitive.Text'), obj);
 if isempty(hobj)
     arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
 else
-    toggleTag = arrayfun(@(t) t.Tag, hobj.Parent.Children(1:end-3), 'Uni', 0);
-    toggleState = arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3), 'Uni', 0);
+    toggleState = flip(arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3)));
 
     if strcmp(onoff, 'on')
-        arrayfun(@(label) set(label,'Visible',toggleState{strcmp(label.Tag, toggleTag)}), obj(labelInd));
+        arrayfun(@(label, state) set(label,'Visible',state), obj(labelInd), toggleState);
     else
         arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
     end
@@ -736,6 +772,9 @@ switch type
         sides=1; % midline
         sidestr={'midline'};
     case 6 % probabilistic
+        sides=1:2;
+        sidestr={'right','left'};
+    case 10 % surface
         sides=1:2;
         sidestr={'right','left'};
 end

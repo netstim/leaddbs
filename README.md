@@ -17,11 +17,15 @@ LEAD-DBS is a MATLAB toolbox facilitating the:
 
 #### Prerequisites
 
-- Recommended RAM size: 16GB or more
-- MATLAB version: R2017b (MATLAB 9.3) or later
-- MATLAB Image Processing Toolbox
-- MATLAB Signal Processing Toolbox
-- SPM12
+- Recommended RAM size: 32GB or more
+- MATLAB version: R2021a or later
+- The following MATLAB toolboxes
+  - MATLAB Image Processing Toolbox
+  - MATLAB Signal Processing Toolbox
+  - MATLAB Statistics and Machine Learning Toolbox
+  - MATLAB Curve Fitting Toolbox (optional)
+  - MATLAB Parallel Computing Toolbox (optional)
+- The [SPM12](https://www.fil.ion.ucl.ac.uk/spm/software/download/) toolbox
 
 #### Normal installation
 
@@ -31,6 +35,7 @@ Lead-DBS can be downloaded from our website (www.lead-dbs.org) in fully function
 
 Alternatively, especially in case you wish to modify and contribute to Lead-DBS, you can
 
+- Make sure to meet the prerequisites
 - Clone the Lead-DBS repository from [github](https://github.com/netstim/leaddbs.git).
 - Download the necessary [data](http://www.lead-dbs.org/release/download.php?id=data_pcloud) and unzip it into the cloned git repository.
 

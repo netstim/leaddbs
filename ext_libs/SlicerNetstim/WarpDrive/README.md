@@ -1,30 +1,41 @@
-# WarpDrive
+# WarpDrive UI overview
 
-This module takes a deformation field as an input and outputs an other deformation field which includes the user's manual modifications.
+Here we provide a general overview of the WarpDrive user interface and the tools functionality. WarpDrive is built as a module is [3D Slicer (Slicer)](https://www.slicer.org/), and we therefore recommend a certain familiarity with the Slicer application, which can be gained with its [documentation](https://slicer.readthedocs.io/en/latest/). WarpDrive can also be run from [Lead-DBS](https://www.lead-dbs.org/), which hides some of the Slicer UI that is not specific for WarpDrive, facilitating navigation in the application.
 
-## Limitations
+![](Screenshots/WD_aux_1_edit.png?raw=true)
 
-- This module is under development and some usability improvements are being worked on (see [here](https://github.com/netstim/SlicerNetstim/issues/3)).
-- The input node selector only accepts Grid Transform nodes or Volume Nodes. [Grid Transforms are legacy](https://discourse.slicer.org/t/converttogridtransform-returns-vtkmrmltransformnode-instead-of-vtkmrmlgridtransformnode/18467) and used unfrequently throughout Slicer. SlicerANTs module uses it so works well (but only available in preview release). This behavior will change in future updates.
-- When drawing using slicer preview release the preview line is not shown. This is because changes on Slicer codebase. Will need to update to match this usage.
-- Use Axial, Sagital, Coronal views to manipulate (don't reformat with volume spacing - still work needed here).
-- Has been used mostly with normalizations to MNI space. Other grid orientation might run into issues (also work needed here).
+## I / O panel
+This panel is used to set up the inputs and outputs for WarpDrive. When launched from Lead-DBS, this panel is automatically populated and hidden to the user, enabling the user to start the refinements.
+-	Input: this selector sets the warpfield that will be used for refinements. In Slicer, this transform is being applied to the subject image. It is also possible to set an image as an input and transform it directly.
+-	Source and target fiducials: the nodes selected here will be populated by the fiducials set during the refinements.
+-	Output displacement field: this selector sets the output transform that will be generated.
 
-## Tutorial
+## Output
 
-1. Load the MRHead from sample data and a [MNI T1 image](http://www.bic.mni.mcgill.ca/~vfonov/icbm/2009/mni_icbm152_nlin_sym_09c_nifti.zip)
-1. Use a registration module (BRAINS, Elastix, ANTs) to normalize the MRHead to T1 space. Be sure to output a grid transform. Without hardening the transform, transform the MRHead with the result from normalization. (Preferably use ANTs that directly outputs grid transform node. If not might need to be converted.)
-1. Switch to the WarpDrive module and set the output transform as the input node and create a new grid transform for the output.
-1. Tools: there are a set of tools to input user modifications. In the end, these all will be creating a set of source and target fiducials that will appear under the corrections tab of the Data Control. It is useful to set the MRHead as foreground and MNI T1 as background images. Also useful to load model atlases (see the import atlas module).
-    * Smudge: click and drag the image to displace it and match the template image.
-    * Draw: first draw the source line. Then depending on the mode of operation this will match a model or the next line drawn. To change between the modes of operation long click the tool.
-    * Point to Point: place single source and target fiducials.
-1. If you have auto update on, then you will already be seeing the modifications done. Fiducials are used as an input to plastimatch software to compute the new deformation field. In the output tab some settings to plastimatch can be set.
+This panel sets parameters used to compute the output displacement field.
+-	Spacing: the grid spacing of the output transform. If the same as input checkbox is checked, the same spacing as the input transform/image is set.
+-	Stiffness: this is a regularization parameter used for the computation of the output transform. Higher values apply higher regularization.
 
-### Notes
+## Tools
 
-- Every time the warp is calculated all source and target fiducials are used to compute it.
-- The output can then be hardened in the transforms module to obtain one grid transformation from source to target.
+This is the main section of the module, where the user can select tools used to refine the input warpfield. The following figure illustrates the steps for the point to point tool, the following text describes the tools more in detail.
 
+![](Screenshots/WD_aux_1_p2steps.png?raw=true)
 
-![](../Documentation/DrawTool.png)
+-	Point to point: after selecting the point to point tool (1), the user places first source point (2) and then the target point (3) to which it corresponds. To compute new transform the user should click on calculate. If the Auto update checkbox is checked, then the output will be calculated after every correction made.
+-	Draw: Drawing works in a similar way, where the user first draws source points which will be matched to the closest structures outlines. These structures outlines can come from atlases, or any model node. It is also possible to manually draw the target drawing by clicking and pressing the Draw button and selecting the respective mode. Drawings become a set of points sampled across the drawing for them to be fed into the output computation algorithm.
+-	Smudge: Smudging works by click-and-dragging the image. This computes a temporary transform that follows the cursor movements. Source points are sampled along the trajectory where the mouse moved and target points are obtained by transforming the source points with the temporary transform. They are then used to compute the output transform.
+-	Radius: The radius specifies the spread that the correction will have.
+
+## Corrections  
+
+In the corrections panel appear all the corrections that are being made by using the tools.
+
+![](Screenshots/WD_aux_3.png?raw=true)
+
+It is possible to delete, rename, change radius, and include/exclude corrections from the computation of the output. The Undo button will delete the last correction and the Source and Target visibility options will change the visibility of source and target points. When selecting a correction with the preview selected correction checkbox checked, the slices will be moved to the respective slice and an arrow will preview the correction.
+Finally, it is also possible to add fix points. These points indicate points that shouldn’t move in the new output transform.
+
+## Atlases
+
+The atlases tab is for Lead-DBS users to load atlas structures of interest included in Lead-DBS into WarpDrive.

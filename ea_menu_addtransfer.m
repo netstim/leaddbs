@@ -1,7 +1,7 @@
-function ea_menu_addtransfer(handles,callingfunction,prefs)
+function ea_menu_addtransfer(handles,prefs)
 
 [leadsuiteapps,leadsuiteids,accs]=ea_getsuiteapps(prefs);
-[~,todel]=ismember(callingfunction,leadsuiteids);
+[~,todel]=ismember(handles.callingfunction,leadsuiteids);
 leadsuiteids(todel)=[];
 leadsuiteapps(todel)=[];
 accs(todel)=[];

@@ -8,9 +8,9 @@ dest = varargin{3};
 transform = varargin{4};
 
 % Apply warp field or affine transform
-if strcmp(varargin{5}, 'l')
+if strcmp(varargin{5}, 'linear')
     type = ' -xfm';
-elseif strcmp(varargin{5}, 'n')
+elseif strcmp(varargin{5}, 'nonlinear')
     type = ' -inv -warp'; % inverse warp field supplied
 end
 
@@ -28,11 +28,8 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.exe']);
-else
-    IMG2IMGCOORD = [basedir, 'img2imgcoord.', computer('arch')];
-end
+IMG2IMGCOORD = ea_getExec([basedir, 'img2imgcoord'], escapePath = 1);
+
 
 cmd = [IMG2IMGCOORD, ...
        ' -src ' ea_path_helper(src), ...
@@ -67,11 +64,7 @@ end
 cmd = [cmd, ' ', ea_path_helper(incoords)];
 
 setenv('FSLOUTPUTTYPE', 'NIFTI');
-if ~ispc
-    [status, cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [status, cmdout] = system(cmd);
-end
+[status, cmdout] = ea_runcmd(cmd);
 
 if status == 0
     outcoords = cell2mat(textscan(cmdout, '%f %f %f', 'HeaderLines', 1));

@@ -41,11 +41,8 @@ dimension = num2str(dimension);
 spacing = sprintf('% f', spacing);
 
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
-if ispc
-    ResampleImageBySpacing = ea_path_helper([basedir, 'ResampleImageBySpacing.exe']);
-else
-    ResampleImageBySpacing = [basedir, 'ResampleImageBySpacing.', computer('arch')];
-end
+ResampleImageBySpacing = ea_getExec([basedir, 'ResampleImageBySpacing'], escapePath = 1);
+
 
 cmd = [ResampleImageBySpacing,' ',dimension, ...
                               ' ',ea_path_helper(inputimage), ...
@@ -55,13 +52,9 @@ cmd = [ResampleImageBySpacing,' ',dimension, ...
                               ' ',addvox, ...
                               ' ',nninterp];
 
-ea_libs_helper;
-
 fprintf('\nResampling image spacing to [%s]: %s\n\n', spacing, inputimage);
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
-fprintf('\n');
 
+ea_libs_helper;
+ea_runcmd(cmd);
+
+fprintf('\n');

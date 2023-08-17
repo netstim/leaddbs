@@ -62,12 +62,14 @@ guidata(hObject, handles);
 % uiwait(handles.ea_spec2dwrite);
 
 % add backdrops
+
 try
     options = varargin{1};
 catch
     options.prefs = ea_prefs('');
 end
-backdrops=ea_assignbackdrop('list',options);
+
+backdrops = ea_assignbackdrop('list',options);
 
 set(handles.tdbackdrop,'String',backdrops);
 if get(handles.tdbackdrop,'Value')>length(backdrops)
@@ -78,7 +80,10 @@ try
     d2=options.prefs.machine.d2;
     ea_options2tdhandles(handles,d2);
 end
+
 set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
+
+ea_ListBoxRenderer(handles.tdbackdrop);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -156,7 +161,7 @@ function savebutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 d2=ea_tdhandles2options(handles);
-ea_storemachineprefs('d2',d2);
+ea_setprefs('d2',d2);
 delete(handles.ea_spec2dwrite);
 
 

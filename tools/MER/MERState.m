@@ -387,7 +387,7 @@ classdef MERState < handle
             save_ok = true;
             if exist(fpath, 'file') && ...
                     ((nargin < 2) || varargin{1}(1)~='y')
-                overwrite = ea_questdlg({...
+                overwrite = questdlg({...
                     ['ea_merstate.mat found in ' obj.Config.patientname ' directory.'];...
                     'Would you like to overwrite this file?'}, obj.Config.patientname);
                 save_ok = strcmpi(overwrite,'Yes');
@@ -460,7 +460,7 @@ classdef MERState < handle
                     XYZ_nii_vx = obj.Cache.prenii_mat \ XYZ_nii_mm;
                     % Map to template space. Slow, but only once per side.
                     XYZ_mni_mm = ea_map_coords(XYZ_nii_vx(1:3,:), prenii_fname, ...
-                        fullfile(ptdir, 'y_ea_inv_normparams.nii'), '');
+                        fullfile(ptdir, 'inverseTransform'), '');
                     % Save some values for later.
                     vx_native{sid} = XYZ_nii_vx;
                     mm_mni{sid} = XYZ_mni_mm;
@@ -498,7 +498,7 @@ classdef MERState < handle
             cmm = [coords_native, ones(size(coords_native, 1), 1)]';
             cvx = obj.Cache.prenii_mat \ cmm;  % mm2vx
             coords_mni = ea_map_coords(cvx(1:3, :), prenii_fname, ...
-                fullfile(ptdir, 'y_ea_inv_normparams.nii'), '')';
+                fullfile(ptdir, 'inverseTransform'), '')';
         end
     end
     methods(Static = true)

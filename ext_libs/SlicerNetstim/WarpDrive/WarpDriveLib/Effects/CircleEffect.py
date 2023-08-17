@@ -50,12 +50,12 @@ class AbstractCircleEffect(AbstractPointerEffect, VTKObservationMixin):
     AbstractPointerEffect.processEvent(self, caller, event)
 
   def scaleRadius(self,scaleFactor):
-    radius = float(self.parameterNode.GetParameter("Spread"))
-    self.parameterNode.SetParameter("Spread", str(radius * scaleFactor))
+    radius = float(self.parameterNode.GetParameter("Radius"))
+    self.parameterNode.SetParameter("Radius", "%.2f" % (radius * scaleFactor))
 
   def updateSphere(self,caller=None,event=None):
     if self.sphere:
-      self.sphere.SetRadius(float(self.parameterNode.GetParameter("Spread")))
+      self.sphere.SetRadius(float(self.parameterNode.GetParameter("Radius")))
       self.sphere.Update()
 
   def cleanup(self):

@@ -33,17 +33,15 @@ disp('*** Converting MNI-coordinates to ACPC based on normalizations in selected
 for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-    [~,template]=ea_whichnormmethod(directory);
+    options = ea_getptopts(directory);
 
+    [~,template]=ea_whichnormmethod(directory);
 
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
-    [~,ptname]=fileparts(uidir{pt});
-    options.prefs=ea_prefs(ptname);
-
     % warp into patient space:
 
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], '');
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [options.subj.subjDir,filesep,'forwardTransform'], '');
     fpinsub_mm=fpinsub_mm';
 
 

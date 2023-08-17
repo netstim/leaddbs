@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 25-Jan-2019 09:22:24
+% Last Modified by GUIDE v2.5 16-Sep-2022 19:45:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,14 +55,15 @@ function lead_dbs_OpeningFcn(hObject, eventdata, handles, varargin)
 
 earoot=ea_getearoot;
 
+handles.prod = 'dbs';
+
 % add recent patients...
-ea_initrecentpatients(handles, 'patients');
+ea_initrecent(handles, 'patients');
 
 set(handles.vizspacepopup,'String',{[ea_underscore2space(ea_getspace), ' Space'];'Native Patient Space'});
 
 ea_dispbn;
 
-mstr='';
 set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
 spacedef=ea_getspacedef;
@@ -72,8 +73,8 @@ end
 
 options.prefs=ea_prefs('');
 
-ea_init_coregmrpopup(handles,1);
-ea_init_coregctpopup(handles,options);
+ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
+ea_init_coregctpopup(handles, options.prefs.ctcoreg.default);
 
 % load atlassets
 ea_listatlassets(options,handles,1);
@@ -83,12 +84,6 @@ set(handles.normalize_checkbox,'Value',0);
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
-%im = imread('bg_gui.png');
-%image(im);
-%axis off;
-%axis fill
-
-%set(0,'gca',handles.logoaxes);
 set(0,'CurrentFigure',handles.leadfigure);
 im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 
@@ -99,22 +94,27 @@ axis equal;
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
-% add norm methods to menu
-options.earoot=ea_getearoot;
-ea_addnormmethods(handles,options);
+options.earoot=earoot;
+
+% Initialize norm methods popupmenu
+ea_init_normpopup(handles, options.prefs.normalize.default);
 
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
+ea_menu_initmenu(handles,{'import','acpc','export','applynorm','leador','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
-handles.prod='dbs';
 ea_firstrun(handles,options);
 ea_getui(handles);
 
 ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
+
+ea_ListBoxRenderer(handles.electrode_model_popup);
+ea_ListBoxRenderer(handles.normmethod);
+ea_ListBoxRenderer(handles.scrfmask);
+ea_ListBoxRenderer(handles.atlassetpopup);
 
 % Choose default command line output for lead_dbs
 handles.output = hObject;
@@ -124,10 +124,7 @@ guidata(hObject, handles);
 
 % Disable buttons for standalone app
 if isdeployed
-    %set(handles.exportcode,'Enable','off');
     set(handles.updatebutn,'Enable','off');
-    %h = findall(hObject, 'Type', 'uimenu');
-    %set(findobj(h,'Label','Submit'),'Enable','off');
 end
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
@@ -484,7 +481,7 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'dbs');
-options.prefs=ea_prefs('');
+options.prefs = ea_prefs;
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'dbs');
 
@@ -588,11 +585,7 @@ else
     set(handles.targetpopup,'Enable','off');
 end
 
-
-
-
 ea_storeui(handles);
-
 
 
 % --- Executes on selection change in MRCT.
@@ -604,19 +597,8 @@ function MRCT_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns MRCT contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MRCT
 
-ea_switchctmr(handles,get(hObject,'Value'));
-if get(hObject,'Value')==1
-    set(handles.reconmethod,'enable','off');
-    set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
-    set(handles.targetpopup,'enable','on');
-    set(handles.maskwindow_txt,'enable','on');
-else
-    set(handles.reconmethod,'enable','on');
-    set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
-    prefs=ea_prefs;
-        set(handles.targetpopup,'enable','off');
-        set(handles.maskwindow_txt,'enable','off');
-end
+ea_switchctmr(handles, get(hObject,'Value'));
+
 ea_storeui(handles);
 
 
@@ -662,7 +644,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
 ea_storeui(handles);
-ea_switchnormmethod(handles);
+ea_normsettings(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -835,33 +817,6 @@ function normptatlascheck_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-% --- Executes on button press in dicomcheck.
-function dicomcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to dicomcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of dicomcheck
-ea_storeui(handles);
-ea_deselectall_dicom(handles);
-
-if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomcheck,'Value')
-    ea_busyaction('on', handles.leadfigure, 'dbs');
-    ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
-    ea_busyaction('off', handles.leadfigure, 'dbs');
-end
-
-
-% --- Executes on button press in genptatlascheck.
-function genptatlascheck_Callback(hObject, eventdata, handles)
-% hObject    handle to genptatlascheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of genptatlascheck
-ea_storeui(handles);
-
-
 % --- Executes on button press in updatebutn.
 function updatebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to updatebutn (see GCBO)
@@ -1004,11 +959,12 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % hObject    handle to specify2dwrite (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-options.native=get(handles.vizspacepopup,'Value')==2;
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
-options.modality=get(handles.MRCT,'Value');
-options.prefs=ea_prefs(options.patientname);
+options = ea_handles2options(handles);
+if ~isempty(getappdata(handles.leadfigure,'uipatdir'))
+    bids = getappdata(handles.leadfigure, 'bids');
+    subjId = getappdata(handles.leadfigure, 'subjId');
+    options.subj = bids.getSubj(subjId{1}, options.modality);
+end
 ea_spec2dwrite(options);
 
 
@@ -1045,6 +1001,9 @@ function vizspacepopup_Callback(hObject, eventdata, handles)
 %    %set(handles.writeout2d_checkbox,'Value',1);
 % end
 atlasset=get(handles.atlassetpopup,'String');
+if get(handles.atlassetpopup,'Value')>length(atlasset)
+    set(handles.atlassetpopup,'Value',length(atlasset));
+end
 atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 options.prefs=ea_prefs('');
 ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
@@ -1072,19 +1031,19 @@ ea_openpatdir(handles);
 
 
 
-% --- Executes on selection change in coregmrpopup.
-function coregmrpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+% --- Executes on selection change in coregmrmethod.
+function coregmrmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrmethod
 
 
 % --- Executes during object creation, after setting all properties.
-function coregmrpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+function coregmrmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1124,21 +1083,21 @@ position=[65,hObject.Position(4)-60,85,16];
 ea_hyperlink_label(label, url, position);
 
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recent.
+function recent_Callback(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recent
 ea_busyaction('on',handles.leadfigure,'dbs');
-ea_rcpatientscallback(handles, 'patients');
+ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'dbs');
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1184,15 +1143,6 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 % --- Otherwise, executes on mouse press in 5 pixel border or over include_lead_connectome_subroutine.
 function include_lead_connectome_subroutine_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to include_lead_connectome_subroutine (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over dicomcheck.
-function dicomcheck_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to dicomcheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
@@ -1289,9 +1239,9 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over recentpts.
-function recentpts_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Otherwise, executes on mouse press in 5 pixel border or over recent.
+function recent_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
@@ -1379,9 +1329,9 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrpopup.
-function coregmrpopup_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrmethod.
+function coregmrmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
@@ -1416,8 +1366,8 @@ function normsettings_Callback(hObject, eventdata, handles)
 % hObject    handle to normsettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
-ea_shownormsettings(currentNormMethod,handles)
+normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+feval(normsettingsfunc, handles);
 
 
 % --- Executes on button press in checkfigures.
@@ -1468,22 +1418,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in assignnii.
-function assignnii_Callback(hObject, eventdata, handles)
-% hObject    handle to assignnii (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of assignnii
-ea_deselectall_dicom(handles);
-
-if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.assignnii,'Value')
-    ea_busyaction('on', handles.leadfigure, 'dbs');
-    ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
-    ea_busyaction('off', handles.leadfigure, 'dbs');
-end
-
-
 % --- Executes on button press in coreg_checkbox.
 function coreg_checkbox_Callback(hObject, eventdata, handles)
 % hObject    handle to coreg_checkbox (see GCBO)
@@ -1527,15 +1461,15 @@ if length(uipatdir)>1
    %ea_error('Selecting the previous patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    if iscell(fullrpts)
-        fullrpts=fullrpts(1);
+    if iscell(recentfolders)
+        recentfolders=recentfolders(1);
     end
 
-    if strcmp('No recent patients found',fullrpts)
+    if strcmp('No recent patients found',recentfolders)
         return
     end
 
-    ea_load_pts(handles,fullrpts);
+    ea_load_pts(handles,recentfolders);
     return
 end
 
@@ -1582,15 +1516,15 @@ elseif isempty(uipatdir)
     % load recent patient then.
 
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    if iscell(fullrpts)
-        fullrpts=fullrpts(1);
+    if iscell(recentfolders)
+        recentfolders=recentfolders(1);
     end
 
-    if strcmp('No recent patients found',fullrpts)
+    if strcmp('No recent patients found',recentfolders)
         return
     end
 
-    ea_load_pts(handles,fullrpts);
+    ea_load_pts(handles,recentfolders);
     return
     %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
 end
@@ -1630,10 +1564,10 @@ function slicer_original_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 1);
 
 
@@ -1643,10 +1577,10 @@ function slicer_coregistered_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 2);
 
 
@@ -1656,10 +1590,10 @@ function slicer_normalized_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 3);
 
 
@@ -1669,10 +1603,10 @@ function slicer_contact_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 4);
 
 
@@ -1907,6 +1841,11 @@ function surfacemethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns surfacemethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from surfacemethod
+if strcmpi(hObject.String{hObject.Value}, 'FreeSurfer')
+    handles.surfsettings.Visible = 'on';
+else
+    handles.surfsettings.Visible = 'off';
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1921,6 +1860,13 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in checkcoreg.
+function checkreg_Callback(hObject, eventdata, handles)
+% hObject    handle to checkcoreg (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkcoreg
 
 % --- Executes on button press in refinefit.
 function refinefit_Callback(hObject, eventdata, handles)
@@ -1929,3 +1875,11 @@ function refinefit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of refinefit
+
+
+% --- Executes on button press in surfsettings.
+function surfsettings_Callback(hObject, eventdata, handles)
+% hObject    handle to surfsettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_freesurfersetting;

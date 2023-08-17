@@ -2,23 +2,15 @@ function ea_denoise_mri(input,output,sigma)
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 ea_dispt(['Denoising: ',input]);
-if ispc
-    UNLM = ea_path_helper([basedir, 'UnbiasedNonLocalMeans.exe']);
-else
-    UNLM = [basedir, 'UnbiasedNonLocalMeans.', computer('arch')];
-end
+UNLM = ea_getExec([basedir, 'UnbiasedNonLocalMeans'], escapePath = 1);
+
 
 if ~exist('sigma','var')
     sigma=5;
 end
 
 cmd=[UNLM,' --sigma ',num2str(sigma),' ',ea_path_helper(input),' ',ea_path_helper(output)];
-
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_runcmd(cmd);
 
 [pth,inputfname]=fileparts(input);
 

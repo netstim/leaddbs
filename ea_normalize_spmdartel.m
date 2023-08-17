@@ -31,64 +31,40 @@ function varargout=ea_normalize_spmdartel(options)
 
 
 if ischar(options) % return name of method.
-    if strcmp(spm('ver'),'SPM12')
-        varargout{1}='SPM12 DARTEL nonlinear (Ashburner 2007)';
-        varargout{2}=1; % compatible
-        varargout{3}=0; % hassettings.
-        varargout{4}=1; % is multispectral
-    else
-        varargout{1}='SPM12 DARTEL nonlinear (Ashburner 2007)';
-        varargout{2}=0; % incompatible
-    end
-
+    varargout{1}='SPM12 DARTEL (Ashburner 2007)';
+    varargout{2}=1; % dummy output
+    varargout{3}=0; % hassettings.
+    varargout{4}=1; % is multispectral
     return
 end
 
-
-directory = [options.root,options.patientname,filesep];
-
-if isfield(options.prefs, 'tranii_unnormalized')
-    if exist([directory,options.prefs.tranii_unnormalized,'.gz'],'file')
-        try
-            gunzip([directory,options.prefs.tranii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.cornii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.sagnii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.prenii_unnormalized,'.gz']);
-        end
-    end
-end
-
-
-
-% now dartel-import the preoperative version.
 disp('Segmenting preoperative version (Import to DARTEL-space)');
-ea_newseg_pt(options,1,1);
+preopImages = struct2cell(options.subj.coreg.anat.preop);
+ea_newseg(preopImages, 1, 1);
 disp('Segmentation of preoperative MRI done.');
 
-% check if darteltemplate is available, if not generate one
+[directory, preopAnchorName] = fileparts(preopImages{1});
+directory = [directory, filesep];
+preopAnchorName = [preopAnchorName, '.nii'];
+
+% Check if dartel template is available
 if exist([ea_space(options,'dartel'),'dartelmni_6.nii'],'file')
     % There is a DARTEL-Template. Check if it will match:
     Vt=spm_vol([ea_space(options,'dartel'),'dartelmni_6.nii']);
-    Vp=spm_vol([directory,'rc1',options.prefs.prenii_unnormalized]);
+    Vp=spm_vol([directory, 'rc1', preopAnchorName]);
     if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
-        ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
+        ea_create_tpm_darteltemplate;
     end
 else % no dartel template present. -> Create matching dartel templates from highres version.
-    ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
+    ea_create_tpm_darteltemplate; %([directory,'rc1',preopAnchor]);
 end
 
 % Normalize to MNI using DARTEL.
 matlabbatch{1}.spm.tools.dartel.warp1.images = {
-                                                {[directory,'rc1',options.prefs.prenii_unnormalized,',1']}
-                                                {[directory,'rc2',options.prefs.prenii_unnormalized,',1']}
-                                                {[directory,'rc3',options.prefs.prenii_unnormalized,',1']}
-                                                }';
+                                                {[directory, 'rc1', preopAnchorName, ',1']}
+                                                {[directory, 'rc2', preopAnchorName, ',1']}
+                                                {[directory, 'rc3', preopAnchorName, ',1']}
+                                               }';
 matlabbatch{1}.spm.tools.dartel.warp1.settings.rform = 0;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).rparam = [4 2 1e-06];
@@ -117,71 +93,70 @@ matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).template = {[ea_space(op
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.lmreg = 0.01;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;
-jobs{1}=matlabbatch;
 
-spm_jobman('run',jobs);
+spm_jobman('run',{matlabbatch});
 disp('*** Dartel coregistration of preoperative version worked.');
+clear matlabbatch;
 
-clear matlabbatch jobs;
+% Export normalization parameters
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory, 'u_rc1', preopAnchorName]};
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
+matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_normparams';
+matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
 
-% Export normalization parameters:
-% backward
-switch spm('ver')
-    case 'SPM8'
-        ea_error('SPM8 is not supported anymore in this version of Lead-DBS');
-    case 'SPM12'
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
-        matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea_normparams'];
-        matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
-end
-jobs{1}=matlabbatch;
-
-spm_jobman('run',jobs);
+spm_jobman('run',{matlabbatch});
 disp('*** Exported normalization parameters to y_ea_normparams.nii');
-clear matlabbatch jobs;
+clear matlabbatch;
 
-% forward (inverse)
-switch spm('ver')
-    case 'SPM8'
-        ea_error('SPM8 is not supported anymore in this version of Lead-DBS');
-    case 'SPM12'
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [0 1];
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
-        matlabbatch{1}.spm.util.defs.comp{2}.id.space = {[directory,options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams';
-        matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
-end
-jobs{1}=matlabbatch;
+% Inverse
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory, 'u_rc1', preopAnchorName]};
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [0 1];
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
+matlabbatch{1}.spm.util.defs.comp{2}.id.space = {[directory, preopAnchorName]};
+matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams';
+matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
 
-spm_jobman('run',jobs);
+spm_jobman('run',{matlabbatch});
 disp('*** Exported normalization parameters to y_ea_inv_normparams.nii');
-clear matlabbatch jobs;
+clear matlabbatch;
 
-% delete([directory,'u_rc1',options.prefs.prenii_unnormalized]);
+% Delete rc* files and u_rc1* file
+ea_delete([directory, 'rc*', preopAnchorName]);
+ea_delete([directory, 'u_rc1*', preopAnchorName]);
 
+% Rename Segmentations (c1, c2, c3)
+mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
+movefile([directory, 'c1', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'GM', 'suffix', 'mask'));
+movefile([directory, 'c2', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'WM', 'suffix', 'mask'));
+movefile([directory, 'c3', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'CSF', 'suffix', 'mask'));
+
+% Rename deformation fields
+ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
+movefile([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
+movefile([directory, 'y_ea_inv_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
+
+% Apply estimated deformation to (coregistered) post-op images.
 ea_apply_normalization(options)
 
-%% add methods dump:
-[scit,lcit]=ea_getspacedefcit;
+% add methods dump:
+[scit, lcit] = ea_getspacedefcit;
 cits={
     'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
     'Ashburner, J. (2007). A fast diffeomorphic image registration algorithm, 38(1), 95?113. http://doi.org/10.1016/j.neuroimage.2007.07.007'
     'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     };
-if ~isempty(lcit)
-    cits=[cits;{lcit}];
-end
-[~,anatpresent]=ea_assignpretra(options);
 
-ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using a'...
-    ' fast diffeomorphic image registration algorithm (DARTEL) as implemented in ',spm('ver'),' (Ashburner 2007; www.fil.ion.ucl.ac.uk/spm/software/).',...
-    ' DARTEL registration was performed by directly registering tissue segmentations of preoperative acquisitions (obtained using the unified Segmentation approach as implemented in ',spm('ver'),' (Ashburner 2005)',...
+if ~isempty(lcit)
+    cits=[cits; {lcit}];
+end
+
+modality = regexp(preopImages, '(?<=_)[^\W_]+(?=\.nii(\.gz)?$)', 'match', 'once');
+
+ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',strjoin(modality, ', '),') using a'...
+    ' fast diffeomorphic image registration algorithm (DARTEL) as implemented in SPM12 (Ashburner 2007; www.fil.ion.ucl.ac.uk/spm/software/).',...
+    ' DARTEL registration was performed by directly registering tissue segmentations of preoperative acquisitions (obtained using the unified Segmentation approach as implemented in SPM12 (Ashburner 2005)',...
     ' to a DARTEL template created from tissue priors defined by the MNI (ICBM 152 Nonlinear asymmetric 2009b atlas; http://nist.mni.mcgill.ca/?p=904)',...
-    ' supplied within Lead-DBS software (Horn 2015; www.lead-dbs.org).',...
-    ],...
-    cits);
+    ' supplied within Lead-DBS software (Horn 2015; www.lead-dbs.org).'], cits);

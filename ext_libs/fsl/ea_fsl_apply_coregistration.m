@@ -32,11 +32,8 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    FLIRT = ea_path_helper([basedir, 'flirt.exe']);
-else
-    FLIRT = [basedir, 'flirt.', computer('arch')];
-end
+FLIRT = ea_getExec([basedir, 'flirt'], escapePath = 1);
+
 
 cmd = [FLIRT, ...
        ' -in ', ea_path_helper(movingimage), ...
@@ -48,8 +45,4 @@ cmd = [FLIRT, ...
        ' -v'];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_runcmd(cmd);

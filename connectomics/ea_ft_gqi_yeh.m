@@ -22,11 +22,8 @@ if ~exist([directory,'ttrackingmask.nii'],'file') || redo || ...
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
-if ispc
-    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
-else
-    DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
-end
+DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
+
 
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     ea_roi2txt([directory,'ttrackingmask.nii'],[directory,'ttrackingmask.txt'],ea_resolve_usfactor(options.lc.struc.ft.upsample))
@@ -76,7 +73,7 @@ trkcmd=[DSISTUDIO,' --action=trk',...
     ' --step_size=0.5',...
     ' --turning_angle=75'];
 
-err=ea_submitcmd(trkcmd);
+err=ea_runcmd(trkcmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
@@ -159,20 +156,20 @@ cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     cmd=[cmd,...
         ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
-    
+
     %% add methods dump:
     cits={
         'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
         'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
         };
     ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample))),' following the concept described in Dyrby et al. 2014 as implemented in DSI Studio (http://dsi-studio.labsolver.org/; Yeh et al. 2010).'],cits);
-    
+
     maskext='.txt';
 else
     maskext='.nii';
 end
 
-err=ea_submitcmd(cmd);
+err=ea_runcmd(cmd);
 
 if err || ~exist([directory,'dti.src.gz'],'file')
     ea_warning('DSI studio failed to generate .src file. Using Matlab code instead.');
@@ -187,7 +184,7 @@ cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']
     ' --num_fiber=5',...
     ' --odf_order=8'];
 
-err=ea_submitcmd(cmd);
+err=ea_runcmd(cmd);
 ea_delete([directory,'dti.src.gz']);
 
 if err

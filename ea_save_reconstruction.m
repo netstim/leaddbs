@@ -1,8 +1,11 @@
-function ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options,outfname)
+function ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options,outFilePath)
 
-if ~exist('outfname','var')
-    outfname='ea_reconstruction.mat';
+if ~exist('outfname', 'var')
+    outFilePath = options.subj.recon.recon;
 end
+
+ea_mkdir(fileparts(outFilePath));
+
 for side=options.sides
     reco.props(side).elmodel=elmodel;
     reco.props(side).manually_corrected=manually_corrected;
@@ -24,7 +27,7 @@ if options.native
             clear x y
         end
     end
-    save([options.root,options.patientname,filesep,outfname],'reco');
+    save(outFilePath, 'reco');
 
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to template space');
@@ -34,17 +37,17 @@ if options.native
             ea_reconstruction2acpc(options);
             ea_dispt('');
         end
-        load([options.root,options.patientname,filesep,outfname]);
+        load(outFilePath, 'reco');
         [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
 
-        save([options.root,options.patientname,filesep,outfname],'reco');
+        save(outFilePath, 'reco');
         ea_dispt('');
     end
 else
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
-    save([options.root,options.patientname,filesep,outfname],'reco');
+    save(outFilePath, 'reco');
 
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to native space');
@@ -54,10 +57,10 @@ else
             ea_reconstruction2acpc(options);
             ea_dispt('');
         end
-        load([options.root,options.patientname,filesep,outfname]);
+        load(outFilePath, 'reco');
         [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
 
-        save([options.root,options.patientname,filesep,outfname],'reco');
+        save(outFilePath, 'reco');
         ea_dispt('');
 
         if corrected

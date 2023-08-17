@@ -9,14 +9,14 @@ elseif ispc
     compflags = ' COMPFLAGS="$COMPFLAGS /MT"';
 end
 
-eval(['mex' compflags, ' BarycentricCoordinatesTetrahedron.c']);
-eval(['mex' compflags, ' BarycentricCoordinatesTriangle.c']);                         
-eval(['mex' compflags, ' CheckInsideFace.c']);
-eval(['mex' compflags, ' LineLineIntersect.c']);
-eval(['mex' compflags, ' LineTriangleIntersection.c']);
-eval(['mex' compflags, ' SphereFrom4Points.c']);
-eval(['mex' compflags, ' TriangleTriangleIntersection.c']);
-eval(['mex' compflags, ' CheckVolumeFaceMesh.c']);
-eval(['mex' compflags, ' CheckVolumeTetraMesh.c']);
+mex('-compatibleArrayDims', compflags, 'BarycentricCoordinatesTetrahedron.c');
+mex('-compatibleArrayDims', compflags, 'BarycentricCoordinatesTriangle.c');                         
+mex('-compatibleArrayDims', compflags, 'CheckInsideFace.c');
+mex('-compatibleArrayDims', compflags, 'LineLineIntersect.c');
+mex('-compatibleArrayDims', compflags, 'LineTriangleIntersection.c');
+mex('-compatibleArrayDims', compflags, 'SphereFrom4Points.c');
+mex('-compatibleArrayDims', compflags, 'TriangleTriangleIntersection.c');
+mex('-compatibleArrayDims', compflags, 'CheckVolumeFaceMesh.c');
+mex('-compatibleArrayDims', compflags, 'CheckVolumeTetraMesh.c');
 
 cd(['..', filesep, '..']);

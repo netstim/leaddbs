@@ -8,10 +8,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
-
-import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
 sys.path.insert( 0, r'/data/trieu/electrode')
 
 ###
@@ -25,7 +21,7 @@ import os
 sys.path.insert( 0, r'{}'.format(os.getcwd()))
 sys.path.append('/usr/local/lib/python2.7/dist-packages')
 #from pandas import read_csv
-#from PrintLog import PrintLog
+#from print(Log import PrintLog)
 
 ##### DEFAULT LIST #####
 
@@ -75,8 +71,8 @@ VolumeObject1 = []
 ContactObject1 = []
 VolumeObject2 = []
 ContactObject2 = []
-print("############################################### DBS340 #######################################################\n")
-print(" DBS_lead's Geometry buid\n")
+print(("############################################### DBS340 #######################################################\n"))
+print((" DBS_lead's Geometry buid\n"))
 ######################################### end of extra code 1 ########################################
 ######################################################################################################
 import GEOM
@@ -84,11 +80,13 @@ from salome.geom import geomBuilder
 import math
 import SALOMEDS
 
+import salome_notebook
+notebook = salome_notebook.notebook
 notebook.set("ground_start", 3.0)              # 2.22 is the lowest (on the border with ROI)
 #notebook.set("ground_length", "7.0-ground_start")
 notebook.set("ground_length", 2.0)    
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -186,17 +184,17 @@ geompy.addToStudy( Fuse_all, 'Fuse_all' )
 geompy.addToStudy( Contact_2, 'Contact_2_init' )
 geompy.addToStudy( Contact_1, 'Contact_1_init' )
 
-print(" Load brain image \n")
+print((" Load brain image \n"))
 if (Brain_map[-4:] == 'brep'):
-	brain_solid = geompy.ImportBREP( Brain_map )
+    brain_solid = geompy.ImportBREP( Brain_map )
 elif (Brain_map[-4:] == 'step'):
-	brain_solid = geompy.ImportSTEP( Brain_map )
+    brain_solid = geompy.ImportSTEP( Brain_map )
 elif (Brain_map[-4:] == 'iges'):
-	brain_solid = geompy.ImportIGES( Brain_map )
+    brain_solid = geompy.ImportIGES( Brain_map )
 elif (Brain_map[-4:] == '.stl'):
-	brain_solid = geompy.ImportSTL( Brain_map )
+    brain_solid = geompy.ImportSTL( Brain_map )
 else:
-	print(" unknow imported file format")
+    print((" unknow imported file format"))
 
 #################################################### Geometry and extra code interface ###############################################################
 Fuse_all_lead_encap_ROI = Fuse_all  
@@ -212,7 +210,7 @@ if(Lead2nd_Enable): ##################  2nd LEAD ###############################
   Volume_name2  = [ 'encap_outer_ROI2','ROI2','encap_inner_ROI2']
   Contact_name2 = ['Contact2_1','Contact2_2']
 ###################################################################################################################################################
-  print("Position 2nd Fuse all object at [{},{},{}], [{}',{}',{}']\n".format(Xt2,Yt2,Zt2,OX_angle2,OY_angle2,OZ_angle2))
+  print(("Position 2nd Fuse all object at [{},{},{}], [{}',{}',{}']\n".format(Xt2,Yt2,Zt2,OX_angle2,OY_angle2,OZ_angle2)))
   Fuse_all_lead_encap_ROI_no_internal_face2 = geompy.MakeTranslation(Fuse_all_lead_encap_ROI_no_internal_face,Xt2,Yt2,Zt2)
   OX2 = geompy.MakeTranslation(OX,Xt2,Yt2,Zt2)
   OY2 = geompy.MakeTranslation(OY,Xt2,Yt2,Zt2)
@@ -220,32 +218,32 @@ if(Lead2nd_Enable): ##################  2nd LEAD ###############################
   geompy.Rotate(Fuse_all_lead_encap_ROI_no_internal_face2, OX2,OX_angle2*math.pi/180.0)
   geompy.Rotate(Fuse_all_lead_encap_ROI_no_internal_face2, OY2,OY_angle2*math.pi/180.0)
   geompy.Rotate(Fuse_all_lead_encap_ROI_no_internal_face2, OZ2,OZ_angle2*math.pi/180.0)
-  print(" cut fuse all scaled up with neuron \n")
+  print((" cut fuse all scaled up with neuron \n"))
   for i in range(0,len(VolumeObject1)):
-	VolumeObject2[i] = geompy.MakeTranslation(VolumeObject1[i],Xt2,Yt2,Zt2)
-	geompy.Rotate(VolumeObject2[i], OX2,OX_angle2*math.pi/180.0)
-	geompy.Rotate(VolumeObject2[i], OY2,OY_angle2*math.pi/180.0)
-	geompy.Rotate(VolumeObject2[i], OZ2,OZ_angle2*math.pi/180.0)
+    VolumeObject2[i] = geompy.MakeTranslation(VolumeObject1[i],Xt2,Yt2,Zt2)
+    geompy.Rotate(VolumeObject2[i], OX2,OX_angle2*math.pi/180.0)
+    geompy.Rotate(VolumeObject2[i], OY2,OY_angle2*math.pi/180.0)
+    geompy.Rotate(VolumeObject2[i], OZ2,OZ_angle2*math.pi/180.0)
   for i in range(0,len(ContactObject1)):
-	ContactObject2[i] = geompy.MakeTranslation(ContactObject1[i],Xt2,Yt2,Zt2)
-	geompy.Rotate(ContactObject2[i], OX2,OX_angle2*math.pi/180.0)
-	geompy.Rotate(ContactObject2[i], OY2,OY_angle2*math.pi/180.0)
-	geompy.Rotate(ContactObject2[i], OZ2,OZ_angle2*math.pi/180.0)
-  print("Cut outer ROI2 with brain\n")
+    ContactObject2[i] = geompy.MakeTranslation(ContactObject1[i],Xt2,Yt2,Zt2)
+    geompy.Rotate(ContactObject2[i], OX2,OX_angle2*math.pi/180.0)
+    geompy.Rotate(ContactObject2[i], OY2,OY_angle2*math.pi/180.0)
+    geompy.Rotate(ContactObject2[i], OZ2,OZ_angle2*math.pi/180.0)
+  print(("Cut outer ROI2 with brain\n"))
   cut_outer_ROI = geompy.MakeCutList(VolumeObject2[0], [brain_solid], True)
   VolumeObject2[0] = geompy.MakeCutList(VolumeObject2[0], [cut_outer_ROI], True)
-  print("Cut ROI2 with brain\n")
+  print(("Cut ROI2 with brain\n"))
   VolumeObject2[1] = geompy.MakeCommonList([VolumeObject2[1], brain_solid], True) 
-  print("Group 2nd:volume and area extraction for group ID identification process\n")        
+  print(("Group 2nd:volume and area extraction for group ID identification process\n")        )
   Volume2_Pro = [geompy.BasicProperties( VolumeObject2[0])]*len(VolumeObject2)
   Contact2_Pro = [geompy.BasicProperties( ContactObject2[0])]*len(ContactObject2)
   for i in range(0,len(VolumeObject2)):
-	Volume2_Pro[i] = geompy.BasicProperties( VolumeObject2[i])
+    Volume2_Pro[i] = geompy.BasicProperties( VolumeObject2[i])
   for i in range(0,len(ContactObject2)):
-	Contact2_Pro[i] = geompy.BasicProperties( ContactObject2[i])
+    Contact2_Pro[i] = geompy.BasicProperties( ContactObject2[i])
 
 ################## LEAD 1st #############################################################
-#print "Position 1st Fuse all object at [{},{},{}], [{}',{}',{}']\n".format(Xt,Yt,Zt,OX_angle,OY_angle,OZ_angle)
+#print( "Position 1st Fuse all object at [{},{},{}], [{}',{}',{}']\n".format(Xt,Yt,Zt,OX_angle,OY_angle,OZ_angle))
 geompy.TranslateDXDYDZ(Fuse_all_lead_encap_ROI_no_internal_face,Xt,Yt,Zt_tip)
 
 OX1 = geompy.MakeTranslation(OX,Xt,Yt,Zt_tip)
@@ -262,7 +260,7 @@ if X_2nd!=Xt or Y_2nd!=Yt:
         Fuse_all_lead_encap_ROI_no_internal_face=geompy.MakeRotationThreePoints(Fuse_all_lead_encap_ROI_no_internal_face, Vertex_O, Vertex_3, Vertex_1)
 
 
-#print "Position 1st Lead at [{},{},{}], [{}',{}',{}']\n".format(Xt,Yt,Zt,OX_angle,OY_angle,OZ_angle)
+#print( "Position 1st Lead at [{},{},{}], [{}',{}',{}']\n".format(Xt,Yt,Zt,OX_angle,OY_angle,OZ_angle))
 for i in range(0,len(VolumeObject1)):
     geompy.TranslateDXDYDZ(VolumeObject1[i],Xt,Yt,Zt_tip)
     geompy.Rotate(VolumeObject1[i], OZ1,OZ_angle*math.pi/180.0)
@@ -277,22 +275,22 @@ for i in range(0,len(ContactObject1)):
 
 
 
-print( "Cut outer ROI1 with brain\n")
+print(( "Cut outer ROI1 with brain\n"))
 cut_outer_ROI = geompy.MakeCutList(VolumeObject1[0], [brain_solid], True)
 VolumeObject1[0] = geompy.MakeCutList(VolumeObject1[0], [cut_outer_ROI], True)
-print( "Cut ROI1 with brain\n")
+print(( "Cut ROI1 with brain\n"))
 VolumeObject1[1] = geompy.MakeCommonList([VolumeObject1[1], brain_solid], True)
-print("Group 1st:volume and area extraction for group ID identification process\n") 
+print(("Group 1st:volume and area extraction for group ID identification process\n") )
 
 Volume1_Pro = [geompy.BasicProperties( VolumeObject1[0])]*len(VolumeObject1)
 Contact1_Pro = [geompy.BasicProperties( ContactObject1[0])]*len(ContactObject1)
 for i in range(0,len(VolumeObject1)):
-	Volume1_Pro[i] = geompy.BasicProperties( VolumeObject1[i])
+    Volume1_Pro[i] = geompy.BasicProperties( VolumeObject1[i])
 for i in range(0,len(ContactObject1)):
-	Contact1_Pro[i] = geompy.BasicProperties( ContactObject1[i])
+    Contact1_Pro[i] = geompy.BasicProperties( ContactObject1[i])
 
 
-print("Create reference groups for ID identification process\n")
+print(("Create reference groups for ID identification process\n"))
 
 if(Lead2nd_Enable):
   
@@ -332,54 +330,54 @@ Group_partition_surface = []
 
 ### find group volume ID ######################################################################
 Partition_volume_IDsList = geompy.SubShapeAllIDs(Partition_profile, geompy.ShapeType["SOLID"]) # list all sub shape volume in Partition
-print "Partition_volume_IDsList",Partition_volume_IDsList, '\n'
+print( "Partition_volume_IDsList",Partition_volume_IDsList, '\n')
 
 for ref_ind in range (0, len(reference_volume)):
-	temp_volume = []
-	for sub_ind in range (0, len (Partition_volume_IDsList)):
-		subshape = geompy.GetSubShape(Partition_profile, [Partition_volume_IDsList[sub_ind]]) # get subshape
-		subshape_Pro = geompy.BasicProperties(subshape)       # extract volume of subshape
-		Common_volume = geompy.MakeCommonList([subshape, reference_volume[ref_ind]], True) # check common intersection
-		Common_volume_Pro = geompy.BasicProperties(Common_volume) 
-		print "volume difference",abs(Common_volume_Pro[2]-subshape_Pro[2]),"/",abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])
-		# if ( common volume = subshape) and (common volume = ref volume) => ref volume = sub shape
-		if (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.0003) and (abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])<0.0003):
-		
-			Group_partition_volume.append([Volume_name[ref_ind],Partition_volume_IDsList[sub_ind]])
-		# if ( common volume = subshape) and (common volume < ref volume) => sub shape belong to ref volume
-		elif (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.0003) and ((Common_volume_Pro[2] - reference_volume_Pro[ref_ind][2])<-0.0003):
-			temp_volume.append( Partition_volume_IDsList[sub_ind] )
-	if len(temp_volume) >1 : # the volume is devided
-		Group_partition_volume.append([Volume_name[ref_ind],temp_volume ])
-		print Volume_name[ref_ind]," is devided and has sub IDs:{}\n".format(temp_volume)
+    temp_volume = []
+    for sub_ind in range (0, len (Partition_volume_IDsList)):
+        subshape = geompy.GetSubShape(Partition_profile, [Partition_volume_IDsList[sub_ind]]) # get subshape
+        subshape_Pro = geompy.BasicProperties(subshape)       # extract volume of subshape
+        Common_volume = geompy.MakeCommonList([subshape, reference_volume[ref_ind]], True) # check common intersection
+        Common_volume_Pro = geompy.BasicProperties(Common_volume)
+        print( "volume difference",abs(Common_volume_Pro[2]-subshape_Pro[2]),"/",abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2]))
+        # if ( common volume = subshape) and (common volume = ref volume) => ref volume = sub shape
+        if (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.0003) and (abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])<0.0003):
+
+            Group_partition_volume.append([Volume_name[ref_ind],Partition_volume_IDsList[sub_ind]])
+        # if ( common volume = subshape) and (common volume < ref volume) => sub shape belong to ref volume
+        elif (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.0003) and ((Common_volume_Pro[2] - reference_volume_Pro[ref_ind][2])<-0.0003):
+            temp_volume.append( Partition_volume_IDsList[sub_ind] )
+    if len(temp_volume) >1 : # the volume is devided
+        Group_partition_volume.append([Volume_name[ref_ind],temp_volume ])
+        print( Volume_name[ref_ind]," is devided and has sub IDs:{}\n".format(temp_volume))
 if len(reference_volume) != len(Group_partition_volume):
-	print "Geometry-volume error please check ROI diameter and DBS lead Position ",len(reference_volume),len(Group_partition_volume)
-print 'Group_partition_volume',Group_partition_volume,'\n'
+    print( "Geometry-volume error please check ROI diameter and DBS lead Position ",len(reference_volume),len(Group_partition_volume))
+print( 'Group_partition_volume',Group_partition_volume,'\n')
 
 ### find group surface ID ######################################################################
 Partition_surface_IDsList = geompy.SubShapeAllIDs(Partition_profile, geompy.ShapeType["FACE"]) # list all sub shape face in Partition
-print('Partition_surface_IDsList: {}\n'.format(Partition_surface_IDsList))
+print(('Partition_surface_IDsList: {}\n'.format(Partition_surface_IDsList)))
 sub_face = [] ## store devided faces
 for reff_ind in range (0, len (reference_surface)):
-	temp_surface = []
-	for subf_ind in range (0, len(Partition_surface_IDsList)):
-		subshapef = geompy.GetSubShape(Partition_profile, [Partition_surface_IDsList[subf_ind]]) # get subshape
-		Common_face = geompy.MakeCommonList([subshapef, reference_surface[reff_ind]], True) # check common intersection
-		Common_face_Pro = geompy.BasicProperties(Common_face) 
-		subshapef_Pro = geompy.BasicProperties(subshapef) # extract volume of subshape
-		print("area difference: {}/{} \n".format(abs(Common_face_Pro[1]-subshapef_Pro[1]),abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1])))
-		# if ( common face = subface) and (common face = ref face) => ref face = sub face
-		if (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 )and (abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1])<0.000001): 
-			Group_partition_surface.append([ Contact_name[reff_ind],Partition_surface_IDsList[subf_ind] ])
-		# if ( common face = subface) and (common face < ref face) => sub face belong to ref face 
-		elif (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 ) and ((Common_face_Pro[1] - reference_surface_Pro[reff_ind][1])<-0.000001):
-			temp_surface.append(Partition_surface_IDsList[subf_ind])
-	if len(temp_surface) >1 : # the face is devided
-		Group_partition_surface.append( [Contact_name[reff_ind],temp_surface ])		
-		print(Contact_name[reff_ind] + " is devided and has sub IDs:{}\n".format(temp_surface))
+    temp_surface = []
+    for subf_ind in range (0, len(Partition_surface_IDsList)):
+        subshapef = geompy.GetSubShape(Partition_profile, [Partition_surface_IDsList[subf_ind]]) # get subshape
+        Common_face = geompy.MakeCommonList([subshapef, reference_surface[reff_ind]], True) # check common intersection
+        Common_face_Pro = geompy.BasicProperties(Common_face)
+        subshapef_Pro = geompy.BasicProperties(subshapef) # extract volume of subshape
+        print(("area difference: {}/{} \n".format(abs(Common_face_Pro[1]-subshapef_Pro[1]),abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1]))))
+        # if ( common face = subface) and (common face = ref face) => ref face = sub face
+        if (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 )and (abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1])<0.000001):
+            Group_partition_surface.append([ Contact_name[reff_ind],Partition_surface_IDsList[subf_ind] ])
+        # if ( common face = subface) and (common face < ref face) => sub face belong to ref face
+        elif (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 ) and ((Common_face_Pro[1] - reference_surface_Pro[reff_ind][1])<-0.000001):
+            temp_surface.append(Partition_surface_IDsList[subf_ind])
+    if len(temp_surface) >1 : # the face is devided
+        Group_partition_surface.append( [Contact_name[reff_ind],temp_surface ])
+        print((Contact_name[reff_ind] + " is devided and has sub IDs:{}\n".format(temp_surface)))
 if len(reference_surface) != len(Group_partition_surface): #+len(Group_partition_Multi_surface):
-	print("Geometry-Surface error please check ROI diameter and DBS lead Position {},{}\n".format(len(reference_surface),len(Group_partition_surface)))
-print('Group_partition_surface {}\n'.format(Group_partition_surface,'\n'))
+    print(("Geometry-Surface error please check ROI diameter and DBS lead Position {},{}\n".format(len(reference_surface),len(Group_partition_surface))))
+print(('Group_partition_surface {}\n'.format(Group_partition_surface,'\n')))
 
 if(Lead2nd_Enable):
    Partition_profile = geompy.MakePartition(VolumeObject1+VolumeObject2+ContactObject1+ContactObject2+[Rest], [], [], [], geompy.ShapeType["SOLID"], 0, [], 0)
@@ -389,35 +387,35 @@ else:
 new_volume_ID= geompy.SubShapeAllIDs(Partition_profile, geompy.ShapeType["SOLID"])
 ID= list(set(Partition_volume_IDsList) ^ set (new_volume_ID))
 Group_partition_volume.append(['Rest_1',ID[0]])
-print("REST {}\n".format(ID))
-print('Group_partition_volume: {}\n'.format(Group_partition_volume))
-print("Create volume and surface group under partition_profile\n")
+print(("REST {}\n".format(ID)))
+print(('Group_partition_volume: {}\n'.format(Group_partition_volume)))
+print(("Create volume and surface group under partition_profile\n"))
 
 for i_solid in range (0,len (Group_partition_volume)):
-	Group_volume[i_solid] = geompy.CreateGroup(Partition_profile, geompy.ShapeType["SOLID"])
-	if (isinstance (Group_partition_volume[i_solid][1],list) == False):
-		geompy.UnionIDs(Group_volume[i_solid], [Group_partition_volume[i_solid][1]])
-	if (isinstance (Group_partition_volume[i_solid][1],list) == True):
-		geompy.UnionIDs(Group_volume[i_solid], Group_partition_volume[i_solid][1])
+    Group_volume[i_solid] = geompy.CreateGroup(Partition_profile, geompy.ShapeType["SOLID"])
+    if (isinstance (Group_partition_volume[i_solid][1],list) == False):
+        geompy.UnionIDs(Group_volume[i_solid], [Group_partition_volume[i_solid][1]])
+    if (isinstance (Group_partition_volume[i_solid][1],list) == True):
+        geompy.UnionIDs(Group_volume[i_solid], Group_partition_volume[i_solid][1])
 
 #############################################
 
 for i_surface in range (0,len (Group_partition_surface)):
-	Group_surface[i_surface] = geompy.CreateGroup(Partition_profile, geompy.ShapeType["FACE"])
-	if (isinstance (Group_partition_surface[i_surface][1],list) == False): # not a list
-		geompy.UnionIDs(Group_surface[i_surface], [Group_partition_surface[i_surface][1]])
-	if (isinstance (Group_partition_surface[i_surface][1],list) == True): #  it is a list
-		geompy.UnionIDs(Group_surface[i_surface], Group_partition_surface[i_surface][1])
-print("Translate whole partition to Xm,Ym,Zm\n")
+    Group_surface[i_surface] = geompy.CreateGroup(Partition_profile, geompy.ShapeType["FACE"])
+    if (isinstance (Group_partition_surface[i_surface][1],list) == False): # not a list
+        geompy.UnionIDs(Group_surface[i_surface], [Group_partition_surface[i_surface][1]])
+    if (isinstance (Group_partition_surface[i_surface][1],list) == True): #  it is a list
+        geompy.UnionIDs(Group_surface[i_surface], Group_partition_surface[i_surface][1])
+print(("Translate whole partition to Xm,Ym,Zm\n"))
 geompy.TranslateDXDYDZ(Partition_profile, Xm, Ym, Zm)
 ### add Vertices to geometry
 if(Vertice_enable):
    for ver_ind in range (0,number_vertex):
-       print("Add vertices to model\n")
+       print(("Add vertices to model\n"))
        Vert.append(geompy.MakeVertex(Vert_array[ver_ind][0],Vert_array[ver_ind][1],Vert_array[ver_ind][2]))
        geompy.TranslateDXDYDZ(Vert[ver_ind], Xm, Ym, Zm)       ###Translate vertices to Xm,Ym,Zm
        geompy.addToStudy( Vert[ver_ind], 'Vert_{}'.format(ver_ind))
-print("add to study\n")
+print(("add to study\n"))
 ############################################ end of extra code 2 ############################################
 #############################################################################################################
 geompy.addToStudy( O, 'O' )
@@ -466,10 +464,10 @@ geompy.addToStudy( Fuse_all_lead_encap_ROI, 'Fuse_all_lead_encap_ROI' )
 
 geompy.addToStudy( Partition_profile, 'Partition_profile' )
 for i_solid1 in range (0,len (Group_partition_volume)):
-	geompy.addToStudyInFather( Partition_profile, Group_volume [i_solid1], Group_partition_volume[i_solid1][0])
+    geompy.addToStudyInFather( Partition_profile, Group_volume [i_solid1], Group_partition_volume[i_solid1][0])
 
 for i_surface1 in range (0,len (Group_partition_surface)):
-	geompy.addToStudyInFather( Partition_profile, Group_surface [i_surface1], Group_partition_surface[i_surface1][0])
+    geompy.addToStudyInFather( Partition_profile, Group_surface [i_surface1], Group_partition_surface[i_surface1][0])
 
 ##################################### end of extra code 3##########################################
 ###################################################################################################
@@ -487,12 +485,12 @@ ROI1=Group_volume[1]
 Rest_1=Group_volume[3]
 
 if(Lead2nd_Enable):
-	Contact2_1=Group_surface[2]
-	Contact2_2=Group_surface[3]
-	encap_inner_ROI2=Group_volume[5]
-	encap_outer_ROI2=Group_volume[3]
-	ROI2=Group_volume[4]
-	Rest_1=Group_volume[6]
+    Contact2_1=Group_surface[2]
+    Contact2_2=Group_surface[3]
+    encap_inner_ROI2=Group_volume[5]
+    encap_outer_ROI2=Group_volume[3]
+    ROI2=Group_volume[4]
+    Rest_1=Group_volume[6]
 
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
@@ -500,7 +498,7 @@ from salome.smesh import smeshBuilder
 anode_mesh_max=0.005
 cathode_mesh_max=0.1
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Partition_profile)
 NETGEN_1D_2D_3D = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
 NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()
@@ -573,30 +571,30 @@ isDone = Mesh_1.SetMeshOrder( [ [ Sub_mesh_1, Sub_mesh_2, Sub_mesh_3, Sub_mesh_4
 
 
 if(Lead2nd_Enable):	
-	NETGEN_1D_2D_1lead2 = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_1D2D,geom=Contact2_1)
-	Sub_mesh_1_2 = NETGEN_1D_2D_1lead2.GetSubMesh()
-	NETGEN_2D_Parameters_1lead2 = NETGEN_1D_2D_1lead2.Parameters()
-	NETGEN_2D_Parameters_1lead2 =NETGEN_2D_Parameters_1
+    NETGEN_1D_2D_1lead2 = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_1D2D,geom=Contact2_1)
+    Sub_mesh_1_2 = NETGEN_1D_2D_1lead2.GetSubMesh()
+    NETGEN_2D_Parameters_1lead2 = NETGEN_1D_2D_1lead2.Parameters()
+    NETGEN_2D_Parameters_1lead2 =NETGEN_2D_Parameters_1
 
-	NETGEN_1D_2D_2lead2 = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_1D2D,geom=Contact2_2)
-	Sub_mesh_2_2 = NETGEN_1D_2D_2lead2.GetSubMesh()
-	NETGEN_2D_Parameters_2lead2 = NETGEN_1D_2D_2lead2.Parameters()
-	NETGEN_2D_Parameters_2lead2 =NETGEN_2D_Parameters_2
+    NETGEN_1D_2D_2lead2 = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_1D2D,geom=Contact2_2)
+    Sub_mesh_2_2 = NETGEN_1D_2D_2lead2.GetSubMesh()
+    NETGEN_2D_Parameters_2lead2 = NETGEN_1D_2D_2lead2.Parameters()
+    NETGEN_2D_Parameters_2lead2 =NETGEN_2D_Parameters_2
 
-	NETGEN_1D_2D_3D_1lead2 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=encap_inner_ROI2)
-	Sub_mesh_3_2 = NETGEN_1D_2D_3D_1lead2.GetSubMesh()
-	NETGEN_3D_Parameters_2lead2 = NETGEN_1D_2D_3D_1lead2.Parameters()
-	NETGEN_3D_Parameters_2lead2 =NETGEN_3D_Parameters_2
+    NETGEN_1D_2D_3D_1lead2 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=encap_inner_ROI2)
+    Sub_mesh_3_2 = NETGEN_1D_2D_3D_1lead2.GetSubMesh()
+    NETGEN_3D_Parameters_2lead2 = NETGEN_1D_2D_3D_1lead2.Parameters()
+    NETGEN_3D_Parameters_2lead2 =NETGEN_3D_Parameters_2
 
-	NETGEN_1D_2D_3D_2lead2 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=encap_outer_ROI2)
-	Sub_mesh_4_2 = NETGEN_1D_2D_3D_2lead2.GetSubMesh()
-	NETGEN_3D_Parameters_3lead2 = NETGEN_1D_2D_3D_2lead2.Parameters()
-	NETGEN_3D_Parameters_3lead2 =NETGEN_3D_Parameters_3
+    NETGEN_1D_2D_3D_2lead2 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=encap_outer_ROI2)
+    Sub_mesh_4_2 = NETGEN_1D_2D_3D_2lead2.GetSubMesh()
+    NETGEN_3D_Parameters_3lead2 = NETGEN_1D_2D_3D_2lead2.Parameters()
+    NETGEN_3D_Parameters_3lead2 =NETGEN_3D_Parameters_3
 
-	NETGEN_1D_2D_3D_3lead2 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=ROI2)
-	Sub_mesh_5_2 = NETGEN_1D_2D_3D_3lead2.GetSubMesh()
-	NETGEN_3D_Parameters_4lead2 = NETGEN_1D_2D_3D_3lead2.Parameters()
-	NETGEN_3D_Parameters_4lead2 =NETGEN_3D_Parameters_4
+    NETGEN_1D_2D_3D_3lead2 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=ROI2)
+    Sub_mesh_5_2 = NETGEN_1D_2D_3D_3lead2.GetSubMesh()
+    NETGEN_3D_Parameters_4lead2 = NETGEN_1D_2D_3D_3lead2.Parameters()
+    NETGEN_3D_Parameters_4lead2 =NETGEN_3D_Parameters_4
 
 NETGEN_1D_2D_3D_4 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=Rest_1)
 Sub_mesh_6 = NETGEN_1D_2D_3D_4.GetSubMesh()
@@ -610,9 +608,9 @@ NETGEN_3D_Parameters_5.SetUseSurfaceCurvature( 1 )
 NETGEN_3D_Parameters_5.SetFuseEdges( 1 )
 NETGEN_3D_Parameters_5.SetQuadAllowed( 0 )
 if(Lead2nd_Enable):
-	isDone = Mesh_1.SetMeshOrder( [ [ Sub_mesh_1,Sub_mesh_1_2, Sub_mesh_2,Sub_mesh_2_2, Sub_mesh_3,Sub_mesh_3_2, Sub_mesh_4,Sub_mesh_4_2, Sub_mesh_5,Sub_mesh_5_2, Sub_mesh_6 ] ])
+    isDone = Mesh_1.SetMeshOrder( [ [ Sub_mesh_1,Sub_mesh_1_2, Sub_mesh_2,Sub_mesh_2_2, Sub_mesh_3,Sub_mesh_3_2, Sub_mesh_4,Sub_mesh_4_2, Sub_mesh_5,Sub_mesh_5_2, Sub_mesh_6 ] ])
 else:
-	isDone = Mesh_1.SetMeshOrder( [ [ Sub_mesh_1, Sub_mesh_2, Sub_mesh_3, Sub_mesh_4, Sub_mesh_5, Sub_mesh_6 ] ])
+    isDone = Mesh_1.SetMeshOrder( [ [ Sub_mesh_1, Sub_mesh_2, Sub_mesh_3, Sub_mesh_4, Sub_mesh_5, Sub_mesh_6 ] ])
 isDone = Mesh_1.Compute()
 
 
@@ -625,22 +623,22 @@ Encap_contact = Mesh_1.GroupOnGeom(encap_inner_ROI1,'Encap_contact',SMESH.VOLUME
 RegOfInt = Mesh_1.GroupOnGeom(ROI1,'RegOfInt',SMESH.VOLUME)
 Rst = Mesh_1.GroupOnGeom(Rest_1,'Rst',SMESH.VOLUME)
 if(Lead2nd_Enable):
-	C2_1 = Mesh_1.GroupOnGeom(Contact2_1,'C2_1',SMESH.FACE)
-	C2_2 = Mesh_1.GroupOnGeom(Contact2_2,'C2_2',SMESH.FACE)
-	Encap_rest2 = Mesh_1.GroupOnGeom(encap_outer_ROI2,'Encap_rest2',SMESH.VOLUME)
-	Encap_contact2 = Mesh_1.GroupOnGeom(encap_inner_ROI2,'Encap_contact2',SMESH.VOLUME)
-	RegOfInt2 = Mesh_1.GroupOnGeom(ROI2,'RegOfInt2',SMESH.VOLUME)
+    C2_1 = Mesh_1.GroupOnGeom(Contact2_1,'C2_1',SMESH.FACE)
+    C2_2 = Mesh_1.GroupOnGeom(Contact2_2,'C2_2',SMESH.FACE)
+    Encap_rest2 = Mesh_1.GroupOnGeom(encap_outer_ROI2,'Encap_rest2',SMESH.VOLUME)
+    Encap_contact2 = Mesh_1.GroupOnGeom(encap_inner_ROI2,'Encap_contact2',SMESH.VOLUME)
+    RegOfInt2 = Mesh_1.GroupOnGeom(ROI2,'RegOfInt2',SMESH.VOLUME)
 
 measure = smesh.CreateMeasurements()
 An_meshed_surf=measure.Area(C1_1)
 Cat_meshed_surf=measure.Area(C1_2)
 
 
-print "Core_div: "
-print abs(An_meshed_surf-anode_surf)/anode_surf
+print( "Core_div: ")
+print( abs(An_meshed_surf-anode_surf)/anode_surf)
 
-print "Outer_div: "
-print abs(Cat_meshed_surf-cath_surf)/cath_surf
+print( "Outer_div: ")
+print( abs(Cat_meshed_surf-cath_surf)/cath_surf)
 #TEST!
 #while abs(An_meshed_surf-anode_surf)/anode_surf>0.01:
 #	contact_mesh_max=contact_mesh_max/2.0
@@ -701,19 +699,19 @@ smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 smesh.SetName(Sub_mesh_4, 'Sub-mesh_4')
 
 if(Lead2nd_Enable):
-	smesh.SetName(C2_1, 'C2_1')
-	smesh.SetName(C2_2, 'C2_2')
-	smesh.SetName(Sub_mesh_5_2, 'Sub-mesh_5_2')
-	smesh.SetName(RegOfInt2, 'RegOfInt2')
-	smesh.SetName(Encap_rest2, 'Encap_rest2')
-	smesh.SetName(Encap_contact2, 'Encap_contact2')
-	smesh.SetName(Sub_mesh_3_2, 'Sub-mesh_3_2')
-	smesh.SetName(Sub_mesh_2_2, 'Sub-mesh_2_2')
-	smesh.SetName(Sub_mesh_1_2, 'Sub-mesh_1_2')
-	smesh.SetName(Sub_mesh_4_2, 'Sub-mesh_4_2')
+    smesh.SetName(C2_1, 'C2_1')
+    smesh.SetName(C2_2, 'C2_2')
+    smesh.SetName(Sub_mesh_5_2, 'Sub-mesh_5_2')
+    smesh.SetName(RegOfInt2, 'RegOfInt2')
+    smesh.SetName(Encap_rest2, 'Encap_rest2')
+    smesh.SetName(Encap_contact2, 'Encap_contact2')
+    smesh.SetName(Sub_mesh_3_2, 'Sub-mesh_3_2')
+    smesh.SetName(Sub_mesh_2_2, 'Sub-mesh_2_2')
+    smesh.SetName(Sub_mesh_1_2, 'Sub-mesh_1_2')
+    smesh.SetName(Sub_mesh_4_2, 'Sub-mesh_4_2')
 
 
-Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med', 0, 33)
 
 #if salome.sg.hasDesktop():
 #  salome.sg.updateObjBrowser(True)

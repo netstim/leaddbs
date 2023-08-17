@@ -15,7 +15,6 @@ else
     end
 end
 
-
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -25,19 +24,22 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-    ocname=cname;
-if ismember('>',cname)
-    delim=strfind(cname,'>');
-    subset=cname(delim+1:end);
-    cname=cname(1:delim-1);
+if contains(cname, '>')
+    subset = regexprep(cname, '.*> *', '');
+    cname = regexprep(cname, ' *>.*', '');
 end
-prefs=ea_prefs;
-dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
-dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
-d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
-dataset=d.dataset;
-clear d;
+if exist('subset', 'var')
+    connLabel = ea_getConnLabel(cname, subset);
+else
+    connLabel = ea_getConnLabel(cname, 'FullSet');
+end
+
+dataset = load([dfold,'fMRI',filesep,cname,filesep,'dataset_volsurf.mat']);
+dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
+dataset.type = dinfo.type;
+dataset.subsets = dinfo.subsets;
+
 if exist('outputmask','var')
     if ~isempty(outputmask)
         omask=ea_load_nii(outputmask);
@@ -52,18 +54,10 @@ else
     maskuseidx=1:length(dataset.vol.outidx);
 end
 
-owasempty=0;
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,ocname);
-        owasempty=1;
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
+if ~exist('outputfolder', 'var')
+    outputfolder = '';
+elseif ~isempty(outputfolder) && ~isfolder(outputfolder)
+    mkdir(outputfolder);
 end
 
 if strcmp(sfile{1}(end-2:end),'.gz')
@@ -158,8 +152,8 @@ if ~exist('subset','var') % use all subjects
     usesubjects=1:numSubUse;
 else
     for ds=1:length(dataset.subsets)
-        if strcmp(subset,dataset.subsets(ds).name)
-            usesubjects=dataset.subsets(ds).subs;
+        if strcmp(subset,dataset.subsets{ds}.name)
+            usesubjects=dataset.subsets{ds}.subs;
             break
         end
     end
@@ -177,6 +171,13 @@ if ~exist('db','var')
         otherwise
             ea_error('File format not supported');
     end
+end
+
+stack = dbstack;
+if ismember('ea_networkmapping_calcvals', {stack.name})
+    isNetworkMappingRun = 1;
+else
+    isNetworkMappingRun = 0;
 end
 
 disp('Iterating through subjects...');
@@ -212,23 +213,41 @@ for subj = 1:numSubUse % iterate across subjects
             Rw=sum(Rw,1); % sum is fine since sum of sweightidxmx{s} == 1
         end
 
-        if owasempty
-            outputfolder=ea_getoutputfolder({sfile{s}},ocname);
+        mmap=dataset.vol.space;
+
+        if ~isempty(outputfolder)
+            mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
+        else
+            if ~isBIDSFileName(sfile{s})
+                mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
+            else
+                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap');
+            end
         end
 
-        mmap=dataset.vol.space;
-        mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
-        mmap.dt=[16,0];
+        mmap.dt(1) = 16;
         mmap.img(:)=0;
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=Rw;
-        ea_write_nii(mmap);
-        if usegzip
-            gzip(mmap.fname);
-            delete(mmap.fname);
+
+        if ~isNetworkMappingRun
+            ea_write_nii(mmap);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
         end
 
-        mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+        if ~isempty(outputfolder)
+            mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
+        else
+            if ~isBIDSFileName(sfile{s})
+                mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
+            else
+                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
+            end
+        end
+
         mmap.img(:)=0;
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=atanh(Rw);

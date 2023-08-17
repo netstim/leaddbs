@@ -4,23 +4,12 @@ function ea_apply_normalization(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-directory=[options.root,options.patientname,filesep];
-whichnormmethod=ea_whichnormmethod(directory);
+json = loadjson(options.subj.norm.log.method);
 
-switch whichnormmethod
-
-    case ea_getantsnormfuns
-
-        ea_ants_apply_transforms(options);
-
-    case ea_getfslnormfuns
-
-        ea_fsl_apply_normalization(options);
-
-    case 'ea_normalize_suit'
-
-        ea_spm_apply_normalization(options,'suit');
-
-    otherwise % all SPM functions
-        ea_spm_apply_normalization(options);
+if contains(json.method, 'ANTs')
+    ea_ants_apply_transforms(options);
+elseif contains(json.method, 'FNIRT')
+    ea_fsl_apply_normalization(options);
+elseif contains(json.method, 'SPM')
+    ea_spm_apply_normalization(options);
 end

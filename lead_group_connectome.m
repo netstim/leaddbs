@@ -116,6 +116,8 @@ setappdata(gcf,'M',M);
 ea_refresh_lg_connectome(handles);
 
 handles.prod='group';
+handles.callingfunction='lead_group_connectome';
+
 ea_firstrun(handles,options);
 
 ea_menu_initmenu(handles,{'prefs','transfer'},options.prefs);
@@ -147,7 +149,7 @@ end
 
 if strcmp(target, 'groupDir')
     if length(folders) > 1 || ~exist(folders{1}, 'dir')
-        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
+        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', simpleStack = 1);
     end
 
     groupdir = [folders{1}, filesep];
@@ -157,7 +159,7 @@ if strcmp(target, 'groupDir')
     ea_busyaction('on',handles.leadfigure,'group');
 
     M = ea_initializeM_connectome;
-    M.ui.groupdir = groupdir;
+    M.root = groupdir;
 
     try % if file already exists, load it (and overwrite M).
         load([groupdir,'GroupConnectomeAnalysis.mat']);
@@ -171,8 +173,8 @@ if strcmp(target, 'groupDir')
 
     ea_refresh_lg_connectome(handles);
 else
-    if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
-        ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+    if strcmp(handles.groupdir_choosebox.String, 'Choose Group Directory')
+        ea_error('Please choose a group directory first to store the group analysis!', simpleStack = 1);
     end
 
     nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
@@ -193,7 +195,7 @@ else
         ea_refresh_lg_connectome(handles);
         % save M
         M=getappdata(handles.leadfigure, 'M');
-        save([get(handles.groupdir_choosebox,'String'), 'GroupConnectomeAnalysis.mat'], 'M', '-v7.3');
+        save([handles.groupdir_choosebox.String, 'GroupConnectomeAnalysis.mat'], 'M', '-v7.3');
     end
 end
 
@@ -244,8 +246,8 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addptbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
-    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+if strcmp(handles.groupdir_choosebox.String, 'Choose Group Directory')
+    ea_error('Please choose a group directory first to store the group analysis!', simpleStack = 1);
 end
 
 M=getappdata(handles.leadfigure,'M');
@@ -258,7 +260,7 @@ setappdata(handles.leadfigure,'M',M);
 ea_refresh_lg_connectome(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([get(handles.groupdir_choosebox,'String'),'GroupConnectomeAnalysis.mat'],'M','-v7.3');
+save([handles.groupdir_choosebox.String,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
 
 
 % --- Executes on button press in removeptbutton.
@@ -600,7 +602,7 @@ catch % if not, store it saving M.
     save([groupdir,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
 end
 
-M.ui.groupdir=groupdir;
+M.root = groupdir;
 setappdata(handles.leadfigure,'M',M);
 
 ea_busyaction('off',handles.leadfigure,'group');
@@ -655,13 +657,13 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 ea_busyaction('on',gcf,'group');
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
     ea_refresh_lg_connectome(handles);
     M=getappdata(hObject,'M');
     try
-        save([get(handles.groupdir_choosebox,'String'),'GroupConnectomeAnalysis.mat'],'M','-v7.3');
+        save([handles.groupdir_choosebox.String,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
@@ -748,7 +750,7 @@ end
 
 end
 
-spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];
+spmdir = [M.root,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];
 if exist(spmdir, 'dir')
     rmdir(spmdir,'s');
 end
@@ -918,8 +920,8 @@ for sub=1:length(M.patient.list)
     ftrFiles{sub} = [M.patient.list{sub},filesep,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
 end
 
-if ~exist([M.ui.groupdir,'connectomes',filesep,'dMRI'], 'dir')
-    mkdir([M.ui.groupdir,'connectomes',filesep,'dMRI'])
+if ~exist([M.root,'connectomes',filesep,'dMRI'], 'dir')
+    mkdir([M.root,'connectomes',filesep,'dMRI'])
 end
 
 entries=get(handles.gcfilter,'String');
@@ -936,7 +938,7 @@ switch entry
 end
 
 ea_ftr_aggregate(ftrFiles, ...
-    [M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized], ...
+    [M.root,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized], ...
     howmanyfibs, 'number', filtermask);
 
 
@@ -1047,7 +1049,7 @@ UI.test.ui=UI.test.ui{get(handles.lc_stattest,'Value')};
 UI.thresh.ui = get(handles.lc_threshold,'String');
 UI.contrast.ui = get(handles.lc_contrast,'String');
 ea_preparenbs(handles)
-root=get(handles.groupdir_choosebox,'String');
+root=handles.groupdir_choosebox.String;
 UI.design.ui = [root,'NBSdesignMatrix.mat'];
 UI.matrices.ui = [root,'NBSdataMatrix.mat'];
 UI.node_coor.ui = '';
@@ -1155,7 +1157,7 @@ mX=zeros(length(gv),max(gv));
 for g=1:max(gv)
     mX(:,g)=gv==g;
 end
-save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+save([handles.groupdir_choosebox.String,'NBSdesignMatrix'],'mX');
 
 % prepare data matrix:
 
@@ -1184,7 +1186,7 @@ if ismember('&',thismetr)
     end
 
     mX=repmat(eye(2),length(mX),1);
-    save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+    save([handles.groupdir_choosebox.String,'NBSdesignMatrix'],'mX');
 else
  metrix{1}=thismetr;
 end
@@ -1210,7 +1212,7 @@ for pt=1:length(M.patient.list)
         Xcnt=Xcnt+1;
     end
 end
-save([get(handles.groupdir_choosebox,'String'),'NBSdataMatrix'],'allX','-v7.3');
+save([handles.groupdir_choosebox.String,'NBSdataMatrix'],'allX','-v7.3');
 
 
 % --- Executes on button press in lc_nbsadvanced.

@@ -10,11 +10,13 @@ classdef ea_networkmapping < handle
         negvisible = 0 % neg voxels visible
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
-        statmetric = 'Correlations (R-map)' % Statistical model to use
+        statmetric = 'Correlations (Horn 2017)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
+        statthresh = 0.2; % t-threshold for N-maps (typically referred to as sensitivity maps in lesion network mapping)
         posBaseColor = [1,1,1] % positive main color
         posPeakColor = [0.9176,0.2000,0.1373] % positive peak color
-
+        smooth_fp = 0; % run smoothing
+        normalize_fp = 0; % run ea_normal / van Albada method to Gaussianize fingerprints
         negBaseColor = [1,1,1] % negative main color
         negPeakColor = [0.2824,0.6157,0.9725] % negative peak color
         showsignificantonly = 0
@@ -34,6 +36,7 @@ classdef ea_networkmapping < handle
         drawobject % handle to surface drawn on figure
         exportmodelsAsNifti=0 % export models during cross-validation into the lg directory
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
+        testagainst_patientselection % selected patients to test against (in two-sample t-test, typically resulting in a specificity map in the lesion network mapping context).
         setlabels={};
         setselections={};
         customselection % selected patients in the custom test list
@@ -41,6 +44,8 @@ classdef ea_networkmapping < handle
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
+        certainvar % certainty variable
+        certainvarlabel = 'None' % label of certainty variable
         covars = {} % covariates
         covarlabels = {} % covariate labels
         cvmask = 'Gray Matter';
@@ -54,6 +59,7 @@ classdef ea_networkmapping < handle
         rngseed = 'default';
         Nperm = 1000 % how many permutations in leave-nothing-out permtest strategy
         kfold = 5 % divide into k sets when doing k-fold CV
+        kiter = 1
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
     end
@@ -89,8 +95,10 @@ classdef ea_networkmapping < handle
                 if isfield(obj.M,'pseudoM')
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
-                    obj.M = ea_map_pseudoM(obj.M);
-                    obj.M.patient.list=obj.M.ROI.list; % copies
+                    obj.M.patient.list = cell(size(obj.M.ROI.list,1), 1);
+                    for i = 1:size(obj.M.ROI.list,1)
+                        obj.M.patient.list{i,1} = obj.M.ROI.list{i,1};
+                    end
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
                     obj.allpatients = obj.M.patient.list;
@@ -109,7 +117,6 @@ classdef ea_networkmapping < handle
                     end
                 end
                 clear D
-                keyboard
             else
                 ea_error('You have opened a file of unknown type.')
                 return
@@ -136,6 +143,12 @@ classdef ea_networkmapping < handle
 
             obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
 
+            % Functional connectome, add spacedef to results
+            if contains(obj.connectome, ' > ')
+                connName = regexprep(obj.connectome, ' > .*$', '');
+                load([ea_getconnectomebase('fmri'), connName, filesep, 'dataset_volsurf.mat'], 'vol');
+                obj.results.(ea_conn2connid(obj.connectome)).space = vol.space;
+            end
         end
 
         function Amps = getstimamp(obj)
@@ -188,7 +201,7 @@ classdef ea_networkmapping < handle
 
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
-                msgbox('LEAD_groupanalysis file has vanished. Please select file.');
+                msgbox('Groupan alysis file has vanished. Please select file.');
                 [fn,pth]=uigetfile();
                 obj.leadgroup=fullfile(pth,fn);
             end
@@ -216,9 +229,65 @@ classdef ea_networkmapping < handle
         end
 
         function [I, Ihat] = kfoldcv(obj)
-            rng(obj.rngseed);
-            cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
-            [I, Ihat] = crossval(obj, cvp);
+            if obj.kiter == 1
+                rng(obj.rngseed);
+                cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+                [I, Ihat] = crossval(obj, cvp);
+            else
+                r_over_iter = zeros(obj.kiter,1);
+                p_over_iter = zeros(obj.kiter,1);
+                for i=1:obj.kiter
+                    cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+                    fprintf("Iterating fold set: %d",i)
+                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp);
+                    inx_nnan = find(isnan(I_iter{i}) ~= 1);
+                    [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
+                end
+                
+                r_Ihat = zeros(size(Ihat_iter,2));
+                for i = 1:size(r_Ihat,1)
+                    for j = 1:size(r_Ihat,1)
+                        [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
+                    end
+                end
+                % plot correlation matrix
+                figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                imagesc(triu(r_Ihat));
+                title('Patient scores'' correlations over K-fold shuffles', 'FontSize', 16); % set title
+                colormap('bone');
+                cb = colorbar;
+                set(cb)
+
+                % plot r-vals over shuffles
+                p_above_05 = p_over_iter(find(p_over_iter>0.05),:);
+                p_above_01 = p_over_iter(find(p_over_iter>0.01),:);
+                h = figure('Name','Over-fold analysis','Color','w','NumberTitle','off');
+                g = ea_raincloud_plot(r_over_iter,'box_on',1);
+                a1=gca;
+                set(a1,'ytick',[])
+                a1.XLabel.String='Spearman''s R of model and clinical scores';
+
+                if min(r_over_iter) >= -0.9
+                    r_lower_lim = min(r_over_iter) - 0.1;
+                else
+                    r_lower_lim = -1.0;
+                end
+                if max(r_over_iter) <= 0.9
+                    r_upper_lim = max(r_over_iter) + 0.1;
+                else
+                    r_upper_lim = 1.0;
+                end
+
+                a1.XLim=([r_lower_lim r_upper_lim]);
+                text(0.25,0.9,['N(p>0.05) = ',sprintf('%d',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                text(0.25,0.83,['N(p>0.01) = ',sprintf('%d',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                % we should think about this part
+                I_iter = cell2mat(I_iter);
+                Ihat_iter = cell2mat(Ihat_iter);
+                I = mean(I_iter,2,'omitnan');
+                Ihat = mean(Ihat_iter,2,'omitnan');
+            end
+
         end
 
         function [I, Ihat] = lno(obj, Iperm)
@@ -293,9 +362,7 @@ classdef ea_networkmapping < handle
                 end
 
                 if obj.exportmodelsAsNifti
-
                     % determine how to call selected patients
-
                     for set=1:length(obj.setlabels)
                         if isequal(obj.patientselection,find(obj.setselections{set}))
                             setname=ea_space2sub(obj.setlabels{set});
@@ -309,44 +376,53 @@ classdef ea_networkmapping < handle
                     end
 
                     % determine which cv is running
-                   st = dbstack;
-                   callingfunction = st(2).name;
-                   callingfunction = strrep(callingfunction,'ea_networkmapping.','');
+                    st = dbstack;
+                    callingfunction = st(2).name;
+                    callingfunction = strrep(callingfunction,'ea_networkmapping.','');
 
-                   res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
-                   res.dt=[16,1];
-                   res.img(:)=vals{1};
+                    if contains(obj.connectome, ' > ')
+                        % For functional connectome, should use the spacedef provided by the connectome itself
+                        res = obj.results.(ea_conn2connid(obj.connectome)).space;
+                    else
+                        res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+                    end
+                    res.dt(1) = 16;
+                    res.img(:)=vals{1};
 
-                   ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
-                   res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction,[ea_space2sub(obj.statmetric),'_',num2str(c),'.nii']);
-                   ea_write_nii(res);
+                    ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
+                    res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction,[ea_space2sub(obj.statmetric),'_',num2str(c),'.nii']);
+                    ea_write_nii(res);
 
-                   % also check if fingerprints have already been exported
-                   if c==1
-                       odir=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints');
-                       if exist(odir,'dir')
-                          ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']);
-                       end
-                       ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints'));
-                       for pt=obj.patientselection
-
-                           res.img(:)=obj.results.(ea_conn2connid(obj.connectome)).connval(pt,:);
-                           res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints',['Fingerprint_',num2str(pt),'.nii']);
-                           ea_write_nii(res);
-                       end
-                   end
+                    % also check if fingerprints have already been exported
+                    if c==1
+                        odir=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints');
+                        if exist(odir,'dir')
+                            ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']);
+                        end
+                        ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints'));
+                        for pt=obj.patientselection
+                            res.img(:)=obj.results.(ea_conn2connid(obj.connectome)).connval(pt,:);
+                            res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints',['Fingerprint_',num2str(pt),'.nii']);
+                            ea_write_nii(res);
+                        end
+                    end
                 end
-
-                switch lower(obj.basepredictionon)
-                    case 'spatial correlations (spearman)'
-                        Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
-                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Spearman');
-                    case 'spatial correlations (pearson)'
-                        Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
-                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Pearson');
-                    case 'spatial correlations (bend)'
-                        Ihat(test) = ea_bendcorr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
-                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))');
+                usemask=ea_getobjmask(obj,vals{1});
+                switch obj.statmetric
+                    case 'Database Lookup'
+                        Ihat(test)=ea_ihat_databaselookup_netmap(obj,vals,connval,patientsel,test,training,usemask);
+                    otherwise
+                        switch lower(obj.basepredictionon)
+                            case 'spatial correlations (spearman)'
+                                Ihat(test) = corr(vals{1}(usemask)',...
+                                    connval(patientsel(test),usemask)','rows','pairwise','type','Spearman');
+                            case 'spatial correlations (pearson)'
+                                Ihat(test) = corr(vals{1}(usemask)',...
+                                    connval(patientsel(test),usemask)','rows','pairwise','type','Pearson');
+                            case 'spatial correlations (bend)'
+                                Ihat(test) = ea_bendcorr(vals{1}(usemask)',...
+                                    connval(patientsel(test),usemask)');
+                        end
                 end
             end
 
@@ -367,56 +443,8 @@ classdef ea_networkmapping < handle
                 Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
         end
-
-        function maskn=ea_mask2maskn(obj)
-            switch obj.cvmask
-                case 'Gray Matter'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='gray';
-                        case '111'
-                            maskn='gray_hd';
-                        case '555'
-                            maskn='gray_5';
-                    end
-                case 'Brain'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='brain';
-                        case '111'
-                            maskn='brain_hd';
-                        case '555'
-                            maskn='brain_5';
-                    end
-                case 'Cortex & Cerebellum'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='cortexcb';
-                        case '111'
-                            maskn='cortexcb_hd';
-                        case '555'
-                            ea_error('Cortex & Cerebellum Mask not supported for 0.5 mm resolution space');
-                    end
-                case 'Cortex'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='cortex';
-                        case '111'
-                            maskn='cortex_hd';
-                        case '555'
-                            maskn='cortex_5';
-                    end
-                case 'Cerebellum'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='cb';
-                        case '111'
-                            maskn='cb_hd';
-                        case '555'
-                            ea_error('Cerebellum Mask not supported for 0.5 mm resolution space');
-                    end
-            end
-        end
+        
+        
 
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
@@ -447,8 +475,7 @@ classdef ea_networkmapping < handle
             R1 = R(1);
             R0 = sort(abs(R(2:end)),'descend');
             Rp95 = R0(round(0.05*numPerm));
-            v = ea_searchclosest(R0, R1);
-            pperm = v/numPerm;
+            pperm = mean(abs(R0)>=abs(R1));
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
             % Return only selected I
@@ -470,6 +497,23 @@ classdef ea_networkmapping < handle
         end
 
         function res=draw(obj,vals)
+            % cleanup
+            if isempty(obj.drawobject) % check if prior object has been stored
+                obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
+            end
+            for s=1:numel(obj.drawobject)
+                for ins=1:numel(obj.drawobject{s})
+                    try delete(obj.drawobject{s}{ins}.toggleH); end
+                    try delete(obj.drawobject{s}{ins}.patchH); end
+                    try delete(obj.drawobject{s}{ins}); end
+                end
+            end
+            obj.drawobject={};
+
+            if strcmp(obj.statmetric,'Database Lookup') % output not viable to plot
+                return
+            end
+
             if ~exist('vals','var')
                 [vals]=ea_networkmapping_calcstats(obj);
             end
@@ -486,17 +530,7 @@ classdef ea_networkmapping < handle
                 obj.M.groups.color=ea_color_wes('all');
             end
             linecols=obj.M.groups.color;
-            if isempty(obj.drawobject) % check if prior object has been stored
-                obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
-            end
-            for s=1:numel(obj.drawobject)
-                for ins=1:numel(obj.drawobject{s})
-                    try delete(obj.drawobject{s}{ins}.toggleH); end
-                    try delete(obj.drawobject{s}{ins}.patchH); end
-                    try delete(obj.drawobject{s}{ins}); end
-                end
-            end
-            obj.drawobject={};
+           
 
             % reset colorbar
             obj.colorbar=[];
@@ -504,13 +538,21 @@ classdef ea_networkmapping < handle
                 return
             end
 
-            res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
-            res.dt=[16,1];
+            if contains(obj.connectome, ' > ')
+                % For functional connectome, should use the spacedef provided by the connectome itself
+                res = obj.results.(ea_conn2connid(obj.connectome)).space;
+            else
+                res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+            end
+            res.dt(1) = 16;
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Horzvat all values for colorbar construction
                 allvals = horzcat(vals{group,:})';
-                if isempty(allvals)
+                if isempty(allvals) || all(isnan(allvals))
+                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
                     continue;
+                else
+                    allvals(isnan(allvals)) = 0;
                 end
 
                 if obj.posvisible && all(allvals<0)
@@ -597,17 +639,11 @@ classdef ea_networkmapping < handle
 
                         res.img(:)=vals{group};
                     case 'Surface (Elvis)'
-                        % first draw correct surface
-                        switch obj.model
-                            case 'Smoothed'
-                                if obj.modelRH; [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf_smoothed.rh.mz3']); end
-                                if obj.modelLH; [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf_smoothed.lh.mz3']); end
-                            case 'Full'
-                                if obj.modelRH; [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf.rh.mz3']); end
-                                if obj.modelLH; [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf.lh.mz3']); end
-                        end
-
-                        % Check cmap
+                        sides=1:2;
+                        keep=[obj.modelRH,obj.modelLH]; 
+                        sides = keep.*sides;
+                        %sides=sides(keep);
+                         % Check cmap
                         if exist('voxcmap','var') && ~isempty(voxcmap{group})
                             defaultColor = [1 1 1]; % Default color for nan values
                             cmap = [voxcmap{group}; defaultColor];
@@ -615,48 +651,16 @@ classdef ea_networkmapping < handle
                             warning('Colormap not defined!')
                             return
                         end
-
-                        % get colors for surface:
-                        bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
-                        [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...
-                            linspace(bb(2,1),bb(2,2),size(res.img,2)),...
-                            linspace(bb(3,1),bb(3,2),size(res.img,3)));
                         res.img(:)=vals{group};
-
-                        if ~obj.posvisible
-                            res.img(res.img>0)=0;
-                        end
-
-                        if ~obj.negvisible
-                            res.img(res.img<0)=0;
-                        end
-
-                        if obj.modelRH
-                            ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),rh.vertices);
-                            if any(~isnan(ic))
-                                CInd = round(ea_contrast(ic)*gradientLevel+1);
-                                CInd(isnan(CInd)) = gradientLevel + 1; % set to white for now
-                                rhCData = cmap(CInd,:);
-                            else
-                                rhCData = repmat(defaultColor, size(rh.vertices,1), 1);
-                            end
-                            obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',rhCData,...
-                                'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
-                            obj.drawobject{group}{1}.Tag=['LH_surf',obj.model];
-                        end
-
-                        if obj.modelLH
-                            ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),lh.vertices);
-                            if any(~isnan(ic))
-                                CInd = round(ea_contrast(ic)*gradientLevel+1);
-                                CInd(isnan(CInd)) = gradientLevel + 1; % set to white for now
-                                lhCData = cmap(CInd,:);
-                            else
-                                lhCData = repmat(defaultColor, size(lh.vertices,1), 1);
-                            end
-                            obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',lhCData,...
-                                'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
-                            obj.drawobject{group}{1}.Tag=['RH_surf',obj.model];
+                        
+                        h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
+                        if obj.modelRH && obj.modelLH
+                            obj.drawobject{group}{1} = h{1};
+                            obj.drawobject{group}{2} = h{2};
+                        elseif obj.modelRH
+                            obj.drawobject{group}{1} = h{1};
+                        elseif obj.modelLH
+                            obj.drawobject{group}{2} = h{2};
                         end
                     case 'Surface (Surfice)'
                         res.img(:)=vals{group};
@@ -751,16 +755,28 @@ classdef ea_networkmapping < handle
                         tick{group} = [1, gradientLevel/2-10, gradientLevel/2+11, length(voxcmap{group})];
                         poscbvals = sort(allvals(allvals>0));
                         negcbvals = sort(allvals(allvals<0));
+                        if isempty(negcbvals)
+                            negcbvals=nan;
+                        end
+                        if isempty(poscbvals)
+                            poscbvals=nan;
+                        end
                         ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.posvisible
                         tick{group} = [1, length(voxcmap{group})];
                         posvals = sort(allvals(allvals>0));
+                        if isempty(posvals)
+                            posvals=nan;
+                        end
                         ticklabel{group} = [posvals(1), posvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.negvisible
                         tick{group} = [1, length(voxcmap{group})];
                         negvals = sort(allvals(allvals<0));
+                        if isempty(negvals)
+                            negvals=nan;
+                        end
                         ticklabel{group} = [negvals(1), negvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     end

@@ -4,8 +4,10 @@ try
     ea_updatemodel(options);
 end
 
-% check if sides is specified correctly for visualization:
-options=ea_detsides(options);
+% check if sides is specified correctly for visualization
+if isfield(options, 'subj')
+    options=ea_detsides(options);
+end
 
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
@@ -18,8 +20,8 @@ if options.d2.write || options.d3.write
       options.atl.pt=1;
       options.atl.can=0;
 
-   elseif length(options.atlasset)>=13 && strcmp(options.atlasset(1:13),'Local atlas: ')
-       options.atlasset=options.atlasset(14:end);
+   elseif startsWith(options.atlasset, 'Local atlas: ')
+       options.atlasset = erase(options.atlasset, 'Local atlas: ');
 
    elseif strcmp(options.atlasset,'Use none')
        % do nothing
@@ -30,7 +32,7 @@ end
 if options.d2.write
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
-    cuts=ea_writeplanes(options);
+    ea_writeplanes(options);
 end
 
 % Render 3D Visualization

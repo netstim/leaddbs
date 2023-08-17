@@ -32,6 +32,7 @@ if nargin < 4
         transform = transform{1};
     end
 elseif regexp(varargin{4}, '^[a-zA-Z]+( +[a-zA-Z]+)*$')
+% elseif isfile(varargin{4})
     transformType = lower(varargin{4});
     if regexp(transformType, '^fsl') % Determine FSL transformation name
         transformType = regexp(transformType, '(?<=^fsl )(.+)$', 'match', 'once');
@@ -58,12 +59,7 @@ else
     end
 end
 
-xfm = '(?<=_)([a-z]+)(?=\d*\.(mat|h5)$)';
-transformType = upper(regexp(transform, xfm, 'match', 'once'));
-
-if ismember(transformType, {'FLIRT','FLIRTBBR'}) % Fix FSL transformation name - this will also be the extension for bbr.
-    transformType = 'FSL';
-end
+transformType = upper(regexp(transform, '(?<=desc-)\w+(?=\.mat)', 'match', 'once'));
 
 % nn: NearestNeighbor
 % lbl: Label (for multi-label image, ANTs uses 'GenericLabel' rather than 'NearestNeighbor')
@@ -107,7 +103,7 @@ switch transformType
             case {'spl', 'spline'}
                 interp = 'BSpline';
         end
-    case 'FSL'
+    case {'FLIRT','FLIRTBBR', 'BBR', 'FSL'}
         % trilinear, nearestneighbour, sinc, spline
         switch lower(interp)
             case {'nn', 'nearestneighbor', 'lbl', 'label'}
@@ -145,6 +141,9 @@ switch transformType
         ea_ants_apply_transforms([], movingimage, outputimage, ...
             0, fixedimage, transform, interp)
     case 'FSL'
+        ea_fsl_apply_coregistration(fixedimage, movingimage, outputimage, ...
+            transform, interp)
+    case 'FLIRT'
         ea_fsl_apply_coregistration(fixedimage, movingimage, outputimage, ...
             transform, interp)
     case 'BRAINSFIT'

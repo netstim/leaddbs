@@ -55,7 +55,7 @@ joint.img=joint.img-min(joint.img(:));
 joint.img=joint.img/max(joint.img(:));
 joint.img=joint.img*(100); % 
 joint.fname=[ea_space,'pca.nii'];
-joint.dt=[4,0];
+joint.dt(1) = 4;
 ea_write_nii(joint);
 
 %% uncomment to also write out 2nd and 3rd PCs
@@ -67,7 +67,7 @@ ea_write_nii(joint);
 % joint.img=joint.img/max(joint.img(:));
 % joint.img=joint.img*(100); % 
 % joint.fname=[ea_space,'pca2.nii'];
-% joint.dt=[4,0];
+% joint.dt(1) = 4;
 % ea_write_nii(joint);
 % 
 % joint=t1;
@@ -78,6 +78,6 @@ ea_write_nii(joint);
 % joint.img=joint.img/max(joint.img(:));
 % joint.img=joint.img*(100); % 
 % joint.fname=[ea_space,'pca3.nii'];
-% joint.dt=[4,0];
+% joint.dt(1) = 4;
 % ea_write_nii(joint);
 

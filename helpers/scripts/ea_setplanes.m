@@ -28,10 +28,10 @@ setappdata(resultfig,'togglestates',togglestates);
 % Update anatomy control GUI
 awin = getappdata(resultfig, 'awin');
 if isvalid(awin) % check if not deleted (closed)
-handle = guidata(awin);
-handle.xval.String = num2str(xx);
-handle.yval.String = num2str(yy);
-handle.zval.String = num2str(zz);
+    handle = guidata(awin);
+    handle.xval.String = num2str(xx);
+    handle.yval.String = num2str(yy);
+    handle.zval.String = num2str(zz);
 end
 
 togglestates.xyztoggles=~isnan(setXYZ);

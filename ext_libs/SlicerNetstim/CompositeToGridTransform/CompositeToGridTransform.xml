@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <category>Utilities</category>
+  <title>CompositeToGridTransform</title>
+  <description><![CDATA[This is a CLI module that can be bundled in an extension]]></description>
+  <version>0.0.1</version>
+  <documentation-url>https://github.com/username/project</documentation-url>
+  <license>Slicer</license>
+  <contributor>FirstName LastName (Institution), FirstName LastName (Institution)</contributor>
+  <acknowledgements>This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN</acknowledgements>
+  <parameters>
+    <transform fileExtensions=".h5">
+      <name>inputTransform1Node</name>
+      <longflag>--inputTransform1Node</longflag>
+      <description>Input Transform 1</description>
+      <label>Input Transform 1 Node</label>
+      <default>None</default>
+      <channel>input</channel>
+    </transform>
+    <string>
+      <name>inputTransform1File</name>
+      <longflag>--inputTransform1File</longflag>
+      <description>Alternativly to a MRML Node, load transform from chosen file.</description>
+      <label>Input Transform 1 File</label>
+      <default></default>
+      <channel>input</channel>
+    </string>
+    <transform fileExtensions=".h5">
+      <name>inputTransform2Node</name>
+      <longflag>--inputTransform2Node</longflag>
+      <description>Input Transform 2</description>
+      <label>Input Transform 2 Node</label>
+      <default>None</default>
+      <channel>input</channel>
+    </transform>
+    <string>
+      <name>inputTransform2File</name>
+      <longflag>--inputTransform2File</longflag>
+      <description>Alternativly to a MRML Node, load transform from chosen file.</description>
+      <label>Input Transform 2 File</label>
+      <default></default>
+      <channel>input</channel>
+    </string>
+    <image>
+      <name>inputReferenceVolumeNode</name>
+      <longflag>--inputReferenceVolumeNode</longflag>
+      <label>Reference Volume Node</label>
+      <default>None</default>
+      <description>Reference volume</description>
+      <channel>input</channel>
+    </image>
+    <string>
+      <name>inputReferenceVolumeFile</name>
+      <longflag>--inputReferenceVolumeFile</longflag>
+      <label>Reference Volume File</label>
+      <default></default>
+      <description>Alternativly to a MRML Node, load volume from chosen file.</description>
+      <channel>input</channel>
+    </string>
+    <transform fileExtensions=".nrrd" type="nonlinear">
+      <name>outputDisplacementField</name>
+      <longflag>--outputDisplacementField</longflag>
+      <description>Deformation field</description>
+      <label>Output Displacement Field</label>
+      <default>None</default>
+      <channel>output</channel>
+    </transform>
+    <string>
+      <name>outputFileName</name>
+      <longflag>--outputFileName</longflag>
+      <description>Alternativly to a MRML Node, choose a file to save the transform directly.</description>
+      <label>Output File Name</label>
+      <default></default>
+      <channel>input</channel>
+    </string>
+  </parameters>
+</executable>

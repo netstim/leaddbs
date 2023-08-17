@@ -3,7 +3,7 @@ function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_n
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-if options.modality==2 % CT support
+if strcmp(options.subj.postopModality, 'CT') % CT support
     tra_nii.img=tra_nii.img*-1;
 else
     if strcmp(options.entrypoint,'Auto')
@@ -23,34 +23,34 @@ endcount=0;
 nanflag=0;
 
 % determine startslice at ~ z=8.7mm
-[startslice,endslice,masksz]=ea_getstartslice(options);
-mmpt=[0;0;startslice;1];
-mmvx=tra_nii.mat\mmpt;
-startslice=round(mmvx(3));
+[startslice,endslice,masksz] = ea_getstartslice(options);
+mmpt = [0;0;startslice;1];
+mmvx = tra_nii.mat\mmpt;
+startslice = round(mmvx(3));
 clear mmpt mmvx
 
-if side>2 % always go for manual entrypoint in case of >second electrode.
+if side > 2 % always go for manual entrypoint in case of >second electrode.
     options.entrypoint='Manual';
 end
 
-flipside=1+(tra_nii.mat(1)<0);
+flipside = 1+(tra_nii.mat(1)<0);
 
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
     % define initial mask
-    mask=zeros(size(slice,1),size(slice,2));
+    mask = zeros(size(slice,1),size(slice,2));
     switch options.entrypoint
         case 'Manual'
-            colormask=zeros(size(slice,1),size(slice,2),3);
-            colormask(:,:,1)=1;
-            mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
+            colormask = zeros(size(slice,1),size(slice,2),3);
+            colormask(:,:,1) = 1;
+            mask(masksz(1):masksz(2),masksz(3):masksz(4)) = 1;
 
-            if side==flipside
-                mask=flip(mask,2);
+            if side == flipside
+                mask = flip(mask,2);
             end
 
-            slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
+            slice = double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
             %slice=fliplr(slice);
-            slice(slice==0)=nan;
+            slice(slice==0) = nan;
             mn = figure('color','w','ToolBar','none','NumberTitle','off','Menubar','none','name','Please specify manual starting point.');
             ax = axes;
             WinOnTop(mn, true); % bring window to top
@@ -65,17 +65,17 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             [X, Y] = ginput(1);
             close(mn);
             % reset mask from mouse input
-            mask=zeros(size(slice,1),size(slice,2));
-            mask(round(Y-10:Y+10),round(X-10:X+10))=1;
+            mask = zeros(size(slice,1),size(slice,2));
+            mask(round(Y-10:Y+10),round(X-10:X+10)) = 1;
         case 'Auto'
             % TP: Similar to manual, but try to detect entry-point using artefact
             crop_n = 100;
-            slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
+            slice = double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
             [h,w] = size(slice);
             crop = slice(crop_n:h-crop_n, crop_n:w-crop_n);
             midpt = floor(size(crop,2)/2);
             idx = 1:midpt;
-            if side==flipside
+            if side == flipside
                 idx = midpt:size(crop,2);
             end
             b = crop(:,idx);
@@ -102,22 +102,22 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             X = round(X + X2 - size(crop,2)/2);
             Y = round(Y + Y2 - size(crop,1)/2);
 
-            mask=zeros(h,w);
-            mask(round(Y-10:Y+10),round(X-10:X+10))=1;
+            mask = zeros(h,w);
+            mask(round(Y-10:Y+10),round(X-10:X+10)) = 1;
         otherwise
-            mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
-            if side==flipside
-                mask=fliplr(mask);
+            mask(masksz(1):masksz(2),masksz(3):masksz(4)) = 1;
+            if side == flipside
+                mask = fliplr(mask);
             end
     end
 
     % initialize slice. mean average for entrypoint over the first 4 slices.
-    slice=zeros(size(mask,1),size(mask,2),4);
-    slicebw=zeros(size(mask,1),size(mask,2),4);
+    slice = zeros(size(mask,1),size(mask,2),4);
+    slicebw = zeros(size(mask,1),size(mask,2),4);
 
-    for i=10:14
+    for i = 10:14
         try
-        [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
+        [slice(:,:,i),slicebw(:,:,i)] = ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
         catch
             % keyboard % TP: Requesting input here pauses tasks when batch
             % processing. I made a work around,but not sure if it will lead
@@ -129,39 +129,39 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             end
         end
     end
-    slice=mean(slice,3);
-    slicebw=logical(mean(slicebw,3));
-    slicebw=ea_centralcomponent(slicebw,mask,options);
+    slice = mean(slice,3);
+    slicebw = logical(mean(slicebw,3));
+    slicebw = ea_centralcomponent(slicebw,mask,options);
 
     %keyboard % here to analyse initial slice.
 
-    stats=ea_centroid(slicebw);
+    stats = ea_centroid(slicebw);
     try
         isempty(stats.Centroid); % this is only to check if stats.Centroid is empty.
-        centerline(1,:)=[stats.Centroid,startslice];
+        centerline(1,:) = [stats.Centroid,startslice];
     catch
         disp('Threshold too high?');
     end
 end
 
-Vmat=nii2Vmat(tra_nii);
-zfifteen=Vmat\[0;0;endslice;1];
+Vmat = nii2Vmat(tra_nii);
+zfifteen = Vmat\[0;0;endslice;1];
 
-if side==1
+if side == 1
     if options.verbose>1
-        progressfig=figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none');
+        progressfig = figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none');
         set(gcf,'color','w');
         axis off;
     end
-elseif side==2
+elseif side == 2
     if options.verbose>1
-        progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none');
+        progressfig = figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none');
         set(gcf,'color','w');
         axis off;
     end
 else
-    if options.verbose>1
-        progressfig=figure('name',['Finding electrode number ',num2str(side)],'NumberTitle','off','Menubar','none','ToolBar','none');
+    if options.verbose > 1
+        progressfig = figure('name',['Finding electrode number ',num2str(side)],'NumberTitle','off','Menubar','none','ToolBar','none');
         set(gcf,'color','w');
         axis off;
     end
@@ -170,23 +170,23 @@ end
 set(progressfig,'KeyPressFcn',@ea_keystr);
 
 %% starting slice 2:end
-for sliceno=2:startslice % sliceno is the counter (how many slices have been processed).
+for sliceno = 2:startslice % sliceno is the counter (how many slices have been processed).
     % uncomment the following two lines to write out slice views.
     %imwrite(((reshape(slice(logical(mask)),sqrt(numel(find(mask))),sqrt(numel(find(mask)))))-min(slice(:)))/(max(slice(:)-min(slice(:)))),['slice_',num2str(sliceno),'.png']);
     %imwrite(reshape(slicebw(logical(mask)),sqrt(numel(find(mask))),sqrt(numel(find(mask)))),['slicebw_',num2str(sliceno),'.png']);
     if refine
-        centerline(1,:)=priortrajectory(1,:); % define initial point and mask for this run.
+        centerline(1,:) = priortrajectory(1,:); % define initial point and mask for this run.
         mask=zeros(size(slice,1),size(slice,2));
         try
-            estpoint=priortrajectory(sliceno,:); % overwrite estpoint defined at the end of the loop if priortrajectory is defined.
+            estpoint = priortrajectory(sliceno,:); % overwrite estpoint defined at the end of the loop if priortrajectory is defined.
         catch
             break
         end
         mask(round(estpoint(2)-options.maskwindow):round(estpoint(2)+options.maskwindow),round(estpoint(1)-options.maskwindow):round(estpoint(1)+options.maskwindow))=1;
     end
 
-    imgsliceno=startslice-(sliceno-1); % imgsliceno is the slice number in the image.
-    if imgsliceno<zfifteen(3) && ~strcmp(options.entrypoint,'Cg25')
+    imgsliceno = startslice-(sliceno-1); % imgsliceno is the slice number in the image.
+    if imgsliceno < zfifteen(3) && ~strcmp(options.entrypoint,'Cg25')
         ea_showdis('Lower than z=-15.5 mm. Stopping.',options.verbose);
         break
     end
@@ -196,7 +196,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
     %-------------------------------------------------------------------------------------------------%
     % the following function will return the slice and a bw copy of the
     % slice.
-    [slice,slicebw,maskslice,maskslicebw]=ea_prepare_slice(tra_nii,mask,sliceno,imgsliceno,options);
+    [slice,slicebw,maskslice,maskslicebw] = ea_prepare_slice(tra_nii,mask,sliceno,imgsliceno,options);
     if isempty(find(slicebw, 1)) % -> slice is not empty
         % HANDLE EMPTY SLICE
     end
@@ -388,7 +388,7 @@ end
 
 function [startslice,endslice,masksz]=ea_getstartslice(options) % get reconstruction default dimensions for current space
 spacedef=ea_getspacedef;
-standardspacedef=load([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'ea_space_def.mat']);
+standardspacedef=load([ea_getearoot,'templates',filesep,'space',filesep,'MNI152NLin2009bAsym',filesep,'spacedef.mat']);
 if isfield(spacedef,'guidef')
     whichentry=ismember(options.entrypoint,spacedef.guidef.entrypoints);
     masksz=spacedef.guidef.masks(whichentry,:);

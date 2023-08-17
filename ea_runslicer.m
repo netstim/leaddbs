@@ -14,12 +14,14 @@ function varargout =  ea_runslicer(options, task)
 %  Things to note: user must set the path of the slicer executable. It would
 %  be nice if there was an easy method to determine the path automatically.
 
-    ea_hastoolbox('slicer');
-
     options.prefs = ea_prefs('');
-    if ~isfield(options.prefs, 'slicer')
-        warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
-        return;
+    if ~isfield(options.prefs,'slicer') || isempty(options.prefs.slicer.dir)
+        ea_hastoolbox('slicer');
+        options.prefs = ea_prefs('');
+        if ~isfield(options.prefs, 'slicer')
+            warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
+            return;
+        end
     end
 
     slicer_path = options.prefs.slicer.dir;
@@ -31,27 +33,27 @@ function varargout =  ea_runslicer(options, task)
     % 'prefs.slicer.dir' can be either the folder containing Slicer executable or
     % the full path to the excutable itself
     if ismac
-        if exist(slicer_path) == 7 && regexp(slicer_path, 'Slicer\.app/?$')
+        if isfolder(slicer_path) && regexp(slicer_path, 'Slicer\.app/?$')
             SLICER = fullfile(slicer_path,'Contents','MacOS','Slicer');
-        elseif exist(slicer_path) == 2 && regexp(slicer_path, 'Slicer$')
+        elseif isfile(slicer_path) && regexp(slicer_path, 'Slicer$')
             SLICER = slicer_path;
         else
             warning('Slicer executable not found!');
             return;
         end
     elseif isunix
-        if exist(slicer_path) == 7 && exist(fullfile(slicer_path, 'Slicer')) == 2
+        if isfolder(slicer_path) && isfile(fullfile(slicer_path, 'Slicer'))
             SLICER = fullfile(slicer_path, 'Slicer');
-        elseif exist(slicer_path) == 2 && regexp(slicer_path, 'Slicer$')
+        elseif isfile(slicer_path) && regexp(slicer_path, 'Slicer$')
             SLICER = slicer_path;
         else
             warning('Slicer executable not found!');
             return;
         end
     elseif ispc
-        if exist(slicer_path) == 7 && exist(fullfile(slicer_path, 'Slicer.exe')) == 2
+        if isfolder(slicer_path) && isfile(fullfile(slicer_path, 'Slicer.exe'))
             SLICER = fullfile(slicer_path, 'Slicer.exe');
-        elseif exist(slicer_path) == 2 && regexp(slicer_path, 'Slicer\.exe$')
+        elseif isfile(slicer_path) && regexp(slicer_path, 'Slicer\.exe$')
             SLICER = slicer_path;
         else
             warning('Slicer executable not found!');
@@ -59,84 +61,73 @@ function varargout =  ea_runslicer(options, task)
         end
     end
 
-    slicer_mrml = 'none';
-
-    if (isempty(options.uipatdirs))
+    if isempty(options.uipatdirs)
         warning('No patient selected!');
         return;
-    else
-        patient_path = [options.root, options.patientname];
+    elseif length(options.uipatdirs)>1 && task ~= 5
+        warning('Slicer module only works for single patient!');
+        return;
     end
 
     switch task
         case -1 % launch slicer for lead reconstruction
-            slicer_mrml = 'Slicer_Reconstruction.mrml';
-            nfiles = 0;
-            allfiles = {options.prefs.tranii_unnormalized
-                options.prefs.ctnii_coregistered};
+            mrmltag = 'reconstruction';
+            allfiles = struct2cell(options.subj.coreg.anat.postop);
+            allfiles = allfiles(~contains(allfiles, 'tonemapped'));
 
-            for i=1:length(allfiles)
-                if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
-                    nfiles = nfiles + 1;
-                    filenames{nfiles} = allfiles{i};
-                    filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
-                end
-            end
+            filepaths = allfiles(isfile(allfiles));
+            filenames = regexp(filepaths, ['(?<=\', filesep, ')[\w-]+(?=\.nii(\.gz)?$)'], 'match', 'once');
+            nfiles = length(filenames);
+
             WriteReconstructionFiducialFile(options);
 
         case 1 % show original volumes
-            nfiles = 0;
-            slicer_mrml = 'Slicer_original.mrml';
-            allfiles = {options.prefs.tranii_unnormalized
-                options.prefs.sagnii_unnormalized
-                options.prefs.cornii_unnormalized
-                options.prefs.rawctnii_unnormalized
-                options.prefs.prenii_unnormalized
-                options.prefs.prenii_unnormalized_t1
-                options.prefs.prenii_unnormalized_pd};
+            mrmltag = 'original';
+            allfiles = [struct2cell(options.subj.preproc.anat.postop)
+                struct2cell(options.subj.preproc.anat.preop)];
 
-            for i=1:length(allfiles)
-                if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
-                    nfiles = nfiles + 1;
-                    filenames{nfiles} = allfiles{i};
-                    filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
-                end
-            end
+            filepaths = allfiles(isfile(allfiles));
+            filenames = regexp(filepaths, ['(?<=\', filesep, ')[\w-]+(?=\.nii(\.gz)?$)'], 'match', 'once');
+            nfiles = length(filenames);
 
         case 2 % show data after co-registration
-            nfiles = 0;
-            slicer_mrml = 'Slicer_coregistered.mrml';
-            allfiles = {options.prefs.tranii_unnormalized
-                options.prefs.sagnii_unnormalized
-                options.prefs.cornii_unnormalized
-                options.prefs.ctnii_coregistered % check others
-                options.prefs.prenii_unnormalized
-                options.prefs.prenii_unnormalized_t1
-                options.prefs.prenii_unnormalized_pd
-                };
+            mrmltag = 'coregistered';
+            allfiles = [struct2cell(options.subj.coreg.anat.postop)
+                struct2cell(options.subj.coreg.anat.preop)];
+            allfiles = allfiles(~contains(allfiles, 'tonemapped'));
 
-            for i=1:length(allfiles)
-                if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
-                    nfiles = nfiles + 1;
-                    filenames{nfiles} = allfiles{i};
-                    filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
-                end
-            end
+            filepaths = allfiles(isfile(allfiles));
+            filenames = regexp(filepaths, ['(?<=\', filesep, ')[\w-]+(?=\.nii(\.gz)?$)'], 'match', 'once');
+            nfiles = length(filenames);
 
         case 3 % show data after normalization
-            slicer_mrml = 'Slicer_normalized.mrml';
-            [nfiles, filepaths, filenames] = GetNormalizedFiles(options);
+            mrmltag = 'normalized';
+            allfiles = [[ea_space, 't2.nii']
+                struct2cell(options.subj.norm.anat.postop)
+                struct2cell(options.subj.norm.anat.preop)];
+            allfiles = allfiles(~contains(allfiles, 'tonemapped'));
+
+            filepaths = allfiles(isfile(allfiles));
+            filenames = regexp(filepaths, ['(?<=\', filesep, ')[\w-]+(?=\.nii(\.gz)?$)'], 'match', 'once');
+            nfiles = length(filenames);
 
         case 4 % show electrode localization
-            if exist([patient_path,filesep,'ea_reconstruction.mat'],'file')
+            if isfile(options.subj.recon.recon)
                 options.native = 0; % Export fiducial only in MNI space
-                ea_exportfiducials(options, 'ElectrodeFiducials.fcsv');
+                ea_exportfiducials(options, setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', 'fcsv'));
             else
                 warning('Please run reconstruction first...');
                 return;
             end
-            slicer_mrml = 'Slicer_electrodes.mrml';
-            [nfiles, filepaths, filenames] = GetNormalizedFiles(options);
+            mrmltag = 'electrodes';
+            allfiles = [[ea_space, 't2.nii']
+                struct2cell(options.subj.norm.anat.postop)
+                struct2cell(options.subj.norm.anat.preop)];
+            allfiles = allfiles(~contains(allfiles, 'tonemapped'));
+
+            filepaths = allfiles(isfile(allfiles));
+            filenames = regexp(filepaths, ['(?<=\', filesep, ')[\w-]+(?=\.nii(\.gz)?$)'], 'match', 'once');
+            nfiles = length(filenames);
 
         case 5 % return slicer path
             varargout = {SLICER};
@@ -147,8 +138,10 @@ function varargout =  ea_runslicer(options, task)
             return;
     end
 
-    script_path = [patient_path, filesep, 'slicer.py'];
-    scene_path = [patient_path, filesep, slicer_mrml];
+    slicer_folder = [options.subj.subjDir, filesep, 'slicer'];
+    ea_mkdir(slicer_folder);
+    script_path = [slicer_folder, filesep, 'slicer.py'];
+    scene_path = [slicer_folder, filesep, 'sub-', options.subj.subjId, '_desc-', mrmltag, '.mrml'];
     if (nfiles < 1)
         warning('Need at least one volume image to load into slicer');
         return;
@@ -164,7 +157,7 @@ function varargout =  ea_runslicer(options, task)
         fprintf(fid, [GetFileXML(i, filepaths{i}, filenames{i}), '\r\n\r\n']);
     end
     if (task == 4 || task == -1)
-        fprintf(fid, GetFiducialEnding());
+        fprintf(fid, GetFiducialEnding(setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', 'fcsv')));
     else
         fprintf(fid, GetEnding());
     end
@@ -189,7 +182,7 @@ function varargout =  ea_runslicer(options, task)
 end
 
 function WriteReconstructionFiducialFile(options)
-    fiducial_path = [options.root, options.patientname, filesep, 'ElectrodeFiducials.fcsv'];
+    fiducial_path = setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', 'fcsv');
     header = ['# Markups fiducial file version = 4.7\r\n',...
               '# CoordinateSystem = 0\r\n',...
               '# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID\r\n'];
@@ -197,7 +190,7 @@ function WriteReconstructionFiducialFile(options)
     fprintf(fid, header);
 
     counter = 0;
-    if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+    if isfile(options.subj.recon.recon)
         options.native = 1;
         options.loadnativereco = 1; % Load native reco intead of scrf
         [~,~,markers] = ea_load_reconstruction(options);
@@ -231,39 +224,10 @@ function WriteReconstructionFiducialFile(options)
     fclose(fid);
 end
 
-function [nfiles, filepaths, filenames] = GetNormalizedFiles(options)
-    nfiles = 0;
-
-    allfiles = {
-        't2.nii'
-        options.prefs.gctnii
-        'glanat_t2.nii'   % could not find pref for this in options.prefs.gctnii
-        options.prefs.gprenii
-        options.prefs.gtranii
-        options.prefs.gcornii
-        options.prefs.gsagnii
-        };
-
-    if (exist(allfiles{1}, 'file') == 2) %special case for template
-        nfiles = nfiles + 1;
-        filenames{nfiles} = allfiles{1};
-         % is there a better way to get the MNI template?
-        filepaths{nfiles} = [options.earoot, 'templates', filesep, 'space', filesep, 'MNI_ICBM_2009b_NLIN_ASYM', filesep, allfiles{1}];
-    end
-
-    for i=2:length(allfiles)
-        if (exist([options.root, options.patientname, filesep, allfiles{i}], 'file') == 2)
-            nfiles = nfiles + 1;
-        filenames{nfiles} = allfiles{i};
-            filepaths{nfiles} = [options.root, options.patientname, filesep, allfiles{i}];
-        end
-    end
-end
-
 
 function txt = GetFileXML(index, filepath, name)
 
-    path = strrep(filepath, '\', '\\'); %avoid escape char errors
+    path = strrep(filepath, '\', '\\'); % avoid escape char errors
 
     vdisplay = ['<VolumeDisplay id="vtkMRMLScalarVolumeDisplayNode', num2str(index), '" ',...
         'name="VolumeDisplay" hideFromEditors="true" selectable="true" selected="false" color="0.5 0.5 0.5" edgeColor="0 0 0" selectedColor="1 0 0" selectedAmbient="0.4" ambient="0" diffuse="1" selectedSpecular="0.5" specular="0" power="1" opacity="1" sliceIntersectionOpacity="1" pointSize="1" lineWidth="1" representation="2" lighting="true" interpolation="1" shading="true" visibility="true" edgeVisibility="false" clipping="false" sliceIntersectionVisibility="false" sliceIntersectionThickness="1" frontfaceCulling="false" backfaceCulling="true" scalarVisibility="false" vectorVisibility="false" tensorVisibility="false" interpolateTexture="false" scalarRangeFlag="UseData" scalarRange="0 100" colorNodeID="vtkMRMLColorTableNodeGrey"  window="100" level="50" upperThreshold="32767" lowerThreshold="-32768" interpolate="1" autoWindowLevel="0" applyThreshold="0" autoThreshold="0" ></VolumeDisplay>'];
@@ -278,7 +242,7 @@ function txt = GetFileXML(index, filepath, name)
 
 
     volume = ['<Volume id="vtkMRMLScalarVolumeNode', num2str(index),'" ',...
-        'name="',name(1:end-4),'" ',... % remove extension .nii
+        'name="',name,'" ',...
         'hideFromEditors="false" selectable="true" selected="false" ',...
         'displayNodeRef="vtkMRMLScalarVolumeDisplayNode', num2str(index),'" ',...
         'storageNodeRef="vtkMRMLVolumeArchetypeStorageNode', num2str(index),'" ',...
@@ -318,8 +282,7 @@ end
 
 
 function txt = GetEnding()
-    txt = ['<SceneView id="vtkMRMLSceneViewNode1" name="Master Scene View" hideFromEditors="false" selectable="true" selected="false" storageNodeRef="vtkMRMLSceneViewStorageNode1" references="storage:vtkMRMLSceneViewStorageNode1;" userTags="" screenshotType="4" sceneViewDescription="Scene at MRML file save point" >  <Crosshair',...
-    ' id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"  ></Crosshair>',...
+    txt = ['<Crosshair id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"  ></Crosshair>',...
     '<Selection id="vtkMRMLSelectionNodeSingleton" name="Selection" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" frequencyUnitNodeRef="vtkMRMLUnitNodeApplicationFrequency" intensityUnitNodeRef="vtkMRMLUnitNodeApplicationIntensity" lengthUnitNodeRef="vtkMRMLUnitNodeApplicationLength" timeUnitNodeRef="vtkMRMLUnitNodeApplicationTime" velocityUnitNodeRef="vtkMRMLUnitNodeApplicationVelocity" references="unit/frequency:vtkMRMLUnitNodeApplicationFrequency;unit/intensity:vtkMRMLUnitNodeApplicationIntensity;unit/length:vtkMRMLUnitNodeApplicationLength;unit/time:vtkMRMLUnitNodeApplicationTime;unit/velocity:vtkMRMLUnitNodeApplicationVelocity;" activeVolumeID="vtkMRMLScalarVolumeNode2" secondaryVolumeID="vtkMRMLScalarVolumeNode2" activeLabelVolumeID="NULL" activeFiducialListID="NULL" activePlaceNodeID="NULL" activePlaceNodeClassName="NULL" activeROIListID="NULL" activeCameraID="NULL" activeTableID="NULL" activeViewID="NULL" activeLayoutID="NULL"  ></Selection>',...
     '<Interaction id="vtkMRMLInteractionNodeSingleton" name="Interaction" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" currentInteractionMode="ViewTransform" placeModePersistence="false" lastInteractionMode="ViewTransform"  ></Interaction>',...
     '<View id="vtkMRMLViewNode1" name="View1" hideFromEditors="false" selectable="true" selected="false" singletonTag="1" attributes="MappedInLayout:1" layoutLabel="1" layoutName="1" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="200" letterSize="0.05" boxVisible="true" fiducialsVisible="true" fiducialLabelsVisible="true" axisLabelsVisible="true" axisLabelsCameraDependent="true" animationMode="Off" viewAxisMode="LookFrom" spinDegrees="2" spinMs="5" spinDirection="YawLeft" rotateDegrees="5" rockLength="200" rockCount="0" stereoType="NoStereo" renderMode="Perspective" useDepthPeeling="0"  ></View>',...
@@ -334,7 +297,6 @@ function txt = GetEnding()
     '<Camera id="vtkMRMLCameraNode1" name="Default Scene Camera" hideFromEditors="false" selectable="true" selected="false" userTags="" position="-174.789 463.886 65.26" focalPoint="0 0 0" viewUp="0.0301267 -0.128106 0.991303" parallelProjection="false" parallelScale="1" activetag="vtkMRMLViewNode1" appliedTransform="1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1"  ></Camera>',...
     '<ClipModels id="vtkMRMLClipModelsNodevtkMRMLClipModelsNode" name="ClipModels" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLClipModelsNode" clipType="0" redSliceClipState="0" yellowSliceClipState="0" greenSliceClipState="0"  ></ClipModels>',...
     '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe"  ></ScriptedModule>',...
-    '</SceneView>',...
     '<SceneViewStorage id="vtkMRMLSceneViewStorageNode1" name="SceneViewStorage" hideFromEditors="true" selectable="true" selected="false" fileName="Master Scene View.png" useCompression="1" defaultWriteFileExtension="png" readState="0" writeState="4" ></SceneViewStorage>',...
     '</MRML>'
     ];
@@ -366,9 +328,9 @@ function txt = GetFiducialBeginning()
      ];
 end
 
-function txt = GetFiducialEnding()
-    txt = ['<SceneView id="vtkMRMLSceneViewNode1" name="Master Scene View" hideFromEditors="false" selectable="true" selected="false" storageNodeRef="vtkMRMLSceneViewStorageNode1" references="storage:vtkMRMLSceneViewStorageNode1;" userTags="" screenshotType="4" sceneViewDescription="Scene at MRML file save point" >  <Crosshair',...
-    ' id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"  ></Crosshair>',...
+function txt = GetFiducialEnding(fiducialFileName)
+    [~,name_no_ext_no_path,~]=fileparts(fiducialFileName);
+    txt = ['<Crosshair id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"  ></Crosshair>',...
     '<Selection id="vtkMRMLSelectionNodeSingleton" name="Selection" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" frequencyUnitNodeRef="vtkMRMLUnitNodeApplicationFrequency" intensityUnitNodeRef="vtkMRMLUnitNodeApplicationIntensity" lengthUnitNodeRef="vtkMRMLUnitNodeApplicationLength" timeUnitNodeRef="vtkMRMLUnitNodeApplicationTime" velocityUnitNodeRef="vtkMRMLUnitNodeApplicationVelocity" references="unit/frequency:vtkMRMLUnitNodeApplicationFrequency;unit/intensity:vtkMRMLUnitNodeApplicationIntensity;unit/length:vtkMRMLUnitNodeApplicationLength;unit/time:vtkMRMLUnitNodeApplicationTime;unit/velocity:vtkMRMLUnitNodeApplicationVelocity;" activeVolumeID="vtkMRMLScalarVolumeNode2" secondaryVolumeID="vtkMRMLScalarVolumeNode2" activeLabelVolumeID="NULL" activeFiducialListID="NULL" activePlaceNodeID="NULL" activePlaceNodeClassName="NULL" activeROIListID="NULL" activeCameraID="NULL" activeTableID="NULL" activeViewID="NULL" activeLayoutID="NULL"  ></Selection>',...
     '<Interaction id="vtkMRMLInteractionNodeSingleton" name="Interaction" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" currentInteractionMode="ViewTransform" placeModePersistence="false" lastInteractionMode="ViewTransform"  ></Interaction>',...
     '<View id="vtkMRMLViewNode1" name="View1" hideFromEditors="false" selectable="true" selected="false" singletonTag="1" attributes="MappedInLayout:1" layoutLabel="1" layoutName="1" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="200" letterSize="0.05" boxVisible="true" fiducialsVisible="true" fiducialLabelsVisible="true" axisLabelsVisible="true" axisLabelsCameraDependent="true" animationMode="Off" viewAxisMode="LookFrom" spinDegrees="2" spinMs="5" spinDirection="YawLeft" rotateDegrees="5" rockLength="200" rockCount="0" stereoType="NoStereo" renderMode="Perspective" useDepthPeeling="0"  ></View>',...
@@ -383,14 +345,10 @@ function txt = GetFiducialEnding()
     '<Camera id="vtkMRMLCameraNode1" name="Default Scene Camera" hideFromEditors="false" selectable="true" selected="false" userTags="" position="-174.789 463.886 65.26" focalPoint="0 0 0" viewUp="0.0301267 -0.128106 0.991303" parallelProjection="false" parallelScale="1" activetag="vtkMRMLViewNode1" appliedTransform="1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1"  ></Camera>',...
     '<ClipModels id="vtkMRMLClipModelsNodevtkMRMLClipModelsNode" name="ClipModels" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLClipModelsNode" clipType="0" redSliceClipState="0" yellowSliceClipState="0" greenSliceClipState="0"  ></ClipModels>',...
     '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe"  ></ScriptedModule>\r\n',...
-    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="ElectrodeFiducials.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
-    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="ElectrodeFiducials" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n'...
-    '<MarkupsDisplay selected="false" selectable="true" hideFromEditors="true" name="MarkupsDisplay" id="vtkMRMLMarkupsDisplayNode1" visibility="true" sliceIntersectionVisibility="false" scalarRange="0 100" scalarRangeFlag="UseData" interpolateTexture="false" tensorVisibility="false" vectorVisibility="false" scalarVisibility="false" backfaceCulling="true" frontfaceCulling="false" sliceIntersectionThickness="1" clipping="false" edgeVisibility="false" shading="true" interpolation="1" lighting="true" representation="2" lineWidth="1" pointSize="1" sliceIntersectionOpacity="1" opacity="1" power="1" specular="0" selectedSpecular="0.5" diffuse="1" ambient="0" selectedAmbient="0.4" selectedColor="1 0.500008 0.500008" edgeColor="0 0 0" color="0.4 1 1" sliceProjectionOpacity="0.6" sliceProjectionColor="1 1 1" sliceProjection="7" glyphType="13" glyphScale="1.6" textScale="1.7"></MarkupsDisplay>\r\n',...
-    '</SceneView>\r\n',...
-    '<SceneViewStorage id="vtkMRMLSceneViewStorageNode1" name="SceneViewStorage" hideFromEditors="true" selectable="true" selected="false" fileName="Master Scene View.png" useCompression="1" defaultWriteFileExtension="png" readState="0" writeState="4" ></SceneViewStorage>\r\n',...
-    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="ElectrodeFiducials.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
-    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="ElectrodeFiducials" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n',...
-    '<MarkupsDisplay selected="false" selectable="true" hideFromEditors="true" name="MarkupsDisplay" id="vtkMRMLMarkupsDisplayNode1" visibility="true" sliceIntersectionVisibility="false" scalarRange="0 100" scalarRangeFlag="UseData" interpolateTexture="false" tensorVisibility="false" vectorVisibility="false" scalarVisibility="false" backfaceCulling="true" frontfaceCulling="false" sliceIntersectionThickness="1" clipping="false" edgeVisibility="false" shading="true" interpolation="1" lighting="true" representation="2" lineWidth="1" pointSize="1" sliceIntersectionOpacity="1" opacity="1" power="1" specular="0" selectedSpecular="0.5" diffuse="1" ambient="0" selectedAmbient="0.4" selectedColor="1 0.500008 0.500008" edgeColor="0 0 0" color="0.4 1 1" sliceProjectionOpacity="0.6" sliceProjectionColor="1 1 1" sliceProjection="7" glyphType="13" glyphScale="1.6" textScale="1.7"></MarkupsDisplay>\r\n',...
+    '<SceneViewStorage id="vtkMRMLSceneViewStorageNode1" name="SceneViewStorage" hideFromEditors="true" selectable="true" selected="false" fileName="MasterSceneView.png" useCompression="1" defaultWriteFileExtension="png" readState="4" writeState="4" ></SceneViewStorage>\r\n',...
+    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="',fiducialFileName,'" coordinateSystem="RAS"></MarkupsFiducialStorage>\r\n',...
+    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="' name_no_ext_no_path '" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsFiducialDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsFiducialDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n',...
+    '<MarkupsFiducialDisplay   id="vtkMRMLMarkupsFiducialDisplayNode1" name="MarkupsFiducialDisplay" hideFromEditors="true" selectable="true" selected="false" color="0.4 1 0" edgeColor="0 0 0" selectedColor="1 0.500008 0.500008" selectedAmbient="0.4" ambient="0" diffuse="1" selectedSpecular="0.5" specular="0" power="1" opacity="1" sliceIntersectionOpacity="1" pointSize="1" lineWidth="1" representation="2" lighting="true" interpolation="1" shading="true" visibility="true" visibility2D="true" visibility3D="true" edgeVisibility="false" clipping="false" sliceIntersectionThickness="1" frontfaceCulling="false" backfaceCulling="false" scalarVisibility="false" vectorVisibility="false" tensorVisibility="false" interpolateTexture="false" scalarRangeFlag="UseData" scalarRange="0 100" activeAttributeLocation="point" viewNodeRef="" folderDisplayOverrideAllowed="true" propertiesLabelVisibility="false" pointLabelsVisibility="true" textScale="3" glyphScale="1" glyphSize="5" useGlyphScale="true" glyphType="Sphere3D" snapMode="toVisibleSurface" sliceProjection="false" sliceProjectionUseFiducialColor="true" sliceProjectionOutlinedBehindSlicePlane="false" sliceProjectionColor="1 1 1" sliceProjectionOpacity="0.6" curveLineSizeMode="UseLineThickness" lineThickness="0.2" lineDiameter="1" lineColorFadingStart="1" lineColorFadingEnd="10" lineColorFadingSaturation="1" lineColorFadingHueOffset="0" handlesInteractive="false" translationHandleVisibility="true" rotationHandleVisibility="true" scaleHandleVisibility="true" fillVisibility="true" outlineVisibility="true" fillOpacity="0.5" outlineOpacity="1" occludedVisibility="false" occludedOpacity="0.3" textProperty="font-family:Arial;font-size:5px;font-style:normal;font-weight:normal;color:rgba(255,255,255,1);background-color:rgba(0,0,0,0);border-width:1px;border-color:rgba(255,255,255,0.0);text-shadow:1px 1px 0px rgba(0,0,0,0.0);" activeColor="0.4 1 0" ></MarkupsFiducialDisplay>\r\n'...
     '</MRML>'
     ];
 end

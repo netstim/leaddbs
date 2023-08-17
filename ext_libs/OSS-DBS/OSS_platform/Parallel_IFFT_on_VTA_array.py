@@ -147,7 +147,10 @@ def get_IFFT_on_VTA_array(num_of_proc,name_sol,d,FREQ_vector_signal,Xs_signal_no
     solution_sort_octv = np.array(solution_sort_octv)
     hf.close()
 
-    num_segments=sum(arrays_shape)
+    if isinstance(arrays_shape, list):
+        num_segments = sum(arrays_shape)
+    else:
+        num_segments = arrays_shape
 
     Max_field_on_VTA_array=np.ctypeslib.as_ctypes(np.zeros(num_segments,float))
     global shared_array
@@ -164,6 +167,8 @@ def get_IFFT_on_VTA_array(num_of_proc,name_sol,d,FREQ_vector_signal,Xs_signal_no
     res = p.map(partial(ifft_on_VTA_array, Xs_signal_normalized,FREQ_vector_signal.shape[0],N_freq_octv,FR_vec_sign_octv,Fr_corresp_ar,t_vect,T,i_start_octv),np.arange(num_segments))
     Max_field_on_VTA_array = np.ctypeslib.as_array(shared_array)
     p.terminate()
+
+    np.save(os.environ['PATIENTDIR'] + '/Field_solutions/Max_voltage_resp', Max_field_on_VTA_array)
 
     minutes=int((time_lib.time() - start_IFFT)/60)
     secnds=int(time_lib.time() - start_IFFT)-minutes*60
@@ -220,6 +225,8 @@ def scale_and_get_IFFT_on_VTA_array(S_vector,num_of_proc,name_sol,d,FREQ_vector_
     res = p.map(partial(scaled_ifft_on_VTA_array, Xs_signal_normalized,FREQ_vector_signal.shape[0],N_freq_octv,FR_vec_sign_octv,Fr_corresp_ar,t_vect,d["T"],i_start_octv),np.arange(num_segments))
     Max_field_on_VTA_array = np.ctypeslib.as_array(shared_array)
     p.terminate()
+
+    np.save(os.environ['PATIENTDIR'] + '/Field_solutions/Max_voltage_resp', Max_field_on_VTA_array)
 
     minutes=int((time_lib.time() - start_IFFT)/60)
     secnds=int(time_lib.time() - start_IFFT)-minutes*60

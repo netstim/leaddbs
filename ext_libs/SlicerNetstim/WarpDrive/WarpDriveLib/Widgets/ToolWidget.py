@@ -42,8 +42,8 @@ class AbstractToolWidget():
     toolMod = getattr(toolPkg, self.name + 'Tool')  
     toolCls = getattr(toolMod, self.name + 'ToolEffect')  
     # activate for each slice widget and save tool
-    for color in ['Red','Green','Yellow']:
-      self.toolEffect.append(toolCls(slicer.app.layoutManager().sliceWidget(color)))
+    for sliceViewName in slicer.app.layoutManager().sliceViewNames():
+      self.toolEffect.append(toolCls(slicer.app.layoutManager().sliceWidget(sliceViewName)))
 
   @classmethod
   def cleanEffects(cls):

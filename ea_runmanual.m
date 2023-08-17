@@ -1,24 +1,23 @@
 function [coords_mm,trajectory,markers]=ea_runmanual(options)
 
-directory = [options.root,options.patientname,filesep];
-load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname,'.mat']);
+load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname,'.mat'], 'electrode');
 
-normdist=pdist([electrode.head_position;electrode.tail_position]);
+normdist = pdist([electrode.head_position;electrode.tail_position]);
 
+switch options.subj.postopModality
+    case 'MRI'
+        vol = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
+    case 'CT'
+        vol = spm_vol(options.subj.coreg.anat.postop.CT);
+end
+
+spm('defaults', 'fmri');
+Fgraph = spm_figure('GetWin', 'Graphics');
+Finter = spm('FnUIsetup','Select Trajectory', 0);
+
+figure(Fgraph); clf;
 
 for side=options.sides
-    spm('defaults', 'fmri');
-    Fgraph = spm_figure('GetWin', 'Graphics');
-    Finter = spm('FnUIsetup','Select Trajectory', 0);
-
-    figure(Fgraph); clf;
-
-    switch options.modality
-        case 1 % MRI
-            vol = spm_vol([directory,options.prefs.tranii_unnormalized]);
-        case 2 % CT
-            vol = spm_vol([directory,options.prefs.ctnii_coregistered]);
-    end
     spm_orthviews('Reset');
     h = spm_orthviews('Image', vol);
     colormap('gray');
@@ -29,6 +28,9 @@ for side=options.sides
     if side==1 && spm_input('Adjust contrast', 1.5, 'y/n', [1,0],2)
         pc = spm_input('Percentiles', 1.5, 'w', '3 97', 2, 100);
         wn = spm_summarise(vol, 'all', @(X) spm_percentile(X, pc));
+    end
+
+    if exist('wn', 'var')
         spm_orthviews('window', h, wn);
     end
 
@@ -52,7 +54,8 @@ for side=options.sides
     markers(side).x = markers(side).head + xunitv*(options.elspec.lead_diameter/2);
     markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
 end
-[coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
+
+[coords_mm,trajectory,markers] = ea_resolvecoords(markers,options,0);
 
 close(Fgraph);
 close(Finter);

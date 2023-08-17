@@ -1,19 +1,22 @@
 function ea_backuprestore(file)
-% Restore file from raw_file if raw_file exists.
-% Backup file to raw_file if raw_file doesn't exist.
+% Restore file from preprocessing if preprocessing exists.
+% Backup file to preprocessing if preprocessing doesn't exist.
 % Used mainly for coregistration pipeline.
 
-[fpath, fname, ext] = ea_niifileparts(file);
+space_tag = regexp(file, '(?<=space-).+(?=desc)', 'match', 'once');
 
-file = [fpath, ext];
-backup = [fileparts(fpath), filesep, 'raw_', fname, ext];
+backup = strrep(file, [filesep 'coregistration' filesep], [filesep 'preprocessing' filesep]);
+backup = strrep(backup, ['space-' space_tag], '');
+
+[~,fname,~] = fileparts(file);
+[~,bu_fname,~] = fileparts(backup);
 
 if exist(backup, 'file')
-    fprintf('\nRestoring %s from raw_%s ...\n\n', [fname, ext], [fname, ext]);
+    fprintf('\nRestoring %s from preprocessing %s ...\n\n', fname, bu_fname);
     copyfile(backup, file);
 elseif exist(file, 'file')
-    fprintf('\nBacking up %s to raw_%s ...\n\n', [fname, ext], [fname, ext]);
+    fprintf('\nBacking up %s to preprocessing %s ...\n\n', fname, bu_fname);
     copyfile(file, backup);
 else
-    fprintf('\nSkipping %s (file does not exist) ...\n\n', [fname, ext]);
+    fprintf('\nSkipping %s (file does not exist) ...\n\n', fname);
 end

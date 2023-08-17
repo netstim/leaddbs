@@ -8,6 +8,8 @@ function atlases=ea_genatlastable(varargin)
 %               4 - mixed (one file with one cluster on each hemisphere)
 %               5 - midline (one file with one cluster in total)
 %
+%               10 - also can add nifti files to heatmap subfolder to be
+%               projected onto surfaces
 %
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
@@ -29,38 +31,38 @@ end
 if isempty(atlases)
     disp('Generating Atlas table. This may take a while...');
 
-    lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
+    lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0); heatmapcell=cell(0);
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
-    lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
-    lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.nii*']);
+    lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.nii*']);
+    lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.trk*']);
     lhmats=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.mat']);
     lhatlases=[lhatlases;lhtrks;lhmats];
     for i=1:length(lhatlases)
         lhcell{i}=lhatlases(i).name;
     end
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
-    rhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.ni*']);
-    rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.nii*']);
+    rhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.nii*']);
+    rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.trk*']);
     rhmats=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
     rhatlases=[rhatlases;rhtrks;rhmats];
     for i=1:length(rhatlases)
         rhcell{i}=rhatlases(i).name;
     end
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
-    mixedatlases=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
-    mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.nii*']);
+    mixedatlases=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.nii*']);
+    mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.trk*']);
     mixedmats=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
     mixedatlases=[mixedatlases;mixedtrks;mixedmats];
     for i=1:length(mixedatlases)
         mixedcell{i}=mixedatlases(i).name;
     end
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
-    midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.ni*']);
-    midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.nii*']);
+    midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.nii*']);
+    midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.trk*']);
     midlinemats=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
     midlineatlases=[midlineatlases;midlinetrks;midlinemats];
     for i=1:length(midlineatlases)
@@ -78,13 +80,19 @@ if isempty(atlases)
         end
     end
 
+    heatmapatlases=dir([root,filesep,mifix,options.atlasset,filesep,'heatmap',filesep,'*.nii*']);
+    for i=1:length(heatmapatlases)
+        heatmapcell{i}=heatmapatlases(i).name;
+    end
+
+
     bothcell=lhcell(todeletelh);
     lhcell(todeletelh)=[];
     rhcell(todeleterh)=[];
 
-    allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell];
+    allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell,heatmapcell];
 
-    typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell))];
+    typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell)),10*ones(1,length(heatmapcell))];
     atlases.names=allcell;
     atlases.types=typecell;
     if ~isfield(atlases, 'threshold') || isempty(atlases.threshold)
@@ -108,6 +116,9 @@ if checkrebuild(atlases,options,root,mifix)
     if ~isfield(atlases,'colormap')
         %atlases.colormap=ea_colorlover(12);
         atlases.colormap=othercolor('BuOrR_14',length(atlases.names));
+    end
+    if ~isfield(atlases,'heatcolormap')
+        atlases.heatcolormap=ea_redblue;
     end
     maxcolor = size(atlases.colormap,1);
 
@@ -138,10 +149,16 @@ if checkrebuild(atlases,options,root,mifix)
                 case 6 % probabilistic atlas, two files
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],atlases,atlas);
+                case 10 % heatmap to be projected onto surface
+                    bothsides=load_structure([root,filesep,mifix,options.atlasset,filesep,'heatmap',filesep,atlases.names{atlas}],atlases,atlas);
+                    rstructure=bothsides{1};
+                    rstructure.Tag=[rstructure.Tag,'_right'];
+                    lstructure=bothsides{2};
+                    rstructure.Tag=[rstructure.Tag,'_left'];
             end
 
             for side=detsides(atlases.types(atlas))
-                if ismember(atlases.types(atlas),[3,4,6]) % both-sides atlas composed of 2 files.
+                if ismember(atlases.types(atlas),[3,4,6,10]) % both-sides atlas composed of 2 files.
                     if side==1
                         structure=rstructure;
                     elseif side==2
@@ -181,16 +198,28 @@ if checkrebuild(atlases,options,root,mifix)
                     ea_addnii2lf(atlases,atlas,structure.nii.img,options,root,mifix)
 
                     iroi{atlas,side}=structure; % later stored
+
                     ifv{atlas,side} = [];
                     ipixdim{atlas,side}=structure.nii.voxsize(1:3); % later stored
                     iXYZ{atlas,side}=XYZ; % later stored
                     try
                         atlases.colors(atlas); % check if predefined color exists
-                        
                     catch
                         atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     end
-                
+                elseif isa(structure,'matlab.graphics.primitive.Patch') % heatmap on surface
+                    ifv{atlas,side}.faces=structure.Faces;
+                    ifv{atlas,side}.vertices=structure.Vertices;
+                    ifv{atlas,side}.facevertexcdata=structure.FaceVertexCData;
+                    ipixdim{atlas,side}='surface';
+                    icdat{atlas,side}=[];
+                    icolorc{atlas,side}=colorc;
+                    normals{atlas,side}=[];
+                    try
+                        atlases.colors(atlas); % check if predefined color exists
+                    catch
+                        atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
+                    end
                 elseif isfield(structure, 'fibers') % fibertract
                     % concat fibers to one patch object
                     addobjr=ea_showfiber(structure.fibers,structure.idx,colorc);
@@ -221,6 +250,8 @@ if checkrebuild(atlases,options,root,mifix)
                     icolorc{atlas,side} = [];
                     normals{atlas,side} = [];
                     atlases.colors(atlas) = NaN;
+                else
+                    keyboard
                 end
             end
         end
@@ -233,7 +264,7 @@ if checkrebuild(atlases,options,root,mifix)
             X(X<1.5)=0;
             X(X>1.5)=1;
 
-            V.dt=[16,0];
+            V.dt(1) = 16;
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             spm_write_vol(V,X);
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
@@ -261,7 +292,6 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
         
         ea_saveatlas(root,options.atlasset,atlases);
-        
     end
 end
 
@@ -277,53 +307,74 @@ else
 end
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
-    origfname=fname;
-    if exist('unmix','var')
-        ea_split_nii_lr(fname);
-        switch unmix
-            case 'unmix_l'
-                [pth,f,ext]=fileparts(fname);
-                fname=fullfile(pth,[f,'_l',ext]);
-            case 'unmix_r'
-                [pth,f,ext]=fileparts(fname);
-                fname=fullfile(pth,[f,'_r',ext]);
+    if atlases.types(atlas)==10 % heatmap
+        if ~isfield(atlases,'surface')
+            atlases.surface.heatcolormap{atlas}=ea_redblue;
+        else
+            if isempty(atlases.surface.heatcolormap{atlas})
+                atlases.surface.heatcolormap{atlas}=ea_redblue;
+            end
+        end
+        if ~isfield(atlases.surface,'surf')
+            atlases.surface.surf{atlas}='smoothed';
+        else
+            if isempty(atlases.surface.surf{atlas})
+                atlases.surface.surf{atlas}='smoothed';
+            end
+        end
+        structure=ea_heatmap2surface(fname,atlases.surface.surf{atlas},1:2,atlases.surface.heatcolormap{atlas});
+
+    else
+        origfname=fname;
+        if exist('unmix','var')
+            ea_split_nii_lr(fname);
+            switch unmix
+                case 'unmix_l'
+                    [pth,f,ext]=fileparts(fname);
+                    fname=fullfile(pth,[f,'_l',ext]);
+                case 'unmix_r'
+                    [pth,f,ext]=fileparts(fname);
+                    fname=fullfile(pth,[f,'_r',ext]);
+            end
+
+        end
+        warning('off');
+        try % will fail for empty images
+        ea_crop_nii(fname);
+        end
+        pobj.color=[1,1,1];
+        test=ea_open_vol(fname);
+        warning('on');
+
+        if ~all(abs(test.voxsize)<=0.8)
+            ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
+        end
+        % preload image to determine threshold
+        atl=ea_load_nii(fname);
+        pobj.threshold=ea_detthresh(atlases,atlas,atl.img);
+
+        structure=ea_roi(fname,pobj);
+
+        if exist('unmix','var')
+            switch unmix
+                case 'unmix_l'
+                    structure.name=strrep(structure.name,'_l',''); % important to remove suffixes again for later indexing.
+                    structure.Tag=strrep(structure.Tag,'_l','_left');
+                case 'unmix_r'
+                    structure.name=strrep(structure.name,'_r','');
+                    structure.Tag=strrep(structure.Tag,'_r','_right');
+            end
+            delete(fullfile(pth,[f,'_r',ext]));
+            delete(fullfile(pth,[f,'_l',ext]));
         end
 
-    end
-    warning('off');
-    ea_crop_nii(fname);
-    pobj.color=[1,1,1];
-    test=ea_open_vol(fname);
-    warning('on');
-
-    if ~all(abs(test.voxsize)<=0.8)
-        ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
-    end
-    % preload image to determine threshold
-    atl=ea_load_nii(fname);
-    pobj.threshold=ea_detthresh(atlases,atlas,atl.img);
-    
-    structure=ea_roi(fname,pobj);
-
-    if exist('unmix','var')
-        switch unmix
-            case 'unmix_l'
-                structure.name=strrep(structure.name,'_l',''); % important to remove suffixes again for later indexing.
-                structure.Tag=strrep(structure.Tag,'_l','_left');
-            case 'unmix_r'
-                structure.name=strrep(structure.name,'_r','');
-                structure.Tag=strrep(structure.Tag,'_r','_right');
+        if wasgzip
+            gzip(origfname);
+            delete(origfname); % since gunzip makes a copy of the zipped file.
         end
-        delete(fullfile(pth,[f,'_r',ext]));
-        delete(fullfile(pth,[f,'_l',ext]));
-    end
-
-    if wasgzip
-        gzip(origfname);
-        delete(origfname); % since gunzip makes a copy of the zipped file.
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
-    [fibers,idx]=ea_loadfibertracts(fname,1);
+    [fibers,idx]=ea_loadfibertracts(fname);
     structure.fibers=fibers;
     structure.idx=idx;
 
@@ -336,14 +387,15 @@ elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
     end
 elseif strcmp(fname(end-3:end),'.mat')
     warning('off', 'MATLAB:load:variableNotFound');
-    if ~isempty(fieldnames(load(fname, 'ea_fibformat'))) % tracts in trk format
-        [fibers,idx]=ea_loadfibertracts(fname,1);
+
+    if ismember('ea_fibformat', who('-file', fname)) % tracts in trk format
+        [fibers,idx]=ea_loadfibertracts(fname);
         structure.fibers=fibers;
         structure.idx=idx;
-    elseif ~isempty(fieldnames(load(fname, 'vals'))) % discriminative fibers
+    elseif ismember('vals', who('-file', fname)) % discriminative fibers
         structure.isdiscfibers = 1;
         % Set default color (blue and red) if not found in mat.
-        if isempty(fieldnames(load(fname, 'fibcolor')))
+        if ismember('fibcolor', who('-file', fname))
             fibcolor = [0 0 1;1 0 0];
             save(fname, 'fibcolor', '-append');
         end
@@ -368,6 +420,8 @@ switch opt
     case 5  % midline
         sides=1;
     case 6 % probabilistic
+        sides=1:2;
+    case 10 % heatmap
         sides=1:2;
 end
 
@@ -418,8 +472,6 @@ switch atlases.types(atlas)
         atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
 end
 
-options = ea_assignpretra(options);
-
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
 
@@ -435,16 +487,16 @@ for atl=1:length(atlnames)
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
         if (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz'],'file'))
             if ~options.native
-                load([ea_space,'ea_space_def.mat'])
+                load([ea_space,'spacedef.mat'])
                 copyfile([ea_space,spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
                     [0.3,0.3,0.3],0,0,1,[],[],1);
             else
-                copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                copyfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality),[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             end
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);
-            V.dt=[16,0];
+            V.dt(1) = 16;
             V.pinfo=[1;0;352];
             X(:)=0;
             spm_write_vol(V,X);

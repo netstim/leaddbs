@@ -24,7 +24,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     sample_width = 10;
     doxx = 1; % TODO: Try it in the other planes as well??
 
-    options.prefs = ea_prefs('');
+    options.prefs = ea_prefs;
     if isfield(options.prefs.reco, 'saveimg')
         saveimg = options.prefs.reco.saveimg;
     end
@@ -42,12 +42,12 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     options.loadnativereco = 1; % Load native reco intead of scrf
     [coords_mm,trajectory,markers,elmodel,~]=ea_load_reconstruction(options);
 
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             disp('ea_refinecoords not implemented yet for MRI. Skipping...');
             return;
-        case 2 % CT
-            V = spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+        case 'CT'
+            V = spm_vol(options.subj.coreg.anat.postop.CT);
     end
 
 
@@ -182,7 +182,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             axis off;
             title('Lead-DBS Automated Reconstruction', 'Color', 'w');
             view(0,0);
-            text(min(xx(:)), min(yy(:)), min(zz(:))*1.05, [options.patientname, '; Side: ', num2str(side)], 'Color', 'w', 'FontSize', 12);
+            text(min(xx(:)), min(yy(:)), min(zz(:))*1.05, [options.subj.subjId, '; Side: ', num2str(side)], 'Color', 'w', 'FontSize', 12);
 
             p(2) = subplot(2,2,2);
             imagesc(tail_slice);
@@ -203,7 +203,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             colormap(gray);
 
             set(hf,'PaperUnits','inches','PaperPosition',[0 0 4 4], 'InvertHardCopy', 'off');
-            print(hf, [options.root, options.patientname, filesep, 'Electrode_', num2str(side), '.jpg'], '-djpeg75', '-r300');
+            print(hf, setBIDSEntity(options.subj.recon.recon, 'desc', ['electrode', num2str(side)], 'ext', '.jpg'), '-djpeg75', '-r300');
             if ~is_debug
                 close(hf);
             end
@@ -212,7 +212,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 
     ea_save_reconstruction(coords_mm, trajectory, rmarkers, elmodel, 0, options);
     if can_export
-        ea_exportfiducials(options,['ElectrodeFiducials' ,'.', options.prefs.reco.exportfiducials]);
+        ea_exportfiducials(options, setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', options.prefs.reco.exportfiducials));
     end
 
 end

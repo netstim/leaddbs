@@ -28,16 +28,14 @@ if strcmp(bdstring, 'list')
 
     % check patient mode
     if isfield(options,'groupmode')
-        nopatientmode=options.groupmode;
-    elseif ~isfield(options,'patientname')
-        nopatientmode=1;
-    elseif strcmp(options.patientname,'No Patient Selected')
+        nopatientmode = options.groupmode;
+    elseif ~isfield(options, 'subj')
         nopatientmode=1;
     end
 
     % check if preop and postop images exist
     if ~nopatientmode
-        if isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']))
+        if ~isfield(options.subj, 'coreg') || ~isfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality))
             haspreop=0;
         end
         try
@@ -53,11 +51,11 @@ if strcmp(bdstring, 'list')
     end
 
     if nopatientmode
-        varargout{1}=[ea_standardspacelist];
+        varargout{1}=ea_standardspacelist;
     else
         if haspreop
-            [~, preopfiles]=ea_assignpretra(options);
-            preop=cellfun(@(x) [subpat, ' Pre-OP (',upper(regexp(x, '(?<=anat_)(.*)(?=\.nii)', 'match', 'once')), ')'], preopfiles, 'Uniform', 0)';
+            preopfiles = fieldnames(options.subj.coreg.anat.preop);
+            preop=cellfun(@(x) [subpat, ' Pre-OP (' x ')'], preopfiles, 'Uniform', 0)';
         else
             preop={''};
         end
@@ -86,18 +84,26 @@ if strcmp(bdstring, 'list')
                 {'Choose...'}];
 
 elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
-    whichpreop=lower(regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
-    options=ea_tempswitchoptstopre(options, native, whichpreop);
-    [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
-    varargout{1}=Vtra;
-    varargout{2}=Vcor;
-    varargout{3}=Vsag;
+    whichpreop = (regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
+    options = ea_switchpost2pre(options, native, whichpreop); % dangerous, likely best to replace sooner or later - took me a while to read
+    [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
+    varargout{1} = Vtra;
+    varargout{2} = Vcor;
+    varargout{3} = Vsag;
 
 elseif strcmp(bdstring, [subpat, ' Post-OP'])
-    [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
-    varargout{1}=Vtra;
-    varargout{2}=Vcor;
-    varargout{3}=Vsag;
+    [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
+    if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to files on the fly.
+        scrf=load(options.subj.brainshift.transform.scrf);
+        Vtra.mat=scrf.mat*Vtra.mat;
+        Vcor.mat=scrf.mat*Vcor.mat;
+        Vsag.mat=scrf.mat*Vsag.mat;
+    end
+
+    varargout{1} = Vtra;
+    varargout{2} = Vcor;
+    varargout{3} = Vsag;
+    
 
 elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)')
 %     if ~ea_checkinstall('bigbrain',0,1)
@@ -107,11 +113,10 @@ elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)')
 %     varargout{2}=varargout{1};
 %     varargout{3}=varargout{1};
 
-elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLIN_ASYM *"
-    spacedef=ea_getspacedef;
-    template=lower(strrep(strrep(bdstring,[ea_getspace,' '],''),[' (',spacedef.citation{1},')'],''));
+elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI152NLin2009bAsym *"
+    template=lower(regexp(bdstring, '(?<= )[^\W+]+(?= \()', 'match', 'once'));
 
-    varargout{1}=spm_vol(ea_niigz(fullfile(ea_space(options),[template])));
+    varargout{1}=spm_vol(ea_niigz(fullfile(ea_space,template)));
     varargout{2}=varargout{1};
     varargout{3}=varargout{1};
 elseif strcmp(bdstring,'Choose...')
@@ -131,44 +136,44 @@ else    % custom backdrop file
 end
 
 
-function [Vtra,Vcor,Vsag]=assignpatspecific(options, native)
+function [Vtra,Vcor,Vsag] = assignpatspecific(options, native)
 if native
-    switch options.modality
-        case 1 % MR
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
-            if exist(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii_unnormalized), 'file')
-                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii_unnormalized));
+    switch options.subj.postopModality
+        case 'MRI'
+            Vtra = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
+            if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
+                Vcor = spm_vol(options.subj.coreg.anat.postop.cor_MRI);
             else
-                Vcor=Vtra;
+                Vcor = Vtra;
             end
-            if exist(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii_unnormalized),'file')
-                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii_unnormalized));
+            if isfield(options.subj.coreg.anat.postop, 'sag_MRI') && isfile(options.subj.coreg.anat.postop.sag_MRI)
+                Vsag = spm_vol(options.subj.coreg.anat.postop.sag_MRI);
             else
-                Vsag=Vtra;
+                Vsag = Vtra;
             end
-        case 2 % CT
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tp_ctnii_coregistered));
-            Vcor=Vtra;
-            Vsag=Vtra;
+        case 'CT'
+            Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
+            Vcor = Vtra;
+            Vsag = Vtra;
     end
 else
-    switch options.modality
-        case 1 % MR
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-            if exist(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii),'file')
-                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
+    switch options.subj.postopModality
+        case 'MRI'
+            Vtra = spm_vol(options.subj.norm.anat.postop.ax_MRI);
+            if isfield(options.subj.norm.anat.postop, 'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
+                Vcor = spm_vol(options.subj.norm.anat.postop.cor_MRI);
             else
-                Vcor=Vtra;
+                Vcor = Vtra;
             end
-            if exist(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii),'file')
-                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
+            if isfield(options.subj.norm.anat.postop, 'sag_MRI') && isfile(options.subj.norm.anat.postop.sag_MRI)
+                Vsag = spm_vol(options.subj.norm.anat.postop.sag_MRI);
             else
-                Vsag=Vtra;
+                Vsag = Vtra;
             end
-        case 2 % CT
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tp_gctnii));
-            Vcor=Vtra;
-            Vsag=Vtra;
+        case 'CT'
+            Vtra = spm_vol(options.subj.norm.anat.postop.tonemapCT);
+            Vcor = Vtra;
+            Vsag = Vtra;
     end
 end
 
@@ -190,33 +195,26 @@ if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')
 end
 
 
-function options=ea_tempswitchoptstopre(options, native, whichpreop)
-% this generates a very temporary fake options struct that points to preop
-% data instead of postop data.
+function options = ea_switchpost2pre(options, native, whichpreop)
+% Generates a very temporary fake options struct that links pre-op to
+% post-op data.
 
 if native
-    options.prefs.tranii_unnormalized=['anat_',whichpreop,'.nii'];
-    options.prefs.cornii_unnormalized=['anat_',whichpreop,'.nii'];
-    options.prefs.sagnii_unnormalized=['anat_',whichpreop,'.nii'];
-    options.prefs.tp_ctnii_coregistered=['anat_',whichpreop,'.nii'];
+    options.subj.coreg.anat.postop.ax_MRI = options.subj.coreg.anat.preop.(whichpreop);
+    options.subj.coreg.anat.postop.cor_MRI = options.subj.coreg.anat.preop.(whichpreop);
+    options.subj.coreg.anat.postop.sag_MRI = options.subj.coreg.anat.preop.(whichpreop);
+    options.subj.coreg.anat.postop.tonemapCT = options.subj.coreg.anat.preop.(whichpreop);
 else
-    [options,preniis]=ea_assignpretra(options);
-    gfi=['glanat','.nii']; % default use the file available.
-    try
-        if strcmp(['anat_',whichpreop,'.nii'], preniis{1})  % whichpreop: "t1", preniis{1}: "anat_t1.nii"
-            gfi=['glanat','.nii'];
-        else
-            gfi=['glanat_',whichpreop,'.nii'];
-        end
+    normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
+    normImage = strrep(normImage,options.subj.AnchorModality,whichpreop);
+    if ~isfile(normImage)
+        to{1} = normImage;
+        from{1} = options.subj.preopAnat.(whichpreop).coreg;
+        ea_apply_normalization_tofile(options,from,to,0);
     end
-    options.prefs.gtranii=gfi;
-    options.prefs.gcornii=gfi;
-    options.prefs.gsagnii=gfi;
-    options.prefs.tp_gctnii=gfi;
 
-    if ~exist([options.root,options.patientname,filesep,gfi],'file')
-        to{1}=[options.root,options.patientname,filesep,gfi];
-        from{1}=[options.root,options.patientname,filesep,['anat_',whichpreop,'.nii']];
-        ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],0);
-    end
+    options.subj.norm.anat.postop.ax_MRI = normImage;
+    options.subj.norm.anat.postop.cor_MRI = normImage;
+    options.subj.norm.anat.postop.sag_MRI = normImage;
+    options.subj.norm.anat.postop.tonemapCT = normImage;
 end

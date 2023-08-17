@@ -1,9 +1,7 @@
 function ea_ptspecific_atl(options)
 
-if length(options.atlasset)>13
-    if strcmp(options.atlasset(1:13),'Local atlas: ') % manually installed atlas coded with this prefix by lead-dbs.
-        return
-    end
+if startsWith(options.atlasset, 'Local atlas: ') % manually installed atlas coded with this prefix by lead-dbs.
+    return
 end
 
 troot=[options.earoot,'templates',filesep];
@@ -38,7 +36,7 @@ end
 copyfile(aroot, [proot,'atlases',filesep,options.atlasset]);
 p=load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 p.atlases.rebuild=1;
-save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'-struct','p');
+save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'], '-struct', 'p', '-v7.3');
 
 ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii*']);
 
@@ -49,30 +47,62 @@ else
 end
 
 for atlas=1:length(atlases.names)
+    subfolders = {};
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            subfolders{end+1} = 'lh';
         case 2 % right hemispheric atlas.
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
+            subfolders{end+1} = 'rh';
         case 3 % both-sides atlas composed of 2 files.
-            pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-
-            platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            subfolders{end+1} = 'lh';
+            subfolders{end+1} = 'rh';
         case 4 % mixed atlas (one file with both sides information.
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
+            subfolders{end+1} = 'mixed';
         case 5 % midline atlas (one file with both sides information.
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
+            subfolders{end+1} = 'midline';
     end
-
-    if atlases.types(atlas)==3
-        ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-        ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-
-        ea_crop_nii(ea_niigz([pratlf,atlases.names{atlas}]));
-        ea_crop_nii(ea_niigz([platlf,atlases.names{atlas}]));
-    else
-        ea_apply_normalization_tofile(options,{ea_niigz([patlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-        ea_crop_nii(ea_niigz([patlf,atlases.names{atlas}]));
+    
+    for i = 1:length(subfolders)
+        file = fullfile(proot, 'atlases', options.atlasset, subfolders{i}, atlases.names{atlas});
+        
+        if isnumeric(atlases.pixdim{atlas,1})
+            ea_apply_normalization_tofile(options, {ea_niigz(file)}, {ea_niigz(file)}, 1, interp);
+            ea_crop_nii(file);
+            
+        elseif ischar(atlases.pixdim{atlas,1})
+            fib_load = load(file);
+            src = fullfile(ea_space, 't1.nii');
+            dest = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+            transform = fullfile(options.subj.subjDir,'forwardTransform');
+            
+            switch atlases.pixdim{atlas,1}
+                case 'fibers'
+                    XYZ_mm = fib_load.fibers(:,1:3);
+                    [~, XYZ_vox] = ea_map_coords([XYZ_mm'; ones(1,size(XYZ_mm,1))], src);
+                    fib_load.fibers(:,1:3) = ea_map_coords(XYZ_vox, src, transform, dest)';
+                case 'discfibers'
+                    for side = 1:size(fib_load.fibcell,2)
+                        XYZ_mm = vertcat(fib_load.fibcell{1,side}{:});
+                        [~, XYZ_vox] = ea_map_coords([XYZ_mm'; ones(1,size(XYZ_mm,1))], src);
+                        mapped = ea_map_coords(XYZ_vox, src, transform, dest)';
+                        start_idx = 1;
+                        for k = 1:length(fib_load.fibcell{1,side})
+                            stop_idx = start_idx + size(fib_load.fibcell{1,side}{k},1) - 1;
+                            fib_load.fibcell{1,side}{k} = mapped(start_idx:stop_idx,:);
+                            start_idx = stop_idx + 1;
+                        end
+                    end
+                otherwise
+                    warning(['Unrecognized pixdim for ' atlases.names{atlas}]);
+                    delete(file);
+            end
+            
+            save(file, '-struct', 'fib_load', '-v7.3');
+            
+        else
+            warning(['Unrecognized pixdim for ' atlases.names{atlas}]);
+            delete(file);
+        end
     end
 end
 
@@ -259,17 +289,6 @@ if options.prefs.normalize.inverse.customtpm
 else
     warpfile=[proot,'y_ea_inv_normparams.nii'];
 end
-
-
-% check if inv has correct size:
-Vinv=spm_vol(warpfile);
-Vanat=spm_vol([proot,options.prefs.prenii_unnormalized]);
-
-if ~isequal(Vinv.dim,Vanat.dim)
-    ea_redo_inv(proot,options);
-end
-
-%apply deformation fields to respective atlas.
 
 % warp atlas to patient space
 for fi=1:length(oatlasfile)

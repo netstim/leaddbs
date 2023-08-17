@@ -5,7 +5,7 @@ outdir=[fileparts(obj.leadgroup),filesep,'sweetspots',filesep,obj.ID,filesep];
 ea_mkdir(outdir);
 copyfile([ea_space,'bb.nii'],[outdir,'bb_nan.nii']);
 nii=ea_load_nii([outdir,'bb_nan.nii']);
-nii.dt=[16,1];
+nii.dt(1) = 16;
 nii.img(:)=nan;
 ea_write_nii(nii);
 allV{1}=[outdir,'bb_nan.nii'];
@@ -42,7 +42,9 @@ end
 % create final space:
 for side=1:size(vatlist,2)
     nii=ea_load_nii([outdir,'efield_bb',sidesuffices{side},'.nii']);
-    nii.img(nii.img<150)=nan;
+    if ~isfield(obj.M,'pseudoM')
+        nii.img(nii.img<150)=nan;
+    end
     ea_write_nii(nii);
     ea_crop_nii(nii.fname);
     nii=ea_load_nii(nii.fname); % reload for space function.

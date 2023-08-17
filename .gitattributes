@@ -8,6 +8,7 @@
 
 *.glnxa64 binary
 *.maci64 binary
+*.maca64 binary
 *.exe binary
 
 *.mat binary
@@ -18,3 +19,5 @@
 *.ply binary
 *.stl binary
 *.mz3 binary
+
+*.svg binary

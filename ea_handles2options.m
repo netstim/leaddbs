@@ -10,45 +10,50 @@ options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the
 options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
 
 %% set options
-%uipatdir=get(handles.patdir_choosebox,'String');
-
 options.earoot = ea_getearoot;
+
+try
+    options.importdcm.do = handles.dicom2bidscheckbox.Value;
+catch
+    options.importdcm.do = 0;
+end
+
+try
+    options.importdcm.tool = handles.dcm2niitool.Value;
+end
+
+try
+    options.importnii.do = handles.nifti2bidscheckbox.Value;
+catch
+    options.importnii.do = 0;
+end
+
 try % not working when calling from lead_anatomy
-    options.dicomimp.do=get(handles.dicomcheck,'Value');
-    options.assignnii=get(handles.assignnii,'Value');
     options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
     options.normalize.settings=getappdata(handles.normsettings,'settings');
 catch
-    options.dicomimp.do=0;
-    options.assignnii=0;
     options.normalize.do=0;
 end
 
 try
-    options.dicomimp.method=get(handles.dcm2niiselect,'Value');
-end
-
-try
-    options.normalize.method=getappdata(handles.leadfigure,'normmethod');
-    options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
-    options.normalize.methodn=get(handles.normmethod,'Value');
+    options.normalize.method = handles.normmethod.String{handles.normmethod.Value};
 end
 
 try % not working when calling from lead_anatomy
-    options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
+    options.checkreg=get(handles.checkreg,'Value');
 catch
-    options.normalize.check=0;
+    options.checkreg=0;
 end
 
 try % also open up checkreg in case of dMRI check registrations
     if get(handles.checkregdmri,'Value')
-        options.normalize.check=1;
+        options.checkreg=1;
     end
 end
 
 try % also open up checkreg in case of dMRI check registrations
     if get(handles.checkregfmri,'Value')
-        options.normalize.check=1;
+        options.checkreg=1;
     end
 end
 
@@ -64,12 +69,12 @@ catch
 end
 
 try
-    options.overwriteapproved=get(handles.overwriteapproved,'Value');
+    options.overwriteapproved = handles.overwriteapproved.Value;
 end
 
 try
-    options.coregmr.method=get(handles.coregmrpopup,'String');
-    options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+    options.coregmr.method=get(handles.coregmrmethod,'String');
+    options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
     options.coregmr.do=get(handles.coreg_checkbox,'Value');
 catch
     options.coregmr.do=0;
@@ -82,10 +87,8 @@ end
 
 try % not working when calling from lead_connectome
     % coreg CT
-    options.coregct.do=(get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max'));
-    options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
-    options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
-    options.coregct.methodn=get(handles.coregctmethod,'Value');
+    options.coregct.do = get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max');
+    options.coregct.method = handles.coregctmethod.String{handles.coregctmethod.Value};
 catch
     options.coregct.do=0;
 end
@@ -99,17 +102,13 @@ end
 
 options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
 
-%sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
-%sidepos=[1,2];
-
-%options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
 try
     options.sides=ea_assignsides(handles);
 catch
     options.sides=1:2;
 end
 try
-    options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
+    options.doreconstruction=(get(handles.doreconstruction,'Value') == get(handles.doreconstruction,'Max'));
     if strcmp(get(handles.maskwindow_txt,'String'),'auto')
         options.maskwindow=10; % initialize at 10
         options.automask=1; % set automask flag
@@ -137,7 +136,6 @@ if isfield(handles,'vizspacepopup')
     end
 end
 
-options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
 try
     options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
 catch
@@ -169,9 +167,9 @@ end
 options.d2.atlasopacity=0.15;
 
 try
-    options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
+    options.refinelocalization=(get(handles.refinelocalization,'Value') == get(handles.refinelocalization,'Max'));
 catch
-    options.manualheightcorrection=0;
+    options.refinelocalization=0;
 end
 
 try
@@ -181,9 +179,9 @@ catch
 end
 
 try
-    options.scrf.mask=get(handles.scrfmask,'Value');
+    options.scrf.mask = handles.scrfmask.String{handles.scrfmask.Value};
 catch
-    options.scrf.mask=2;
+    options.scrf.mask = 'Coarse mask (Schönecker 2008)';
 end
 
 try
@@ -208,29 +206,32 @@ try
 catch
     options.d3.autoserver=0;
 end
+
 options.d3.expdf=0;
 options.numcontacts=4;
+
 try
-    options.entrypoint=get(handles.targetpopup,'String');
-    options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
-    options.entrypointn=get(handles.targetpopup,'Value');
+    options.entrypointn = handles.targetpopup.Value;
+    options.entrypoint = handles.targetpopup.String{options.entrypointn};
 end
-options.writeoutpm=1;
+
+options.writeoutpm = 0;
+
 try
-    options.elmodeln = get(handles.electrode_model_popup,'Value');
-    string_list = get(handles.electrode_model_popup,'String');
-    options.elmodel=string_list{options.elmodeln};
+    options.elmodeln = handles.electrode_model_popup.Value;
+    options.elmodel = handles.electrode_model_popup.String{options.elmodeln};
 catch
-    elms=ea_resolve_elspec;
-    options.elmodel=elms{1};
+    elms = ea_resolve_elspec;
+    options.elmodel = elms{1};
 end
+
 try
-    options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
-    options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
-    options.atlassetn=get(handles.atlassetpopup,'Value');
+    options.atlassetn = handles.atlassetpopup.Value;
+    options.atlasset = handles.atlassetpopup.String{options.atlassetn};
 end
+
 try
-    if strcmp(options.atlasset,'Use none');
+    if strcmp(options.atlasset,'Use none')
         options.d3.writeatlases=0;
         options.d2.writeatlases=1;
     else
@@ -258,36 +259,40 @@ end
 
 % lead connectome mapper options:
 try
-    sdp=get(handles.seeddefpopup,'String');
-    if iscell(sdp)
-        sdp=sdp{get(handles.seeddefpopup,'Value')};
+    seed = handles.seeddefpopup.String;
+    if iscell(seed)
+        seed = seed{handles.seeddefpopup.Value};
     end
-    switch sdp
+
+    switch seed
         case 'Manually choose seeds'
-            options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
-            options.lcm.seeddef='manual';
+            options.lcm.seeds = getappdata(handles.seedbutton,'seeds');
+            options.lcm.seeddef = 'manual';
         case 'Manually choose parcellation'
-            options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
-            options.lcm.seeddef='parcellation';
+            options.lcm.seeds = getappdata(handles.seedbutton,'seeds');
+            options.lcm.seeddef = 'parcellation';
         otherwise
-            stimname=sdp(11:end);
-            options.lcm.seeds=stimname;
-            options.lcm.seeddef='vats';
+            stimname = erase(seed, 'Use VAT: ');
+            options.lcm.seeds = stimname;
+            options.lcm.seeddef = 'vats';
     end
+
     try
         options.lcm.odir=getappdata(handles.odirbutton,'odir');
     catch % called from predict module.
         options=rmfield(options,'lcm');
     end
-%     if isempty(options.lcm.odir)
-%         if ~strcmp(options.lcm.seeddef,'vats')
-%             try
-%             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
-%             end
-%         else
-%             options.lcm.odir='';
-%         end
-%     end
+
+    % if isempty(options.lcm.odir)
+    %     if ~strcmp(options.lcm.seeddef,'vats')
+    %         try
+    %         options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+    %         end
+    %     else
+    %         options.lcm.odir='';
+    %     end
+    % end
+
     options.lcm.omask=getappdata(handles.omaskbutton,'omask');
     options.lcm.struc.do=get(handles.dostructural,'Value');
     options.lcm.func.do=get(handles.dofunctional,'Value');
@@ -323,6 +328,7 @@ try
     end
     includes(todel)=[];
     options.predict.includes=includes;
+
     % dMRI connectome
     if ~iscell(handles.fiberspopup.String)
         options.predict.dMRIcon{1}=handles.fiberspopup.String;
@@ -331,7 +337,7 @@ try
     end
     options.predict.dMRIcon=options.predict.dMRIcon{handles.fiberspopup.Value};
 
-    %fMRI connectome
+    % fMRI connectome
     if ~iscell(handles.fmripopup.String)
         options.predict.fMRIcon{1}=handles.fmripopup.String;
     else
@@ -349,7 +355,7 @@ try
     options.predict.model=options.predict.model{handles.predictionmodel.Value};
     options.predict.model_mfile=mfiles{handles.predictionmodel.Value};
 
-    % chosen stimulation name
+    % Chosen stimulation name
     if ~iscell(handles.seeddefpopup.String)
     	options.predict.stimulation{1}=handles.seeddefpopup.String;
     else
@@ -357,6 +363,7 @@ try
     end
     options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
 end
+
 try
     options.ecog.extractsurface.do=get(handles.extractsurface,'Value');
     options.ecog.extractsurface.method=get(handles.surfacemethod,'Value');
@@ -364,6 +371,7 @@ try
 catch
     options.ecog.extractsurface.do=0;
 end
+
 
 function sides=ea_assignsides(handles)
 cnt=1;

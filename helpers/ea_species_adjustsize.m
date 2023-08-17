@@ -1,5 +1,5 @@
 function rad=ea_species_adjustsize(rad)
-sd=load([ea_space,'ea_space_def.mat']);
+sd=load([ea_space,'spacedef.mat']);
 
 if isfield(sd.spacedef,'species')
     load([ea_getearoot,'common',filesep,'ea_species.mat']); % https://faculty.washington.edu/chudler/facts.html

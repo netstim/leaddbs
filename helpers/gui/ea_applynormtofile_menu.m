@@ -1,36 +1,40 @@
-function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname, templateresolution)
+function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname, templateresolution, targetfile)
 if ~exist('untouchedanchor','var')
-    untouchedanchor=0;
-end
-if ~exist('templateresolution','var')
-    templateresolution=0;
-end
-if templateresolution
-   res=inputdlg('Specify voxel resolution of template space to warp into.','Template resolution',1,{'0.5'});
-   templateresolution=str2double(res);
+    untouchedanchor = 0;
 end
 
-if untouchedanchor
-    interp=0;
-else
-    interp=4;
+if ~exist('templateresolution','var')
+    templateresolution = 0;
 end
+
+if ~exist("targetfile",'var')
+    targetfile=0;
+end
+
+if templateresolution
+    res = inputdlg('Specify voxel resolution of template space to warp into.','Template resolution',1,{'0.5'});
+    templateresolution = str2double(res);
+end
+
 
 if ~exist('expdicom','var')
-    expdicom=0;
+    expdicom = 0;
 end
 
 if ~exist('asoverlay','var')
-    asoverlay=0;
+    asoverlay = 0;
 end
 
 if ~iscell(handles)
-    uipatdir=getappdata(handles.leadfigure,'uipatdir');
+    uipatdir = getappdata(handles.leadfigure,'uipatdir');
 else
-    uipatdir=handles; % direct supply of cell string.
+    uipatdir = handles; % direct supply of cell string.
+end
+if ~exist('fname','var')
+    fname=0;
 end
 
-if ~exist('fname','var') || isempty(fname)
+if ~fname || isempty(fname)
     if useinverse
         defaultPath = ea_space;
     else
@@ -41,69 +45,91 @@ if ~exist('fname','var') || isempty(fname)
         end
     end
     if ismac % macs file open dlg doesnt seem to support .nii/.nii.gz handling from matlab.
-        [fis, path] = uigetfile({'*'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+        [fromfis, frompath] = uigetfile({'*'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
     else
-        [fis, path] = uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+        [fromfis, frompath] = uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
     end
-    if ~ischar(fis) && ~iscell(fis)
-        if ~fis
+    if ~ischar(fromfis) && ~iscell(fromfis)
+        if ~fromfis
             return
         end
     end
 else
-    [path,fis,ext]=fileparts(fname);
-    if ~isempty(path)
-        path=[path, filesep];
+    [frompath, fromfis, ext] = fileparts(fname);
+    if ~isempty(frompath)
+        frompath = fullfile(frompath, filesep);
     else % local file
-        path=['.', filesep];
+        frompath = fullfile('.', filesep);
     end
-    fis=[fis,ext];
+    fromfis = [fromfis, ext];
 end
 
+if ischar(fromfis)
+    fromfis = {fromfis};
+end
+space=''; % default blank
 if useinverse % from template space to [untouched] achor space
     for pt=1:length(uipatdir)
-        [options.root, options.patientname] = fileparts(uipatdir{pt});
-        options.root = [options.root, filesep];
-        options.earoot = ea_getearoot;
-        options.prefs = ea_prefs(options.patientname);
-        [options,presentfiles] = ea_assignpretra(options);
-        try
-            options.coregmr.method=get(handles.coregmrpopup,'String');
-            options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
-        catch
-            options.coregmr.method='SPM';
+        options = ea_getptopts(uipatdir{pt});
+        presentfiles = fieldnames(options.subj.preopAnat);
+        options.coregmr.method = get_coregmr_method;
+
+        from = cell(length(fromfis), 1);
+        to = cell(length(fromfis), 1);
+
+        if untouchedanchor
+            spaceTag = [options.subj.subjId, 'Native'];
+        else
+            spaceTag = [options.subj.subjId, 'anchorNative'];
         end
 
-        if ischar(fis)
-            fis = {fis};
+        for i=1:length(fromfis)
+        
+                if isBIDSFileName(fromfis{i})
+                    to{i} = setBIDSEntity(fullfile(frompath, fromfis{i}), 'space', spaceTag);
+                else
+                    to{i} = strrep(fromfis{i}, '.nii', ['_space-', spaceTag, '.nii']);
+                end
+           
+                if targetfile % overwrite since will be supplied in better resolution
+                    if ischar(targetfile)
+                        to{i}=targetfile;
+                    elseif iscell(targetfile)
+                        to{i}=targetfile{i};
+                    else
+                        if length(fromfis)>1
+                            ea_error('Not supported for multiple images, please supply one by one.');
+                        end
+                        [spacefile,spacepath]=uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'},['Specify target space for image number ',num2str(i)]);
+                        space=fullfile(spacepath,spacefile);
+                    end
+                end
+            from{i} = fullfile(frompath, fromfis{i});
         end
-
-        to = cell(1, length(fis));
-        from = cell(1, length(fis));
-
-        for fi=1:length(fis)
-            to{fi} = [uipatdir{pt}, filesep, 'w', fis{fi}];
-            from{fi} = [path, fis{fi}];
+        if length(from)==1
+            interp='auto';
+        else
+            interp=1;
         end
-
-        ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
+        ea_apply_normalization_tofile(options, from, to, useinverse, interp, space);
 
         if untouchedanchor % map from anchor to untouched anchor
-            ea_coreg2images(options,[options.root, options.patientname, filesep, presentfiles{1}],...
-                [options.root, options.patientname, filesep, 'raw_', presentfiles{1}],...
-                [options.root, options.patientname, filesep, 'rraw_', presentfiles{1}],...
-                to,[],[],interp);
-            ea_delete([options.root, options.patientname, filesep, 'rraw_', presentfiles{1}]);
+            tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'desc-preproc','desc-tmp');
+            ea_coregimages(options,...
+                options.subj.coreg.anat.preop.(presentfiles{1}),...
+                options.subj.preproc.anat.preop.(presentfiles{1}),...
+                tmp_file, to,[],[],interp);
+            ea_delete(tmp_file);
 
             if asoverlay
-                untouchedanchorImage=ea_load_nii([options.root, options.patientname, filesep, 'raw_', presentfiles{1}]);
+                untouchedanchorImage=ea_load_nii(options.subj.preproc.anat.preop.(presentfiles{1}));
                 overlay=ea_load_nii(to{1});
                 fused=untouchedanchorImage;
                 fused.img(:)=zscore(fused.img(:));
                 fused.img=fused.img+overlay.img;
                 fused.img=ea_rescale(fused.img);
                 fused.img=fused.img*255;
-                fused.dt=[2,0];
+                fused.dt(1) = 2;
                 [natpath,natfn,natext]=fileparts(untouchedanchorImage.fname);
                 fused.fname=fullfile(natpath,[natfn,'_overlay',natext]);
                 ea_write_nii(fused);
@@ -125,37 +151,29 @@ if useinverse % from template space to [untouched] achor space
             end
         end
     end
+    
 else % from [untouched] achor space to template space
-    [options.root, options.patientname] = fileparts(fileparts(path));
-    options.root = [options.root, filesep];
-    options.earoot = ea_getearoot;
-    options.prefs = ea_prefs(options.patientname);
-    [options,presentfiles] = ea_assignpretra(options);
-    try
-        options.coregmr.method=get(handles.coregmrpopup,'String');
-        options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
-    catch
-        options.coregmr.method='SPM';
-    end
+    options = ea_getptopts(uipatdir{1});
+    presentfiles = fieldnames(options.subj.preopAnat);
+    options.coregmr.method = get_coregmr_method;
 
-    if ischar(fis)
-        fis = {fis};
-    end
-
-    to = cell(1, length(fis));
-    from = cell(1, length(fis));
-
-    for fi=1:length(fis)
-        to{fi} = [path, 'gl', fis{fi}];
-        from{fi} = [path, fis{fi}];
+    to = cell(length(fromfis), 1);
+    for i=1:length(fromfis)
+        if isBIDSFileName(fromfis{i})
+            to{i} = setBIDSEntity(fullfile(frompath, fromfis{i}), 'space', ea_getspace);
+        else
+            to{i} = strrep(fromfis{i}, '.nii', ['_space-', ea_getspace, '.nii']);
+        end
+        copyfile(fullfile(frompath, fromfis{i}), to{i});
     end
 
     if untouchedanchor % map from untouched anchor to anchor first
-        ea_coreg2images(options,[options.root, options.patientname, filesep, 'raw_', presentfiles{1}],...
-            [options.root, options.patientname, filesep, presentfiles{1}],...
-            [options.root, options.patientname, filesep, 'uraw_', presentfiles{1}],...
-            from);
-        ea_delete([options.root, options.patientname, filesep, 'uraw_', presentfiles{1}]);
+        tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'desc-preproc','desc-tmp');
+        ea_coregimages(options,...
+            options.subj.preproc.anat.preop.(presentfiles{1}),...
+            options.subj.coreg.anat.preop.(presentfiles{1}),...
+            tmp_file, to);
+        ea_delete(tmp_file);
     end
 
     if templateresolution
@@ -167,7 +185,7 @@ else % from [untouched] achor space to template space
             ea_reslice_nii([ea_space,'resliced_templates',filesep,trstr,'.nii'],[ea_space,'resliced_templates',filesep,trstr,'.nii'],repmat(templateresolution,1,3));
             nii=ea_load_nii([ea_space,'resliced_templates',filesep,trstr,'.nii']);
             nii.img(:)=0;
-            nii.dt=[4,0];
+            nii.dt(1) = 4;
             ea_write_nii(nii);
             gzip(nii.fname);
             delete(nii.fname);
@@ -176,6 +194,18 @@ else % from [untouched] achor space to template space
     else
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
+    if length(from)==1
+        interp='auto';
+    else
+        interp=1;
+    end
+    ea_apply_normalization_tofile(options, to, to, useinverse, interp, refim);
+end
 
-    ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp, refim);
+
+function coregmr_method = get_coregmr_method(handles)
+try
+    coregmr_method = handles.coregctmethod.String{handles.coregmrmethod.Value};
+catch
+    coregmr_method = 'SPM (Friston 2007)';
 end

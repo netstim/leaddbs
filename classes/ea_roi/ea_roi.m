@@ -74,69 +74,76 @@ classdef ea_roi < handle
                 catch
                     [~,obj.name]=ea_niifileparts(obj.niftiFilename);
                 end
-
+                
                 obj.Tag = obj.name;
 
-                try
-                    obj.plotFigureH=pobj.plotFigureH;
-                catch
-                    obj.plotFigureH=gcf;
-                end
-
-                try
-                    obj.htH=pobj.htH;
-                    if isempty(obj.htH)
-                        obj.htH=getappdata(obj.plotFigureH,'addht');
+                if isfield(pobj, 'plotFigureH')
+                    obj.plotFigureH = pobj.plotFigureH;
+                else
+                    currentfig = gcf;
+                    stack = dbstack;
+                    if contains(currentfig.Name, 'Electrode-Scene') && ~ismember('ea_genatlastable', {stack.name})
+                        % Set figure and toolbar only in elvis
+                        obj.plotFigureH = currentfig;
                     end
-                catch
-                    obj.htH=getappdata(obj.plotFigureH,'addht');
                 end
 
-                if isempty(obj.htH) % first ROI
-                    obj.htH=uitoolbar(obj.plotFigureH);
+                if isfield(pobj, 'htH')
+                    obj.htH = pobj.htH;
                 end
 
-                set(0,'CurrentFigure',obj.plotFigureH);
+                if isempty(obj.htH) && ~isempty(obj.plotFigureH)
+                    obj.htH = getappdata(obj.plotFigureH, 'addht');
+                    if isempty(obj.htH)
+                        obj.htH = uitoolbar(obj.plotFigureH);  % first ROI
+                    end
+                end
+
+                if ~isempty(obj.plotFigureH)
+                    set(0,'CurrentFigure',obj.plotFigureH);
+                end
+
                 % set cdata
                 if exist('pobj','var') && ~isempty(pobj)
-                    try
-                        obj.color=pobj.color;
-                    catch
+                    if isfield(pobj, 'color')
+                        obj.color = pobj.color;
+                    else
                         obj.color = ea_uisetcolor;
                     end
                 else
                     obj.color = ea_uisetcolor;
                 end
 
-                try
-                    obj.binary=pobj.binary;
+                if isfield(pobj, 'binary')
+                    obj.binary = pobj.binary;
                 end
 
-                try
-                    obj.usesolidcolor=pobj.usesolidcolor;
+                if isfield(pobj, 'usesolidcolor')
+                    obj.usesolidcolor = pobj.usesolidcolor;
                 end
 
-                try
-                    obj.colormap=pobj.colormap;
+                if isfield(pobj, 'colormap')
+                    obj.colormap = pobj.colormap;
                 end
 
-                try
-                    obj.nii=pobj.nii;
-                catch
+                if isfield(pobj, 'nii')
+                    obj.nii = pobj.nii;
+                else
                     % load nifti
                     obj.nii=ea_load_nii(obj.niftiFilename);
-                    obj.nii.img(obj.nii.img==0) = nan;
-                    obj.nii.img(isinf(obj.nii.img)) = nan;
-
-                    if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
-                        obj.binary=1;
-                    else
-                        obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
-                        obj.binary=0;
-                    end
-                    obj.nii.img(isnan(obj.nii.img)) = 0;
-                    obj.nii.img(isinf(obj.nii.img)) = 0;
                 end
+
+                obj.nii.img(obj.nii.img==0) = nan;
+                obj.nii.img(isinf(obj.nii.img)) = nan;
+
+                if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
+                    obj.binary=1;
+                else
+                    obj.nii.img=obj.nii.img-ea_nanmin(obj.nii.img(:)); % set min to zero
+                    obj.binary=0;
+                end
+                obj.nii.img(isnan(obj.nii.img)) = 0;
+                obj.nii.img(isinf(obj.nii.img)) = 0;
                 options.prefs=ea_prefs;
 
                 obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
@@ -144,29 +151,41 @@ classdef ea_roi < handle
                 maxmindiff=obj.max-obj.min;
                 obj.max=obj.max; %-0.1*maxmindiff;
                 obj.min=obj.min; %+0.1*maxmindiff;
-                try
-                    obj.threshold=pobj.threshold;
-                catch
+
+                if isfield(pobj, 'threshold')
+                    obj.threshold = pobj.threshold;
+                else
                     if obj.binary
-                        obj.threshold=obj.max/2;
+                        obj.threshold = obj.max/2;
                     else
-                        obj.threshold=obj.max-0.5*maxmindiff;
+                        obj.threshold = obj.max-0.5*maxmindiff;
                     end
                 end
-                try
-                    obj.smooth=pobj.smooth;
-                catch
-                    obj.smooth=options.prefs.hullsmooth;
-                end
-                try
-                    obj.hullsimplify=pobj.hullsimplify;
-                catch
-                    obj.hullsimplify=options.prefs.hullsimplify;
-                end
-                set(0,'CurrentFigure',obj.plotFigureH);
-                obj.patchH=patch;
 
-                obj.toggleH=uitoggletool;
+                if isfield(pobj, 'smooth')
+                    obj.smooth = pobj.smooth;
+                else
+                    obj.smooth = options.prefs.hullsmooth;
+                end
+
+                if isfield(pobj, 'hullsimplify')
+                    obj.hullsimplify = pobj.hullsimplify;
+                else
+                    obj.hullsimplify = options.prefs.hullsimplify;
+                end
+
+                if ~isempty(obj.plotFigureH)
+                    set(0,'CurrentFigure',obj.plotFigureH);
+                    obj.patchH = patch;
+                end
+
+                if ~isempty(obj.htH)
+                    obj.toggleH = uitoggletool(obj.htH);
+                    stack = dbstack;
+                    if ismember('ea_addobj', {stack.name})
+                        obj.toggleH.UserData = 'roi';
+                    end
+                end
 
                 update_roi(obj);
                 breathelife(obj);
@@ -205,34 +224,38 @@ classdef ea_roi < handle
             addlistener(obj,'edgecolor','PostSet',...
                 @changeevent);
 
-            if isempty(obj.toggleH)
-                obj.toggleH=uitoggletool(obj.htH);
+            if isempty(obj.toggleH) && ~isempty(obj.htH)
+                obj.toggleH = uitoggletool(obj.htH);
             end
-            if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
-                % Get the underlying java object using findobj
-                jtoggle = findjobj(obj.toggleH);
-                % Specify a callback to be triggered on any mouse release event
-                set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+
+            if ~isempty(obj.plotFigureH)
+                if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
+                    % Get the underlying java object using findobj
+                    jtoggle = findjobj(obj.toggleH);
+                    % Specify a callback to be triggered on any mouse release event
+                    set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+                end
+                setappdata(obj.plotFigureH, 'addht', obj.htH);
             end
-            setappdata(obj.plotFigureH,'addht',obj.htH);
         end
 
         function obj=update_roi(obj,evtnm) % update ROI
             if ~exist('evtnm','var')
                 evtnm='all';
             end
-            if isempty(obj.patchH)
-                obj.patchH=patch;
-            end
-            if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
-                bb = [1,1,1;size(obj.nii.img)];
-                bb = ea_vox2mm(bb, obj.nii.mat);
-                gv=cell(3,1);
-                for dim=1:3
-                    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
-                end
-                [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
 
+            if isempty(obj.patchH) && ~isempty(obj.plotFigureH)
+                obj.patchH = patch;
+            end
+
+            if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
+                img_size = size(obj.nii.img);
+                [X_vox, Y_vox, Z_vox] = meshgrid(1:img_size(1), 1:img_size(2), 1:img_size(3));
+                XYZ_mm = ea_vox2mm([X_vox(:), Y_vox(:), Z_vox(:)], obj.nii.mat);
+                X = reshape(XYZ_mm(:,1), size(X_vox));
+                Y = reshape(XYZ_mm(:,2), size(Y_vox));
+                Z = reshape(XYZ_mm(:,3), size(Z_vox));
+                
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
@@ -279,9 +302,6 @@ classdef ea_roi < handle
             %co(1,1,:)=obj.color;
             %atlasc=double(rgb2ind(co,jetlist));
 
-            % show atlas.
-            set(0,'CurrentFigure',obj.plotFigureH);
-
             if isempty(obj.edgecolor)
                 obj.edgecolor='none';
             end
@@ -293,23 +313,29 @@ classdef ea_roi < handle
                 roiTag = obj.name;
             end
 
-            set(obj.patchH,...
-                {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength','Tag'},...
-                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,roiTag});
-            if obj.binary || obj.usesolidcolor
+            % show atlas.
+            if ~isempty(obj.plotFigureH)
+                set(0,'CurrentFigure',obj.plotFigureH);
                 set(obj.patchH,...
-                    {'FaceColor'},...
-                    {obj.color});
-            else
-                set(obj.patchH,...
-                    {'FaceVertexCData','FaceColor'},...
-                    {obj.cdat,'interp'});
+                    {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength','Tag'},...
+                    {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,roiTag});
+                if obj.binary || obj.usesolidcolor
+                    set(obj.patchH,...
+                        {'FaceColor'},...
+                        {obj.color});
+                else
+                    set(obj.patchH,...
+                        {'FaceVertexCData','FaceColor'},...
+                        {obj.cdat,'interp'});
+                end
             end
 
             % add toggle button:
-            set(obj.toggleH,...
-                {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tooltip'},...
-                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag});
+            if ~isempty(obj.htH)
+                set(obj.toggleH,...
+                    {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tag','Tooltip'},...
+                    {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag,roiTag});
+            end
         end
 
         function delete(obj)
@@ -328,11 +354,11 @@ function rightcallback(src, evnt,obj)
     end
 end
 
-function ea_editroi(Hobj,evt,obj)
-    obj.controlH=ea_roicontrol(obj);
+function ea_editroi(~,~,obj)
+    obj.controlH = ea_roicontrol(obj);
 end
 
-function ea_roivisible(Hobj,evt,onoff,obj)
+function ea_roivisible(~,~,onoff,obj)
     obj.Visible=onoff;
 end
 

@@ -22,7 +22,7 @@ function varargout = lead_anatomy(varargin)
 
 % Edit the above text to modify the response to help lead_anatomy
 
-% Last Modified by GUIDE v2.5 18-May-2017 13:06:57
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:13:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,8 +52,11 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
-% add recent patients...
-ea_initrecentpatients(handles, 'patients');
+handles.prod = 'anatomy';
+handles.callingfunction = 'lead_anatomy';
+
+% add recentpatients patients...
+ea_initrecent(handles, 'patients');
 earoot=ea_getearoot;
 if ~isdeployed
     addpath(genpath(earoot));
@@ -84,17 +87,16 @@ axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead Anatomy','color','w');
 
-ea_init_coregmrpopup(handles);
+ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
 
-% add norm methods to menu
-ea_addnormmethods(handles,options,'normmethod');
+% Initialize norm methods popupmenu
+ea_init_normpopup(handles, options.prefs.normalize.default);
 
 ea_processguiargs(handles,varargin)
 
 % add tools menu
 ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'},options.prefs);
 
-handles.prod='anatomy';
 ea_firstrun(handles,options);
 
 ea_bind_dragndrop(handles.leadfigure, ...
@@ -246,15 +248,15 @@ list=ea_assignbackdrop('list',options,'Patient');
 set(handles.tdbackdrop,'String',list);
 
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
-ea_rcpatientscallback(handles, 'patients');
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
+ea_recentcallback(handles, 'patients');
 options.prefs=ea_prefs('');
 [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
 options.root=[options.root,filesep];
@@ -263,8 +265,8 @@ set(handles.tdbackdrop,'String',list);
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -348,7 +350,7 @@ options.macaquemodus=0;
 
 options.d2=ea_tdhandles2options(handles);
 
-% ea_storemachineprefs('d2',d2);
+% ea_setprefs('d2',d2);
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 if isempty(options.uipatdirs)
@@ -474,7 +476,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
-ea_switchnormmethod(handles);
+ea_normsettings(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -499,7 +501,7 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % d2=ea_tdhandles2options(handles);
-% ea_storemachineprefs('d2',d2);
+% ea_setprefs('d2',d2);
 
 delete(hObject);
 
@@ -549,22 +551,23 @@ function normsettings_Callback(hObject, eventdata, handles)
 % hObject    handle to normsettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
-ea_shownormsettings(currentNormMethod,handles)
+normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+feval(normsettingsfunc, handles);
 
-% --- Executes on selection change in coregmrpopup.
-function coregmrpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+
+% --- Executes on selection change in coregmrmethod.
+function coregmrmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrmethod
 
 
 % --- Executes during object creation, after setting all properties.
-function coregmrpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+function coregmrmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -573,6 +576,15 @@ function coregmrpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrmethod.
+function coregmrmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- Executes on button press in tdfidcheck.

@@ -23,7 +23,7 @@ switch lower(whichPrefs)
             error('Input value should be a string!');
         end
 
-        if isempty(str2num(value))
+        if isempty(str2num(value)) || ~isempty(regexp(value, '[a-zA-Z]+', 'once'))
             % value to be set is str
             value = ['''', value, ''''];
         end

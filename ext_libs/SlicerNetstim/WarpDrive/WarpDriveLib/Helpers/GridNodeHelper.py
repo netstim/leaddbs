@@ -1,44 +1,45 @@
 import vtk, slicer
-
+import numpy as np
 
 def getGridDefinition(node):
 
   if isinstance(node, slicer.vtkMRMLScalarVolumeNode):
+    directionMatrix = vtk.vtkMatrix4x4()
+    node.GetIJKToRASDirectionMatrix(directionMatrix)
     grid = node.GetImageData()
-    # get origin (defined in volume node)
-    origin = node.GetOrigin()
+    size = np.array(grid.GetDimensions())
+    origin = np.array(node.GetOrigin())
+    spacing = np.array(node.GetSpacing())
 
-  elif isinstance(node, slicer.vtkMRMLGridTransformNode):
+  elif isinstance(node, slicer.vtkMRMLTransformNode):
     fp = node.GetTransformFromParent()
     tp = node.GetTransformToParent()
     if isinstance(fp, slicer.vtkOrientedGridTransform) and fp.GetDisplacementGrid():
       grid = fp.GetDisplacementGrid()
+      directionMatrix = slicer.vtkOrientedGridTransform().SafeDownCast(fp).GetGridDirectionMatrix()
     elif isinstance(tp, slicer.vtkOrientedGridTransform) and tp.GetDisplacementGrid():
       grid = tp.GetDisplacementGrid()
-    # get origin
-    origin = grid.GetOrigin()
+      directionMatrix = slicer.vtkOrientedGridTransform().SafeDownCast(tp).GetGridDirectionMatrix()
+    origin = np.array(grid.GetOrigin())
+    size = np.array(grid.GetDimensions())
+    spacing = np.array(grid.GetSpacing())
 
-  size = grid.GetDimensions()
-  spacing = grid.GetSpacing()
-
-  return size,origin,spacing
+  return size,origin,spacing,directionMatrix
 
 def getTransformRASToIJK(transformNode):
-  size,origin,spacing = getGridDefinition(transformNode)
-  IJKToRAS = [ 
-              [spacing[0],          0 ,         0 ,  origin[0] ],
-              [        0 ,  spacing[1],         0 ,  origin[1] ],
-              [        0 ,          0 , spacing[2],  origin[2] ],
-              [        0 ,          0 ,         0 ,         1  ],
-              ] 
+  size,origin,spacing,directionMatrix = getGridDefinition(transformNode)
   m = vtk.vtkMatrix4x4()
-  for i in range(4):
-    for j in range(4):
-      m.SetElement(i,j,IJKToRAS[i][j])
+  for row in range(3):
+    m.SetElement(row,3,origin[row])
+    for col in range(3):
+      m.SetElement(row, col, spacing[col] * directionMatrix.GetElement(row,col))
   m.Invert()
   return m
 
-def emptyGridTransform(transformSize = [193,229,193], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [1.0, 1.0, 1.0], transformNode = None):
+def emptyGridTransform(transformSize, transformOrigin, transformSpacing, directionMatrix = None, transformNode = None):
+
+  if not directionMatrix:
+    directionMatrix = vtk.vtkMatrix4x4()
 
   if not transformNode:
     transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
@@ -54,6 +55,7 @@ def emptyGridTransform(transformSize = [193,229,193], transformOrigin = [-96.0, 
   transform = slicer.vtkOrientedGridTransform()
   transform.SetInterpolationModeToCubic()
   transform.SetDisplacementGridData(imageData)
+  transform.SetGridDirectionMatrix(directionMatrix)
   # Create transform node
   transformNode.SetAndObserveTransformFromParent(transform)
   transformNode.GetTransformFromParent().GetDisplacementGrid().SetOrigin(transformOrigin)
@@ -62,9 +64,8 @@ def emptyGridTransform(transformSize = [193,229,193], transformOrigin = [-96.0, 
   return transformNode
 
 
-def emptyVolume(imageSize, imageOrigin, imageSpacing):
+def emptyVolume(imageSize, imageOrigin, imageSpacing, directionMatrix):
   voxelType = vtk.VTK_UNSIGNED_CHAR
-  imageDirections = [[1,0,0], [0,1,0], [0,0,1]]
   fillVoxelValue = 0
   # Create an empty image volume, filled with fillVoxelValue
   imageData = vtk.vtkImageData()
@@ -75,7 +76,7 @@ def emptyVolume(imageSize, imageOrigin, imageSpacing):
   volumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
   volumeNode.SetOrigin(imageOrigin)
   volumeNode.SetSpacing(imageSpacing)
-  volumeNode.SetIJKToRASDirections(imageDirections)
+  volumeNode.SetIJKToRASDirectionMatrix(directionMatrix)
   volumeNode.SetAndObserveImageData(imageData)
   volumeNode.CreateDefaultDisplayNodes()
 

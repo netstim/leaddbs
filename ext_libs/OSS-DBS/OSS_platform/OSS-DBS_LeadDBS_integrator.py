@@ -1,10 +1,7 @@
-# This script reads input files from Lead-DBS and updates the default dictionary of GUI.
-
-# -*- coding: utf-8 -*-
 """
-Created on Thu Jun 18 11:33:13 2020
+@author: Konstantin Butenko
 
-@author: konstantin
+# This script reads input files from Lead-DBS and updates the default dictionary of GUI.
 """
 
 # import tables
@@ -14,23 +11,15 @@ import subprocess
 # import pickle
 import json
 import os
-
 import sys
 
 
-# from scipy.io import loadmat
-# import file
-
 # updates default dictionary
-def get_input_from_LeadDBS(settings_location, index_side):  # 0 - rhs, 1 - lhs
+def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  # 0 - rhs, 1 - lhs
 
     index_side = int(index_side)
-    cluster_run = 0
-    cluster_run = int(cluster_run)
 
-    print("cluster run", cluster_run)
-
-    # these are input from Lead-DBS
+    # these parameters will be imported from Lead-DBS
     input_dict = {
         'MRI_data_name': "name_MRI.nii.gz",  # segmented MRI data
         'DTI_data_name': "name_DTI.nii.gz",  # scaled tensor data
@@ -47,10 +36,10 @@ def get_input_from_LeadDBS(settings_location, index_side):  # 0 - rhs, 1 - lhs
         'Second_coordinate_Z': -10000000000.0,
         'Rotation_Z': 0.0,  # rotation around the lead axis in degrees
         'current_control': 0,  # 0 - VC, 1 - CC
-        'Phi_vector': [None, None, None, None],
+        'Pulse_amp': [None, None, None, None],
         # Signal vector: give an amplitude. If CC, 0.0 refers to 0 V (ground), other numbers are in A. None is for floating potentials
         'Activation_threshold_VTA': 0.0,  # threshold for Astrom VTA (V/mm), compute using the Lead-DBS function.
-        'Full_Field_IFFT': 0,
+        'VTA_approx': 0,
         'external_grounding': False,
         'VTA_from_E': 1,
         'VTA_from_divE': 0,
@@ -68,7 +57,13 @@ def get_input_from_LeadDBS(settings_location, index_side):  # 0 - rhs, 1 - lhs
 
     path = os.path.normpath(settings_location)
     path.split(os.sep)
-    print('Patient folder: ', path.split(os.sep)[-5])
+
+    try:
+        patient_folder = path.split(os.sep)[-5]
+        print('Patient: ', path.split(os.sep)[-5])
+    except:
+        patient_folder = "John Doe"  # stim folder was passed, patient_folder not relevant
+
     patient_folder = path.split(os.sep)[-5]
 
     file = h5py.File(str(settings_location), 'r')
@@ -87,28 +82,30 @@ def get_input_from_LeadDBS(settings_location, index_side):  # 0 - rhs, 1 - lhs
     input_dict["Rotation_Z"] = phi * 180.0 / np.pi
 
     input_dict['Stim_side'] = index_side
-    # Phi_vector=file.root.settings.Phi_vector[:,index_side]
-    Phi_vector = file['settings']['Phi_vector'][:, index_side]
+    #Pulse_amp = file.root.settings.Phi_vector[:,index_side]
+    Pulse_amp = file['settings']['Phi_vector'][:, index_side]
     if file['settings']['current_control'][0][0] == 1 or file['settings']['current_control'][0][-1] == 1:
         input_dict['current_control'] = 1
-        Phi_vector = Phi_vector * 0.001  # because Lead-DBS uses mA as the input
-        input_dict['el_order'] = 3
+        Pulse_amp = Pulse_amp * 0.001  # because Lead-DBS uses mA as the input
 
-    Phi_vector = list(Phi_vector)
+    Pulse_amp = list(Pulse_amp)
     import math
-    for i in range(len(Phi_vector)):
-        if math.isnan(Phi_vector[i]):
-            Phi_vector[i] = None
+    for i in range(len(Pulse_amp)):
+        if math.isnan(Pulse_amp[i]):
+            Pulse_amp[i] = None
+        # Fix of VC random grounding bug for Lead-DBS stim settings
+        elif Pulse_amp[i] == 0.0 and input_dict['current_control'] == 0:
+            Pulse_amp[i] = None  # this is allowed only for this case since we can't set contact to 0 V in Lead-DBS
+            print("swapped 0V contact to None in VC")
 
     StimSets = int(file['settings']['stimSetMode'][0][0])
     input_dict['StimSets'] = StimSets
-    #print("StimSets: ", StimSets)
 
-    if all(v is None for v in Phi_vector) and StimSets == 0:
+    if all(v is None for v in Pulse_amp) and StimSets == 0:
         print("No stimulation defined for this hemisphere")
         return -1
 
-    input_dict['Phi_vector'] = Phi_vector
+    input_dict['Pulse_amp'] = Pulse_amp
 
     # convert ascii from Matlab struct to a string
     # array_ascii=file.root.settings.MRI_data_name[:]
@@ -119,9 +116,8 @@ def get_input_from_LeadDBS(settings_location, index_side):  # 0 - rhs, 1 - lhs
     # list_ascii = map(lambda s: s.strip(), list_ascii)
     name_split = ''.join(chr(i) for i in list_ascii)
     input_dict['MRI_data_name'] = name_split.rsplit(os.sep, 1)[-1]
-
-    path_to_patient = name_split.rsplit(os.sep, 1)[:-1]
-    path_to_patient = path_to_patient[0]
+    stim_folder = os.path.dirname(str(settings_location))
+    print("Stim folder:", stim_folder)
 
     # array_ascii=file.root.settings.DTI_data_name[:]
     array_ascii = file['settings']['DTI_data_name'][:]
@@ -214,65 +210,66 @@ def get_input_from_LeadDBS(settings_location, index_side):  # 0 - rhs, 1 - lhs
     input_dict['Implantation_coordinate_X'], input_dict['Implantation_coordinate_Y'], input_dict[
         'Implantation_coordinate_Z'] = file['settings']['Implantation_coordinate'][:, index_side]
     input_dict['Second_coordinate_X'], input_dict['Second_coordinate_Y'], input_dict['Second_coordinate_Z'] = \
-    file['settings']['Second_coordinate'][:, index_side]
+        file['settings']['Second_coordinate'][:, index_side]
     input_dict['Aprox_geometry_center'] = [input_dict['Implantation_coordinate_X'],
                                            input_dict['Implantation_coordinate_Y'],
                                            input_dict['Implantation_coordinate_Z']]
 
-    el_array_length = np.sqrt((input_dict['Implantation_coordinate_X'] - input_dict['Second_coordinate_X']) ** 2 + (input_dict['Implantation_coordinate_Y'] - input_dict['Second_coordinate_Y']) ** 2 + (input_dict['Implantation_coordinate_Z'] - input_dict['Second_coordinate_Z']) ** 2)
+    el_array_length = np.sqrt((input_dict['Implantation_coordinate_X'] - input_dict['Second_coordinate_X']) ** 2 + (
+                input_dict['Implantation_coordinate_Y'] - input_dict['Second_coordinate_Y']) ** 2 + (
+                                          input_dict['Implantation_coordinate_Z'] - input_dict[
+                                      'Second_coordinate_Z']) ** 2)
     stretch = el_array_length / normal_array_length
 
     Estimate_In_Template = file['settings']['Estimate_In_Template'][0][0]
 
-
-    if abs(stretch - 1.0) < 0.01 or Electrode_type == 'ELAINE Rat Electrode' or Estimate_In_Template == 1:  # 1% tolerance or monopolar electrodes
+    if abs(stretch - 1.0) < 0.01 or Electrode_type == 'ELAINE Rat Electrode':  # 1% tolerance or monopolar electrodes
         input_dict["stretch"] = 1.0
     else:
         input_dict["stretch"] = stretch
 
-    input_dict['Activation_threshold_VTA'] = file['settings']['Activation_threshold_VTA'][0][0]  # threshold is the same for both hemispheres
+    input_dict['Activation_threshold_VTA'] = file['settings']['Activation_threshold_VTA'][0][
+        0]  # threshold is the same for both hemispheres
     input_dict['external_grounding'] = bool(file['settings']['Case_grounding'][:, index_side][0])
-    input_dict['Neuron_model_array_prepared'] = int(file['settings']['calcAxonActivation'][0][0])  # external model (e.g. from fiber tractograpy)
+    input_dict['Neuron_model_array_prepared'] = int(
+        file['settings']['calcAxonActivation'][0][0])  # external model (e.g. from fiber tractograpy)
 
     if input_dict['Neuron_model_array_prepared'] != 1:
-        input_dict['Full_Field_IFFT'] = 1  # for now we have only these two options
-
-
+        input_dict['VTA_approx'] = 1  # for now we have only these two options
+    else:
+        with open(stim_folder + '/Allocated_axons_parameters.json', 'r') as fp:
+            neuron_dict = json.load(fp)
+        input_dict.update(neuron_dict)
 
     input_dict['Stim_side'] = index_side
     input_dict['patient_folder'] = patient_folder
-    # input_dict['cluster_run'] = path_to_patient
 
-    from GUI_tree_files.GUI_tree_files.default_dict import d
-
-    # with open(path_to_patient + '/Lead_DBS_input.py', 'w') as save_as_dict:
-    #     save_as_dict.write('"""@author: trieu,butenko"""\n')
-    #     # save_as_dict.write('\n')
-    #     save_as_dict.write("lead_dict = {\n")
-    #     for key in input_dict:
-    #         if type(input_dict[key]) != str:
-    #             save_as_dict.write("    '{}': {},\n".format(key, input_dict[key]))
-    #         else:
-    #             save_as_dict.write("    '{}': '{}',\n".format(key, input_dict[key]))
-    #     save_as_dict.write("}\n")
-
-    with open(path_to_patient + '/Lead_DBS_input.json', 'w') as save_as_dict:
+    with open(stim_folder + '/Lead_DBS_input.json', 'w') as save_as_dict:
         json.dump(input_dict, save_as_dict)
 
     interactive_mode = int(file['settings']['interactiveMode'][0][0])
 
-    return path_to_patient, index_side, interactive_mode, cluster_run, patient_folder, StimSets
+    return stim_folder, index_side, interactive_mode, cluster_run, patient_folder, StimSets
 
 
 if __name__ == '__main__':
 
     oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(oss_dbs_folder)
-    print(sys.argv[1:])
-    path_to_patient, side, interactive_mode, cluster_run, patient_folder, StimSets = get_input_from_LeadDBS(*sys.argv[1:])
 
-    if os.environ.get('SINGULARITY_NAME'):
-        os.environ['PATIENTDIR'] = path_to_patient  # Use real path for singularity
+    print(sys.argv[1:])
+    if len(sys.argv[1:]) > 2 and sys.argv[3] == '1':
+        cluster_sim = int(sys.argv[3])
+    else:
+        cluster_sim = 0
+    print("Cluster run:", bool(cluster_sim))
+
+    path_to_patient, side, interactive_mode, cluster_run, patient_folder, StimSets = get_input_from_LeadDBS(
+        *sys.argv[1:3], cluster_sim)
+
+    if os.environ.get('SINGULARITY_NAME'):  # not sure about this part
+        os.environ['PATIENTDIR'] = path_to_patient
+        os.environ['TMPDIR'] = sys.argv[5]
     else:
         os.environ['PATIENTDIR'] = '/opt/Patient'  # Use fixed mount path for docker
 
@@ -302,8 +299,31 @@ if __name__ == '__main__':
                 print("The system's OS does not support OSS-DBS")
                 raise SystemExit
     else:
-        if os.environ.get('SINGULARITY_NAME'):
-            output = subprocess.run(['python3', 'Launcher_OSS_cluster.py'])
-        else:
-            print("Only Singularity cluster solution is currently supported")
-            raise SystemExit
+
+        dir_code = os.path.dirname(os.getcwd())  # OSS-DBS folder to be mount, NOT OSS_platform folder
+
+        import getpass
+
+        # /fast/users/ might need to be changed depending on the cluster 
+        user_pseudo_home_mount = '/fast/users/' + getpass.getuser() + ':/root'
+        user_pseudo_work = '/fast/work/users/' + getpass.getuser()
+
+        env_vars = 'PATIENTDIR=' + os.environ['PATIENTDIR'] + ',TMPDIR=' + os.environ['TMPDIR'] + ','
+
+        output = subprocess.run(['singularity', 'run', '--cleanenv',
+                                 '-B', dir_code + ':/opt/OSS-DBS',
+                                 '-B', path_to_patient + ':/opt/Patient',
+                                 '-B', sys.argv[5] + ':/opt/temp',
+                                 '-B', user_pseudo_work,
+                                 '-B', user_pseudo_home_mount,
+                                 '--home', '/root',
+                                 '--env', env_vars, sys.argv[6], 'python3',
+                                 '/opt/OSS-DBS/OSS_platform/Launcher_OSS_lite.py', str(cluster_run)])
+
+        ## When launching MATLAB in Singularity?
+
+        # if os.environ.get('SINGULARITY_NAME'):
+        #    output = subprocess.run(['python3', 'Launcher_OSS_cluster.py'])
+        # else:
+        #    print("Only Singularity cluster solution is currently supported")
+        #    raise SystemExit

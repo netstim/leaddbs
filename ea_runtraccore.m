@@ -1,10 +1,8 @@
-function [coords_mm,trajectory,markers]=ea_runtraccore(options)
+function [coords_mm,trajectory,markers] = ea_runtraccore(options)
 
-directory = [options.root,options.patientname,filesep];
-
-if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+if isfile(options.subj.recon.recon)
     options.native = 0; % Load MNI reco
-    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+    [coords_mm,trajectory,markers] = ea_load_reconstruction(options);
 end
 
 if isempty(options.sides)
@@ -13,19 +11,25 @@ end
 
 % build lfile
 fis={[ea_space,'bb.nii']};
-switch options.modality
-    case 1 % MR
-        fis=[fis;{[directory,options.prefs.gtranii]}];
-        if exist([directory,options.prefs.gcornii],'file')
-            fis=[fis;{[directory,options.prefs.gcornii]}];
+switch options.subj.postopModality
+    case 'MRI'
+        if isfile(options.subj.norm.anat.postop.ax_MRI)
+            fis = [fis; {options.subj.norm.anat.postop.ax_MRI}];
         end
-    case 2 % CT
-        fis=[fis;{[directory,options.prefs.gctnii]}];
+        if isfield(options.subj.norm.anat.postop,'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
+            fis = [fis; {options.subj.norm.anat.postop.cor_MRI}];
+        end
+    case 'CT'
+        fis = [fis; {options.subj.norm.anat.postop.CT}];
 end
 
+tmp_dir = fullfile(options.subj.normDir,'tmp');
+ea_mkdir(tmp_dir);
+lpost_path = fullfile(tmp_dir, 'lpost.nii');
+
 matlabbatch{1}.spm.util.imcalc.input = fis;
-matlabbatch{1}.spm.util.imcalc.output = [directory,'lpost.nii'];
-matlabbatch{1}.spm.util.imcalc.outdir = {directory};
+matlabbatch{1}.spm.util.imcalc.output = lpost_path;
+matlabbatch{1}.spm.util.imcalc.outdir = {tmp_dir};
 matlabbatch{1}.spm.util.imcalc.expression = 'sum(X(2:end,:),1)';
 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
@@ -34,49 +38,48 @@ matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
-lnii=ea_load_untouch_nii([directory,'lpost.nii']);
+lnii = ea_load_untouch_nii(lpost_path);
 
-for side=options.sides
-    %try
+for side = options.sides
     % call main routine reconstructing trajectory for one side.
-    [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,side,lnii);
+    [coords,trajvector{side},trajectory{side},tramat] = ea_reconstruct(options,side,lnii);
 
     % refit electrodes starting from first electrode (this is redundant at this point).
-    coords_mm{side} = ea_map_coords(coords', [directory,'lpost.nii'])';
+    coords_mm{side} = ea_map_coords(coords', lpost_path)';
 
-    [~,distmm]=ea_calc_distance(options.elspec.eldist,trajvector{side},tramat(1:3,1:3),[directory,'lpost.nii']);
+    [~,distmm] = ea_calc_distance(options.elspec.eldist,trajvector{side},tramat(1:3,1:3),lpost_path);
 
-    comp = ea_map_coords([0,0,0;trajvector{side}]', [directory,'lpost.nii'])'; % (XYZ_mm unaltered)
+    comp = ea_map_coords([0,0,0;trajvector{side}]', lpost_path)'; % (XYZ_mm unaltered)
 
-    trajvector{side}=diff(comp);
+    trajvector{side} = diff(comp);
 
-    normtrajvector{side}=trajvector{side}./norm(trajvector{side});
+    normtrajvector{side} = trajvector{side}./norm(trajvector{side});
 
     for electrode=2:4
-        coords_mm{side}(electrode,:)=coords_mm{side}(1,:)-normtrajvector{side}.*((electrode-1)*distmm);
+        coords_mm{side}(electrode,:) = coords_mm{side}(1,:)-normtrajvector{side}.*((electrode-1)*distmm);
     end
 
-    markers(side).head=coords_mm{side}(1,:);
-    markers(side).tail=coords_mm{side}(4,:);
+    markers(side).head = coords_mm{side}(1,:);
+    markers(side).tail = coords_mm{side}(4,:);
 
     [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
     markers(side).x = coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
     markers(side).y = coords_mm{side}(1,:) + yunitv*(options.elspec.lead_diameter/2);
 
-    coords_mm=ea_resolvecoords(markers,options);
+    coords_mm = ea_resolvecoords(markers,options);
 end
 
 % transform trajectory to mm space:
-for side=options.sides
+for side = options.sides
     try
         if ~isempty(trajectory{side})
-            trajectory{side}=ea_map_coords(trajectory{side}', [directory,'lpost.nii'])';
+            trajectory{side} = ea_map_coords(trajectory{side}', lpost_path)';
         end
     end
 end
 
-options.hybridsave=1;
-ea_delete([directory,'lpost.nii']);
+options.hybridsave = 1;
+rmdir(tmp_dir, 's');
 ea_methods(options,...
     ['DBS-Electrodes were automatically pre-localized in native & template space using Lead-DBS software',...
     ' (Horn & Kuehn 2015; SCR_002915; https://www.lead-dbs.org).'],...

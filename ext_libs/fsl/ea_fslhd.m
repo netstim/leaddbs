@@ -12,21 +12,15 @@ if ~isfile(input)
     error('%s not found!', input);
 end
 
-input = ea_path_helper(input);
-
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    FSLHD = ea_path_helper([basedir, 'fslhd.exe']);
-else
-    FSLHD = [basedir, 'fslhd.', computer('arch')];
-end
+FSLHD = ea_getExec([basedir, 'fslhd'], escapePath = 1);
 
-cmd = [FSLHD, ' ', xmlarg, ' ', input, ];
 
-if ~ispc
-    [~, cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [~, cmdout] = system(cmd);
+cmd = [FSLHD, ' ', xmlarg, ' ', ea_path_helper(input), ];
+[status, cmdout] = ea_runcmd(cmd);
+
+if status ~= 0
+    error('%s', strip(cmdout));
 end
 
 % Trim string
@@ -45,17 +39,21 @@ cmdout = cellfun(@(x) strsplit(x, ' = '), strsplit(cmdout, ea_newline), 'Uni', 0
 % Construct header
 header = struct;
 for i=1:length(cmdout)
-    if isempty(cmdout{i}{2})
-        eval(['header.', cmdout{i}{1}, ' = '''';']);
-    elseif ~isempty(regexp(cmdout{i}{2}, '[0-9]', 'once')) && ...
-            isempty(regexp(cmdout{i}{2}, '[^0-9.+-e ]', 'once'))
-        try
-            eval(['header.', cmdout{i}{1}, ' = [', cmdout{i}{2}, '];']);
-        catch
+    if length(cmdout{i})==1
+        continue % shell init issue on macOS, skip this line
+    else
+        if isempty(cmdout{i}{2})
+            eval(['header.', cmdout{i}{1}, ' = '''';']);
+        elseif ~isempty(regexp(cmdout{i}{2}, '[0-9]', 'once')) && ...
+                isempty(regexp(cmdout{i}{2}, '[^0-9.+-e ]', 'once'))
+            try
+                eval(['header.', cmdout{i}{1}, ' = [', cmdout{i}{2}, '];']);
+            catch
+                eval(['header.', cmdout{i}{1}, ' = ''', cmdout{i}{2}, ''';']);
+            end
+        else
             eval(['header.', cmdout{i}{1}, ' = ''', cmdout{i}{2}, ''';']);
         end
-    else
-        eval(['header.', cmdout{i}{1}, ' = ''', cmdout{i}{2}, ''';']);
     end
 end
 

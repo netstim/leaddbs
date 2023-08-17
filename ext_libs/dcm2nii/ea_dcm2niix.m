@@ -13,22 +13,17 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    dcm2niix = ea_path_helper([basedir, 'dcm2niix.exe']);
-else
-    dcm2niix = [basedir, 'dcm2niix.', computer('arch')];
-end
+dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
+
 
 if strcmp(outdir(end),filesep)
     outdir = outdir(1:end-1);
 end
+
 if strcmp(dicomdir(end),filesep)
     dicomdir = dicomdir(1:end-1);
 end
-cmd=[dcm2niix, ' -z n -x y -i y -b n', ' -o ', ea_path_helper(outdir), ' ', ea_path_helper(dicomdir)];
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+cmd=[dcm2niix, ' --progress -f "%f_%p_%z_%t_%s_%d" -i y -b y -v 0 -z y -o ', ea_path_helper(outdir), ' ', ea_path_helper(dicomdir)];
+
+ea_runcmd(cmd);

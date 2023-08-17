@@ -183,9 +183,9 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
 
     if MPI.comm_world.rank==1:
         #print("Computing field with superposition on mesh with ",mesh_sol.num_cells(), " elements")
-        print(len(Domains.fi)," computations are required for the iteration")
+        print(len(Domains.Amp_vector)," computations are required for the iteration")
 
-    contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
+    contacts_with_current=[x for x in Domains.Amp_vector if x != 0.0]       #0.0 are grounded contacts
     phi_r_floating=np.zeros((len(contacts_with_current),len(contacts_with_current)-1),float)       #stores real potential field in the virtual floating contacts (where current is actually assigned)
     J_real_current_contacts=np.zeros(len(contacts_with_current),float)                  #currents computed on the contacts when we solve "one active contact vs ground" system (other contacts are floating)
     contact_amplitude=np.zeros(len(contacts_with_current),float)                        #stores assigned amplitudes of the currents
@@ -197,7 +197,7 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
         J_im_current_contacts=np.zeros(len(contacts_with_current),float)
 
     glob_counter=0
-    for i in range(len(Domains.fi)):
+    for i in range(len(Domains.Amp_vector)):
         for j in range(len(Domains.Float_on_lead)):
             if Domains.Active_on_lead[i] == Domains.Float_on_lead[j]:      # find the index of the floating conductor (in .med/.msh file) for the active contact (i)
 
@@ -209,7 +209,7 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
                     phi_r_floating[glob_counter,:],__,J_real_current_contacts[glob_counter],__=get_field_with_floats(Field_calc_param.external_grounding,mesh_sol,i,Domains,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.anisotropy,Field_calc_param.frequenc,Field_calc_param.EQS_mode,Solver_type,calc_with_MPI=True,kappa=kappa)
 
                 fl_ind[glob_counter,:]=fl_contacts_rel_ind[np.arange(len(fl_contacts_rel_ind))!=glob_counter]   # if three current contacts, it will store [[1,2][0,2],[0,1]]
-                contact_amplitude[glob_counter]=Domains.fi[i]
+                contact_amplitude[glob_counter]=Domains.Amp_vector[i]
 
                 glob_counter=glob_counter+1
 
@@ -233,17 +233,17 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
 
     # not an elegant way but just for the maximum transparency
     if Field_calc_param.EQS_mode == 'EQS':
-        scaled_phi=np.complex(1.0,0.0)*np.zeros(len(Domains.fi),float)
-        for i in range(len(Domains.fi)):
-            if Domains.fi[i]==0.0:
+        scaled_phi=np.complex(1.0,0.0)*np.zeros(len(Domains.Amp_vector),float)
+        for i in range(len(Domains.Amp_vector)):
+            if Domains.Amp_vector[i]==0.0:
                 scaled_phi[i]=0.0+1j*0.0
             else:
                 scaled_phi[i]=V_r_BC_for_current[glob_counter]+1j*V_im_BC_for_current[glob_counter]
                 glob_counter=glob_counter+1
     else:
-        scaled_phi=np.zeros(len(Domains.fi),float)
-        for i in range(len(Domains.fi)):
-            if Domains.fi[i]==0.0:
+        scaled_phi=np.zeros(len(Domains.Amp_vector),float)
+        for i in range(len(Domains.Amp_vector)):
+            if Domains.Amp_vector[i]==0.0:
                 scaled_phi[i]=0.0
             else:
                 scaled_phi[i]=V_r_BC_for_current[glob_counter]

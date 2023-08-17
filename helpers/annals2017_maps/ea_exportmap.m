@@ -3,7 +3,7 @@ function ea_exportmap(n,M,fis,regressor,output,mask,sk,corrtype)
 n.img(:)=M;
 n.fname=output;
 
-n.dt=[16,0];
+n.dt(1) = 16;
 ea_write_nii(n);
 if ~exist('mask','var')
     mask=nan;
@@ -33,8 +33,8 @@ if isnan(mask)
 end
 
 if dok
-    nanix=n.img(mask);
-    nanix=ixs(~isnan(nanix));
+    nanix=(mask);
+    nanix(isnan(n.img(nanix)))=0;
     n.img(nanix)=ea_normal(n.img(nanix));
     ea_write_nii(n);
 end

@@ -78,7 +78,10 @@ set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called
 ea_listatlassets(options,handles,options.native);
 
 [~,handles.atlassetpopup.Value]=ismember(options.atlasset,handles.atlassetpopup.String);
-
+if handles.atlassetpopup.Value==0
+handles.atlassetpopup.String=[handles.atlassetpopup.String;{options.atlasset}];
+[~,handles.atlassetpopup.Value]=ismember(options.atlasset,handles.atlassetpopup.String);
+end
 setappdata(handles.atlasselect,'handles',handles);
 setappdata(handles.atlasselect,'atlases',atlases);
 setappdata(handles.atlasselect,'options',options);
@@ -88,6 +91,9 @@ axis off
 ea_createpcmenu(handles);
 setappdata(handles.atlasselect,'treeinit',1);
 setuptree([{handles}, varargin])
+
+ea_ListBoxRenderer(handles.atlassetpopup);
+ea_ListBoxRenderer(handles.presets);
 
 
 function setuptree(varargin)
@@ -167,69 +173,69 @@ for subgroup=1:length(atlases.subgroups)
             [~,thisatlname]=ea_niifileparts(thisatlname);
         end
 
-        color = round(squeeze(atlases.colormap(ceil(atlases.colors(node)),:))*256);
+        color = round(squeeze(atlases.colormap(ceil(atlases.colors(atlases.subgroups(subgroup).entries(node))),:))*256);
         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
 
         atlaslabel = ['<HTML><BODY>' ...
-                      '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                      '<FONT color="black">&nbsp;&nbsp;',thisatlname,'</FONT>' ...
-                      '</BODY></HTML>'];
+            '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+            '<FONT color="black">&nbsp;&nbsp;',thisatlname,'</FONT>' ...
+            '</BODY></HTML>'];
         h.sgsub{subgroup}{node}=DefaultCheckBoxNode(atlaslabel,true);
         h.sg{subgroup}.add(h.sgsub{subgroup}{node});
+        switch atlases.types(atlases.subgroups(subgroup).entries(node))
+            case {3,4,6,10} % need lh and rh entries
+                [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+                try
+                    checked=onoff2bool(togglebuttons(thistb).State);
+                catch
+                    keyboard
+                end
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
 
-        if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) || (atlases.types(atlases.subgroups(subgroup).entries(node))==6) % need lh and rh entries
-            [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
-            try
+                [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
                 checked=onoff2bool(togglebuttons(thistb).State);
-            catch
-                keyboard
-            end
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
-
-            [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
-        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==1) % RH only
-            [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
-        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==2) % LH only
-            [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
-        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==5) % Midline
-            [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;Midline</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
+            case 1 % RH only
+                [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+                checked=onoff2bool(togglebuttons(thistb).State);
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
+            case 2 % LH only
+                [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
+                checked=onoff2bool(togglebuttons(thistb).State);
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
+            case 5 % Midline
+                [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
+                checked=onoff2bool(togglebuttons(thistb).State);
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;Midline</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
         end
         atlchecks{atlases.subgroups(subgroup).entries(node)}=...
             [atlchecks{atlases.subgroups(subgroup).entries(node)},h.sgsub{subgroup}{node}];
@@ -459,24 +465,7 @@ if isfield(atlases,'presets')
         %        uimenu(pcmenu, 'Label',atlases.presets(ps).label,'Callback',{@ea_makeselection,handles,atlases.presets(ps)});
     end
 end
-% add from prefs:
-prefs=ea_prefs;
-options=getappdata(handles.atlasselect,'options');
-if isfield(prefs.machine.atlaspresets,getridofspaces(options.atlasset))
-    for ps=1:length(prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets)
-        try
-            prescell{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label;
-            presetactions{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps};
 
-            %        uimenu(pcmenu, 'Label',prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label,'Callback',{@ea_makeselection,handles,prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}});
-        catch
-            keyboard
-        end
-    end
-end
-
-% add save prefs:
-%uimenu(pcmenu,'Label','Save current selection as preset...','Callback',{@ea_saveselection,handles,options});
 handles.presets.String=prescell;
 handles.presets.Value=1;
 
@@ -486,7 +475,7 @@ if isfield(atlases,'defaultset')
     end
 end
 setappdata(handles.presets,'presetactions',presetactions);
-%setappdata(handles.presets,'uimenu',pcmenu);
+
 
 function ea_saveselection(~,~,handles,options)
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
@@ -527,27 +516,6 @@ try WinOnTop(handles.atlasselect,false); end
 tag=inputdlg('Please enter a name for the preset:','Preset name');
 pres.label=tag{1};
 try WinOnTop(handles.atlasselect,true); end
-
-
-prefs=ea_prefs;
-machine=prefs.machine;
-
-if ~isfield(machine.atlaspresets,getridofspaces(options.atlasset))
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.default=pres.default;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.show=pres.show;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.hide=pres.hide;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.label=pres.label;
-
-else
-
-    clen=length(machine.atlaspresets.(getridofspaces(options.atlasset)).presets);
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.default=pres.default;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.show=pres.show;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.hide=pres.hide;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.label=pres.label;
-end
-
-save([ea_gethome,'.ea_prefs.mat'],'machine');
 
 % refresh content menu.
 ea_createpcmenu(handles)
@@ -645,7 +613,7 @@ resultfig=getappdata(handles.atlasselect,'resultfig');
 options=getappdata(handles.atlasselect,'options');
 
 % Clear atlas toolbar
-atlastoolbar = getappdata(resultfig,'atlht');
+atlastoolbar = getappdata(resultfig,'addht');
 arrayfun(@delete, atlastoolbar.Children);
 
 % surfaces

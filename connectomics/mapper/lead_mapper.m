@@ -22,7 +22,7 @@ function varargout = lead_mapper(varargin)
 
 % Edit the above text to modify the response to help lead_mapper
 
-% Last Modified by GUIDE v2.5 09-Oct-2019 11:08:01
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:11:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,8 @@ function lead_mapper_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_mapper (see VARARGIN)
 
+handles.prod = 'mapper';
+handles.callingfunction = 'lead_mapper';
 
 earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_connectome_mapper.png']);
@@ -63,8 +65,8 @@ set(handles.leadfigure,'name','Lead Connectome Mapper','color','w');
 % homedir=ea_gethome;
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
-% add recent patients...
-ea_initrecentpatients(handles, 'patients');
+% add recentpatients patients...
+ea_initrecent(handles, 'patients');
 
 ea_processguiargs(handles,varargin)
 
@@ -79,6 +81,9 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
+
+ea_ListBoxRenderer(handles.fiberspopup);
+ea_ListBoxRenderer(handles.fmripopup);
 
 % Choose default command line output for lead_mapper
 handles.output = hObject;
@@ -201,21 +206,12 @@ function seedbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-p='/'; % default use root
-try
-    p=pwd; % if possible use pwd instead (could not work if deployed)
-end
-try % finally use last patient parent dir if set.
-    earoot=ea_getearoot;
-    load([earoot,'ea_recentpatients.mat']);
-    p=fileparts(fullrpts{1});
-end
-seeddef=get(handles.seeddefpopup,'String');
+seeddef = get(handles.seeddefpopup,'String');
 switch seeddef{get(handles.seeddefpopup,'Value')}
     case 'Manually choose seeds'
-        [seeds,path]=uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
+        [seeds,path] = uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
     case 'Manually choose parcellation'
-        [seeds,path]=uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
+        [seeds,path] = uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
 end
 
 if ischar(path) % path is 0 if the user clicks Cancel or close the window
@@ -223,11 +219,11 @@ if ischar(path) % path is 0 if the user clicks Cancel or close the window
         set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);
     elseif ischar(seeds)
         set(hObject,'String',seeds);
-        seeds={seeds};
+        seeds = {seeds};
     end
 
-    for s=1:length(seeds)
-        seeds{s}=fullfile(path,seeds{s});
+    for s = 1:length(seeds)
+        seeds{s} = fullfile(path,seeds{s});
     end
 
     setappdata(hObject,'seeds',seeds);
@@ -240,12 +236,12 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfigure=handles.leadfigure;
+leadfigure = handles.leadfigure;
 ea_busyaction('on',leadfigure,'mapper');
 
-options=ea_handles2options(handles);
-options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
-options.uipatdirs={''};
+options = ea_handles2options(handles);
+options.uivatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.uipatdirs = {''};
 
 options.leadprod = 'mapper';
 
@@ -260,16 +256,16 @@ function exportcode_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfigure=handles.leadfigure;
+leadfigure = handles.leadfigure;
 ea_busyaction('on',leadfigure,'mapper');
 
-options=ea_handles2options(handles);
-options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
-options.uipatdirs={''};
+options = ea_handles2options(handles);
+options.uivatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.uipatdirs = {''};
 
 options.leadprod = 'mapper';
 
-ea_run('export',options);
+ea_run('export', options);
 
 ea_busyaction('off',leadfigure,'mapper');
 
@@ -282,8 +278,9 @@ function command_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns command contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from command
-if strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix') ...
-    && handles.dofunctional.Value == 1
+conn = handles.fmripopup.String{handles.fmripopup.Value};
+cmd = handles.command.String{handles.command.Value};
+if contains(cmd, 'matrix', 'IgnoreCase', true) && ~contains(conn, 'matrix', 'IgnoreCase', true)
     handles.exportgmtc.Visible = 'on';
 else
     handles.exportgmtc.Visible = 'off';
@@ -310,8 +307,9 @@ function dofunctional_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of dofunctional
-if handles.dofunctional.Value == 1 ...
-   && strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix')
+conn = handles.fmripopup.String{handles.fmripopup.Value};
+cmd = handles.command.String{handles.command.Value};
+if contains(cmd, 'matrix', 'IgnoreCase', true) && ~contains(conn, 'matrix', 'IgnoreCase', true)
     handles.exportgmtc.Visible = 'on';
 else
     handles.exportgmtc.Visible = 'off';
@@ -326,6 +324,13 @@ function fmripopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns fmripopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fmripopup
+conn = handles.fmripopup.String{handles.fmripopup.Value};
+cmd = handles.command.String{handles.command.Value};
+if contains(cmd, 'matrix', 'IgnoreCase', true) && ~contains(conn, 'matrix', 'IgnoreCase', true)
+    handles.exportgmtc.Visible = 'on';
+else
+    handles.exportgmtc.Visible = 'off';
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -402,26 +407,26 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'mapper');
-options.prefs=ea_prefs('');
+options.prefs = ea_prefs;
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'mapper');
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_busyaction('on',handles.leadfigure,'mapper');
-ea_rcpatientscallback(handles, 'patients');
+ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'mapper');
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

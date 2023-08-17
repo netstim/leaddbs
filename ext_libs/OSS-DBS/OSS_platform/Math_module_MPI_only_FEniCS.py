@@ -277,7 +277,7 @@ def compute_field(mesh_sol,Domains,subdomains,boundaries_sol,kappa_r,Field_calc_
 
     #In case of current-controlled stimulation, Dirichlet_bc or the whole potential distribution will be scaled afterwards (due to the system's linearity)
     from FEM_in_spectrum import get_solution_space_and_Dirichlet_BC
-    V_space,Dirichlet_bc,ground_index,facets=get_solution_space_and_Dirichlet_BC(Field_calc_param.external_grounding,Field_calc_param.c_c,mesh_sol,subdomains,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,Domains.fi)
+    V_space,Dirichlet_bc,ground_index,facets=get_solution_space_and_Dirichlet_BC(Field_calc_param.external_grounding,Field_calc_param.c_c,mesh_sol,subdomains,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,Domains.Amp_vector)
     #ground index refers to the ground in .med/.msh file
 
     #facets = MeshFunction('size_t',mesh_sol,2)
@@ -332,15 +332,15 @@ def compute_field(mesh_sol,Domains,subdomains,boundaries_sol,kappa_r,Field_calc_
         V_normE=FunctionSpace(mesh_sol,"CG",Field_calc_param.element_order)
 
 
-    if Field_calc_param.external_grounding==True and (Field_calc_param.c_c==1 or len(Domains.fi)==1):
-        V_max=max(Domains.fi[:], key=abs)
+    if Field_calc_param.external_grounding==True and (Field_calc_param.c_c==1 or len(Domains.Amp_vector)==1):
+        V_max=max(Domains.Amp_vector[:], key=abs)
         V_min=0.0
-    elif -1*Domains.fi[0]==Domains.fi[1]:     # V_across is needed only for 2 active contact systems
-        V_min=-1*abs(Domains.fi[0])
-        V_max=abs(Domains.fi[0])
+    elif -1*Domains.Amp_vector[0]==Domains.Amp_vector[1]:     # V_across is needed only for 2 active contact systems
+        V_min=-1*abs(Domains.Amp_vector[0])
+        V_max=abs(Domains.Amp_vector[0])
     else:
-        V_min=min(Domains.fi[:], key=abs)
-        V_max=max(Domains.fi[:], key=abs)
+        V_min=min(Domains.Amp_vector[:], key=abs)
+        V_max=max(Domains.Amp_vector[:], key=abs)
     V_across=V_max-V_min   # this can be negative
 
 
@@ -408,7 +408,7 @@ def compute_field(mesh_sol,Domains,subdomains,boundaries_sol,kappa_r,Field_calc_
 
         if Field_calc_param.CPE==1:
 
-            if len(Domains.fi)>2:
+            if len(Domains.Amp_vector)>2:
                 print("Currently, CPE can be used only for simulations with two contacts. Please, assign the rest to 'None'")
                 raise SystemExit
 
@@ -416,7 +416,7 @@ def compute_field(mesh_sol,Domains,subdomains,boundaries_sol,kappa_r,Field_calc_
             CPE_param=[d_cpe["K_A"],d_cpe["beta"],d_cpe["K_A_ground"],d_cpe["beta_ground"]]
 
             from FEM_in_spectrum import get_CPE_corrected_Dirichlet_BC           #-1.0 to avoid printing
-            Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Field_calc_param.external_grounding,facets,boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,-1.0,Domains.Contacts,Domains.fi,V_across,Z_tissue,V_space)
+            Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Field_calc_param.external_grounding,facets,boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,-1.0,Domains.Contacts,Domains.Amp_vector,V_across,Z_tissue,V_space)
             if MPI.comm_world.rank==1:
                 print("Solving for an adjusted potential on contacts to account for CPE")
                 start_math=tm.time()
@@ -467,7 +467,7 @@ def compute_field(mesh_sol,Domains,subdomains,boundaries_sol,kappa_r,Field_calc_
                 Dirichlet_bc_scaled=[]
                 for bc_i in range(len(Domains.Contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
                     if Field_calc_param.EQS_mode=='EQS':
-                        if Domains.fi[bc_i]!=0.0:
+                        if Domains.Amp_vector[bc_i]!=0.0:
                             Active_with_CC=V_across*V_across/J_ground          #(impedance * current through the contact (V_across coincides with the assigned current magnitude))
                             Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real(Active_with_CC), boundaries_sol,Domains.Contacts[bc_i]))
                             Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag(Active_with_CC), boundaries_sol,Domains.Contacts[bc_i]))

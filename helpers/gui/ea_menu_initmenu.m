@@ -1,14 +1,12 @@
 function ea_menu_initmenu(handles,cmd,prefs)
 
-callingfunction=dbstack;
-callingfunction=callingfunction(4).name;
 menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
     f = uimenu('Label','Tools');
     pp= uimenu('Label','Preferences');
     uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
-    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@(src, evt) ea_restoreprefs});
 
     p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
     if prefs.machine.chirp
@@ -24,6 +22,9 @@ if isempty(menuprobe)
         m_c.Checked='off';
     end
 
+    if ismember('import',cmd)
+        uimenu(f,'Label','Import Legacy Folder to BIDS Dataset','Callback',{@(src, evt) lead_import});
+    end
 
     if ismember('checkregfigs',cmd)
         cr=uimenu(f,'Label','Checkreg');
@@ -32,10 +33,10 @@ if isempty(menuprobe)
         uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
         uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
     end
+
     if ismember('group',cmd)
        cr=uimenu(f,'Label','Group Tools');
        uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
-       uimenu(cr,'Label','Rebase root directory of patient folders...','Callback',{@ea_rebasegrouppts,handles});
     end
 
     if ismember('acpc',cmd)
@@ -54,10 +55,17 @@ if isempty(menuprobe)
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
 
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
+
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
         
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
 
+    uimenu(f,'Label','Run WarpDrive in Segment mode','Callback',{@ea_runwarpdrive_segment,handles});
+    if ismember('leador',cmd)
+        dbs=uimenu(f,'Label','Lead-OR');
+        uimenu(dbs,'Label','Create OR Scene','Callback',{@ea_leador_create_or_scene,handles});
+    end
+    
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
         uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
@@ -108,6 +116,10 @@ if isempty(menuprobe)
         uimenu(backwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0},'Accelerator','Y');
         uimenu(backwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,1,0,0,0});
 
+        backwdspace=uimenu(backwd,'Label','Select target resolution...');
+        uimenu(backwdspace,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0,0,0,1});
+        uimenu(backwdspace,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,1,0,0,0,0,0,1});
+
         uimenu(f,'Label','Map file from untouched anchor space to template...','Callback',{@ea_applynormtofile_menu,handles,0,1});
         uimenu(f,'Label','Map file from template to untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1});
         uimenu(f,'Label','Export NII of overlay (template space) in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,0});
@@ -128,7 +140,7 @@ if isempty(menuprobe)
 
 
     if ismember('transfer',cmd)
-       ea_menu_addtransfer(handles,callingfunction,prefs);
+       ea_menu_addtransfer(handles,prefs);
     end
 
     if ismember('vats',cmd)

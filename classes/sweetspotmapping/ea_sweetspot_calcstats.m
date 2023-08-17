@@ -82,8 +82,14 @@ for group=groups
                         amps(k,2) = obj.M.S(k).Ls1.amp;
                     end
                 end
+
+                if obj.mirrorsides
+                    amps = [amps;amps];
+                end
+
                 %get VTA Size
                 VTAsize(:,side) = sum(gval{side},2);
+                VTAsize((VTAsize==0))=nan; % will prevent division by zero issue in case of empty VTAs
 
                 %% define null-hypothesis for statistical testing
                 switch obj.stat0hypothesis
@@ -112,11 +118,11 @@ for group=groups
                                 H0(gpatsel,side) = predict(lm,lmtable.Amplitude);
                                 clear lm lmtable Outcome Amplitude
                             case 'Amplitude'
-                                H0 = mean(I(gpatsel,side) ./ amps(gpatsel,side));
+                                H0 = ea_nanmean(I(gpatsel,side) ./ amps(gpatsel,side));
                             case 'None'
-                                H0 = mean(I(gpatsel,side));
+                                H0 = ea_nanmean(I(gpatsel,side));
                             case 'VTA Size'
-                                H0 = mean(I(gpatsel,side) ./ VTAsize(gpatsel,side));
+                                H0 = ea_nanmean(I(gpatsel,side) ./ VTAsize(gpatsel,side));
                         end
                 end
 
@@ -138,8 +144,12 @@ for group=groups
                         vals{group,side} = ea_nanmean(thisvals)';
                         vals{group,side}(vals{group,side} < obj.statimpthreshold) = NaN;
                     case 'N-Image'
-                        tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
-                        Nmap=ea_nansum(double(gval{side}(tmpind,:)));
+                        if ~ea_isbinary(I(gpatsel,side))
+                            tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
+                        else
+                            tmpind = 1:length(gpatsel);
+                        end
+                        Nmap=ea_nansum(double(gval{side}(gpatsel(tmpind),:)));
                         vals{group,side} = Nmap';
                         vals{group,side}(vals{group,side} < round(numel(tmpind)*(obj.statNthreshold/100))) = NaN;
                     case 'T-Test'
@@ -158,6 +168,7 @@ for group=groups
                         else
                             [~,ps,~,stats]=ttest(thisvals(:,~nanidx),H0);
                         end
+                        stats.tstat(isinf(stats.tstat))=nan;
 
                         if obj.showsignificantonly
                             stats.tstat=ea_corrsignan(stats.tstat',ps',obj);
@@ -203,6 +214,72 @@ for group=groups
                         vals{group,side}=nan(size(thisvals,2),1);
 %                         vals{group,side}(~nanidx)=meanvals;
                         vals{group,side}(~nanidx)=logpvals;
+                    case 'Proportion Test (Binary Var)'
+                        
+                        gval{side} = double(gval{side});
+                        %gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
+
+                        %nonempty=sum(gval{side}(gpatsel,:),1)>0;
+                        Nmap=nansum(gval{side}(gpatsel,:));
+                        nonempty=Nmap>round(size(gpatsel,2)*(obj.coverthreshold/100));
+
+                        invals=gval{side}(gpatsel,nonempty);
+                        vals{group,side}=nan(size(gval{side},2),1);
+
+                        if ~isempty(invals)
+
+                            ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                            % restore nans
+                            ImpBinary(isnan(I(gpatsel,side)))=nan;
+
+
+                            suminvals=sum(invals(ImpBinary == 1,:),1); % for each voxel, how many vtas cover it of patients that also had the effect (binary outcome)
+                            Ninvals=sum(ImpBinary == 1,1);
+                            sumoutvals=sum(invals(ImpBinary == 0,:),1); % for each voxel, how many vtas cover it of patients that did not have the effect (binary var)
+                            Noutvals=sum(ImpBinary == 0,1);
+
+                            prop=zeros(size(invals,2),1); %
+                            outps=prop; %
+
+                            for vox=1:size(invals,2)
+                                [h,outps(vox), prop(vox)] = ea_prop_test([suminvals(vox),sumoutvals(vox)],[Ninvals,Noutvals],1);
+                            end
+                            if obj.showsignificantonly
+                                prop=ea_corrsignan(prop',outps',obj);
+                            end
+                            vals{group,side}(nonempty)=prop;
+                        end
+                    case 'Binomial Test (Binary Var)'
+                        
+                        gval{side} = double(gval{side});
+                        %gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
+                        Nmap=nansum(gval{side}(gpatsel,:));
+                        nonempty=Nmap>round(size(gpatsel,2)*(obj.coverthreshold/100));
+
+                        invals=gval{side}(gpatsel,nonempty);
+                        vals{group,side}=nan(size(gval{side},2),1);
+
+                        if ~isempty(invals)
+                            coverage_createeffect=((invals==1).*repmat((I(gpatsel,side)==1),1,size(invals,2)));
+                            coverage=((invals==1));
+
+                            Nmap=ea_nansum(invals);
+                            nanidx=Nmap<round(size(coverage_createeffect,1)*(obj.coverthreshold/100));
+                            coverage_createeffect(:,nanidx)=nan;
+
+                            non_nan=~nanidx;
+
+                            ps=nan(size(invals,2),1); %
+                            thisvals = nan(size(invals,2),1);
+                            for vox=find(non_nan)
+                                ps(vox) = binopdf(ea_nansum(coverage_createeffect(:,vox)),ea_nansum(coverage(:,vox)),ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                                thisvals(vox) = (ea_nansum(coverage_createeffect(:,vox))./ea_nansum(coverage(:,vox))) - (ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                            end
+                            if obj.showsignificantonly
+                                thisvals=ea_corrsignan(thisvals',ps',obj);
+                            end
+                            vals{group,side}(nonempty)=thisvals';
+                        end
                 end
 
             case 'E-Fields'
@@ -223,6 +300,32 @@ for group=groups
 
                         vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
                         vals{group,side}(~nanidx)=R;
+                    case 'Reverse T-Tests (Binary Var)'
+
+                    nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
+                    invals=gval{side}(gpatsel,nonempty)';
+                    if ~isempty(invals)
+                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                        % restore nans
+                        ImpBinary(isnan(I(gpatsel,side)))=nan;
+                        upSet=invals(:,ImpBinary==1)';
+                        downSet=invals(:,ImpBinary==0)';
+
+                        if obj.showsignificantonly
+                            [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                            outps=ps;
+                        else % no need to calc p-val here
+                            [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                        end
+                        vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
+
+                        vals{group,side}(nonempty)=outvals;
+%                         if exist('outps','var') % only calculated if testing for significance.
+%                             pvals{group,side}(nonempty)=outps;
+%                         end
+                    end 
                 end
         end
     end
@@ -238,11 +341,15 @@ switch lower(obj.multcompstrategy)
     case 'fdr'
         pnnan=ps(nnanidx);
         [psort,idx]=sort(pnnan);
-        pranks=zeros(length(psort),1);
+        pranks=zeros(1,length(psort));
         for rank=1:length(pranks)
             pranks(idx(rank))=rank;
         end
         pnnan=pnnan.*numtests;
+
+        if ~isequal(size(pranks),size(pnnan))
+            pranks=pranks';
+        end
         pnnan=pnnan./pranks;
         ps(nnanidx)=pnnan;
     case 'bonferroni'

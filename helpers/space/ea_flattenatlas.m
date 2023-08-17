@@ -3,7 +3,7 @@ function ea_flattenatlas(atlassetname,outfn)
 if isempty(atlassetname)
     return
 end
-load([ea_space,'ea_space_def.mat']);
+load([ea_space,'spacedef.mat']);
 if exist([ea_space([],'atlases'),atlassetname,filesep,'atlas_index.mat'],'file')
     load([ea_space([],'atlases'),atlassetname,filesep,'atlas_index.mat']);
 else

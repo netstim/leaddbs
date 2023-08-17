@@ -19,57 +19,43 @@ function varargout=ea_normalize_spmnewseg(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM12 Segment nonlinear (Ashburner 2005)';
-    switch spm('ver')
-        case 'SPM12'
-            varargout{2}=1; % compatible
-            varargout{3}=1; % hassettings.
-            varargout{4}=1; % is multispectral
-        otherwise
-            varargout{2}=0; % not compatible
-    end
+    varargout{1}='SPM12 Segment (Ashburner 2005)';
+    varargout{2}=1; % dummy output
+    varargout{3}=1; % hassettings.
+    varargout{4}=1; % is multispectral
     return
 end
 
 fprintf('\nThis Normalization routine uses the advanced TPMs by Lorio 2016.\nSee http://unil.ch/lren/home/menuinst/data--utilities.html\n\n');
 
-directory=[options.root,options.patientname,filesep];
-if isfield(options.prefs, 'tranii_unnormalized')
-    if exist([directory,options.prefs.tranii_unnormalized,'.gz'],'file')
-        try
-            gunzip([directory,options.prefs.tranii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.cornii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.sagnii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.prenii_unnormalized,'.gz']);
-        end
-    end
-end
-
-% now segment the preoperative version.
+% Run SPM New Segment
 disp('Segmenting preoperative version...');
+preopImages = struct2cell(options.subj.coreg.anat.preop);
+ea_newseg(preopImages, 0, 0, 1);
+disp('Segmentation of preoperative MRI done.');
 
-ea_newseg_pt(options,0,0,1);
+[directory, preopAnchorName] = fileparts(preopImages{1});
+directory = [directory, filesep];
+preopAnchorName = [preopAnchorName, '.nii'];
+
 disp('done.');
 
-% Rename deformation fields:
-try copyfile([directory,'y_',options.prefs.prenii_unnormalized],[directory,'y_ea_normparams.nii']); end
-try copyfile([directory,'iy_',options.prefs.prenii_unnormalized],[directory,'y_ea_inv_normparams.nii']); end
+% Rename Segmentations (c1, c2, c3)
+mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
+movefile([directory, 'c1', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'GM', 'suffix', 'mask'));
+movefile([directory, 'c2', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'WM', 'suffix', 'mask'));
+movefile([directory, 'c3', preopAnchorName], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'CSF', 'suffix', 'mask'));
 
-% Apply estimated deformation to (coregistered) post-op data.
+% Rename deformation fields
+ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
+movefile([directory, 'y_', preopAnchorName], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
+movefile([directory, 'iy_', preopAnchorName], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
 
+% Apply estimated deformation to (coregistered) post-op images.
 ea_apply_normalization(options)
 
-[~,anatpresent]=ea_assignpretra(options);
+modality = regexp(preopImages, '(?<=_)[^\W_]+(?=\.nii(\.gz)?$)', 'match', 'once');
 
-ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
-    'Unified Segmentation Approach as implemented in SPM12 (Ashburner 2005; www.fil.ion.ucl.ac.uk/spm/software/spm12/).',...
-    ],...
-    {...
-    'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018',...
-    });
+ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space based on preoperative acquisition(s) (',strjoin(modality, ', '),') using the'...
+    'Unified Segmentation Approach as implemented in SPM12 (Ashburner 2005; www.fil.ion.ucl.ac.uk/spm/software/spm12/).'], ...
+    {'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'});

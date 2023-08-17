@@ -16,7 +16,7 @@ end
 
 % Check output folder
 if ~exist('outputfolder', 'var') || isempty(outputfolder)
-    outputfolder = M.ui.groupdir;
+    outputfolder = M.root;
 else
     if ~isfolder(outputfolder)
         mkdir(outputfolder);
@@ -37,4 +37,4 @@ if isfield(M, 'stats')
 end
 
 % Save modified group analysis file
-save(fullfile(outputfolder, 'LEAD_groupanalysis.mat'), 'M');
+save(ea_getGroupAnalysisFile(outputfolder), 'M');

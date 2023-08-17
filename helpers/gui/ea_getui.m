@@ -1,14 +1,22 @@
 function ea_getui(handles)
 
-% determine if patientfolder is set
-switch get(handles.patdir_choosebox,'String')
-    case {'Choose Patient Directory','Multiple'}
-        outdir=[ea_getearoot];
-    otherwise
-        outdir=get(handles.patdir_choosebox,'String');
-end
+bids = getappdata(handles.leadfigure,'bids');
+subjId = getappdata(handles.leadfigure,'subjId');
 
-try
-    options=load([outdir,'ea_ui']);
-    ea_options2handles(options,handles); % update UI
+if ~isempty(bids)
+    % Determine prefs path
+    if isempty(handles.patientlist.Data) || isempty(handles.patientlist.Selection)
+    	% prefsPath = fullfile(ea_getearoot, 'ea_ui.mat');
+        prefsPath = '';
+    else
+    	prefsPath = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
+    end
+
+    if isfile(prefsPath)
+        % Load UI prefs
+        options = load(prefsPath);
+
+        % Update UI
+        ea_options2handles(options, handles);
+    end
 end

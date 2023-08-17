@@ -314,6 +314,7 @@ function [imageData, alpha] = export_fig(varargin) %#ok<*STRCL1>
 
     % Display promo (just once!)
     persistent promo
+    promo = true;
     if isempty(promo) && ~isdeployed
         website = 'https://UndocumentedMatlab.com';
         link = ['<a href="' website];

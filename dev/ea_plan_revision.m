@@ -1,20 +1,15 @@
 function ea_plan_revision(directory,sourceels,revs)
-if exist([directory,'ea_reconstruction_backup.mat'],'file')
-    copyfile( [directory,'ea_reconstruction_backup.mat'],[directory,'ea_reconstruction.mat']);
-end
-load([directory,'ea_reconstruction.mat']);
-save([directory,'ea_reconstruction_backup.mat'],'reco');
-for rev=1:length(revs)
-    options=ea_getptopts(directory);
+options = ea_getptopts(directory);
 
-    load([directory,'ea_reconstruction.mat']);
-    %    if ~isfield(reco,'acpc')
-    %        options.prefs.reco.saveACPC=1;
-    %        [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-    %        options.hybridsave=1;
-    %        ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options);
-    %        load([directory,'ea_reconstruction.mat']);
-    %    end
+backupRecon = strrep(options.subj.recon.recon, '.mat', '_backup.mat');
+if isfile(backupRecon)
+    copyfile(backupRecon, options.subj.recon.recon);
+end
+load(options.subj.recon.recon);
+save(backupRecon, 'reco');
+
+for rev=1:length(revs)
+    load(options.subj.recon.recon);
 
     copymarkers=reco.native.markers(sourceels(rev));
     % head
@@ -47,11 +42,11 @@ for rev=1:length(revs)
     reco.mni.markers(end).y = reco.mni.markers(end).head + yunitv*(options.elspec.lead_diameter/2);
 
     reco=rmfield(reco,'native');
-    save([directory,'ea_reconstruction.mat'],'reco');
+    save(options.subj.recon.recon,'reco');
     options.hybridsave=1;
     options.sides=1:length(reco.mni.markers);
     [reco.mni.coords_mm,reco.mni.trajectory,reco.mni.markers]=ea_resolvecoords(reco.mni.markers,options,0);
-    delete([directory,'ea_reconstruction.mat']);
+    delete(options.subj.recon.recon);
 
     elmodel=ea_get_first_notempty_elmodel(reco.props);
     ea_save_reconstruction(reco.mni.coords_mm, reco.mni.trajectory, reco.mni.markers, elmodel, 1, options)

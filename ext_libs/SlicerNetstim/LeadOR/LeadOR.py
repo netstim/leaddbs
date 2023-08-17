@@ -1,10 +1,16 @@
 import os
 import unittest
 import logging
+import warnings
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
+import json
 
+import LeadORLib
+import LeadORLib.util
+from LeadORLib.util import Trajectory, Feature
+from LeadORLib.Widgets.tables import FeaturesTable
 
 #
 # LeadOR
@@ -25,6 +31,33 @@ class LeadOR(ScriptedLoadableModule):
 This module controls micro electrode settings for deep brain stimulation surgery
 """
     self.parent.acknowledgementText = ""
+
+
+    # Additional initialization step after application startup is complete
+    slicer.app.connect("startupCompleted()", registerSampleData)
+    slicer.app.connect("startupCompleted()", addCustomLayout)
+
+#
+# Register sample data sets in Sample Data module
+#
+
+def registerSampleData():
+  """
+  Add data sets to Sample Data module.
+  """
+
+  import SampleData
+  iconsPath = os.path.join(os.path.dirname(__file__), 'Resources/Icons')
+
+  SampleData.SampleDataLogic.registerCustomSampleDataSource(
+    category='LeadOR',
+    sampleName='STN Planning',
+    thumbnailFileName=os.path.join(iconsPath, 'LeadOR1.png'),
+    uris="https://github.com/netstim/SlicerNetstim/releases/download/SampleData/Lead-OR_STN.mrb",
+    fileNames='Lead-OR_STN.mrb',
+    loadFiles=True,
+    loadFileType='SceneFile'
+  )
 
 
 #
@@ -58,15 +91,62 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
-    # AO Channels actions to ToolButton
-    for child in self.ui.microElectrodeLayoutFrame.children():
-      if isinstance(child, qt.QToolButton):
-        # channel
-        AOChannelsAction = qt.QAction('AO Channels', self.layout)
-        AOChannelsAction.setEnabled(False)
-        AOChannelsAction.setMenu(qt.QMenu(child))
-        child.addAction(AOChannelsAction)
+    # IGTLink
+    if hasattr(slicer.modules,'openigtlinkif'):
+      try:
+        w = slicer.modules.openigtlinkif.createNewWidgetRepresentation()
+        connectorListFrame = next(filter(lambda c: c.name=="ConnectorListFrame", w.children()))
+        # Get ListView and ButtonFrame
+        connectorListView = next(filter(lambda c: c.name=="ConnectorListView", connectorListFrame.children()))
+        connectorButtonFrame = next(filter(lambda c: c.name=="ConnectorButtonFrame", connectorListFrame.children()))
+        # Add "active" checkbox to connector ButtonFrame
+        connectorPropertyWidget = next(filter(lambda c: c.name=="ConnectorPropertyWidget", connectorListFrame.children()))
+        connectorPropertyFrame = next(filter(lambda c: c.name=="ConnectorPropertyFrame", connectorPropertyWidget.children()))
+        connectorStateCheckBox = next(filter(lambda c: c.name=="ConnectorStateCheckBox", connectorPropertyFrame.children()))
+        connectorButtonFrame.layout().addWidget(connectorStateCheckBox)
+        # Add custom button to go to module
+        goToModuleButton = qt.QPushButton('Go To Module')
+        goToModuleButton.clicked.connect(lambda: slicer.util.mainWindow().moduleSelector().selectModule('OpenIGTLinkIF'))
+        connectorButtonFrame.layout().addWidget(goToModuleButton)
+        # Add ListView and ButtonFrame to collapsible button
+        self.ui.IGTLinkFrame.setLayout(qt.QVBoxLayout())
+        self.ui.IGTLinkFrame.layout().addWidget(connectorListView)
+        self.ui.IGTLinkFrame.layout().addWidget(connectorButtonFrame)
+        # Adjust view
+        for i in range(4):
+          connectorListView.header().setSectionResizeMode(i, qt.QHeaderView.Stretch)
+      except:
+        self.ui.IGTLinkCollapsibleButton.enabled = False
+        self.ui.IGTLinkCollapsibleButton.collapsed = True
+        self.ui.IGTLinkCollapsibleButton.setToolTip('Unable to set up OpenIGTLinkIF. Use the module directly.')
+    else:
+      self.ui.IGTLinkCollapsibleButton.enabled = False
+      self.ui.IGTLinkCollapsibleButton.collapsed = True
+      self.ui.IGTLinkCollapsibleButton.setToolTip('OpenIGTLinkIF Module required')
 
+    # Reslice driver
+    volumeResliceDriverPixmap = qt.QPixmap(self.resourcePath('Icons/VolumeResliceDriver.png'))
+    self.ui.setDefaultResliceDriverToolButton.setIcon(qt.QIcon(volumeResliceDriverPixmap))
+    self.ui.setDefaultResliceDriverToolButton.setIconSize(volumeResliceDriverPixmap.rect().size())
+    self.ui.setDefaultResliceDriverToolButton.clicked.connect(self.setDefaultResliceDriver)
+
+    # Sequences
+    recordSequenzePixmap = qt.QPixmap(self.resourcePath('Icons/VcrRecord16.png'))
+    self.ui.recordSequenceToolButton.setIcon(qt.QIcon(recordSequenzePixmap))
+    self.ui.recordSequenceToolButton.setIconSize(recordSequenzePixmap.rect().size())
+    self.ui.recordSequenceToolButton.clicked.connect(self.setUpSequenzeRecording)
+
+    # Stim actions to ToolButton
+    stimulationActionGroup = qt.QActionGroup(self.layout)
+    for child in self.ui.trajectoriesLayoutFrame.children():
+      if isinstance(child, qt.QToolButton):
+        # stim
+        stimulationAction = qt.QAction('Stim Source', self.layout)
+        stimulationAction.setCheckable(True)
+        stimulationAction.setEnabled(True)
+        stimulationAction.toggled.connect(self.updateStimulationTransform)
+        stimulationActionGroup.addAction(stimulationAction)
+        child.addAction(stimulationAction)
 
     # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
     # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
@@ -82,51 +162,51 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # These connections ensure that we update parameter node when scene is closed
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+    self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, self.onNodeAdded)
+    self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeRemovedEvent, self.onNodeRemoved)
 
-    # These connections ensure that whenever user changes some settings on the GUI, that is saved in the MRML scene
-    # (in the selected parameter node).
+    # Planning and distance to target
+    self.ui.planningTransformComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+    self.ui.planningTransformComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.guessSideFromTransform)
+    self.ui.planningTransformComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.setTransformsHierarchy)
+
     self.ui.distanceToTargetComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-    self.ui.trajectoryTransformComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-    self.ui.trajectoryTransformComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.guessSideFromTransform)
-
-    # transforms hierarchy
     self.ui.distanceToTargetComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.setTransformsHierarchy)
-    self.ui.trajectoryTransformComboBox.connect("currentNodeChanged(vtkMRMLNode*)", self.setTransformsHierarchy)
-
-    # reset ME when distance to target node change
-    self.ui.distanceToTargetComboBox.currentNodeChanged.connect(lambda b,enabledList=[0]*9: self.setMELayout(enabledList))
-
-    # distance to target slider
+    self.ui.distanceToTargetComboBox.currentNodeChanged.connect(lambda b,enabledList=[0]*9: self.setTrajectoryLayout(enabledList))
     self.ui.distanceToTargetComboBox.connect("currentNodeChanged(vtkMRMLNode*)", lambda node: self.ui.distanceToTargetSlider.setMRMLTransformNode(node))
+    
     self.ui.distanceToTargetSlider.connect("valueChanged(double)", lambda value: self.ui.distanceToTargetSlider.applyTransformation(value))
 
-    # micro electrode layouts
-    self.ui.MECenterLayoutPushButton.clicked.connect(lambda b,enabledList=[0,0,0,0,1,0,0,0,0]: self.setMELayout(enabledList))
-    self.ui.MEPlusLayoutPushButton.clicked.connect(  lambda b,enabledList=[0,1,0,1,1,1,0,1,0]: self.setMELayout(enabledList))
-    self.ui.MEXLayoutPushButton.clicked.connect(     lambda b,enabledList=[1,0,1,0,1,0,1,0,1]: self.setMELayout(enabledList))
+    # Trajectories
+    for i in range(self.ui.trajectoryVisualizationComboBox.model().rowCount()):
+      index = self.ui.trajectoryVisualizationComboBox.model().index(i,0)
+      self.ui.trajectoryVisualizationComboBox.setCheckState(index, qt.Qt.Checked)
+    self.ui.trajectoryVisualizationComboBox.checkedIndexesChanged.connect(self.trajectoryVisualizationChanged)
 
-    # add connection for each micro electro toggle button 
-    for child in self.ui.microElectrodeLayoutFrame.children():
-      if isinstance(child, qt.QToolButton):
-        child.toggled.connect(lambda b,N=int(child.objectName.split('_')[-1]): self.microElectrodeLayoutToggle(b,N))
+    for i in range(9):
+      toolButton = getattr(self.ui, 'TrajectoryToolButton_'+str(i))
+      toolButton.toggled.connect(lambda b,N=i: self.trajectoryLayoutToggle(b,N))
 
-    # ME visibility
-    self.ui.MEModelVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('microElectrodeModel', b))
-    self.ui.MELineVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('trajectoryLine', b))
-    self.ui.METipVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('tipFiducial', b))
-    self.ui.METraceVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('traceModel', b))
+    self.ui.trajectoryPresetComboBox.currentTextChanged.connect(lambda t: self.setTrajectoryLayoutPreset(t))
+    self.ui.unlinkedChannelsListWidget.itemSelectionChanged.connect(self.onUnlinkedChannelsSelectionChanged)
+    self.ui.linkChannelsToTrajectoriesPushButton.clicked.connect(self.onLinkChannelsToTrajectoriesPushButton)
 
+    # Features
+    self.ui.featuresTableWidget = FeaturesTable(self.ui.featuresTableView, self.updateParameterNodeFromGUI)
+
+    # Stimulation
+    if hasattr(slicer,'vtkMRMLFiberBundleNode') and hasattr(slicer.vtkMRMLFiberBundleNode,'GetExtractFromROI'):
+      self.ui.stimulationCollapsibleButton.enabled = True
+    else:
+      self.ui.stimulationCollapsibleButton.enabled = False
+      self.ui.stimulationCollapsibleButton.collapsed = True
+      self.ui.stimulationCollapsibleButton.setToolTip('Updated SlicerDMRI Extension needed for stimulation module')
+      
+    self.ui.stimulationActiveCheckBox.connect('toggled(bool)', self.onStimulationActivate)
+    self.ui.stimulationAmplitudeSpinBox.valueChanged.connect(self.updateStimulationRadius)
 
     # Make sure parameter node is initialized (needed for module reload)
     self.initializeParameterNode()
-
-    # AlphaOmega parameter node (Singleton)
-    try:
-      AOParameterNode = slicer.modules.alphaomega.logic().getParameterNode()
-      self.addObserver(AOParameterNode, vtk.vtkCommand.ModifiedEvent, self.updateParameterNodeFromAO)
-      self.updateParameterNodeFromAO(AOParameterNode, None)
-    except:
-      pass
 
   def cleanup(self):
     """
@@ -146,7 +226,9 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     Called each time the user opens a different module.
     """
     # Do not react to parameter node changes (GUI wlil be updated when the user enters into the module)
-    self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
+    with warnings.catch_warnings():
+      warnings.simplefilter("ignore")
+      self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
 
   def onSceneStartClose(self, caller, event):
     """
@@ -154,8 +236,8 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
     # Parameter node will be reset, do not use it anymore
     self.setParameterNode(None)
-    # reset ME state
-    self.setMELayout([0]*9)
+    # reset trajectory state
+    self.setTrajectoryLayout([0]*9)
 
   def onSceneEndClose(self, caller, event):
     """
@@ -174,7 +256,6 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.setParameterNode(self.logic.getParameterNode())
 
-
   def setParameterNode(self, inputParameterNode):
     """
     Set and observe parameter node.
@@ -188,7 +269,9 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Changes of parameter node are observed so that whenever parameters are changed by a script or any other module
     # those are reflected immediately in the GUI.
     if self._parameterNode is not None:
-      self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
+      with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
     self._parameterNode = inputParameterNode
     if self._parameterNode is not None:
       self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
@@ -196,6 +279,68 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Initial GUI update
     self.updateGUIFromParameterNode()
 
+  @vtk.calldata_type(vtk.VTK_OBJECT)
+  def onNodeAdded(self, caller, event, calldata):
+
+    # todo send PR to opigtlink so that markups name is set before adding to scene
+    qt.QTimer.singleShot(100, lambda cd=calldata: self.onNodeWithNameAdded(cd))
+
+  def onNodeWithNameAdded(self, node):
+
+    if (not node.GetName().startswith("LeadOR")) or self._parameterNode is None or self._updatingGUIFromParameterNode:
+      return  
+    wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
+    
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    folderID = self._parameterNode.GetParameter("LeadORIGTLFolderID")
+    if folderID == '':
+      folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), "LeadOR-IGTL")
+      self._parameterNode.SetParameter("LeadORIGTLFolderID", str(folderID))
+      shNode.SetItemExpanded(folderID, False)
+    shNode.SetItemParent(shNode.GetItemByDataNode(node), int(folderID))
+    
+    subname = node.GetName().split(':')[-1]
+    if subname == "ChannelsNames":
+      self.addObserver(node, node.TextModifiedEvent, lambda c,e,n=node: self.onChannelsNamesModified(n))
+      self.onChannelsNamesModified(node)
+    elif subname == "DTT":
+      self._parameterNode.SetNodeReferenceID("DistanceToTargetTransform", node.GetID())
+    elif isinstance(node,slicer.vtkMRMLTextNode):
+      newFeature = {'name':subname, 'sourceNodeID':node.GetID(), 'projectTo':'Tube', 'property':'', 'visible':1}
+      featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
+      featuresList.append(newFeature)
+      self._parameterNode.SetParameter("FeaturesJson", json.dumps(featuresList))
+      self.addObserver(node, node.TextModifiedEvent, lambda c,e,n=node: self.onFeatureTextModified(n))
+
+    self._parameterNode.EndModify(wasModified)
+
+  def onChannelsNamesModified(self, channelsNamesNode):
+    wasModified = self._parameterNode.StartModify()
+    self._parameterNode.SetParameter("UnlinkedChannels", channelsNamesNode.GetText())
+    self._parameterNode.EndModify(wasModified)
+
+  def onFeatureTextModified(self, node):
+    featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
+    for feature in featuresList:
+      if node.GetID() == feature['sourceNodeID']:
+        self.logic.setUpFeature(**feature)
+        return
+
+  @vtk.calldata_type(vtk.VTK_OBJECT)
+  def onNodeRemoved(self, caller, event, calldata):
+    if self._parameterNode is not None:
+      wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
+    
+      if isinstance(calldata,slicer.vtkMRMLTextNode):
+        featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
+        for i,feature in enumerate(featuresList):
+          if feature['sourceNodeID'] == calldata.GetID():
+            featuresList.pop(i)
+            break
+        self._parameterNode.SetParameter("FeaturesJson", json.dumps(featuresList))
+
+      self._parameterNode.EndModify(wasModified)
+  
   def updateGUIFromParameterNode(self, caller=None, event=None):
     """
     This method is called whenever parameter node is changed.
@@ -209,12 +354,33 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._updatingGUIFromParameterNode = True
 
     self.ui.distanceToTargetComboBox.setCurrentNode(self._parameterNode.GetNodeReference("DistanceToTargetTransform"))
-    self.ui.trajectoryTransformComboBox.setCurrentNode(self._parameterNode.GetNodeReference("TrajectoryTransform"))
-
+    self.ui.planningTransformComboBox.setCurrentNode(self._parameterNode.GetNodeReference("TrajectoryTransform"))
+    
     transformsAvailable = bool(self._parameterNode.GetNodeReference("DistanceToTargetTransform") and self._parameterNode.GetNodeReference("TrajectoryTransform"))
+    self.ui.recordSequenceToolButton.enabled = transformsAvailable
+    self.ui.trajectoryPresetComboBox.enabled = transformsAvailable
+    self.ui.trajectoriesLayoutFrame.enabled = transformsAvailable
+    self.ui.linkChannelsToTrajectoriesPushButton.enabled = transformsAvailable
+    self.ui.stimulationCollapsibleButton.enabled = transformsAvailable and hasattr(slicer,'vtkMRMLFiberBundleNode') and hasattr(slicer.vtkMRMLFiberBundleNode,'GetExtractFromROI')
+    self.ui.setDefaultResliceDriverToolButton.enabled = transformsAvailable and hasattr(slicer.modules,'volumereslicedriver')
+    
+    self.ui.setDefaultResliceDriverToolButton.toolTip = 'Set default reslice driver.' if hasattr(slicer.modules,'volumereslicedriver') else 'Install SlicerIGT to use volume reslice driver.'
 
-    self.ui.layoutToggleFrame.enabled            = transformsAvailable
-    self.ui.microElectrodeLayoutFrame.enabled    = transformsAvailable
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    for i,trajectory in enumerate(trajectories):
+      toolButton = getattr(self.ui, 'TrajectoryToolButton_'+str(i))
+      toolButton.setChecked(trajectory["active"])
+      toolButton.setToolTip(trajectory["channelName"])
+
+    linkedChannels = set([trajectory["channelName"] for trajectory in trajectories])
+    unlinkedChannels = set(self._parameterNode.GetParameter("UnlinkedChannels").split(","))
+    self.ui.unlinkedChannelsListWidget.clear()
+    self.ui.unlinkedChannelsListWidget.addItems(list(unlinkedChannels.difference(linkedChannels)))
+
+    featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
+    self.ui.featuresTableWidget.updateNumberOfRows(len(featuresList))
+    for i,feature in enumerate(featuresList):
+      self.ui.featuresTableWidget.updateNthRowFromFeature(i, feature)
 
     # All the GUI updates are done
     self._updatingGUIFromParameterNode = False
@@ -230,62 +396,105 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
     self._parameterNode.SetNodeReferenceID("DistanceToTargetTransform", self.ui.distanceToTargetComboBox.currentNodeID)
-    self._parameterNode.SetNodeReferenceID("TrajectoryTransform", self.ui.trajectoryTransformComboBox.currentNodeID)
+    self._parameterNode.SetNodeReferenceID("TrajectoryTransform", self.ui.planningTransformComboBox.currentNodeID)
+
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    for i,trajectory in enumerate(trajectories):
+      toolButton = getattr(self.ui, 'TrajectoryToolButton_'+str(i))
+      trajectory["active"] = toolButton.checked
+      trajectory["channelName"] = toolButton.toolTip.replace('<p>','').replace('</p>','')
+    self._parameterNode.SetParameter("TrajectoriesJson", json.dumps(trajectories))
+
+    featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
+    for i,feature in enumerate(featuresList):
+      featureUpdated = self.ui.featuresTableWidget.updateFeatureFromNthRow(feature, i)
+      if featureUpdated:
+        self.logic.setUpFeature(**feature)
+    self._parameterNode.SetParameter("FeaturesJson", json.dumps(featuresList))
 
     self._parameterNode.EndModify(wasModified)
-
-  def updateParameterNodeFromAO(self, caller, event):
-    """
-    This method is called when there are changes in the AlphaOmega module
-    The parameters are copied
-    """
-    if self._parameterNode is None or self._updatingGUIFromParameterNode:
-      return
-    wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
-    self._parameterNode.SetNodeReferenceID("DistanceToTargetTransform", caller.GetNodeReferenceID("DistanceToTargetTransform"))
-    self._parameterNode.EndModify(wasModified)
-
 
   def setTransformsHierarchy(self):
     if self._parameterNode and self._parameterNode.GetNodeReference("DistanceToTargetTransform") and self._parameterNode.GetNodeReference("TrajectoryTransform"):
       self._parameterNode.GetNodeReference("DistanceToTargetTransform").SetAndObserveTransformNodeID(self._parameterNode.GetNodeReferenceID("TrajectoryTransform"))
 
+  def onUnlinkedChannelsSelectionChanged(self):
+    selection = self.ui.unlinkedChannelsListWidget.selectedItems()
+    if len(selection)>1:
+      selection[0].setSelected(0)
 
-  def microElectrodeLayoutToggle(self, enabled, N):
-    toolButton = getattr(self.ui, 'METoolButton_'+str(N))
-    if enabled:
-      self.logic.initializeNthTrajectory(N, self._parameterNode.GetNodeReferenceID("DistanceToTargetTransform"))
-      self.setToolButtonMenu(toolButton, N)
-    else:
-      self.logic.removeNthTrajectory(N)
-      toolButton.actions()[0].menu().clear()
-
-  def setToolButtonMenu(self, toolButton, N):
-    channelsNames = []
-    for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLAlphaOmegaChannelNode')):
-      channelsNames.append(slicer.mrmlScene.GetNthNodeByClass(i,'vtkMRMLAlphaOmegaChannelNode').GetChannelName())
-    if not channelsNames:
+  def trajectoryLayoutToggle(self, enabled, N):
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
       return
-    # init
-    AOChannelsActionGroup = qt.QActionGroup(toolButton)
-    # add none
-    noneChannelAction = qt.QAction('None', toolButton)
-    noneChannelAction.setCheckable(True)
-    noneChannelAction.setChecked(True)
-    AOChannelsActionGroup.addAction(noneChannelAction)
-    # add for each channel
-    for name in channelsNames:
-      channelAction = qt.QAction(name, toolButton)
-      channelAction.setCheckable(True)
-      AOChannelsActionGroup.addAction(channelAction)
-    # set menu
-    toolButton.actions()[0].menu().clear()
-    toolButton.actions()[0].menu().addActions(AOChannelsActionGroup.actions())
-    toolButton.actions()[0].menu().triggered.connect(lambda action, trajectoryN=N: self.logic.setNthTrajectoryAOChannelNode(trajectoryN, action.text))
+    if enabled and len(self.ui.unlinkedChannelsListWidget.selectedItems()):
+      linkChannelName = self.ui.unlinkedChannelsListWidget.selectedItems()[0].text()
+    else:
+      linkChannelName = ''
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    trajectories[N]["active"] = enabled
+    trajectories[N]["channelName"] = linkChannelName
+    self._parameterNode.SetParameter("TrajectoriesJson", json.dumps(trajectories))
+    self.setUpTrajectories()
 
-  def setMELayout(self, enabledList):
-    for enabled, N in zip(enabledList, range(len(enabledList))):  
-      getattr(self.ui, 'METoolButton_'+str(N)).checked = enabled
+  def onLinkChannelsToTrajectoriesPushButton(self):
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
+      return
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    standardChannels = ['Anterio'+self.ui.leftTrajectoryLabel.text, 'Anterior', 'Anterio'+self.ui.rightTrajectoryLabel.text,\
+                        self.ui.leftTrajectoryLabel.text, 'Central', self.ui.rightTrajectoryLabel.text,\
+                        'Posterio'+self.ui.leftTrajectoryLabel.text, 'Posterior', 'Posterio'+self.ui.rightTrajectoryLabel.text]
+    standardChannels = [standardChannel.lower() for standardChannel in standardChannels]
+    unlinkedChannels = self._parameterNode.GetParameter("UnlinkedChannels").split(",")
+    for unlinkedChannel in unlinkedChannels:
+      unlinkedChannelLower = unlinkedChannel.lower()
+      idx = standardChannels.index(unlinkedChannelLower) if unlinkedChannelLower in standardChannels else None
+      if idx is not None:
+        trajectories[idx]["active"] = 1
+        trajectories[idx]["channelName"] = unlinkedChannel       
+    self._parameterNode.SetParameter("TrajectoriesJson", json.dumps(trajectories))
+    self.setUpTrajectories()
+    
+  def setTrajectoryLayoutPreset(self, text):
+    if text == "Cross (x)":
+      enabledList=[1,0,1,0,1,0,1,0,1]
+    elif text == "Plus (+)":
+      enabledList=[0,1,0,1,1,1,0,1,0]
+    elif text == "Center (.)":
+      enabledList=[0,0,0,0,1,0,0,0,0]
+    if text != "Select...":
+      self.setTrajectoryLayout(enabledList)
+    self.ui.trajectoryPresetComboBox.setCurrentText("Select...")
+
+  def setTrajectoryLayout(self, enabledList):
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
+      return
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    for N,enabled in enumerate(enabledList):
+      trajectories[N]["active"] = enabled
+      trajectories[N]["channelName"] = ''
+    self._parameterNode.SetParameter("TrajectoriesJson", json.dumps(trajectories))
+    self.setUpTrajectories()
+
+  def trajectoryVisualizationChanged(self):
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
+      return
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    for i in range(self.ui.trajectoryVisualizationComboBox.model().rowCount()):
+      index = self.ui.trajectoryVisualizationComboBox.model().index(i,0)
+      key = index.data().lower() + 'Visibility'
+      value = bool(self.ui.trajectoryVisualizationComboBox.checkState(index))
+      for trajectory in trajectories:
+        trajectory[key] = value
+    self._parameterNode.SetParameter("TrajectoriesJson", json.dumps(trajectories))
+    self.setUpTrajectories()
+
+  def setUpTrajectories(self):
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
+      return
+    distanceToTargetTransformID = self.ui.distanceToTargetComboBox.currentNodeID
+    trajectories = json.loads(self._parameterNode.GetParameter("TrajectoriesJson"))
+    for i,trajectory in enumerate(trajectories):
+      self.logic.setUpTrajectory(trajectoryNumber=i, distanceToTargetTransformID=distanceToTargetTransformID, **trajectory)
 
   def guessSideFromTransform(self, transformNode):
     if not transformNode:
@@ -295,8 +504,77 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     transformNode.GetMatrixTransformToWorld(matrix)
     matrix.MultiplyPoint([0.0, 0.0, 0.0, 1.0], currentPoint)
     guessRightSide = currentPoint[0] > 0
-    self.ui.leftMELabel.text = 'Medial' if guessRightSide else 'Lateral'  
-    self.ui.rightMELabel.text = 'Lateral' if guessRightSide else 'Medial' 
+    self.ui.leftTrajectoryLabel.text = 'Medial' if guessRightSide else 'Lateral'  
+    self.ui.rightTrajectoryLabel.text = 'Lateral' if guessRightSide else 'Medial' 
+
+  def setDefaultResliceDriver(self):
+    # Get Reslice Driver Logic
+    try:    
+        logic = slicer.modules.volumereslicedriver.logic()
+    except:
+        qt.QMessageBox.warning(qt.QWidget(),'','Reslice Driver Module not Found')
+        return
+    transformNodeID = self._parameterNode.GetNodeReferenceID("DistanceToTargetTransform")
+    # Settings
+    redSettings    = {'node':slicer.util.getNode('vtkMRMLSliceNodeRed'),    'mode':6, 'angle':90 , 'flip':True}
+    yellowSettings = {'node':slicer.util.getNode('vtkMRMLSliceNodeYellow'), 'mode':5, 'angle':180, 'flip':False}
+    greenSettings  = {'node':slicer.util.getNode('vtkMRMLSliceNodeGreen'),  'mode':4, 'angle':180, 'flip':False}
+    # Set
+    for settings in [redSettings, yellowSettings, greenSettings]:
+        logic.SetDriverForSlice(    transformNodeID,    settings['node'])
+        logic.SetModeForSlice(      settings['mode'],   settings['node'])
+        logic.SetRotationForSlice(  settings['angle'],  settings['node'])
+        logic.SetFlipForSlice(      settings['flip'],   settings['node'])
+
+  def setUpSequenzeRecording(self):
+    browserNode = self._parameterNode.GetNodeReference("browserNode")
+    if browserNode is None:
+      browserNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSequenceBrowserNode', 'LeadOR')
+      self._parameterNode.SetNodeReferenceID("browserNode", browserNode.GetID())
+
+    if self.ui.recordSequenceToolButton.isChecked():
+      sequencesLogic = slicer.modules.sequences.logic()
+      featuresList = json.loads(self._parameterNode.GetParameter("FeaturesJson"))
+      nodesToSync = [feature['sourceNodeID'] for feature in featuresList]
+      nodesToSync.insert(0, self._parameterNode.GetNodeReferenceID("DistanceToTargetTransform"))
+      for nodeID in nodesToSync:
+        sequenceNode = browserNode.GetSequenceNode(slicer.util.getNode(nodeID))
+        if sequenceNode is None:
+          sequenceNode = sequencesLogic.AddSynchronizedNode(None, slicer.util.getNode(nodeID), browserNode)
+        browserNode.SetRecording(sequenceNode, True)
+
+    browserNode.SetRecordingActive(self.ui.recordSequenceToolButton.isChecked())
+
+  def onStimulationActivate(self, active):
+    if active: 
+      self.logic.VTASource = LeadORLib.util.VTASource()
+      self.updateStimulationRadius(self.ui.stimulationAmplitudeSpinBox.value)
+      self.updateStimulationTransform()
+    else:
+      self.logic.VTASource.cleanup()
+      self.logic.VTASource = None
+      self.ui.amplitudeRadiusLabel.setText('-')        
+
+  def updateStimulationTransform(self):
+    if not self.logic.VTASource:
+      return
+    # get current active stim
+    N = next(filter(lambda n: getattr(self.ui, 'TrajectoryToolButton_'+str(n)).actions()[0].checked, range(9)), None)
+    trajectory = Trajectory.GetNthTrajectory(N)
+    if N is None or trajectory is None:
+      self.ui.stimulationActiveCheckBox.checked = False
+      qt.QMessageBox().warning(qt.QWidget(),'','Set a Stimulation Source')
+      return
+    # set transform
+    self.logic.VTASource.SetAndObserveTransformNodeID(trajectory.translationTransformNodeID)
+
+  def updateStimulationRadius(self, value):
+    if not self.logic.VTASource:
+      return
+    # set  radius
+    radius = self.logic.getVTARadius(value * 1e-3) * 1e3 
+    self.logic.VTASource.SetRadius(radius)
+    self.ui.amplitudeRadiusLabel.setText('%.2f' % radius)
 
 
 #
@@ -319,48 +597,63 @@ class LeadORLogic(ScriptedLoadableModuleLogic):
     """
     ScriptedLoadableModuleLogic.__init__(self)
     if slicer.util.settingsValue('Developer/DeveloperMode', False, converter=slicer.util.toBool):
-      import LeadORLib
-      import LeadORLib.util
+      import glob
       import importlib
-      importlib.reload(LeadORLib.util)
+      import LeadORLib
+      LeadORLibPath = os.path.join(os.path.dirname(__file__), 'LeadORLib')
+      G = glob.glob(os.path.join(LeadORLibPath, '**','*.py'))
+      for g in G:
+        relativePath = os.path.relpath(g, LeadORLibPath) # relative path
+        relativePath = os.path.splitext(relativePath)[0] # get rid of .py
+        moduleParts = relativePath.split(os.path.sep) # separate
+        importlib.import_module('.'.join(['LeadORLib']+moduleParts)) # import module
+        module = LeadORLib
+        for modulePart in moduleParts: # iterate over parts in order to load subpkgs
+          module = getattr(module, modulePart)
+        importlib.reload(module) # reload
 
-    self.trajectories = {}
+    self.VTASource = None
 
     
   def setDefaultParameters(self, parameterNode):
     """
     Initialize parameter node with default settings.
     """
-    pass
+    if not parameterNode.GetParameter("UnlinkedChannels"):
+      parameterNode.SetParameter("UnlinkedChannels", "")
+    if not parameterNode.GetParameter("FeatureNames"):
+      parameterNode.SetParameter("FeatureNames", "")
+    if not parameterNode.GetParameter("FeaturesJson"):
+      parameterNode.SetParameter("FeaturesJson", json.dumps([]))
+    if not parameterNode.GetParameter("TrajectoriesJson"):
+      parameterNode.SetParameter("TrajectoriesJson", json.dumps([{"active":0,"channelName":'',"modelVisibility":1,"lineVisibility":1,"tipVisibility":1}]*9))
 
-  def initializeNthTrajectory(self, N, distanceToTargetTransformID):
-    import LeadORLib
-    self.trajectories[N] = LeadORLib.util.Trajectory(N, distanceToTargetTransformID)
-  
-  def removeNthTrajectory(self, N):
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    IDs = vtk.vtkIdList()
-    shNode.GetItemChildren(self.trajectories[N].folderID, IDs, True)
-    for i in range(IDs.GetNumberOfIds()):
-      shNode.RemoveItem(IDs.GetId(i))
-    shNode.RemoveItem(self.trajectories[N].folderID)
-    del self.trajectories[N]
+  def setUpTrajectory(self, trajectoryNumber, distanceToTargetTransformID, active=True, channelName='', modelVisibility=1, lineVisibility=1, tipVisibility=1):
+    if active:
+      trajectory = Trajectory.InitOrGetNthTrajectory(trajectoryNumber)
+      trajectory.setDistanceToTargetTransformID(distanceToTargetTransformID)
+      trajectory.setChannelName(channelName)
+      trajectory.setModelVisibility(modelVisibility)
+      trajectory.setLineVisibility(lineVisibility)
+      trajectory.setTipVisibility(tipVisibility)
+    else:
+      Trajectory.RemoveNthTrajectory(trajectoryNumber)
 
-  def setNthTrajectoryAOChannelNode(self, N, channelName):
-    if N not in self.trajectories.keys() or channelName == 'None':
+  def setUpFeature(self, sourceNodeID=None, name='', projectTo='Tube', property='', visible=1):
+    if sourceNodeID is None:
       return
-    channelNode = self.getAOChannelNodeFromChannelName(channelName)
-    self.trajectories[N].setAlphaOmegaChannelNode(channelNode)
-    
-  def getAOChannelNodeFromChannelName(self, channelName):
-    for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLAlphaOmegaChannelNode')):
-      AONode = slicer.mrmlScene.GetNthNodeByClass(i,'vtkMRMLAlphaOmegaChannelNode')
-      if AONode.GetChannelName() == channelName:
-        return AONode
+    feature = Feature(projectTo)
+    feature.addSourceNode(sourceNodeID, property, visible)
+    feature.update()
 
-  def setMEVisibility(self, modelType, visible):
-    for trajectory in self.trajectories.values():
-      getattr(trajectory, modelType).GetDisplayNode().SetVisibility3D(visible)
+  def getVTARadius(self, I, pw=60): 
+    # I: amplitude in Ampere
+    # pw: pulse width in micro seconds
+    # returns radius in meter
+    from numpy import sqrt
+    return ((pw/90)**0.3) * sqrt(0.8*I/165) # 0.72
+
+
 
 #
 # LeadORTest
@@ -376,58 +669,175 @@ class LeadORTest(ScriptedLoadableModuleTest):
   def setUp(self):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
+    # Close Open-Ephys
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex(('127.0.0.1',37497))
+    if result == 0:
+      import requests
+      url = "http://localhost:37497/api/"
+      requests.put(url + "status", json={"mode" : "IDLE"})
+      requests.put(url + "processors/103/config", json={"text" : "LOR IGTLDISCONNECT"})
+      requests.put(url + "window", json={"command" : "quit"})
+    # Clear Slicer
+    while slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLIGTLConnectorNode"):
+      slicer.mrmlScene.GetNthNodeByClass(0,"vtkMRMLIGTLConnectorNode").Stop()
+      slicer.mrmlScene.RemoveNode(slicer.mrmlScene.GetNthNodeByClass(0,"vtkMRMLIGTLConnectorNode"))
     slicer.mrmlScene.Clear()
 
   def runTest(self):
     """Run as few or as many tests as needed here.
     """
     self.setUp()
-    self.test_LeadOR1()
+    # self.test_LeadORWithOpenEphys()
+    # self.test_LeadORFeatures()
+    self.test_LeadORFeaturesWithNan()
+    # self.test_LeadORFeaturesBasic()
 
-  def test_LeadOR1(self):
-    """ Ideally you should have several levels of tests.  At the lowest level
-    tests should exercise the functionality of the logic with different inputs
-    (both valid and invalid).  At higher levels your tests should emulate the
-    way the user would interact with your code and confirm that it still works
-    the way you intended.
-    One of the most important features of the tests is that it should alert other
-    developers when their changes will have an impact on the behavior of your
-    module.  For example, if a developer removes a feature that you depend on,
-    your test should break so they know that the feature is needed.
-    """
+  def test_LeadORFeaturesBasic(self):
+    self.delayDisplay("Starting the test")
+
+    planningNode =slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','Planning')
+    dttNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','DTT')
+    dttNode.SetAndObserveTransformNodeID(planningNode.GetID())
+
+    channelName = "Central"
+
+    featureNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature1')
+    featureNode.SetText("RecordingSiteDTT,"+channelName)
+    
+    logic = LeadORLogic()
+
+    logic.setUpTrajectory(4, dttNode.GetID(), True, channelName, 0, 0, 0)
+    logic.setUpFeature(featureNode.GetID(), 'feature1', 'Tube', 'RadiusAndColor')
+
+    self.delayDisplay('Test passed')
+
+  def test_LeadORFeatures(self):
+    self.delayDisplay("Starting the test")
+
+    planningNode =slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','Planning')
+    dttNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','DTT')
+    dttNode.SetAndObserveTransformNodeID(planningNode.GetID())
+
+    channelName = "Central"
+
+    featureNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature1')
+    featureNode.SetText("RecordingSiteDTT,"+channelName+"\n\
+                          10.0,80\n\
+                          9.0,80\n\
+                          8.0,80\n\
+                          7.0,80\n\
+                          6.0,160\n\
+                          5.0,200\n\
+                          4.0,140\n\
+                          3.0,300\n\
+                          2.0,200")
+    
+    logic = LeadORLogic()
+
+    logic.setUpTrajectory(4, dttNode.GetID(), True, channelName, 0, 0, 0)
+    logic.setUpFeature(featureNode.GetID(), 'feature1', 'Tube', 'RadiusAndColor')
+
+    self.delayDisplay('Test passed')
+
+  def test_LeadORFeaturesWithNan(self):
+    self.delayDisplay("Starting the test")
+
+    planningNode =slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','Planning')
+    dttNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode','DTT')
+    dttNode.SetAndObserveTransformNodeID(planningNode.GetID())
+
+    channelName = "Central"
+
+    featureNode1 = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature1')
+    featureNode1.SetText("RecordingSiteDTT,"+channelName+"\n\
+                          10.0,80\n\
+                          8.0,80\n\
+                          7.0,80\n\
+                          6.0,160\n\
+                          5.0,200\n\
+                          4.0,300\n\
+                          2.0,200")
+
+    featureNode2 = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTextNode','feature2')
+    featureNode2.SetText("RecordingSiteDTT,"+channelName+"\n\
+                          10.0,80\n\
+                          9.0,90\n\
+                          8.0,80\n\
+                          6.0,300\n\
+                          5.0,150\n\
+                          4.0,80\n\
+                          3.0,80\n\
+                          2.0,80")
+    
+    logic = LeadORLogic()
+
+    logic.setUpTrajectory(4, dttNode.GetID(), True, channelName, 0, 0, 0)
+    logic.setUpFeature(featureNode1.GetID(), 'feature1', 'Tube', 'Radius')
+    logic.setUpFeature(featureNode2.GetID(), 'feature2', 'Tube', 'Color')
+
+    self.delayDisplay('Test passed')
+
+
+  def test_LeadORWithOpenEphys(self):
 
     self.delayDisplay("Starting the test")
 
     # Get/create input data
 
-    import SampleData
-    registerSampleData()
-    inputVolume = SampleData.downloadSample('LeadOR1')
-    self.delayDisplay('Loaded test data set')
+    # Currently use local data.
+    # This is sensitive data recorded during surgery.
+    # TODO: see how to share an example dataset for other users.
+    from sys import platform
+    if platform == "win32":
+      test_dir = "C:\\Users\\simon\\Desktop\\143UA53-test"
+    elif platform == "darwin":
+      test_dir = "/Users/simon/Desktop/143UA53-test"
+    if not os.path.isdir(test_dir):
+      return
 
-    inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-    self.assertEqual(inputScalarRange[0], 0)
-    self.assertEqual(inputScalarRange[1], 695)
+    slicer.util.loadScene(os.path.join(test_dir, "ORScene.mrb"))
 
-    outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-    threshold = 100
+    # Add an IGTL Connector
 
-    # Test the module logic
+    n = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLIGTLConnectorNode')
+    n.SetServerPort(18944)
+    n.Start()
 
-    logic = LeadORLogic()
+    # Open Open-ephys instance with test config, connect to igtl and start aquisition
 
-    # Test algorithm with non-inverted threshold
-    logic.process(inputVolume, outputVolume, threshold, True)
-    outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], threshold)
+    if platform == "win32":
+      open_ephys_exe = "C:\\Users\\simon\\repo\\plugin-GUI\\Build\\Release\\open-ephys.exe"
+    elif platform == "darwin":
+      open_ephys_exe = '/Users/simon/repo/plugin-GUI/Build/Release/open-ephys.app/Contents/MacOS/open-ephys'
+    open_ephys_config = os.path.join(test_dir, "LeadORConfig.xml")
+    import subprocess
+    subprocess.Popen([open_ephys_exe, open_ephys_config])
 
-    # Test algorithm with inverted threshold
-    logic.process(inputVolume, outputVolume, threshold, False)
-    outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], inputScalarRange[1])
+    import requests
+    url = "http://localhost:37497/api/"
+    r = None
+    while (r == None) or (r.json()['mode'] != 'IDLE'):
+      try:
+        r = requests.get(url + "status")
+        break
+      except:
+        import time
+        time.sleep(0.5)
 
+    r = None
+    while (r == None) or (r.json()['info'] != 'Connected!'):
+      try:
+        r = requests.put(url + "processors/103/config", json={"text" : "LOR IGTLCONNECT 18944"})
+        break
+      except:
+        import time
+        time.sleep(0.5)
+    
+    self.assertEqual(r.json()['info'], 'Connected!')
+
+    r = requests.put(url + "status", json={"mode" : "ACQUIRE"})
     self.delayDisplay('Test passed')
 
 #
@@ -435,7 +845,7 @@ class LeadORTest(ScriptedLoadableModuleTest):
 #
 
 
-def tryToAddCustomLayout():
+def addCustomLayout():
 
   customLayout = """
   <layout type="horizontal" split="true">
@@ -508,7 +918,7 @@ def tryToAddCustomLayout():
   except:
     mainWindow = None
 
-  if mainWindow and not layoutNode.GetLayoutDescription(customLayoutId):
+  if mainWindow and not layoutNode.IsLayoutDescription(customLayoutId):
     layoutNode.AddLayoutDescription(customLayoutId, customLayout)                                         
     viewToolBar = mainWindow.findChild("QToolBar", "ViewToolBar")
     layoutMenu = viewToolBar.widgetForAction(viewToolBar.actions()[0]).menu()
@@ -516,7 +926,3 @@ def tryToAddCustomLayout():
     layoutSwitchAction = layoutSwitchActionParent.addAction("LeadOR")
     layoutSwitchAction.setData(customLayoutId)
     layoutSwitchAction.setIcon(qt.QIcon(":Icons/Go.png"))
-
-# add layout once we have a layout manager
-t = qt.QTimer()
-t.singleShot(5000, tryToAddCustomLayout)

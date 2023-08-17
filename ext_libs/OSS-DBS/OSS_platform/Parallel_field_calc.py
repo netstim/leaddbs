@@ -85,9 +85,9 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
     start_paral=tm.time()
 
     Field_on_VTA=0          #temp solution
-    if d["Full_Field_IFFT"]==1:
+    if d["VTA_approx"]==1:
         Field_on_VTA=1
-        d["Full_Field_IFFT"]=0
+        d["VTA_approx"]=0
 
     #load adapted mesh
     mesh = Mesh(os.environ['PATIENTDIR']+'/Results_adaptive/mesh_adapt.xml.gz')
@@ -225,7 +225,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
     complete_impedance=np.zeros((freq_list.shape[0],3),float)
 
-    if d["Full_Field_IFFT"]==1:     # for Full IFFT we have to re-sort only impedance results
+    if d["VTA_approx"]==1:     # for Full IFFT we have to re-sort only impedance results
         cnt_freq=0
         for core in range(n_files):
             if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:
@@ -298,6 +298,6 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
 
         if Field_on_VTA==1:
-            d["Full_Field_IFFT"]=1
+            d["VTA_approx"]=1
 
         return True

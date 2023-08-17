@@ -1,5 +1,10 @@
-function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
-
+function varargout=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
+stack = dbstack;
+if any(ismember({'ea_generate_optim_vat', 'ea_generate_base_vats','ea_generate_vat'}, {stack.name}))
+    isClearTuneRun = 1;
+else
+   isClearTuneRun = 0;
+end
 if ~isempty(resultfig)
     vatgrad=getappdata(resultfig,'vatgrad');
     if isempty(vatgrad)
@@ -94,15 +99,20 @@ end
 
 ea_dispt('Creating nifti header for export...');
 % create nifti
+[~, ~, endian] = computer;
+switch endian
+    case 'L'
+        endian = 0;
+    case 'B'
+        endian = 1;
+end
+
 chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
 Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
 Vvat.dim=[res,res,res];
-Vvat.dt=[4,0];
+Vvat.dt = [4, endian];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
-end
 
 ea_dispt('Filling data with values from interpolant...');
 eeg = F(gv);
@@ -142,35 +152,47 @@ S.volume(side)=vatvolume;
 
 ea_dispt('Writing files...');
 
-% determine stimulation name:
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
-end
+% determine stimulation name
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+filePrefix = ['sub-', options.subj.subjId, '_sim-'];
+
+modelLabel = ea_simModel2Label(S.model);
 
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
-        Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_right.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_right.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.nii'];
+        Vvate=Vvat;
+        Vvatne=Vvat;
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-', modelLabel, '_hemi-R.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-', modelLabel, '_hemi-R.nii'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
-        Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_left.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_left.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-L.nii'];
+        Vvate = Vvat;
+        Vvatne = Vvat;
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-', modelLabel, '_hemi-L.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-', modelLabel, '_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
-Vvate.dt=[16,0];
-ea_write_nii(Vvate);
-
+Vvate.dt = [16, endian];
+if ~isClearTuneRun || options.writeVTA
+    ea_write_nii(Vvate);
+end
+%ea_write_nii(Vvate);
 Vvatne.img=neeg; %permute(neeg,[2,1,3]);
-ea_write_nii(Vvatne);
+if ~isClearTuneRun || options.writeVTA
+    ea_write_nii(Vvatne);
+end
+%ea_write_nii(Vvatne);
 
 Vvat.img=eg; %permute(eg,[1,2,3]);
-ea_write_nii(Vvat);
+if ~isClearTuneRun || options.writeVTA
+    ea_write_nii(Vvat);
+end
+%ea_write_nii(Vvat);
 
 ea_dispt('Calculating isosurface to display...');
 vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
@@ -197,10 +219,11 @@ end
 % visualization
 switch side
     case 1
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
     case 2
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
 end
+
 vatgrad = vatgrad(side);
 save(vatfvname,'vatfv','vatgrad','vatvolume');
 
@@ -209,8 +232,18 @@ Vvat.img=imfill(Vvat.img,'holes');
 SE = strel('sphere',3);
 Vvat.img = imerode(Vvat.img,SE);
 Vvat.img = imdilate(Vvat.img,SE);
-ea_write_nii(Vvat);
+if ~isClearTuneRun || options.writeVTA
+    ea_write_nii(Vvat);
+end
 
+%ea_write_nii(Vvat);
+if isClearTuneRun
+    varargout{1} = Vvate;
+else
+    varargout{1} = vatfv;
+    varargout{2} = vatvolume;
+    varargout{3} = radius;
+end 
 
 function vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec)
 

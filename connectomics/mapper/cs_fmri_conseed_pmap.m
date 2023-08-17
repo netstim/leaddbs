@@ -24,18 +24,24 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-ocname=cname;
-if ismember('>',cname)
-    delim=strfind(cname,'>');
-    subset=cname(delim+1:end);
-    cname=cname(1:delim-1);
+if contains(cname, '>')
+    subset = regexprep(cname, '.*> *', '');
+    cname = regexprep(cname, ' *>.*', '');
+end
+
+if exist('subset', 'var')
+    connLabel = ea_getConnLabel(cname, subset);
+else
+    connLabel = ea_getConnLabel(cname, 'FullSet');
 end
 
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to vol subdir.
 
-d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
-dataset=d.dataset;
-clear d;
+dataset = load([dfold,'fMRI',filesep,cname,filesep,'dataset_volsurf.mat']);
+dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
+dataset.type = dinfo.type;
+dataset.subsets = dinfo.subsets;
+
 if exist('outputmask','var')
     if ~isempty(outputmask)
         omask=ea_load_nii(outputmask);
@@ -47,18 +53,10 @@ else
     omaskidx=dataset.vol.outidx; % use all.
 end
 
-owasempty=0;
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,ocname);
-        owasempty=1;
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
+if ~exist('outputfolder', 'var')
+    outputfolder = '';
+elseif ~isempty(outputfolder) && ~isfolder(outputfolder)
+    mkdir(outputfolder);
 end
 
 if strcmp(sfile{1}(end-2:end),'.gz')
@@ -153,8 +151,8 @@ if ~exist('subset','var') % use all subjects
     usesubjects=1:numsub;
 else
     for ds=1:length(dataset.subsets)
-        if strcmp(subset,dataset.subsets(ds).name)
-            usesubjects=dataset.subsets(ds).subs;
+        if strcmp(subset,dataset.subsets{ds}.name)
+            usesubjects=dataset.subsets{ds}.subs;
             break
         end
     end
@@ -208,7 +206,17 @@ for mcfi=usesubjects % iterate across subjects
             ccmap=dataset.vol.space;
             ccmap.dt=[16 0];
             ccmap.img=single(ccmap.img);
-            ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_pmap.nii'];
+
+            if ~isempty(outputfolder)
+                ccmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1},'_corr.nii']);
+            else
+                if ~isBIDSFileName(sfile{s})
+                    ccmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1},'_corr.nii']);
+                else
+                    ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'suffix', 'corr');
+                end
+            end
+
             ccmap.img(omaskidx)=fX{s}(:,scnt);
             spm_write_vol(ccmap,ccmap.img);
         end
@@ -225,19 +233,24 @@ switch dataset.type
         ea_error('Command partial map is not supported for matrix type datasets.')
     case 'fMRI_timecourses'
         for s=1:size(seedfn,1) % subtract 1 in case of pmap command
-            if owasempty
-                outputfolder=ea_getoutputfolder(sfile(s),ocname);
-            end
-
             % export mean
             M=ea_nanmean(fX{s}',1);
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
 
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+            if ~isempty(outputfolder)
+                mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgR_funcpmap1stseed.nii']);
+            else
+                if ~isBIDSFileName(sfile{s})
+                    mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcpmap1stseed.nii']);
+                else
+                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcpmap1stseed');
+                end
+            end
+
             ea_write_nii(mmap);
             if usegzip
                 gzip(mmap.fname);
@@ -247,12 +260,21 @@ switch dataset.type
             % export variance
             M=ea_nanvar(fX{s}');
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
 
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
+            if ~isempty(outputfolder)
+                mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-VarR_funcpmap1stseed.nii']);
+            else
+                if ~isBIDSFileName(sfile{s})
+                    mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-VarR_funcpmap1stseed.nii']);
+                else
+                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'VarR', 'suffix', 'funcpmap1stseed');
+                end
+            end
+
             ea_write_nii(mmap);
             if usegzip
                 gzip(mmap.fname);
@@ -265,11 +287,21 @@ switch dataset.type
             % export fz-mean
             M=nanmean(fX{s}');
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+
+            if ~isempty(outputfolder)
+                mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgRFz_funcpmap1stseed.nii']);
+            else
+                if ~isBIDSFileName(sfile{s})
+                    mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcpmap1stseed.nii']);
+                else
+                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcpmap1stseed');
+                end
+            end
+
             spm_write_vol(mmap,mmap.img);
             if usegzip
                 gzip(mmap.fname);
@@ -280,12 +312,21 @@ switch dataset.type
             [~,~,~,tstat]=ttest(fX{s}');
             tmap=dataset.vol.space;
             tmap.img(:)=0;
-            tmap.dt=[16,0];
+            tmap.dt(1) = 16;
             tmap.img=single(tmap.img);
 
             tmap.img(omaskidx)=tstat.tstat;
 
-            tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
+            if ~isempty(outputfolder)
+                tmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-T_funcpmap1stseed.nii']);
+            else
+                if ~isBIDSFileName(sfile{s})
+                    tmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-T_funcpmap1stseed.nii']);
+                else
+                    tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcpmap1stseed');
+                end
+            end
+
             spm_write_vol(tmap,tmap.img);
             if usegzip
                 gzip(tmap.fname);

@@ -6,7 +6,6 @@ function [] = ea_command_line_run(varargin)
 % For example, to run Segment normalization:
 % lead dbs -normalize_checkbox -normmethod 2 /path/to/patient/directory
 
-
 switch varargin{1}
     case {'dbs', '-d', 'd'}
         h = lead_dbs;
@@ -22,7 +21,7 @@ handles = guihandles(h);
 % reset all checkboxes to 0
 handles_names = fieldnames(handles);
 for i = 1:length(handles_names)
-    if isprop(handles.(handles_names{i}), 'Style') & strcmp(handles.(handles_names{i}).Style,'checkbox')
+    if isprop(handles.(handles_names{i}), 'Style') && strcmp(handles.(handles_names{i}).Style,'checkbox')
         handles.(handles_names{i}).Value = 0;
     end
 end
@@ -46,12 +45,12 @@ for i = 2:nargin
             elseif strcmp(opt,'process')
                 % run basic lead dbs pipeline with defaults
                 handles.coreg_checkbox.Value = 1;
-                handles.coregmrpopup.Value = 1;
+                handles.coregmrmethod.Value = 1;
                 handles.normalize_checkbox.Value = 1;
                 handles.normmethod.Value = 9;
                 handles.scrf.Value = 1;
                 handles.scrfmask.Value = 2;
-                handles.doreconstruction_checkbox.Value = 1;
+                handles.doreconstruction.Value = 1;
                 handles.reconmethod.Value = 3;
                 tryBIDS = true;
             else
@@ -59,26 +58,6 @@ for i = 2:nargin
             end
         otherwise
             set(handles.(opt),'Value',str2double(varargin{i}));
-    end
-end
-
-
-if tryBIDS
-    try 
-        for i = 1:length(dirs) % BIDS subject dir
-            spm_BIDS(fileparts(fileparts(fullfile(dirs{i},filesep))));
-        end
-        handles.dicomcheck.Value = 1;
-        handles.dcm2niiselect.Value = 4;
-    end
-    if length(dirs) == 1 % root BIDS directory
-        try
-            spm_BIDS(dirs{1});
-            D = dir(fullfile(dirs{1},'sub*'));
-            dirs = cellstr(strcat(vertcat(D.folder),repmat(filesep,length(D),1),vertcat(D.name)));
-            handles.dicomcheck.Value = 1;
-            handles.dcm2niiselect.Value = 4;
-        end
     end
 end
 
@@ -97,18 +76,9 @@ save([ea_gethome, '.ea_prefs.mat'],'machine');
 % run
 ea_run('run',options);
 
-if handles.dicomcheck.Value == 1 && tryBIDS % first run only imports bids folders. run again to process 
-    handles.dicomcheck.Value = 0;
-    options = ea_handles2options(handles);
-    options.uipatdirs = strsplit(handles.patdir_choosebox.Tooltip);    
-    options.leadprod = leadprod;
-    ea_run('run',options);
-end
-
 % restore previous pop up config
 machine.methods_show = umachine.machine.methods_show;
 save([ea_gethome, '.ea_prefs.mat'],'machine');
-
 
 set(h, 'Visible', 'on'); drawnow; % make gui visible so that close request function is executed
 close(h)

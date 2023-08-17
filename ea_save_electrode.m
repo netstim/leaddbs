@@ -1,9 +1,9 @@
 function ea_save_electrode(obj)
 
-if exist([obj.options.root,obj.options.patientname,filesep,'ea_reconstruction.mat'],'file')
-    d=load([obj.options.root,obj.options.patientname,filesep,'ea_reconstruction.mat']);
+if isfile(obj.options.subj.recon.recon)
+    d = load(obj.options.subj.recon.recon);
 else
-    d.reco.electrode=struct;
+    d.reco.electrode = struct;
 end
 
 
@@ -21,5 +21,5 @@ d.reco.electrode(obj.side).plan.planRelative=obj.planRelative;
 d.reco.electrode(obj.side).plan.target=obj.target;
 
 d.reco.electrode(obj.side).micro.relateMicro=obj.relateMicro;
-save([obj.options.root,obj.options.patientname,filesep,'ea_reconstruction.mat'],'-struct','d');
+save(obj.options.subj.recon.recon, '-struct', 'd');
 

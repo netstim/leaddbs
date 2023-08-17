@@ -11,11 +11,8 @@ function ea_gencheckregpair_deep(moving,fixed,outfn)
 %    outfn:     png file as a combination of the above two (fixed image shown as wireframe overlay)
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
-if ispc
-    SLICER = ea_path_helper([basedir, 'slicer.exe']);
-else
-    SLICER = [basedir, 'slicer.', computer('arch')];
-end
+SLICER = ea_getExec([basedir, 'slicer'], escapePath = 1);
+
 
 uuid=ea_generate_uuid;
 
@@ -36,10 +33,6 @@ if ~exist(basedir,'dir')
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI')
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_runcmd(cmd);
 
 ea_delete([tempdir,'lead_temp',uuid,'.nii']);

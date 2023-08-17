@@ -45,8 +45,8 @@ if nargin < 1
 end
 
 %% filenames & extensions
-idtffile = ea_path_helper([fn, '.idtf']);
-u3dfile = ea_path_helper([fn, '.u3d']);
+idtffile = [fn, '.idtf'];
+u3dfile = [fn, '.u3d'];
 
 %% prepare command
 execdir = [fileparts(mfilename('fullpath')), filesep, 'bin',filesep, computer, filesep];
@@ -59,7 +59,7 @@ else
 end
 
 %% idtf -> u3d conversion
-cmd = [IDTF, ' -input ', idtffile, ' -output ', u3dfile];
+cmd = [IDTF, ' -input ', ea_path_helper(idtffile), ' -output ', ea_path_helper(u3dfile)];
 disp(cmd);
 
 [status, result] = system(cmd);

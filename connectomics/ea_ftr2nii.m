@@ -30,16 +30,17 @@ elseif strcmp(voxmm, 'vox')
 end
 
 % Remove all outliers
-fibers_vox = fibers_vox(all(fibers_vox>0, 2) & all(fibers_vox<=refnii.dim, 2), :);
+fibers_voxc = fibers_vox(all(fibers_vox>0, 2) & all(fibers_vox<=refnii.dim, 2), :);
+fibervalc = fiberval(all(fibers_vox>0, 2) & all(fibers_vox<=refnii.dim, 2), :);
 
 % Calculate values at voxels
 refnii.img = zeros(size(refnii.img));
-fibImgInd = sub2ind(size(refnii.img), fibers_vox(:,1), fibers_vox(:,2), fibers_vox(:,3));
+fibImgInd = sub2ind(size(refnii.img), fibers_voxc(:,1), fibers_voxc(:,2), fibers_voxc(:,3));
 [unifibImgInd, ~, ic] = unique(fibImgInd);
-fibImgVal = accumarray(ic, fiberval);
+fibImgVal = accumarray(ic, fibervalc);
 refnii.img(unifibImgInd) = refnii.img(unifibImgInd) + fibImgVal;
 
 % Save nifti
 refnii.fname = outputName;
-refnii.dt = [16,0];
+refnii.dt(1) = 16;
 ea_write_nii(refnii);

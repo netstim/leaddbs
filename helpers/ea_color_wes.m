@@ -3,7 +3,7 @@ function colors=ea_color_wes(set, colnum)
 % similar or same palettes found in R here: https://github.com/karthik/wesanderson
 % different sets here https://prafter.com/color/
 sets={'lifeaquatic','budapest','moonrisekingdom','royaltenenbaums','fantasticmrfox','darjeeling','hotelchevalier','rushmore'};
-if ~exist('set','var')
+if ~exist('set','var') || isempty(set)
     s=randperm(length(sets));
     set=sets{s(1)};
 end

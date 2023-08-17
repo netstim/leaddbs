@@ -1,14 +1,11 @@
-function [fibers,idx,voxmm,mat,vals]=ea_loadfibertracts(cfile,type)
-if ~exist('type','var')
-    type = nan;
+function [fibers,idx,voxmm,mat,vals]=ea_loadfibertracts(cfile, ref)
+if ~exist('ref','var')
+    ref = 'mni';
 end
 
-if ~strcmp(cfile(end-3:end),'.mat')
-    [fibers,idx] = ea_trk2ftr(cfile,type);
-    [cpa,cfn] = fileparts(cfile);
-    ea_savefibertracts(fullfile(cpa,[cfn,'.mat']),fibers,idx,'mm');
-    [pth,fn,~] = fileparts(cfile);
-    cfile = fullfile(pth,[fn,'.mat']);
+if endsWith(cfile, {'.trk', '.trk.gz'})
+    ea_trk2ftr(cfile, ref, 1);
+    cfile = replace(erase(cfile, '.gz'), '.trk', '.mat');
 end
 
 fibinfo = load(cfile);

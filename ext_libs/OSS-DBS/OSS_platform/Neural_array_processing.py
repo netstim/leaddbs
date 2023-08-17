@@ -28,8 +28,7 @@ class Neuron_array(object):
     def __init__(self, input_dict,
                  MRI_param):  # for better readability, resaving the input dictionary to more explicit variables
 
-        self.MRI_first_voxel = np.array([MRI_param.x_min, MRI_param.y_min,
-                                         MRI_param.z_min])  # coordinates of the first voxel (center), will be used to shift to the positive octant (PO)
+        self.MRI_first_voxel = MRI_param.first_vox_coords  # coordinates of the first voxel (center), will be used to shift to the positive octant (PO)
         self.impl_coordinates = np.array(
             [input_dict['Implantation_coordinate_X'], input_dict['Implantation_coordinate_Y'],
              input_dict['Implantation_coordinate_Z']])  # in the MRI space, mm
@@ -75,13 +74,12 @@ class Neuron_array(object):
                 # list containing rotational angles around X axis. IMPORTANT: the neurons are first centered at O(0,0,0), rotated, and then translated to their center coordinates
                 'Y_angles_loc': input_dict['ZX_angles'],  # already converted to radians in Dict_corrector.py
                 'Z_angles_loc': input_dict['XY_angles'],
-                }
+            }
 
     def rotate_globally(self, point_coords, inx_angle):
 
         """ rotates a 3D point defined by point_coords (x,y,z) around the global Cartesian axes (angles in radians)
             point_coords is usually a center node of a seeded axon
-
             Input  : class,  array-like shape (1,3) - Cartesian point coordinates
             Returns: a rotated 3D point (1D numpy array) """
 
@@ -115,7 +113,6 @@ class Neuron_array(object):
 
         """ takes a pattern model (self.pattern['Array_coord_pattern_O'], 2D numpy array (x,y,z)),
             rotates it around the global Cartesian axes (angles in radians) and shifts its center to (x_loc,y_loc,z_loc)
-
             Input  : class,  3 angles (radiants), 3 coordinates
             Returns: a rotated and shifted 3D pattern of points (2D numpy array) """
 
@@ -173,15 +170,14 @@ class Neuron_array(object):
 
         """ creates a VTA grid based on settings in GUI_inp_dict.py when 'Global_rot' = 1
             returns a 2D numpy array of middle (seeeding) nodes of axons centered around (0,0,0)
-
             Input  : class
             Adds to self: seeding nodes for VTA axons (a 2D numpy array) """
 
         # contain coordinates of the VTA axons centered at (0,0,0)
         self.N_models_in_plane = int((self.VTA_structure['N_seeding_steps'][0] + 1) * (
-                    self.VTA_structure['N_seeding_steps'][1] + 1) * (self.VTA_structure['N_seeding_steps'][2] + 1))
+                self.VTA_structure['N_seeding_steps'][1] + 1) * (self.VTA_structure['N_seeding_steps'][2] + 1))
         self.N_total_of_axons = int((self.VTA_structure['N_seeding_steps'][0] + 1) * (
-                    self.VTA_structure['N_seeding_steps'][1] + 1) * (
+                self.VTA_structure['N_seeding_steps'][1] + 1) * (
                                             self.VTA_structure['N_seeding_steps'][2] + 1) * len(
             self.VTA_structure["X_angles_glob"]))  # +1 because we have the initial axon
         self.VTA_seeds_O = np.zeros((self.N_total_of_axons, 3), float)
@@ -197,7 +193,8 @@ class Neuron_array(object):
         z_one_dir = []
 
         # iterate over axes
-        for x_ind in range(self.VTA_structure['N_seeding_steps'][0] + 1):  # number of steps corresponds to additional axons along this axis besides the initial one centered at (0,0,0) along Y-axis
+        for x_ind in range(self.VTA_structure['N_seeding_steps'][
+                               0] + 1):  # number of steps corresponds to additional axons along this axis besides the initial one centered at (0,0,0) along Y-axis
             for y_ind in range(self.VTA_structure['N_seeding_steps'][1] + 1):
                 for z_ind in range(self.VTA_structure['N_seeding_steps'][2] + 1):
                     x_one_dir.append(start_point[0] + x_ind * self.VTA_structure['Dist_seeding_steps'][0])
@@ -234,13 +231,30 @@ class Neuron_array(object):
                 a)  # we need here distances between compartments: nr["ranvier_length"], nr["para1_length"], nr["para2_length"], nr["inter_length"], nr["deltax"]
 
             n_comp = int(((nr["ranvier_nodes"] - 1) + nr["inter_nodes"] + nr["para1_nodes"] + nr["para2_nodes"]) / (
-                        nr["ranvier_nodes"] - 1))
+                    nr["ranvier_nodes"] - 1))
             n_segm = int((N_Ranvier - 1) * n_comp + 1)  # overall number of compartments on one axon incl. internodal
+        elif self.neuron_model == 'McIntyre2002_ds':
 
+            # load the morphology
+            param_ax = {
+                'centered': True,
+                'diameter': fib_diam  # float, not a list here! Will throw an error if uneligible fiber diameter
+            }
+            a = Axon(param_ax)
+            nr = Axon.get_axonparams(
+                a)  # we need here distances between compartments: nr["ranvier_length"], nr["para1_length"], nr["para2_length"], nr["inter_length"], nr["deltax"]
+
+            if fib_diam >= 5.7:
+                n_comp = 3   # node -- -- internodal -- -- -- -- internodal -- -- node
+            else:
+                n_comp = 2   # mode -- -- -- internodal -- -- -- node
+
+            n_segm = int(
+                (N_Ranvier - 1) * n_comp + 1)  # overall number of compartments on one axon incl. internodal
         elif self.neuron_model == 'Reilly2016':
             n_comp = 2
             n_segm = int((
-                                     N_Ranvier - 1) * n_comp + 1)  # Reilly's (Carnevale's implementation) model has 1 internodal compartment per section
+                                 N_Ranvier - 1) * n_comp + 1)  # Reilly's (Carnevale's implementation) model has 1 internodal compartment per section
             nr = {}
             nr['deltax'] = fib_diam * 200.0  # from 1 to 2 micrometers
             if fib_diam > 10.0 or fib_diam < 5.0:
@@ -256,7 +270,6 @@ class Neuron_array(object):
 
         """ generates a neuron pattern centered around (0,0,0)
             used for VTA and sometimes custom neuron arrays
-
             Input  : class
             Adds to self: self.pattern['num_segments'], self.pattern['Array_coord_pattern_O'], stores it in a .csv file
             self.pattern['Array_coord_pattern_O']: coordinates of neuron compartments (segments) (2D numpy array), center at O(0,0,0) """
@@ -278,7 +291,7 @@ class Neuron_array(object):
 
             for inx in range(1, self.pattern['num_segments']):
                 if self.pattern[
-                    'fiber_diameter'] > 3.0:  # if larger than 3.0, 6 central compartments are required, otherwise 3
+                    'fiber_diameter'] >= 5.7:  # if larger than 3.0, 6 central compartments are required, otherwise 3
                     if loc_inx == 0:
                         l_step = (nr["para1_length"] + nr["ranvier_length"]) / 2000  # switch to mm from Âµm
                     if loc_inx == 1 or loc_inx == 11:
@@ -308,6 +321,30 @@ class Neuron_array(object):
                 if inx % n_comp == 0:
                     loc_inx = 0
 
+        elif self.neuron_model == 'McIntyre2002_ds':
+            for inx in range(1, self.pattern['num_segments']):
+
+                if self.pattern['fiber_diameter'] >= 5.7:  # if larger than 3.0, 6 central compartments are required, otherwise 3
+                    if loc_inx == 0:
+                        l_step = nr["para1_length"] / 1000 + nr["para2_length"] / 1000 + (nr["ranvier_length"] + nr["inter_length"]) / 2000
+                    if loc_inx == 1 or loc_inx == 3:
+                        l_step = (nr["ranvier_length"] + nr["inter_length"]) / 2000 + nr["para1_length"] / 1000 + nr["para2_length"] / 1000  # switch to mm from micro m
+                    if loc_inx == 2:
+                        l_step = 5 * nr["inter_length"] / 2000
+                else:
+                    l_step = (nr["para1_length"] + nr["para2_length"] + nr["inter_length"])/ 1000 + (nr["ranvier_length"] + nr["inter_length"]) / 2000
+
+                loc_inx += 1
+                self.pattern['Array_coord_pattern_O'][inx, :] = [0.0, self.pattern['Array_coord_pattern_O'][
+                    inx - 1, 1] + l_step, 0.0]  # pattern along Y-axis
+
+                if inx % n_comp == 0:
+                    loc_inx = 0
+
+            # the downsamling is complete, reassign here
+            if self.neuron_model == 'McIntyre2002_ds':
+                self.neuron_model = 'McIntyre2002'
+
         elif self.neuron_model == 'Reilly2016':
             l_step = nr["deltax"] / 2000.0  # linear change of the internodal distance from 1 to 2 mm
             for inx in range(1, self.pattern['num_segments']):
@@ -318,14 +355,14 @@ class Neuron_array(object):
             raise SystemExit
 
         self.pattern['Array_coord_pattern_O'] = np.round(self.pattern['Array_coord_pattern_O'], 8)
-        np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/' + str(self.pattern['name']), self.pattern['Array_coord_pattern_O'],
+        np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/' + str(self.pattern['name']),
+                   self.pattern['Array_coord_pattern_O'],
                    delimiter=" ")
 
     def allocate_neurons_PO(self):
 
         """ allocates neurons for VTA or according to the customized input. If imported, just stores in Neuron_model_arrays/All_neuron_models.csv
             also computes the extent of the region of interest ROI: the distance from the implantation point to the furthest compartment
-
             Input  : class
             Adds to self: self.ROI_radius, self.VTA_coord_PO or self.custom_coord_PO for VTA and Custom, respectively
             self.VTA_coord_PO: coordinates of neuron compartments (segments) that form VTA (2D numpy array), in PO, stores in Neuron_model_arrays/All_neuron_models.csv
@@ -352,7 +389,8 @@ class Neuron_array(object):
                                 Z_locations_PO[inx])
                             loc_ind = loc_ind + self.pattern['num_segments']
 
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models.csv', self.custom_coord_PO, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/All_neuron_models.csv', self.custom_coord_PO,
+                       delimiter=" ")
             self.ROI_radius = max(distance.cdist(self.custom_coord_PO, self.impl_coords_PO, 'euclidean'))[0]
 
         elif self.Type == 'VTA':  # if placement in the ordered array (as for VTA)
@@ -379,7 +417,8 @@ class Neuron_array(object):
 
                 loc_ind = loc_ind + self.pattern['num_segments']
 
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models.csv', self.VTA_coord_PO, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/All_neuron_models.csv', self.VTA_coord_PO,
+                       delimiter=" ")
             self.ROI_radius = max(distance.cdist(self.VTA_coord_PO, self.impl_coords_PO, 'euclidean'))[0]
 
         elif self.Type == 'Imported':
@@ -388,10 +427,13 @@ class Neuron_array(object):
 
             self.ROI_radius = max(distance.cdist(self.imp_proc_coord_PO, self.impl_coords_PO, 'euclidean'))[0]
 
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models.csv', self.imp_proc_coord_PO, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/All_neuron_models.csv', self.imp_proc_coord_PO,
+                       delimiter=" ")
 
-        logging.critical("Initial neuron models can be visualized from Neuron_model_arrays/All_neuron_models.csv in Paraview")
-        logging.critical("Max distance from a compartment in the neuron array to the implantation site: {}".format(float(self.ROI_radius)))
+        logging.critical(
+            "Initial neuron models can be visualized from Neuron_model_arrays/All_neuron_models.csv in Paraview")
+        logging.critical("Max distance from a compartment in the neuron array to the implantation site: {}".format(
+            float(self.ROI_radius)))
 
     def build_neuron_models(self):
 
@@ -415,7 +457,8 @@ class Neuron_array(object):
             self.generate_pattern()  # creates self.pattern['Array_coord_pattern_O']
         else:
             # load from the provided file
-            Array_coord_load_get = read_csv(os.environ['PATIENTDIR']+'/'+self.pattern['name'], delimiter=' ', header=None)
+            Array_coord_load_get = read_csv(os.environ['PATIENTDIR'] + '/' + self.pattern['name'], delimiter=' ',
+                                            header=None)
             self.pattern['Array_coord_pattern_O'] = Array_coord_load_get.values
             self.pattern['num_segments'] = self.pattern['Array_coord_pattern_O'].shape[
                 0]  # all segments should be in the pattern model
@@ -437,10 +480,8 @@ class Neuron_array(object):
         """ processes imported neuron array, filters out neurons
             that are outside of the computational domain (if brain geometry was not imported)
             and calls allocate_neurons_PO()
-
             Input  : class
             Adds to self: self.imp_proc_coord_PO, self.pattern['num_segments']            'Neuron_model_arrays/Processed_neuron_array_MRI_space.h5' , 'Neuron_model_arrays/All_neuron_models_by_populations.h5'
-
             self.imp_proc_coord_PO: coordinates of neurons (compartments/segments) that are inside the computational domain (2D numpy array), in PO,
             stored in 'Neuron_model_arrays/All_neuron_models_by_populations.h5' with different projections in separate datasets,
             'Neuron_model_arrays/Processed_neuron_array_MRI_space.h5' same in the NRI space
@@ -454,17 +495,19 @@ class Neuron_array(object):
         self.impl_coords_PO = np.array([[Imp_X_PO, Imp_Y_PO, Imp_Z_PO]])  # 2D, otherwise distance,cdist won't work
 
         if self.brain_model == 'Brain_substitute.brep':  # cut models if use brain approximation
-            mesh_brain_sub = Mesh(os.environ['PATIENTDIR']+"/Meshes/Mesh_brain_substitute_max_ROI.xml")
+            mesh_brain_sub = Mesh(os.environ['PATIENTDIR'] + "/Meshes/Mesh_brain_substitute_max_ROI.xml")
 
         if not isinstance(self.pattern['fiber_diameter'],
                           list):  # for simplicity, we will treat it as a list with a single entry
             self.pattern['fiber_diameter'] = [self.pattern['fiber_diameter']]
+
+        if not isinstance(self.pattern['num_Ranvier'], list):
             self.pattern['num_Ranvier'] = [self.pattern['num_Ranvier']]
 
         if self.imp_name[-4:] == '.csv':
 
             # load the external array containing all neurons (coordinates of compartments) in the MRI space
-            Array_coord_get = read_csv(os.environ['PATIENTDIR']+'/'+self.imp_name, delimiter=' ', header=None)  #
+            Array_coord_get = read_csv(os.environ['PATIENTDIR'] + '/' + self.imp_name, delimiter=' ', header=None)  #
             self.imp_coord_MRI = Array_coord_get.values
             Array_coord_in_MRI = self.imp_coord_MRI
 
@@ -473,7 +516,7 @@ class Neuron_array(object):
         # in .h5 datasets with different morphologies can be stored
         elif self.imp_name[-3:] == '.h5':
 
-            hf = h5py.File(os.environ['PATIENTDIR']+'/'+self.imp_name, 'r')
+            hf = h5py.File(os.environ['PATIENTDIR'] + '/' + self.imp_name, 'r')
             lst = list(hf.keys())  # names of datasets
 
         self.pattern['num_segments'] = np.zeros(len(lst), int)
@@ -501,29 +544,35 @@ class Neuron_array(object):
                             pnt) < mesh_brain_sub.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                         points_outside += 1
                         Array_coord_in_MRI, inx, __ = self.mark_to_remove(Array_coord_in_MRI, inx,
-                                                                      nsegm=self.pattern['num_segments'][
-                                                                          population_index])  # will also shift inx to the end of the neuron
+                                                                          nsegm=self.pattern['num_segments'][
+                                                                              population_index])  # will also shift inx to the end of the neuron
 
-                        
                 Array_coord_in_MRI = Array_coord_in_MRI[
                     ~np.all(Array_coord_in_MRI == -100000000.0, axis=1)]  # deletes all -10000000 enteries
                 n_models_after = int(Array_coord_in_MRI.shape[0] / self.pattern['num_segments'][population_index])
                 if int(n_models_before - n_models_after) != 0:
-                    logging.critical("In {} {} models were outside of the approximating geometrical domain".format(str(i), n_models_before - n_models_after))
+                    logging.critical(
+                        "In {} {} models were outside of the approximating geometrical domain".format(str(i),
+                                                                                                      n_models_before - n_models_after))
 
             Array_coord_in_MRI = np.round(Array_coord_in_MRI, 8)
             result_total.append(Array_coord_in_MRI)
 
-            hf2 = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Processed_neuron_array_MRI_space.h5', 'a')
+            hf2 = h5py.File(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Processed_neuron_array_MRI_space.h5', 'a')
             hf2.create_dataset(i, data=Array_coord_in_MRI)
             hf2.close()
 
-            hf3 = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'a')  # resave to .h5
+            hf3 = h5py.File(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/All_neuron_models_by_populations.h5',
+                            'a')  # resave to .h5
             dataset_imp_proc_coord_PO = Array_coord_in_MRI - self.MRI_first_voxel  # shift every dataset to PO
             hf3.create_dataset(i, data=dataset_imp_proc_coord_PO)
             hf3.close()
 
             population_index = population_index + 1
+
+        # the downsamling is complete, reassign here
+        if self.neuron_model == 'McIntyre2002_ds':
+            self.neuron_model = 'McIntyre2002'
 
         if self.imp_name[-3:] == '.h5':
             hf.close()
@@ -547,22 +596,22 @@ class Neuron_array(object):
             Stores the remaining neuron compartments (2D numpy array) in PO space
             in Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv and returns number of remaining models
             (int if VTA or custom, list if imported (per projection))
-
             If neuron array was imported stores projections separately in 'Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5'
             (if one projection or from .csv, stores just one dataset in .h5) """
 
         import os
-        start_neuron_models = time.clock()
+        start_neuron_models = time.time()
 
         if self.Type != 'Imported':  # if the neuron array was created internally
 
             # or we can take it from the class: self.custom_coord_PO or self.VTA_coord_PO
-            Array_coord_get = read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None)  #
+            Array_coord_get = read_csv(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/All_neuron_models.csv',
+                                       delimiter=' ', header=None)  #
             Array_coord = Array_coord_get.values
 
         elif self.Type == 'Imported':  # if the neuron array was provided
 
-            hf = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
+            hf = h5py.File(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
             lst = list(hf.keys())
             List_of_arrays = []
             List_of_empty = []
@@ -591,16 +640,26 @@ class Neuron_array(object):
         points_csf, points_encap, points_outside = (0, 0, 0)
 
         # now we will folter out unphysiological neurins
-        mesh = Mesh(os.environ['PATIENTDIR']+"/Meshes/Mesh_unref.xml")
-        subdomains_assigned = MeshFunction('size_t', mesh, os.environ['PATIENTDIR']+"/Meshes/Mesh_unref_physical_region.xml")
+        mesh = Mesh(os.environ['PATIENTDIR'] + "/Meshes/Mesh_unref.xml")
+        subdomains_assigned = MeshFunction('size_t', mesh,
+                                           os.environ['PATIENTDIR'] + "/Meshes/Mesh_unref_physical_region.xml")
 
         # also neurons should not pass through the encapsulation layer and floating contacts
         subdomains_enc = MeshFunction("size_t", mesh, mesh.topology().dim())
         subdomains_enc.set_all(0)
 
-        for i in range(len(Domains.Encup_index)):
-            subdomains_enc.array()[
-                subdomains_assigned.array() == Domains.Encup_index[i]] = 1  # neuron models cannot be located in CSF
+        #for i in range(len(Domains.Encup_index)):
+        #    subdomains_enc.array()[
+        #        subdomains_assigned.array() == Domains.Encup_index[i]] = 1  # neuron models cannot be located in CSF
+
+        # encap at the electrode array only (defined by ROI)
+        subdomains_enc.array()[subdomains_assigned.array() == Domains.Encup_index[1]] = 1  # neuron models cannot be located in encap
+
+        # encap outside of ROI
+        subdomains_enc_out = MeshFunction("size_t", mesh, mesh.topology().dim())
+        subdomains_enc_out.set_all(0)
+        subdomains_enc_out.array()[
+            subdomains_assigned.array() == Domains.Encup_index[0]] = 1  # neuron models cannot be located in encap
 
         if isinstance(Domains.Float_contacts, list):
             for i in range(len(Domains.Float_contacts)):
@@ -611,10 +670,11 @@ class Neuron_array(object):
                 subdomains_assigned.array() == Domains.Float_contacts] = 1  # neuron models cannot be located in floating conductors
 
         submesh_encup = SubMesh(mesh, subdomains_enc, 1)
+        submesh_encup_out = SubMesh(mesh, subdomains_enc_out, 1)
 
         # if multiple pathways, those will be lists of lists
-        self.neurons_idx_encap = []   # IMPORTANT: if the neuron does not intersect with encap. but with the electrode (sparse sampling), it will be treated as outside of the domain
-        self.neurons_idx_csf = []  
+        self.neurons_idx_encap = []  # IMPORTANT: if the neuron does not intersect with encap. but with the electrode (sparse sampling), it will be treated as outside of the domain
+        self.neurons_idx_csf = []
 
         inx = 0
         if self.Type != 'Imported':
@@ -627,20 +687,24 @@ class Neuron_array(object):
                         pnt) < submesh_encup.num_cells()):  # this is a condition to check whether the point is inside encap. layer or floating conductor
                     points_encap = points_encap + 1
                     Array_coord, inx, i_neuron_encap = self.mark_to_remove(Array_coord,
-                                                           inx)  # will also shift inx to the end of the neuron
+                                                                           inx)  # will also shift inx to the end of the neuron
                     self.neurons_idx_encap.append(i_neuron_encap)
-
                 else:
-                    if not (mesh.bounding_box_tree().compute_first_entity_collision(
+                    if (submesh_encup_out.bounding_box_tree().compute_first_entity_collision(
+                            pnt) < submesh_encup_out.num_cells()):  # this is a condition to check whether the point is inside encap. layer or floating conductor
+                        points_outside = points_outside + 1
+                        Array_coord, inx, __ = self.mark_to_remove(Array_coord,inx)  # will also shift inx to the end of the neuron
+
+                    elif not (mesh.bounding_box_tree().compute_first_entity_collision(
                             pnt) < mesh.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                         points_outside = points_outside + 1
                         Array_coord, inx, __ = self.mark_to_remove(Array_coord,
-                                                               inx)  # will also shift inx to the end of the neuron
+                                                                   inx)  # will also shift inx to the end of the neuron
                     else:
                         # finally checks whether the neuron compartment is inside the CSF voxel
-                        check1_1 = (voxel_array_CSF_shifted[:, 0] - Array_coord[inx, 0] <= MRI_param.x_vox_size)
-                        check1_2 = (voxel_array_CSF_shifted[:, 1] - Array_coord[inx, 1] <= MRI_param.y_vox_size)
-                        check1_3 = (voxel_array_CSF_shifted[:, 2] - Array_coord[inx, 2] <= MRI_param.z_vox_size)
+                        check1_1 = (voxel_array_CSF_shifted[:, 0] - Array_coord[inx, 0] <= MRI_param.voxel_dims[0])
+                        check1_2 = (voxel_array_CSF_shifted[:, 1] - Array_coord[inx, 1] <= MRI_param.voxel_dims[1])
+                        check1_3 = (voxel_array_CSF_shifted[:, 2] - Array_coord[inx, 2] <= MRI_param.voxel_dims[2])
                         check2_1 = (voxel_array_CSF_shifted[:, 0] >= Array_coord[
                             inx, 0])  # we could just check the sign
                         check2_2 = (voxel_array_CSF_shifted[:, 1] >= Array_coord[inx, 1])
@@ -654,13 +718,14 @@ class Neuron_array(object):
                             points_csf = points_csf + 1
 
                             Array_coord, inx, i_neuron_csf = self.mark_to_remove(Array_coord,
-                                                                   inx)  # will also shift inx to the end of the neuron
+                                                                                 inx)  # will also shift inx to the end of the neuron
                             self.neurons_idx_csf.append(i_neuron_csf)
                         else:
                             inx += 1
 
-
-            logging.critical("Neurons in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(points_csf, points_encap, points_outside))
+            logging.critical(
+                "Neurons in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(
+                    points_csf, points_encap, points_outside))
             inx = 0
 
             del voxel_array_CSF_shifted
@@ -669,10 +734,10 @@ class Neuron_array(object):
                                               axis=1)]  # deletes all marked (in self.mark_to_remove with -100000000.0) enteries
             Array_coord = np.round(Array_coord, 8)
 
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord,
+                       delimiter=" ")
             logging.critical(
                 "Adjusted neuron models can be visualized from Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv in Paraview")
-
 
             N_models = int(Array_coord.shape[0] / self.pattern['num_segments'])
 
@@ -682,8 +747,7 @@ class Neuron_array(object):
                 logging.critical("Check segmask and image normalizations")
                 logging.critical("!========================================================!")
 
-
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv',
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Adjusted_neuron_array_info.csv',
                        np.array([N_models, points_csf, points_encap, points_outside]), delimiter=" ")
             logging.critical("Number of placed neuron models: {}".format(N_models))
 
@@ -692,25 +756,29 @@ class Neuron_array(object):
             list_of_connections = []
 
             # clean-up
-            if os.path.isfile(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5'):
-                os.remove(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5')
+            if os.path.isfile(
+                    os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5'):
+                os.remove(
+                    os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5')
 
             number_of_points_filtered = 0
-            N_models = np.zeros((len(List_of_arrays)), int)  # each entry will contain number of models per projection
+            N_models = np.zeros(len(List_of_arrays), int)  # each entry will contain number of models per projection
 
             for i in range(len(List_of_arrays)):
-                
+
                 sublist_idx_encap = []
                 sublist_idx_csf = []
-                            
+
                 if not (type(List_of_arrays[i]) is np.ndarray):  # check for empty
-                    hf3 = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
+                    hf3 = h5py.File(
+                        os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5',
+                        'a')
                     hf3.create_dataset(lst[i], data=0)
                     hf3.close()
-                    
+
                     self.neurons_idx_csf.append([-1])
                     self.neurons_idx_encap.append([-1])
-                    
+
                 else:
                     Array_coord = List_of_arrays[i]
                     while inx < Array_coord.shape[0]:
@@ -720,19 +788,20 @@ class Neuron_array(object):
                         if (submesh_encup.bounding_box_tree().compute_first_entity_collision(
                                 pnt) < mesh.num_cells()):  # this is a condition to check whether the point is inside encap. layer or floating conductor
                             points_encap += 1
-                            Array_coord, inx, i_neuron_encap = self.mark_to_remove(Array_coord, inx, nsegm=self.pattern['num_segments'][
-                                i])  # will also shift inx to the end of the neuron
+                            Array_coord, inx, i_neuron_encap = self.mark_to_remove(Array_coord, inx,
+                                                                                   nsegm=self.pattern['num_segments'][
+                                                                                       i])  # will also shift inx to the end of the neuron
                             sublist_idx_encap.append(i_neuron_encap)
                         else:
                             if not (mesh.bounding_box_tree().compute_first_entity_collision(
                                     pnt) < mesh.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                                 points_outside += 1
                                 Array_coord, inx, __ = self.mark_to_remove(Array_coord, inx,
-                                                                       nsegm=self.pattern['num_segments'][i])
+                                                                           nsegm=self.pattern['num_segments'][i])
                             else:  # finally checks whether the neuron compartment is inside the CSF voxel
-                                check1_1 = (voxel_array_CSF_shifted[:, 0] - Array_coord[inx, 0] <= MRI_param.x_vox_size)
-                                check1_2 = (voxel_array_CSF_shifted[:, 1] - Array_coord[inx, 1] <= MRI_param.y_vox_size)
-                                check1_3 = (voxel_array_CSF_shifted[:, 2] - Array_coord[inx, 2] <= MRI_param.z_vox_size)
+                                check1_1 = (voxel_array_CSF_shifted[:, 0] - Array_coord[inx, 0] <= MRI_param.voxel_dims[0])
+                                check1_2 = (voxel_array_CSF_shifted[:, 1] - Array_coord[inx, 1] <= MRI_param.voxel_dims[1])
+                                check1_3 = (voxel_array_CSF_shifted[:, 2] - Array_coord[inx, 2] <= MRI_param.voxel_dims[2])
                                 check2_1 = (voxel_array_CSF_shifted[:, 0] >= Array_coord[inx, 0])
                                 check2_2 = (voxel_array_CSF_shifted[:, 1] >= Array_coord[inx, 1])
                                 check2_3 = (voxel_array_CSF_shifted[:, 2] >= Array_coord[inx, 2])
@@ -745,8 +814,10 @@ class Neuron_array(object):
                                 if str(a) != '(array([], dtype=int64),)':
                                     points_csf += 1
                                     Array_coord, inx, i_neuron_csf = self.mark_to_remove(Array_coord, inx,
-                                                                           nsegm=self.pattern['num_segments'][i])
-                                    sublist_idx_csf.append(i_neuron_csf)                                    
+                                                                                         nsegm=
+                                                                                         self.pattern['num_segments'][
+                                                                                             i])
+                                    sublist_idx_csf.append(i_neuron_csf)
                                 else:
                                     inx += 1
 
@@ -758,25 +829,29 @@ class Neuron_array(object):
                     Array_coord = np.round(Array_coord, 8)
                     N_models[i] = int(Array_coord.shape[0] / self.pattern['num_segments'][i])
 
-                    hf3 = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
+                    hf3 = h5py.File(
+                        os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5',
+                        'a')
                     hf3.create_dataset(lst[i], data=Array_coord)
                     hf3.close()
 
-                    np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/' + lst[i] + '.csv', Array_coord, delimiter=" ")
+                    np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/' + lst[i] + '.csv', Array_coord,
+                               delimiter=" ")
                     list_of_connections.append(lst[i])
 
                     number_of_points_filtered = number_of_points_filtered + Array_coord.shape[0]
 
                     self.neurons_idx_csf.append(sublist_idx_csf)
                     self.neurons_idx_encap.append(sublist_idx_encap)
-                    
+
                     if len(sublist_idx_csf) > 0.25 * N_models[i]:
                         logging.critical("!========================================================!")
                         logging.critical("WARNING: too many neurons of {} are in CSF".format(lst[i]))
                         logging.critical("Check segmask and image normalizations")
                         logging.critical("!========================================================!")
 
-            hf = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
+            hf = h5py.File(
+                os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
             lst = list(hf.keys())
             result_total = []
             for i in lst:
@@ -789,19 +864,20 @@ class Neuron_array(object):
             Array_coord_total = np.concatenate(result_total)
             hf.close()
 
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv', N_models, delimiter=" ")
-            np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord_total, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Adjusted_neuron_array_info.csv', N_models,
+                       delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR'] + '/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv',
+                       Array_coord_total, delimiter=" ")
 
-            logging.critical("Neurons in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(points_csf, points_encap, points_outside))
+            logging.critical(
+                "Neurons in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(
+                    points_csf, points_encap, points_outside))
             logging.critical(
                 "Adjusted neuron models can be visualized from Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv in Paraview")
-
 
             # might not work like this
             # from Visualization_files.Paraview_connections_processed import show_connections
             # show_connections(list_of_connections)
-
-
 
             logging.critical("Number of placed neuron models per population: {}".format(N_models))
             del Array_coord_total, voxel_array_CSF_shifted
@@ -810,8 +886,8 @@ class Neuron_array(object):
             del List_of_arrays
         del Array_coord
 
-        minutes = int((time.clock() - start_neuron_models) / 60)
-        secnds = int(time.clock() - start_neuron_models) - minutes * 60
+        minutes = int((time.time() - start_neuron_models) / 60)
+        secnds = int(time.time() - start_neuron_models) - minutes * 60
         logging.critical("----- Adjustment of the neuron models took {} min {} sec -----\n".format(minutes, secnds))
 
         self.N_models = N_models

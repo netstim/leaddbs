@@ -40,11 +40,8 @@ else
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    BRAINSResample = ea_path_helper([basedir, 'BRAINSResample.exe']);
-else
-    BRAINSResample = [basedir, 'BRAINSResample.', computer('arch')];
-end
+BRAINSResample = ea_getExec([basedir, 'BRAINSResample'], escapePath = 1);
+
 
 cmd = [BRAINSResample, ...
        ' --referenceVolume ', ea_path_helper(fixedVolume), ...
@@ -58,8 +55,4 @@ if inverse
     cmd = [cmd, ' --inverseTransform'];
 end
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_runcmd(cmd);

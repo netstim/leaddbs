@@ -6,7 +6,7 @@ function seed = ea_conformseedtofmri(dataset,seed,interp)
 % (affine) or 9 DOF (traditional) transformation might be needed.
 
 if ~isstruct(dataset) && isfile(dataset)
-    load(dataset, 'dataset');
+    dataset = load(dataset);
 end
 
 if ~isstruct(seed) && isfile(seed)
@@ -25,12 +25,12 @@ tmpseed = [td,'tmpseed_',guid,'.nii'];
 
 % Write out ref into temp file
 dataset.vol.space.fname = tmpref;
-dataset.vol.space.dt = [16,0];
+dataset.vol.space.dt(1) = 16;
 ea_write_nii(dataset.vol.space);
 
 % Write out seed into temp file
 seed.fname = tmpseed;
-seed.dt = [16,0];
+seed.dt(1) = 16;
 ea_write_nii(seed);
 
 % Conform space using FSL or SPM reslicing with trilinear interpolation

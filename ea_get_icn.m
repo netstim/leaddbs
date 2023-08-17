@@ -35,4 +35,7 @@ switch varargin{1}
         
     otherwise
         icn_color = imread(fullfile(ea_getearoot,'icons',[varargin{1},'.png']));
+        if numel(size(icn_color)) == 2
+            icn_color = repmat(icn_color, [1 1 3]);
+        end
 end

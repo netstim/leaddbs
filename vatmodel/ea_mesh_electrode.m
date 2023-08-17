@@ -16,10 +16,11 @@ if vizz
 end
 
 if max(S.amplitude{side})>4
-    stretchfactor=0.75*(max(S.amplitude{side})/2.5);
+    stretchfactor= 0.3125*(max(S.amplitude{side})/2.5);
 else
     stretchfactor=0.5;
 end
+%stretchfactor=0.5*(max(S.amplitude{side})/2.5);
 
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
@@ -396,7 +397,11 @@ for reg=1:length(centroids)
 end
 
 % now we need to get surface nodes based on nbcyl:
+if isempty(which('rangesearch'))
+    ea_error('Matlab Statistics Toolbox not installed. This is (unfortunately) needed to calculate VTAs this way.');
+end
 wmboundary=rangesearch(nmesh,nbcyl,0.1);
+
 wmboundary=unique(cell2mat(wmboundary'));
 
 if vizz
@@ -435,11 +440,12 @@ end
 if stlexport
     ea_dispt('Exporting STL files');
     tissuelabels={'grey','white','contacts','insulation'};
-    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep],'file')
-        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep]);
-    end
+
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    ea_mkdir(headmodelDir);
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
     for tt=1:length(tissuelabels)
-        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'current_headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
+        savestl(nmesh, emesh(emesh(:,5)==tt,1:4), fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side), '_label-', tissuelabels{tt}, '.stl']), tissuelabels{tt});
     end
 end
 

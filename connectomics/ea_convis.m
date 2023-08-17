@@ -274,7 +274,7 @@ else % use fiberset
     targetsfile.img(round(targetsfile.img)==get(handles.matseed,'Value'))=0;
     thresh=get(handles.matthresh,'String');
     options.writeoutstats=0;
-    options.writeoutpm=1;
+    options.writeoutpm = 0;
 
 
     [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');

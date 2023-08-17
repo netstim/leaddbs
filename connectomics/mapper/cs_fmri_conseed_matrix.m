@@ -24,24 +24,31 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-if ismember('>',cname)
-    delim=strfind(cname,'>');
-    subset=cname(delim+1:end);
-    cname=cname(1:delim-1);
+if contains(cname, '>')
+    subset = regexprep(cname, '.*> *', '');
+    cname = regexprep(cname, ' *>.*', '');
+end
+
+if exist('subset', 'var')
+    connLabel = ea_getConnLabel(cname, subset);
+else
+    connLabel = ea_getConnLabel(cname, 'FullSet');
 end
 
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
-d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
-dataset=d.dataset;
-clear d;
+dataset = load([dfold,'fMRI',filesep,cname,filesep,'dataset_volsurf.mat']);
+dataset.connLabel = connLabel;
+dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
+dataset.type = dinfo.type;
+dataset.subsets = dinfo.subsets;
 
 if isempty(outputfolder)
     warning('off', 'backtrace');
     warning('Custom output folder not specified! Will save result to current folder.');
     warning('on', 'backtrace');
-    outputfolder = ea_getoutputfolder({[pwd, filesep]},cname);
+    outputfolder = [pwd, filesep];
 elseif ~strcmp(outputfolder(end),filesep)
     outputfolder = [outputfolder,filesep];
 end
@@ -139,8 +146,8 @@ if ~exist('subset','var') % use all subjects
     usesubjects=1:numsub;
 else
     for ds=1:length(dataset.subsets)
-        if strcmp(subset,dataset.subsets(ds).name)
-            usesubjects=dataset.subsets(ds).subs;
+        if strcmp(subset,dataset.subsets{ds}.name)
+            usesubjects=dataset.subsets{ds}.subs;
             break
         end
     end
@@ -181,7 +188,8 @@ for mcfi=usesubjects % iterate across subjects
 
         if exportgmtc
             tmp.gmtc = stc;
-            save([outputfolder,addp,'gmtc_',dataset.vol.subIDs{mcfi}{1},'_run',num2str(run,'%02d'),'.mat'],'-struct','tmp','-v7.3');
+            save(fullfile(outputfolder, ['conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1}, '_run-', num2str(run,'%02d'), '_timeseries.mat']),'-struct', 'tmp', '-v7.3');
+
         end
 
         switch cmd
@@ -191,6 +199,7 @@ for mcfi=usesubjects % iterate across subjects
                 X=partialcorr(stc');
         end
         thiscorr(:,run)=X(:);
+        clear stc
     end
     
     thiscorr=mean(thiscorr,2);
@@ -198,7 +207,7 @@ for mcfi=usesubjects % iterate across subjects
     fX(:,scnt)=X(logical(triu(ones(numseed),1)));
 
     if writeoutsinglefiles
-        save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
+        save(fullfile(outputfolder, ['conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1}, '_funcmatrix.mat']), 'X', '-v7.3');
     end
 
     ea_dispercent(scnt/numsub);
@@ -210,10 +219,12 @@ switch dataset.type
     case 'fMRI_matrix'
         ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
     case 'fMRI_timecourses'
+        seeds = sfile;
         if isfield(options.lcm, 'parcSeedName') && ~isempty(options.lcm.parcSeedName)
-            corrMxName = options.lcm.parcSeedName;
+            isParcSeed = 1;
+            parcSeedName = options.lcm.parcSeedName;
         else
-            corrMxName = 'matrix';
+            isParcSeed = 0;
         end
 
         % export mean
@@ -222,7 +233,16 @@ switch dataset.type
         X(logical(triu(ones(numseed),1)))=M;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,corrMxName,'_corrMx_AvgR.mat'],'X','-v7.3');
+        if isParcSeed
+            save(fullfile(outputfolder, [parcSeedName, '_conn-', connLabel, '_desc-AvgR_func', cmd, '.mat']), 'X', '-v7.3');
+        else
+            if ~isBIDSFileName(sfile{1})
+                [~, fn] = fileparts(sfile{1});
+                save(fullfile(outputfolder, [fn, '_conn-', connLabel, '_desc-AvgR_func', cmd, '.mat']), 'X', 'seeds', '-v7.3');
+            else
+                save(setBIDSEntity(sfile{s}, 'dir', outputfolder, 'sub', '', 'conn', connLabel, 'desc', 'AvgR', 'suffix', ['func',cmd], 'ext', 'mat'), 'X', 'seeds','-v7.3');
+            end
+        end
 
         % export variance
         M=nanvar(fX');
@@ -230,7 +250,16 @@ switch dataset.type
         X(logical(triu(ones(numseed),1)))=M;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,corrMxName,'_corrMx_VarR.mat'],'X','-v7.3');
+        if isParcSeed
+            save(fullfile(outputfolder, [parcSeedName, '_conn-', connLabel, '_desc-VarR_func', cmd, '.mat']), 'X', '-v7.3');
+        else
+            if ~isBIDSFileName(sfile{1})
+                [~, fn] = fileparts(sfile{1});
+                save(fullfile(outputfolder, [fn, '_conn-', connLabel, '_desc-VarR_func', cmd, '.mat']), 'X', 'seeds', '-v7.3');
+            else
+                save(setBIDSEntity(sfile{s}, 'dir', outputfolder, 'sub', '', 'conn', connLabel, 'desc', 'VarR', 'suffix', ['func',cmd], 'ext', 'mat'), 'X', 'seeds','-v7.3');
+            end
+        end
 
         % fisher-transform:
         fX=atanh(fX);
@@ -239,7 +268,16 @@ switch dataset.type
         X(logical(triu(ones(numseed),1)))=M;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,corrMxName,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
+        if isParcSeed
+            save(fullfile(outputfolder, [parcSeedName, '_conn-', connLabel, '_desc-AvgRFz_func', cmd, '.mat']), 'X', '-v7.3');
+        else
+            if ~isBIDSFileName(sfile{1})
+                [~, fn] = fileparts(sfile{1});
+                save(fullfile(outputfolder, [fn, '_conn-', connLabel, '_desc-AvgRFz_func', cmd, '.mat']), 'X', 'seeds', '-v7.3');
+            else
+                save(setBIDSEntity(sfile{s}, 'dir', outputfolder, 'sub', '', 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', ['func',cmd], 'ext', 'mat'), 'X', 'seeds','-v7.3');
+            end
+        end
 
         % export T
         [~,~,~,tstat]=ttest(fX');
@@ -247,7 +285,16 @@ switch dataset.type
         X(logical(triu(ones(numseed),1)))=tstat.tstat;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
+        if isParcSeed
+            save(fullfile(outputfolder, [parcSeedName, '_conn-', connLabel, '_desc-T_func', cmd, '.mat']), 'X', '-v7.3');
+        else
+            if ~isBIDSFileName(sfile{1})
+                [~, fn] = fileparts(sfile{1});
+                save(fullfile(outputfolder, [fn, '_conn-', connLabel, '_desc-T_func', cmd, '.mat']), 'X', 'seeds', '-v7.3');
+            else
+                save(setBIDSEntity(sfile{s}, 'dir', outputfolder, 'sub', '', 'conn', connLabel, 'desc', 'T', 'suffix', ['func',cmd], 'ext', 'mat'), 'X', 'seeds','-v7.3');
+            end
+        end
 end
 
 toc

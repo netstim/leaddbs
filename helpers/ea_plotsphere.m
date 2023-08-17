@@ -8,10 +8,14 @@
 
 % adapted for use in lead-dbs
 
-function graphicsHandle = ea_plotsphere(point, diameter, color, edgecolor)
+function graphicsHandle = ea_plotsphere(point, diameter, color, edgecolor, alpha)
 
     if ~exist('edgecolor','var')
         edgecolor='none';
+    end
+
+    if ~exist('alpha','var')
+        alpha=1;
     end
 
     [x,y,z] = sphere(10); % 10x10 faces (default: 20x20 facess)
@@ -20,7 +24,7 @@ function graphicsHandle = ea_plotsphere(point, diameter, color, edgecolor)
     y = y .* (diameter/2)+ point(2);
     z = z .* (diameter/2)+ point(3);
     
-    graphicsHandle = surf(x,y,z, 'FaceColor', color, 'EdgeColor', edgecolor);
+    graphicsHandle = surf(x,y,z, 'FaceColor', color, 'EdgeColor', edgecolor, 'FaceAlpha', alpha);
     daspect([1 1 1]);
     lighting gouraud;
     material shiny;

@@ -1,10 +1,13 @@
-function p = ea_startpath
-p='/'; % default use root
+function startPath = ea_startpath
+% Get start path for uigetfile/uigetdir
+
+startPath = ea_gethome; % Use home folder by default
+
 try
-    p=pwd; % if possible use pwd instead (could not work if deployed)
+    startPath = pwd; % if possible use pwd instead (could not work if deployed)
 end
-try % finally use last patient parent dir if set.
-    earoot=ea_getearoot;
-    load([earoot,'common',filesep,'ea_recentpatients.mat']);
-    p=fileparts(fullrpts{1});
+
+try % Finally try to use the parent folder of the last recent patient folder
+    load([ea_getearoot, 'common', filesep, 'ea_recentpatients.mat'], 'recentfolders');
+    startPath = fileparts(recentfolders{1});
 end

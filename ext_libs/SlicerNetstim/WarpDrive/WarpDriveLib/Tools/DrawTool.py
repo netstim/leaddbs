@@ -5,7 +5,7 @@ import numpy as np
 from ..Widgets.ToolWidget   import AbstractToolWidget
 from ..Effects.DrawEffect import AbstractDrawEffect
 
-from ..Helpers import GridNodeHelper, WarpDriveUtil
+from ..Helpers import GridNodeHelper
 
 class DrawToolWidget(AbstractToolWidget):
   
@@ -17,10 +17,13 @@ class DrawToolWidget(AbstractToolWidget):
     nearestModelAction = qt.QAction('To Nearest Model', self.effectButton)
     nearestModelAction.setCheckable(True)
     nearestModelAction.setChecked(True)
+    fromNearestModelAction = qt.QAction('From Nearest Model', self.effectButton)
+    fromNearestModelAction.setCheckable(True)
     twoLinesAction = qt.QAction('To Following Line', self.effectButton)
     twoLinesAction.setCheckable(True)
     actionsGroup = qt.QActionGroup(self.effectButton)
     actionsGroup.addAction(nearestModelAction)
+    actionsGroup.addAction(fromNearestModelAction)
     actionsGroup.addAction(twoLinesAction)
     menu = qt.QMenu(self.effectButton)
     menu.addActions(actionsGroup.actions())
@@ -47,34 +50,37 @@ class DrawToolEffect(AbstractDrawEffect):
         self.sourceFiducial = self.getFiducialFromDrawing()
 
         if self.sourceFiducial is None:
-          self.resetPolyData()
+          self.resetDrawing()
           return
 
         if self.parameterNode.GetParameter("DrawMode") == 'To Nearest Model': # get target fiducial from nearest model 
           targetFiducial = self.getFiducialFromSlicedModel()
+        elif self.parameterNode.GetParameter("DrawMode") == 'From Nearest Model': # get target fiducial from nearest model 
+          targetFiducial = self.sourceFiducial
+          self.sourceFiducial = self.getFiducialFromSlicedModel()
         elif self.parameterNode.GetParameter("DrawMode") == 'To Following Line': # return and wait for following drawing
           self.sourceFiducial.GetDisplayNode().SetVisibility(1)
-          self.resetPolyData()
+          self.resetDrawing()
           return
 
       else: # use new drawing as target fiducial
-        targetFiducial = self.getFiducialFromDrawing(nPoints = self.sourceFiducial.GetNumberOfControlPoints())  
+        targetFiducial = self.getFiducialFromDrawing(nPoints = self.sourceFiducial.GetNumberOfControlPoints())
+        targetFiducial.SetName(slicer.mrmlScene.GenerateUniqueName('drawing'))
 
       if targetFiducial is None:
         slicer.mrmlScene.RemoveNode(self.sourceFiducial)
         self.sourceFiducial = None
-        self.resetPolyData()
+        self.resetDrawing()
         return
 
       self.sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
 
-      WarpDriveUtil.addCorrection(self.sourceFiducial, targetFiducial, 
-                              spread=int(round(float(self.parameterNode.GetParameter("Spread")))),
-                              referenceNode = self.parameterNode.GetNodeReference("InputNode"))   
+      self.setFiducialNodeAs("Source", self.sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+      self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
 
       self.parameterNode.SetParameter("Update","true")
       self.sourceFiducial = None
-      self.resetPolyData()
+      self.resetDrawing()
 
     elif event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape'):
       slicer.mrmlScene.RemoveNode(self.sourceFiducial)
@@ -84,14 +90,10 @@ class DrawToolEffect(AbstractDrawEffect):
 
     # create curve from drawing and resample
     sourceCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-    sourceCurve.SetControlPointPositionsWorld(self.rasPoints)
+    sourceCurve.Copy(self.drawnCurveNode)
     sourceCurve.ResampleCurveWorld(sampleDistance)
     if nPoints is not None: # resample to get specified number of points
       sourceCurve.ResampleCurveWorld(sourceCurve.GetCurveLengthWorld() / max((nPoints - 1), 1))
-
-    # get resampled points
-    resampledPoints = vtk.vtkPoints()
-    sourceCurve.GetControlPointPositionsWorld(resampledPoints)
 
     sourceFiducial = self.curveToFiducial(sourceCurve)
 
@@ -119,7 +121,6 @@ class DrawToolEffect(AbstractDrawEffect):
     targetCurve.GetDisplayNode().SetVisibility(0)
     targetCurve.SetControlPointPositionsWorld(resampledPoints)
     targetCurve.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
-    targetCurve.ResampleCurveSurface(sampleDistance, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
     targetCurve.ResampleCurveWorld(targetCurve.GetCurveLengthWorld() / max((resampledPoints.GetNumberOfPoints() - 1), 1))
       
     # curve to fiducial
@@ -142,7 +143,7 @@ class DrawToolEffect(AbstractDrawEffect):
       label = '1'
     else:
       label = str( int(targetNode.GetNthFiducialLabel(targetNode.GetNumberOfControlPoints()-1)) + 1 )
-    p = [0]*3
+    p = np.zeros(3)
     for i in range(sourceNode.GetNumberOfControlPoints()):
       sourceNode.GetNthControlPointPosition(i,p)
       targetNode.AddFiducialFromArray(p, label)
@@ -150,17 +151,21 @@ class DrawToolEffect(AbstractDrawEffect):
 
   def curveToFiducial(self, curve):
     fiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    fiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
+    fiducial.GetDisplayNode().SetGlyphScale(1)
     fiducial.GetDisplayNode().SetVisibility(0)
-    fiducial.GetDisplayNode().SetTextScale(0)
+    fiducial.GetDisplayNode().SetPointLabelsVisibility(0)
     points = vtk.vtkPoints()
     curve.GetControlPointPositionsWorld(points)
     fiducial.SetControlPointPositionsWorld(points)
     return fiducial
 
   def sliceClosestModel(self, point):
+    shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
     originalModel = None
     # set up plane
-    normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
+    sliceToRAS = self.sliceLogic.GetSliceNode().GetSliceToRAS()
+    normal = np.array([sliceToRAS.GetElement(0,2), sliceToRAS.GetElement(1,2), sliceToRAS.GetElement(2,2)])
     plane = vtk.vtkPlane()
     plane.SetOrigin(point) # point in plane
     plane.SetNormal(normal)
@@ -177,7 +182,18 @@ class DrawToolEffect(AbstractDrawEffect):
     nModels = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')
     for i in range(nModels):
       model = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-      polyData = model.GetPolyData()
+      if model.GetTransformNodeID():
+        try:
+          clonedItemID = slicer.modules.subjecthierarchy.logic().CloneSubjectHierarchyItem(shNode, shNode.GetItemByDataNode(model))
+          tmpNode = shNode.GetItemDataNode(clonedItemID)
+          tmpNode.SetAndObserveTransformNodeID(model.GetTransformNodeID())
+        except:
+          continue
+        tmpNode.HardenTransform()
+        polyData = tmpNode.GetPolyData()
+      else:
+        polyData = model.GetPolyData()
+        tmpNode = None
       if model.GetDisplayNode() and model.GetDisplayNode().GetVisibility() and polyData.GetNumberOfCells() > 1 and model.GetName()!= 'auxSphereModel': # model visible and cells available
         cutter.SetInputData(polyData)
         cutter.Update()
@@ -192,6 +208,8 @@ class DrawToolEffect(AbstractDrawEffect):
             outPolyData.DeepCopy(cutterOutput)
             globalMinDistance = localMinDistance
             originalModel = model
+      if tmpNode:
+        slicer.mrmlScene.RemoveNode(tmpNode)
     # return in case no model found
     if not originalModel:
       return False, False

@@ -17,6 +17,7 @@ if nargin>=5
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Dembek 2017';
+        varargout{2} = false; % Doesn't support directed lead
         return
     end
 end
@@ -24,7 +25,6 @@ end
 ethresh = options.prefs.machine.vatsettings.dembek_ethresh;
 ethresh_pw = options.prefs.machine.vatsettings.dembek_ethreshpw;
 pw = options.prefs.machine.vatsettings.dembek_pw;
-
 
 switch side
     case 1
@@ -34,7 +34,6 @@ switch side
         sidec='L';
         cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
-
 
 [xx,yy,zz]=psphere(100);
 
@@ -50,7 +49,6 @@ if ~isfield(S, 'sources')
     S.sources=1:4;
 end
 for source=S.sources
-    
     stimsource=S.([sidec,'s',num2str(source)]);
     
     for cnt=1:length(cnts)
@@ -64,9 +62,9 @@ for source=S.sources
     Im=Im(U>0);
     Im=Im*1000; % kohm -> ohm
     U=stimsource.amp;
-%%  actual function call  
+    %  actual function call  
     radius(source)=dembek17_radius(U,Im, ethresh, pw, ethresh_pw);
-%%
+
     volume(source)=(4/3)*pi*radius(source)^3;
     
     VAT{source}=[xx*radius(source)+coords{side}(Acnt,1);...
@@ -78,6 +76,7 @@ for source=S.sources
         ivx(source,dim,:)=[min(VAT{source}(:,dim)),max(VAT{source}(:,dim))];
     end
 end
+
 aivx=zeros(3,2);
 aivx(:,1)=min(ivx(:,:,1));
 aivx(:,2)=max(ivx(:,:,2));
@@ -94,43 +93,44 @@ XYZmm=[gvmm{1}(XYZv(1,:));...
     gvmm{3}(XYZv(3,:));...
     ones(1,length(XYZv))];
 mat=mldivide(XYZv',XYZmm')';
+
 for source=S.sources
     in=ea_intriangulation(VAT{source},K{source},XYZmm(1:3,:)');
     voxspace(sub2ind(size(voxspace),XYZv(1,in),XYZv(2,in),XYZv(3,in)))=1;
 end
 
-
 % write nifti of VAT
+[~, ~, endian] = computer;
+switch endian
+    case 'L'
+        endian = 0;
+    case 'B'
+        endian = 1;
+end
+
 Vvat.mat=mat;
 %voxspace=permute(voxspace,[2,1,3]);
 Vvat.dim=size(voxspace);
-Vvat.dt=[4,0];
+Vvat.dt = [4, endian];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
 
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
-end
-
-mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
-%S(side).volume=sum(volume);
-
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
 if side == 1
-    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
-    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_right.mat'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-dembek_hemi-R.nii'];
 elseif side == 2
-    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
-    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_left.mat'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-dembek_hemi-L.nii'];
 end
+
 ea_savestimulation(S,options);
 spm_write_vol(Vvat,voxspace);
-
 
 varargout{1}=VAT;
 varargout{2}=volume;
 varargout{3}=radius;
-
 
 
 function r=dembek17_radius(U,Im, ethresh, pw, ethresh_pw)
@@ -139,11 +139,9 @@ function r=dembek17_radius(U,Im, ethresh, pw, ethresh_pw)
 % 500?1500 Ohm (Butson 2006).
 r=0; %
 if U %(U>0)
-r = ((pw/ethresh_pw)^0.3) * sqrt((0.72 * (U/Im)) / (ethresh * 1000));
-r= r * 1000; % from m to mm
+    r = ((pw/ethresh_pw)^0.3) * sqrt((0.72 * (U/Im)) / (ethresh * 1000));
+    r= r * 1000; % from m to mm
 end
-
-
 
 
 function [x,y,z,avgr] = psphere(n,rad)
@@ -295,7 +293,3 @@ avgr = min(tmp(indices));
 
 %Turn back on the default warning state.
 warning backtrace
-
-
-
-

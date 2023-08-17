@@ -85,7 +85,7 @@ ea_prepare_dti(options)
 
 % create c2 from anat
 if ~exist([directory,'trackingmask.nii'],'file');
-    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+    ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
 
     %% coreg anat to b0
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
@@ -106,7 +106,7 @@ end
 
 % create c1 from anat
 if ~exist([directory,'gmmask.nii'],'file');
-    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+    ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
     %% coreg anat to b0
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c1',options.prefs.prenii_unnormalized,',1']};

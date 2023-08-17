@@ -2,6 +2,20 @@ function ea_busyaction(varargin)
 % function displays or hides a spinning wheel on top right corner (default)
 % of figure.
 
+if isa(varargin{2}, 'matlab.ui.control.Image')
+    switch varargin{1}
+        case 'on'
+            varargin{2}.Visible = 'on';
+            varargin{2}.ImageSource = fullfile(ea_getearoot, 'icons', 'busy.gif');
+            varargin{2}.Tooltip = 'Busy';
+        case 'off'
+            varargin{2}.ImageSource = fullfile(ea_getearoot, 'icons', 'idle.png');
+            varargin{2}.Tooltip = 'Idle';
+    end
+    drawnow;
+    return;
+end
+
 try
     onoff=varargin{1};
     fighandle=varargin{2};

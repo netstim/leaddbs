@@ -4,7 +4,6 @@ vnum=['v',ea_getvsn('local')];
 if nargin>0
     if strcmp(varargin{1},'ee')
         for space=1:100
-            clc
             spstr=repmat(' ',1,space);
             % display banner..
             disp('                 Welcome to                            ');
@@ -41,7 +40,6 @@ if nargin>0
     end
 else
     space=5;
-    clc
     spstr=repmat(' ',1,space);
     % display banner..
     disp('                 Welcome to                            ');

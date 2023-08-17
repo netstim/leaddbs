@@ -31,8 +31,6 @@ if(radbound<1)
              '"opt.radbound" correctly for the default meshing method.']);
 end
 
-exesuff=getexeext;
-
 saveinr(vol,mwpath('pre_extract.inr'));
 deletemeshfile(mwpath('post_extract.off'));
 
@@ -47,7 +45,7 @@ if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_INITSIZE')))
         initnum=getvarfrom({'caller','base'},'ISO2MESH_INITSIZE');
 end
 
-system([' "' mcpath('cgalsurf') exesuff '" "' mwpath('pre_extract.inr') ...
+system([' "' ea_getExec(mcpath('cgalsurf')) '" "' mwpath('pre_extract.inr') ...
     '" ' sprintf('%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f %d ',thres,cent,brad,ang,radbound,distbound,maxnode) ...
     ' "' mwpath('post_extract.off') '" ' sprintf('%.0f %d',randseed,initnum)]);
 [node,elem]=readoff(mwpath('post_extract.off'));

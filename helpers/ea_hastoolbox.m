@@ -4,7 +4,7 @@ switch cmd
     case 'freesurfer'
         
         if ispc
-           errordlg('Freesurfer is not available for Windows.'); 
+           errordlg('FreeSurfer is not available for Windows.');
            return
         end
         
@@ -14,7 +14,7 @@ switch cmd
         while ~isfield(options.prefs,'fspath')
             errordlg('FreeSurfer installation not set properly, please select FreeSurfer base folder in the next step.');
             uiwait
-            pth=uigetdir('','Please select freesurfer installation folder');
+            pth=uigetdir('','Please select FreeSurfer installation folder');
             if ~ischar(pth) % user pressed cancel
                 return
             end
@@ -24,15 +24,17 @@ switch cmd
             end
             options.prefs=ea_prefs;
         end
-        setenv('FREESURFER_HOME',options.prefs.fspath);
-        system(['source ',options.prefs.fspath,filesep,'SetUpFreeSurfer.sh']);
-        setenv('PATH', [getenv('PATH') ':',options.prefs.fspath,'bin']);
-        setenv('PATH', [getenv('PATH') ':',options.prefs.fspath,'mni/bin']);
+        setenv('FREESURFER_HOME',options.prefs.fs.dir);
+        system(['source ',options.prefs.fs.dir,filesep,'SetUpFreeSurfer.sh']);
+        setenv('PATH', [getenv('PATH') ':',options.prefs.fs.dir,'bin']);
+        setenv('PATH', [getenv('PATH') ':',options.prefs.fs.dir,'mni/bin']);
         if ismac
-            copyfile([ea_gethome,'.bash_profile'],[ea_getearoot,'bp']);
-            system(['chmod +x ',ea_getearoot,'bp']);
-            system([ea_getearoot,'bp']);
-            delete([ea_getearoot,'bp']);
+            try
+                copyfile([ea_gethome,'.bash_profile'],[ea_getearoot,'bp']);
+                system(['chmod +x ',ea_getearoot,'bp']);
+                system([ea_getearoot,'bp']);
+                delete([ea_getearoot,'bp']);
+            end
         end
         success=1;
         

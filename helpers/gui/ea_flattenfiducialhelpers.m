@@ -41,7 +41,7 @@ for pt=1:length(uipatdir)
     clear AllX
     nii.img=nii.img./max(nii.img(:));
     nii.fname=fullfile([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace],[fguid,'.nii']);
-    nii.dt=[16,0];
+    nii.dt(1) = 16;
     ea_write_nii(nii);
     gziplocal([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace],[fguid,'.nii']);
     ea_delete(tfidcell);
@@ -70,7 +70,7 @@ for pt=1:length(uipatdir)
     clear AllX
     nii.img=nii.img./max(nii.img(:));
     nii.fname=fullfile([uipatdir{pt},filesep,'fiducials',filesep,'native'],[fguid,'.nii']);
-    nii.dt=[16,0];
+    nii.dt(1) = 16;
     ea_write_nii(nii);
     
     gziplocal([uipatdir{pt},filesep,'fiducials',filesep,'native'],[fguid,'.nii']);

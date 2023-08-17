@@ -13,7 +13,7 @@ import logging
 logging.getLogger('UFL').setLevel(logging.WARNING)
 logging.getLogger('FFC').setLevel(logging.WARNING)
 
-from dolfin import *
+from dolfin import Mesh, Point
 import matplotlib.pyplot as plt
 from pandas import read_csv
 import time as time_lib
@@ -22,212 +22,101 @@ import nibabel as nib
 
 #This script allows to use VTA arrays of points instead of axons in OSS-DBS
 
-def create_VTA_array(Xt,Yt,Zt,el_model):    #in mm, in MRI space
-    [__,__,__,__,__,__,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+def create_VTA_array(seed_coords, rodent_electrode, MRI_param):    #in mm, in the MRI space
 
-    VTA_res=max(MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z)
-    #VTA_res=0.5
-    VTA_box_length=20.0       # can be adjusted
-    if el_model=='SR_rodent' or el_model=='AA_rodent_monopolar' or el_model=='SNEX100':
-        VTA_box_length=2.0
+    # set VTA resolution
+    VTA_res = max(MRI_param.voxel_dims)
+    if VTA_res > 0.5:
+        VTA_res = 0.5
 
-    x_vector=np.arange(Xt-VTA_box_length/2.0,Xt+VTA_box_length/2.0+VTA_res,VTA_res)
-    y_vector=np.arange(Yt-VTA_box_length/2.0,Yt+VTA_box_length/2.0+VTA_res,VTA_res)
-    z_vector=np.arange(Zt-VTA_box_length/2.0,Zt+VTA_box_length/2.0+VTA_res,VTA_res)
+    if rodent_electrode == True:
+        VTA_box_length = 2.0
+    else:
+        VTA_box_length = 20.0  # can be adjusted
 
-    VTA_array=np.zeros((x_vector.shape[0]*y_vector.shape[0]*z_vector.shape[0],3),float)
+    # seed probe points in a cube centered at the tip (or the first contact) of the electrode
+    x_vector = np.arange(seed_coords[0] - VTA_box_length / 2.0, seed_coords[0] + VTA_box_length / 2.0 + VTA_res, VTA_res)
+    y_vector = np.arange(seed_coords[1] - VTA_box_length / 2.0, seed_coords[1] + VTA_box_length / 2.0 + VTA_res, VTA_res)
+    z_vector = np.arange(seed_coords[2] - VTA_box_length / 2.0, seed_coords[2] + VTA_box_length / 2.0 + VTA_res, VTA_res)
 
-    total_counter=0
+    VTA_array = np.zeros((x_vector.shape[0]*y_vector.shape[0]*z_vector.shape[0], 3), float)
+
+    total_counter = 0
     for i in range(x_vector.shape[0]):
        for j in range(y_vector.shape[0]):
            for k in range(z_vector.shape[0]):
-               VTA_array[total_counter,:]=(x_vector[i],y_vector[j],z_vector[k])
-               total_counter+=1
-
-    #hf = h5py.File('VTA_default_array.h5', 'a')
-    #hf.create_dataset('VTA_default', data=VTA_array)
-    #hf.close()
-
-
+               VTA_array[total_counter,:] = (x_vector[i], y_vector[j], z_vector[k])
+               total_counter += 1
 
     np.savetxt(os.environ['PATIENTDIR']+'/VTA_default_array.csv', VTA_array, delimiter=" ")
 
-    return(x_vector.shape[0],'VTA_default_array.csv',VTA_res)
-
-def resave_as_verts(array_name):    #in mm, in MRI space
-
+    # check if probe points are inside the computational domain
     mesh = Mesh(os.environ['PATIENTDIR']+"/Meshes/Mesh_unref.xml")
-    [__,__,__,x_min,y_min,z_min,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+    for j in range(VTA_array.shape[0]):
+        VTA_array[j,:] =  VTA_array[j,:] - MRI_param.first_vox_coords[:] # shift to the positive octant space
+        pnt = Point(VTA_array[j, 0], VTA_array[j, 1], VTA_array[j, 2])
+        # mark the point if it is not inside the computational domain (e.g. intersects with the electrode)
+        if not (mesh.bounding_box_tree().compute_first_entity_collision(pnt) < mesh.num_cells() * 10):
+            VTA_array[j, :] = -100000000.0
+    # remove marked
+    VTA_array = VTA_array[~np.all(VTA_array == -100000000.0, axis=1)]
 
-    arrays_shapes=[]
-
-    Array_coord_get=read_csv(os.environ['PATIENTDIR']+'/'+array_name, delimiter=' ', header=None)
-    Array_coord=Array_coord_get.values
-
-    for j in range(Array_coord.shape[0]):
-        pnt=Point(Array_coord[j,0]-x_min,Array_coord[j,1]-y_min,Array_coord[j,2]-z_min)
-        if not(mesh.bounding_box_tree().compute_first_entity_collision(pnt)<mesh.num_cells()*10):
-            Array_coord[j,:]=-100000000.0
-#
-    Array_coord=Array_coord[~np.all(Array_coord==-100000000.0,axis=1)]
-    arrays_shapes.append(Array_coord.shape[0])        #save to use later to recognize the array. Make sure you know the order!
-
-    # shift to the positive octant space
-    Array_coord[:,0]=Array_coord[:,0]-x_min
-    Array_coord[:,1]=Array_coord[:,1]-y_min
-    Array_coord[:,2]=Array_coord[:,2]-z_min
+    np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', VTA_array, delimiter=" ")
+    return(x_vector.shape[0], VTA_array.shape[0])
 
 
-#    if array_name[-3:]=='.h5':
-#        hf = h5py.File(array_name, 'r')
-#        lst=list(hf.keys())
-#        result_total=[]
-#        arrays_shapes=[]
-#
-#        for i in lst:
-#            a=hf.get(i)
-#            a=np.array(a)
-#
-#            for j in range(a.shape[0]):
-#                pnt=Point(a[j,0]-x_min,a[j,1]-y_min,a[j,2]-z_min)
-#                if not(mesh.bounding_box_tree().compute_first_entity_collision(pnt)<mesh.num_cells()*10):
-#                    a[j,:]=-100000000.0
-#
-#            a=a[~np.all(a==-100000000.0,axis=1)]
-#            arrays_shapes.append(a.shape[0])        #save to use later to recognize the array. Make sure you know the order!
-#
-#            result_total.append(a)
-#
-#        Array_coord=np.concatenate(result_total)
-#        hf.close()
-#
-#        # shift to the positive octant space
-#        Array_coord[:,0]=Array_coord[:,0]-x_min
-#        Array_coord[:,1]=Array_coord[:,1]-y_min
-#        Array_coord[:,2]=Array_coord[:,2]-z_min
-
-
-    np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord, delimiter=" ")
-
-    return arrays_shapes
 
 #here we need to add function that will check that these vertices do not intersect with CSF, encap and so on
 
 # do not use parallelization here
 
 
-# This is outdated
-def ifft_on_VTA_array(name_sol,d,FREQ_vector_signal,Xs_signal_normalized,t_vect,T,i_start_octv,arrays_shape):    #in mm, in MRI space
 
-    start_IFFT=time_lib.time()
-
-    num_segments=sum(arrays_shape)
-
-    Max_signal_for_point=np.zeros(num_segments,float)
-
-    hf = h5py.File(os.environ['PATIENTDIR']+'/'+name_sol[:-4]+'.h5', 'r')
-    solution_sort_octv = hf.get('dataset_1')
-    solution_sort_octv = np.array(solution_sort_octv)
-    hf.close()
-
-    Fr_corresp_ar = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-    #Fr_octave_vect = np.genfromtxt('Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-    FR_vec_sign_octv = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-
-    Fr_corresp_ar=np.round(Fr_corresp_ar,6)
-    #Fr_octave_vect=np.round(Fr_octave_vect,6)
-    N_freq_octv=(FR_vec_sign_octv.shape[0])
-
-
-    for i_point in range(num_segments):
-        Xs_Tr=np.vectorize(complex)(solution_sort_octv[(i_point)*N_freq_octv:(i_point*N_freq_octv+N_freq_octv),3],solution_sort_octv[i_point*N_freq_octv:(i_point*N_freq_octv+N_freq_octv),4])         #real and im parts for the first point in VTA
-        Xs_Tr_full_real=np.zeros(FREQ_vector_signal.shape[0],float)
-        Xs_Tr_full_imag=np.zeros(FREQ_vector_signal.shape[0],float)
-        stepper=0
-        for i_inx in range(Xs_Tr.shape[0]):
-            if i_inx>=i_start_octv:
-                rslt=np.where(Fr_corresp_ar[:,0]==np.round(FR_vec_sign_octv[i_inx],6))
-                step_octv=rslt[0].shape[0]   #size of the freq. pack in the octave
-
-                Xs_Tr_full_real[stepper:stepper+step_octv]=(Xs_Tr[i_inx].real)
-                Xs_Tr_full_imag[stepper:stepper+step_octv]=(Xs_Tr[i_inx].imag)
-                stepper=stepper+step_octv
-            else:
-                Xs_Tr_full_real[stepper]=(Xs_Tr[i_inx].real)
-                Xs_Tr_full_imag[stepper]=(Xs_Tr[i_inx].imag)
-                stepper=stepper+1
-
-        if i_point==0:
-            np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Xs_Tr_full_real.csv', Xs_Tr_full_real, delimiter=" ")
-            np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Xs_Tr_full_imag.csv', Xs_Tr_full_imag, delimiter=" ")
-
-        Xs_Tr_full_complex=np.vectorize(complex)(Xs_Tr_full_real,Xs_Tr_full_imag)
-
-        Xs_conv=Xs_signal_normalized*Xs_Tr_full_complex
-
-        if np.mod(t_vect.shape[0], 2):  # if the FT vector is odd
-            fv_conj = np.conjugate(Xs_conv[-1:0:-1])
-        else:  # if the FT vector is even
-            fv_conj = np.conjugate(Xs_conv[-2:0:-1])
-
-        Y = np.concatenate((Xs_conv, fv_conj), axis=0)
-
-        Signal_t_conv=np.fft.ifft(Y).real
-
-        Max_signal_for_point[i_point]=abs(max(Signal_t_conv[:], key=abs))
-
-        if i_point==1:
-            plt.figure(11111234)
-            plt.plot(t_vect,Signal_t_conv)
-            plt.xlim(0.000,T*5)
-            plt.grid(True)
-            plt.xlabel('t, sec')
-            plt.ylabel('Potential, V')
-            plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
-
-        np.save(os.environ['PATIENTDIR']+'/Points_in_time/Signal_t_conv'+str(i_point), Signal_t_conv.real)
-
-    minutes=int((time_lib.time() - start_IFFT)/60)
-    secnds=int(time_lib.time() - start_IFFT)-minutes*60
-    logging.critical("----- IFFT took {} min {} sec -----\n".format(minutes, secnds))
-
-    return(Max_signal_for_point)
-
-def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,VTA_res):
+def get_VTA(d,vox_along_axis,Max_signal_for_point,shift_to_MRI_space):
     import os
-    VTA_Vertices_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models
-    VTA_Vertices=VTA_Vertices_get.values
 
-    Array_full_coord_get=read_csv(os.environ['PATIENTDIR']+'/'+array_full_name, delimiter=' ', header=None)    # get only physiologically correct neuron models
-    Array_full_coord=Array_full_coord_get.values
+    example_filename = os.path.join(os.environ['PATIENTDIR']+'/'+d['MRI_data_name'])
+    img = nib.load(example_filename)
 
-    VTA_affected=np.zeros((VTA_Vertices.shape[0],4),float)
-    VTA_affected[:,:3]=VTA_Vertices
+    VTA_res = max([x for x in img.header.get_zooms()[:]])
+    if VTA_res > 0.5:
+        VTA_res = 0.5
 
-    VTA_size=0.0
+    VTA_Vertices_get = read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models
+    VTA_Vertices = VTA_Vertices_get.values
+
+    Array_full_coord_get = read_csv(os.environ['PATIENTDIR']+'/'+'VTA_default_array.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models
+    Array_full_coord = Array_full_coord_get.values
+
+    VTA_affected = np.zeros((VTA_Vertices.shape[0],4),float)
+    VTA_affected[:,:3] = VTA_Vertices
+
+    E_field_MRI_space = np.zeros((VTA_Vertices.shape[0], 4), float)
+    E_field_MRI_space[:,:3] = VTA_affected[:, :3] + shift_to_MRI_space
+
+    VTA_size = 0.0
 
     for i in range(VTA_Vertices.shape[0]):
-        if abs(Max_signal_for_point[i])>=d["Activation_threshold_VTA"]:
-            VTA_affected[i,3]=1.0
-            VTA_size+=VTA_res**3
+        if abs(Max_signal_for_point[i]) >= d["Activation_threshold_VTA"] / 1000.0:  # activation threshold is in V/m
+            VTA_affected[i,3] = 1.0
+            VTA_size += VTA_res**3
+
+        E_field_MRI_space[i,3] = Max_signal_for_point[i] * 1000.0  # switch to V/m
+
 
     logging.critical("VTA_size: {}".format(VTA_size))
 
-    [__,__,__,x_min,y_min,z_min,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
-    shift_to_MRI_space=np.array([x_min,y_min,z_min])
-
     VTA_affected_MRI_space=np.zeros((VTA_Vertices.shape[0],4),float)
-    VTA_affected_MRI_space[:,:3]=VTA_affected[:,:3]+shift_to_MRI_space
-    VTA_affected_MRI_space[:,3]=VTA_affected[:,3]
+    VTA_affected_MRI_space[:,:3] = VTA_affected[:,:3] + shift_to_MRI_space
+    VTA_affected_MRI_space[:,3] = VTA_affected[:,3]
 
     np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/VTA_affected.csv', VTA_affected, delimiter=" ")
 
-    VTA_nifti=np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),int)
-    E_field_nifti=np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),float)
+    VTA_nifti = np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),int)
+    E_field_nifti = np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),float)
 
     # will throw an error, because we need to have the same number of points (no extractions)
-    counter_truncated=0
+    counter_truncated = 0
 
     logging.critical("vox_along_axis : {}".format(vox_along_axis))
 
@@ -239,36 +128,34 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
 
                 if np.all(np.round(VTA_affected_MRI_space[counter_truncated,:3],6)==np.round(Array_full_coord[total_counter,:],6)):            # if coordinates match, then
                     VTA_nifti[i,j,k]=int(VTA_affected_MRI_space[counter_truncated,3])
-                    E_field_nifti[i,j,k]=Max_signal_for_point[counter_truncated]
-                    counter_truncated+=1
+                    E_field_nifti[i,j,k] = Max_signal_for_point[counter_truncated] * 1000.0  # switch to V/m
+                    counter_truncated += 1
                 else:
-                    VTA_nifti[i,j,k]=0
-                    E_field_nifti[i,j,k]=0.0
+                    VTA_nifti[i,j,k] = 0
+                    E_field_nifti[i,j,k] = 0.0
 
-    if counter_truncated!=VTA_affected_MRI_space.shape[0]:
+    if counter_truncated != VTA_affected_MRI_space.shape[0]:
         logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
         raise SystemExit
 
 
+    # IMPORTANT:
+    # If we computed in MNI, then we just use nifti directly
+    # otherwise easier to operate with a 2-D spatial array
+    # Lead-DBS will choose what to use
 
-    affine_info=np.eye(4)
-    affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
-    affine_info[1,1]=VTA_res
-    affine_info[2,2]=VTA_res
-    affine_info[0,3]=VTA_affected_MRI_space[0,0]
-    affine_info[1,3]=VTA_affected_MRI_space[0,1]
-    affine_info[2,3]=VTA_affected_MRI_space[0,2]
+    affine_info = np.eye(4)
+    affine_info[0,0] = VTA_res
+    affine_info[1,1] = VTA_res
+    affine_info[2,2] = VTA_res
+    affine_info[0:3,3] = VTA_affected_MRI_space[0,0:3]
 
+    #img.header.set_data_dtype(np.double)
 
-    import os
-    example_filename = os.path.join(os.environ['PATIENTDIR']+'/'+d['MRI_data_name'])
-    img = nib.load(example_filename)
+    img.header.set_zooms((VTA_res, VTA_res, VTA_res))
 
-
-
-
-
-    img3 = nib.Nifti1Image(VTA_nifti, affine_info,img.header)
+    # obviously, the header is wrong if computed in native
+    img3 = nib.Nifti1Image(VTA_nifti, affine_info, img.header)
     if d['Stim_side']==0:
         nib.save(img3, os.environ['PATIENTDIR']+'/Results_rh/VTA_solution.nii')
     else:
@@ -276,94 +163,12 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
 
     img4 = nib.Nifti1Image(E_field_nifti, affine_info,img.header)
     if d['Stim_side']==0:
-        nib.save(img4, os.environ['PATIENTDIR']+'/Results_rh/E_field_solution.nii')
+        np.savetxt(os.environ['PATIENTDIR'] + '/Results_rh/VTA_affected_MRI_space.csv', VTA_affected_MRI_space, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR'] + '/Results_rh/E_field_MRI_space.csv', E_field_MRI_space,delimiter=" ")
+        nib.save(img4, os.environ['PATIENTDIR'] + '/Results_rh/E_field_solution.nii')
     else:
-        nib.save(img4, os.environ['PATIENTDIR']+'/Results_lh/E_field_solution.nii')
-
-    return True
-
-
-
-
-def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,VTA_res,scaling_index):
-    import os
-    VTA_Vertices_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models
-    VTA_Vertices=VTA_Vertices_get.values
-
-    Array_full_coord_get=read_csv(os.environ['PATIENTDIR']+'/'+array_full_name, delimiter=' ', header=None)    # get only physiologically correct neuron models
-    Array_full_coord=Array_full_coord_get.values
-
-    VTA_affected=np.zeros((VTA_Vertices.shape[0],4),float)
-    VTA_affected[:,:3]=VTA_Vertices
-
-    VTA_size=0.0
-
-    for i in range(VTA_Vertices.shape[0]):
-        if abs(Max_signal_for_point[i])>=d["Activation_threshold_VTA"]:
-            VTA_affected[i,3]=1.0
-            VTA_size+=VTA_res**3
-
-    logging.critical("VTA_size: {}".format(VTA_size))
-
-    [__,__,__,x_min,y_min,z_min,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
-    shift_to_MRI_space=np.array([x_min,y_min,z_min])
-
-    VTA_affected_MRI_space=np.zeros((VTA_Vertices.shape[0],4),float)
-    VTA_affected_MRI_space[:,:3]=VTA_affected[:,:3]+shift_to_MRI_space
-    VTA_affected_MRI_space[:,3]=VTA_affected[:,3]
-
-    np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/VTA_affected_'+str(scaling_index)+'.csv', VTA_affected, delimiter=" ")
-
-    VTA_nifti=np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),int)
-    E_field_nifti=np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),float)
-
-    # will throw an error, because we need to have the same number of points (no extractions)
-    counter_truncated=0
-
-    logging.critical("vox_along_axis : {}".format(vox_along_axis))
-
-    for i in range(vox_along_axis):  #go over all voxels
-        for j in range(vox_along_axis):  #go over all voxels
-            for k in range(vox_along_axis):  #go over all voxels
-                #total_counter=i+j*vox_along_axis+k*vox_along_axis*vox_along_axis
-                total_counter=k+j*vox_along_axis+i*vox_along_axis*vox_along_axis
-
-                if np.all(np.round(VTA_affected_MRI_space[counter_truncated,:3],6)==np.round(Array_full_coord[total_counter,:],6)):            # if coordinates match, then
-                    VTA_nifti[i,j,k]=int(VTA_affected_MRI_space[counter_truncated,3])
-                    E_field_nifti[i,j,k]=Max_signal_for_point[counter_truncated]
-                    counter_truncated+=1
-                else:
-                    VTA_nifti[i,j,k]=0
-                    E_field_nifti[i,j,k]=0.0
-
-    if counter_truncated!=VTA_affected_MRI_space.shape[0]:
-        logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
-        raise SystemExit
-
-    affine_info=np.eye(4)
-    affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
-    affine_info[1,1]=VTA_res
-    affine_info[2,2]=VTA_res
-    affine_info[0,3]=VTA_affected_MRI_space[0,0]
-    affine_info[1,3]=VTA_affected_MRI_space[0,1]
-    affine_info[2,3]=VTA_affected_MRI_space[0,2]
-
-
-    import os
-    example_filename = os.path.join(os.environ['PATIENTDIR']+'/'+d['MRI_data_name'])
-    img = nib.load(example_filename)
-
-
-    img3 = nib.Nifti1Image(VTA_nifti, affine_info,img.header)
-    if d['Stim_side']==0:
-        nib.save(img3, os.environ['PATIENTDIR']+'/Results_rh/VTA_solution_'+str(scaling_index)+'.nii')
-    else:
-        nib.save(img3, os.environ['PATIENTDIR']+'/Results_lh/VTA_solution_'+str(scaling_index)+'.nii')
-
-    img4 = nib.Nifti1Image(E_field_nifti, affine_info,img.header)
-    if d['Stim_side']==0:
-        nib.save(img4, os.environ['PATIENTDIR']+'/Results_rh/E_field_solution_'+str(scaling_index)+'.nii')
-    else:
-        nib.save(img4, os.environ['PATIENTDIR']+'/Results_lh/E_field_solution_'+str(scaling_index)+'.nii')
+        np.savetxt(os.environ['PATIENTDIR'] + '/Results_lh/VTA_affected_MRI_space.csv', VTA_affected_MRI_space, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR'] + '/Results_lh/E_field_MRI_space.csv', E_field_MRI_space, delimiter=" ")
+        nib.save(img4, os.environ['PATIENTDIR'] + '/Results_lh/E_field_solution.nii')
 
     return True

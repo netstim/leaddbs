@@ -22,7 +22,7 @@ for pt=1:length(uipatdir)
         exptxt=[exptxt,'All acquisitions were warped into template space using: \n',normmethod,'\n'];
     end
     
-    if exist([uipatdir{pt},filesep,'ea_reconstruction.mat'],'file')
+    if exist([uipatdir{pt},filesep,'reconstruction',filesep,ptname,'_desc-reconstruction.mat'],'file')
         options=ea_getptopts(uipatdir{pt});
         options.sides=1:2;
         options.native=1;

@@ -1,0 +1,9 @@
+name: ossdbs
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - pyqt=5
+  - h5py

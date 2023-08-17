@@ -2,7 +2,11 @@
 """
 Created on Sun Nov  4 16:14:19 2018
 
-@author: trieu
+@author: Trieu, modified by Konstantin
+
+These dummy functions just extract indices of mesh entities from Meshes/Mesh_unref.msh
+Should be substituted with a more unified approach
+
 """
 
 from Electrode_files.Profile_Process_V6 import words_detect
@@ -217,5 +221,3 @@ def read_mesh_indicies_extended(dictionary):
     dictionary['Active_contacts_on_lead']   = N_contacts_on_lead;
     dictionary['Float_contacts_on_lead']   = N_floats_on_lead;
     f1.close();
-
-    #print(dictionary)

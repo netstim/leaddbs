@@ -3,6 +3,7 @@ import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
+import glob
 
 import sys
 import numpy as np
@@ -20,10 +21,10 @@ class ImportAtlas(ScriptedLoadableModule):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "ImportAtlas" # TODO make this more human readable by adding spaces
     self.parent.categories = ["Netstim"]
-    self.parent.dependencies = []
+    self.parent.dependencies = ["NetstimPreferences"]
     self.parent.contributors = ["Simon Oxenford (Netstim Berlin)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
-This module loads Lead-DBS atlases into Slicer.
+This module loads Lead-DBS atlases into Slicer. Set the Lead-DBS path in the Settings menu to see available atlases.
 """
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
     self.parent.acknowledgementText = "" # replace with organization, grant and thanks.
@@ -52,11 +53,6 @@ class ImportAtlasWidget(ScriptedLoadableModuleWidget):
     # Layout within the dummy collapsible button
     parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
 
-    #
-    # atlases directory
-    #
-    self.atlasDirectoryButton = ctk.ctkDirectoryButton()
-    parametersFormLayout.addRow("Directory: ", self.atlasDirectoryButton)
 
     #
     # atlas combo box
@@ -74,50 +70,29 @@ class ImportAtlasWidget(ScriptedLoadableModuleWidget):
 
     # connections
     self.importButton.connect('clicked(bool)', self.onImportButton)
-    self.atlasDirectoryButton.directoryChanged.connect(self.onAtlasDirectoryChanged)
-    #self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-    #self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
 
     # Add vertical spacer
     self.layout.addStretch(1)
 
-    # Refresh dir
-
-    modulePath = os.path.split(__file__)[0]
-    with open(os.path.join(modulePath,'Resources','previousDirectory.txt'), 'r') as f: 
-      directory = f.readlines()[0]
-    self.atlasDirectoryButton.directory = directory if os.path.isdir(directory) else '.'
 
   def cleanup(self):
     pass
 
-  def onAtlasDirectoryChanged(self, directory):
-    # remove atlases
-    self.atlasComboBox.clear()  
-
-    # add new dirs if valid lead paths
-    self.atlasComboBox.addItems(ImportAtlasLogic().getValidAtlases(directory))
-    
-    # if MNI use DISTAL as default
-    parentDir, dirName = os.path.split(directory)
-    parentDirName = os.path.split(parentDir)[-1]
-    if parentDirName == 'MNI_ICBM_2009b_NLIN_ASYM':
+  def enter(self):
+    validAtlases = ImportAtlasLogic().getValidAtlases()
+    self.atlasComboBox.clear()
+    self.atlasComboBox.addItems(validAtlases)
+    self.importButton.enabled = len(validAtlases) > 0
+    if 'DISTAL Minimal (Ewert 2017)' in validAtlases:
       self.atlasComboBox.setCurrentText('DISTAL Minimal (Ewert 2017)')
-    
-    # change text so its no so large
-    self.atlasDirectoryButton.text = os.path.join('[...]',parentDirName,dirName)
+      self.importButton.setToolTip('')
+    else:
+      self.importButton.setToolTip('Set leaddbs path in setting menu')
 
-    # enable import button if available atlases
-    self.importButton.enabled = self.atlasComboBox.itemText(0) != ''
-
-    # save for future
-    modulePath = os.path.split(__file__)[0]
-    with open(os.path.join(modulePath,'Resources','previousDirectory.txt'), 'w') as f: 
-      f.write(directory) 
 
   def onImportButton(self):
     logic = ImportAtlasLogic()
-    atlasPath = os.path.join(self.atlasDirectoryButton.directory, self.atlasComboBox.currentText)
+    atlasPath = os.path.join(logic.getAtlasesPath(), self.atlasComboBox.currentText)
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
     qt.QApplication.processEvents()
     try:
@@ -139,34 +114,128 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
 
-  def getValidAtlases(self, directory):
-    validAtlases = []
-    atlases = sorted(os.listdir(directory))
-    for atlas in atlases:
-      if atlas[0] != '.' and os.path.isfile(os.path.join(directory,atlas,'atlas_index.mat')):
-        validAtlases.append(atlas)
+
+  def getAtlasesPath(self):
+    leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
+    leadDBSSpace = slicer.util.settingsValue("NetstimPreferences/leadDBSSpace", "", converter=str)
+    if leadDBSPath and leadDBSSpace:
+      return os.path.join(leadDBSPath, "templates", "space", leadDBSSpace, "atlases")
+    for possibleSpace in ["MNI152NLin2009bAsym", "MNI_ICBM_2009b_NLIN_ASYM"]:
+      possiblePath = os.path.join(leadDBSPath, "templates", "space", possibleSpace, "atlases")
+      if os.path.isdir(possiblePath):
+        return possiblePath
+    return ""
+
+  def getValidAtlases(self):
+    validAtlases = glob.glob(os.path.join(self.getAtlasesPath(), '*', 'atlas_index.mat'))
+    if not validAtlases:
+      qt.QMessageBox().warning(qt.QWidget(), "", "Invalid Lead-DBS path in preferences.")
+      return []
+    validAtlases = [os.path.basename(os.path.dirname(a)) for a in validAtlases]
+    validAtlases.sort()
     return validAtlases
 
-  def getAtlasNames(self,atlasFile):
-    """
-    Get names from atlas.mat. This is a bit different from the others
-    """
-    names = []
-    atlases = atlasFile['atlases']
-    for column in atlases['names']:
-      row_data = []
-      for row_number in range(len(column)):     
-        if sys.version_info[0] < 3: 
-          row_data.append(''.join(map(unichr, atlases[column[row_number]][:])))   
-        else:
-          row_data.append(''.join(map(chr, atlases[column[row_number]][:]))) 
-      names.append(row_data)
-    return names
+  def createFolderDisplayNode(self, folderID, color=[0.66,0.66,0.66], opacity=1.0):
+    # from qSlicerSubjectHierarchyFolderPlugin.cxx
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    displayNode = slicer.vtkMRMLFolderDisplayNode()
+    displayNode.SetName(shNode.GetItemName(folderID))
+    displayNode.SetHideFromEditors(0)
+    displayNode.SetAttribute('SubjectHierarchy.Folder', "1")
+    displayNode.SetColor(*color)
+    displayNode.SetOpacity(opacity)
+    shNode.GetScene().AddNode(displayNode)
+    shNode.SetItemDataNode(folderID, displayNode)
+    shNode.ItemModified(folderID)
 
-  def createPolyData(self, vertices, faces):
+  def readAtlas(self, atlasPath, atlasName=None):
     """
-     Generate vtk polydata from vertices and faces
+    Run the actual algorithm
     """
+
+    atlasName = atlasName if atlasName else os.path.basename(os.path.dirname(atlasPath))
+
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), atlasName)
+    self.createFolderDisplayNode(folderID, opacity=0.8)
+    shNode.SetItemAttribute(folderID, 'atlas', 'template')
+
+    atlas = LeadDBSAtlas(atlasPath)
+
+    for structure in atlas.structures:
+      
+      if structure.isBilateral():
+        subName = ['rh', 'lh']
+        sideIndexes = [0, 1]
+        subFolderID = shNode.CreateFolderItem(folderID, structure.name)
+        self.createFolderDisplayNode(subFolderID, structure.color)
+        shNode.SetItemDisplayVisibility(subFolderID, structure.visibility)
+        shNode.SetItemExpanded(subFolderID, 0)
+        shNode.SetItemAttribute(subFolderID, 'atlas', 'template')
+      else:
+        subName = [structure.name]
+        sideIndexes = [1] if structure.type == 2 else [0]
+        subFolderID = folderID
+
+      for sideIndex, sideName in zip(sideIndexes, subName):
+        node = structure.getStructureNode(sideIndex)
+        node.SetName(sideName)
+        shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
+        shNode.SetItemAttribute(shNode.GetItemByDataNode(node), 'atlas', 'template')
+
+    return folderID
+
+#
+# Atlas Structure
+#
+
+class LeadDBSAtlasStructure:
+  def __init__(self):
+    self.atlasPath = None
+    self.index = None
+    self.name = None
+    self.color = None
+    self.type = None
+    self.visibility = None
+
+  def isBilateral(self):
+    return self.type in [3,4]
+
+  def getStructureNode(self, sideIndex):
+    pass
+
+  def createNode(self, polyData, nodeType):
+    node = slicer.mrmlScene.AddNewNodeByClass(nodeType)
+    node.SetAndObservePolyData(polyData)
+    node.CreateDefaultDisplayNodes()
+    node.GetDisplayNode().SetColor(*self.color)
+    node.GetDisplayNode().SetBackfaceCulling(0)
+    node.GetDisplayNode().SetVisibility(self.visibility)
+    return node
+
+class ModelStructure(LeadDBSAtlasStructure):
+  def __init__(self):
+      super().__init__()
+
+  def getStructureNode(self, sideIndex):
+    faces, vertices = self.getFacesVertices(sideIndex)
+    polyData = self.getPolyData(faces, vertices)
+    modelNode = self.createNode(polyData)
+    return modelNode
+
+  def getFacesVertices(self, sideIndex):
+    smooth = slicer.util.settingsValue("NetstimPreferences/useSmoothAtlas", True, converter=slicer.util.toBool)
+    import h5py
+    with h5py.File(self.atlasPath,'r') as atlasFile:
+      roi = atlasFile['atlases']['roi']
+      ref = roi[sideIndex][self.index]
+      fvKey = 'sfv' if (smooth and 'sfv' in atlasFile[ref].keys()) else 'fv'
+      fv = atlasFile[ref][fvKey]
+      vertices = fv['vertices'][()].transpose()
+      faces = fv['faces'][()].transpose()
+    return faces, vertices
+
+  def getPolyData(self, faces, vertices):
     points = vtk.vtkPoints()
     for v in vertices:
       points.InsertNextPoint(*v)
@@ -191,100 +260,207 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
 
     return normals.GetOutput()
 
-  def createModel(self, polydata, name, color):
-    """
-    create model node with polydata, color, name and set default view mode
-    """
-    modelNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', name )
-    modelNode.SetAndObservePolyData(polydata)
-    modelNode.CreateDefaultDisplayNodes()
-    modelNode.GetDisplayNode().SetColor(*color)
-    modelNode.GetDisplayNode().SetVisibility2D(1)
-    modelNode.GetDisplayNode().SetBackfaceCulling(0)
-    modelNode.GetDisplayNode().SetVisibility(0) # hide by default
-    return modelNode
+  def createNode(self, polyData):
+    node = super().createNode(polyData, 'vtkMRMLModelNode')
+    node.GetDisplayNode().SetVisibility2D(1)
+    return node
 
-  def createFolderDisplayNode(self, folderID, color=[0.66,0.66,0.66], opacity=1.0):
-    # from qSlicerSubjectHierarchyFolderPlugin.cxx
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    displayNode = slicer.vtkMRMLFolderDisplayNode()
-    displayNode.SetName(shNode.GetItemName(folderID))
-    displayNode.SetHideFromEditors(0)
-    displayNode.SetAttribute('SubjectHierarchy.Folder', "1")
-    displayNode.SetColor(*color)
-    displayNode.SetOpacity(opacity)
-    shNode.GetScene().AddNode(displayNode)
-    shNode.SetItemDataNode(folderID, displayNode)
-    shNode.ItemModified(folderID)
 
-  def readAtlas(self, atlasPath, name=None):
-    """
-    Run the actual algorithm
-    """
+class FibersStructure(LeadDBSAtlasStructure):
+  def __init__(self):
+      super().__init__()
+  
+  def getStructureNode(self, sideIndex):
+    points = self.getPointsIdx(sideIndex)
+    polyData = self.getPolyData(points)
+    fiberNode = self.createNode(polyData)
+    return fiberNode
+
+  def getPointsIdx(self, sideIndex):
+    if self.isBilateral():
+      subFolder = 'rh' if sideIndex == 0 else 'lh'
+      fibersPath = os.path.join(os.path.dirname(self.atlasPath), subFolder, self.name+'.mat')
+    else:
+      import glob
+      fibersPath = glob.glob(os.path.join(os.path.dirname(self.atlasPath), '*', self.name+'.mat'))[0]
+    import h5py
+    with h5py.File(fibersPath,'r') as fibersFile:
+      points = fibersFile['fibers'][()].transpose()
+    return points
+
+  def getPolyData(self, points):
+    vtkPoints = vtk.vtkPoints()
+    lines = vtk.vtkCellArray()
+    ptsIndex = 0
+    lineIndex = 1
+    finish = False
+    while not finish:
+      line = vtk.vtkPolyLine()
+      while lineIndex == points[ptsIndex,3]:
+        vtkPoints.InsertNextPoint(points[ptsIndex,0:3])
+        line.GetPointIds().InsertNextId(ptsIndex)
+        ptsIndex = ptsIndex + 1
+        if ptsIndex == points.shape[0]:
+          finish = True
+          break
+      lines.InsertNextCell(line)
+      lineIndex = lineIndex + 1
+    
+    pd = vtk.vtkPolyData()
+    pd.SetPoints(vtkPoints)
+    pd.SetLines(lines)
+
+    return pd
+
+  def createNode(self, polyData):
+    node = super().createNode(polyData, 'vtkMRMLFiberBundleNode')
+    node.GetDisplayNode().SetColorModeToScalar()
+    return node
+
+class DiscFibersStructure(FibersStructure):
+  def __init__(self):
+      super().__init__()
+
+  def getStructureNode(self, sideIndex):
+    points, scalars = self.getPointsIdx(sideIndex)
+    polyData = self.getPolyData(points, scalars)
+    fiberNode = self.createNode(polyData)
+    return fiberNode
+
+  def getPointsIdx(self, sideIndex):
+    import glob
+    fibersPath = glob.glob(os.path.join(os.path.dirname(self.atlasPath), '*', self.name+'.mat'))[0]
+    import h5py
+    fiberCount = 1
+    with h5py.File(fibersPath,'r') as fibersFile:
+      for i in range(fibersFile['fibcell'].shape[0]):
+        ref = fibersFile['fibcell'][i,0]
+        for j in range(fibersFile[ref].shape[1]):
+          fiber = fibersFile[fibersFile[ref][0,j]][()].transpose()
+          fiber = np.concatenate((fiber, fiberCount*np.ones((fiber.shape[0],1))), axis=1)
+          scalar = fibersFile[fibersFile['vals'][i,0]][0][j]
+          if fiberCount == 1:
+            points = fiber
+            scalars = scalar * np.ones((fiber.shape[0],1))
+          else:
+            points = np.concatenate((points, fiber), axis=0)
+            scalars = np.concatenate((scalars, scalar * np.ones((fiber.shape[0],1))), axis=0)
+          fiberCount = fiberCount + 1
+    return points, scalars
+
+  def getPolyData(self, points, scalars):
+    pd = super().getPolyData(points)
+    vtkValuesArray = vtk.vtkDoubleArray()
+    vtkValuesArray.SetName('values')
+    for scalar in scalars:
+      vtkValuesArray.InsertNextTuple((scalar,))
+    pd.GetPointData().AddArray(vtkValuesArray)
+    pd.GetPointData().SetScalars(vtkValuesArray)
+    return pd
+
+  def createNode(self, polyData):
+    node = super().createNode(polyData)
+    node.GetDisplayNode().SetVisibility(True)
+    node.GetDisplayNode().SetColorModeToScalarData()
+    node.GetDisplayNode().SetActiveScalarName('values')
+    node.GetDisplayNode().SetAndObserveColorNodeID(slicer.util.getNode('DivergingBlueRed').GetID())
+    return node
+
+#
+# Lead-DBS Atlas
+#
+
+class LeadDBSAtlas:
+  def __init__(self, atlasPath):
 
     try:
       import h5py
     except:
       slicer.util.pip_install('h5py')
       import h5py
-
-    if name is None:
-      folder = os.path.split(atlasPath)[0]
-      name = os.path.split(folder)[1]
-
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), name)
-    self.createFolderDisplayNode(folderID, opacity=0.8)
-    shNode.SetItemAttribute(folderID, 'atlas', '1')
-
+      
     with h5py.File(atlasPath,'r') as atlasFile:
-      # get .mat data
-      roi = atlasFile['atlases']['roi']
-      colors = atlasFile['atlases']['colors'][()]   
-      try:
-        colormap = atlasFile['atlases']['colormap'][()].transpose()
-      except: # colormap not present
-        colormap = np.array([[0.2422,0.1504,0.6603],[0.2504,0.1650,0.7076],[0.2578,0.1818,0.7511],[0.2647,0.1978,0.7952],[0.2706,0.2147,0.8364],[0.2751,0.2342,0.8710],[0.2783,0.2559,0.8991],[0.2803,0.2782,0.9221],[0.2813,0.3006,0.9414],[0.2810,0.3228,0.9579],[0.2795,0.3447,0.9717],[0.2760,0.3667,0.9829],[0.2699,0.3892,0.9906],[0.2602,0.4123,0.9952],[0.2440,0.4358,0.9988],[0.2206,0.4603,0.9973],[0.1963,0.4847,0.9892],[0.1834,0.5074,0.9798],[0.1786,0.5289,0.9682],[0.1764,0.5499,0.9520],[0.1687,0.5703,0.9359],[0.1540,0.5902,0.9218],[0.1460,0.6091,0.9079],[0.1380,0.6276,0.8973],[0.1248,0.6459,0.8883],[0.1113,0.6635,0.8763],[0.0952,0.6798,0.8598],[0.0689,0.6948,0.8394],[0.0297,0.7082,0.8163],[0.0036,0.7203,0.7917],[0.0067,0.7312,0.7660],[0.0433,0.7411,0.7394],[0.0964,0.7500,0.7120],[0.1408,0.7584,0.6842],[0.1717,0.7670,0.6554],[0.1938,0.7758,0.6251],[0.2161,0.7843,0.5923],[0.2470,0.7918,0.5567],[0.2906,0.7973,0.5188],[0.3406,0.8008,0.4789],[0.3909,0.8029,0.4354],[0.4456,0.8024,0.3909],[0.5044,0.7993,0.3480],[0.5616,0.7942,0.3045],[0.6174,0.7876,0.2612],[0.6720,0.7793,0.2227],[0.7242,0.7698,0.1910],[0.7738,0.7598,0.1646],[0.8203,0.7498,0.1535],[0.8634,0.7406,0.1596],[0.9035,0.7330,0.1774],[0.9393,0.7288,0.2100],[0.9728,0.7298,0.2394],[0.9956,0.7434,0.2371],[0.9970,0.7659,0.2199],[0.9952,0.7893,0.2028],[0.9892,0.8136,0.1885],[0.9786,0.8386,0.1766],[0.9676,0.8639,0.1643],[0.9610,0.8890,0.1537],[0.9597,0.9135,0.1423],[0.9628,0.9373,0.1265],[0.9691,0.9606,0.1064],[0.9769,0.9839,0.0805]])
-      names = self.getAtlasNames(atlasFile)
-      types = atlasFile['atlases']['types'][()]
-      try:
+      names = self.readNames(atlasFile)
+      colors = self.readColors(atlasFile)
+      types = self.readTypes(atlasFile)
+      showIndex = self.readShowIndex(atlasFile)
+      pixdimTypes = self.readPixdimType(atlasFile)
+
+    self.structures = []
+
+    for i, pixdimType in enumerate(pixdimTypes):
+      if pixdimType == 'numeric':
+        structure = ModelStructure()
+      elif pixdimType == 'fibers':
+        structure = FibersStructure()
+      elif pixdimType == 'discfibers':
+        structure = DiscFibersStructure()
+      if isinstance(structure, FibersStructure) and not hasattr(slicer.modules,'tractographydisplay'):
+        qt.QMessageBox().warning(qt.QWidget(), "Error", "Install SlicerDMRI Extension to load fiber atlases")
+        continue
+      structure.atlasPath = atlasPath
+      structure.index = i
+      structure.name = names[i]
+      structure.color = colors[i]
+      structure.type = types[i]
+      structure.visibility = i in showIndex
+      self.structures.append(structure)
+
+  def readColors(self, atlasFile):
+    colorIndex = atlasFile['atlases']['colors'][()].squeeze()
+    if not colorIndex.shape:
+      colorIndex = np.array([colorIndex])
+    colorIndex[np.isnan(colorIndex)] = 1
+    try:
+      colormap = atlasFile['atlases']['colormap'][()].transpose()
+    except: # colormap not present
+      colormap = np.array([[0.2422,0.1504,0.6603],[0.2504,0.1650,0.7076],[0.2578,0.1818,0.7511],[0.2647,0.1978,0.7952],[0.2706,0.2147,0.8364],[0.2751,0.2342,0.8710],[0.2783,0.2559,0.8991],[0.2803,0.2782,0.9221],[0.2813,0.3006,0.9414],[0.2810,0.3228,0.9579],[0.2795,0.3447,0.9717],[0.2760,0.3667,0.9829],[0.2699,0.3892,0.9906],[0.2602,0.4123,0.9952],[0.2440,0.4358,0.9988],[0.2206,0.4603,0.9973],[0.1963,0.4847,0.9892],[0.1834,0.5074,0.9798],[0.1786,0.5289,0.9682],[0.1764,0.5499,0.9520],[0.1687,0.5703,0.9359],[0.1540,0.5902,0.9218],[0.1460,0.6091,0.9079],[0.1380,0.6276,0.8973],[0.1248,0.6459,0.8883],[0.1113,0.6635,0.8763],[0.0952,0.6798,0.8598],[0.0689,0.6948,0.8394],[0.0297,0.7082,0.8163],[0.0036,0.7203,0.7917],[0.0067,0.7312,0.7660],[0.0433,0.7411,0.7394],[0.0964,0.7500,0.7120],[0.1408,0.7584,0.6842],[0.1717,0.7670,0.6554],[0.1938,0.7758,0.6251],[0.2161,0.7843,0.5923],[0.2470,0.7918,0.5567],[0.2906,0.7973,0.5188],[0.3406,0.8008,0.4789],[0.3909,0.8029,0.4354],[0.4456,0.8024,0.3909],[0.5044,0.7993,0.3480],[0.5616,0.7942,0.3045],[0.6174,0.7876,0.2612],[0.6720,0.7793,0.2227],[0.7242,0.7698,0.1910],[0.7738,0.7598,0.1646],[0.8203,0.7498,0.1535],[0.8634,0.7406,0.1596],[0.9035,0.7330,0.1774],[0.9393,0.7288,0.2100],[0.9728,0.7298,0.2394],[0.9956,0.7434,0.2371],[0.9970,0.7659,0.2199],[0.9952,0.7893,0.2028],[0.9892,0.8136,0.1885],[0.9786,0.8386,0.1766],[0.9676,0.8639,0.1643],[0.9610,0.8890,0.1537],[0.9597,0.9135,0.1423],[0.9628,0.9373,0.1265],[0.9691,0.9606,0.1064],[0.9769,0.9839,0.0805]])
+    colors = [colormap[int(i)-1] for i in colorIndex]
+    return colors
+
+  def readNames(self, atlasFile):
+    names = []
+    atlases = atlasFile['atlases']
+    for column in atlases['names']:
+      name = ''.join(map(chr, np.squeeze(atlases[column[0]][:])))
+      names.append(name.split('.')[0])
+    return names
+  
+  def readTypes(self, atlasFile):
+    types = atlasFile['atlases']['types'][()].squeeze()
+    if not types.shape:
+      types = np.array([types])
+    return types
+
+  def readShowIndex(self, atlasFile):
+    import h5py
+    try:
+      if isinstance(atlasFile['atlases']['presets']['show'][0,0], h5py.h5r.Reference):
         showIndexRef = atlasFile['atlases']['presets']['show'][0,0]
         showIndex = atlasFile[showIndexRef][()].squeeze() - 1 # -1 to fix index base
-      except:
-        showIndex = np.array(range(len(names)))
+      else:
+        showIndex = atlasFile['atlases']['presets']['show'][()].squeeze() - 1 
+    except:
+      showIndex = np.array(range(len(atlasFile['atlases']['pixdim'][0])))
+    if not showIndex.shape:
+      showIndex = np.array([showIndex])
+    return showIndex
 
-      for index in range(len(names)): # for each structure     
-        
-        structureName = os.path.splitext(os.path.splitext(names[index][0])[0])[0]
-        structureColor = colormap[int(colors[index])-1]
+  def readPixdimType(self, atlasFile):
+    pixdimType = []
+    for i in range(len(atlasFile['atlases']['pixdim'][0])):
+      ref = atlasFile['atlases']['pixdim'][0,i]
+      data = atlasFile[ref][()]
+      if data.dtype == np.dtype('uint16'):
+        pixdimType.append(''.join(map(chr, np.squeeze(data))))
+      else:
+        pixdimType.append('numeric')
+    return pixdimType
 
-        if types[index][0] in [3,4]:
-          subName = ['rh', 'lh']
-          subFolderID = shNode.CreateFolderItem(folderID, structureName)
-          self.createFolderDisplayNode(subFolderID, structureColor)
-          shNode.SetItemDisplayVisibility(subFolderID, index in showIndex)
-          shNode.SetItemExpanded(subFolderID, 0)
-          shNode.SetItemAttribute(subFolderID, 'atlas', '1')
-        else:
-          subName = [structureName]
-          subFolderID = folderID
 
-        for sideIndex,sideName in zip(range(len(subName)),subName):
-          # get faces and vertices data
-          ref = roi[sideIndex][index]
-          fv = atlasFile[ref]['fv']
-          vertices = fv['vertices'][()].transpose()
-          faces = fv['faces'][()].transpose()
-          # create polydata
-          structurePolyData = self.createPolyData(vertices, faces)          
-          # add model node
-          modelNode = self.createModel(structurePolyData, sideName, structureColor)
-          modelNode.GetDisplayNode().SetVisibility(index in showIndex)
-          # add as child to parent
-          shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
-          shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'atlas', '1')
-
-    return folderID
+#
+# File Reader
+#
 
 class ImportAtlasFileReader:
 
@@ -332,6 +508,9 @@ class ImportAtlasFileReader:
     self.parent.loadedNodes = loadedNodeIDs
     return True
 
+#
+# Test
+#
 
 class ImportAtlasTest(ScriptedLoadableModuleTest):
   """

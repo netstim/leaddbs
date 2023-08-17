@@ -14,20 +14,13 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    dcm2nii = ea_path_helper([basedir, 'dcm2nii.exe']);
-else
-    dcm2nii = [basedir, 'dcm2nii.', computer('arch')];
-end
+dcm2nii = ea_getExec([basedir, 'dcm2nii'], escapePath = 1);
+
 
 cmd=[dcm2nii, ' -g n -x y ', ea_path_helper(inputimage)];
 
 fprintf('\nReorient and crop image...\n\n');
-if ~ispc
-    [~,cmdout] = system(['bash -c "', cmd, '"']);
-else
-    [~,cmdout] = system(cmd);
-end
+[~, cmdout] = ea_runcmd(cmd);
 
 disp(cmdout);
 
@@ -55,24 +48,22 @@ if contains(cmdout,'Crop 3D unsupported datatype.') ||...
 
     % Try again now
     fprintf('\nRetry reorienting and cropping...\n\n');
-    if ~ispc
-        [~,cmdout] = system(['bash -c "', cmd, '"']);
-    else
-        [~,cmdout] = system(cmd);
-    end
+    [~, cmdout] = ea_runcmd(cmd);
 
     disp(cmdout);
 end
 
 % Check the output files of dcm2nii
-savedf = regexp(cmdout, 'Saving (.*?)\x{0A}','tokens');
+cmdout = strsplit(cmdout, '\x{0A}', 'DelimiterType', 'RegularExpression')';
+savedf = regexp(cmdout, '(?<=Saving )(.*?)$', 'match', 'once');
+savedf(cellfun(@isempty, savedf)) = [];
 
 if ~isempty(savedf)
-    movefile(savedf{end}{1}, inputimage);
+    movefile(savedf{end}, inputimage);
     if numel(savedf) == 2
-        delete(savedf{1}{1});
+        delete(savedf{1});
     end
-    tempf = savedf{end}{1};
+    tempf = savedf{end};
     disp('Reorientation and/or cropping applied.');
 else
     tempf = inputimage;

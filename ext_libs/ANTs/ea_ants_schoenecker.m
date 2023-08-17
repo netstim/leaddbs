@@ -32,6 +32,7 @@ end
 slabsupport=1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
 [outputdir, outputname, ~] = fileparts(outputimage);
+ea_mkdir(outputdir);
 if outputdir
     outputbase = [outputdir, filesep, outputname];
 else
@@ -39,7 +40,13 @@ else
 end
 
 if slabsupport
-    disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
+    if isBIDSFileName(movingimage{end})
+        parsedStruct = parseBIDSFilePath(movingimage{end});
+        anchorName = parsedStruct.suffix;
+    else
+        [~, anchorName] = ea_niifileparts(movingimage{end});
+    end
+    disp(['Checking for slabs among structural images (assuming anchor image ',anchorName,' is a whole-brain acquisition)...']);
 
     for mov=1:length(movingimage)
         mnii=ea_load_nii(movingimage{mov});
@@ -56,14 +63,14 @@ if slabsupport
     if length(sums)>1 % multispectral warp
         slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 70% of last (dominant) image, a slab is prevalent.
-            slabmovingimage=movingimage(slabs); % move slabs to new cell slabimage
-            slabfixedimage=fixedimage(slabs);
+            slabmovingimage=ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage
+            slabfixedimage=ea_path_helper(fixedimage(slabs));
             movingimage(slabs)=[]; % remove slabs from movingimage
             fixedimage(slabs)=[]; % remove slabs from fixedimage
 
             % write out slab mask
             slabspresent=1;
-            mnii.dt=[4,0];
+            mnii.dt(1) = 4;
             mnii.img=AllMX;
 
             tmaskdir = fullfile(outputdir, 'tmp');
@@ -74,6 +81,7 @@ if slabsupport
             mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
+            % slabmovingimage = mnii.fname;
         else
             disp('No slabs found.');
         end
@@ -83,9 +91,6 @@ else
     slabspresent=0;
     impmasks=repmat({'nan'},length(movingimage),1);
 end
-
-directory=fileparts(movingimage{1});
-directory=[directory,filesep];
 
 for fi=1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
@@ -98,27 +103,15 @@ if length(fixedimage)~=length(movingimage)
     ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
 end
 
-outputimage = ea_path_helper(ea_niigz(outputimage));
+outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
+HEADER = ea_getExec([basedir, 'PrintHeader'], escapePath = 1);
+ANTS = ea_getExec([basedir, 'antsRegistration'], escapePath = 1);
+applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
 
-if ispc
-    HEADER = ea_path_helper([basedir, 'PrintHeader.exe']);
-    ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
-
-else
-    HEADER = [basedir, 'PrintHeader.', computer('arch')];
-    ANTS = [basedir, 'antsRegistration.', computer('arch')];
-    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
-
-end
-
-if ~ispc
-    [~, imgsize] = system(['bash -c "', HEADER, ' ',fixedimage{1}, ' 2"']);
-else
-    [~, imgsize] = system([HEADER, ' ', fixedimage{1}, ' 2']);
-end
+headercmd = [HEADER, ' ', fixedimage{1}, ' 2'];
+[~, imgsize] = ea_runcmd(headercmd);
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
@@ -236,33 +229,40 @@ for fi=1:length(fixedimage)
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-ea_libs_helper
-
-%setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','8')
+ea_libs_helper;
 
 cmd = [ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
-    ' --output [',ea_path_helper(outputbase), ',', outputimage, ']', ...
+    ' --output [',ea_path_helper(outputbase), ',', ea_path_helper(outputimage), ']', ...
     ' --interpolation Linear', ...
     ' --use-histogram-matching 1', ...
     ' --float 1',...
-    ' --write-composite-transform 1', ...
+    ' --write-composite-transform 0', ...
     rigidstage, affinestage, affinestage_mask1, affinestage_mask2];
 
-display(cmd)
+invcmd = [applyTransforms, ' --verbose 1' ...
+    ' --dimensionality 3 --float 1' ...
+    ' --reference-image ', movingimage{end}, ...
+    ' --transform [', ea_path_helper([outputbase, '0GenericAffine.mat']),',1]' ...
+    ' --output Linear[', ea_path_helper([outputbase, 'Inverse0GenericAffine.mat']),']'];
 
-fid=fopen([directory,'ea_ants_command.txt'],'a');
-fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
+% Log ANTs command
+if isBIDSFileName(outputimage)
+    parsedStruct = parseBIDSFilePath(outputimage);
+    logDir = strrep(parsedStruct.dir, ['normalization', filesep, 'anat'], ['normalization', filesep, 'log']);
+    ea_mkdir(logDir);
+    antsCMDFile = [logDir, filesep, 'sub-', parsedStruct.sub, '_desc-antscmd.txt'];
+else
+    antsCMDFile = [outputdir, filesep, 'ea_ants_command.txt'];
+end
+
+fid = fopen(antsCMDFile, 'a');
+fprintf(fid, '%s:\n%s\n\n', char(datetime('now')), cmd);
 fclose(fid);
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+ea_runcmd(cmd);
+ea_runcmd(invcmd);
 
 if exist('tmaskdir', 'var')
     ea_delete(tmaskdir);
 end
-
-ea_conv_antswarps(directory, 'glanat', {}, '.nii.gz', 'float');

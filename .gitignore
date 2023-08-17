@@ -15,6 +15,9 @@
 *.pyc
 *.mat.bids
 *.mat.dev
+*.mat.classic
+*.tmp
+*.temp
 .idea
 __pycache__
 CMakeLists.txt
@@ -29,7 +32,7 @@ lead_standalone/
 connectomes/
 coverage_html/
 
-/templates/space/MNI152NLin2009bAsym/
+/templates/space/MNI_ICBM_2009b_NLIN_ASYM/
 
 # dev only
 ea_make_release.m
@@ -58,3 +61,7 @@ Thumbs.db
 /slicer.py
 
 /ext_libs/SlicerCustom*
+/ext_libs/SlicerForLeadDBS*
+/ext_libs/miniconda
+/ext_libs/mambaforge
+/ext_libs/fastsurfer/upstream

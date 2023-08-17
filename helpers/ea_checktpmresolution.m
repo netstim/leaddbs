@@ -6,7 +6,7 @@ if ~exist([ea_space,'TPM.nii'],'file')
     return
 end
 
-load([ea_space,'ea_space_def']);
+load([ea_space,'spacedef']);
 if isfield(spacedef,'tpm')
    if strcmp(spacedef.tpm,'custom_fixed')
        needstobebuilt=0;

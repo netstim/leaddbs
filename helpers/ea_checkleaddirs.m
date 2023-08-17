@@ -1,19 +1,22 @@
 function ea_checkleaddirs
 prefs=ea_prefs('');
 
-if ~exist(prefs.lc.datadir,'file');
-    if ~(isdeployed && ~isfield(prefs,'firstrun')) % dont enter first time in deployed app
-        try mkdir(prefs.lc.datadir); end
-        if ~exist(prefs.lc.datadir,'file')
-            warning('Connectome data directory could not be established. Please set prefs.lc.data dir folder to a valid directory in preferences.');
+if ~isfolder(prefs.lc.datadir)
+    if ~(isdeployed && ~isfield(prefs,'firstrun')) % don't enter first time in deployed app
+        try
+            ea_mkdir(prefs.lc.datadir);
+        catch
+            ea_cprintf('CmdWinWarnings', 'Failed to create connectome directory.\nPlease set prefs.lc.datadir to a valid directory in preferences.\n');
         end
     end
 end
+
 if ~isempty(prefs.ltx.pdfconverter)
    if ~exist(prefs.ltx.pdfconverter,'file')
-      warning('LaTeX PDF converter not set properly. Please edit prefs.ltx.pdfconverter in preferences.'); 
+        warning('LaTeX PDF converter not set properly. Please edit prefs.ltx.pdfconverter in preferences.'); 
    end
 end
+
 if ~isempty(prefs.ls.dir)
     if ~exist(prefs.ls.dir,'file')
         ea_mkdir(prefs.ls.dir);
@@ -23,6 +26,7 @@ if ~isempty(prefs.ls.dir)
         
     end
 end
+
 if ~isempty(prefs.ixi.dir)
     if ~exist(prefs.ixi.dir,'file')
         warning('IXI data directory empty. Please set prefs.ixi.dir folder to a valid directory in preferences.');

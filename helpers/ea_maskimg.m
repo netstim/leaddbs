@@ -1,13 +1,30 @@
-function ea_maskimg(options,file,prefix)
-directory=[options.root,options.patientname,filesep];
-if ~exist([directory,'brainmask.nii'],'file')
-	ea_genbrainmask(options);
+function [maskedImage, brainMask] = ea_maskimg(filePath)
+% Return path of masked image
+
+% Segment image
+filePath = GetFullPath(filePath);
+[directory, fileName] = fileparts(filePath);
+
+% Set brain mask and masked image path
+if isBIDSFileName(filePath)
+    brainMask = setBIDSEntity(filePath, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
+    parsedStruct = parseBIDSFilePath(filePath);
+    if isfield(parsedStruct, 'acq')
+        maskedImage = setBIDSEntity(filePath, 'acq', [], 'label', 'Brain', 'acq', parsedStruct.acq)
+    else
+        maskedImage = setBIDSEntity(filePath, 'label', 'Brain');
+    end
+else
+    brainMask = [directory, filesep, fileName, '_brainmask.nii'];
+    maskedImage = [directory, filesep, fileName, '_brain.nii'];
 end
-[pth,fn,ext]=fileparts(file);
-if ~exist([pth,filesep,prefix,fn,ext],'file')
-    nii=ea_load_nii(file);
-    bm=ea_load_nii([directory,'brainmask.nii']);
-    nii.img=nii.img.*double(bm.img);
-    nii.fname=[pth,filesep,prefix,fn,ext];
-    spm_write_vol(nii,nii.img);
+
+if ~isfile(brainMask)
+	ea_genbrainmask(filePath);
 end
+
+nii = ea_load_nii(filePath);
+mask = ea_load_nii(brainMask);
+nii.img = nii.img.*double(mask.img);
+nii.fname = maskedImage;
+ea_write_nii(nii);

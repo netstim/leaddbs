@@ -18,33 +18,40 @@ pt=varargin{2}; % patient number (of options.uivatdirs) defined in outer loop.
 directory=[options.uivatdirs{pt},filesep];
 load(fullfile(ea_getearoot,'predict','models','horn2017_AoN','modeldata.mat'));
 
+[~, subPrefix] = fileparts([options.uivatdirs{pt}, '_']);
+fConnName = ea_getConnLabel(options.predict.fMRIcon);
+dConnName = ea_getConnLabel(options.predict.dMRIcon);
+fMRIMapName = [subPrefix, 'sim-binary_model-simbio_seed-fMRI_conn-', fConnName, '_desc-AvgRFz_funcmap.nii'];
+dMRIMapName = [subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', dConnName, '_strucmap.nii'];
+SKdMRIMapName = [subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', dConnName, '_desc-NormSmooth_strucmap.nii']; % Smoothed and normalized
+
 feats=[0,0];
 stimname=options.predict.stimulation;
 
 %% get seed maps of VTAs
 if ismember('dMRI',options.predict.includes)
     feats(1)=1;
-    if strcmp(options.predict.dMRIcon(1:13),'Precomputed: ')
-            options.predict.dMRIcon=options.predict.dMRIcon(14:end);
+    if startsWith(options.predict.dMRIcon,'Precomputed: ')
+        options.predict.dMRIcon = erase(options.predict.dMRIcon, 'Precomputed: ');
     else
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,0,options.predict.dMRIcon,1,options.predict.fMRIcon)
     end
-    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii'],'file')
-        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'vat_seed_compound_dMRI_struc_seed.nii'],modeldata.mask)
+    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,SKdMRIMapName],'file')
+        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,dMRIMapName],modeldata.mask)
     end
-    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii']);
+    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,SKdMRIMapName]);
 end
 
 if ismember('fMRI',options.predict.includes)
     feats(2)=1;
-    if strcmp(options.predict.fMRIcon(1:13),'Precomputed: ')
-            options.predict.fMRIcon=options.predict.fMRIcon(14:end);
+    if startsWith(options.predict.fMRIcon,'Precomputed: ')
+        options.predict.fMRIcon = erase(options.predict.fMRIcon, 'Precomputed: ');
     else
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,1,options.predict.dMRIcon,0,options.predict.fMRIcon)
     end
-    fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.fMRIcon,'>','_'),filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii']);
+    fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,fMRIMapName]);
 end
 
 % model
@@ -192,11 +199,9 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
-options.assignnii = 0;
 options.normalize.do = 0;
 options.normalize.method = [];
-options.normalize.check = 0;
+options.checkreg = false;
 options.coregmr.check = 0;
 options.coregmr.do = 0;
 options.coregmr.method = '';
@@ -209,7 +214,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = 0;
-options.atl.normalize = 0;
 options.atl.can = 1;
 options.atl.pt = 0;
 options.atl.ptnative = 0;
@@ -219,11 +223,11 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 1;
 options.d2.bbsize = 10;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T1';
+options.d2.backdrop = 'MNI152NLin2009bAsym T1 (Fonov 2011)';
 options.d2.fid_overlay = 0;
 options.d2.write = 0;
 options.d2.atlasopacity = 0.15;
-options.manualheightcorrection = 0;
+options.refinelocalization = 0;
 options.scrf = 0;
 options.d3.write = 0;
 options.d3.prolong_electrode = 2;
@@ -239,7 +243,7 @@ options.d3.mirrorsides = 0;
 options.d3.autoserver = 0;
 options.d3.expdf = 0;
 optiosns.numcontacts = 4;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.expstatvat.do = 0;
 options.fiberthresh = 10;
 options.writeoutstats = 1;
@@ -250,7 +254,6 @@ options.lcm.omask = [];
 options.lcm.struc.espace = 1;
 options.lcm.cmd = 1;
 options.uipatdirs = {''};
-
 options.lc.general.parcellation = 'AICHA reordered (Joliot 2015)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;

@@ -31,131 +31,93 @@ function varargout=ea_normalize_spmshoot(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM12 SHOOT nonlinear (Ashburner 2011)';
-    if strcmp(spm('ver'),'SPM12')
-        varargout{2}=1; % compatible
-        varargout{3}=0; % hassettings.
-        varargout{4}=1; % is multispectral
-    else
-        varargout{2}=0; % not compatible
-    end
+    varargout{1}='SPM12 SHOOT (Ashburner 2011)';
+    varargout{2}=1; % dummy output
+    varargout{3}=0; % hassettings.
+    varargout{4}=1; % is multispectral
     return
 end
 
-directory = [options.root,options.patientname,filesep];
-if isfield(options.prefs, 'tranii_unnormalized')
-    if exist([directory,options.prefs.tranii_unnormalized,'.gz'],'file')
-        try
-            gunzip([directory,options.prefs.tranii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.cornii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.sagnii_unnormalized,'.gz']);
-        end
-        try
-            gunzip([directory,options.prefs.prenii_unnormalized,'.gz']);
-        end
-    end
-end
-
-
-% now dartel-import the preoperative version.
 disp('Segmenting preoperative version (Import to DARTEL-space)');
-ea_newseg_pt(options,1,1);
+preopImages = struct2cell(options.subj.coreg.anat.preop);
+ea_newseg(preopImages, 1, 1);
 disp('Segmentation of preoperative MRI done.');
 
-% check if darteltemplate is available, if not generate one
+[directory, preopAnchorName] = fileparts(preopImages{1});
+directory = [directory, filesep];
+
+% Check if SHOOT template is available
 if exist([ea_space(options,'dartel'),'shootmni_6.nii'],'file')
     % There is a DARTEL-Template. Check if it will match:
     Vt=spm_vol([ea_space(options,'dartel'),'shootmni_6.nii']);
-    Vp=spm_vol([directory,'rc1',options.prefs.prenii_unnormalized]);
+    Vp=spm_vol([directory, 'rc1', preopAnchorName, '.nii']);
     if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
-        ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
+        ea_create_tpm_darteltemplate;
     end
 else % no dartel template present. -> Create matching dartel templates from highres version.
     keyboard
-    ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
+    ea_create_tpm_darteltemplate;
 end
 
-
+% Forward
 matlabbatch{1}.spm.tools.shoot.warp1.images = {
-    {[directory,'rc1',options.prefs.prenii_unnormalized,',1']}
-    {[directory,'rc2',options.prefs.prenii_unnormalized,',1']}
-    {[directory,'rc3',options.prefs.prenii_unnormalized,',1']}
-    }';
+    {[directory,'rc1',preopAnchorName,'.nii,1']}
+    {[directory,'rc2',preopAnchorName,'.nii,1']}
+    {[directory,'rc3',preopAnchorName,'.nii,1']}}';
 matlabbatch{1}.spm.tools.shoot.warp1.templates = {[ea_space(options,'dartel'),'shootmni_1.nii']
     [ea_space(options,'dartel'),'shootmni_2.nii']
     [ea_space(options,'dartel'),'shootmni_3.nii']
     [ea_space(options,'dartel'),'shootmni_4.nii']
     [ea_space(options,'dartel'),'shootmni_5.nii']
     [ea_space(options,'dartel'),'shootmni_6.nii']};
-  jobs{1}=matlabbatch;
 
-
-spm_jobman('run',jobs);
+spm_jobman('run',{matlabbatch});
 disp('*** Shoot coregistration of preoperative version worked.');
+clear matlabbatch;
 
-clear matlabbatch jobs;
+movefile([directory,'y_rc1', preopAnchorName, '_Template.nii'], [directory,'y_ea_normparams.nii']);
 
-% % Export normalization parameters:
-% % backward
-% switch spm('ver')
-%     case 'SPM8'
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-%         matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-%         matlabbatch{1}.spm.util.defs.fnames = '';
-%         matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
-%         matlabbatch{1}.spm.util.defs.interp = 1;
-%     case 'SPM12'
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-%         matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
-%         matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea_normparams'];
-%         matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
-% end
-% jobs{1}=matlabbatch;
-%
-% spm_jobman('run',jobs);
-% disp('*** Exported normalization parameters to y_ea_normparams.nii');
-% clear matlabbatch jobs;
-
-[pth,fn,ext]=fileparts(options.prefs.prenii_unnormalized);
-movefile([directory,'y_rc1',fn,'_Template.nii'],[directory,'y_ea_normparams.nii']);
-
-% inverse
+% Inverse
 matlabbatch{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-matlabbatch{1}.spm.util.defs.comp{1}.inv.space = {[directory,options.prefs.prenii_unnormalized]};
+matlabbatch{1}.spm.util.defs.comp{1}.inv.space = {[directory, preopAnchorName, '.nii']};
 matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams.nii';
 matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
 spm_jobman('run',{matlabbatch});
 disp('*** Exported normalization parameters to y_ea_inv_normparams.nii');
-clear matlabbatch jobs;
+clear matlabbatch;
 
-% delete([directory,'u_rc1',options.prefs.prenii_unnormalized]);
+% Delete rc* files and u_rc1* file
+ea_delete([directory, 'rc*', preopAnchorName, '.nii']);
+ea_delete([directory, '*_rc1', preopAnchorName, '_Template.nii']);
+
+% Rename Segmentations (c1, c2, c3)
+mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
+movefile([directory, 'c1', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'GM', 'suffix', 'mask'));
+movefile([directory, 'c2', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'WM', 'suffix', 'mask'));
+movefile([directory, 'c3', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'CSF', 'suffix', 'mask'));
+
+% Rename deformation fields
+ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
+movefile([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
+movefile([directory, 'y_ea_inv_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
 
 ea_apply_normalization(options)
 
-%% add methods dump:
-[scit,lcit]=ea_getspacedefcit;
+% add methods dump:
+[scit, lcit] = ea_getspacedefcit;
 cits={
     'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
     'Ashburner, J., & Friston, K. J. (2011). Diffeomorphic registration using geodesic shooting and Gauss?Newton optimisation. NeuroImage, 55(3), 954?967. http://doi.org/10.1016/j.neuroimage.2010.12.049'
-    'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
-    };
-if ~isempty(lcit)
-    cits=[cits;{lcit}];
-end
-[~,anatpresent]=ea_assignpretra(options);
+    'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'};
 
-ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using a'...
-    ' diffeomorphic registration algorithm using geodesic shooting and Gauss-Neuwton optimisation (SHOOT) as implemented in ',spm('ver'),' (Ashburner 2011; www.fil.ion.ucl.ac.uk/spm/software/).',...
-    ' SHOOT registration was performed by directly registering tissue segmentations of preoperative acquisitions (obtained using the unified Segmentation approach as implemented in ',spm('ver'),' (Ashburner 2005)',...
+if ~isempty(lcit)
+    cits = [cits; {lcit}];
+end
+
+modality = regexp(preopImages, '(?<=_)[^\W_]+(?=\.nii(\.gz)?$)', 'match', 'once');
+
+ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',strjoin(modality, ', '),') using a'...
+    ' diffeomorphic registration algorithm using geodesic shooting and Gauss-Neuwton optimisation (SHOOT) as implemented in SPM12 (Ashburner 2011; www.fil.ion.ucl.ac.uk/spm/software/).',...
+    ' SHOOT registration was performed by directly registering tissue segmentations of preoperative acquisitions (obtained using the unified Segmentation approach as implemented in SPM12 (Ashburner 2005)',...
     ' to a SHOOT template created from tissue priors defined by the MNI (ICBM 152 Nonlinear asymmetric 2009b atlas; http://nist.mni.mcgill.ca/?p=904)',...
-    ' supplied within Lead-DBS software (Horn 2015; www.lead-dbs.org).',...
-    ],...
-    cits);
+    ' supplied within Lead-DBS software (Horn 2015; www.lead-dbs.org).'],cits);

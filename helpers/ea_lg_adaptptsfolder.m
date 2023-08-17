@@ -10,12 +10,10 @@ elseif isfile(lgfile)
 end
 
 % Adapat patient folder: change from rootA/patient1 to rootB/patient1
-if ~M.ui.detached % Avoid to do it for group analysis in detached mode
-    for i=1:length(M.patient.list)
-        [~, ptsName] = fileparts(M.patient.list{i});
-        M.patient.list{i} = fullfile(ptsrootfolder, ptsName);
-    end
+for i=1:length(M.patient.list)
+    [~, ptsName] = fileparts(M.patient.list{i});
+    M.patient.list{i} = fullfile(ptsrootfolder, ptsName);
 end
 
 % Save modified group analysis file
-save(fullfile(M.ui.groupdir, 'LEAD_groupanalysis.mat'), 'M');
+save(ea_getGroupAnalysisFile(M.root), 'M');

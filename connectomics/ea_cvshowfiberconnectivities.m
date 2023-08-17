@@ -97,24 +97,24 @@ if ~options.savefibers.load
     origtargets=targets; % original targets map.
 
     %% prepare fibers
-    % dispercent(0,'Preparing fibers');
+    % ea_dispercent(0,'Preparing fibers');
     % [idx,~]=cellfun(@size,fibers);
     %
     % fibers=cell2mat(fibers');
     % idxv=zeros(size(fibers,1),1);
     % lid=1; cnt=1;
     % for id=idx
-    %     dispercent(cnt/length(idx));
+    %     ea_dispercent(cnt/length(idx));
     %     idxv(lid:lid+id-1)=cnt;
     %     lid=lid+id;
     %     cnt=cnt+1;
     % end
-    % dispercent(1,'end');
+    % ea_dispercent(1,'end');
 
     %% select fibers that traverse through seed voxels
     [seed_fv,volume]=ea_fvseeds(seed,options);
 
-    dispercent(0,'Selecting connecting fibers...');
+    ea_dispercent(0,'Selecting connecting fibers...');
     cnt=1;
     selectedfibs = cell(1, length(seed));
     for side=1:length(seed)
@@ -131,11 +131,11 @@ if ~options.savefibers.load
         filtIdx(prefiltIdx) = filtPrefiltIdx; % filter of all fibers
 
         selectedfibs{side}=unique(idxv(filtIdx)); % mapping individual points back to fibers
-        dispercent(cnt/length(sides));
+        ea_dispercent(cnt/length(sides));
         cnt=cnt+1;
     end
 
-    dispercent(1,'end');
+    ea_dispercent(1,'end');
     connectingfibs=cell(2,1);
 
     %% reformat fibers
@@ -178,9 +178,9 @@ if ~options.savefibers.load
         allcareas=[];
 
         fibmax=length(connectingfibs{side});
-        dispercent(0,'Gathering region information');
+        ea_dispercent(0,'Gathering region information');
         for fib=1:fibmax
-            dispercent(fib/fibmax);
+            ea_dispercent(fib/fibmax);
 
             thisfibendpoints=[connectingfibs{side}{fib}(1,1:3);connectingfibs{side}{fib}(end,1:3)];
             thisfibendpoints=targets.mat\[thisfibendpoints,ones(2,1)]'; % mm 2 vox
@@ -204,7 +204,7 @@ if ~options.savefibers.load
             allcareas=[allcareas, conareas];
         end
         allcareas=round(allcareas);
-        dispercent(100, 'end');
+        ea_dispercent(1, 'end');
 
         atlength=length(atlas_lgnd{1});
         howmanyfibs{side}=zeros(atlength,1);
@@ -223,7 +223,7 @@ if ~options.savefibers.load
 
         % Write out connectivity stats
         if options.writeoutstats
-            load([options.root,options.patientname,filesep,'ea_stats']);
+            load(options.subj.stats, 'ea_stats');
             % assign the place where to write stim stats into struct
             if isfield(options,'groupmode')
                 if options.groupmode
@@ -236,7 +236,7 @@ if ~options.savefibers.load
 
             ea_stats.stimulation(thisstim).ft(side).nfibercounts{la}=ea_stats.stimulation(thisstim).ft(side).fibercounts{la}/volume{side};
             ea_stats.stimulation(thisstim).ft(side).labels{la}=atlas_lgnd{2};
-            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+            save(options.subj.stats, 'ea_stats');
         end
 
         contargets{side}=round(targets.img);
@@ -328,7 +328,7 @@ clear tareas
 
 % Write out probability map of fiber terminals
 if options.writeoutpm
-    pm.dt=[16,0];
+    pm.dt(1) = 16;
     pm.fname=[options.root,options.patientname,filesep,'ea_pm','.nii'];
     spm_write_vol(pm,pm.img);
 end
@@ -348,10 +348,10 @@ for iside=1:length(options.sides)
             fibmax=options.prefs.d3.maxfibers;
         end
 
-        dispercent(0,'Plotting fibers that connect to seed');
+        ea_dispercent(0,'Plotting fibers that connect to seed');
 
         for fib=1:fibmax
-            dispercent(fib/fibmax);
+            ea_dispercent(fib/fibmax);
             %for segment=1:length(connectingfibs{fib})-1
             connectingfibs{side}{la,fib}=connectingfibs{side}{la,fib}';
 
@@ -382,15 +382,16 @@ for iside=1:length(options.sides)
 
             clear thisfib
         end
-        if strcmp(options.prefs.d3.fiberstyle,'tube')
-             fv=ea_concatfv(fv);
-             set(0,'CurrentFigure',resultfig);
-             PL.fib_plots.fibs(side,1)=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.2);
-             set(PL.fib_plots.fibs(side,1),'FaceVertexCData', get(PL.fib_plots.fibs(side,1),'FaceVertexCData'));
-             PL.fib_plots.fibs(:,2:end)=[];
-         end
 
-        dispercent(100,'end');
+        if strcmp(options.prefs.d3.fiberstyle,'tube')
+            fv=ea_concatfv(fv);
+            set(0,'CurrentFigure',resultfig);
+            PL.fib_plots.fibs(side,1)=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.2);
+            set(PL.fib_plots.fibs(side,1),'FaceVertexCData', get(PL.fib_plots.fibs(side,1),'FaceVertexCData'));
+            PL.fib_plots.fibs(:,2:end)=[];
+        else
+            ea_dispercent(1,'end');
+        end
 
         if strcmp(options.prefs.d3.fiberstyle,'line')
                     fibInd = ishandle(PL.fib_plots.fibs(side,:));
@@ -674,23 +675,6 @@ for i = 1:blocks
         aNr = repmat(aN,1,length(j));
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
-end
-
-
-function  dispercent(varargin)
-%
-percent=round(varargin{1}*100);
-
-if nargin==2
-    if strcmp(varargin{2},'end')
-        fprintf('\n')
-        fprintf('\n')
-        fprintf('\n')
-    else
-        fprintf(1,[varargin{2},':     ']);
-    end
-else
-    fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
 end
 
 

@@ -3,13 +3,15 @@ function fv=ea_electrode2stl(directory,side,handles)
 options=ea_handles2options(handles);
 options.native=0; % MNI space only
 
-if exist([directory,'ea_reconstruction.mat'],'file')
-    load([directory,'ea_reconstruction.mat'],'reco');
+[options.root,options.patientname]=fileparts(directory);
+options.root=[options.root,filesep];
+
+if isfile([directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'])
+    load([directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'],'reco');
     options.elmodel=ea_get_first_notempty_elmodel(reco.props);
 end
 options=ea_resolve_elspec(options);
-[options.root,options.patientname]=fileparts(directory);
-options.root=[options.root,filesep];
+
 options.leadprod='dbs';
 options.sidecolor=1;
 options.prefs=ea_prefs;
@@ -47,4 +49,4 @@ end
 
 fv=ea_concatfv(fv);
 fv=ea_mapcolvert2face(fv);
-ea_stlwrite([directory,'export',filesep,'stl',filesep,sidec,'electrode.stl'],fv,'FACECOLOR',fv.facevertexcdata);
+ea_stlwrite([directory,filesep,'export',filesep,'stl',filesep,sidec,'electrode.stl'],fv,'FACECOLOR',fv.facevertexcdata);

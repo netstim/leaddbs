@@ -3377,7 +3377,7 @@
                     <font/>
                    </property>
                    <property name="text">
-                    <string>Full Field IFFT</string>
+                    <string>VTA approximation</string>
                    </property>
                   </widget>
                  </item>

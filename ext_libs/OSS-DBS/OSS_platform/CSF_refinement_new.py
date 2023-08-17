@@ -98,9 +98,9 @@ def mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers,Domains,cc
     facets_old.set_all(0)
 
     # take the first contact to check whether the mesh refinement was done correctly
-    facets_old.array()[boundaries.array() == Domains.Contacts[0]]=1
+    facets_old.array()[boundaries.array() == Domains.Active_contacts[0]]=1
 
-    if cc_multicontact==True and Domains.fi[0]!=0.0:            #because ground contact is always subtracted from the mesh
+    if cc_multicontact==True and Domains.Amp_vector[0]!=0.0:            #because ground contact is always subtracted from the mesh
         dsSSS=Measure("dS",domain=mesh_old,subdomain_data=facets_old)
         An_surface_size_old=assemble(1.0*dsSSS(1))
     else:
@@ -114,9 +114,9 @@ def mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers,Domains,cc
 
     facets = MeshFunction('size_t',mesh_new,2)
     facets.set_all(0)
-    facets.array()[boundaries_new.array()==Domains.Contacts[0]]=1
+    facets.array()[boundaries_new.array()==Domains.Active_contacts[0]]=1
 
-    if cc_multicontact==True and Domains.fi[0]!=0.0:
+    if cc_multicontact==True and Domains.Amp_vector[0]!=0.0:
         dsS_new=Measure("dS",domain=mesh_new,subdomain_data=facets)
         An_surface_size_new=assemble(1.0*dsS_new(1))
     else:
@@ -142,7 +142,7 @@ def index_cell_marker(mesh, index_array ,MRI_param, Scaler):
     c00 = MeshFunction("double", mesh, 3)       #to check, which cells will be refined
     for cell in cells(mesh):
         cell_processed=cell_processed+1
-        smallest_edge=min([MRI_param.x_vox_size,MRI_param.y_vox_size,MRI_param.z_vox_size])   # of the voxel
+        smallest_edge=min([MRI_param.voxel_dims[0],MRI_param.voxel_dims[1],MRI_param.voxel_dims[2]])   # of the voxel
         if np.any(np.isin(index_array,cell.index())) and cell.h()>Scaler*smallest_edge:
             cell_ref[cell] = True
             cell_to_ref=cell_to_ref+1
@@ -158,7 +158,7 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
         List_of_placed = Array_coord
 
     # first, the neuron compartments should not pass through CSF, maybe put it as a separate function, maybe even in CSF_refinement
-    # import os
+    import os
     if os.path.isfile(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-4] + '_voxel_array_CSF.npy') or os.path.isfile(
             os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-7] + '_voxel_array_CSF.npy'):  # if array was already prepared
         if MRI_param.name[-2:] == 'gz':
@@ -168,10 +168,6 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
         logging.critical("voxel_array_CSF is loaded")
     else:  # otherwise prepare an array that stores coordinated of all voxels with CSF in the vicinity of the neurons
         Tissue_array = np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tissue_array_MRI.npy')
-
-        x_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-        y_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-        z_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
 
         voxel_array_CSF = np.zeros((Tissue_array.shape[0], 3),
                                    float)  # array to store all CSF voxels in the specified ROI
@@ -197,28 +193,45 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
 
         space_from_neurons = 1.0  # here we do not need to check further away
 
-        affine = np.load(os.environ['PATIENTDIR'] + '/MRI_DTI_derived_data/affine_MRI.npy')
+        # to create a nifti of CSF (for a visual check of intersections)
+        CSF_nifti = np.zeros((MRI_param.N_voxels[0], MRI_param.N_voxels[1], MRI_param.N_voxels[2]), int)
 
-        for z_i in range(int(MRI_param.M_z)):
-            for y_i in range(int(MRI_param.M_y)):
-                for x_i in range(int(MRI_param.M_x)):
-                    coords_reals = np.dot(affine, np.array([x_i, y_i, z_i, 1.0]))
+        for z_i in range(int(MRI_param.N_voxels[2])):
+            for y_i in range(int(MRI_param.N_voxels[1])):
+                for x_i in range(int(MRI_param.N_voxels[0])):
+                    # this is defined in O(0,0,0) of the voxel
+                    coords_reals = np.dot(MRI_param.affine_MRI, np.array([x_i, y_i, z_i, 1.0]))
 
-                    x_pos = coords_reals[0] + MRI_param.x_shift + MRI_param.x_vox_size / 2.0
-                    y_pos = coords_reals[1] + MRI_param.y_shift + MRI_param.y_vox_size / 2.0
-                    z_pos = coords_reals[2] + MRI_param.z_shift + MRI_param.z_vox_size / 2.0
+                    # this is defined in the center of the voxel
+                    x_pos = coords_reals[0] + MRI_param.MRI_shift[0] + MRI_param.voxel_dims[0]/ 2.0
+                    y_pos = coords_reals[1] + MRI_param.MRI_shift[1] + MRI_param.voxel_dims[1] / 2.0
+                    z_pos = coords_reals[2] + MRI_param.MRI_shift[2] + MRI_param.voxel_dims[2] / 2.0
 
-                    x_coord, y_coord, z_coord = (x_pos + MRI_param.x_vox_size / 2.0, y_pos + MRI_param.y_vox_size / 2.0, z_pos + MRI_param.z_vox_size / 2.0)
+                    # this is defined in the opposite corner from O(0,0,0)
+                    x_coord, y_coord, z_coord = (x_pos + MRI_param.voxel_dims[0] / 2.0, y_pos + MRI_param.voxel_dims[1] / 2.0, z_pos + MRI_param.voxel_dims[2] / 2.0)
 
                     if x_neuron_max + space_from_neurons >= x_pos >= x_neuron_min - space_from_neurons and y_neuron_max + space_from_neurons >= y_pos >= y_neuron_min - space_from_neurons and z_neuron_max + space_from_neurons >= z_pos >= z_neuron_min - space_from_neurons:
 
-                        glob_index = x_i + y_i*int(MRI_param.M_x) + z_i*int(MRI_param.M_x)*int(MRI_param.M_y)
+                        glob_index = x_i + y_i*int(MRI_param.N_voxels[0]) + z_i*int(MRI_param.N_voxels[0])*int(MRI_param.N_voxels[1])
                         glob_index = int(glob_index)
 
                         if Tissue_array[glob_index] == 1:
                             voxel_array_CSF[glob_index, 0] = x_pos
                             voxel_array_CSF[glob_index, 1] = y_pos
                             voxel_array_CSF[glob_index, 2] = z_pos
+
+                            CSF_nifti[x_i,y_i,z_i] = 1
+
+
+
+
+
+        # import nibabel as nib
+        # import os
+        # example_filename = os.path.join(os.environ['PATIENTDIR'] + '/' + MRI_param.name)
+        # img = nib.load(example_filename)
+        # img3 = nib.Nifti1Image(CSF_nifti, MRI_param.affine_MRI, img.header)
+        # nib.save(img3, os.environ['PATIENTDIR'] + '/Neuron_model_arrays/CSF_vox_nearby.nii')
 
         voxel_array_CSF = voxel_array_CSF[~np.all(voxel_array_CSF == 0.0, axis=1)]  # deletes all zero enteries
 
@@ -227,13 +240,13 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
         else:
             np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-4] + '_voxel_array_CSF', voxel_array_CSF)
 
-        del Tissue_array, x_vect, y_vect, z_vect
+        del Tissue_array
         logging.critical("voxel_array_CSF (contains CSF voxels close to the neuron array) is prepared")
 
     voxel_array_CSF_shifted = np.zeros((voxel_array_CSF.shape[0], 3), float)
-    voxel_array_CSF_shifted[:, 0] = voxel_array_CSF[:, 0] + MRI_param.x_vox_size / 2
-    voxel_array_CSF_shifted[:, 1] = voxel_array_CSF[:, 1] + MRI_param.y_vox_size / 2
-    voxel_array_CSF_shifted[:, 2] = voxel_array_CSF[:, 2] + MRI_param.z_vox_size / 2
+    voxel_array_CSF_shifted[:, 0] = voxel_array_CSF[:, 0] + MRI_param.voxel_dims[0] / 2
+    voxel_array_CSF_shifted[:, 1] = voxel_array_CSF[:, 1] + MRI_param.voxel_dims[1] / 2
+    voxel_array_CSF_shifted[:, 2] = voxel_array_CSF[:, 2] + MRI_param.voxel_dims[2] / 2
     del voxel_array_CSF
 
     return voxel_array_CSF_shifted
@@ -241,7 +254,7 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
 
 def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_frac_div,CSF_ref_add,EQS_mode,cc_multicontact,ref_freq,Best_scaling=0,scaling_old=0):
 
-    start_CSF_refinement=tim.clock()
+    start_CSF_refinement=tim.time()
 
     if cc_multicontact==True:
         from Math_module_hybrid_floating import compute_field_with_superposition,get_field_on_points
@@ -319,17 +332,13 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
 
         logging.critical("voxel_array_CSF in {} mm vicinity is loaded".format(str(CSF_ref_add)))
     else:
-        start_voxel_array_CSF=tim.clock()
+        start_voxel_array_CSF=tim.time()
 
         Tissue_array=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tissue_array_MRI.npy')
-        x_vect=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-        y_vect=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-        z_vect=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
-
         voxel_array_CSF=np.zeros((Tissue_array.shape[0],3),float)      #array to store all CSF voxels in the specified ROI
 
         bb = mesh.bounding_box_tree()
-        #check the extent of the neuron array (look for CSF only there + vicinity defined by CSF_ref_add)
+        #check the extent of the neuron array (loof for CSF only there + vicinity defined by CSF_ref_add)
         x_neuron_max=max(Vertices_neur[:,0])
         y_neuron_max=max(Vertices_neur[:,1])
         z_neuron_max=max(Vertices_neur[:,2])
@@ -340,52 +349,30 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         #go over all voxels and check whether it contains CSF and intersect with the mesh
         
         
-        affine=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/affine_MRI.npy')
-        
-        if affine[0,1]!=0.0 or affine[0,2]!=0.0 or affine[1,2]!=0.0:
-            glob_index=0
-            
-            for z_i in range(int(MRI_param.M_z)):
-                for y_i in range(int(MRI_param.M_y)):
-                    for x_i in range(int(MRI_param.M_x)):
-                        
-                        coords_reals=np.dot(affine,np.array([x_i,y_i,z_i,1.0]))
-                        
-                        x_pos=coords_reals[0]+MRI_param.x_shift+MRI_param.x_vox_size/2.0
-                        y_pos=coords_reals[1]+MRI_param.y_shift+MRI_param.y_vox_size/2.0
-                        z_pos=coords_reals[2]+MRI_param.z_shift+MRI_param.z_vox_size/2.0
+        affine=MRI_param.affine_MRI
 
-                        if (x_pos<=x_neuron_max+CSF_ref_add and x_pos>=x_neuron_min-CSF_ref_add and y_pos<=y_neuron_max+CSF_ref_add and y_pos>=y_neuron_min-CSF_ref_add and z_pos<=z_neuron_max+CSF_ref_add and z_pos>=z_neuron_min-CSF_ref_add):                        
-                            pnt=Point(x_pos,y_pos,z_pos)
-                            
-                            if Tissue_array[glob_index]==1 and bb.compute_first_entity_collision(pnt)<mesh.num_cells()*100:
-                                voxel_array_CSF[glob_index,0]=x_pos
-                                voxel_array_CSF[glob_index,1]=y_pos
-                                voxel_array_CSF[glob_index,2]=z_pos                      
+        glob_index=0
 
-                        glob_index+=1
-        else:                        
-            for x_coord in x_vect:
-                for y_coord in y_vect:
-                    for z_coord in z_vect:
-    
-                        x_pos=x_coord-MRI_param.x_vox_size/2.0
-                        y_pos=y_coord-MRI_param.y_vox_size/2.0
-                        z_pos=z_coord-MRI_param.z_vox_size/2.0
-    
-                        if (x_pos<=x_neuron_max+CSF_ref_add and x_pos>=x_neuron_min-CSF_ref_add and y_pos<=y_neuron_max+CSF_ref_add and y_pos>=y_neuron_min-CSF_ref_add and z_pos<=z_neuron_max+CSF_ref_add and z_pos>=z_neuron_min-CSF_ref_add):
-    
-                            xv_mri=int((x_coord)/MRI_param.x_vox_size-0.000000001)                                  #defines number of steps to get to the voxels containing x[0] coordinate
-                            yv_mri=(int((y_coord)/MRI_param.y_vox_size-0.000000001))*MRI_param.M_x                  #defines number of steps to get to the voxels containing x[0] and x[1] coordinates
-                            zv_mri=(int((z_coord)/MRI_param.z_vox_size-0.000000001))*MRI_param.M_x*MRI_param.M_y          #defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
-                            glob_index=int(xv_mri+yv_mri+zv_mri)
-    
-                            pnt=Point(x_pos,y_pos,z_pos)
-    
-                            if Tissue_array[glob_index]==1 and bb.compute_first_entity_collision(pnt)<mesh.num_cells()*100:
-                                voxel_array_CSF[glob_index,0]=x_pos
-                                voxel_array_CSF[glob_index,1]=y_pos
-                                voxel_array_CSF[glob_index,2]=z_pos
+        for z_i in range(int(MRI_param.N_voxels[2])):
+            for y_i in range(int(MRI_param.N_voxels[1])):
+                for x_i in range(int(MRI_param.N_voxels[0])):
+
+                    coords_reals = np.dot(affine,np.array([x_i,y_i,z_i,1.0]))
+
+                    x_pos=coords_reals[0]+MRI_param.MRI_shift[0]+MRI_param.voxel_dims[0]/2.0
+                    y_pos=coords_reals[1]+MRI_param.MRI_shift[1]+MRI_param.voxel_dims[1]/2.0
+                    z_pos=coords_reals[2]+MRI_param.MRI_shift[2]+MRI_param.voxel_dims[2]/2.0
+
+                    if (x_pos<=x_neuron_max+CSF_ref_add and x_pos>=x_neuron_min-CSF_ref_add and y_pos<=y_neuron_max+CSF_ref_add and y_pos>=y_neuron_min-CSF_ref_add and z_pos<=z_neuron_max+CSF_ref_add and z_pos>=z_neuron_min-CSF_ref_add):
+                        pnt = Point(x_pos,y_pos,z_pos)
+
+                        glob_index = x_i + y_i*int(MRI_param.N_voxels[0]) + z_i*int(MRI_param.N_voxels[0])*int(MRI_param.N_voxels[1])
+                        glob_index = int(glob_index)
+
+                        if Tissue_array[glob_index] == 1 and bb.compute_first_entity_collision(pnt)<mesh.num_cells()*100:
+                            voxel_array_CSF[glob_index,0] = x_pos
+                            voxel_array_CSF[glob_index,1] = y_pos
+                            voxel_array_CSF[glob_index,2] = z_pos
 
         voxel_array_CSF=voxel_array_CSF[~np.all(voxel_array_CSF==0.0,axis=1)]  #deletes all zero enteries
 
@@ -395,7 +382,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
 
         del Tissue_array
-        logging.critical("----- voxel_array_CSF for {} mm vicinity was prepared in {} seconds -----".format(str(CSF_ref_add),tim.clock() - start_voxel_array_CSF))
+        logging.critical("----- voxel_array_CSF for {} mm vicinity was prepared in {} seconds -----".format(str(CSF_ref_add),tim.time() - start_voxel_array_CSF))
 
 
     '''Here we pre-refine mesh on elements with CSF voxels'''
@@ -516,7 +503,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         else:
             phi_error=abs((max(Phi_r.vector()[:])-min(Phi_r.vector()[:]))*CSF_frac_div)   #should be scaled
     else:
-        Phi_vector=[x for x in Domains.fi if x is not None]
+        Phi_vector=[x for x in Domains.Amp_vector if x is not None]
         if Field_calc_param.external_grounding==True:
             Phi_vector.append(0.0)
         phi_error=abs((max(Phi_vector)-min(Phi_vector))*CSF_frac_div)      #Absolute potential error defined as a 1% of the maximum potential difference, VC case
@@ -532,8 +519,8 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             max_div=abs(Phi_amp_on_neuron_old[inx,3]-Phi_amp_on_neuron[inx,3])
 
         if max_div> phi_error:
-            logging.critical("Deviation threshold: V".format(phi_error))
-            logging.critical("Deviation at least: V".format(max_div))
+            logging.critical("Deviation threshold: {} V".format(phi_error))
+            logging.critical("Deviation at least: {} V".format(max_div))
             logging.critical("At point: {} {} {}".format(Phi_amp_on_neuron_old[inx,0],Phi_amp_on_neuron_old[inx,1],Phi_amp_on_neuron_old[inx,2]))
             logging.critical("Need further refinement of CSF")
             csf_refined=0
@@ -553,8 +540,8 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
 
     del voxel_array_CSF
 
-    minutes=int((tim.clock() - start_CSF_refinement)/60)
-    secnds=int(tim.clock() - start_CSF_refinement)-minutes*60
+    minutes=int((tim.time() - start_CSF_refinement)/60)
+    secnds=int(tim.time() - start_CSF_refinement)-minutes*60
     logging.critical("----- CSF refinement iteration took {} min {} sec -----\n".format(minutes, secnds))
 
     return csf_refined

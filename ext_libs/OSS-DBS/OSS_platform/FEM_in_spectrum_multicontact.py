@@ -151,7 +151,7 @@ def get_field_with_floats(Sim_setup,active_index,Domains,Solver_type):
         Cond_tensor=False  #just to initialize
 
     from FEM_in_spectrum import get_solution_space_and_Dirichlet_BC
-    V_space,facets=get_solution_space_and_Dirichlet_BC(Sim_setup.external_grounding,1,Sim_setup.mesh,Sim_setup.subdomains,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Contacts,Domains.fi,only_space=True)
+    V_space,facets=get_solution_space_and_Dirichlet_BC(Sim_setup.external_grounding,1,Sim_setup.mesh,Sim_setup.subdomains,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Active_contacts,Domains.Amp_vector,only_space=True)
 
     facets_active = MeshFunction('size_t',Sim_setup.mesh,2)
     facets_active.set_all(0)
@@ -162,18 +162,18 @@ def get_field_with_floats(Sim_setup,active_index,Domains,Solver_type):
     active_floats=0
 
     # assign only the chosen active contact and the ground, other should be just marked on the mesh (starting from 2)
-    for bc_i in range(len(Domains.Contacts)):
-        if bc_i==active_index or Domains.fi[bc_i]==0.0:
+    for bc_i in range(len(Domains.Active_contacts)):
+        if bc_i==active_index or Domains.Amp_vector[bc_i]==0.0:
             if Sim_setup.Laplace_eq == 'EQS':
-                dirichlet_bc.append(DirichletBC(V_space.sub(0), Domains.fi[bc_i], Sim_setup.boundaries,Domains.Contacts[bc_i]))
-                dirichlet_bc.append(DirichletBC(V_space.sub(1), Constant(0.0), Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                dirichlet_bc.append(DirichletBC(V_space.sub(0), Domains.Amp_vector[bc_i], Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
+                dirichlet_bc.append(DirichletBC(V_space.sub(1), Constant(0.0), Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
             else:
-                dirichlet_bc.append(DirichletBC(V_space, Domains.fi[bc_i], Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                dirichlet_bc.append(DirichletBC(V_space, Domains.Amp_vector[bc_i], Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
 
             if bc_i==active_index:
-                facets_active.array()[Sim_setup.boundaries.array()==Domains.Contacts[bc_i]]=1
+                facets_active.array()[Sim_setup.boundaries.array()==Domains.Active_contacts[bc_i]]=1
         else:
-            facets_active.array()[Sim_setup.boundaries.array()==Domains.Contacts[bc_i]]=float_surface    #it will not be assigned to always floating contacts
+            facets_active.array()[Sim_setup.boundaries.array()==Domains.Active_contacts[bc_i]]=float_surface    #it will not be assigned to always floating contacts
             float_surface+=1
             active_floats+=1
 
@@ -253,7 +253,7 @@ def scale_bc_potentials_with_superposition(Sim_setup,Domains,Solver_type):
         logging.critical("element_order is 1, increasing to 2 for current-controlled stimulation")
         Sim_setup.element_order=2
 
-    contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
+    contacts_with_current=[x for x in Domains.Amp_vector if x != 0.0]       #0.0 are grounded contacts
     phi_r_floating=np.zeros((len(contacts_with_current),len(contacts_with_current)-1),float)       #stores real potential field in the virtual floating contacts (where current is actually assigned)
     J_real_current_contacts=np.zeros(len(contacts_with_current),float)                              #currents computed on the contacts when we solve "one active contact vs ground" system (other contacts are floating)
     contact_amplitude=np.zeros(len(contacts_with_current),float)                                   #stores assigned amplitudes of the currents
@@ -265,7 +265,7 @@ def scale_bc_potentials_with_superposition(Sim_setup,Domains,Solver_type):
         J_im_current_contacts=np.zeros(len(contacts_with_current),float)
 
     glob_counter=0
-    for i in range(len(Domains.fi)):
+    for i in range(len(Domains.Amp_vector)):
         for j in range(len(Domains.Float_on_lead)):
             if Domains.Active_on_lead[i] == Domains.Float_on_lead[j]:      #find the index of the floating conductor (in .med/.msh file) for the active contact (i)
 
@@ -276,7 +276,7 @@ def scale_bc_potentials_with_superposition(Sim_setup,Domains,Solver_type):
                     phi_r_floating[glob_counter,:],__,J_real_current_contacts[glob_counter],__=get_field_with_floats(Sim_setup,i,Domains,Solver_type)
 
                 fl_ind[glob_counter,:]=fl_contacts_rel_ind[np.arange(len(fl_contacts_rel_ind))!=glob_counter]   # if three current contacts, it will store [[1,2][0,2],[0,1]]
-                contact_amplitude[glob_counter]=Domains.fi[i]
+                contact_amplitude[glob_counter]=Domains.Amp_vector[i]
 
                 glob_counter=glob_counter+1
 
@@ -300,17 +300,17 @@ def scale_bc_potentials_with_superposition(Sim_setup,Domains,Solver_type):
 
     # not an elegant way but just for the maximum transparency
     if Sim_setup.Laplace_eq=='EQS':
-        scaled_phi=np.complex(1.0,0.0)*np.zeros(len(Domains.fi),float)
-        for i in range(len(Domains.fi)):
-            if Domains.fi[i]==0.0:
+        scaled_phi=np.complex(1.0,0.0)*np.zeros(len(Domains.Amp_vector),float)
+        for i in range(len(Domains.Amp_vector)):
+            if Domains.Amp_vector[i]==0.0:
                 scaled_phi[i]=0.0+1j*0.0
             else:
                 scaled_phi[i]=V_r_BC_for_current[glob_counter]+1j*V_im_BC_for_current[glob_counter]
                 glob_counter=glob_counter+1
     else:
-        scaled_phi=np.zeros(len(Domains.fi),float)
-        for i in range(len(Domains.fi)):
-            if Domains.fi[i]==0.0:
+        scaled_phi=np.zeros(len(Domains.Amp_vector),float)
+        for i in range(len(Domains.Amp_vector)):
+            if Domains.Amp_vector[i]==0.0:
                 scaled_phi[i]=0.0
             else:
                 scaled_phi[i]=V_r_BC_for_current[glob_counter]
@@ -335,16 +335,16 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
 
     #Dirichlet_bc was scaled to match the desired current (using system's linearity).
     from FEM_in_spectrum import get_solution_space_and_Dirichlet_BC
-    V_space,facets=get_solution_space_and_Dirichlet_BC(Sim_setup.external_grounding,Sim_setup.c_c,Sim_setup.mesh,Sim_setup.subdomains,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Contacts,Phi_scaled,only_space=True)
+    V_space,facets=get_solution_space_and_Dirichlet_BC(Sim_setup.external_grounding,Sim_setup.c_c,Sim_setup.mesh,Sim_setup.subdomains,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Active_contacts,Phi_scaled,only_space=True)
 
 
     Dirichlet_bc_scaled=[]
-    for bc_i in range(len(Domains.Contacts)):
+    for bc_i in range(len(Domains.Active_contacts)):
         if Sim_setup.Laplace_eq == 'EQS':
-            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real(Phi_scaled[bc_i]), Sim_setup.boundaries,Domains.Contacts[bc_i]))
-            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag(Phi_scaled[bc_i]), Sim_setup.boundaries,Domains.Contacts[bc_i]))
+            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real(Phi_scaled[bc_i]), Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
+            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag(Phi_scaled[bc_i]), Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
         else:
-            Dirichlet_bc_scaled.append(DirichletBC(V_space, Phi_scaled[bc_i], Sim_setup.boundaries,Domains.Contacts[bc_i]))
+            Dirichlet_bc_scaled.append(DirichletBC(V_space, Phi_scaled[bc_i], Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
 
     if Sim_setup.external_grounding==True:
         if Sim_setup.Laplace_eq == 'EQS':
@@ -392,7 +392,7 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
         #if QS, E_field_im is 0
 
         # to get current on the active contacts (including the ground)
-        J_currents_real,J_currents_imag = get_current_on_multiple_contacts(Sim_setup.external_grounding,facets,Sim_setup.mesh,Sim_setup.boundaries,Sim_setup.Laplace_eq,Domains.Contacts,Phi_scaled,E_field,E_field_im,kappa,Cond_tensor)
+        J_currents_real,J_currents_imag = get_current_on_multiple_contacts(Sim_setup.external_grounding,facets,Sim_setup.mesh,Sim_setup.boundaries,Sim_setup.Laplace_eq,Domains.Active_contacts,Phi_scaled,E_field,E_field_im,kappa,Cond_tensor)
         # J_currents_imag is a zero array if 'QS' mode
         logging.critical("Complex currents on contacts at the base frequency (signal repetition rate):")
         for j in range(J_currents_real.shape[0]):
@@ -492,6 +492,8 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
     #####    com=np.vstack((coordinat[0:10,0],coordinat[0:10,1],coordinat[0:10,2],real_par[0:10],image_par[0:10],fre_vector[0:10])).T
         comb=np.vstack((Phi_ROI[:,0],Phi_ROI[:,1],Phi_ROI[:,2],Phi_ROI[:,3],Phi_ROI[:,4],fre_vector)).T
 
+        if int(Sim_setup.sine_freq) == int(Sim_setup.signal_freq):
+            np.savetxt(os.environ['PATIENTDIR']+'/Phi_real_on_Axons_' + str(Sim_setup.signal_freq) + '_PO.csv', Phi_ROI[:, :4], delimiter=' ')
 
         f = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5','a')
         f.create_dataset(str(Sim_setup.sine_freq), data=comb)

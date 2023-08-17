@@ -19,7 +19,7 @@ for side = 1:numSide
     fibsvalMean{side} = zeros(length(fibcell{side}), numPatient);
     fibsvalPeak{side} = zeros(length(fibcell{side}), numPatient);
     fibsval5Peak{side} = zeros(length(fibcell{side}), numPatient);
-
+    fibers=ea_fibcell2fibmat(fibcell{side});
     disp(['Calculate for side ', num2str(side), ':']);
     for pt = 1:numPatient
         disp(['VAT ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
@@ -34,9 +34,10 @@ for side = 1:numSide
         % Trim connectome fibers
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
         vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
-
-        fibers=ea_fibcell2fibmat(fibcell{side});
-
+        if isempty(vatmm)
+            continue;
+        end
+        
         filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
 
         % Skip further calculation in case VAT is totally not connected
@@ -49,7 +50,7 @@ for side = 1:numSide
         % Map mm connectome fibers into VAT voxel space
         [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
         fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
-
+   
         % Remove outliers
         fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
         trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
@@ -85,6 +86,7 @@ fibers=cell2mat(fibers);
 idxv=zeros(size(fibers,1),1);
 lid=1; cnt=1;
 for id=idx'
+
     idxv(lid:lid+id-1)=cnt;
     lid=lid+id;
     cnt=cnt+1;

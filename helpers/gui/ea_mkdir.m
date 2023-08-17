@@ -1,6 +1,7 @@
 function ea_mkdir(pth)
-if ~exist(pth,'dir')
-    try
-        mkdir(pth);
-    end
+
+if ~iscell(pth)
+    pth = {pth};
 end
+
+cellfun(@(x) ~isfolder(x) && mkdir(x), pth);

@@ -5,11 +5,8 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-if ispc
-    N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection.exe']);
-else
-    N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.', computer('arch')];
-end
+N4BiasFieldCorrection = ea_getExec([basedir, 'N4BiasFieldCorrection'], escapePath = 1);
+
 
 cmd=[N4BiasFieldCorrection, ...
     ' --image-dimensionality 3' ...
@@ -20,8 +17,5 @@ cmd=[N4BiasFieldCorrection, ...
     ' --convergence [50x50x50x50,0.000001]'];
 
 fprintf('\nBias field correction...\n\n')
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+
+ea_runcmd(cmd);

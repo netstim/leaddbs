@@ -1,38 +1,23 @@
-function ea_init_coregctpopup(handles,options,handlestring)
+function ea_init_coregctpopup(handles, defaultmethod, handlestring)
+% Initialize CT coregistration methods popupmenu.
 
+% Set coregctmethod popupmenu by default
+% In checkreg window, we need to set coregmrmethod popupmenu
 if ~exist('handlestring','var')
-    handlestring='coregctmethod';
+    handlestring = 'coregctmethod';
 end
 
-% add coreg methods to menu
-cnt=1;
-ndir=dir([ea_getearoot,'ea_coregctmri_*.m']);
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
-        if ismember(spm('ver'),spmvers)
-            cdc{cnt}=thisndc;
-            coregctmethod{cnt}=methodf;
-            if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-                defentry=cnt;
-            end
-            cnt=cnt+1;
-        end
-    catch
-        keyboard
-    end
+% Get functions and names
+funcs = ea_regexpdir(ea_getearoot, 'ea_coregpostopct_.*\.m$', 0);
+funcs = regexp(funcs, '(ea_coregpostopct_.*)(?=\.m)', 'match', 'once');
+names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
+
+% Set names to popupmenu
+set(handles.(handlestring), 'String', names);
+
+% Set default method
+if ~ismember(defaultmethod, names)
+    defaultmethod = 'ANTs (Avants 2008)';
 end
-try
-        setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
-        set(handles.(handlestring),'String',cdc);
-catch
-    if isempty(which('spm'))
-        ea_error('Please install SPM12 for Lead-DBS to work properly.');
-    end
-end
-try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
-    if defentry<=length(get(handles.(handlestring),'String'))
-        set(handles.(handlestring),'Value',defentry);
-    end
-end
+
+set(handles.(handlestring), 'Value', find(ismember(names, defaultmethod), 1));

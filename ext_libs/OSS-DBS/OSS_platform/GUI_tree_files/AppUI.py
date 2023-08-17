@@ -10,6 +10,7 @@ from pop_up_control.full_field_ifft import PopUpFullFieldIFFT
 from pop_up_control.mesh_refinement import PopUpMeshRefinement
 from functionalities import Functionalities
 from temp_dict import Dictionary
+from time import sleep
 
 import json
 
@@ -230,14 +231,14 @@ class MainWindow(Functionalities):
                 output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
             else:
                 output = subprocess.run(
-                    ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                    ['docker', 'run', '-e', 'PATIENTDIR', '-e', 'TZ', '--volume', dir_code + ':/opt/OSS-DBS',
                      '--volume', self.path_to_patient + ':/opt/Patient',
-                     '-it', '--rm', 'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
+                     '-it', '--rm', 'ningfei/oss-dbs:custom', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform == 'win32':
             output = subprocess.run(
-                ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                ['docker', 'run', '-e', 'PATIENTDIR', '-e', 'TZ', '--volume', dir_code + ':/opt/OSS-DBS',
                  '--volume', self.path_to_patient + ':/opt/Patient',
-                 '-it', '--rm', 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
+                 '-it', '--rm', 'ningfei/oss-dbs:latest', 'python3', 'Launcher_OSS_lite.py'])
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
@@ -272,7 +273,9 @@ class MainWindow(Functionalities):
             else:
                 print("Simulation is completed")
 
-        self.closeWindow()        
+        sleep(5)
+        self.closeWindow()
+
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
         # print(self.path_to_patient)
@@ -578,15 +581,15 @@ class MainWindow(Functionalities):
         else:
             print("All cores available for Docker will be drawn")
 
-        self.ui.checkBox_Voxel_orr_MRI.setCheckState(self.anti_corrector(d['voxel_arr_MRI']))
-        self.ui.checkBox_Voxel_orr_DTI.setCheckState(----self.anti_corrector(d['voxel_arr_DTI']))
+        self.ui.checkBox_Voxel_orr_MRI.setCheckState(self.anti_corrector(d['Segm_MRI_processed']))
+        self.ui.checkBox_Voxel_orr_DTI.setCheckState(----self.anti_corrector(d['DTI_processed']))
         self.ui.checkBox_Init_Neuron_Model_Ready.setCheckState(self.anti_corrector(d['Init_neuron_model_ready']))
         self.ui.checkBox_Init_Mesh_Ready.setCheckState(self.anti_corrector(d['Init_mesh_ready']))
         self.ui.checkBox_Adjusted_Neuron_Model_Ready.setCheckState(
             self.anti_corrector(d['Adjusted_neuron_model_ready']))
         self.ui.checkBox_CSF_Mesh_Ready.setCheckState(self.anti_corrector(d['CSF_mesh_ready']))
         self.ui.checkBox_Adapted_Mesh_Ready.setCheckState(self.anti_corrector(d['Adapted_mesh_ready']))
-        self.ui.checkBox_Signal_Generation_Ready.setCheckState(self.anti_corrector(d['signal_generation_ready']))
+        self.ui.checkBox_Signal_Generation_Ready.setCheckState(self.anti_corrector(d['Signal_generated']))
         self.ui.checkBox_Parallel_Computing_Ready.setCheckState(self.anti_corrector(d['Parallel_comp_ready']))
         self.ui.checkBox_Parallel_Computing_Interrupted.setCheckState(
             self.anti_corrector(d['Parallel_comp_interrupted']))
@@ -670,7 +673,7 @@ class MainWindow(Functionalities):
         except:
             pass
         self.ui.checkBox_Current_Control.setCheckState(self.anti_corrector(d['current_control']))
-        self.get_lineedit_entry(d['Phi_vector'], self.ui.lineEdit_Phi_Vector)
+        self.get_lineedit_entry(d['Pulse_amp'], self.ui.lineEdit_Phi_Vector)
         try:
             self.ui.comboBox_Solver_Type.setCurrentText("{}".format(d['Solver_Type']))
         except:
@@ -686,7 +689,7 @@ class MainWindow(Functionalities):
         self.cpeActive.ui.doubleSpinBox_K_S.setValue(d['K_A'])
         self.cpeActive.ui.doubleSpinBox_Alpha_Ground.setValue(d['beta_ground'])
         self.cpeActive.ui.doubleSpinBox_K_S_Ground.setValue(d['K_A_ground'])
-        self.ui.checkBox_Full_Field_IFFT.setCheckState(self.anti_corrector(d['Full_Field_IFFT']))
+        self.ui.checkBox_Full_Field_IFFT.setCheckState(self.anti_corrector(d['VTA_approx']))
         self.fullFieldIFFT.ui.spinBox_T_Step_End.setValue(d['t_step_end'])
         self.fullFieldIFFT.ui.checkBox_VTA_From_DivE.setCheckState(self.anti_corrector(d['VTA_from_divE']))
         self.fullFieldIFFT.ui.checkBox_VTA_From_NEURON.setCheckState(self.anti_corrector(d['VTA_from_NEURON']))
@@ -723,12 +726,19 @@ class MainWindow(Functionalities):
 
         filename, _ = QFileDialog.getOpenFileName(None, "Load State", "",
                                                   "All Files (*);;Text Files (*.txt)", options=options)
+                                                  
+        if sys.platform == 'win32':
+            filename.replace("\\","/")
+                                                              
         if filename:
             with open(filename, 'r') as f:
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d = ast.literal_eval(content.strip())
+                if sys.platform == 'win32':
+                    d = eval(content)
+                else:
+                    d = ast.literal_eval(content.strip())
                 self.set_load_state(d)
 
             self.info("Run", "{} has been loaded successfully.".format(filename))
@@ -737,12 +747,19 @@ class MainWindow(Functionalities):
         os.chdir(self.oss_plat_cont)
 
     def reset_state(self):
+    
+        if sys.platform == 'win32':
+            self.rel_folder.replace("\\","/")
+    
         filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
         with open(filename, 'r') as f:
             num = f.read().find('{')
             f.seek(num)
             content = f.read()
-            d = ast.literal_eval(content.strip())
+            if sys.platform == 'win32':
+                d = eval(content)
+            else:
+                d = ast.literal_eval(content.strip())
             self.set_load_state(d)
         # self.set_current_file_name(filename)
 
@@ -769,12 +786,19 @@ class MainWindow(Functionalities):
         #print('I am here', os.getcwd())
 
         filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
+        if sys.platform == 'win32':
+            filename.replace("\\","/")
+            self.path_to_patient.replace(os.sep,"/")
+            self.rel_folder.replace("\\","/")
 
         with open(filename, 'r') as f:
             num = f.read().find('{')
             f.seek(num)
             content = f.read()
-            d = ast.literal_eval(content.strip())
+            if sys.platform == 'win32':
+                d = eval(content)
+            else:
+                d = ast.literal_eval(content.strip())
 
         try:
             filename = "GUI_inp_dict.py"
@@ -782,21 +806,30 @@ class MainWindow(Functionalities):
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d_modified = ast.literal_eval(content.strip())
+                if sys.platform == 'win32':
+                    d_modified = eval(content)
+                else:
+                    d_modified = ast.literal_eval(content.strip())
         except:
             filename = "GUI_inp_dict_base.py"
             with open(filename, 'r') as f:
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d_modified = ast.literal_eval(content.strip())
+                if sys.platform == 'win32':
+                    d_modified = eval(content)
+                else:
+                    d_modified = ast.literal_eval(content.strip())
 
         d.update(d_modified)    # maybe te ordering of updating should be changed
 
-        with open(self.path_to_patient + '/Lead_DBS_input.json', 'r') as fp:
-            lead_dict = json.load(fp)
-        fp.close()
-        d.update(lead_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+        try:
+            with open(self.path_to_patient + '/Lead_DBS_input.json', 'r') as fp:
+                lead_dict = json.load(fp)
+            fp.close()
+            d.update(lead_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+        except:
+            print("No input from Lead-DBS was detected")
 
         try:
             with open(self.path_to_patient + '/Allocated_axons_parameters.json', 'r') as fp:
@@ -804,7 +837,7 @@ class MainWindow(Functionalities):
             fp.close()
             d.update(axon_dict)  # update from oss-dbs_parameters.mat directly for cluster version
         except:
-            print("Neuron models will be defined in OSS-DBS")
+            print("No Allocated_axons_parameters.json was detected")
 
         self.set_load_state(d)
         #except:

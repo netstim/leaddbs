@@ -1,17 +1,14 @@
-function [h,pv,Rsquared,F,mdl,bb,dev,allstats]=ea_glmplot(X,y,labels,distribution,group1,group2,colors,markers,switchxy)
+function [h,Rsquared,pv,g,F,mdl,bb,dev,allstats]=ea_glmplot(X,Y,distribution,labels,group1,group2,colors,markers,switchxy)
 
-
-if iscell(y) % model provided
-    priormodel=y{1};
-    y=y{2};
+if iscell(Y) % model provided
+    priormodel=Y{1};
+    Y=Y{2};
 end
 
-
-
-if ~(size(y,2)==1)
+if ~(size(Y,2)==1)
     ea_warning('Assuming X and y were switched. Switching variables.');
-    Xn=y;
-    y=X;
+    Xn=Y;
+    Y=X;
     X=Xn;
 end
 
@@ -33,6 +30,7 @@ else
        modeltype=B;
     end
 end
+
 if ~exist('modeltype','var')
    modeltype='linear'; 
 end
@@ -87,19 +85,19 @@ else
 end
 
 if exist('priormodel','var') % prediction mode
-    yhat=predict(priormodel,X);
-    mdl=fitglm(yhat,y,'linear','distribution',distribution); % always use linear - interactions or quadratic would not make sense here.
-    [bb,dev,allstats]=glmfit(yhat,y,distribution);
+    Yhat=predict(priormodel,X);
+    mdl=fitglm(Yhat,Y,'linear','distribution',distribution); % always use linear - interactions or quadratic would not make sense here.
+    [bb,dev,allstats]=glmfit(Yhat,Y,distribution);
 else
-    mdl=fitglm(X,y,modeltype,'distribution',distribution);
-    [bb,dev,allstats]=glmfit(X,y,distribution);
-    yhat=predict(mdl,X);
+    mdl=fitglm(X,Y,modeltype,'distribution',distribution);
+    [bb,dev,allstats]=glmfit(X,Y,distribution);
+    Yhat=predict(mdl,X);
 end
 
 if exist('switchxy','var') && switchxy
-    g=gramm('x',y,'y',yhat); % data needs to be put in "reversed" for gramm.
+    g=gramm('x',Y,'y',Yhat); % data needs to be put in "reversed" for gramm.
 else
-    g=gramm('x',yhat,'y',y); % data needs to be put in "reversed" for gramm.
+    g=gramm('x',Yhat,'y',Y); % data needs to be put in "reversed" for gramm.
 end
 
 if isempty(group1) && isempty(group2)
@@ -112,7 +110,7 @@ end
 g.set_point_options('markers', markers, 'base_size', 7);
 g.stat_glm('distribution',distribution,'fullrange','false','fullrange','false');
 
-[~,~,~,~,stats]=regress(y,ea_addone(X));
+[~,~,~,~,stats]=regress(Y,ea_addone(X));
 %g.geom_abline();
 %g.stat_cornerhist('edges',[ea_nanmean(X)-1*ea_nanstd(X):0.2:ea_nanmean(X)+1*ea_nanstd(X)],'aspect',0.6,'location',max(X));
 pstr='p';

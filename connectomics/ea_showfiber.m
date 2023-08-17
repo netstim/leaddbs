@@ -1,7 +1,7 @@
-function fibhandle=ea_showfiber(fibers,fibidx,col,fiberalpha)
+function fibhandle=ea_showfiber(fibers,fibidx,color,fiberalpha)
 
-if ~exist('col','var')
-    col=nan;
+if ~exist('color','var')
+    color=nan;
 end
 
 if ~exist('fiberalpha','var')
@@ -15,15 +15,16 @@ if ismember(ea_getspace, {'Waxholm_Space_Atlas_SD_Rat_Brain'})
     reduceFactor = 0; % No patch reduce
 else
     sampleFactor = 5; % Reduce the points along the fiber by a factor of 5
-    tubeWidth = 0.25; % Larger tube width
+    prefs = ea_prefs;
+    tubeWidth = prefs.d3.fiberwidth; % Larger tube width
     reduceFactor = 0.1; % Set patch reduce factor
 end
 
-if ~(size(fibers,1)==4)
-    fibers=fibers';
+if size(fibers,1) < size(fibers,2)
+    fibers = fibers';
 end
 
-fibersnew=mat2cell(fibers(1:3,:)',fibidx);
+fibersnew = mat2cell(fibers(:, 1:3), fibidx);
 
 fibersnew = cellfun(@(f,len) f(round(linspace(1,len,round(len/sampleFactor))),:), fibersnew, num2cell(cellfun(@(p) size(p,1), fibersnew)), 'UniformOutput', 0);
 
@@ -35,7 +36,7 @@ while k <= length(fibersnew)
         k = k+1;
     end
 end
-if isnan(col)
+if isnan(color)
     ea_dispercent(0,'Determine Directions');
     k = 1;
     for k = 1:length(fibersnew)
@@ -65,23 +66,23 @@ end
 set(fibhandle(:),'CDataMapping','direct')
 
 fprintf('\n');
-if isnan(col)    
+if isnan(color)    
     ea_dispercent(0,'Adding color information');
     for k = 1:length(fibhandle)
-        thiscol = fibersdiff{k};
-        thiscol = repmat(thiscol,1,1,length(fibhandle(k).ZData(1,:,1)));
-        thiscol = permute(thiscol,[1 3 2]);
-        set(fibhandle(k),'CData',thiscol)
+        thiscolor = fibersdiff{k};
+        thiscolor = repmat(thiscolor,1,1,length(fibhandle(k).ZData(1,:,1)));
+        thiscolor = permute(thiscolor,[1 3 2]);
+        set(fibhandle(k),'CData',thiscolor)
         ea_dispercent(k/length(fibhandle))
     end
     ea_dispercent(1,'end');
 else
     ea_dispercent(0,'Adding color information');
     for k = 1:length(fibhandle)
-        thiscol = repmat(col,length(fibhandle(k).ZData(:,1)),1);
-        thiscol = repmat(thiscol,1,1,length(fibhandle(k).ZData(1,:,1)));
-        thiscol = permute(thiscol,[1 3 2]);
-        set(fibhandle(k),'CData',thiscol)
+        thiscolor = repmat(color,length(fibhandle(k).ZData(:,1)),1);
+        thiscolor = repmat(thiscolor,1,1,length(fibhandle(k).ZData(1,:,1)));
+        thiscolor = permute(thiscolor,[1 3 2]);
+        set(fibhandle(k),'CData',thiscolor)
         ea_dispercent(k/length(fibhandle))
     end
     ea_dispercent(1,'end');

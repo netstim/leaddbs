@@ -29,6 +29,7 @@ wbhandle = waitbar(0, 'Starting download...', ...
         'Name', sprintf('Downloading %s', assetname), ...
         'CreateCancelBtn', @(obj, event) ea_canceldownload());
 
+warn('off', 'MATLAB:parallel:loadsave:CannotSaveCorrectly');
 f(1) = parfeval(p, @ea_startwebsave, 0, destination, downloadurl, id);      % start the download
 f(2) = parfeval(p, @ea_checkprogress, 0, q, destination, fsize);            % start monitoring of file size
 
@@ -47,6 +48,8 @@ if ~downloadaborted
 else
     error('Parallel download unsuccessful')
 end
+
+warn('on', 'MATLAB:parallel:loadsave:CannotSaveCorrectly');
 
 % helper functions
     function ea_checkprogress(q, filename, targetFilesize) 

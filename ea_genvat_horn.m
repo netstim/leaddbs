@@ -19,7 +19,8 @@ elseif nargin==6
     lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='SimBio/FieldTrip (see Horn 2017)';
+        varargout{1} = 'SimBio/FieldTrip (see Horn 2017)';
+        varargout{2} = true; % Support directed lead
         return
     end
 end
@@ -76,10 +77,16 @@ else
     elstruct.stretchfactor=0.5;
 end
 
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+ea_mkdir(headmodelDir);
+filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+
 hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
 assignin('caller','hmchanged',hmchanged);
 if hmchanged
-    ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
+    disp('Headmodel needs to be re-calculated. This may take a while...');
 
     cnt=1;
     mesh.tet=[];
@@ -128,7 +135,7 @@ if hmchanged
                 success=1;
                 break
             end
-        catch
+        catch ME
             % The VTA model has led to an intersection of meshes, which
             % can sometimes happen. We will introduce a small jitter to
             % the electrode and try again.
@@ -155,11 +162,17 @@ if hmchanged
                 h.Position=[1000          85         253        1253];
             end
         end
-        ea_kill('name', ['tetgen', getexeext]);
+        [~, tetgenName, tetgenExt] = fileparts(ea_getExec(mcpath('tetgen')));
+        ea_kill('name', [tetgenName, tetgenExt]);
     end
 
     if ~success
-       ea_error('Despite all attempts the VTA model could not be created. Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.');
+        if exist('ME', 'var')
+            ea_cprintf('CmdWinErrors', '%s\n', ME.message);
+        end
+        ea_error(['Despite all attempts the VTA model could not be created.\n' ...
+            'Please check MATLAB Command Window for detailed error information.\n' ...
+            'Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.']);
     end
 
     % replace wmboundary
@@ -221,15 +234,13 @@ if hmchanged
         mesh.pnt=mesh.pnt*1000; % in meter
         mesh.unit='mm';
     end
-    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
-        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
-    end
-    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
+
+    save(fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side),'.mat']), 'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
 else
     % simply load vol.
     ea_dispt('Loading headmodel...');
-    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
+    load(fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side),'.mat']));
     activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
 end
 
@@ -295,7 +306,7 @@ for source=S.sources
         end
 
         if isempty(ix)
-            rmdir([options.root,options.patientname,filesep,'current_headmodel'],'s'); % the least I can do at this point is to clean up the faulty headmodel.
+            rmdir(fullfile(options.subj.subjDir, 'headmodel'),'s'); % the least I can do at this point is to clean up the faulty headmodel.
             ea_error('Something went wrong. Active vertex index not found.');
         end
 
@@ -376,10 +387,9 @@ else % VTA calculated in native space and then transformed back to MNI
         end
 
         % Convert midpts and actContact from native space to MNI space
-        [~,anatpresent] = ea_assignpretra(options);
-        ptsvx_native = ea_mm2vox([midpts;actContact], [options.root,options.patientname,filesep,anatpresent{1}])';
-        ptsmm_mni = ea_map_coords(ptsvx_native, [options.root,options.patientname,filesep,anatpresent{1}], ...
-            [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], '')';
+        ptsvx_native = ea_mm2vox([midpts;actContact], options.subj.preopAnat.(options.subj.AnchorModality).coreg)';
+        ptsmm_mni = ea_map_coords(ptsvx_native, options.subj.preopAnat.(options.subj.AnchorModality).coreg, ...
+            [options.subj.subjDir,filesep,'inverseTransform'], '')';
         midpts_mni = ptsmm_mni(1:size(midpts,1),:);
         actContact_mni = ptsmm_mni(size(midpts,1)+1:end,:);
         options.native=0; % go back to template space for export
@@ -417,14 +427,18 @@ protocol.version=1.1;
 protocol.vatsettings=options.prefs.machine.vatsettings;
 
 if sv % save protocol to disk
-    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat'],'protocol');
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    save(fullfile(headmodelDir, [filePrefix, 'hmprotocol',num2str(side),'.mat']), 'protocol');
 end
 
 
 function protocol=ea_load_hmprotocol(options,side)
 % function that loads protocol
 try
-    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat']);
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    load(fullfile(headmodelDir, [filePrefix, 'hmprotocol',num2str(side),'.mat']));
 catch
     protocol=struct; % default for errors or if not present
 end
@@ -2244,7 +2258,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
     autoindx = indx(indx(:,1)==indx(:,2), 1);
     cmbindx  = setdiff([1:size(indx,1)]', autoindx);
 
-    if strcmp(data.dimord(1:3), 'rpt')
+    if startsWith(data.dimord, 'rpt')
         data.powspctrm = data.crsspctrm(:, autoindx, :, :);
         data.crsspctrm = data.crsspctrm(:, cmbindx,  :, :);
     else
@@ -9109,7 +9123,7 @@ elseif isfield(vol,'hex')
 end
 
 try
-    [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val_wrapper(node,elem,cond,mele);
+    [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val(node,elem,cond,mele);
 catch err
     if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')
         error('Error executing mex-file. Microsoft Visual C++ 2008 Redistributables and Intel Visual Fortran Redistributables are required.')

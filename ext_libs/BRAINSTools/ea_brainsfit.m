@@ -23,7 +23,7 @@ else
     otherfiles = {};
 end
 
-volumedir = [fileparts(ea_niifileparts(movingVolume)), filesep];
+volumedir = [fileparts(ea_niifileparts(outputVolume)), filesep];
 
 fixedVolume = ea_niigz(fixedVolume);
 movingVolume = ea_niigz(movingVolume);
@@ -41,8 +41,7 @@ fixparams = [' --fixedVolume ' , ea_path_helper(fixedVolume), ...
              ' --samplingPercentage 0.005' ...
              ' --removeIntensityOutliers 0.005' ...
              ' --interpolationMode Linear' ...
-             ' --outputTransform ', ea_path_helper([volumedir, xfm, '.h5']), ...
-             ' --writeOutputTransformInFloat'];
+             ' --outputTransform ', ea_path_helper([volumedir, xfm, '.h5'])];
 
 % first attempt...
 paramset{1} = [fixparams, ...
@@ -77,20 +76,14 @@ else
 end
 
 basename = [fileparts(mfilename('fullpath')), filesep, 'BRAINSFit'];
-if ispc
-    BRAINSFit = [basename, '.exe '];
-else
-    BRAINSFit = [basename, '.', computer('arch'), ' '];
-end
+BRAINSFit = ea_getExec(basename, escapePath = 1);
+
 
 ea_libs_helper
 for trial = 1:4
-    cmd = [BRAINSFit, paramset{trial}];
-    if ~ispc
-        status = system(['bash -c "', cmd, '"']);
-    else
-        status = system(cmd);
-    end
+    cmd = [BRAINSFit, ' ', paramset{trial}];
+    status = ea_runcmd(cmd);
+
     if status == 0
         fprintf(['\nBRAINSFit with parameter set ', num2str(trial), '\n']);
         break
@@ -108,12 +101,23 @@ if ~writeoutmat
     ea_delete([volumedir, xfm, '_Inverse.h5']);
     affinefile = {};
 else
-    % TODO: convert the hdf5 transformation to MAT file
-    invxfm = [fix, '2', mov, '_brainsfit'];
-    movefile([volumedir, xfm, '_Inverse.h5'], [volumedir, invxfm, '.h5']);
+    % Convert h5 to mat
+    AffineTransform_double_3_3 = h5read([volumedir, xfm, '.h5'], '/TransformGroup/0/TransformParameters');
+    fixed = h5read([volumedir, xfm, '.h5'], '/TransformGroup/0/TransformFixedParameters');
+    save([volumedir, xfm, '.mat'], 'AffineTransform_double_3_3', 'fixed');
+    delete([volumedir, xfm, '.h5']);
 
-    affinefile = {[volumedir, xfm, '.h5']
-                  [volumedir, invxfm, '.h5']};
+    % Convert h5 to mat
+    AffineTransform_double_3_3 = h5read([volumedir, xfm, '_Inverse.h5'], '/TransformGroup/0/TransformParameters');
+    fixed = h5read([volumedir, xfm, '_Inverse.h5'], '/TransformGroup/0/TransformFixedParameters');
+    save([volumedir, xfm, '_Inverse.mat'], 'AffineTransform_double_3_3', 'fixed');
+    delete([volumedir, xfm, '_Inverse.h5']);
+
+    invxfm = [fix, '2', mov, '_brainsfit'];
+    movefile([volumedir, xfm, '_Inverse.mat'], [volumedir, invxfm, '.mat']);
+
+    affinefile = {[volumedir, xfm, '.mat']
+                  [volumedir, invxfm, '.mat']};
 end
 
 fprintf('\nBRAINSFit LINEAR registration done.\n');

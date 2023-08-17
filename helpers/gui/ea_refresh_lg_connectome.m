@@ -8,7 +8,7 @@ options.earoot=ea_getearoot;
 % get analysis data
 M=getappdata(handles.leadfigure,'M');
 
-if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
+if strcmp(handles.groupdir_choosebox.String,'Choose Group Directory') % not set yet.
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end
@@ -154,7 +154,7 @@ if ~isempty(M.patient.list)
         restcell=cell(0);
         for p=1:length(pcell)
             [~,pcell{p}]=fileparts(tryparcs(p).name);
-            if strcmp(pcell{p}(1:4),'rest')
+            if startsWith(pcell{p},'rest')
                 ix=strfind(pcell{p},'_');
                restcell{restcnt}=pcell{p}(ix(1)+1:ix(2)-1);
                restcnt=restcnt+1;
@@ -187,7 +187,7 @@ for g=1:length(gms)
     others=1:length(gms);
     others(g)=[];
     for h=others
-        if strcmp(gms{h}(1:length(pfx)),pfx)
+        if startsWith(gms{h},pfx)
           toappend{cnt}=[gms{g},'>',gms{h}];
           toappend{cnt+1}=[gms{h},'>',gms{g}];
           cnt=cnt+2;

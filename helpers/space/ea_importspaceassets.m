@@ -63,7 +63,7 @@ for p=1:length(parcellation)
        else
            directory=[ea_space,fromspace,filesep];
             options.prefs=ea_prefs('');
-            ea_apply_normalization_tofile(options,from,to,directory,0,0);
+            ea_apply_normalization_tofile(options,from,to,0,0);
        end
 
        movefile(to{1},[ea_space([],'labeling'),parcellation{p},' - imported from ',fromspace,'.nii']);
@@ -85,7 +85,7 @@ directory=[ea_space,fromspace,filesep];
 options=ea_getptopts(directory);
 options.prefs=ea_prefs('');
 options=ea_assignpretra(options);
-ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,4,[ea_space,options.primarytemplate,'.nii']);
+ea_apply_normalization_tofile(options,{infname},{outfname},0,4,[ea_space,options.primarytemplate,'.nii']);
 
 
 
@@ -124,7 +124,7 @@ for atlasset=1:length(asc)
 
     % for .mat case
     src = fullfile(ea_space,fromspace,'anat_t1.nii');
-    invt = fullfile(ea_space,fromspace,'y_ea_inv_normparams.nii');
+    invt = fullfile(ea_space,fromspace,'inverseTransform');
     srcV = ea_open_vol(src);
 
     atlroot=[ea_space,fromspace,filesep,asc{atlasset},filesep];
@@ -165,7 +165,7 @@ for atlasset=1:length(asc)
                     from{1}=nii{n}; to{1}=nii{n};
                     directory=[ea_space,fromspace,filesep];
                     options.prefs=ea_prefs('');
-                    ea_apply_normalization_tofile(options,from,to,directory,0,1);
+                    ea_apply_normalization_tofile(options,from,to,0,1);
                     if wasgzip
                         gzip(nii{n});
                         delete(nii{n});

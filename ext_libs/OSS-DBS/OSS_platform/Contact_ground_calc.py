@@ -26,7 +26,7 @@ parameters['linear_algebra_backend']='PETSc'
 set_log_active(False)   #turns off debugging info
 
 # to compute Contact-Ground solution we use the same routine as for floats, but with minor adjustments
-# in the context of this function Domains.fi is all 1.0 (grounding is external), thus Float_contacts should be empty
+# in the context of this function Domains.Amp_vector is all 1.0 (grounding is external), thus Float_contacts should be empty
 
 
 
@@ -48,7 +48,7 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
         Cond_tensor=False  #just to initialize
 
     from FEM_in_spectrum import get_solution_space_and_Dirichlet_BC
-    V_space,facets=get_solution_space_and_Dirichlet_BC(external_grounding,1,mesh_sol,subdomains,boundaries_sol,element_order,Laplace_mode,Domains.Contacts,Domains.fi,only_space=True)
+    V_space,facets=get_solution_space_and_Dirichlet_BC(external_grounding,1,mesh_sol,subdomains,boundaries_sol,element_order,Laplace_mode,Domains.Active_contacts,Domains.Amp_vector,only_space=True)
 
     facets_active = MeshFunction('size_t',mesh_sol,2)
     facets_active.set_all(0)
@@ -59,25 +59,25 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
     active_floats=0
 
     # assign only the chosen active contact and the ground, other should be just marked on the mesh (starting from 2)
-    #print("Contacts: ",Domains.Contacts)
-    #print("fi: ",Domains.fi)
+    #print("Contacts: ",Domains.Active_contacts)
+    #print("fi: ",Domains.Amp_vector)
     #print("active_index: ",active_index)
-    #print("ponteial: ", Domains.fi[active_index])
+    #print("ponteial: ", Domains.Amp_vector[active_index])
 
-    for bc_i in range(len(Domains.Contacts)):
-        if bc_i==active_index or Domains.fi[bc_i]==0.0:
+    for bc_i in range(len(Domains.Active_contacts)):
+        if bc_i==active_index or Domains.Amp_vector[bc_i]==0.0:
             if Laplace_mode == 'EQS':
-                dirichlet_bc.append(DirichletBC(V_space.sub(0), Domains.fi[bc_i], boundaries_sol,Domains.Contacts[bc_i]))
-                dirichlet_bc.append(DirichletBC(V_space.sub(1), Constant(0.0), boundaries_sol,Domains.Contacts[bc_i]))
+                dirichlet_bc.append(DirichletBC(V_space.sub(0), Domains.Amp_vector[bc_i], boundaries_sol,Domains.Active_contacts[bc_i]))
+                dirichlet_bc.append(DirichletBC(V_space.sub(1), Constant(0.0), boundaries_sol,Domains.Active_contacts[bc_i]))
             else:
-                dirichlet_bc.append(DirichletBC(V_space, Domains.fi[bc_i], boundaries_sol,Domains.Contacts[bc_i]))
+                dirichlet_bc.append(DirichletBC(V_space, Domains.Amp_vector[bc_i], boundaries_sol,Domains.Active_contacts[bc_i]))
 
             if bc_i==active_index:
-                facets_active.array()[boundaries_sol.array()==Domains.Contacts[bc_i]]=1
-                #print("phi to solve for: ",Domains.fi[bc_i])
+                facets_active.array()[boundaries_sol.array()==Domains.Active_contacts[bc_i]]=1
+                #print("phi to solve for: ",Domains.Amp_vector[bc_i])
                 #print(active_index)
         else:
-            facets_active.array()[boundaries_sol.array()==Domains.Contacts[bc_i]]=float_surface    #it will not be assigned to always floating contacts
+            facets_active.array()[boundaries_sol.array()==Domains.Active_contacts[bc_i]]=float_surface    #it will not be assigned to always floating contacts
             float_surface=float_surface+1
             active_floats=active_floats+1
 
@@ -154,19 +154,19 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
 #            else:
 #            # Solve for rescaled
 #                Dirichlet_bc_scaled=[]
-#                for bc_i in range(len(Domains.Contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
+#                for bc_i in range(len(Domains.Active_contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
 #                    if Laplace_mode == 'EQS':
-#                        if Domains.fi[bc_i]==0.0:
-#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
-#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+#                        if Domains.Amp_vector[bc_i]==0.0:
+#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), 0.0, Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
+#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), 0.0, Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
 #                        else:
-#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
-#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
+#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real((Domains.Amp_vector[bc_i])/J_ground),Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
+#                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag((Domains.Amp_vector[bc_i])/J_ground),Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
 #                    else:
-#                        if Domains.fi[bc_i]==0.0:
-#                            Dirichlet_bc_scaled.append(DirichletBC(V_space, 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+#                        if Domains.Amp_vector[bc_i]==0.0:
+#                            Dirichlet_bc_scaled.append(DirichletBC(V_space, 0.0, Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
 #                        else:
-#                            Dirichlet_bc_scaled.append(DirichletBC(V_space, np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
+#                            Dirichlet_bc_scaled.append(DirichletBC(V_space, np.real((Domains.Amp_vector[bc_i])/J_ground),Sim_setup.boundaries,Domains.Active_contacts[bc_i]))
 #
 #                if Sim_setup.external_grounding==True:
 #                    if Laplace_mode == 'EQS':
@@ -185,7 +185,7 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
 #                    phi_i_check.vector()[:] = 0.0
 
             #from FEM_in_spectrum import get_current
-            #J_ground,E_field_r,E_field_im=get_current(mesh_sol,facets,boundaries_sol,element_order,Laplace_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index,get_E_field=True)
+            #J_ground,E_field_r,E_field_im=get_current(mesh_sol,facets,boundaries_sol,element_order,Laplace_mode,Domains.Active_contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index,get_E_field=True)
 
             # to get manual projections for the E-field
             from FEM_in_spectrum_multicontact import get_E_field
@@ -314,10 +314,10 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
     if Field_calc_param.sine_freq==Field_calc_param.signal_freq:
 
         logging.critical("Computing field with superposition on mesh with {} elements".format(Field_calc_param.mesh.num_cells()))
-        logging.critical("{} computations are required for the iteration".format(len(Domains.fi)))
+        logging.critical("{} computations are required for the iteration".format(len(Domains.Amp_vector)))
 
-    #contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
-    contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
+    #contacts_with_current=[x for x in Domains.Amp_vector if x != 0.0]       #0.0 are grounded contacts
+    contacts_with_current=[x for x in Domains.Amp_vector if x != 0.0]       #0.0 are grounded contacts
 
     phi_r_floating=np.zeros((len(contacts_with_current),len(contacts_with_current)-1),float)       #stores real potential field in the virtual floating contacts (where current is actually assigned)
     J_real_current_contacts=np.zeros(len(contacts_with_current),float)                  #currents computed on the contacts when we solve "one active contact vs ground" system (other contacts are floating)
@@ -340,7 +340,7 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
         Solutions_on_points=np.zeros((Vertices.shape[0],len(contacts_with_current)),float)
 
     glob_counter=0
-    for i in range(len(Domains.fi)):
+    for i in range(len(Domains.Amp_vector)):
         for j in range(len(Domains.Float_on_lead)):     # this iterator does not exist here
             if Domains.Active_on_lead[i] == Domains.Float_on_lead[j]:       #find the index of the floating conductor (in .med/.msh file) for the active contact (i)
 
@@ -351,7 +351,7 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
                     phi_r_floating[glob_counter,:],__,Solutions_on_points[:,glob_counter]=get_field_with_floats(Field_calc_param.external_grounding,Field_calc_param.mesh,i,Domains,Field_calc_param.subdomains,Field_calc_param.boundaries,Field_calc_param.element_order,Field_calc_param.anisotropy,Field_calc_param.sine_freq,Field_calc_param.Laplace_eq,Solver_type,Vertices,Field_calc_param.conductivities,Field_calc_param.rel_permittivities,Field_calc_param.unscaled_tensor,VTA_IFFT)
 
                 #fl_ind[glob_counter,:]=fl_contacts_rel_ind[np.arange(len(fl_contacts_rel_ind))!=glob_counter]   # if three current contacts, it will store [[1,2][0,2],[0,1]]
-                #contact_amplitude[glob_counter]=Domains.fi[i]
+                #contact_amplitude[glob_counter]=Domains.Amp_vector[i]
 
                 glob_counter=glob_counter+1
 
@@ -415,17 +415,17 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
 
     # # not an elegant way but just for the maximum transparency
     # if Field_calc_param.EQS_mode == 'EQS':
-    #     scaled_phi=np.complex(1.0,0.0)*np.zeros(len(Domains.fi),float)
-    #     for i in range(len(Domains.fi)):
-    #         if Domains.fi[i]==0.0:
+    #     scaled_phi=np.complex(1.0,0.0)*np.zeros(len(Domains.Amp_vector),float)
+    #     for i in range(len(Domains.Amp_vector)):
+    #         if Domains.Amp_vector[i]==0.0:
     #             scaled_phi[i]=0.0+1j*0.0
     #         else:
     #             scaled_phi[i]=V_r_BC_for_current[glob_counter]+1j*V_im_BC_for_current[glob_counter]
     #             glob_counter=glob_counter+1
     # else:
-    #     scaled_phi=np.zeros(len(Domains.fi),float)
-    #     for i in range(len(Domains.fi)):
-    #         if Domains.fi[i]==0.0:
+    #     scaled_phi=np.zeros(len(Domains.Amp_vector),float)
+    #     for i in range(len(Domains.Amp_vector)):
+    #         if Domains.Amp_vector[i]==0.0:
     #             scaled_phi[i]=0.0
     #         else:
     #             scaled_phi[i]=V_r_BC_for_current[glob_counter]

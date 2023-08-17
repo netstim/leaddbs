@@ -11,7 +11,7 @@ for s=1:length(sfile)
         % Warp mask from MNI space to patient T1 space
         ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
             {[vatdir,space]},...
-            {[vatdir,space]}, options.uivatdirs{s}, 1, 0);
+            {[vatdir,space]}, 1, 0);
         map=ea_load_nii([vatdir,space]);
     else
         map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
@@ -157,24 +157,28 @@ for s=1:length(sfile)
             map.img(utopaint)=c;
         end
 
-        [~,fn]=fileparts(sfile{s});
-        outputfolder=ea_getoutputfolder(sfile(s),connName);
+        connLabel = ea_getConnLabel(connName);
+        if ~isBIDSFileName(sfile{s})
+            [outputfolder, fname] = fileparts(sfile{s});
+            mapFile = fullfile(outputfolder, [fname, '_conn-', connLabel, '_strucmap.nii']);
+        else
+            mapFile = setBIDSEntity(sfile{s}, 'conn', connLabel, 'suffix', 'strucmap');
+        end
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
             map.img(~(map.img==0))=ea_normal(map.img(~(map.img==0)));
         end
 
-        map.fname=fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']);
-        map.dt=[16,0];
+        map.fname = mapFile;
+        map.dt(1) = 16;
         spm_write_vol(map,map.img);
         if useNativeSeed
-            mniOutputFolder = strrep(outputfolder, ea_nt(1), ea_nt(0));
-            mniMap = fullfile(mniOutputFolder,[fn,'_struc_',cmd,'.nii']);
-            ea_mkdir(mniOutputFolder);
+            mniMap = strrep(mapFile, [filesep,ea_nt(1)], [filesep,ea_nt(0)]);
+            ea_mkdir(fileparts(mniMap));
             % Warp map from patient T1 space to MNI space
             ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
                 {map.fname},...
-                {mniMap}, options.uivatdirs{s}, 0, 1, ...
+                {mniMap}, 0, 1, ...
                 ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]));
         end
 
@@ -190,6 +194,3 @@ for s=1:length(sfile)
         end
     end
 end
-
-
-

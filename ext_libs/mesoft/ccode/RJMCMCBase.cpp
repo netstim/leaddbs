@@ -299,17 +299,17 @@ class RJMCMCBase
             stats.report_movetype(" total:");
             
             char buf[256];
-            sprintf(buf,"birth (%.3f):",p_birth);
+            snprintf(buf, sizeof(buf), "birth (%.3f):",p_birth);
             birthstats.report_movetype(buf);
-            sprintf(buf,"death (%.3f):",p_death);
+            snprintf(buf, sizeof(buf), "death (%.3f):",p_death);
             deathstats.report_movetype(buf);
-            sprintf(buf,"shift (%.3f):",p_shift);
+            snprintf(buf, sizeof(buf), "shift (%.3f):",p_shift);
             shiftstats.report_movetype(buf);
-            sprintf(buf,"model (%.3f):",p_Dmod);
+            snprintf(buf, sizeof(buf), "model (%.3f):",p_Dmod);
             capstats.report_movetype(buf);
-            sprintf(buf,"volfr (%.3f):",p_vfmod);
+            snprintf(buf, sizeof(buf), "volfr (%.3f):",p_vfmod);
             vfstats.report_movetype(buf);
-            sprintf(buf,"track (%.3f):",p_conprob);
+            snprintf(buf, sizeof(buf), "track (%.3f):",p_conprob);
             connstats.report_movetype(buf);
 
             

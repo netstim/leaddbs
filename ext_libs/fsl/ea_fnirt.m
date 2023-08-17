@@ -5,43 +5,60 @@ fixedimage = varargin{1};
 movingimage = varargin{2};
 outputimage = varargin{3};
 
+% Set output dir
+volumedir = [fileparts(ea_niifileparts(outputimage)), filesep];
+
 % Do linear registration first, generate the affine matrix 'fslaffine*.mat'
-[movpath, movname] = ea_niifileparts(movingimage);
-movingimage_flirt = [fileparts(movpath), filesep, 'flirt_', movname];
+movPath = ea_niifileparts(movingimage);
+movingimage_flirt = [movPath, '_flirt'];
 
 if isempty(dir([movingimage_flirt,'.nii*']))
-    ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
+    affineInit = ea_flirt(fixedimage, movingimage, movingimage_flirt);
+
+    % Move initial affine transformation to 'normalization/transformations'
+    % folder in case BIDS dataset.
+    if isBIDSFileName(movingimage)
+        parsedStruct = parseBIDSFilePath(movingimage);
+        transformDir = [volumedir, '..', filesep, 'transformations', filesep];
+        ea_mkdir(transformDir);
+        movefile(affineInit{1}, [transformDir, 'sub-', parsedStruct.sub, '_from-anchorNative', '_to-', ea_getspace, '_desc-flirt.mat']);
+        movefile(affineInit{2}, [transformDir, 'sub-', parsedStruct.sub, '_from-', ea_getspace, '_to-anchorNative', '_desc-flirt.mat']);
+
+        % Set init affine transformation
+        affineInit = [transformDir, 'sub-', parsedStruct.sub, '_from-anchorNative', '_to-', ea_getspace, '_desc-flirt.mat'];
+    end
 end
+
+% Clean up coregistered image (only transformation needed)
+ea_delete([movingimage_flirt, '.nii*']);
 
 umachine = load([ea_gethome, '.ea_prefs.mat']);
 normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
-    movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
-    [fixpath, fixname] = ea_niifileparts(fixedimage);
-    fixedimage_bet_mask = [fileparts(fixpath), filesep, 'bet_', fixname, '_mask'];
-    mask_params = [' --refmask=', ea_path_helper(fixedimage_bet_mask), ...
-                  ' --inmask=', ea_path_helper(movingimage_bet_mask)];
+    if isBIDSFileName(movingimage)
+        parsedStruct = parseBIDSFilePath(movingimage);
+        movingimage_brainmask = setBIDSEntity(movingimage, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
+    else
+        movingimage_brainmask = [movPath, '_brainmask'];
+    end
+
+    fixedPath = ea_niifileparts(fixedimage);
+    if isBIDSFileName(fixedimage)
+        parsedStruct = parseBIDSFilePath(fixedimage);
+        fixedimage_brainmask = setBIDSEntity(fixedimage, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
+    else
+        fixedimage_brainmask = [fixedPath, '_brainmask'];
+    end
+
+    mask_params = [' --refmask=', ea_path_helper(fixedimage_brainmask), ...
+                  ' --inmask=', ea_path_helper(movingimage_brainmask)];
 else % skullstripping is off
     mask_params = '';
 end
 
-volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
-
-% Determine the affine matrix to be used
+% Additional inital affine transformation provided
 if nargin >= 4
-    affine = varargin{4};
-else
-    [~, mov] = ea_niifileparts(movingimage);
-    [~, fix] = ea_niifileparts(fixedimage);
-    xfm = [mov, '2', fix];
-    affine = dir([volumedir, xfm, '_flirt*.mat']);
-
-    if numel(affine) == 0
-        error(['Initial affine matrix is missing!\nPlease delete ', ...
-               movingimage_flirt, '.nii and try again.']);
-    else
-        affine = [volumedir, affine(end).name];
-    end
+    affineInit = varargin{4};
 end
 
 fprintf('\n\nRunning FSL FNIRT: %s\n\n', movingimage);
@@ -69,7 +86,7 @@ fprintf('\n\nRunning FSL FNIRT: %s\n\n', movingimage);
 fnirtstage = [' --ref=', ea_path_helper(fixedimage), ...
               ' --in=', ea_path_helper(movingimage), ...
               mask_params, ...
-              ' --aff=', ea_path_helper(affine), ...
+              ' --aff=', ea_path_helper(affineInit), ...
               ' --iout=', ea_path_helper(outputimage), ...
               ' --cout=', ea_path_helper([volumedir, warpprefix, 'WarpCoef.nii']), ...
               ' --fout=', ea_path_helper([volumedir, warpprefix, 'WarpField.nii']), ...
@@ -97,24 +114,17 @@ invwarpstage = [' --warp=', ea_path_helper([volumedir, warpprefix, 'WarpField.ni
                 ' --verbose'];
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-if ispc
-    FNIRT = ea_path_helper([basedir, 'fnirt.exe']);
-    INVWARP = ea_path_helper([basedir, 'invwarp.exe']);
-else
-    FNIRT = [basedir, 'fnirt.', computer('arch')];
-    INVWARP = [basedir, 'invwarp.', computer('arch')];
-end
+FNIRT = ea_getExec([basedir, 'fnirt'], escapePath = 1);
+INVWARP = ea_getExec([basedir, 'invwarp'], escapePath = 1);
 
 fnirtcmd = [FNIRT, fnirtstage];
 invwarpcmd = [INVWARP, invwarpstage];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
-if ~ispc
-    system(['bash -c "', fnirtcmd, '"']);
-    system(['bash -c "', invwarpcmd, '"']);
-else
-    system(fnirtcmd);
-    system(invwarpcmd);
-end
+ea_runcmd(fnirtcmd);
+ea_runcmd(invwarpcmd);
+
+% Clean up waro coef file
+ea_delete([volumedir, warpprefix, 'WarpCoef.nii'])
 
 fprintf('\nFSL FNIRT finished\n');

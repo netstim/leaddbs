@@ -5,6 +5,9 @@ function ea_anatomyslices(resultfig,togglestates,options,controlhandles)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+if ~exist('controlhandles', 'var')
+    controlhandles = [];
+end
 
 set(0, 'currentfigure', resultfig);  % for figures
 atlases=getappdata(resultfig,'atlases');
@@ -78,7 +81,6 @@ if (~togglestates.refreshcuts) && (~togglestates.refreshview)
     return
 end
 
-
 %% Render slices
 V=getappdata(resultfig,'V');
 inverted=getappdata(resultfig,'inverted');
@@ -111,9 +113,8 @@ if ~inverted==togglestates.tinvert
     inverted=togglestates.tinvert;    
 end
 
-try
+if ~isempty(controlhandles)
     if get(controlhandles.slicepopup,'Value')==1
-
         togglestates.xyzmm=[togglestates.xyzmm,1]';
 
         try
@@ -124,14 +125,11 @@ try
 
         xyzv=round(xyzv(1:3)); % now in voxel coordinates.
         %keyboard
-
     elseif get(controlhandles.slicepopup,'Value')==2
-
         xyzv = togglestates.xyzmm;
         % xyzv= V{1}.mat * togglestates.xyzmm;
-
     end
-catch % direct call from script.
+else % direct call from script.
     xyzv = round(V{1}.mat \ [togglestates.xyzmm,1]');
 end
 
@@ -140,34 +138,44 @@ end
 % [balanced,colormap] = ea_autocontrast(double(V{1}.dat),2.5);
 % end
 
-if togglestates.xyztoggles(1)
-    usesag=(length(V)>2)*2; % check if explicit saggital volume is available
-    if strcmp(class(V{1+usesag}),'nifti') % memory mapped, nifti function
-        xsliceplot=slice3i(resultfig,V{1+usesag}.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
-    else
-        xsliceplot=slice3i(resultfig,V{1+usesag}.img,V{1+usesag}.mat,1,xyzv(1),controlhandles);
-    end
+usesag=(length(V)>2)*2; % check if explicit saggital volume is available
+if isa(V{1+usesag},'nifti') % memory mapped, nifti function
+    xsliceplot=slice3i(resultfig,V{1+usesag}.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
+else
+    xsliceplot=slice3i(resultfig,V{1+usesag}.img,V{1+usesag}.mat,1,xyzv(1),controlhandles);
 end
 
-if togglestates.xyztoggles(2)
-    % check whether second nii is being used:
-    usecor=length(V)>1; % check if explicit coronal volume is available    
-    if strcmp(class(V{1+usecor}),'nifti') % memory mapped, nifti function
-        ysliceplot=slice3i(resultfig,V{1+usecor}.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
-    else
-        ysliceplot=slice3i(resultfig,V{1+usecor}.img,V{1+usecor}.mat,2,xyzv(2),controlhandles);
-    end
+usecor=length(V)>1; % check if explicit coronal volume is available
+if isa(V{1+usecor},'nifti') % memory mapped, nifti function
+    ysliceplot=slice3i(resultfig,V{1+usecor}.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
+else
+    ysliceplot=slice3i(resultfig,V{1+usecor}.img,V{1+usecor}.mat,2,xyzv(2),controlhandles);
 end
 
-if togglestates.xyztoggles(3)
-    if strcmp(class(V{1}),'nifti') % memory mapped, nifti function        
-        zsliceplot=slice3i(resultfig,V{1}.dat,V{1}.mat,3,xyzv(3),controlhandles);
-    else
-        zsliceplot=slice3i(resultfig,V{1}.img,V{1}.mat,3,xyzv(3),controlhandles);
-    end
+if isa(V{1},'nifti') % memory mapped, nifti function
+    zsliceplot=slice3i(resultfig,V{1}.dat,V{1}.mat,3,xyzv(3),controlhandles);
+else
+    zsliceplot=slice3i(resultfig,V{1}.img,V{1}.mat,3,xyzv(3),controlhandles);
 end
 
 %colormap(cmap);
+
+% Set template popup and slice toggle properly, useful when scripting
+if isempty(controlhandles)
+    awin = getappdata(resultfig, 'awin');
+    if isvalid(awin) % check if not deleted (closed)
+        handle = guidata(awin);
+        [~, idx] = ismember(togglestates.template, handle.templatepopup.String);
+        if idx
+            handle.templatepopup.Value = idx;
+        else
+            ea_cprintf('CmdWinWarnings', 'Template not found in the list!\n');
+        end
+        handle.xtoggle.Value = togglestates.xyztoggles(1);
+        handle.ytoggle.Value = togglestates.xyztoggles(2);
+        handle.ztoggle.Value = togglestates.xyztoggles(3);
+    end
+end
 
 % store data in figure
 setappdata(resultfig,'xsliceplot',xsliceplot);

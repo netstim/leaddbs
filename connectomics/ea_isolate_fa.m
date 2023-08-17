@@ -35,9 +35,9 @@ parametersDTI.textdisplay=true;
 
 V=spm_vol([directory,options.prefs.dti,',1']);
 V.fname=[directory,options.prefs.fa];
-V.dt=[16,1];
+V.dt(1) = 16;
 spm_write_vol(V,FA);
 
 V.fname=[directory,options.prefs.b0];
-V.dt=[16,1];
+V.dt(1) = 16;
 spm_write_vol(V,Bo);

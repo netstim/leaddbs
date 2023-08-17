@@ -7,14 +7,13 @@ if ~isfield(options,'root') % called from lead group
     return
 end
 
-directory = [options.root,options.patientname,filesep];
 stimname = cell(0);
-if exist([directory,'stimulations',filesep,ea_nt(options)],'dir')
-    stimdir = dir([directory,'stimulations',filesep,ea_nt(options)]);
+if exist([options.subj.stimDir, filesep, ea_nt(options)],'dir')
+    stimdir = dir([options.subj.stimDir, filesep, ea_nt(options)]);
     [~, ind] = sort([stimdir(:).datenum], 'descend'); % show the latest modified first
     stimdir = stimdir(ind);
     stimname = {stimdir(cell2mat({stimdir.isdir})).name};
-    stimname = stimname(cellfun(@(x) ~strncmp(x,'.',1) && ~strncmp(x,'gs_',3), stimname));
+    stimname = stimname(cellfun(@(x) ~startsWith(x, {'.', 'gs_'}), stimname));
 end
 
 if ~isempty(stimname)
@@ -45,7 +44,7 @@ while 1
     if length(stimc{1})<3
         break
     else
-        if strcmp(stimc{1}(1:3),'gs_')
+        if startsWith(stimc{1},'gs_')
             msgbox('Please do not choose a stimulation label that starts with "gs_". These are reserved letters used in stimulations programmed inside Lead Group.')
         else
             break

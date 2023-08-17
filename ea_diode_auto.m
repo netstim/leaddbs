@@ -314,10 +314,10 @@ Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-e
 Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
 finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
 finalslice = finalslice';
-
-if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
-    finalslice = flipdim(finalslice,2);
-end
+finalslice = flipdim(finalslice,2);
+% if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
+%     finalslice = flipdim(finalslice,2);
+% end
 %% darkstar method
 checkslices = [-2:0.5:2]; % check neighboring slices for marker
 
@@ -577,7 +577,7 @@ set(ax2,'yticklabel',{[]})
 
 ax3 = subplot(3,3,3);
 hold on
-title(ax3,'Sagittal View','FontWeight','normal')
+title(ax3,'Sagittal View','FontWeight','bold')
 
 imagesc(finalslice)
 axis equal
@@ -685,14 +685,17 @@ uiwait
 
 if SaveButton.UserData == 1
     savestate = 1;
+    uiresume
 elseif DiscardButton.UserData == 1
     savestate = 0;
     retrystate = 0;
+    uiresume
 elseif ManualButton.UserData == 1
     savestate = 0;
     retrystate = 1;
     disp(['Retry with manual refinement!'])
     [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec);
+    uiresume
 end
 
 %% saving results

@@ -26,8 +26,8 @@ if redomarkers
             case {'Medtronic B33005'
                   'Medtronic B33015'
                   'Boston Scientific Vercise Directed'
-                  'St. Jude Directed 6172 (short)'
-                  'St. Jude Directed 6173 (long)'}
+                  'Abbott Directed 6172 (short)'
+                  'Abbott Directed 6173 (long)'}
                 elstruct.markers(side).tail=elstruct.coords_mm{side}(8,:);
             case {'Boston Scientific Vercise Cartesia HX'
                   'Boston Scientific Vercise Cartesia X'}
@@ -57,7 +57,7 @@ if options.native && exist([options.root,options.patientname,filesep,'scrf',file
     Btest = B/mat';
     Xtest = mldivide(A,Btest);
 elseif options.native && exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
-    mat = ea_getscrfmat([options.root,options.patientname,filesep]);
+    mat = ea_getscrfmat(options);
     save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
     Btest = B/mat';
     Xtest = mldivide(A,Btest);

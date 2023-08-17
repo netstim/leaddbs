@@ -21,15 +21,16 @@ else
         warning('off', 'backtrace');
         warning('Custom output folder not specified! Will save result to current folder.');
         warning('on', 'backtrace');
-        outputfolder = ea_getoutputfolder({[pwd, filesep]},connName);
+        outputfolder = [pwd, filesep];
     elseif ~strcmp(outputfolder(end),filesep)
-        outputfolder = [outputfolder,filesep];
+        outputfolder = [outputfolder, filesep];
     end
+    connLabel = ea_getConnLabel(connName);
 end
 
 disp(['Command: ',cmd]);
 switch cmd
-    case 'seed'             
+    case 'seed'
         cs_dmri_conseed_map(connBaseFolder,connName,sfile,cmd,space,options)
     case {'matrix', 'pmatrix'}
         for s=1:length(sfile)
@@ -131,14 +132,21 @@ switch cmd
                 end
             end
         end
+
         mat=mat+mat'; % symmetrize matrix
         mat(logical(eye(length(sfile))))=mat(logical(eye(length(sfile))))/2;
+
         if isfield(options.lcm, 'parcSeedName') && ~isempty(options.lcm.parcSeedName)
-            fn = options.lcm.parcSeedName;
+            save(fullfile(outputfolder, [options.lcm.parcSeedName, '_conn-', connLabel, '_struc', cmd, '.mat']), 'mat');
         else
-            [~,fn]=fileparts(sfile{1});
+            seeds = sfile;
+            if ~isBIDSFileName(sfile{1})
+                [~, fn] = fileparts(sfile{1});
+                save(fullfile(outputfolder, [fn, '_conn-', connLabel, '_struc', cmd, '.mat']), 'mat', 'seeds', '-v7.3');
+            else
+                save(setBIDSEntity(sfile{s}, 'dir', outputfolder, 'sub', '', 'conn', connLabel, 'suffix', ['struc',cmd], 'ext', 'mat'), 'mat', 'seeds', '-v7.3');
+            end
         end
-        save(fullfile(outputfolder,[fn,'_struc_',cmd,'.mat']),'mat');
     otherwise
         warning('Structural connectivity only supported for seed / matrix / pmatrix commands.');
 end
@@ -147,11 +155,8 @@ end
 function ftr=track_seed_gqi(cfile,seedfile)
 
 basedir = [ea_getearoot, 'ext_libs',filesep,'dsi_studio',filesep];
-if ispc
-    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
-else
-    DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
-end
+DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
+
 
 pth=fileparts(seedfile);
 
@@ -161,7 +166,7 @@ cmd=[DSISTUDIO,' --action=trk --source=',ea_path_helper(cfile),...
     ' --seed_count=10000',...
     ' --output=',ea_path_helper([pth,filesep,'temp.mat'])];
 
-err=ea_submitcmd(cmd);
+err=ea_runcmd(cmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end

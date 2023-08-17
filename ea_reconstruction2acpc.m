@@ -1,7 +1,6 @@
 function ea_reconstruction2acpc(options)
 
-directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat'],'reco');
+load(options.subj.recon.recon, 'reco');
 
 for iside=1:length(options.sides)
     side=options.sides(iside);
@@ -10,7 +9,7 @@ for iside=1:length(options.sides)
         cfg.ymm=reco.native.coords_mm{side}(c,2);
         cfg.zmm=reco.native.coords_mm{side}(c,3);
         cfg.acmcpc=2; % map to MCP
-        fid=ea_native2acpc(cfg,{directory});
+        fid=ea_native2acpc(cfg,{[options.root,options.patientname]});
         reco.acpc.coords_mm{side}(c,:)=fid.WarpedPointACPC;
         reco.acpc.ac=fid.AC;
         reco.acpc.pc=fid.PC;
@@ -18,4 +17,5 @@ for iside=1:length(options.sides)
     end
 end
 
-save([directory,filesep,'ea_reconstruction.mat'],'reco');
+save(options.subj.recon.recon,'reco');
+

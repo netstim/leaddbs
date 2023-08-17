@@ -22,7 +22,7 @@ function varargout = ea_checkstructures(varargin)
 
 % Edit the above text to modify the response to help ea_checkstructures
 
-% Last Modified by GUIDE v2.5 04-Feb-2020 14:57:52
+% Last Modified by GUIDE v2.5 21-Sep-2021 10:48:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,14 +66,14 @@ options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for ch
 setappdata(handles.checkstructures,'options',options);
 setappdata(handles.checkstructures,'hemisphere',2);
 setappdata(handles.checkstructures,'offset',[0.5,0.5,0.5]);
-[~,presentfiles]=ea_assignpretra(options);
+presentfiles = fieldnames(options.subj.preopAnat);
 
 c = uicontextmenu(handles.checkstructures);
 handles.otherstructures.UIContextMenu = c;
-atlases=dir(ea_space(options,'atlases'));
+atlases = dir(ea_space(options,'atlases'));
 atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
 atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));  % also remove '.', '..' and '.*' folders from dir results
-atlmenu=cell(length(presentfiles),length(atlases));
+atlmenu = cell(length(presentfiles),length(atlases));
 warning('off');
 set(handles.refinestatus,'String','Click on panels to add detail-corrections relative to the atlas of choice.');
 
@@ -117,26 +117,13 @@ axis equal;
 axis off;
 drawnow
 % add preop acquisitions to popup
-cellentr=cell(0);
-for p=presentfiles'
-    % cellentr{end+1}=upper(p{1}(6:end-4));
-    % TP: above line is problematic if user sets their own naming conventions
-    % in ea_prefs. At this stage, the truncation is used just to display in
-    % a drop-down list... but it gets saved to a handle and is later used
-    % to find a nii file resulting in a crash.
-    %
-    % Need to remove search string pre-fix and file extension. Below
-    % solution is still not a complete fix since I'm assuming the search
-    % string ends with *.nii
-    idx = strfind(options.prefs.prenii_searchstring, '*');
-    cellentr{end+1}=upper(p{1}(idx:end-4));
-end
-set(handles.anat_select,'String',cellentr);
-modality=get(handles.anat_select,'String');
-modality=modality{get(handles.anat_select,'Value')};
-setappdata(handles.checkstructures,'modality',modality);
-options.prefs=ea_prefs(options.patientname);
-setappdata(handles.checkstructures,'options',options);
+cellentr = presentfiles;
+set(handles.anat_select, 'String', cellentr);
+modality = get(handles.anat_select, 'String');
+modality = modality{get(handles.anat_select, 'Value')};
+setappdata(handles.checkstructures, 'modality', modality);
+options.prefs = ea_prefs(options.patientname);
+setappdata(handles.checkstructures, 'options', options);
 try
     switch(options.prefs.machine.checkreg.default)
         case 'DISTAL Minimal (Ewert 2017)@STN'
@@ -150,7 +137,7 @@ try
             ea_setnewatlas(h,[],options,handles);
     end
 catch % default (e.g. when changing to a different space
-    sd=load([ea_space,'ea_space_def.mat']);
+    sd=load([ea_space,'spacedef.mat']);
     defaultnucleus=sd.spacedef.defaultnucleus;
     parts=ea_strsplit(defaultnucleus,'@');
     h.Parent.Label=parts{1};
@@ -164,7 +151,7 @@ end
 
 function ea_preset_stn(handles)
 set(handles.stn,'Value',1); set(handles.gpi,'Value',0);
-stnmods={'T2','QSM','T2STAR','FGATIR'};
+stnmods={'T2w','T2starw','FGATIR','QSM'};
 mods=get(handles.anat_select,'String');
 [is,idx]=ismember(mods,stnmods);
 if any(is) % only change modality if theres a suitable one available.
@@ -338,6 +325,7 @@ for cts=cortrasag
     options.d2.lab_overlay=1;
     options.d2.col_overlay=0;
     [hf,img,bb,contour{cts}]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
+    ea_delete([options.subj.subjDir, filesep, 'export', filesep, '2D', '*viewplane.txt']);
     bbs=getappdata(handles.checkstructures,'bbs');
     if isempty(bbs)
         clear bbs
@@ -352,7 +340,7 @@ for cts=cortrasag
     him=image(img);
 
     hold on
-    set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_getmouse(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
+%     set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_getmouse(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
     set(handles.(views{cts}),'xtick',[],'ytick',[],'xlabel',[],'ylabel',[]);
     set(him, 'HitTest', 'off');
 end
@@ -709,7 +697,7 @@ if ~isempty(uuid)
         if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
             nii=ea_load_nii([ea_space,'t1.nii']);
             nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
-            nii.dt=[16,0];
+            nii.dt(1) = 16;
             nii.img(:)=0;
         else
             nii=ea_load_nii([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii']);
@@ -724,13 +712,13 @@ if ~isempty(uuid)
 
         % now project fids back to native space and export mapping there:
         expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
-        [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+        [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'forwardTransform'],[directory,options.prefs.prenii_unnormalized]);
 
 
         if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
             nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
             nii.fname=[directory,'fiducials',filesep,'native',filesep,uuid,'.nii'];
-            nii.dt=[16,0];
+            nii.dt(1) = 16;
             nii.img(:)=0;
         else
             nii=ea_load_nii([directory,'fiducials',filesep,'native',filesep,uuid,'.nii']);
@@ -825,7 +813,7 @@ if ~isempty(uuid)
     approved.(ea_stripext(options.prefs.gprenii))=0;
     save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
-    if strcmp(computer('arch'),'maci64')
+    if ismac
         system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(options.prefs.gprenii),'.nii'])]);
     end
 
@@ -859,8 +847,3 @@ function pushbutton6_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-
-
-

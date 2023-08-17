@@ -9,7 +9,7 @@ function dcm = ea_searchdcm(src)
 
 
 %% Retrieve all files in the folder
-fnames = ea_regexpdir(src, ['[^\', filesep, ']$'], 1);
+fnames = ea_regexpdir(src, '.*', 1, 'file');
 
 nFile = numel(fnames);
 if nFile<1

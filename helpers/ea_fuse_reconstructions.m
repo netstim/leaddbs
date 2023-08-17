@@ -1,6 +1,6 @@
 function ea_fuse_reconstructions(recos,outputfilename)
 % simple function to fuse several reconstructions into one.
-% recos is a cell pointing to different ea_reconstruction.mat files
+% recos is a cell pointing to different reconstruction iles
 
 for r=1:length(recos)
 
@@ -24,10 +24,6 @@ for r=1:length(recos)
         try reco.scrf.markers(end+1:end+length(rec(r).reco.scrf.markers))=rec(r).reco.scrf.markers; end       
         try reco.acpc.markers(end+1:end+length(rec(r).acpc.scrf.markers))=rec(r).acpc.scrf.markers; end
     end
-
-
 end
 
 save(outputfilename,'reco');
-
-

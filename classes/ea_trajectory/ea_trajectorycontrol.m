@@ -542,15 +542,12 @@ obj.target=t;
 
 
 function ea_plan2reconstruction(~,~,obj)
-[FileName,PathName] = uiputfile('ea_reconstruction.mat','Choose destination of ea_reconstruction.mat');
+[fileName, path] = uiputfile(obj.options.subj.recon.recon,'Export Plan as Reconstruction');
 
-if ~strcmp(FileName,'ea_reconstruction.mat')
-    ea_warning('Files that are named differently than ea_reconstruction.mat will not be recognized by Lead-DBS.');
-end
-elstruct=obj.plan2elstruct;
-options=obj.options;
-[options.root,options.patientname]=fileparts(PathName);
-ea_save_reconstruction(elstruct(1).coords_mm,elstruct(1).trajectory,elstruct(1).markers,obj.plan2elstruct_model,1,options,FileName);
+elstruct = obj.plan2elstruct;
+options = obj.options;
+
+ea_save_reconstruction(elstruct(1).coords_mm,elstruct(1).trajectory,elstruct(1).markers,obj.plan2elstruct_model,1,options,[path, fileName]);
 
 
 % --- Outputs from this function are returned to the command line.

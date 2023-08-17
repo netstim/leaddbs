@@ -167,7 +167,7 @@ class Ui_centralwidget(object):
 
     def retranslateUi(self, centralwidget):
         _translate = QtCore.QCoreApplication.translate
-        centralwidget.setWindowTitle(_translate("centralwidget", "Full Field IFFT"))
+        centralwidget.setWindowTitle(_translate("centralwidget", "VTA approximation"))
         self.pushButton_Save.setText(_translate("centralwidget", "Ok"))
         self.pushButton_Cancel.setText(_translate("centralwidget", "Cancel"))
         self.label_T_Step_End.setText(_translate("centralwidget", "Time Steps Until"))

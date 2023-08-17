@@ -19,7 +19,7 @@ end
 [bids_folder,id]=fileparts(bids_subject_folder);
 
 % at this point lead checks that the subject folder begins with 'sub', not sure this is necessary:
-if ~strcmp(id(1:3),'sub')
+if ~startsWith(id,'sub')
     error('Not a valid BIDS subject folder')
 end
 
@@ -133,22 +133,17 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
-options.dicomimp.method = 1;
-options.assignnii = 0;
 options.normalize.do = true;
 options.normalize.settings = [];
-options.normalize.method = 'ea_normalize_ants';
-options.normalize.methodn = 9;
-options.normalize.check = false;
+options.normalize.method = 'ANTs (Avants 2008)';
+options.checkreg = false;
 options.normalize.refine = 0;
 options.coregmr.check = 0;
-options.coregmr.method = 'SPM';
+options.coregmr.method = 'SPM (Friston 2007)';
 options.coregmr.do = 1;
 options.overwriteapproved = 0;
 options.coregct.do = true;
-options.coregct.method = 'ea_coregctmri_ants';
-options.coregct.methodn = 7;
+options.coregct.method = 'ANTs (Avants 2008)';
 options.modality = 1;
 options.verbose = 3;
 options.sides = [1 2];
@@ -159,7 +154,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;
@@ -169,14 +163,14 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 0;
 options.d2.bbsize = 50;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T1';
+options.d2.backdrop = 'MNI152NLin2009bAsym T1 (Fonov 2011)';
 options.d2.fid_overlay = 1;
 options.d2.write = false;
 options.d2.atlasopacity = 0.15;
 options.d2.writeatlases = 1;
-options.manualheightcorrection = false;
+options.refinelocalization = false;
 options.scrf.do = 1;
-options.scrf.mask = 2;
+options.scrf.mask = 'Coarse mask (Schönecker 2008)';
 options.d3.write = false;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -194,7 +188,7 @@ options.d3.writeatlases = 1;
 options.numcontacts = 4;
 options.entrypoint = 'STN, GPi or ViM';
 options.entrypointn = 1;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodeln = 1;
 options.elmodel = 'Medtronic 3389';
 options.atlasset = 'DISTAL Minimal (Ewert 2017)';

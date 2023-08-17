@@ -3,7 +3,7 @@ function ea_fix_runtimepath
 % the environment variable. This function will fix it when needed.
 % The path is neccesary to run some binaries.
 
-runtimePath = {fullfile(matlabroot,'bin',computer('arch'))};
+runtimePath = {fullfile(matlabroot,'bin',ea_getarch)};
 
 if ispc
     envname = 'PATH';
@@ -13,7 +13,7 @@ else
     elseif isunix
         envname = 'LD_LIBRARY_PATH';
     end
-    runtimePath = [runtimePath; fullfile(matlabroot, 'sys', 'os', computer('arch'))];
+    runtimePath = [runtimePath; fullfile(matlabroot, 'sys', 'os', ea_getarch)];
 end
 
 env = getenv(envname);

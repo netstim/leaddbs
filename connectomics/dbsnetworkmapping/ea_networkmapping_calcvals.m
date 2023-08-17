@@ -3,7 +3,7 @@ function [AllX] = ea_networkmapping_calcvals(vatlist,cfile)
 %% Run Lead Mapper:
 % --------------------------------------
 options = getoptslocal;
-options.prefs=ea_prefs;
+options.prefs.lcm.vatseed = 'efield';
 options.lcm.seeds = vatlist(:);
 %%
 % determine whether connectome of use is structural or functional:
@@ -24,20 +24,28 @@ options.lcm.cmd = 1;
 ea_run('run', options);
 
 %% Load in nifti files as matrix
+connLabel = ea_getConnLabel(cfile);
 for s=1:size(vatlist,1)
+    switch sf(ix)
+        case 1 % structural
+            if isBIDSFileName(vatlist{s})
+                fingerprint = setBIDSEntity(vatlist{s}, 'conn', connLabel, 'suffix', 'strucmap');
+            else
+                fingerprint = strrep(vatlist{s}, '.nii', ['_conn-', connLabel, '_strucmap.nii']);
+            end
+        case 2 % functional
+            if isBIDSFileName(vatlist{s})
+                fingerprint = setBIDSEntity(vatlist{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
+            else
+                fingerprint = strrep(vatlist{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
+            end
+    end
 
-        [pth,fn,ext]=fileparts(vatlist{s});
-        switch sf(ix)
-            case 1 % structural
-                suffix='_struc_seed';
-            case 2 % functional
-                suffix='_func_seed_AvgR_Fz';
-        end
-        nii=ea_load_nii(ea_niigz(fullfile(pth,strrep(cfile,' > ','_'),[fn,suffix,ext])));
-        if ~exist('AllX','var')
-           AllX=zeros(size(vatlist,1),numel(nii.img));
-        end
-        AllX(s,:)=nii.img(:);
+    nii = ea_load_nii(ea_niigz(fingerprint));
+    if ~exist('AllX','var')
+       AllX = zeros(size(vatlist,1),numel(nii.img));
+    end
+    AllX(s,:) = nii.img(:);
 end
 
 
@@ -48,11 +56,9 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
-options.assignnii = 0;
 options.normalize.do = 0;
 options.normalize.method = [];
-options.normalize.check = 0;
+options.checkreg = false;
 options.normalize.refine = 0;
 options.coregmr.check = 0;
 options.coregmr.do = 0;
@@ -66,7 +72,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = 0;
-options.atl.normalize = 0;
 options.atl.can = 1;
 options.atl.pt = 0;
 options.atl.ptnative = 0;
@@ -76,13 +81,13 @@ options.d2.con_overlay = 1;
 options.d2.con_color = [1 1 1];
 options.d2.lab_overlay = 0;
 options.d2.bbsize = 50;
-options.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T1 (Fonov 2011)';
+options.d2.backdrop = 'MNI152NLin2009bAsym T1 (Fonov 2011)';
 options.d2.fid_overlay = 1;
 options.d2.write = 0;
 options.d2.atlasopacity = 0.15;
-options.manualheightcorrection = 0;
+options.refinelocalization = 0;
 options.scrf.do = 0;
-options.scrf.mask = 2;
+options.scrf.mask = 'Coarse mask (Schönecker 2008)';
 options.d3.write = 0;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -97,7 +102,7 @@ options.d3.mirrorsides = 0;
 options.d3.autoserver = 0;
 options.d3.expdf = 0;
 options.numcontacts = 4;
-options.writeoutpm = 1;
+options.writeoutpm = 0;
 options.elmodel = 'Medtronic 3389';
 options.expstatvat.do = 0;
 options.fiberthresh = 10;
@@ -169,13 +174,11 @@ options.colormap = [0.2422 0.1504 0.6603
                     0.9769 0.9839 0.0805];
 %%
 options.dolc = 0;
-%%
 options.ecog.extractsurface.do = 0;
-%%
 options.uivatdirs = {};
-%%
 options.uipatdirs = {''};
 options.leadprod = 'mapper';
+options.prefs = ea_prefs;
 options.lc.general.parcellation = 'ABI_atlas_reduced_V2';
 options.lc.general.parcellationn = 2;
 options.lc.graph.struc_func_sim = 0;

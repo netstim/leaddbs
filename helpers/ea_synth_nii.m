@@ -1,0 +1,13 @@
+function Vexp=ea_synth_nii(fname,mat,dt,Y)
+Vexp.mat=mat;
+Vexp.fname=fname;
+Vexp.dt=dt;
+Vexp.dim=size(Y);
+Vexp.n=[1 1];
+Vexp.descrip='lead dbs - leadfield';
+Vexp.private=nifti;
+Vexp.private.mat=Vexp.mat;
+Vexp.private.mat0=Vexp.mat;
+Vexp.private.mat_intent='Aligned';
+Vexp.private.mat0_intent='Aligned';
+Vexp.private.descrip='lead dbs - leadfield';

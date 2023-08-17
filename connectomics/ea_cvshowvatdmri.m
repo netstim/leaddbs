@@ -30,24 +30,28 @@ else
     end
 end
 
-% seed filename
-seedfile={};
-for v=1:length(usevat)
-    seedfile{v}=[directory,'stimulations',filesep,ea_nt(options),vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
+subPrefix = ['sub-', options.subj.subjId];
+hemiTag = regexprep(usevat, {'right', 'left'}, {'R', 'L'});
+
+try
+    load([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,subPrefix,'_desc-stimparameters.mat'], 'S');
+catch
+    ea_error(['Could not find stimulation parameters for ',directory,ea_nt(options),vsname,'.']);
 end
 
-for side=1:length(usevat)
-    try
-        load([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,'stimparameters.mat']);
-    catch
-        ea_error(['Could not find stimulation parameters for ',directory,ea_nt(options),vsname,'.']);
-    end
+modelLabel = ea_simModel2Label(S.model);
+vatPrefix = [subPrefix, '_sim-binary_model-', modelLabel, '_hemi-'];
+
+% seed filename
+seedfile=cell(length(hemiTag),1);
+for v=1:length(hemiTag)
+    seedfile{v}=[directory,'stimulations',filesep,ea_nt(options),vsname,filesep,vatPrefix,hemiTag{options.sides(v)},'.nii'];
 end
 
 targetsfile=[ea_space(options,'labeling'),selectedparc,'.nii'];
 
 options.writeoutstats=1;
-options.writeoutpm=1;
+options.writeoutpm = 0;
 
 try
     load([directory,'connvisfibers/','fiberstate.mat'])

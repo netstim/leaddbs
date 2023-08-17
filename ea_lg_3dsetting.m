@@ -103,6 +103,8 @@ catch
     set(handles.mirrorsides, 'Value', 0);
 end
 
+ea_ListBoxRenderer(handles.elmodelselect);
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_lg_3dsetting_OutputFcn(hObject, eventdata, handles)
@@ -146,7 +148,7 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
                 [options.root,options.patientname] = fileparts(M.patient.list{pt});
                 options.root = [options.root, filesep];
                 options = ea_resolve_elspec(options);
-                if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+                if isfile([options.root,options.patientname,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'])
                     [~,~,markers,elmodel,~,coords_acpc] = ea_load_reconstruction(options);
 
                     if M.ui.elmodelselect == 1 % use patient specific elmodel
@@ -186,10 +188,8 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
             catch
                 if pt>1 % first patient has worked but some other patient seems not to have worked.
                     try
-                        if ~M.ui.detached
-                            M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
-                            warning(['No reconstruction present for ',patientname,'. Please check.']);
-                        end
+                        M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
+                        warning(['No reconstruction present for ',patientname,'. Please check.']);
                     end
                 end
             end

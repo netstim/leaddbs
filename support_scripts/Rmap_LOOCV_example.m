@@ -44,7 +44,7 @@ end
 
 %% 3. show correlation between similarities to "optimal" connectivity and empirical improvement
 
-h=ea_corrplot(Regressor(allpts),RegressorHat(allpts),{'LOOCV Crossvalidation','Empirical Regressor','Similarity to R-Map'},corrtype);
+h=ea_corrplot(Regressor(allpts), RegressorHat(allpts), 'noperm', {'LOOCV Crossvalidation','Empirical Regressor','Similarity to R-Map'});
 saveas(h,'result.png');
 
 

@@ -2,12 +2,12 @@ function ea_atlas2conn(atlasFolder, connectomeName)
 % Convert atlas that contains fiber tracts into normal dMRI connectome
 
 % Retrieve left side tracts
-leftTracts = ea_regexpdir([atlasFolder, filesep, 'lh'], '.*\.mat', 1);
+leftTracts = ea_regexpdir([atlasFolder, filesep, 'lh'], '^(?!\.).*\.mat$', 1);
 [~, leftTractNames] = cellfun(@fileparts, leftTracts, 'Uni', 0);
 leftTractNames = strcat({'Left '}, leftTractNames);
 
 % Retrieve right side tracts
-rightTracts = ea_regexpdir([atlasFolder, filesep, 'rh'], '.*\.mat', 1);
+rightTracts = ea_regexpdir([atlasFolder, filesep, 'rh'], '^(?!\.).*\.mat$', 1);
 [~, rightTractNames] = cellfun(@fileparts, rightTracts, 'Uni', 0);
 rightTractNames = strcat({'Right '}, rightTractNames);
 
