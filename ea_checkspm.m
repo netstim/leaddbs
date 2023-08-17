@@ -23,6 +23,7 @@ if ~isdeployed
     cfg = dir(fullfile(fileparts(which('spm')), 'toolbox', 'Shoot', 'tbx_cfg_shoot.m'));
     if cfg.bytes ~= 35562
         ea_patch_spm;
+        ea_cprintf('CmdWinWarnings', 'Patched SPM cfg files for use in LeadDBS.\n')
     end
 
     if ~any(ismember(ver(8:11),'.')) % old version format
