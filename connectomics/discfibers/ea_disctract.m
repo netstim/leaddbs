@@ -855,6 +855,7 @@ classdef ea_disctract < handle
                         Ihat = Ihat(test,:,:);
                         Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
                         Improvement = Improvement(test);
+                        return;
                     end
                 case 'Split & Color By PCA'
 
@@ -906,9 +907,6 @@ classdef ea_disctract < handle
             if ~iscell(Ihat)
                 if cvp.NumTestSets == 1
                     Ihat = Ihat(test,:);
-                    if obj.CleartuneOptim
-                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
-                    end
                     Improvement = Improvement(test);
                 end
 
