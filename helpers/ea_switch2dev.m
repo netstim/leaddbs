@@ -98,7 +98,6 @@ disp('Switch LeadDBS branch to develop ...')
 system(['git -C ', LeadRoot, ' stash']);
 system(['git -C ', LeadRoot, ' checkout develop']);
 
-lead path;
-savepath;
+ea_setpath;
 rehash toolboxcache;
 disp('LeadDBS search path updated.');
