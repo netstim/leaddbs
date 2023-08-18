@@ -67,16 +67,8 @@ if update
             % delete files during incremental updating
             if update==2 && exist([earoot,'tmp',filesep,id,filesep,'DELETE'], 'file')
                 disp('Deleting outdated code...');
-                dfid = fopen([earoot,'tmp',filesep,id,filesep,'DELETE']);
-                dels=textscan(dfid,'%s');
-                fclose(dfid);
-                for f=1:length(dels{1})
-                    if isdir([earoot,dels{1}{f}])
-                        rmdir([earoot,dels{1}{f}],'s')
-                    else
-                        delete([earoot,dels{1}{f}])
-                    end
-                end
+                dels = readlines([earoot,'tmp',filesep,id,filesep,'DELETE']);
+                ea_delete(cellstr(dels));
                 delete([earoot,'tmp',filesep,id,filesep,'DELETE'])
             end
         catch
