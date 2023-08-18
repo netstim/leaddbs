@@ -43,19 +43,11 @@ if hotfix
         end
         delete([earoot,'tmp',filesep,'hotfix.zip']);
 
-        disp('Deleting outdated code...');
         try
             if exist([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'], 'file')
-                dfid = fopen([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
-                dels=textscan(dfid,'%s');
-                fclose(dfid);
-                for f=1:length(dels{1})
-                    if isdir([earoot,dels{1}{f}])
-                        rmdir([earoot,dels{1}{f}],'s')
-                    else
-                        delete([earoot,dels{1}{f}])
-                    end
-                end
+                disp('Deleting outdated code...');
+                dels = readlines([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
+                ea_delete(cellstr(dels));
                 delete([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'])
             end
         catch
