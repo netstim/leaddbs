@@ -153,18 +153,19 @@ if isempty(menuprobe)
     for l=1:length(list)
         if isa([list{l}], 'char')
             insit(l) = uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
-            insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
+            if isdeployed && strcmp(commands{l}, 'hotfix')
+                % Disable hotfix for compiled app
+                insit(l).Checked = 'off';
+                insit(l).Enable = 'off';
+            else
+                insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
+            end
         else % cell. create menu in above item
             insit(l-1).Callback = [];
             for j = 1:length(list{l})
                 m = uimenu(insit(l-1),'Label',[list{l}{j}],'Callback',{@ea_menuinstall,commands{l}{j}});
                 m.Checked = ea_checkinstall(commands{l}{j},1);
             end
-        end
-        % disable for compiled app
-        if isdeployed && any(strcmp(insit(l).Text,{'Install development version of LeadDBS'}))
-            insit(l).Checked = 'off';
-            insit(l).Enable = 'off';
         end
     end
 
