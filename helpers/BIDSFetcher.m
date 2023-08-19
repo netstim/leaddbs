@@ -25,7 +25,7 @@ classdef BIDSFetcher
             end
 
             % Set up properties
-            obj.settings = obj.leadPrefs('m');
+            obj.settings = obj.leadPrefs(ea_prefsext);
             obj.spacedef = ea_getspacedef;
             obj.datasetDir = GetFullPath(datasetDir);
 
@@ -834,14 +834,14 @@ classdef BIDSFetcher
         %% Helper functions
         function prefs = leadPrefs(type)
             if ~exist('type', 'var') || isempty(type)
-                type = 'm';
+                type = '.m';
             end
 
             switch type
-                case 'json'
+                case '.json'
                     % Read .ea_prefs.json
                     prefs = loadjson(fullfile(ea_gethome, '.ea_prefs.json'));
-                case 'm'
+                case '.m'
                     % Read .ea_prefs.m and .ea_prefs.mat
                     prefs = ea_prefs;
             end
