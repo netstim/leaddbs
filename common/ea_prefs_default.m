@@ -1,12 +1,15 @@
 function prefs = ea_prefs_default(patientname)
-
 % determine preferences here. For filenames, the variable 'patientname' can
 % be used in string-handling. This variable will be a string with the same name as the patient
 % folder.
 
+if nargin == 0
+    patientname = '';
+end
+
 % load loaded prefs (-> prefs.lp)
 try
-    load([ea_getearoot,'ea_prefs']);
+    load([ea_getearoot, 'ea_prefs']);
     prefs.lp = lp;
 end
 

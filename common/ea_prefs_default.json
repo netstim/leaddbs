@@ -1,1 +1,288 @@
-{"dev":{"profile":"user"},"pp":{"do":0,"csize":4,"profile":"local"},"prenii_searchstring":"anat_*.nii","prenii_order":["t1","t2","pd"],"prenii_unnormalized":"anat_t2.nii","prenii_unnormalized_t1":"anat_t1.nii","prenii_unnormalized_pd":"anat_pd.nii","tranii_unnormalized":"postop_tra.nii","sagnii_unnormalized":"postop_sag.nii","cornii_unnormalized":"postop_cor.nii","rawctnii_unnormalized":"postop_ct.nii","ctnii_coregistered":"rpostop_ct.nii","tp_ctnii_coregistered":"tp_rpostop_ct.nii","preferMRCT":1,"patientdir":"","gprenii":"glanat.nii","gtranii":"glpostop_tra.nii","gcornii":"glpostop_cor.nii","gsagnii":"glpostop_sag.nii","gctnii":"glpostop_ct.nii","tp_gctnii":"tp_glpostop_ct.nii","tonemap":"heuristic","rest_searchstring":"rest*.nii","rest":"rest.nii","lc":{"struc":{"maxdist":2,"minlen":3},"graphsurfc":[0.2081,0.1663,0.5292],"matsurfc":[0.8,0.7,0.4],"seedsurfc":[0.8,0.1,0.1],"func":{"regress_global":1,"regress_wmcsf":1,"bphighcutoff":0.08,"bplowcutoff":0.009},"datadir":"/home/simon/Projects/leaddbs/connectomes/"},"lcm":{"vatseed":"binary","chunk":10},"b0":"b0.nii","fa":"fa.nii","fa2anat":"fa2anat.nii","FTR_unnormalized":"FTR.mat","FTR_normalized":"wFTR.mat","DTD":"DTD.mat","HARDI":"HARDI.mat","dti":"dti.nii","bval":"dti.bval","bvec":"dti.bvec","sampledtidicom":"sample_dti_dicom.dcm","normmatrix":"lmat.txt","normalize":{"default":"ea_normalize_ants","inverse":{"warp":"inverse","customtpm":0},"createwarpgrids":0,"fsl":{"warpres":8},"spm":{"resolution":1}},"reco":{"mancoruse":"postop","saveACPC":0,"saveimg":0,"exportfiducials":0},"ctcoreg":{"default":"ea_coregctmri_ants"},"mrcoreg":{"default":"spm","writeoutcoreg":0},"scrf":{"tonemap":"tp_"},"atlases":{"default":"DISTAL Minimal (Ewert 2017)"},"hullmethod":2,"hullsmooth":5,"hullsimplify":0.3,"lhullmethod":2,"lhullsmooth":3,"lhullsimplify":"auto","d2":{"useprepost":"pre","groupcolors":"lead","isovolsmoothed":"s","isovolcolormap":"jet","isovolsepcomb":"combined"},"d3":{"fiberstyle":"tube","fiberdiameter":0.1,"maxfibers":200,"colorjitter":0,"showdirarrows":0,"cortexcolor":[0.65,0.65,0.65],"cortexalpha":0.5,"cortex_defaultatlas":"DKT","fs":{"dev":0}},"video":{"path":[[-90,10],[-110,10],[-180,80],[-250,10],[-360,10],[-450,10]],"opts":{"FrameRate":24,"Duration":30,"Periodic":true}},"vat":{"gm":"mask","efieldmax":10000},"mer":{"rejwin":[1,60],"offset":2,"length":24,"markersize":0.5,"defaulttract":1,"n_pnts":50,"tag":{"visible":"off"},"step_size":[0.25,0.75,0.05],"tract_info":[{"label":"central","color":[0.5,0,0],"position":[0,0,0]},{"label":"anterior","color":[0.5,0.5,0],"position":[0,1,0]},{"label":"posterior","color":[0,0.5,0],"position":[0,-1,0]},{"label":"lateral","color":[0.5,0,0.5],"position":[1,0,0]},{"label":"medial","color":[0,0.5,0.5],"position":[-1,0,0]}]},"dicom":{"dicomfiles":0,"tool":"dcm2niix"},"addfibers":[],"native":{"warp":"inverse"},"ls":{"autosave":0,"dir":""},"env":{"dev":0,"logtime":0,"campus":"generic"},"ixi":{"meanage":60,"dir":""},"ltx":{"pdfconverter":""}}
+{
+	"dev": {
+		"profile": "user"
+	},
+	"pp": {
+		"do": 0,
+		"csize": 4,
+		"profile": "local"
+	},
+	"migrate": {
+		"doDicomConversion": 1,
+		"DicomConversionTool": "dcm2niix",
+		"interactive": 0
+	},
+	"niiFileExt": ".nii",
+	"prenii_searchstring": "anat_*.nii",
+	"prenii_order": [
+		"T1w",
+		"T2w",
+		"PDw",
+		"T2starw"
+	],
+	"prenii_unnormalized": "anat_t2.nii",
+	"prenii_unnormalized_t1": "anat_t1.nii",
+	"prenii_unnormalized_pd": "anat_pd.nii",
+	"tranii_unnormalized": "postop_tra.nii",
+	"sagnii_unnormalized": "postop_sag.nii",
+	"cornii_unnormalized": "postop_cor.nii",
+	"rawctnii_unnormalized": "postop_ct.nii",
+	"ctnii_coregistered": "rpostop_ct.nii",
+	"tp_ctnii_coregistered": "tp_rpostop_ct.nii",
+	"diary": 0,
+	"preferMRCT": 2,
+	"patientdir": "",
+	"gprenii": "glanat.nii",
+	"gtranii": "glpostop_tra.nii",
+	"gcornii": "glpostop_cor.nii",
+	"gsagnii": "glpostop_sag.nii",
+	"gctnii": "glpostop_ct.nii",
+	"tp_gctnii": "tp_glpostop_ct.nii",
+	"bids_session_postop": "ses-postDBS",
+	"bids_session_preop": "ses-preDBS",
+	"tonemap": "heuristic",
+	"rest_searchstring": "rest*.nii",
+	"rest": "rest.nii",
+	"lc": {
+		"struc": {
+			"maxdist": 2,
+			"minlen": 3
+		},
+		"graphsurfc": [0.2081,0.1663,0.5292],
+		"matsurfc": [0.8,0.7,0.4],
+		"seedsurfc": [0.8,0.1,0.1],
+		"func": {
+			"regress_global": 1,
+			"regress_wmcsf": 1,
+			"bphighcutoff": 0.08,
+			"bplowcutoff": 0.009
+		},
+		"datadir": "\/Users\/LeadDBS\/Documents\/MATLAB\/toolbox\/leaddbs\/connectomes\/",
+		"defaultParcellation": "Automated Anatomical Labeling 3 (Rolls 2020)"
+	},
+	"lcm": {
+		"vatseed": "binary",
+		"vat2fmrimethod": "fsl",
+		"chunk": 10,
+		"includesurf": 0,
+		"struc": {
+			"patienttracts": {
+				"nativeseed": 0
+			}
+		}
+	},
+	"b0": "b0.nii",
+	"fa": "fa.nii",
+	"fa2anat": "fa2anat.nii",
+	"FTR_unnormalized": "FTR.mat",
+	"FTR_normalized": "wFTR.mat",
+	"DTD": "DTD.mat",
+	"HARDI": "HARDI.mat",
+	"dti": "dti.nii",
+	"bval": "dti.bval",
+	"bvec": "dti.bvec",
+	"sampledtidicom": "sample_dti_dicom.dcm",
+	"normmatrix": "lmat.txt",
+	"normalize": {
+		"default": "ANTs (Avants 2008)",
+		"inverse": {
+			"warp": "inverse",
+			"customtpm": 0
+		},
+		"createwarpgrids": 0,
+		"fsl": {
+			"warpres": 8
+		},
+		"spm": {
+			"resolution": 1
+		}
+	},
+	"reco": {
+		"method": {
+			"MRI": "TRAC\/CORE (Horn 2015)",
+			"CT": "PaCER (Husch 2017)"
+		},
+		"mancoruse": "postop",
+		"saveACPC": 0,
+		"saveimg": 0,
+		"exportfiducials": ".fcsv"
+	},
+	"ctcoreg": {
+		"default": "ANTs (Avants 2008)"
+	},
+	"mrcoreg": {
+		"default": "SPM (Friston 2007)",
+		"writeoutcoreg": 0
+	},
+	"scrf": {
+		"tonemap": "tp_"
+	},
+	"lg": {
+		"defaultParcellation": "Automated Anatomical Labeling 3 (Rolls 2020)"
+	},
+	"hullmethod": 2,
+	"hullsmooth": 5,
+	"hullsimplify": 0.3,
+	"lhullmethod": 2,
+	"lhullsmooth": 3,
+	"lhullsimplify": "auto",
+	"d2": {
+		"useprepost": "pre",
+		"groupcolors": "lead",
+		"isovolsmoothed": "s",
+		"isovolcolormap": "jet",
+		"isovolsepcomb": "combined"
+	},
+	"d3": {
+		"fiberstyle": "tube",
+		"fiberwidth": 0.2,
+		"maxfibers": 200,
+		"colorjitter": 0,
+		"showdirarrows": 0,
+		"fiber_activated_color": [1,0,0],
+		"fiber_nonactivated_color": [1,1,1],
+		"fiber_damaged_color": [0.5,0,0.5],
+		"fiber_csf_color": [0,0,1],
+		"fiber_outside_color": [0,1,0],
+		"pointcloudstyle": "plain",
+		"camlightcolor": [0.8,0.8,1],
+		"ceilinglightcolor": [1,0.9,0.9],
+		"rightlightcolor": [1,0.9,0.7],
+		"leftlightcolor": [0.9,0.9,1],
+		"roi": {
+			"autofillcolor": 1,
+			"defaultcolormap": "parula"
+		},
+		"cortexcolor": [0.65,0.65,0.65],
+		"cortexalpha": 0.5,
+		"cortex_defaultatlas": "DKT",
+		"fs": {
+			"dev": 0
+		}
+	},
+	"video": {
+		"path": [
+			[-90,-110,-180,-250,-360,-450],
+			[10,10,80,10,10,10]
+		],
+		"opts": {
+			"FrameRate": 24,
+			"Duration": 30,
+			"Periodic": true
+		}
+	},
+	"vat": {
+		"gm": "mask",
+		"efieldmax": 10000
+	},
+	"mer": {
+		"rejwin": [1,60],
+		"offset": 2,
+		"length": 24,
+		"markersize": 0.5,
+		"defaulttract": 1,
+		"n_pnts": 50,
+		"tag": {
+			"visible": "off"
+		},
+		"step_size": [0.25,0.75,0.05],
+		"tract_info": [
+			{
+				"label": "central",
+				"color": [0.5,0,0],
+				"position": [0,0,0]
+			},
+			{
+				"label": "anterior",
+				"color": [0.5,0.5,0],
+				"position": [0,1,0]
+			},
+			{
+				"label": "posterior",
+				"color": [0,0.5,0],
+				"position": [0,-1,0]
+			},
+			{
+				"label": "lateral",
+				"color": [0.5,0,0.5],
+				"position": [1,0,0]
+			},
+			{
+				"label": "medial",
+				"color": [0,0.5,0.5],
+				"position": [-1,0,0]
+			}
+		]
+	},
+	"fs": {
+		"dir": "",
+		"reconall": {
+			"do": 1
+		},
+		"subcorticalseg": {
+			"do": 1,
+			"thalamus": 1,
+			"hippo_amygdala": 0,
+			"brainstem": 0
+		},
+		"samseg": {
+			"do": 0
+		}
+	},
+	"slicer": {
+		"dir": ""
+	},
+	"dicom": {
+		"dicomfiles": 0,
+		"tool": "dcm2niix"
+	},
+	"addfibers": [],
+	"fibfilt": {
+		"connfibs": {
+			"showmax": 5000,
+			"fiberwidth": 0.04,
+			"alpha": 0.4,
+			"color": [1,0.99,0.91]
+		},
+		"roi": {
+			"alpha": 0.5,
+			"color": [1,0.99,0.91]
+		}
+	},
+	"native": {
+		"warp": "inverse"
+	},
+	"ls": {
+		"autosave": 0,
+		"dir": ""
+	},
+	"env": {
+		"dev": 0,
+		"logtime": 0,
+		"campus": "generic"
+	},
+	"ixi": {
+		"meanage": 60,
+		"dir": ""
+	},
+	"ltx": {
+		"pdfconverter": ""
+	},
+	"genetics": {
+		"dbdir": "\/Users\/ningfei\/Documents\/MATLAB\/toolbox\/leaddbs\/templates\/space\/MNI152NLin2009bAsym\/genetics\/"
+	},
+	"platform": {
+		"glnxa64": {
+			"load_shipped_runtime": false
+		},
+		"maci64": {
+			"load_shipped_runtime": false
+		},
+		"maca64": {
+			"load_shipped_runtime": false
+		},
+		"win64": {
+			"load_shipped_runtime": false
+		}
+	}
+}
