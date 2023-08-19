@@ -3,6 +3,15 @@ function prefs = ea_setprefs(key, value, whichPrefs)
 % 'whichPrefs' can be either 'machine' (default) to set 'prefs.machine.*'
 % or 'user' to set 'prefs.*'
 
+% In case deployed, only support set user prefs saved in .ea_prefs.json
+if isdeployed
+    prefs = loadjson([ea_gethome, '.ea_prefs.json']);
+    fields = strsplit(key, '.');
+    prefs = setfield(prefs, fields{:}, value);
+    savejson('', prefs, [ea_gethome, '.ea_prefs.json']);
+    return
+end
+
 if ~exist('whichPrefs', 'var') || isempty(whichPrefs)
     % Set prefs.machine.* by default
     whichPrefs = 'machine';
@@ -12,7 +21,8 @@ switch lower(whichPrefs)
     case 'machine'
         prefs = ea_prefs;
         machine = prefs.machine;
-        eval(['machine.', key, ' = value;']);
+        fields = strsplit(key, '.');
+        machine = setfield(machine, fields{:}, value);
         try % may not have write permissions
             save([ea_gethome,'.ea_prefs.mat'],'machine');
         catch
@@ -29,9 +39,9 @@ switch lower(whichPrefs)
         end
 
         % Replace prefs in .ea_prefs.m
-        prefs = fileread([ea_gethome,'.ea_prefs.m']);
+        prefs = fileread([ea_gethome, '.ea_prefs.m']);
         pattern = [strrep(['prefs.',key], '.', '\.'), ' *= *.*?;'];
-        if ~isempty(regexp(prefs, pattern,'once')) % Key exists
+        if ~isempty(regexp(prefs, pattern, 'once')) % Key exists
             prefs = regexprep(prefs, pattern, regexptranslate('escape',['prefs.',key,' = ',value,';']));
         else % New key added
             prefs = [prefs, sprintf('\nprefs.%s = %s;\n',key,value)];
