@@ -6,7 +6,7 @@ end
 if ~isdeployed
     edit([ea_gethome,'.ea_prefs.m']);
 else
-    
+
     msgbox('Open ~/.ea_prefs.json with a text editor to edit preferences.');
 
 %     prefs = ea_prefs;
@@ -15,11 +15,11 @@ else
 %         uiwait(mb);
 %         file = uigetfile('/Applications/*.app');
 %         if file
-%             ea_injectprefstring('textedit',file(1:end-4));
+%             ea_setprefs('textedit', file(1:end-4), 'user');
 %             prefs = ea_prefs;
 %         else
 %             return
 %         end
 %     end
-%     system(['open -a ','''',prefs.textedit,'''',' ',fullfile(ea_gethome,'.ea_prefs.json')])    
+%     system(['open -a ','''',prefs.textedit,'''',' ',fullfile(ea_gethome,'.ea_prefs.json')])
 end
