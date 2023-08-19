@@ -57,7 +57,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
 
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
-        
+
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
 
     uimenu(f,'Label','Run WarpDrive in Segment mode','Callback',{@ea_runwarpdrive_segment,handles});
@@ -65,7 +65,7 @@ if isempty(menuprobe)
         dbs=uimenu(f,'Label','Lead-OR');
         uimenu(dbs,'Label','Create OR Scene','Callback',{@ea_leador_create_or_scene,handles});
     end
-    
+
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
         uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
@@ -162,7 +162,7 @@ if isempty(menuprobe)
             end
         end
         % disable for compiled app
-        if isdeployed && any(strcmp(insit(l).Text,{'Install development version of Lead'}))
+        if isdeployed && any(strcmp(insit(l).Text,{'Install development version of LeadDBS'}))
             insit(l).Checked = 'off';
             insit(l).Enable = 'off';
         end
