@@ -5,7 +5,7 @@ updurl = 'https://www.lead-dbs.org/release/download.php';
 
 if nargin
     if strcmp(varargin{1},'full')
-    	id = 'data_bids_pcloud';
+    	id = 'data_pcloud';
     else
         id = 'updates_data';
     end
@@ -20,9 +20,9 @@ if strcmp(id, 'updates_data')
     if status ~= 200
         info=sprintf(['No data update found!\n',...
                       'Alternatively, you can download the full data zip from:\n', ...
-                      'https://www.lead-dbs.org/release/download.php?id=data_bids_pcloud or\n', ...
-                      'https://www.lead-dbs.org/release/download.php?id=data_bids_onedrive']);
-        disp(info);
+                      'https://www.lead-dbs.org/release/download.php?id=data_pcloud\nOR\n', ...
+                      'https://www.lead-dbs.org/release/download.php?id=data_onedrive']);
+        ea_cprintf('CmdWinWarnings', '\n%s\n\n', info);
         msgbox(info,'No Update','Help');
         return
     end
@@ -42,7 +42,7 @@ catch
     try
         urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
     catch
-        fprintf(['\nDownload error! You may try to download the update package manually from:\n',...
+        ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download the update package manually from:\n',...
                  '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=',id]);
         msgbox('Please check the command window for more information.','Download error!','Error')
         return
