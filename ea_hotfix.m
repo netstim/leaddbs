@@ -28,7 +28,7 @@ if hotfix
             try
                 urlwrite([updurl,'?id=hotfix'],[earoot,'tmp',filesep,'hotfix.zip'],'Timeout',Inf);
             catch
-                fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+                ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download the file manually from:\n',...
                          '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=hotfix']);
                 msgbox('Please check the command window for more information.','Download error!','Error')
                 return
@@ -68,12 +68,12 @@ if hotfix
     catch
         info=sprintf(['Patch does not exist or failed to install development version of LeadDBS!\n',...
                       'Please wait for the next release.']);
-        disp(info);
+        ea_cprintf('CmdWinWarnings', '\n%s\n\n', info);
         msgbox(info,'Update','Error');
     end
 else
     info=sprintf(['Local version is not applicable to install development version of LeadDBS.\n'...
         'Please upgrade to the latest release (v', web,') first!']);
-    disp(info);
+    ea_cprintf('CmdWinWarnings', '\n%s\n\n', info);
     msgbox(info,'Update','Help');
 end
