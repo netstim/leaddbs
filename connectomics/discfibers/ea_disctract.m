@@ -1060,7 +1060,7 @@ classdef ea_disctract < handle
             if obj.switch_connectivity == 1
                 if obj.multi_pathways == 1
                     [filepath,name,ext] = fileparts(obj.leadgroup);
-                    cfile = [filepath,filesep,'merged_pathways.mat'];
+                    cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                 end
@@ -1091,7 +1091,7 @@ classdef ea_disctract < handle
                 if ~isfield(obj.results.(ea_conn2connid(obj.connectome)),'totalFibers')
                     if obj.multi_pathways == 1
                         [filepath,~,~] = fileparts(obj.leadgroup);
-                        cfile = [filepath,filesep,'merged_pathways.mat'];
+                        cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
                     else
                         cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                     end
