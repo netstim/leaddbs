@@ -6,6 +6,7 @@ function ea_migrateGroupAnalysis(source,dest,id_list)
 % id_list : optional - a N x 2 cell with the correspondance between old classic 
 %           IDs and new bids IDs, in case patients were renamed
 
+dest = erase(dest, filesep + lineBoundary('end'));
 [~, op_filename] = fileparts(dest);
 op_filename = regexprep(op_filename, '[\W_]', '');
 
@@ -43,7 +44,7 @@ try
             end 
         end
 
-        if ~isdir(fullfile(new_path, new_pname))
+        if ~isfolder(fullfile(new_path, new_pname))
             ea_warning(['Could not complete the lead group import. Subject directory ' fullfile(new_path, new_pname) ' not found!'])
             return; 
         
