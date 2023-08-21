@@ -98,8 +98,13 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
             Pulse_amp[i] = None  # this is allowed only for this case since we can't set contact to 0 V in Lead-DBS
             print("swapped 0V contact to None in VC")
 
+    # check how many contacts have assigned current or non-zero voltage
+    Pulse_amp_active_non_zero = [x for x in Pulse_amp if (x is not None) and (x != 0.0)]
+    
     StimSets = int(file['settings']['stimSetMode'][0][0])
     input_dict['StimSets'] = StimSets
+    if input_dict['StimSets'] == 1 or (input_dict['current_control'] == 1 and len(Pulse_amp_active_non_zero) > 1):  # multicontact current-controlled case
+        input_dict['el_order'] = 3
 
     if all(v is None for v in Pulse_amp) and StimSets == 0:
         print("No stimulation defined for this hemisphere")
