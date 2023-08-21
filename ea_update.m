@@ -43,11 +43,11 @@ if update
                 urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
             catch
                 if update==1
-                    fprintf(['\nDownload error! You may try to download Lead-DBS manually from:\n',...
-                             '%s_pcloud\nOR\n%s_onedrive\n\n'], [updurl,'?id=',id], [updurl,'?id=',id]);
+                    ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download Lead-DBS manually from:\n',...
+                             '%s_pcloud or\n%s_onedrive\n\n'], [updurl,'?id=',id], [updurl,'?id=',id]);
 
                 elseif update==2
-                    fprintf(['\nDownload error! You may try to download the update package manually from:\n',...
+                    ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download the update package manually from:\n',...
                              '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=',id]);
                 end
                 msgbox('Please check the command window for more information.','Download error!','Error')

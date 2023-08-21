@@ -22,7 +22,7 @@ if strcmp(id, 'updates_data_classic')
                       'Alternatively, you can download the full data zip from:\n', ...
                       'https://www.lead-dbs.org/release/download.php?id=data_classic_pcloud or\n', ...
                       'https://www.lead-dbs.org/release/download.php?id=data_classic_onedrive']);
-        disp(info);
+        ea_cprintf('CmdWinWarnings', '\n%s\n\n', info);
         msgbox(info,'No Update','Help');
         return
     end
@@ -42,7 +42,7 @@ catch
     try
         urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
     catch
-        fprintf(['\nDownload error! You may try to download the update package manually from:\n',...
+        ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download the update package manually from:\n',...
                  '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=',id]);
         msgbox('Please check the command window for more information.','Download error!','Error')
         return

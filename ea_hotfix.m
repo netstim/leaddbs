@@ -28,7 +28,7 @@ if hotfix
             try
                 urlwrite([updurl,'?id=hotfix_classic'],[earoot,'tmp',filesep,'hotfix_classic.zip'],'Timeout',Inf);
             catch
-                fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+                ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download the file manually from:\n',...
                          '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=hotfix_classic']);
                 msgbox('Please check the command window for more information.','Download error!','Error')
                 return
