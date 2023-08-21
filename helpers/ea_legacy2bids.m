@@ -1404,7 +1404,9 @@ function fileList = filterLegacyFiles(fileList)
 
 function modalities = checkModalities(coregAnatFolder)
     % In case modalities not found above, check the migrated MRIs
-    coregAnat = ea_regexpdir(coregAnatFolder, 'acq-.*\.nii$', 0, 'f');
+    [~, subPrefix] = fileparts(fileparts(fileparts(coregAnatFolder)));
+    pattern = [subPrefix, '_ses-(pre|post)op_space-anchorNative_desc-preproc_acq-[^\W_]+_[^\W_]+\.nii$'];
+    coregAnat = ea_regexpdir(coregAnatFolder, pattern, 0, 'f');
     modalities = unique(regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once'));
     % Remove anchor modality
     prefs = ea_prefs;
