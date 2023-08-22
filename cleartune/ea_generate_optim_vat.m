@@ -18,7 +18,9 @@ options.groupid = 'cleartune';
 resultfig=figure('visible','off');
 
 %% Start iterating through patients
-
+if iscell(patselect)
+    patselect = patselect{1};
+end
 options = ea_getptopts(patselect, options);
 
 fprintf('\nProcessing sub-%s...\n\n', options.subj.subjId);

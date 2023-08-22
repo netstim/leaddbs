@@ -85,15 +85,15 @@ for pt = 1:length(patlist)
     startptsL = zeros(1,app.inputVars.numContacts);
     % set third contact (k2) to the middle of the higher current bound
     if abs(max_bound_per_contactR(startcontactR)) > abs(min_bound_per_contactR(startcontactR))
-        startptsR(startcontactR) = max_bound_per_contactR(startcontactR) / 2.0;
+        startptsR(startcontactR) = max_bound_per_contactR(startcontactR) / 1.0;
     else
-        startptsR(startcontactR) = min_bound_per_contactR(startcontactR) / 2.0;
+        startptsR(startcontactR) = min_bound_per_contactR(startcontactR) / 1.0;
     end
 
     if abs(max_bound_per_contactL(startcontactL)) > abs(min_bound_per_contactL(startcontactL))
-        startptsL(startcontactL) = max_bound_per_contactL(startcontactL) / 2.0;
+        startptsL(startcontactL) = max_bound_per_contactL(startcontactL) / 1.0;
     else
-        startptsL(startcontactL) = min_bound_per_contact(startcontactL) / 2.0;
+        startptsL(startcontactL) = min_bound_per_contactL(startcontactL) / 1.0;
     end
     %define lower bounds and upper bounds
     lbR = min_bound_per_contactR;
@@ -309,17 +309,17 @@ function tractsetclone=updateStim(tractsetclone,X)
     %disp('Case activation:100%');
 end
 
-function Fval=getFval(app,X,pt,side,ptindx)
+function Fval=getFval(app,X,patlist,side,ptindx)
       
     %create a vta inside this function, send it to cleartune, get Ihat out and return it as
     %Fval
-    
+    selpat = patlist{ptindx};
     % remove very small currents
     X(abs(X) < 0.000001) = 0.0;
     writeVTA = 0;
 
     % new way to define inputs
-    inputs = ea_get_inputs_for_optimizer(pt,X, app.inputVars.modelVTA,writeVTA,side);
+    inputs = ea_get_inputs_for_optimizer(selpat,X, app.inputVars.modelVTA,writeVTA,side);
     try
         [Efields,allS]=ea_generate_optim_vat(inputs{:});
     catch ME
@@ -335,7 +335,7 @@ function Fval=getFval(app,X,pt,side,ptindx)
     app.protocol{ptindx}.allS=allS;
     tractsetclone=ea_disctract;
     app.tractset.copyobj(tractsetclone);
-    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,{pt},side);
+    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,ptindx,side);
     %Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
     if isnan(Ihat(:))
         ea_warning("Some test values have returned NaNs..why?");
