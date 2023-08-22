@@ -85,15 +85,15 @@ for pt = 1:length(patlist)
     startptsL = zeros(1,app.inputVars.numContacts);
     % set third contact (k2) to the middle of the higher current bound
     if abs(max_bound_per_contactR(startcontactR)) > abs(min_bound_per_contactR(startcontactR))
-        startptsR(startcontactR) = max_bound_per_contactR(startcontactR) / 1.0;
+        startptsR(startcontactR) = max_bound_per_contactR(startcontactR)/1.0;
     else
-        startptsR(startcontactR) = min_bound_per_contactR(startcontactR) / 1.0;
+        startptsR(startcontactR) = min_bound_per_contactR(startcontactR)/1.0;
     end
 
     if abs(max_bound_per_contactL(startcontactL)) > abs(min_bound_per_contactL(startcontactL))
-        startptsL(startcontactL) = max_bound_per_contactL(startcontactL) / 1.0;
+        startptsL(startcontactL) = max_bound_per_contactL(startcontactL)/1.0;
     else
-        startptsL(startcontactL) = min_bound_per_contactL(startcontactL) / 1.0;
+        startptsL(startcontactL) = min_bound_per_contactL(startcontactL)/1.0;
     end
     %define lower bounds and upper bounds
     lbR = min_bound_per_contactR;
@@ -162,23 +162,14 @@ for pt = 1:length(patlist)
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_R.mat'),'ipR','XOptimR');
     % generate the VTA
-    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist{pt},XOptimR, modelVTA,writeVTA,1);
+    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist,XOptimR, modelVTA,writeVTA,1);
     ea_generate_optim_vat(inputsR{:});
 
-    if all(ubR(:) <= 0.0)
-        objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist{pt},ptindx));
-        [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-    else
-        objconstrR=@(x)struct('Fval',nestedfunR(x,patlist{pt},ptindx));
-        [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
-    end
-
-    
     if all(ubL(:) <= 0.0)
-        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist{pt},ptindx));
+        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist,ptindx));
         [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
     else
-        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist{pt},ptindx));
+        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist,ptindx));
         [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,optionsL);
     end
 
@@ -219,7 +210,7 @@ for pt = 1:length(patlist)
 end
 
 % Nested function that computes the objective function
-function f = nestedfunR(X,pt,ptindx)
+function f = nestedfunR(X,patlist,ptindx)
 
 % limit to 8mA
 if sum(X(X>0)) > sum(abs(X(X<0)))
@@ -236,12 +227,12 @@ if isempty(X)
 end
 constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
-f.Fval=getFval(app,X,pt,1,ptindx);
+f.Fval=getFval(app,X,patlist,1,ptindx);
 
 return
 end
 
-function f = nestedfunL(X,pt,ptindx)
+function f = nestedfunL(X,patlist,ptindx)
 X = reformatX(X);
 
 if sum(X(X>0)) > sum(abs(X(X<0)))
@@ -256,14 +247,14 @@ if isempty(X)
 end
 constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
-f.Fval=getFval(app,X,pt,2,ptindx);
+f.Fval=getFval(app,X,patlist,2,ptindx);
 % limit to 8mA
 
 return
 end
 
 % Nested function that computes the objective function
-function Fval = nestedfunR_Monopolar(X,pt,ptindx)
+function Fval = nestedfunR_Monopolar(X,patlist,ptindx)
 
 X = reformatX(X);
 
@@ -272,12 +263,12 @@ if isempty(X)
     return
 end
 tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,pt,1,ptindx);
+Fval=getFval(app,X,patlist,1,ptindx);
 
 return
 end
 
-function Fval = nestedfunL_Monopolar(X,pt,ptindx)
+function Fval = nestedfunL_Monopolar(X,patlist,ptindx)
 X = reformatX(X);
 
 if isempty(X)
@@ -286,7 +277,7 @@ if isempty(X)
 end
 
 tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,pt,2,ptindx);
+Fval=getFval(app,X,patlist,2,ptindx);
 % limit to 8mA
 
 return
