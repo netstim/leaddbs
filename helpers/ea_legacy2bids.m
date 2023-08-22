@@ -805,8 +805,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 elseif contains(which_file,'glanatInverseComposite.h5')
                     coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
                     if isempty(coregfiles)
-                       coregfiles = dir(fullfile(old_path,'*anat_*'));
-
+                       coregfiles = dir(fullfile(source_patient_path,'*anat_*'));
                     end
                     reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
                 end
