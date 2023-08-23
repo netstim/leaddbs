@@ -800,24 +800,29 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %then rename%
             if endsWith(which_file,'.h5') %already renames
                 bids_name = [patient_name,'_',bids_name];
+                outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
                 if contains(which_file,'glanatComposite.h5')
                     reference = fullfile(ea_space,'t1.nii');
                 elseif contains(which_file,'glanatInverseComposite.h5')
                     coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
                     if isempty(coregfiles)
-                       coregfiles = dir(fullfile(old_path,'*anat_*'));
-
+                        coregfiles = dir(fullfile(source_patient_path,'anat_.*.nii'));
                     end
-                    reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
+                    if ~isempty(coregfiles)
+                         reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
+                    else
+                        ea_warning("Could not convert the inverse transform since no coreg files were found. Please consider reruning the pipeline to generate coregistration files..");
+                    end
                 end
                 try
                     ea_conv_antswarps(fullfile(new_path,which_file), reference);
-                    outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
                     movefile(outfile,fullfile(new_path,bids_name));
                 catch
-                    movefile(outfile,fullfile(new_path,bids_name));
+                    bids_name = strrep(bids_name,'.nii.gz','.h5');
+                    movefile(fullfile(new_path,which_file),fullfile(new_path,bids_name));
                     warning('Transform files could not be converted to nii.gz format. Please check that the files are not corrupt manually.');
                 end
+               
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
