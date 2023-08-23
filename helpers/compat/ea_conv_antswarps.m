@@ -29,7 +29,8 @@ end
 
 cmd = [cmd, ' -v 1'];
 
-ea_runcmd(cmd);
+status = ea_runcmd(cmd);
 
-ea_delete(transform_file_name)
-
+if status == 0
+    ea_delete(transform_file_name);
+end
