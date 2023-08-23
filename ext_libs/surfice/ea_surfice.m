@@ -19,7 +19,7 @@ end
 %     SURFICE = 'surficeOld';
 % else
 %     ea_error(sprintf('Surf Ice failed to load proper OpenGL!\nFound version: %s, Vendor: %s.', ...
-%         openglInfo.Version, openglInfo.Vendor), 'Error', dbstack);
+%         openglInfo.Version, openglInfo.Vendor), simpleStack = 1);
 % end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
