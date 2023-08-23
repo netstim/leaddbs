@@ -335,25 +335,25 @@ if strcmp(assetname,'LeadDBS Data Files')
 else
     downloadurl = 'https://www.lead-dbs.org/release/download.php';
     success=1;
-    
-    if ~exist(fileparts(destination), 'dir')
+
+    if ~isfolder(fileparts(destination))
         mkdir(fileparts(destination));
     end
-    
+
     % get the file size and display it to inform user of size
     try
         fsize = ea_getassetfilesize(id);    % get the filesize in bytes from the server
     catch
         fsize = 0;
     end
-    
+
     if fsize ~= 0
         fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
     else
         fprintf('Downloading %s\nFilename: %s\n', ea_getspace, destination);
         disp('This could take a while...');
     end
-    
+
     % first see if parallel toolbox is installed and can be utilized to
     % download in the backgroung
     if license('test', 'Distrib_Computing_Toolbox') % check if parallel toolbox is installed
