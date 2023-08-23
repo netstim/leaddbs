@@ -806,21 +806,25 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 elseif contains(which_file,'glanatInverseComposite.h5')
                     coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
                     if isempty(coregfiles)
-                        coregfiles = dir(fullfile(source_patient_path,'anat_.*.nii'));
+                        coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
                     end
                     if ~isempty(coregfiles)
-                         reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
-                    else
-                        ea_warning("Could not convert the inverse transform since no coreg files were found. Please consider reruning the pipeline to generate coregistration files..");
+                        reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
                     end
                 end
                 try
                     ea_conv_antswarps(fullfile(new_path,which_file), reference);
                     movefile(outfile,fullfile(new_path,bids_name));
                 catch
-                    bids_name = strrep(bids_name,'.nii.gz','.h5');
-                    movefile(fullfile(new_path,which_file),fullfile(new_path,bids_name));
-                    warning('Transform files could not be converted to nii.gz format. Please check that the files are not corrupt manually.');
+                    bids_h5name = strrep(bids_name,'.nii.gz','.h5');
+                    movefile(fullfile(new_path,which_file),fullfile(new_path,bids_h5name));
+                    if ~exist('reference', 'var')
+                        ea_cprintf('CmdWinWarnings', ['Transform: %s\nCould not convert the transform to *.nii.gz format since anchor image is missing.\n', ...
+                            'Please double check the legacy folder and consider reruning the pipeline to generate necessary files.\n'], fullfile(new_path,bids_h5name));
+                    else
+                        ea_cprintf('CmdWinWarnings', ['Transform: %s\nFailed to convert the transform to *.nii.gz format. ', ...
+                            'File might be corrupted.\n'], fullfile(new_path,bids_h5name));
+                    end
                 end
                
             else
