@@ -7,10 +7,6 @@ if ~exist('interp', 'var')
     interp=4;
 end
 
-
-
-
-
 if ~exist('ref', 'var')
     ref='';
 end

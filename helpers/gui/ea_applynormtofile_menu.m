@@ -194,7 +194,7 @@ else % from [untouched] achor space to template space
     else
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
-    if length(from)==1
+    if length(to)==1
         interp='auto';
     else
         interp=1;
