@@ -65,7 +65,7 @@ for but=1:length(togglenames)
     expand=1;
     if isempty(eval(togglenames{but}))
         %eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
-        %changed to max, as to include for sure the array as large as the maximum side used, 
+        %changed to max, as to include for sure the array as large as the maximum side used,
         %as this code was intended for the bilateral cases
         %maybe will have to change it to minimum have two elements, to always include at least R and L sides
         %For example, before if the side was only Left, the multiplier would have been only 1
@@ -193,9 +193,9 @@ for iside=1:length(options.sides)
                                         case {'left', 'L'}
                                             atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
                                     end
-                                case 4 % mixed atlas (one file with both sides information).
+                                case 4 % mixed atlas (one file with one cluster on each hemisphere).
                                     atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
-                                case 5 % midline atlas (one file with both sides information.
+                                case 5 % midline atlas (one file with one cluster in total).
                                     atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
                             end
 
@@ -220,7 +220,7 @@ for iside=1:length(options.sides)
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas) = mm_overlap;
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas) = normVTAOverlap; % Overlap in respect of VAT (ratio [0-1]);
                             ea_stats.stimulation(thisstim).vat(side,vat).nWithinAtlasIntersection(atlas) = normAtlasOverlap; % Overlap in respect of atlas (ratio [0-1])
-                            
+
                             % now also add efield overlap:
                             if exist('vefieldfile','var')
                                 [overlap, normOverlap, efieldSum]  = ea_efield_overlap(vefieldfile,atlasfile,sidec);
