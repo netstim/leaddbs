@@ -187,7 +187,7 @@ def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order
     img = nib.load(filepath)
     # img.shape
     DTI_data = img.get_fdata()
-    if np.any(np.isnan(DTI_data))
+    if np.any(np.isnan(DTI_data)):
         print("NaN detected in the DTI, please remove them!")
         raise SystemExit
 
