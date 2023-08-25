@@ -35,3 +35,6 @@ delete(affineTransform{2});
 
 % Refresh scrf status
 ea_refreshscrf(options, handles);
+
+% Dump method
+ea_dumpmethod(options, 'brainshift');

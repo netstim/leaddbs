@@ -208,7 +208,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.scrf.do
         if ~ea_reglocked(options, options.subj.brainshift.anat.scrf) || options.overwriteapproved
             options.autobrainshift = 1;
-            ea_dumpmethod(options, 'brainshift');
             ea_subcorticalrefine(options);
             options = rmfield(options,'autobrainshift');
         end
