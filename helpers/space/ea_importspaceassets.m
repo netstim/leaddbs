@@ -146,10 +146,9 @@ for atlasset=1:length(asc)
                     case 3 % both-sides atlas composed of 2 files.
                         nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
                         nii{2}=[atlroot,'rh',filesep,atlases.names{atlas}];
-                    case 4 % mixed atlas (one file with both sides information).
+                    case 4 % mixed atlas (one file with one cluster on each hemisphere).
                         nii{1}=[atlroot,'mixed',filesep,atlases.names{atlas}];
-
-                    case 5 % midline atlas (one file with both sides information.
+                    case 5 % midline atlas (one file with one cluster in total).
                         nii{1}=[atlroot,'midline',filesep,atlases.names{atlas}];
                 end
 

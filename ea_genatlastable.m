@@ -141,10 +141,10 @@ if checkrebuild(atlases,options,root,mifix)
                 case 3 % both-sides atlas composed of 2 files.
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],atlases,atlas);
-                case 4 % mixed atlas (one file with both sides information).
+                case 4 % mixed atlas (one file with one cluster on each hemisphere).
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],atlases,atlas,'unmix_l');
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],atlases,atlas,'unmix_r');
-                case 5 % midline atlas (one file with both sides information).
+                case 5 % midline atlas (one file with one cluster in total).
                     structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],atlases,atlas);
                 case 6 % probabilistic atlas, two files
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
@@ -276,7 +276,7 @@ if checkrebuild(atlases,options,root,mifix)
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
-        
+
         % save table information that has been generated from nii files (on first run with this atlas set).
         try atlases.fv=ifv; end
         try atlases.cdat=icdat; end
@@ -290,7 +290,7 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'cdat'); end % redundancy cleanup
         try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
-        
+
         ea_saveatlas(root,options.atlasset,atlases);
     end
 end
@@ -463,9 +463,9 @@ switch atlases.types(atlas)
     case 3 % both-sides atlas composed of 2 files.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
         atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-    case 4 % mixed atlas (one file with both sides information).
+    case 4 % mixed atlas (one file with one cluster on each hemisphere).
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
-    case 5 % midline atlas (one file with both sides information.
+    case 5 % midline atlas (one file with one cluster in total).
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
     case 6 % probabilistic atlas, 2 files.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
