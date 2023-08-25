@@ -82,6 +82,7 @@ if options.prefs.diary
 end
 
 if options.overwriteapproved && isfolder(options.subj.brainshiftDir)
+    ea_delete(options.subj.brainshiftDir);
     ea_cprintf('CmdWinWarnings', 'Postop MR coregistration has been rerun. Please also rerun brain shift correction!\n');
 end
 
