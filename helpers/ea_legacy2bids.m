@@ -522,7 +522,15 @@ for patients = 1:length(source)
                                 templateStimFolder = {fullfile(new_path,pipelines{folders}, 'MNI152NLin2009bAsym')};
                                 ea_mkdir(templateStimFolder);
                             end
-                            cellfun(@(x) movefile(x, templateStimFolder{1}), legacyStims);
+                            for s = 1:length(legacyStims)
+                                try
+                                    movefile(legacyStims{s}, templateStimFolder{1});
+                                catch
+                                    [~, stimName] = fileparts(legacyStims{s});
+                                    ea_delete(legacyStims{s});
+                                    ea_cprintf('CmdWinWarnings', 'Skipped duplicated legacy stimulation: %s\n', stimName);
+                                end
+                            end
                         end
 
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
