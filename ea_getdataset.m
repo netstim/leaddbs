@@ -26,6 +26,14 @@ if exist('defaultLocation', 'var') && ~defaultLocationExisted && ~strcmp(uipatdi
     ea_delete(defaultLocation);
 end
 
+% Just in case "derivatives" or "derivatives/leaddbs" is chosen as dataset
+% folder. This should not happen in the ideal case.
+if endsWith(uipatdir, filesep + "derivatives") && ~isempty(ea_regexpdir(uipatdir, '^leaddbs$', 0, 'd'))
+    uipatdir = erase(uipatdir, filesep + "derivatives" + lineBoundary("end"));
+elseif endsWith(uipatdir, filesep + "derivatives" + filesep + "leaddbs")
+    uipatdir = erase(uipatdir, filesep + "derivatives" + filesep + "leaddbs" + lineBoundary("end"));
+end
+
 ea_mkdir(fullfile(uipatdir, 'derivatives', 'leaddbs'));
 ea_mkdir(fullfile(uipatdir, 'rawdata'));
 ea_mkdir(fullfile(uipatdir, 'sourcedata'));
