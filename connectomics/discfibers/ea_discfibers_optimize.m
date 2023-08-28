@@ -182,7 +182,7 @@ if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparal
 end
 
 choice='y';
-numIters=3; % 120 by default, run 1000 at least once
+numIters=120; % 120 by default, run 1000 at least once
 while 1
     switch choice
         case 'y'
