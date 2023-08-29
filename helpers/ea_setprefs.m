@@ -18,7 +18,7 @@ if ~exist('whichPrefs', 'var') || isempty(whichPrefs)
 end
 
 switch lower(whichPrefs)
-    case 'machine'
+    case {'m', 'machine'}
         prefs = ea_prefs;
         machine = prefs.machine;
         fields = strsplit(key, '.');
@@ -28,7 +28,7 @@ switch lower(whichPrefs)
         catch
             warning('Could not save preferences to user home directory. Please check permission.');
         end
-    case 'user'
+    case {'u', 'user'}
         if ~ischar(value)
             error('Input value should be a string!');
         end
