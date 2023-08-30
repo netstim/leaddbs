@@ -295,7 +295,6 @@ for patients = 1:length(source)
                         movefile(fullfile(new_path,pipelines{4},which_file),fullfile(recon_dir,[patient_name,'_',reconstruction{1,2}{indx}]));
 
                     elseif ismember(which_file,preprocessing{:,1})
-                        which_file = which_file;
                         %corresponding index of the new pat
                         indx = cellfun(@(x)strcmp(x,which_file),preprocessing{:,1});
                         which_pipeline = pipelines{5};
@@ -304,7 +303,6 @@ for patients = 1:length(source)
                             bids_name = add_tag(bids_name,mod_cell,tag_cell);
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
-
 
                     elseif ismember(which_file,prefs{:,1})
                         %corresponding index of the new pat
@@ -406,9 +404,9 @@ for patients = 1:length(source)
                                 end
                                 bids_name = CheckifAlreadyExists(op_dir,bids_name);
                                 if exist(fullfile(source_path,which_file),'file')
-                                  copyfile(fullfile(source_path,which_file),op_dir);
+                                    copyfile(fullfile(source_path,which_file),op_dir);
                                 elseif exist(fullfile(source_patient,which_file),'file')
-                                   copyfile(fullfile(source_patient,which_file),op_dir);
+                                    copyfile(fullfile(source_patient,which_file),op_dir);
                                 end
                                 movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                                 disp(['Renaming file ' which_file ' to ' bids_name])
@@ -1007,7 +1005,6 @@ function generate_rawImagejson(patient_name,dest)
             temp_tag = strsplit(json_val,'-');
             rawdata_fieldname = temp_tag{end};
             anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
-
         end
     end
     if exist('anat_files_selected','var')
