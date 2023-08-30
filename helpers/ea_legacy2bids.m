@@ -182,7 +182,10 @@ for patients = 1:length(source)
                         indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
                         bids_name = brainshift{1,2}{indx};
                         if MRCT == 1
-                            bids_name = strrep(bids_name,'CT','MRI');
+                            if contains(bids_name, '_CT.')
+                                bids_name = strrep(bids_name,'CT','MRI');
+                                bids_name = replace(bids_name, {'rec-tonemapped_', 'tonemapped'}, '');
+                            end
                         end
                         if contains(bids_name,'acqTag')
                             bids_name = add_tag(bids_name,mod_cell,tag_cell);
@@ -689,8 +692,8 @@ for patients = 1:length(source)
                                     end
                                 end
                             elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
-                                disp("Migrating dwi data...")
                                 for files = 1:length(files_to_move)
+                                    disp("Migrating dwi data...")
                                     if ~isempty(regexp(files_to_move{files}, '^dti\.(bval|bvec|nii)$', 'once'))
                                         if exist(fullfile(source_patient,files_to_move{files}),'file')
                                             modality_str = strsplit(files_to_move{files},'_');
