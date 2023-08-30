@@ -692,24 +692,25 @@ for patients = 1:length(source)
                                     end
                                 end
                             elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
-                                for files = 1:length(files_to_move)
+                                if ~isempty(cell2mat(regexp(files_to_move, '^dti\.(bval|bvec|nii)$', 'once')))
                                     disp("Migrating dwi data...")
-                                    if ~isempty(regexp(files_to_move{files}, '^dti\.(bval|bvec|nii)$', 'once'))
-                                        if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                            modality_str = strsplit(files_to_move{files},'_');
-                                            modality_str = lower(modality_str{end});
-                                            try
-                                                bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str)];
-                                            catch
-                                                modality_str = strsplit(modality_str,'.');
-                                                modality_str = upper(modality_str{1});
-                                                bids_name = [patient_name,'_',sessions{j},'_',modality_str,'.nii.gz'];
+                                    for files = 1:length(files_to_move)
+                                        if ~isempty(regexp(files_to_move{files}, '^dti\.(bval|bvec|nii)$', 'once'))
+                                            if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                                modality_str = strsplit(files_to_move{files},'_');
+                                                modality_str = lower(modality_str{end});
+                                                try
+                                                    bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str)];
+                                                catch
+                                                    modality_str = strsplit(modality_str,'.');
+                                                    modality_str = upper(modality_str{1});
+                                                    bids_name = [patient_name,'_',sessions{j},'_',modality_str,'.nii.gz'];
+                                                end
+                                                which_file = files_to_move{files};
+                                                derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
+                                                derivatives_cell{end,2} = fullfile(new_path,bids_name);
+                                                move_raw2bids(source_patient,new_path,which_file,bids_name);
                                             end
-                                            which_file = files_to_move{files};
-                                            derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                                            derivatives_cell{end,2} = fullfile(new_path,bids_name);
-                                            move_raw2bids(source_patient,new_path,which_file,bids_name)
-
                                         end
                                     end
                                 end
