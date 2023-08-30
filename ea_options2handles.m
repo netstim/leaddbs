@@ -75,9 +75,19 @@ else
 end
 
 if isfield(options, 'elmodel')
-    set(handles.electrode_model_popup, 'Value', find(ismember(handles.electrode_model_popup.String, options.elmodel)));
+    value = find(ismember(handles.electrode_model_popup.String, options.elmodel));
+    if ~isempty(value)
+        set(handles.electrode_model_popup, 'Value', value);
+    else
+        ea_cprintf('CmdWinWarnings', 'Specified electrode not found: %s\n', options.elmodel);
+    end
 end
 
 if isfield(options, 'atlasset')
-    set(handles.atlassetpopup, 'Value',  find(ismember(handles.atlassetpopup.String, options.atlasset)));
+    value = find(ismember(handles.atlassetpopup.String, options.atlasset));
+    if ~isempty(value)
+        set(handles.atlassetpopup, 'Value',  value);
+    else
+        ea_cprintf('CmdWinWarnings', 'Specified atlas not found: %s\n', options.atlasset);
+    end
 end
