@@ -1032,23 +1032,15 @@ function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
 
 function bids_name = CheckifAlreadyExists(path,try_bids_name)
     if contains(try_bids_name,'acq-')
-        split_bids_name = strsplit(try_bids_name,'acq-');
-        tag_bids_name = split_bids_name{2};
-        tag_bids_name = strsplit(tag_bids_name,'_');
-        tag = tag_bids_name{1};
-        bids_mod = tag_bids_name{2};
-        if exist(fullfile(path,try_bids_name),'file')
-            new_bids_name = [split_bids_name{1},'acq-',tag,num2str(1),'_',bids_mod];
-            movefile(fullfile(path,try_bids_name),fullfile(path,new_bids_name));
-            bids_name = [split_bids_name{1},'acq-',tag,num2str(2),'_',bids_mod];
-        elseif exist(fullfile(path,[split_bids_name{1},'acq-',tag,num2str(1),'_',bids_mod]),'file')
-            suffix = 2;
-            filename_to_check = [split_bids_name{1},'acq-',tag,num2str(suffix),'_',bids_mod];
-            while exist(fullfile(path,filename_to_check),'file')
+        if isfile(fullfile(path,try_bids_name))
+            parsed = parseBIDSFilePath(fullfile(path, try_bids_name));
+            suffix = 1;
+            filen_to_check = setBIDSEntity(fullfile(path,try_bids_name), 'acq', [parsed.acq, num2str(suffix)]);
+            while isfile(filen_to_check)
                 suffix = suffix + 1;
-                filename_to_check = [split_bids_name{1},'acq-',tag,num2str(suffix),'_',bids_mod];
+                filen_to_check = setBIDSEntity(filen_to_check, 'acq', [parsed.acq, num2str(suffix)]);
             end
-            bids_name = filename_to_check;
+            bids_name = erase(filen_to_check, fullfile(path, filesep));
         else
             bids_name = try_bids_name;
         end
@@ -1056,18 +1048,18 @@ function bids_name = CheckifAlreadyExists(path,try_bids_name)
     elseif endsWith(try_bids_name,'.mat')
         split_bids_name = strsplit(try_bids_name,'.mat');
         split_bids_name = split_bids_name{1};
-        if exist(fullfile(path,try_bids_name),'file')
+        if isfile(fullfile(path,try_bids_name))
             new_bids_name = [split_bids_name,num2str(1),'.mat'];
             movefile(fullfile(path,try_bids_name),fullfile(path,new_bids_name));
             bids_name = [split_bids_name,num2str(2),'.mat'];
-        elseif exist(fullfile(path,[split_bids_name,num2str(1),'.mat']),'file')
+        elseif isfile(fullfile(path,[split_bids_name,num2str(1),'.mat']))
             suffix = 2;
-            filename_to_check = [split_bids_name,num2str(suffix),'.mat'];
-            while exist(fullfile(path,filename_to_check),'file')
+            filen_to_check = [split_bids_name,num2str(suffix),'.mat'];
+            while exist(fullfile(path,filen_to_check),'file')
                 suffix = suffix + 1;
-                filename_to_check = [split_bids_name,num2str(suffix),'.mat'];
+                filen_to_check = [split_bids_name,num2str(suffix),'.mat'];
             end
-            bids_name = filename_to_check;
+            bids_name = filen_to_check;
         else
             bids_name = try_bids_name;
         end
