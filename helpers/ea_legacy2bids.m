@@ -1313,6 +1313,7 @@ if endsWith(fname_in,'.mat')
             json_mat = loadjson(fname_out);
         end
 
+        modalities = {};
         if isfield(json_mat, 'approval')
             % If ea_coreg_approved.mat exists and was properly migrated,
             % use MR modalities from the *_desc-coregmethod.json first.
