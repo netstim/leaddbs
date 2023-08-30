@@ -648,12 +648,7 @@ for patients = 1:length(source)
                                         to_match = matching_files_preop{matching_files};
                                         bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
 
-                                        indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
-                                        unique_indx = find(indx);
-                                        if length(unique_indx) > 1
-                                            indx = unique_indx(1);
-                                        end
-                                        tag = tag_cell{indx};
+                                        tag = ea_checkacq(fullfile(source_patient,matching_files_preop{matching_files}));
                                         try_bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];
                                         %support for multiple modalities. If a
                                         %file already exists with that name (i.e., tag & mod are the same)
