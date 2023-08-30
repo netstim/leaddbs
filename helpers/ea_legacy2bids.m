@@ -166,6 +166,7 @@ for patients = 1:length(source)
             %in order to ensure there are no conflicts, we move scrf files
             %first.
         elseif strcmp(dir_names{j},'scrf')
+            disp('Migrating scrf folder...');
             which_pipeline = pipelines{1};
             if ~exist(fullfile(new_path,which_pipeline),'dir')
                 scrf_patient = fullfile(source_patient,'scrf');
@@ -228,7 +229,7 @@ for patients = 1:length(source)
         switch subfolder_cell{subfolders}
 
             case 'derivatives'
-                disp('Migrating Derivatives folder...');
+                disp('Migrating derivatives folder...');
                 new_path = fullfile(dest,subfolder_cell{subfolders},'leaddbs',patient_name);
                 for files=1:length(files_to_move)
                     which_file = files_to_move{files};
@@ -735,9 +736,13 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
     checkreg_dir = fullfile(new_path,which_pipeline,'checkreg');
     transformations_dir = fullfile(new_path,which_pipeline,'transformations');
     if endsWith(which_file,'.nii')
-        ea_mkdir(anat_dir);
+        if startsWith(which_file, 'y_ea_') % Transform from SPM normalization
+            new_path = transformations_dir;
+        else
+            new_path = anat_dir;
+        end
+        ea_mkdir(new_path);
         old_path = fullfile(source_patient_path,which_file);
-        new_path = anat_dir;
 
         if exist(old_path,'file')
             %first move%
