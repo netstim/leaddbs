@@ -396,7 +396,12 @@ for patients = 1:length(source)
                                 copyfile(fullfile(source_path,which_file),op_dir);
                             else
                                 try
-                                    tag = ea_checkacq(fullfile(source_path,which_file));
+                                    if isfile(fullfile(source_path,['raw_', which_file]))
+                                        % Use acq tag of raw image when available
+                                        tag = ea_checkacq(fullfile(source_path,['raw_', which_file]));
+                                    else
+                                        tag = ea_checkacq(fullfile(source_path,which_file));
+                                    end
                                     bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acq-',tag,'_',bids_mod,ext];
                                 catch
                                     try_bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acqTag','_',bids_mod,ext];
