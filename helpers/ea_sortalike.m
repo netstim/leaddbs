@@ -1,21 +1,22 @@
-function [A, index] = ea_sortalike(A, B, mode)
+function [A, index] = ea_sortalike(A, B, options)
 % Sort one vector (A) based on the order defined by another vector (B).
 
-if ~isvector(A) || ~isvector(B)
-    error('Inputs should be vector!');
-elseif ~strcmp(class(A), class(B))
+arguments
+    A {mustBeVector}
+    B {mustBeVector}
+    options.mode {mustBeMember(options.mode, {'match', 'fuzzy'})} = 'fuzzy'
+end
+
+if ~strcmp(class(A), class(B))
     error('Inputs should be the same class!')
 end
 
-% Additional control flag for cell string. Can either use 'match' or
-% 'fuzzy'. With 'match', elements in A should match exactly elements in B
-% to be sorted. With 'fuzzy', elements in A starting with elements in B
-% would be enough to be sorted.
-if ~exist('mode', 'var')
-    mode = 'match';
-end
+% options.model is the a dditional control flag for cell string. Can either
+% use 'match' or 'fuzzy'. With 'match', elements in A should match exactly
+% elements in B to be sorted. With 'fuzzy', elements in A starting with
+% elements in B would be enough to be sorted.
 
-if strcmp(mode, 'match') || isnumeric(A)
+if strcmp(options.mode, 'match') || isnumeric(A)
     [~, index] = ismember(A, B);
 
     [~, NotFoundIndex] = sort(A(index==0));
