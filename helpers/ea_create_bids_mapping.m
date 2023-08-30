@@ -79,7 +79,7 @@ brainshift{:,2} = {'ses-preop_space-anchorNative_rec-brainshift_desc-preproc_acq
     'from-anchorNative_to-anchorNativeBSC_desc-instore.mat';
     'from-anchorNative_to-anchorNativeBSC_desc-converted.mat';
     'from-anchorNative_to-anchorNativeBSC_desc-scrf.mat';
-    'ses-preop_space-anchorNative_rec-brainshift_desc-preproc_acqTag_T1w.png';
+    'ses-postop_space-anchorNative_rec-tonemapped_desc-preproc_CT.png';
     'ses-postop_space-anchorNative_rec-tonemappedbrainshift_desc-preproc_CT.png'};
 
 coregistration{:,1} = {'rpostop_ct.nii';

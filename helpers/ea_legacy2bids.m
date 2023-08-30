@@ -769,6 +769,20 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %first move%
             copyfile(old_path,new_path);
             %then rename%
+            % Overwrite the name mapping
+            if ~isempty(ea_regexpdir(anat_dir, '_CT\.nii$', 0, 'f'))
+                if strcmp(which_file, 'scrf.png')
+                    bids_name = 'ses-postop_space-anchorNative_rec-tonemappedbrainshift_desc-preproc_CT.png';
+                elseif strcmp(which_file, 'standard.png')
+                    bids_name = 'ses-postop_space-anchorNative_rec-tonemapped_desc-preproc_CT.png';
+                end
+            elseif ~isempty(ea_regexpdir(anat_dir, '_MRI\.nii$', 0, 'f'))
+                if strcmp(which_file, 'scrf.png')
+                    bids_name = 'ses-postop_space-anchorNative_rec-brainshift_desc-preproc_MRI.png';
+                elseif strcmp(which_file, 'standard.png')
+                    bids_name = 'ses-postop_space-anchorNative_desc-preproc_MRI.png';
+                end
+            end
             disp(['Renaming file ' which_file ' to ' bids_name]);
             rename_path = fullfile(new_path,which_file);
             derivatives_cell{end+1,1} = fullfile(old_path);
@@ -782,7 +796,6 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             derivatives_cell{end+1,1} = fullfile(old_path);
             derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-
         end
 
     elseif ~isempty(regexp(which_file,'.*(_approved|_applied)\.mat$', 'once'))
