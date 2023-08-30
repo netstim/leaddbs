@@ -271,7 +271,13 @@ for patients = 1:length(source)
                         bids_name = normalization{1,2}{indx};
                         %replace tag in the bids name
                         if contains(bids_name,'acqTag')
-                            bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                            if strcmp(which_file, 'glanat.nii')
+                                [~, achorMod] = checkModalities(fullfile(new_path, 'coregistration', 'anat'));
+                                acqTag = strsplit(achorMod, '_');
+                                bids_name = replace(bids_name, 'acqTag', ['acq-', acqTag{1}]);
+                            else
+                                bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                            end
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         %only for normalization
@@ -1414,7 +1420,7 @@ function fileList = filterLegacyFiles(fileList)
     fileList(endsWith(fileList, '.h5') & ~startsWith(fileList, 'glanat')) = [];
 
 
-function modalities = checkModalities(coregAnatFolder)
+function [modalities, achorModality] = checkModalities(coregAnatFolder)
     % In case modalities not found above, check the migrated MRIs
     [~, subPrefix] = fileparts(fileparts(fileparts(coregAnatFolder)));
     pattern = [subPrefix, '_ses-(pre|post)op_space-anchorNative_desc-preproc_acq-[^\W_]+_[^\W_]+\.nii$'];
@@ -1426,6 +1432,7 @@ function modalities = checkModalities(coregAnatFolder)
     if sum(contains(modalities, anchorModality)) == 1
         % Only one anchor modality image exists
         modalities(contains(modalities, anchorModality)) = [];
+        achorModality = modalities{1};
     elseif sum(contains(modalities, anchorModality)) > 1
         % Multiple anchor modality images exist, remove the first
         % one according to the pre-defined order: iso, ax, cor, sag
@@ -1434,4 +1441,5 @@ function modalities = checkModalities(coregAnatFolder)
         [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
         anchorModalities = anchorModalities(ind);
         modalities = [anchorModalities(2:end); otherModalities];
+        achorModality = anchorModalities{1};
     end
