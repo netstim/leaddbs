@@ -219,16 +219,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         end
     end
 
-    if options.dolc % perform lead connectome subroutine..
-        ea_perform_lc(options);
-    end
-
-    if options.d2.write || options.d3.write
-        if options.atl.genpt % generate patient specific atlas set
-            ea_ptspecific_atl(options);
-        end
-    end
-
     if options.checkreg
         % Export checkreg figures
         if isempty(ea_regexpdir([options.subj.coregDir, filesep, 'checkreg'], '^(?!\.).*\.png$'))
@@ -253,33 +243,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.normalize.refine
         ea_runwarpdrive(options, '0');
-    end
-
-    if options.ecog.extractsurface.do
-       switch options.ecog.extractsurface.method
-           case 1 % CAT 12
-               hastb=ea_hastoolbox('cat');
-               if ~hastb
-                   ea_error('CAT12 needs to be installed to the SPM toolbox directory');
-               end
-               ea_cat_seg(options);
-           case 2 % FS
-               if exist([options.subj.freesurferDir,filesep,'sub-',options.subj.subjId,filesep],'dir')
-                   if options.overwriteapproved
-                       % for now still ask user to confirm recalculation
-                       % since fs takes so long.
-                       answ=questdlg('Existing FreeSurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
-                          'FreeSurfer output found','Recalculate & Overwrite','Skip','Skip');
-
-                       switch lower(answ)
-                           case 'recalculate & overwrite'
-                               ea_runfreesurfer(options)
-                       end
-                   end
-               else
-                    ea_runfreesurfer(options);
-               end
-       end
     end
 
     if options.doreconstruction
@@ -349,7 +312,44 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             options.elside=options.sides(1);
             ea_manualreconstruction(mcfig,options.subj.subjId,options);
         end
-    else
+    end
+
+    if options.ecog.extractsurface.do
+       switch options.ecog.extractsurface.method
+           case 1 % CAT 12
+               hastb=ea_hastoolbox('cat');
+               if ~hastb
+                   ea_error('CAT12 needs to be installed to the SPM toolbox directory');
+               end
+               ea_cat_seg(options);
+           case 2 % FS
+               if exist([options.subj.freesurferDir,filesep,'sub-',options.subj.subjId,filesep],'dir')
+                   if options.overwriteapproved
+                       % for now still ask user to confirm recalculation
+                       % since fs takes so long.
+                       answ=questdlg('Existing FreeSurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
+                          'FreeSurfer output found','Recalculate & Overwrite','Skip','Skip');
+
+                       switch lower(answ)
+                           case 'recalculate & overwrite'
+                               ea_runfreesurfer(options)
+                       end
+                   end
+               else
+                    ea_runfreesurfer(options);
+               end
+       end
+    end
+
+    if options.dolc % perform lead connectome subroutine..
+        ea_perform_lc(options);
+    end
+
+    if options.d2.write || options.d3.write
+        if options.atl.genpt % generate patient specific atlas set
+            ea_ptspecific_atl(options);
+        end
+
         ea_write(options)
     end
 else
