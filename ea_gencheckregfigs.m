@@ -1,5 +1,4 @@
 function ea_gencheckregfigs(options, type)
-fprintf('\nExporting coregistration check images to %scheckreg...\n', [options.subj.coregDir,filesep]);
 
 if ~exist('type', 'var')
     type = {'coreg', 'norm'};
@@ -8,6 +7,7 @@ elseif ischar(type)
 end
 
 if ismember('coreg', type)
+    fprintf('\nExporting coregistration check images to %scheckreg...\n', [options.subj.coregDir,filesep]);
     % Make dir
     ea_mkdir(fullfile(options.subj.coregDir, 'checkreg'));
 
@@ -49,25 +49,8 @@ if ismember('coreg', type)
     end
 end
 
-if ismember('brainshift', type)
-    % Make dir
-    ea_mkdir(fullfile(options.subj.brainshiftDir, 'checkreg'));
-
-    % Get anchor Image path
-    anchorImage = options.subj.brainshift.anat.anchor;
-
-    % Generate checkreg figure for standard image
-    if isfile(options.subj.brainshift.anat.moving)
-        ea_gencheckregpair(options.subj.brainshift.anat.moving, anchorImage, options.subj.brainshift.checkreg.standard);
-    end
-
-    % Generate checkreg figure for brain shift corrected image
-    if isfile(options.subj.brainshift.anat.scrf)
-        ea_gencheckregpair(options.subj.brainshift.anat.scrf, anchorImage, options.subj.brainshift.checkreg.scrf);
-    end
-end
-
 if ismember('norm', type)
+    fprintf('\nExporting normalization check images to %scheckreg...\n', [options.subj.normDir,filesep]);
     % Make dir
     ea_mkdir(fullfile(options.subj.normDir, 'checkreg'));
 
@@ -98,6 +81,26 @@ if ismember('norm', type)
         if isfile(normImage{i})
             ea_gencheckregpair(normImage{i}, templateImage, checkregFigure{i});
         end
+    end
+end
+
+if ismember('brainshift', type)
+    % Make dir
+    ea_mkdir(fullfile(options.subj.brainshiftDir, 'checkreg'));
+
+    % Get anchor Image path
+    anchorImage = options.subj.brainshift.anat.anchor;
+
+    % Generate checkreg figure for standard image
+    if isfile(options.subj.brainshift.anat.moving)
+        fprintf('\nExporting brainshift correction check image (standard) to %scheckreg...\n', [options.subj.brainshiftDir,filesep]);
+        ea_gencheckregpair(options.subj.brainshift.anat.moving, anchorImage, options.subj.brainshift.checkreg.standard, preproc = 0);
+    end
+
+    % Generate checkreg figure for brain shift corrected image
+    if isfile(options.subj.brainshift.anat.scrf)
+        fprintf('\nExporting brainshift correction check image (scrf) to %scheckreg...\n', [options.subj.brainshiftDir,filesep]);
+        ea_gencheckregpair(options.subj.brainshift.anat.scrf, anchorImage, options.subj.brainshift.checkreg.scrf, preproc = 0);
     end
 end
 
