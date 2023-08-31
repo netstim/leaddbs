@@ -58,7 +58,6 @@ setappdata(handles.scrf, 'options', options);
 handles.patientname.String = options.subj.subjId;
 
 set(handles.scrf, 'name', ['Brainshift Correction: ', options.subj.subjId]);
-options.init = 1;
 ispresent = ea_refreshscrf(options,handles);
 
 switch options.scrf.mask
