@@ -205,8 +205,12 @@ function disapprovebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 options=getappdata(handles.scrf,'options');
+
 ea_delete(options.subj.brainshift.transform.converted);
 ea_delete(options.subj.brainshift.transform.scrf);
+if isfile(options.subj.recon.recon)
+    ea_recalc_reco([],[],options.subj.subjDir);
+end
 
 % Set approval status
 if isfile(options.subj.brainshift.log.method)
