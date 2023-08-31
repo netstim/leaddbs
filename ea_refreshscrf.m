@@ -92,28 +92,32 @@ postopCoregImage = struct2cell(options.subj.coreg.anat.postop);
 postopMovingImage = strrep(postopCoregImage, options.subj.coregDir, options.subj.brainshiftDir);
 for i = 1:length(postopCoregImage)
     if isfile(postopCoregImage{i})
-        copyfile(postopCoregImage{i}, postopMovingImage{i});
-        ea_conformspaceto(options.subj.brainshift.anat.anchor, postopMovingImage{i},1);
+        if ~isfile(postopMovingImage{i}) || options.overwriteapproved
+            copyfile(postopCoregImage{i}, postopMovingImage{i});
+            ea_conformspaceto(options.subj.brainshift.anat.anchor, postopMovingImage{i},1);
+        end
     end
 end
 
 % In case post-op MRI, create mean image based on available images
 if strcmp(options.subj.postopModality, 'MRI')
-    nii = cellfun(@(x) ea_load_nii(x), postopMovingImage);
+    if ~isfile(options.subj.brainshift.anat.moving) || options.overwriteapproved
+        nii = cellfun(@(x) ea_load_nii(x), postopMovingImage);
 
-    % Threshold
-    for i=1:length(nii)
-        nii(i).img(abs(nii(i).img)<0.1) = nan;
+        % Threshold
+        for i=1:length(nii)
+            nii(i).img(abs(nii(i).img)<0.1) = nan;
+        end
+    
+        % Get mean image
+        nii(1).img = ea_nanmean(cat(4, nii(:).img), 4);
+        nii(1).img(isnan(nii(1).img)) = 0;
+    
+        % Save moving image
+        nii(1).fname = options.subj.brainshift.anat.moving;
+        ea_write_nii(nii(1));
+    
+        % Cleanup
+        ea_delete(postopMovingImage);
     end
-
-    % Get mean image
-    nii(1).img = ea_nanmean(cat(4, nii(:).img), 4);
-    nii(1).img(isnan(nii(1).img)) = 0;
-
-    % Save moving image
-    nii(1).fname = options.subj.brainshift.anat.moving;
-    ea_write_nii(nii(1));
-
-    % Cleanup
-    ea_delete(postopMovingImage);
 end
