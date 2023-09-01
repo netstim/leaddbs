@@ -42,6 +42,7 @@ if strcmp(options.coregmr.method, 'ANTs Nonlinear Coregistration')
 end
 
 % Do coregistration
+ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
     affinefile = ea_coregimages(options, moving{i}, anchor, output{i}, [], 1);

@@ -34,6 +34,7 @@ if options.prefs.diary
 end
 
 % Do coregistration
+ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
 
