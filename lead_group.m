@@ -218,11 +218,20 @@ if strcmp(target, 'groupDir')
         M = getappdata(handles.leadfigure,'M');
 
         disp('Saving data to disk...');
-        try
-            save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
-        catch
-            warning('Data could not be saved.');
-            keyboard
+        groupAnalysisFile = ea_getGroupAnalysisFile(handles.groupdir_choosebox.String);
+        if ~isempty(groupAnalysisFile)
+            save(groupAnalysisFile, 'M', '-v7.3');
+        else
+            if ~isfolder(handles.groupdir_choosebox.String)
+                ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
+            else
+                [~, datasetName] = fileparts(fileparts(fileparts(fileparts(handles.groupdir_choosebox.String))));
+                if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                    ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
+                else
+                    ea_cprintf('CmdWinErrors', 'Could not get the group analysis file.\n')
+                end
+            end
         end
         disp('Done.');
         ea_busyaction('off',handles.leadfigure,'group');
@@ -349,18 +358,27 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Save data for previous selected group folder
-if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory')
     ea_busyaction('on',handles.leadfigure,'group');
     disp('Saving data...');
     % save M
     ea_refresh_lg(handles);
     M=getappdata(handles.leadfigure,'M');
     disp('Saving data to disk...');
-    try
-        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
-    catch
-        warning('Data could not be saved.');
-        % keyboard
+    groupAnalysisFile = ea_getGroupAnalysisFile(handles.groupdir_choosebox.String);
+    if ~isempty(groupAnalysisFile)
+        save(groupAnalysisFile, 'M', '-v7.3');
+    else
+        if ~isfolder(handles.groupdir_choosebox.String)
+            ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
+        else
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(handles.groupdir_choosebox.String))));
+            if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
+            else
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file.\n')
+            end
+        end
     end
     disp('Done.');
     ea_busyaction('off',handles.leadfigure,'group');
@@ -1513,11 +1531,20 @@ if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group
     ea_refresh_lg(handles);
     M=getappdata(hObject,'M');
     disp('Saving data to disk...');
-    try
-        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
-    catch
-        warning('Data could not be saved.');
-        keyboard
+    groupAnalysisFile = ea_getGroupAnalysisFile(handles.groupdir_choosebox.String);
+    if ~isempty(groupAnalysisFile)
+        save(groupAnalysisFile, 'M', '-v7.3');
+    else
+        if ~isfolder(handles.groupdir_choosebox.String)
+            ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
+        else
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(handles.groupdir_choosebox.String))));
+            if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
+            else
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file.\n')
+            end
+        end
     end
     disp('Done.');
     disp('Bye for now.');
