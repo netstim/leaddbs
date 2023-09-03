@@ -34,6 +34,11 @@ elseif endsWith(uipatdir, filesep + "derivatives" + filesep + "leaddbs")
     uipatdir = erase(uipatdir, filesep + "derivatives" + filesep + "leaddbs" + lineBoundary("end"));
 end
 
+[~, datasetName] = fileparts(uipatdir);
+if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+    ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
+end
+
 ea_mkdir(fullfile(uipatdir, 'derivatives', 'leaddbs'));
 ea_mkdir(fullfile(uipatdir, 'rawdata'));
 ea_mkdir(fullfile(uipatdir, 'sourcedata'));
