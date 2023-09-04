@@ -210,7 +210,7 @@ for subj = 1:numSubUse % iterate across subjects
                 Rw=Rw/(2^15); % convert to actual R values
             end
             Rw=Rw.*repmat(sweightidxmx{s},1,pixdim); % map weights of seed to entries
-            Rw=sum(Rw,1); % sum is fine since sum of sweightidxmx{s} == 1
+            Rw = sum(Rw, 1, 'omitnan'); % sum is fine since sum of sweightidxmx{s} == 1
         end
 
         mmap=dataset.vol.space;
