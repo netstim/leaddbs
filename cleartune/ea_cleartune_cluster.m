@@ -1,4 +1,4 @@
-function [tractsetclone]=ea_cleartune_optimize_surrogate(tractsetclone,patlist,app,~,~)
+function [tractsetclone]=ea_cleartune_cluster(tractsetclone,patlist,app,~,~)
 % Function to optimize parameters for cleartune using a Surrogate
 % Optimization Algorithm. The app input is optional but can be used to
 % live-view tuning of parameters.
@@ -40,90 +40,62 @@ end
 useparallel=0;
 
 warning off
-%app = ea_cleartune;
-%list of vars to optimize:
-% [paramsR,paramsL] = genParams(app);
-% 
-% lbR = [paramsR(:,1)];
-% lbL = [paramsL(:,1)];
-% ubR = [paramsR(:,2)];
-% ubL = [paramsL(:,2)];
-
-
-%for bipolar
-%max 8 contacts activated
-%A = [0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0;0 0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 0];
-%b = [8;-1];
-
-% A = [];
-% b = [];
-% 8 mA if cathodic stimulation
-% set up initial points with some good heuristics:
-% startptsR = [paramsR(:,4)];
-% startptsL = [paramsL(:,4)];% first initial point is activation in k2, with voltage of 0.5
-
-
-% New way to defide the stimulation window
-% we assume one patient
-% check the reconstruction file (we are assuming the same model on both sides)
 
 for pt = 1:length(patlist)
     ptindx = pt;
-    %we need the reconstruction file for getting current per contact.
-    %Defines the segmented and ring contacts
     reconstruction_file = dir([patlist{pt},filesep,'reconstruction',filesep,'sub-*desc-reconstruction.mat']);
     reconstruction_file_path = [reconstruction_file.folder,filesep,reconstruction_file.name];
     [reconst, ~, ~, ~] = ea_get_reconstruction(reconstruction_file_path);
     % do not update S here, just get the bounds in mA!
-    [min_bound_per_contactR, max_bound_per_contactR, ~] = ea_get_currents_per_contact(app.MinCylindricEditField_2.Value,app.MaxCylindricEditField.Value, app.MinSegmentedEditField.Value, app.MaxSegmentedEditField.Value, reconst, 0, 0);
+    [min_bound_per_contactR, max_bound_per_contactR, ~] = ea_get_currents_per_contact(app.inputVars.MinCylindricCurr,app.inputVars.MaxCylindricCurr, app.inputVars.MinSegmentCurr, app.inputVars.MaxSegmentCurr, reconst, 0, 0);
     min_bound_per_contactL = min_bound_per_contactR;
     max_bound_per_contactL = max_bound_per_contactR;
-    %arbritary start points
-    startcontactR = 5;
-    startcontactL = 3;
+    
     startptsR = zeros(1,app.inputVars.numContacts);
     startptsL = zeros(1,app.inputVars.numContacts);
+
     % set third contact (k2) to the middle of the higher current bound
+    startcontactR = 5;
+    startcontactL = 2;
     if abs(max_bound_per_contactR(startcontactR)) > abs(min_bound_per_contactR(startcontactR))
-        startptsR(startcontactR) = max_bound_per_contactR(startcontactR)/1.0;
+        startptsR(startcontactR) = max_bound_per_contactR(startcontactR) / 1.0;
     else
-        startptsR(startcontactR) = min_bound_per_contactR(startcontactR)/1.0;
+        startptsR(startcontactR) = min_bound_per_contactR(startcontactR) / 1.0;
+    end
+  
+    
+    if abs(max_bound_per_contactL(startcontactL)) > abs(min_bound_per_contactL(startcontactL))
+        startptsL(startcontactL) = max_bound_per_contactL(startcontactL) / 1.0;
+    else
+        startptsL(startcontactL) = min_bound_per_contactL(startcontactL) / 1.0;
     end
 
-    if abs(max_bound_per_contactL(startcontactL)) > abs(min_bound_per_contactL(startcontactL))
-        startptsL(startcontactL) = max_bound_per_contactL(startcontactL)/1.0;
-    else
-        startptsL(startcontactL) = min_bound_per_contactL(startcontactL)/1.0;
-    end
-    %define lower bounds and upper bounds
     lbR = min_bound_per_contactR;
     lbL = min_bound_per_contactL;
     ubR = max_bound_per_contactR;
     ubL = max_bound_per_contactL;
-    %the current values per contact are not integers. They can assume
-    %decimal values
     intergCond = zeros(1,app.inputVars.numContacts);
-    %the number of contacts is automatically obtained from your
-    %reconstruction file
     A = repmat(-1,1,app.inputVars.numContacts);
     b = 5;
     Aeq = [];
     beq = [];
-    %define the right side & left side options
+
     optionsR=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsR,...
-        'MaxFunctionEvaluations',500,... %choose 500 iters for now
+        'MaxFunctionEvaluations',3,...
         'Display','iter');
     optionsL=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsL,...
-        'MaxFunctionEvaluations',500,... %choose 500 iters for now
+        'MaxFunctionEvaluations',500,...
         'Display','iter');
+
+    %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
     % check for parallel processing toolbox
     if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
@@ -131,25 +103,21 @@ for pt = 1:length(patlist)
         optionsL.UseParallel=true;
         parpool('Processes',2);
     end
-    
-    % for monopolar case
+
     if all(ubR(:) <= 0.0)
+        
         objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist,ptindx));
         [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-        if length(ipR.Fval) == 2
-            keyboard
-        end
-    else %bipolar, not well tested
+        
+    else
         objconstrR=@(x)struct('Fval',nestedfunR(x,patlist,ptindx));
         [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
     end
-    %to output VTA
+
     writeVTA = 1;
-    %default: SimBio/FieldTrip
     modelVTA = app.inputVars.modelVTA;
     %remove very small currents
     XOptimR(abs(XOptimR) < 0.000001) = 0.0;
-    %because the inputs are normalized to remove small currents
     newoptimR = reformatX(XOptimR);
     if ~isempty(newoptimR)
         XOptimR = newoptimR;
@@ -161,8 +129,8 @@ for pt = 1:length(patlist)
         end
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_R.mat'),'ipR','XOptimR');
-    % generate the VTA
-    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist,XOptimR, modelVTA,writeVTA,1);
+    % new way to define inputs
+    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist{pt},XOptimR, modelVTA,writeVTA,1);
     ea_generate_optim_vat(inputsR{:});
 
     if all(ubL(:) <= 0.0)
@@ -173,12 +141,15 @@ for pt = 1:length(patlist)
         [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,optionsL);
     end
 
+    % remove
     XOptimL(abs(XOptimL) < 0.000001) = 0.0;
-
     newoptimL = reformatX(XOptimL);
     if ~isempty(newoptimL)
         XOptimL = newoptimL;
     end
+   
+     
+    writeVTA = 1;
     for i=1:size(ipL.X,1)
         newL = reformatX(ipL.X(i,:));
         if ~isempty(newL)
@@ -186,37 +157,29 @@ for pt = 1:length(patlist)
         end
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_L.mat'),'ipL','XOptimL');
-    [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
-    ea_generate_optim_vat(inputsL{:});
-    
-    
-    
-    %finally, we can save the stimulation parameters of the winning VTA
-    options = setOPTS(patlist{pt});
-    S = ea_initializeS(options);
-    S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
-    save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
-    
-    %create a plot that shows how Ihat changes with amplitude
-    createIhatAmpPlot(app,inputsR,inputsL)
-    avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
-    disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
+   [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
+   ea_generate_optim_vat(inputsL{:});
+
+   options = setOPTS(patlist{pt});
+   S = ea_initializeS(options);
+   S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
+   save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
     warning on
-    %end the parallel toolbox
     if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
         poolobj = gcp('nocreate'); delete(poolobj);
     end
 
 end
 
+
 % Nested function that computes the objective function
 function f = nestedfunR(X,patlist,ptindx)
 
 % limit to 8mA
 if sum(X(X>0)) > sum(abs(X(X<0)))
-    f.Ineq = sum(X(X>0)) - 8.0;
+    f.Ineq = sum(X(X>0)) - 5.0;
 else
-    f.Ineq = sum(abs(X(X<0))) - 8.0;
+    f.Ineq = sum(abs(X(X<0))) - 5.0;
 end
 
 X = reformatX(X);
@@ -253,6 +216,7 @@ f.Fval=getFval(app,X,patlist,2,ptindx);
 return
 end
 
+
 % Nested function that computes the objective function
 function Fval = nestedfunR_Monopolar(X,patlist,ptindx)
 
@@ -264,7 +228,6 @@ if isempty(X)
 end
 tractsetclone=updateStim(tractsetclone,X);
 Fval=getFval(app,X,patlist,1,ptindx);
-
 return
 end
 
@@ -283,11 +246,32 @@ Fval=getFval(app,X,patlist,2,ptindx);
 return
 end
 
-function X = reformatX(X)
-    if all(~X(1:8)) %all contacts have zero % activation its not allowed
-        X = [];
-        return
+
+function X = reformatX(ipX)
+if all(~ipX) %all contacts have zero % activation its not allowed
+    X = [];
+    return
+end
+thresh = abs(app.inputVars.MinCylindricCurr/100);
+%normalization, which will ruin the function progression
+%whichneg = abs(X) < (abs(app.MinCylindricEditField_2.Value/100) &&;
+for yy = 1:length(ipX)
+    if ipX(yy) ~= 0 && abs(ipX(yy)) < thresh
+        whichneg(yy) = 1;
+    else
+        whichneg(yy) = 0;
     end
+end
+sum_X = sum(ipX);
+if any(whichneg)
+    ipX(find(whichneg)) = 0;
+    sum_newX = sum(ipX);
+    normalizer = (sum_X/sum_newX);
+    X = (ipX.*normalizer);
+else
+    X = ipX;
+end
+% X = (X./sum_X)*-1;
 return
 end
 
@@ -313,23 +297,21 @@ function Fval=getFval(app,X,patlist,side,ptindx)
     inputs = ea_get_inputs_for_optimizer(selpat,X, app.inputVars.modelVTA,writeVTA,side);
     try
         [Efields,allS]=ea_generate_optim_vat(inputs{:});
+       
     catch ME
-        if (contains(ME.message,'Despite all attempts the VTA model could not be created'))
-            %try once more
-            [Efields,allS]=ea_generate_optim_vat(inputs{:});
-            %Fval =  NaN;
-
-        end
+        disp(ME.message);
+        Fval = NaN;
+        return
     end
     app.protocol{ptindx}.inputs=inputs;
     app.protocol{ptindx}.Efields=Efields;
     app.protocol{ptindx}.allS=allS;
-    tractsetclone=ea_disctract;
-    app.tractset.copyobj(tractsetclone);
+   
+   
     [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,ptindx,side);
     %Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
-    if isnan(Ihat(:))
-        ea_warning("Some test values have returned NaNs..why?");
+    if sum(isnan(Ihat(:)))/length(Ihat(:))>0.3
+        ea_warning("Issue")
     end
     preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
     Fval = -1*preFval;
@@ -363,35 +345,45 @@ function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
     return
 end
 function Fval = penaltyFunc(app,X,Fval)
-    if strcmp(app.ApplypenaltyusingDropDown.Value,'Quadratic curve')
-        xx = app.SweetspotamplitudeEditField.Value;
+    if strcmp(app.Applypenaltyusing,'Quadratic curve')
+        xx = app.PenaltyVal;
         yy = abs(sum(X));
-        Fval = Fval + ((yy-xx)^2)/100;
-    elseif strcmp(app.ApplypenaltyusingDropDown.Value,'Range of amplitudes')
+        Fval = Fval + ((yy-xx)^2).*0.02;
+    elseif strcmp(app.Applypenaltyusing,'Range of amplitudes')
         if sum(abs(X)) > 3 || sum(abs(X)) < 2
             Fval = Fval + app.ApplyapenaltyvalueofEditField.Value;
         end
     else
         return 
     end
+    return
 end
 function createIhatAmpPlot(app,inputsR,inputsL)
     startamp = 1;
     inputsR{6} = 1; %writeVTA
     inputsL{6} = 1; %writeVTA
+    patient = {inputsR{1}};
+
     for i=1:9
         inputsR{2} = startamp;
         inputsL{2} = startamp;
         ea_generate_optim_vat(inputsR{:});
         ea_generate_optim_vat(inputsL{:});
-        stimfolder = 'mA_33_14';
-        Ihatvector(i,:) = predictImprovement(app,patient,stimfolder,1);
+        stimfolderR = 'mA_33_14_side_1';
+        Ihatvector(i,1) = predictImprovement(app,patient,stimfolderR,1);
+        stimfolderL = 'mA_33_14_side_2';
+        Ihatvector(i,2) = predictImprovement(app,patient,stimfolderL,1);
         amplitudevector(i) = startamp;
         startamp = startamp + 0.5;
     end
    figure;
-   plot(amplitudevector,Ihatvector,'o-','linewidth',2,'markersize',5,'Color',[120/255,0,128/255]);
+   plot(amplitudevector,Ihatvector(:,1),'o-','linewidth',2,'markersize',5,'Color',[120/255,0,128/255]);
+   hold on
+   plot(amplitudevector,Ihatvector(:,2),'o-','linewidth',2,'markersize',5,'Color',[135/255,206/255,200/255]);
+   filename = fullfile(inputsR{1},'Ihat_vs_amplitude.png');
+   saveas(figure,filename);
 
+   
 end
 
 function options = setOPTS(patselect)
@@ -440,3 +432,97 @@ function options=ea_setopts_local
     options.macaquemodus=0;
 return
 end
+
+function [I,Ihat,actualimprovs] = runcrossval(app,event,tractsetclone,patlist,ptidx,side)
+tractsetclone.calculate_cleartune(app.protocol{ptidx}.Efields);
+app.tractset.cleartuneresults=tractsetclone.cleartuneresults; % this is fine to copy to the main object for visualization later.
+
+%% >>>>>>>>>> BEGIN INJECTION:
+
+%% temporarily append cleartune results to results to feed into
+% crossvalidation:
+
+% this is crucial to be cleaned up again and cannot go
+% wrong, i.e. anything in between injection and cleanup
+% needs to be in a try/catch statement.
+
+if ~isempty(tractsetclone.cleartuneinjected)
+    if ~strcmp(tractsetclone.cleartuneinjected.status,'clean')
+        ea_error('Fiber Filtering File is corrupted. Aborting.');
+    end
+end
+
+tractsetclone.cleartuneinjected.status='injected';
+gpatsel=tractsetclone.patientselection;
+if tractsetclone.mirrorsides
+    gpatsel=[gpatsel,gpatsel + length(tractsetclone.M.patient.list)]; %this should not be changed.
+end
+%find length of selected patients to add the new guy in
+origlen=size(tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{1}(:,gpatsel),2)/2;
+%to find index of the new guy from cleartune.results
+numEfields = size(app.protocol{ptidx}.Efields(side),1);
+origix=1:origlen; %the last value of this array will indicate where the new efield will be added.
+efieldix=1:numEfields;
+%first make a copy of the results
+tmpfibvals=tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval;
+%find the last patient to insert new guy into
+lastpt = origix(end);
+%this will also be needed for array indexing
+allpatslen = length(tractsetclone.M.patient.list);
+for hem=1:2
+    tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}=...
+        [tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,1:lastpt),...
+        tractsetclone.cleartuneresults.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,efieldix),...
+        tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,lastpt+1:lastpt+allpatslen),...
+        tractsetclone.cleartuneresults.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,efieldix),...
+        tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,lastpt+allpatslen+1:end)];
+end
+tractsetclone.allpatients=[tractsetclone.M.patient.list;repmat({''},size(app.protocol{ptidx}.Efields,1),1)];
+
+tractsetclone.responsevar=[tractsetclone.responsevar;nan(size(app.protocol{ptidx}.Efields,1),size(tractsetclone.responsevar,2))];
+reduceresponsevar=0;
+switch event
+    case 'suggest'
+        if size(tractsetclone.responsevar,2) == 1 % global scores
+            tractsetclone.responsevar=[tractsetclone.responsevar,tractsetclone.responsevar];    % we will need maximal stim settings for each site separately, so we will pretend responsevar is bihemispheric
+            reduceresponsevar=1;
+        end
+end
+switch tractsetclone.multitractmode
+    case 'Single Tract Analysis'
+    otherwise
+        for wv=1:length(tractsetclone.subscore.vars)
+            tractsetclone.subscore.weightvars{wv} = [tractsetclone.subscore.weightvars{wv}(:);repmat(app.symptomWeightVar{ptidx,side}(wv),size(app.protocol{ptidx}.Efields,1),1)];
+            tractsetclone.subscore.vars{wv}=[tractsetclone.subscore.vars{wv}(:);ones(size(app.protocol{ptidx}.Efields,1),1)]; % need to add in weights here.
+        end
+        
+        app.trainings=repmat({app.tractset.patientselection},length(patlist),1);
+
+        try % this has to be in a try/catch because we still have to cleanup the fibfilt again if something would go wrong (next section).
+            cvp.NumTestSets = 1;
+            % training and test indices from the items list
+            test = origlen+1:origlen+size(app.protocol{ptidx}.Efields,1);
+            % Patient selected based on the training and test indices
+            tractsetclone.customselection = unique([app.trainings{ptidx}, test]);
+            cvp.training{1} = ismember(tractsetclone.customselection, app.trainings{ptidx});
+            cvp.test{1} = ismember(tractsetclone.customselection, test);
+            % Construct cvp struct
+            [I, Ihat, actualimprovs]=tractsetclone.crossval(cvp); % actualimprovs is for each side separately.
+
+            %remove results again
+            for hem=1:2
+                tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}=...
+                    [tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,1:lastpt),...
+                    tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,lastpt+2:lastpt+allpatslen+1),... %remove efield of new guy
+                    tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{hem}(:,lastpt+allpatslen+3:end)]; %remove mirrorred of new guy
+            end
+            if isequaln(tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval,tmpfibvals)
+                tractsetclone.cleartuneinjected.status='clean';
+            else
+                ea_error('Something went wrong.');
+            end
+            return
+        end
+end
+end
+
