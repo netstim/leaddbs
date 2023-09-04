@@ -50,13 +50,40 @@ for pt = 1:length(patlist)
     [min_bound_per_contactR, max_bound_per_contactR, ~] = ea_get_currents_per_contact(app.inputVars.MinCylindricCurr,app.inputVars.MaxCylindricCurr, app.inputVars.MinSegmentCurr, app.inputVars.MaxSegmentCurr, reconst, 0, 0);
     min_bound_per_contactL = min_bound_per_contactR;
     max_bound_per_contactL = max_bound_per_contactR;
-    
+    firstLevel = [1,2,3,4,8];
+    secondLevel = [1,5,6,7,8];
+    if pt == 1 || pt == 3 || pt == 5
+        min_bound_per_contactR(secondLevel) = 0;
+        max_bound_per_contactR(secondLevel) = 0;
+        startcontactR = 3;
+        min_bound_per_contactL(firstLevel) = 0;
+        max_bound_per_contactL(firstLevel) = 0;
+        startcontactL = 5;
+    elseif pt == 2 || pt == 9 || pt == 10
+        min_bound_per_contactR(secondLevel) = 0;
+        max_bound_per_contactR(secondLevel) = 0;
+        startcontactR = 5;
+        min_bound_per_contactL(secondLevel) = 0;
+        max_bound_per_contactL(secondLevel) = 0;
+        startcontactL = 5;
+    elseif pt == 3 || pt == 6 || pt == 7
+        min_bound_per_contactR(firstLevel) = 0;
+        max_bound_per_contactR(firstLevel) = 0;
+        startcontactR = 5;
+        min_bound_per_contactL(firstLevel) = 0;
+        max_bound_per_contactL(firstLevel) = 0;
+        startcontactL = 3;
+    elseif pt == 4 || pt == 8
+        min_bound_per_contactR(firstLevel) = 0;
+        max_bound_per_contactR(firstLevel) = 0;
+        startcontactR = 5;
+        min_bound_per_contactL(secondLevel) = 0;
+        max_bound_per_contactL(secondLevel) = 0;
+        startcontactL = 3;
+    end
     startptsR = zeros(1,app.inputVars.numContacts);
     startptsL = zeros(1,app.inputVars.numContacts);
-
-    % set third contact (k2) to the middle of the higher current bound
-    startcontactR = 5;
-    startcontactL = 2;
+    
     if abs(max_bound_per_contactR(startcontactR)) > abs(min_bound_per_contactR(startcontactR))
         startptsR(startcontactR) = max_bound_per_contactR(startcontactR) / 1.0;
     else
@@ -85,7 +112,7 @@ for pt = 1:length(patlist)
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsR,...
-        'MaxFunctionEvaluations',3,...
+        'MaxFunctionEvaluations',500,...
         'Display','iter');
     optionsL=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
