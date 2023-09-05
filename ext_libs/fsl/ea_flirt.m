@@ -132,8 +132,7 @@ convertxfmcmd = [COVERT_XFM, ...
               ' -omat ', ea_path_helper([volumedir, invxfm, num2str(runs+1), '.mat']), ...
               ' -inverse ', ea_path_helper([volumedir, xfm, num2str(runs+1), '.mat'])];
 
-setenv('FSLOUTPUTTYPE','NIFTI');
-ea_runcmd(flirtcmd);
+ea_runcmd(flirtcmd, 'FSLOUTPUTTYPE=NIFTI');
 ea_runcmd(convertxfmcmd);
 
 if ~isempty(otherfiles)

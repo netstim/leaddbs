@@ -45,8 +45,7 @@ cmd = [SLICER, ...
     threshParams, ...
     ' -a ' ea_path_helper(outfn)];
 
-setenv('FSLOUTPUTTYPE','NIFTI')
-ea_runcmd(cmd);
+ea_runcmd(cmd, 'FSLOUTPUTTYPE=NIFTI');
 
 if options.preproc
     ea_delete([tempdir,'lead_temp',uuid,'.nii']);

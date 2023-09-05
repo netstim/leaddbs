@@ -100,15 +100,15 @@ for i = 1:length(input)
             cmd = [cmd, ' --interp=', interp];
         end
 
-        if strcmp(output{i}(end-2:end),'.gz')
-            setenv('FSLOUTPUTTYPE', 'NIFTI_GZ');
+        if endsWith(output{i},'.gz')
+            env = 'FSLOUTPUTTYPE=NIFTI_GZ';
         else
-            setenv('FSLOUTPUTTYPE', 'NIFTI');
+            env = 'FSLOUTPUTTYPE=NIFTI';
         end
 
         [~, inputFileName] = ea_niifileparts(input{i});
         fprintf('\nNormalizing %s ...\n', inputFileName);
 
-        ea_runcmd(cmd);
+        ea_runcmd(cmd, env);
     end
 end

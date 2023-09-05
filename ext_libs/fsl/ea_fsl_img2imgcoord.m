@@ -63,7 +63,6 @@ end
 
 cmd = [cmd, ' ', ea_path_helper(incoords)];
 
-setenv('FSLOUTPUTTYPE', 'NIFTI');
 [status, cmdout] = ea_runcmd(cmd);
 
 if status == 0

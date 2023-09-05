@@ -43,11 +43,11 @@ cmd = [cmd, ' -f ' ,num2str(fraintthreshold)];
 
 switch ext
     case '.nii'
-        setenv('FSLOUTPUTTYPE','NIFTI');
+        env = 'FSLOUTPUTTYPE=NIFTI';
     case '.nii.gz'
-        setenv('FSLOUTPUTTYPE','NIFTI_GZ');
+        env = 'FSLOUTPUTTYPE=NIFTI_GZ';
 end
 
-ea_runcmd(cmd);
+ea_runcmd(cmd, env);
 
 fprintf('\nFSL BET2 finished\n');

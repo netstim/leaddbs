@@ -3,9 +3,6 @@ ixiids=ea_getIXI_IDs(564);
 fsldir = [ea_getearoot, filesep, 'ext_libs', filesep, 'fsl', filesep];
 SLICER = ea_getExec([fsldir, 'slicer'], escapePath = 1);
 
-
-setenv('FSLOUTPUTTYPE','NIFTI');
-
 for ixi=1:length(ixiids)
     [pth, ixibase] = fileparts(ixiids{ixi});
     cmd = [SLICER, ...
