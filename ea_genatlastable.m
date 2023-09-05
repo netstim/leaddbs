@@ -114,7 +114,7 @@ if checkrebuild(atlases,options,root,mifix)
     end
     nm=nm(logical(nmind)); % select which shall be performed.
     if ~isfield(atlases,'colormap')
-        %atlases.colormap=ea_colorlover(12);
+        %atlases.colormap=ea_color_wes('all',length(atlases.names));
         atlases.colormap=othercolor('BuOrR_14',length(atlases.names));
     end
     if ~isfield(atlases,'heatcolormap')
@@ -492,7 +492,14 @@ for atl=1:length(atlnames)
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
                     [0.3,0.3,0.3],0,0,1,[],[],1);
             else
-                copyfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality),[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                if isfield(options, 'subj')
+                    copyfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality),[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                elseif isfield(options, 'reference')
+                    copyfile(options.reference, [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                else
+                    ea_error('Reference for gray matter mask not defined! (options.reference)', showdlg = false, simpleStack = 1);
+                    return;
+                end
             end
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);
