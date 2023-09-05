@@ -275,8 +275,8 @@ for patients = 1:length(source)
                         %replace tag in the bids name
                         if contains(bids_name,'acqTag')
                             if strcmp(which_file, 'glanat.nii')
-                                [~, achorMod] = checkModalities(fullfile(new_path, 'coregistration', 'anat'));
-                                acqTag = strsplit(achorMod, '_');
+                                [~, anchorMod] = checkModalities(fullfile(new_path, 'coregistration', 'anat'));
+                                acqTag = strsplit(anchorMod, '_');
                                 bids_name = replace(bids_name, 'acqTag', ['acq-', acqTag{1}]);
                             else
                                 bids_name = add_tag(bids_name,mod_cell,tag_cell);
@@ -1437,7 +1437,7 @@ function fileList = filterLegacyFiles(fileList)
     fileList(endsWith(fileList, '.h5') & ~startsWith(fileList, 'glanat')) = [];
 
 
-function [modalities, achorModality] = checkModalities(coregAnatFolder)
+function [modalities, anchorModality] = checkModalities(coregAnatFolder)
     % In case modalities not found above, check the migrated MRIs
     [~, subPrefix] = fileparts(fileparts(fileparts(coregAnatFolder)));
     pattern = [subPrefix, '_ses-(pre|post)op_space-anchorNative_desc-preproc_acq-[^\W_]+_[^\W_]+\.nii$'];
@@ -1448,7 +1448,7 @@ function [modalities, achorModality] = checkModalities(coregAnatFolder)
     anchorModality = prefs.prenii_order{1};
     if sum(contains(modalities, anchorModality)) == 1
         % Only one anchor modality image exists
-        achorModality = modalities{1};
+        anchorModality = modalities{1};
         modalities(contains(modalities, anchorModality)) = [];
     elseif sum(contains(modalities, anchorModality)) > 1
         % Multiple anchor modality images exist, remove the first
@@ -1457,6 +1457,6 @@ function [modalities, achorModality] = checkModalities(coregAnatFolder)
         anchorModalities = setdiff(modalities, otherModalities);
         [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
         anchorModalities = anchorModalities(ind);
-        achorModality = anchorModalities{1};
+        anchorModality = anchorModalities{1};
         modalities = [anchorModalities(2:end); otherModalities];
     end
