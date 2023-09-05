@@ -48,6 +48,8 @@ if isempty(menuprobe)
     uimenu(normf,'Label','Flatten fiducial helpers for selected patients','Callback',{@ea_flattenfiducialhelpers,handles})
     uimenu(normf,'Label','Delete fiducial helpers for selected patients','Callback',{@ea_deletefiducialhelpers,handles})
 
+    uimenu(f,'Label','Run THOMAS Segmentation for T1w','Callback',{@(~, ~) ea_runthomas_gui(handles)});
+
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
 
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
