@@ -276,8 +276,7 @@ for patients = 1:length(source)
                         if contains(bids_name,'acqTag')
                             if strcmp(which_file, 'glanat.nii')
                                 [~, anchorMod] = checkModalities(fullfile(new_path, 'coregistration', 'anat'));
-                                acqTag = strsplit(anchorMod, '_');
-                                bids_name = replace(bids_name, 'acqTag', ['acq-', acqTag{1}]);
+                                bids_name = regexprep(bids_name, 'acqTag_[^\W_]+', ['acq-', anchorMod]);
                             else
                                 bids_name = add_tag(bids_name,mod_cell,tag_cell);
                             end
@@ -1445,7 +1444,11 @@ function [modalities, anchorModality] = checkModalities(coregAnatFolder)
     modalities = unique(regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once'));
     % Remove anchor modality
     prefs = ea_prefs;
-    anchorModality = prefs.prenii_order{1};
+    anchorModality = prefs.prenii_order{1}; % Should be T1w by default
+    if ~any(contains(modalities, anchorModality))
+        anchorModality = prefs.prenii_order{2}; % Fallback to T2w in case subj only has anat_t2
+    end
+
     if sum(contains(modalities, anchorModality)) == 1
         % Only one anchor modality image exists
         anchorModality = modalities{1};
