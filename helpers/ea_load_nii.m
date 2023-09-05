@@ -13,7 +13,7 @@ function nii = ea_load_nii(fname)
 %     'PATH/TO/image,1'
 
 % input file is MAT file
-if strcmp(fname(end-3:end),'.mat')
+if endsWith(fname, '.mat')
     nii = load(fname);
     return
 end
