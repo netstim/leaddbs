@@ -1448,8 +1448,8 @@ function [modalities, achorModality] = checkModalities(coregAnatFolder)
     anchorModality = prefs.prenii_order{1};
     if sum(contains(modalities, anchorModality)) == 1
         % Only one anchor modality image exists
-        modalities(contains(modalities, anchorModality)) = [];
         achorModality = modalities{1};
+        modalities(contains(modalities, anchorModality)) = [];
     elseif sum(contains(modalities, anchorModality)) > 1
         % Multiple anchor modality images exist, remove the first
         % one according to the pre-defined order: iso, ax, cor, sag
@@ -1457,6 +1457,6 @@ function [modalities, achorModality] = checkModalities(coregAnatFolder)
         anchorModalities = setdiff(modalities, otherModalities);
         [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
         anchorModalities = anchorModalities(ind);
-        modalities = [anchorModalities(2:end); otherModalities];
         achorModality = anchorModalities{1};
+        modalities = [anchorModalities(2:end); otherModalities];
     end
