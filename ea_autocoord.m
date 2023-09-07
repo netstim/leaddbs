@@ -55,11 +55,11 @@ end
 options = ea_resolve_elspec(options);
 
 % check connectome-mapper tags
-if isfield(options,'lcm')
+if strcmp(options.leadprod, 'mapper')
     ea_lcm(options);
 end
 
-if isfield(options,'predict')
+if strcmp(options.leadprod, 'predict')
    ea_predict(options);
 end
 
@@ -345,7 +345,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         ea_perform_lc(options);
     end
 
-    if options.d2.write || options.d3.write
+    if ~options.refinelocalization && (options.d2.write || options.d3.write)
         if options.atl.genpt % generate patient specific atlas set
             ea_ptspecific_atl(options);
         end

@@ -157,8 +157,12 @@ ea_methods(options,...
     {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 % continue with rest of the program schedule..
-
-ea_write(options);
+if options.d2.write || options.d3.write
+    if options.atl.genpt % generate patient specific atlas set
+        ea_ptspecific_atl(options);
+    end
+    ea_write(options);
+end
 
 
 % Callback invoked when user presses the 'Update all' button in the 'Manual electrodes head / tail setting' figure.
