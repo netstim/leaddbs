@@ -5,7 +5,6 @@ function [PL]=ea_calc_vatstats(resultfig,options,hmchanged)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-PL.ht=uitoolbar(resultfig);
 set(0,'CurrentFigure',resultfig)
 
 ea_dispt('Visualizing VTA...');
@@ -243,8 +242,13 @@ for iside=1:length(options.sides)
     end
 
     try
-        vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat'),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
-        quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver'),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));
+        if stimparams(side).volume
+            if ~isfield(PL, 'ht')
+                PL.ht=uitoolbar(resultfig);
+            end
+            vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat'),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
+            quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver'),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));
+        end
     end
 end
 
