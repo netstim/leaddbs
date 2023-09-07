@@ -3,7 +3,7 @@ function clearXattr(folder, pattern, type)
 % excutable or app to bypass Gatekeeper on macOS.
 
 if nargin < 2
-    pattern = '*maci64';
+    pattern = '*mac[ia]64';
 end
 
 if nargin < 3
