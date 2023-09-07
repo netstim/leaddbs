@@ -221,7 +221,7 @@ switch side
     case 1
         vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
     case 2
-        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-L.mat'];
 end
 
 vatgrad = vatgrad(side);
