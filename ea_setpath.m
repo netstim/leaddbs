@@ -14,9 +14,9 @@ extDir = fullfile(leaddbsRoot, 'ext_libs');
 fastsurferDir = fullfile(extDir, 'fastsurfer');
 surficeDir = fullfile(extDir, 'surfice');
 
-rootSubDirs = listDir(leaddbsRoot, {'ext_libs', 'release'});
-extSubDirs = listDir(extDir, {'mambaforge', 'SlicerNetstim', 'SlicerForLeadDBS', '@'});
-surficeSubDirs = listDir(surficeDir, {'surfice.app'});
+rootSubDirs = listDir(leaddbsRoot, excludePattern = {'ext_libs', 'release'});
+extSubDirs = listDir(extDir, excludePattern = {'mambaforge', 'SlicerNetstim', 'SlicerForLeadDBS', '@'});
+surficeSubDirs = listDir(surficeDir, excludePattern = {'surfice.app'});
 
 dirToAdd = strjoin({leaddbsRoot, extDir, fastsurferDir, surficeDir}, pathsep);
 subdirsToAdd = strjoin(cellfun(@genpath, [rootSubDirs; extSubDirs; surficeSubDirs], 'Uni', 0), pathsep);
@@ -33,10 +33,22 @@ end
 savepath;
 
 
-function subDirs = listDir(inputDir, startsWithPattern)
-% List subfolders and filter unwanted based on startsWithPattern
-startsWithPattern = [startsWithPattern, '.'];
+function subDirs = listDir(inputDir, opts)
+% List subfolders and filter unwanted based on excludePattern (using startsWith)
+
+arguments
+    inputDir {mustBeFolder}
+    opts.excludePattern {mustBeText} = '.';
+end
+
+if ischar(opts.excludePattern)
+    opts.excludePattern = {opts.excludePattern};
+end
+
+if ~ismember('.', opts.excludePattern)
+    opts.excludePattern = [opts.excludePattern, '.']; % Exclude folders starting with '.'
+end
 
 subDirs = dir(inputDir);
-subDirs(~[subDirs.isdir]' | startsWith({subDirs.name}', startsWithPattern)) = [];
+subDirs(~[subDirs.isdir]' | startsWith({subDirs.name}', opts.excludePattern)) = [];
 subDirs = fullfile({subDirs.folder}', {subDirs.name}');
