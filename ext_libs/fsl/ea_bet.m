@@ -42,7 +42,7 @@ end
 cmd = [cmd, ' -f ' ,num2str(fraintthreshold)];
 
 switch ext
-    case '.nii'
+    case {'', '.nii'}
         env = 'FSLOUTPUTTYPE=NIFTI';
     case '.nii.gz'
         env = 'FSLOUTPUTTYPE=NIFTI_GZ';
