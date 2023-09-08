@@ -27,11 +27,17 @@ else
     lookup_table = getpref('dcm2bids', 'lookuptable');
 end
 
-% nii folder instead of nii files provided
-if isfolder(niiFiles)
-    niiFiles = ea_regexpdir(niiFiles, '\.nii(\.gz)$', 0);
-    if isempty(niiFiles)
-        ea_cprintf('CmdWinWarnings', 'NIfTI not found in the specified folder!\n')
+if ischar(niiFiles)
+    if isfolder(niiFiles)   % nii folder instead of nii files provided
+        niiFiles = ea_regexpdir(niiFiles, '\.nii(\.gz)$', 0);
+        if isempty(niiFiles)
+            ea_cprintf('CmdWinWarnings', 'NIfTI not found in the specified folder!\n')
+            return;
+        end
+    elseif isfile(niiFiles) % single nii file provided
+        niiFiles = {niiFiles};
+    else
+        ea_cprintf('CmdWinWarnings', 'Can''t retrieve NIfTI from the input!\n')
         return;
     end
 end
