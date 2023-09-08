@@ -50,30 +50,31 @@ for pt = 1:length(patlist)
     [min_bound_per_contactR, max_bound_per_contactR, ~] = ea_get_currents_per_contact(app.inputVars.MinCylindricCurr,app.inputVars.MaxCylindricCurr, app.inputVars.MinSegmentCurr, app.inputVars.MaxSegmentCurr, reconst, 0, 0);
     min_bound_per_contactL = min_bound_per_contactR;
     max_bound_per_contactL = max_bound_per_contactR;
+    [~,subId,~] = fileparts(patlist{pt});
     firstLevel = [1,2,3,4,8];
     secondLevel = [1,5,6,7,8];
-    if pt == 1 || pt == 3 || pt == 5
+    if strcmp(subId,'sub-TWEED01') || strcmp(subId,'sub-TWEED03') || strcmp(subId,'sub-TWEED05')
         min_bound_per_contactR(secondLevel) = 0;
         max_bound_per_contactR(secondLevel) = 0;
         startcontactR = 3;
         min_bound_per_contactL(firstLevel) = 0;
         max_bound_per_contactL(firstLevel) = 0;
         startcontactL = 5;
-    elseif pt == 2 || pt == 9 || pt == 10
+    elseif strcmp(subId,'sub-TWEED02') || strcmp(subId,'sub-TWEED09') || strcmp(subId,'sub-TWEED10')
         min_bound_per_contactR(secondLevel) = 0;
         max_bound_per_contactR(secondLevel) = 0;
         startcontactR = 5;
         min_bound_per_contactL(secondLevel) = 0;
         max_bound_per_contactL(secondLevel) = 0;
         startcontactL = 5;
-    elseif pt == 3 || pt == 6 || pt == 7
+   elseif strcmp(subId,'sub-TWEED03') || strcmp(subId,'sub-TWEED06') || strcmp(subId,'sub-TWEED07')
         min_bound_per_contactR(firstLevel) = 0;
         max_bound_per_contactR(firstLevel) = 0;
         startcontactR = 5;
         min_bound_per_contactL(firstLevel) = 0;
         max_bound_per_contactL(firstLevel) = 0;
         startcontactL = 3;
-    elseif pt == 4 || pt == 8
+    elseif strcmp(subId,'sub-TWEED04') || strcmp(subId,'sub-TWEED08')
         min_bound_per_contactR(firstLevel) = 0;
         max_bound_per_contactR(firstLevel) = 0;
         startcontactR = 5;
