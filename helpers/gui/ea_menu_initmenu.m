@@ -22,10 +22,6 @@ if isempty(menuprobe)
         m_c.Checked='off';
     end
 
-    if ismember('import',cmd)
-        uimenu(f,'Label','Import Legacy Folder to BIDS Dataset','Callback',{@(src, evt) lead_import});
-    end
-
     if ismember('checkregfigs',cmd)
         cr=uimenu(f,'Label','Checkreg');
         uimenu(cr,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles});
