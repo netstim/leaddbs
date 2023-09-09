@@ -10,8 +10,8 @@ anchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 postopModality = fieldnames(options.subj.postopAnat);
 
 % Set moving and output image
-moving = cellfun(@(x) options.subj.postopAnat.(x).preproc, postopModality, 'Uni', 0);
-output = cellfun(@(x) options.subj.postopAnat.(x).coreg, postopModality, 'Uni', 0);
+moving = cellfun(@(x) options.subj.preproc.anat.postop.(x), postopModality, 'Uni', 0);
+output = cellfun(@(x) options.subj.coreg.anat.postop.(x), postopModality, 'Uni', 0);
 
 % Check moving image existence
 moving_exists = cellfun(@(x) isfile(x), moving);

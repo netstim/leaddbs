@@ -230,8 +230,33 @@ if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 r
     checkregFig = [directory, 'checkreg', filesep,ea_stripext(currvol),'2',strrep(ea_stripext(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
     set(handles.anchormod,'String',ea_stripext(b0restanchor{activevolume}));
 else % normal anatomical 2 anatomical registration
-    set(handles.substitute, 'Visible', 'off');
-    set(handles.anchormod, 'String', anchor);
+    if isfile(options.subj.coreg.log.method) && ~contains(currvol, options.subj.normDir)
+        % Get all coreg modalities
+        coregLog = loadjson(options.subj.coreg.log.method);
+        modalities = fieldnames(coregLog.approval);
+        % Exclude postop modalities
+        modalities(endsWith(modalities, {'CT', '_MRI'})) = [];
+        % Exclude current modalities
+        currentModality = ea_getmodality(currvol);
+        modalities(ismember(modalities, currentModality)) = [];
+        % Only keep approved modalities
+        approval = cellfun(@(x) coregLog.approval.(x), modalities);
+        modalities(~approval) = [];
+    else
+        modalities = {};
+    end
+
+    if ~isempty(modalities)
+        modalities = strcat('Substitute anchor image with "', modalities, '"');
+        modalities = [['Use default anchor image "' options.subj.AnchorModality '"']; modalities];
+        set(handles.substitute, 'Visible', 'on');
+        set(handles.substitute, 'String', modalities);
+        set(handles.substitute, 'Value', 1);
+        set(handles.anchormod, 'String', options.subj.AnchorModality);
+    else
+        set(handles.substitute, 'Visible', 'off');
+        set(handles.anchormod, 'String', anchor);
+    end
 end
 
 set(handles.imgfn, 'Visible', 'on');
@@ -277,9 +302,9 @@ function [pretras]=ea_getsubstitutes(options)
 [~, checkregImages] = ea_assignpretra(options);
 for fi=1:length(checkregImages)
     if fi==1
-        pretras{fi} = ['Use ',checkregImages{fi}, ' (default)'];
+        pretras{fi} = ['Use default anchor image "',checkregImages{fi}, '"'];
     else
-        pretras{fi} = ['Substitute moving file with ',checkregImages{fi}];
+        pretras{fi} = ['Substitute anchor image with "' checkregImages{fi} '"'];
     end
 end
 
@@ -363,6 +388,9 @@ elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj
     % Get CT coregistration method
     options.coregct.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
 
+    % Override anchormodality
+    options.subj.AnchorModality = handles.anchormod.String;
+
     % Run CT coregistration
     ea_coregpostopct(options);
 
@@ -414,19 +442,36 @@ else % MR
         end
         ea_cleandownstream(directory,thisrest);
     else  % other images
+        % Override anchormodality
+        options.subj.AnchorModality = handles.anchormod.String;
+
         session = regexp(currvol, '(?<=_ses-)(preop|postop)', 'match', 'once');
         modality = ea_getmodality(currvol);
-        preprocImage = options.subj.preproc.anat.(session).(modality);
-        ea_coregimages(options, preprocImage, anchorImage, currvol, {}, 0);
+
+        if strcmp(session, 'preop')
+            % Override preop preproc and coreg fields and then run coregpreopmr
+            preopFields = fieldnames(options.subj.preproc.anat.preop);
+            preopFields = setdiff(preopFields, {options.subj.AnchorModality, modality});
+            for f = 1:length(preopFields)
+                options.subj.preproc.anat.preop = rmfield(options.subj.preproc.anat.preop, preopFields{f});
+                options.subj.coreg.anat.preop = rmfield(options.subj.coreg.anat.preop, preopFields{f});
+            end
+            ea_coregpreopmr(options);
+        elseif strcmp(session, 'postop')
+            % Override postop preproc and coreg fields and then run coregpostopmr
+            postopFields = fieldnames(options.subj.preproc.anat.postop);
+            postopFields = setdiff(postopFields, modality);
+            for f = 1:length(postopFields)
+                options.subj.postopAnat = rmfield(options.subj.postopAnat, postopFields{f});
+                options.subj.preproc.anat.postop = rmfield(options.subj.preproc.anat.postop, postopFields{f});
+                options.subj.coreg.anat.postop = rmfield(options.subj.coreg.anat.postop, postopFields{f});
+            end
+            ea_coregpostopmr(options);
+        end
 
         % Create checkreg fig
         fprintf('\nRegenerating checkreg figure...\n\n');
         ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.(session).(modality));
-
-        % Disapprove after recompute
-        json = loadjson(options.subj.coreg.log.method);
-        json.approval.(modality) = 0;
-        savejson('', json, options.subj.coreg.log.method);
 
         if strcmp(session, 'postop') && isfolder(options.subj.brainshiftDir)
             ea_cprintf('CmdWinWarnings', 'Postop MR coregistration has been rerun. Please also rerun brain shift correction!\n');
@@ -858,6 +903,7 @@ function substitute_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns substitute contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from substitute
+handles.anchormod.String = regexp(handles.substitute.String{handles.substitute.Value}, '(?<=")(\w+)(?=")', 'match', 'once');
 
 
 % --- Executes during object creation, after setting all properties.
