@@ -721,6 +721,8 @@ for i = find(uiapp.niiFileTable.Data.Include)'
 
 end
 
+ea_genrawimagesjson(dataset_folder, erase(subjID, lineBoundary("start") + "sub-"));
+
 setappdata(groot, 'sortedFiles', sortedFiles);
 setappdata(groot, 'returnCode', 'okay');
 delete(uiapp);      % close window

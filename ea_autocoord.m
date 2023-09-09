@@ -41,7 +41,6 @@ if strcmp(options.leadprod, 'dbs')
         if ~isempty(unsortedFiles)
             ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
             ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
-            ea_genrawimagesjson(bids.datasetDir, options.subj.subjId);
         else
             ea_cprintf('CmdWinWarnings', 'No unsorted raw images found for "%s"!\n', options.subj.subjId);
         end
@@ -186,9 +185,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.do
-        
+
         normlock = ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).norm);
-        
+
         if contains(options.normalize.method, 'apply')
             doit = true;
         elseif normlock == 1 % Both pre-op images coreg and norm were approved.
@@ -198,7 +197,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         else
             doit = true;
         end
-        
+
         if doit
             ea_normalize(options);
             ea_gencheckregfigs(options, 'norm');
