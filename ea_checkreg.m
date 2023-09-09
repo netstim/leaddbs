@@ -168,13 +168,11 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
 
     ea_init_normpopup(handles, options.prefs.normalize.default, 'coregmrmethod');
 
-    if isfile(options.subj.norm.log.method)
-        json = loadjson(options.subj.norm.log.method);
+    if ~isfile(options.subj.norm.log.method)
+        json.approval = 0;
+        ea_mkdir(fileparts(options.subj.norm.log.method));
+        savejson('', json, options.subj.norm.log.method);
     end
-
-    json.approval = 0;
-    ea_mkdir(fileparts(options.subj.coreg.log.method));
-    savejson('', json, options.subj.norm.log.method);
 
     checkregFig = options.subj.norm.checkreg.preop.(options.subj.AnchorModality);
 
@@ -196,26 +194,22 @@ else
     if strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
         ea_init_coregctpopup(handles, options.prefs.ctcoreg.default, 'coregmrmethod');
 
-        if isfile(options.subj.coreg.log.method)
-            json = loadjson(options.subj.coreg.log.method);
+        if ~isfile(options.subj.coreg.log.method)
+            json.approval.CT = 0;
+            savejson('', json, options.subj.coreg.log.method);
         end
-
-        json.approval.CT = 0;
-        savejson('', json, options.subj.coreg.log.method);
 
         checkregFig = options.subj.coreg.checkreg.postop.tonemapCT;
     else % MR
         ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
 
-        if isfile(options.subj.coreg.log.method)
-            json = loadjson(options.subj.coreg.log.method);
-        end
-
         % Extract image modality
         modality = ea_getmodality(currvol);
 
-        json.approval.(modality) = 0;
-        savejson('', json, options.subj.coreg.log.method);
+        if ~isfile(options.subj.coreg.log.method)
+            json.approval.(modality) = 0;
+            savejson('', json, options.subj.coreg.log.method);
+        end
 
         if contains(currvol, 'ses-preop')
             checkregFig = options.subj.coreg.checkreg.preop.(modality);
