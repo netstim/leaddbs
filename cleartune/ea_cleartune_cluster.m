@@ -43,65 +43,12 @@ warning off
 
 for pt = 1:length(patlist)
     ptindx = pt;
-    reconstruction_file = dir([patlist{pt},filesep,'reconstruction',filesep,'sub-*desc-reconstruction.mat']);
-    reconstruction_file_path = [reconstruction_file.folder,filesep,reconstruction_file.name];
-    [reconst, ~, ~, ~] = ea_get_reconstruction(reconstruction_file_path);
-    % do not update S here, just get the bounds in mA!
-    [min_bound_per_contactR, max_bound_per_contactR, ~] = ea_get_currents_per_contact(app.inputVars.MinCylindricCurr,app.inputVars.MaxCylindricCurr, app.inputVars.MinSegmentCurr, app.inputVars.MaxSegmentCurr, reconst, 0, 0);
-    min_bound_per_contactL = min_bound_per_contactR;
-    max_bound_per_contactL = max_bound_per_contactR;
-    [~,subId,~] = fileparts(patlist{pt});
-    firstLevel = [1,2,3,4,8];
-    secondLevel = [1,5,6,7,8];
-    if strcmp(subId,'sub-TWEED01') || strcmp(subId,'sub-TWEED03') || strcmp(subId,'sub-TWEED05')
-        min_bound_per_contactR(secondLevel) = 0;
-        max_bound_per_contactR(secondLevel) = 0;
-        startcontactR = 3;
-        min_bound_per_contactL(firstLevel) = 0;
-        max_bound_per_contactL(firstLevel) = 0;
-        startcontactL = 5;
-    elseif strcmp(subId,'sub-TWEED02') || strcmp(subId,'sub-TWEED09') || strcmp(subId,'sub-TWEED10')
-        min_bound_per_contactR(secondLevel) = 0;
-        max_bound_per_contactR(secondLevel) = 0;
-        startcontactR = 5;
-        min_bound_per_contactL(secondLevel) = 0;
-        max_bound_per_contactL(secondLevel) = 0;
-        startcontactL = 5;
-   elseif strcmp(subId,'sub-TWEED03') || strcmp(subId,'sub-TWEED06') || strcmp(subId,'sub-TWEED07')
-        min_bound_per_contactR(firstLevel) = 0;
-        max_bound_per_contactR(firstLevel) = 0;
-        startcontactR = 5;
-        min_bound_per_contactL(firstLevel) = 0;
-        max_bound_per_contactL(firstLevel) = 0;
-        startcontactL = 3;
-    elseif strcmp(subId,'sub-TWEED04') || strcmp(subId,'sub-TWEED08')
-        min_bound_per_contactR(firstLevel) = 0;
-        max_bound_per_contactR(firstLevel) = 0;
-        startcontactR = 5;
-        min_bound_per_contactL(secondLevel) = 0;
-        max_bound_per_contactL(secondLevel) = 0;
-        startcontactL = 3;
-    end
-    startptsR = zeros(1,app.inputVars.numContacts);
-    startptsL = zeros(1,app.inputVars.numContacts);
-    
-    if abs(max_bound_per_contactR(startcontactR)) > abs(min_bound_per_contactR(startcontactR))
-        startptsR(startcontactR) = max_bound_per_contactR(startcontactR) / 1.0;
-    else
-        startptsR(startcontactR) = min_bound_per_contactR(startcontactR) / 1.0;
-    end
-  
-    
-    if abs(max_bound_per_contactL(startcontactL)) > abs(min_bound_per_contactL(startcontactL))
-        startptsL(startcontactL) = max_bound_per_contactL(startcontactL) / 1.0;
-    else
-        startptsL(startcontactL) = min_bound_per_contactL(startcontactL) / 1.0;
-    end
-
-    lbR = min_bound_per_contactR;
-    lbL = min_bound_per_contactL;
-    ubR = max_bound_per_contactR;
-    ubL = max_bound_per_contactL;
+    startptsR = app.startptsR;
+    startptsL = app.startptsL;
+    lbR = app.lbR; %min_bound_per_contactR;
+    lbL = app.lbL; %min_bound_per_contactL;
+    ubR = app.ubR; %max_bound_per_contactR;
+    ubL = app.ubL; %max_bound_per_contactL;
     intergCond = zeros(1,app.inputVars.numContacts);
     A = repmat(-1,1,app.inputVars.numContacts);
     b = 5;
@@ -136,7 +83,6 @@ for pt = 1:length(patlist)
         
         objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist,ptindx));
         [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-        
     else
         objconstrR=@(x)struct('Fval',nestedfunR(x,patlist,ptindx));
         [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
@@ -159,7 +105,11 @@ for pt = 1:length(patlist)
     save(fullfile(patlist{pt},'optimize_status_surrogate_R.mat'),'ipR','XOptimR');
     % new way to define inputs
     [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist{pt},XOptimR, modelVTA,writeVTA,1);
-    ea_generate_optim_vat(inputsR{:});
+     try
+        ea_generate_optim_vat(inputsR{:});
+     catch ME
+        disp(ME.message);
+     end
 
     if all(ubL(:) <= 0.0)
         objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist,ptindx));
@@ -175,8 +125,6 @@ for pt = 1:length(patlist)
     if ~isempty(newoptimL)
         XOptimL = newoptimL;
     end
-   
-     
     writeVTA = 1;
     for i=1:size(ipL.X,1)
         newL = reformatX(ipL.X(i,:));
@@ -186,7 +134,11 @@ for pt = 1:length(patlist)
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_L.mat'),'ipL','XOptimL');
    [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
-   ea_generate_optim_vat(inputsL{:});
+   try
+        ea_generate_optim_vat(inputsL{:});
+   catch ME
+        disp(ME.message);
+   end
 
    options = setOPTS(patlist{pt});
    S = ea_initializeS(options);
@@ -280,7 +232,7 @@ if all(~ipX) %all contacts have zero % activation its not allowed
     X = [];
     return
 end
-thresh = abs(app.inputVars.MinCylindricCurr/100);
+thresh = abs(app.inputVars.MinCylindricCurr/10);
 %normalization, which will ruin the function progression
 %whichneg = abs(X) < (abs(app.MinCylindricEditField_2.Value/100) &&;
 for yy = 1:length(ipX)
