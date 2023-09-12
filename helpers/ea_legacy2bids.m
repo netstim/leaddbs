@@ -1020,7 +1020,7 @@ function generate_rawImagejson(patient_name,dest)
     end
     for i=1:length(postop_files)
         json_val = regexprep(postop_files{i},'\.nii(\.gz)?$','');
-        if contains(postop_files{i},'ct','IgnoreCase',true)
+        if contains(postop_files{i},'_ct.nii','IgnoreCase',true)
             rawdata_fieldname = 'CT';
             anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
         else
