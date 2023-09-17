@@ -48,6 +48,6 @@ switch ext
         env = 'FSLOUTPUTTYPE=NIFTI_GZ';
 end
 
-ea_runcmd(cmd, env);
+ea_runcmd(cmd, 'env', env);
 
 fprintf('\nFSL BET2 finished\n');

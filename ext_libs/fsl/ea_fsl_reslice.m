@@ -31,4 +31,4 @@ if verbose
     fprintf('Reslicing %s to match %s ...\n', input, reference);
 end
 
-ea_runcmd(cmd, 'FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(cmd, env='FSLOUTPUTTYPE=NIFTI');

@@ -3,7 +3,7 @@ disp('Generating surfaces of template space (left/right hemisphere)');
 cmd = [ea_getExec([ea_getearoot,'ext_libs',filesep,'fsl',filesep,'bet2'], escapePath = 1) ' ' ea_space 't1.nii ' ea_space 't1b.nii'];
 ea_dispt('Skullstripping T1');
 
-ea_runcmd(cmd, 'FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(cmd, env='FSLOUTPUTTYPE=NIFTI');
 ea_dispt('Splitting T1 into left & right hemispheres');
 
 ea_split_nii_lr([ea_space,'t1b.nii']);

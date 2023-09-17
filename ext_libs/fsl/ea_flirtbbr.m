@@ -120,15 +120,15 @@ end
 setenv('FSLOUTPUTTYPE','NIFTI');
 
 fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
-ea_runcmd(fastcmd, 'FSLOUTPUTTYPE=NIFTI');
-ea_runcmd(wmsegcmd, 'FSLOUTPUTTYPE=NIFTI');
-ea_runcmd(wmedgecmd, 'FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(fastcmd, env='FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(wmsegcmd, env='FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(wmedgecmd, env='FSLOUTPUTTYPE=NIFTI');
 
 fprintf('\n\nRunning FSL FLIRT Pre-alignment: %s\n\n', movingimage);
-ea_runcmd(flirtinitcmd, 'FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(flirtinitcmd, env='FSLOUTPUTTYPE=NIFTI');
 
 fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
-ea_runcmd(flirtbbrcmd, 'FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(flirtbbrcmd, env='FSLOUTPUTTYPE=NIFTI');
 
 if writeoutmat
     ea_runcmd(convertxfmcmd);

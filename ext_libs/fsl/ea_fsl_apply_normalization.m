@@ -109,6 +109,6 @@ for i = 1:length(input)
         [~, inputFileName] = ea_niifileparts(input{i});
         fprintf('\nNormalizing %s ...\n', inputFileName);
 
-        ea_runcmd(cmd, env);
+        ea_runcmd(cmd, 'env', env);
     end
 end

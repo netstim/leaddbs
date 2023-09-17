@@ -20,7 +20,7 @@ if options.preproc
     Lbound = SIX(round(length(SIX)*options.ubound/100));
     mov.img(mov.img<Lbound) = Lbound;
     %mov.img(mov.img(:)~=0) = ea_contrast(mov.img(mov.img(:)~=0),2,0);
-    
+
     mov.filetype = 16;
     mov.hdr.dime.scl_slope = 1;
     ea_save_untouch_nii(mov,[tempdir,'lead_temp',uuid,'.nii']);
@@ -45,7 +45,7 @@ cmd = [SLICER, ...
     threshParams, ...
     ' -a ' ea_path_helper(outfn)];
 
-ea_runcmd(cmd, 'FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(cmd, env='FSLOUTPUTTYPE=NIFTI');
 
 if options.preproc
     ea_delete([tempdir,'lead_temp',uuid,'.nii']);
