@@ -1,9 +1,10 @@
-function varargout = ea_runcmd(cmd, env)
+function varargout = ea_runcmd(cmd, env, timeout)
 % Run system command constructed using external binaries.
 
 arguments
-    cmd {mustBeTextScalar}
-    env {mustBeText} = '' % env to be overridden, can be 'key=value' or {'key1=value1', 'key2=value2'}
+    cmd     {mustBeTextScalar}
+    env     {mustBeText} = '' % env to be overridden, can be 'key=value' or {'key1=value1', 'key2=value2'}
+    timeout {mustBeTextScalar} = '' % Execute cmd with timeout, can be 10s, 10m, 1h, etc.
 end
 
 if isempty(env)
@@ -24,6 +25,20 @@ cmd = [envOverride, cmd];
 
 if isunix
     cmd = ['bash -c "', cmd, '"'];
+end
+
+if ~isempty(timeout)
+    % Add timeout
+    binFolder = fileparts(mfilename('fullpath'));
+    if ismac
+        binPath = ea_getExec(fullfile(binFolder, 'gtimeout'), escapePath=true);
+        cmd = [binPath ' ' timeout ' ' cmd];
+    elseif isunix
+        cmd = ['timeout ' timeout ' ' cmd];
+    elseif ispc
+        binPath = ea_getExec(fullfile(binFolder, 'procgov64'), escapePath=true);
+        cmd = [binPath ' -t ' timeout ' ' cmd];
+    end
 end
 
 if nargout == 0
