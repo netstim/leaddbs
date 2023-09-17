@@ -5,7 +5,7 @@ function fullPath = ea_getExec(basePath, options)
 
 arguments
     basePath             {mustBeText}   % File path without extension
-    options.escapePath   {mustBeNumericOrLogical} = false % Escape the full path or not
+    options.escapePath   {mustBeNumericOrLogical} = true % Escape the full path or not
 end
 
 basePath = GetFullPath(basePath);
