@@ -112,7 +112,7 @@ else
 	cmd = [ea_getExec(mcpath('tetgen')) ' -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"'];
 end
 
-ea_runcmd(cmd);
+ea_runcmd(cmd, timeout='15m');
 
 % read in the generated mesh
 success=1;
