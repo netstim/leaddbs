@@ -105,19 +105,14 @@ catch
     end
 end
 
-%  system([' "' ea_getExec(mcpath('tetgen')) '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-if ~ispc
-    cmdsuffix='';
+if isempty(cmdopt) % default run
+    cmd = [ea_getExec(mcpath('tetgen')) ' -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"'];
+    % cmd = [ea_getExec(mcpath('tetgen')) ' -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"'];
 else
-    cmdsuffix='';
+	cmd = [ea_getExec(mcpath('tetgen')) ' -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"'];
 end
 
-if(isempty(cmdopt)) % default run
-    system([' "' ea_getExec(mcpath('tetgen')) '" -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
-    % system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-else
-	system([' "' ea_getExec(mcpath('tetgen')) '"  -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
-end
+ea_runcmd(cmd);
 
 % read in the generated mesh
 success=1;
@@ -138,6 +133,7 @@ success=1;
 %         success=0;
 %     end
 % end
+
 
 function sweeptempdir
  file=mwpath('post_vmesh.poly');
