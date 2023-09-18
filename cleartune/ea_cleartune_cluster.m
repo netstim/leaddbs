@@ -60,7 +60,6 @@ for pt = 1:length(patlist)
     else
         reportFileName = ['cleartune_' char(datetime('now'), 'yyyyMMdd''T''HHmmss') '.txt'];
     end
-
     reportpath = fullfile(patlist{pt},'log',filesep,reportFileName);
     fileID = fopen(reportpath,'a+');
     fprintf(fileID,['processing patient: ',patlist{pt}]);
@@ -335,8 +334,8 @@ function Fval=getFval(app,X,patlist,side,ptindx,reportpath)
         catch ME
             disp(ME.message);
             Fval = NaN;
-            fprintf(fileID,'\nComputation of VTA failed');
-            fprintf(fileID,'%d',[inputs{2} ', side:' side]);
+            fprintf(fileID,'\nComputation of VTA failed for side: ');
+            fprintf(fileID,'%d',side);
             return
         end
         app.protocol{ptindx}.inputs=inputs;
@@ -347,17 +346,17 @@ function Fval=getFval(app,X,patlist,side,ptindx,reportpath)
             [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,ptindx,side);
             if any(isnan(Ihat))
                 nanidx = find(isnan(Ihat));
-                fprintf(fileID,'\n%s%d',['Calculation of Ihat returned NaN for the following idx: ',nanidx]);
+                fprintf(fileID,'\n%s','Calculation of Ihat returned NaN for the following idx: ');
+                fprintf(fileID,'%d',nanidx);
             end
             preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
             Fval = -1*preFval;
             %add penalty function if user chooses
             Fval = penaltyFunc(app,X,Fval);
-        catch
-            fprintf(fileID,'\n%s','Calculation of Ihat failed for patient:');
-            fprintf(fileID,'\n%s',patlist{ptindx});
-            fprintf(fileID,'\n%s%d',['side: ',side]);
-            disp("Program exited with error: Ihat not calculated");
+        catch ME
+            fprintf(fileID,'\n%s',['Calculation of Ihat failed for patient:',patlist{ptindx},' for side: ']);
+            fprintf(fileID,'%d',side);
+            fprintf(fileID,'\n%s',['Program exited with error: ',ME.message]);
         end
         try
             fclose(fileID);
@@ -478,6 +477,7 @@ return
 end
 
 function [I,Ihat,actualimprovs] = runcrossval(app,event,tractsetclone,patlist,ptidx,side)
+
 tractsetclone.calculate_cleartune(app.protocol{ptidx}.Efields);
 app.tractset.cleartuneresults=tractsetclone.cleartuneresults; % this is fine to copy to the main object for visualization later.
 
@@ -501,15 +501,15 @@ gpatsel=tractsetclone.patientselection;
 if tractsetclone.mirrorsides
     gpatsel=[gpatsel,gpatsel + length(tractsetclone.M.patient.list)]; %this should not be changed.
 end
-%find length of selected patients to add the new guy in
+%find length of selected patients to add the new patient in
 origlen=size(tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval{1}(:,gpatsel),2)/2;
-%to find index of the new guy from cleartune.results
+%to find index of the new patient from cleartune.results
 numEfields = size(app.protocol{ptidx}.Efields(side),1);
 origix=1:origlen; %the last value of this array will indicate where the new efield will be added.
 efieldix=1:numEfields;
 %first make a copy of the results
 tmpfibvals=tractsetclone.results.(ea_conn2connid(tractsetclone.connectome)).(ea_method2methodid(tractsetclone)).fibsval;
-%find the last patient to insert new guy into
+%find the last patient to insert new patient into
 lastpt = origix(end);
 %this will also be needed for array indexing
 allpatslen = length(tractsetclone.M.patient.list);
