@@ -55,7 +55,13 @@ for pt = 1:length(patlist)
     Aeq = [];
     beq = [];
 
-    reportpath = fullfile(patlist{pt},'log',filesep,'report.txt');
+    if ~isempty(getenv('SLURMD_NODENAME'))
+        reportFileName = ['cleartune_' getenv('SLURMD_NODENAME') '_' getenv('SLURM_JOB_ID') '.txt'];
+    else
+        reportFileName = ['cleartune_' char(datetime('now'), 'yyyyMMdd''T''HHmmss') '.txt'];
+    end
+
+    reportpath = fullfile(patlist{pt},'log',filesep,reportFileName);
     fileID = fopen(reportpath,'a+');
     fprintf(fileID,['processing patient: ',patlist{pt}]);
     optionsR=optimoptions('surrogateopt',...
