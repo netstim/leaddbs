@@ -55,6 +55,9 @@ for pt = 1:length(patlist)
     Aeq = [];
     beq = [];
 
+    reportpath = fullfile(patlist{pt},'log',filesep,'report.txt');
+    fileID = fopen(reportpath,'a+');
+    fprintf(fileID,['processing patient: ',patlist{pt}]);
     optionsR=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
         'MinSurrogatePoints',200,...
@@ -79,14 +82,24 @@ for pt = 1:length(patlist)
         parpool('Processes',2);
     end
 
+    % right side processing%
+    disp('>>>>> Processing Right hemisphere..25% done >>>>>');
+    fclose(fileID);
     if all(ubR(:) <= 0.0)
-        
-        objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist,ptindx));
-        [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
+        objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist,ptindx,reportpath));
+        [XOptimR,~,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
     else
-        objconstrR=@(x)struct('Fval',nestedfunR(x,patlist,ptindx));
-        [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
+        objconstrR=@(x)struct('Fval',nestedfunR(x,patlist,ptindx,reportpath));
+        [XOptimR,~,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
     end
+    Flist = fopen('all');
+    if ismember(fileID,Flist)
+        fprintf(fileID,'\nRight side successfully completed!');
+    else
+        fileID = fopen(reportpath,'a+');
+        fprintf(fileID,'\nRight side successfully completed!');
+    end
+    disp('>>>>> Right hemisphere completed..50% done >>>>>');
 
     writeVTA = 1;
     modelVTA = app.inputVars.modelVTA;
@@ -104,22 +117,40 @@ for pt = 1:length(patlist)
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_R.mat'),'ipR','XOptimR');
     % new way to define inputs
+    fileID = fopen(reportpath,'a+');
+    fprintf(fileID,'\nRight side optimizer paramters saved to patient directory!');
+    fclose(fileID);
     [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist{pt},XOptimR, modelVTA,writeVTA,1);
-     try
+    try
         ea_generate_optim_vat(inputsR{:});
-     catch ME
+        fprintf(fileID,'\nWriting out the winning VTA on the right side was successfull!');
+        fprintf(fileID,'%d',inputsR{2});
+        fclose(fileID);
+    catch ME
+        fileID = fopen(reportpath,'a+');
+        fprintf(fileID,'\nWriting out the winning VTA on the right side did not succeed.\nHowever, your optimize status file is successfully saved.');
+        fprintf(fileID,'%d',inputsR{2});
+        fclose(fileID);
         disp(ME.message);
-     end
-
-    if all(ubL(:) <= 0.0)
-        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist,ptindx));
-        [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
-    else
-        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist,ptindx));
-        [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,optionsL);
     end
 
-    % remove
+   % left side processing%
+    disp('>>>>> Processing Left hemisphere..75% done >>>>>');
+    if all(ubL(:) <= 0.0)
+        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist,ptindx,reportpath));
+        [XOptimL,~,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
+    else
+        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist,ptindx,reportpath));
+        [XOptimL,~,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,optionsL);
+    end
+    Flist = fopen('all');
+    if ismember(fileID,Flist)
+        fprintf(fileID,'\nLeft side successfully completed!');
+    else
+        fileID = fopen(reportpath,'a+');
+        fprintf(fileID,'\nLeft side successfully completed!');
+    end
+    % prune low currrent values
     XOptimL(abs(XOptimL) < 0.000001) = 0.0;
     newoptimL = reformatX(XOptimL);
     if ~isempty(newoptimL)
@@ -133,72 +164,46 @@ for pt = 1:length(patlist)
         end
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_L.mat'),'ipL','XOptimL');
-   [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
+    fprintf(fileID,'\nLeft side optimizer paramters saved to patient directory!');
+    [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
    try
-        ea_generate_optim_vat(inputsL{:});
+       ea_generate_optim_vat(inputsL{:});
+       fprintf(fileID,'\nWriting out the winning VTA on the left side was successfull!');
+       fprintf(fileID,'%d',inputsL{2});
    catch ME
         disp(ME.message);
+        fprintf(fileID,'\nWriting out the winning VTA on the left side did not succeed.\nHowever, your optimize status file is successfully saved.');
+        fprintf(fileID,'%d',inputsL{2});
    end
-
+   disp('>>>>> Left hemisphere completed..100% done >>>>>');
+   
+   %finally save the stimulation parameters in the patient directory
    options = setOPTS(patlist{pt});
    S = ea_initializeS(options);
    S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
    save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
+   disp('>>>>> Stimulation parameters saved successfully! >>>>>');
+   fprintf(fileID,'\nStimulation parameters saved!');
+   fclose(fileID);
+    %finally, switch off parallel processing
     warning on
     if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
         poolobj = gcp('nocreate'); delete(poolobj);
     end
+    disp("Process done ***")
 
 end
 
 
 % Nested function that computes the objective function
-function f = nestedfunR(X,patlist,ptindx)
-
+function Fval = nestedfunR(X,patlist,ptindx,reportpath)
+side = 1; %right side
 % limit to 8mA
 if sum(X(X>0)) > sum(abs(X(X<0)))
-    f.Ineq = sum(X(X>0)) - 5.0;
+    Ineq = sum(X(X>0)) - 5.0;
 else
-    f.Ineq = sum(abs(X(X<0))) - 5.0;
+    Ineq = sum(abs(X(X<0))) - 5.0;
 end
-
-X = reformatX(X);
-
-if isempty(X)
-    f.Fval = Inf;
-    return
-end
-constCurr = 2;
-tractsetclone=updateStim(tractsetclone,X);
-f.Fval=getFval(app,X,patlist,1,ptindx);
-
-return
-end
-
-function f = nestedfunL(X,patlist,ptindx)
-X = reformatX(X);
-
-if sum(X(X>0)) > sum(abs(X(X<0)))
-    f.Ineq = sum(X(X>0)) - 8.0;
-else
-    f.Ineq = sum(abs(X(X<0))) - 8.0;
-end
-
-if isempty(X)
-    f.Fval = Inf;
-    return
-end
-constCurr = 2;
-tractsetclone=updateStim(tractsetclone,X);
-f.Fval=getFval(app,X,patlist,2,ptindx);
-% limit to 8mA
-
-return
-end
-
-
-% Nested function that computes the objective function
-function Fval = nestedfunR_Monopolar(X,patlist,ptindx)
 
 X = reformatX(X);
 
@@ -206,12 +211,49 @@ if isempty(X)
     Fval = Inf;
     return
 end
-tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,patlist,1,ptindx);
+tractsetclone=updateStim(tractsetclone,X,side);
+[Fval]=getFval(app,X,patlist,side,ptindx,reportpath);
 return
 end
 
-function Fval = nestedfunL_Monopolar(X,patlist,ptindx)
+function Fval = nestedfunL(X,patlist,ptindx,fileID)
+side = 2; %left side
+X = reformatX(X);
+
+if sum(X(X>0)) > sum(abs(X(X<0)))
+    Ineq = sum(X(X>0)) - 8.0;
+else
+    Ineq = sum(abs(X(X<0))) - 8.0;
+end
+
+if isempty(X) 
+    Fval = Inf;
+    return
+end
+tractsetclone=updateStim(tractsetclone,X,side);
+Fval=getFval(app,X,patlist,side,ptindx,fileID);
+% limit to 8mA
+return
+end
+
+         
+% Nested function that computes the objective function
+function Fval = nestedfunR_Monopolar(X,patlist,ptindx,fileID)
+side = 1; %side = 1 since it is right side
+X = reformatX(X);
+
+if isempty(X)
+    Fval = Inf;
+    fprintf(fileID,'\nEmpty input variables. Returning Fval of Inf.');
+    return
+end
+tractsetclone=updateStim(tractsetclone,X,side);
+Fval=getFval(app,X,patlist,side,ptindx,reportpath);
+return
+end
+
+function Fval = nestedfunL_Monopolar(X,patlist,ptindx,reportpath)
+side = 2; %since its left side
 X = reformatX(X);
 
 if isempty(X)
@@ -219,10 +261,10 @@ if isempty(X)
     return
 end
 
-tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,patlist,2,ptindx);
-% limit to 8mA
+tractsetclone=updateStim(tractsetclone,X,side);
+Fval=getFval(app,X,patlist,side,ptindx,reportpath);
 
+% limit to 8mA
 return
 end
 
@@ -232,6 +274,8 @@ if all(~ipX) %all contacts have zero % activation its not allowed
     X = [];
     return
 end
+
+
 thresh = abs(app.inputVars.MinCylindricCurr/10);
 %normalization, which will ruin the function progression
 %whichneg = abs(X) < (abs(app.MinCylindricEditField_2.Value/100) &&;
@@ -251,56 +295,70 @@ if any(whichneg)
 else
     X = ipX;
 end
-% X = (X./sum_X)*-1;
 return
 end
 
-function tractsetclone=updateStim(tractsetclone,X)
-    disp('Parameters applied: ');
-    %fprintf('Amplitude:%d\n',X(1));
-    whichContact = find(X(1:end));
-    fprintf('Active contact: k0%d\n',whichContact-1)
-    fprintf('Current, mA: %d\n',X(1:end));
-    %disp('Case activation:100%');
+function tractsetclone=updateStim(tractsetclone,X,side)
+        disp('Parameters applied: ');
+        whichContact = find(X(1:end));
+        if side == 1
+            fprintf('Active contact: k0%d\n',whichContact-1);
+        else
+            if whichContact < 2
+                fprintf('Active contact: k0%d\n',whichContact+8);
+            else
+                fprintf('Active contact: k%d\n',whichContact+8);
+            end
+        end
+        fprintf('Current, mA: %d\n',X(1:end));
 end
 
-function Fval=getFval(app,X,patlist,side,ptindx)
-      
-    %create a vta inside this function, send it to cleartune, get Ihat out and return it as
-    %Fval
-    selpat = patlist{ptindx};
-    % remove very small currents
-    X(abs(X) < 0.000001) = 0.0;
-    writeVTA = 0;
+function Fval=getFval(app,X,patlist,side,ptindx,reportpath)
+        %create a vta inside this function, send it to cleartune, get Ihat out and return it as
+        %Fval
+        fileID = fopen(reportpath,'a+');
+        selpat = patlist{ptindx};
+        % remove very small currents
+        X(abs(X) < 0.000001) = 0.0;
+        writeVTA = 0;
 
-    % new way to define inputs
-    inputs = ea_get_inputs_for_optimizer(selpat,X, app.inputVars.modelVTA,writeVTA,side);
-    try
-        [Efields,allS]=ea_generate_optim_vat(inputs{:});
-       
-    catch ME
-        disp(ME.message);
-        Fval = NaN;
+        % new way to define inputs
+        inputs = ea_get_inputs_for_optimizer(selpat,X, app.inputVars.modelVTA,writeVTA,side);
+        try
+            [Efields,allS]=ea_generate_optim_vat(inputs{:});
+        catch ME
+            disp(ME.message);
+            Fval = NaN;
+            fprintf(fileID,'\nComputation of VTA failed');
+            fprintf(fileID,'%d',[inputs{2} ', side:' side]);
+            return
+        end
+        app.protocol{ptindx}.inputs=inputs;
+        app.protocol{ptindx}.Efields=Efields;
+        app.protocol{ptindx}.allS=allS;
+
+        try
+            [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,ptindx,side);
+            if any(isnan(Ihat))
+                nanidx = find(isnan(Ihat));
+                fprintf(fileID,'\n%s%d',['Calculation of Ihat returned NaN for the following idx: ',nanidx]);
+            end
+            preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
+            Fval = -1*preFval;
+            %add penalty function if user chooses
+            Fval = penaltyFunc(app,X,Fval);
+        catch
+            fprintf(fileID,'\n%s','Calculation of Ihat failed for patient:');
+            fprintf(fileID,'\n%s',patlist{ptindx});
+            fprintf(fileID,'\n%s%d',['side: ',side]);
+            disp("Program exited with error: Ihat not calculated");
+        end
+        try
+            fclose(fileID);
+        end
         return
-    end
-    app.protocol{ptindx}.inputs=inputs;
-    app.protocol{ptindx}.Efields=Efields;
-    app.protocol{ptindx}.allS=allS;
-   
-   
-    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,ptindx,side);
-    %Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
-    if sum(isnan(Ihat(:)))/length(Ihat(:))>0.3
-        ea_warning("Issue")
-    end
-    preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
-    Fval = -1*preFval;
-    %add penalty function if user chooses
-    Fval = penaltyFunc(app,X,Fval);
-return
-    
-end
 
+    end
 end
 
 function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
@@ -475,7 +533,7 @@ switch tractsetclone.multitractmode
             tractsetclone.subscore.weightvars{wv} = [tractsetclone.subscore.weightvars{wv}(:);repmat(app.symptomWeightVar{ptidx,side}(wv),size(app.protocol{ptidx}.Efields,1),1)];
             tractsetclone.subscore.vars{wv}=[tractsetclone.subscore.vars{wv}(:);ones(size(app.protocol{ptidx}.Efields,1),1)]; % need to add in weights here.
         end
-        
+
         app.trainings=repmat({app.tractset.patientselection},length(patlist),1);
 
         try % this has to be in a try/catch because we still have to cleanup the fibfilt again if something would go wrong (next section).
