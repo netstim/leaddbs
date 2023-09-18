@@ -115,17 +115,20 @@ end
 ea_runcmd(cmd, timeout='15m');
 
 % read in the generated mesh
-success=1;
-% try
+try
     [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
-% 	fprintf(1,'volume mesh generation is complete\n');
-% catch
+    success = 1;
+	fprintf('volume mesh generation completed\n');
+catch
+	fprintf('volume mesh generation failed!\n');
+    rethrow(ME);
+end
 %     system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 %     system([' "' ea_getExec(mcpath('tetgen')) '" -A -d -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 %     system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' ' mwpath('post_vmesh.1.face'),' ',mwpath('post_vmesh.1.node') '']);
 %     try
 %         [node,elem,face]=readtetgen(mwpath('post_vmesh.2'));
-%         fprintf(1,'volume mesh generation is complete\n');
+%         fprintf(1,'volume mesh generation completed\n');
 %     catch
 %         node=[];
 %         elem=[];
