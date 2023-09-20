@@ -16,6 +16,7 @@ if ~nargin
         'SceneRay SR1200', 'SceneRay SR1210', 'SceneRay SR1211', 'SceneRay SR1242', ...
         'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
         'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S14', 'SDE-08 S16', ...
+        'PMT 2102-04-091', 'PMT 2102-06-091', 'PMT 2102-08-091', 'PMT 2102-10-091', 'PMT 2102-12-091', 'PMT 2102-14-091', 'PMT 2102-16-091', ...
         'PMT 2102-16-092', 'PMT 2102-16-093', 'PMT 2102-16-131', 'PMT 2102-16-142', ...
         '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', 'NeuroPace DL-344-10', ...
         'DIXI D08-05AM', 'DIXI D08-08AM', 'DIXI D08-10AM', 'DIXI D08-12AM', 'DIXI D08-15AM', 'DIXI D08-18AM', ...
@@ -34,6 +35,7 @@ if ~nargin
         'sceneray_sr1200', 'sceneray_sr1210', 'sceneray_sr1211', 'sceneray_sr1242', ...
         'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
         'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s14', 'sde_08_s16', ...
+        'pmt_2102_04_091', 'pmt_2102_06_091', 'pmt_2102_08_091', 'pmt_2102_10_091', 'pmt_2102_12_091', 'pmt_2102_14_091', 'pmt_2102_16_091', ...
         'pmt_2102_16_092', 'pmt_2102_16_093', 'pmt_2102_16_131', 'pmt_2102_16_142', ...
         'epc_05c', 'epc_15c', 'neuropace_dl_344_35', 'neuropace_dl_344_10', ...
         'dixi_d08_05am', 'dixi_d08_08am', 'dixi_d08_10am', 'dixi_d08_12am', 'dixi_d08_15am', 'dixi_d08_18am', ...
@@ -622,6 +624,145 @@ switch elmodel
         elspec.forstimulation=0;
     case 'SDE-08 S16'
         elspec.matfname='sde_08_s16';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=16;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
+            'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-04-091'
+        elspec.matfname='pmt_2102_04_091';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=4;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (L)','K5 (L)','K6 (L)','K7 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-06-091'
+        elspec.matfname='pmt_2102_06_091';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=6;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)',...
+            'K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-08-091'
+        elspec.matfname='pmt_2102_08_091';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=8;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
+            'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-10-091'
+        elspec.matfname='pmt_2102_10_091';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=10;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
+            'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-12-091'
+        elspec.matfname='pmt_2102_12_091';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=12;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)',...
+            'K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-14-091'
+        elspec.matfname='pmt_2102_14_091';
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.3;
+        elspec.tip_length=2;
+        elspec.contact_spacing=1.5;
+        elspec.numel=14;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)',...
+            'K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
+    case 'PMT 2102-16-091'
+        elspec.matfname='pmt_2102_16_091';
         elspec.lead_diameter=0.8;
         elspec.lead_color=0.7;
         elspec.contact_length=2;
