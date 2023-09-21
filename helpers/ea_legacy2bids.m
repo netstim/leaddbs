@@ -1383,28 +1383,28 @@ if endsWith(fname_in,'.mat')
 end
 
 
-function method_used = generateMethod(input_mat,modality_field)
-if iscell(modality_field)
-    modality_field = modality_field{1};
+function method_used = generateMethod(input_mat, field)
+if iscell(field)
+    field = field{1};
 end
 
-if contains(modality_field, 'coregct')
+if contains(field, 'coregct')
     regType = 'CT coregistration';
-elseif contains(modality_field, 'coregmr')
+elseif contains(field, 'coregmr')
     regType = 'MR coregistration';
-elseif contains(modality_field, 'norm')
+elseif contains(field, 'norm')
     regType = 'normalization';
 end
 
-if isfield(input_mat,modality_field)
-    if ischar(input_mat.(modality_field))
-        input_mat.(modality_field) = {input_mat.(modality_field)};
+if isfield(input_mat,field)
+    if ischar(input_mat.(field))
+        input_mat.(field) = {input_mat.(field)};
     end
-    if strcmp(input_mat.(modality_field){end},'ea_normalize_apply_normalization')
-        j = length(input_mat.(modality_field));
-        for i=1:length(input_mat.(modality_field))
-            if ~strcmp(input_mat.(modality_field){j},'ea_normalize_apply_normalization')
-                modField = input_mat.(modality_field){j};
+    if strcmp(input_mat.(field){end},'ea_normalize_apply_normalization')
+        j = length(input_mat.(field));
+        for i=1:length(input_mat.(field))
+            if ~strcmp(input_mat.(field){j},'ea_normalize_apply_normalization')
+                method = input_mat.(field){j};
                 %need to get the first entry thats not
                 %ea_normalize_apply_normalization
                 break
@@ -1412,25 +1412,27 @@ if isfield(input_mat,modality_field)
             j = j-1;
         end
     else
-        modField = input_mat.(modality_field){end};
+        method = input_mat.(field){end};
     end
-    if strcmp(modField,'ANTs') || contains(modField,'_ants')
-        method_used = ea_normalize_ants('promt');
-    elseif strcmp(modField,'BRAINSFit')
-        method_used = 'BRAINSFit (Johnson 2007)';
-    elseif strcmp(modField,'FLIRT')
-        method_used = 'FLIRT (Jenkinson 2001 & 2002)';
-    elseif strcmp(modField,'BBR')
-        method_used = 'FLIRT BBR (Greve and Fischl 2009)';
-    elseif strcmp(modField,'Hybrid SPM & ANTs')
-        method_used = 'Hybrid SPM & ANTs';
-    elseif strcmp(modField,'Hybrid SPM & BRAINSFIT')
-        method_used = 'Hybrid SPM & BRAINSFIT';
-    elseif strcmp(modField,'SPM') || contains(modField,'_spm')
+    if strcmp(method,'ANTs') || contains(method,'_ants')
+        method_used = 'ANTs (Avants 2008)';
+    elseif strcmp(method,'SPM') || contains(method,'_spm')
         method_used = 'SPM (Friston 2007)';
-    elseif strcmp(modField,'Hybrid SPM & FLIRT')
+    elseif strcmp(method,'BRAINSFit') || contains(method,'_brainsfit')
+        method_used = 'BRAINSFit (Johnson 2007)';
+    elseif strcmp(method,'FLIRT') || contains(method, '_flirt') || strcmp(method, 'ea_coregctmri_fsl')
+        method_used = 'FLIRT (Jenkinson 2001 & 2002)';
+    elseif strcmp(method,'BBR') || contains(method,'_bbr')
+        method_used = 'FLIRT BBR (Greve and Fischl 2009)';
+    elseif strcmp(method,'ea_normalize_fsl')
+        method_used = 'FNIRT (Andersson 2010)';
+    elseif strcmp(method,'Hybrid SPM & ANTs')
+        method_used = 'Hybrid SPM & ANTs';
+    elseif strcmp(method,'Hybrid SPM & BRAINSFIT')
+        method_used = 'Hybrid SPM & BRAINSFIT';
+    elseif strcmp(method,'Hybrid SPM & FLIRT')
         method_used = 'Hybrid SPM & FLIRT';
-    elseif strcmp(modField,'Schoenecker 2009')
+    elseif strcmp(method,'Schoenecker 2009')
         method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
     else
         method_used = '';
