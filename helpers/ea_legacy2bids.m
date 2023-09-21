@@ -851,7 +851,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            if endsWith(which_file,'.h5') %already renames
+            if startsWith(which_file,'glanat') && endsWith(which_file,'.h5') %already renames
                 bids_name = [patient_name,'_',bids_name];
                 outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
                 if contains(which_file,'glanatComposite.h5')
@@ -1455,7 +1455,7 @@ function fileList = filterLegacyFiles(fileList)
     containsPattern = {'tmp', 'temp', 'copy', 'grid', 'seg8', 'ignore', 'backup'};
     fileList(contains(fileList, containsPattern, 'IgnoreCase', true)) = [];
 
-    fileList(endsWith(fileList, '.h5') & ~startsWith(fileList, 'glanat')) = [];
+    fileList(endsWith(fileList, '.h5') & (~startsWith(fileList, 'glanat') & ~contains(fileList, '_brainsfit'))) = [];
 
 
 function [modalities, anchorModality] = checkModalities(coregAnatFolder)
