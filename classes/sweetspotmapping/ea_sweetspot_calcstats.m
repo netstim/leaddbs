@@ -81,12 +81,12 @@ for group=groups
                         amps(k,1) = obj.M.S(k).Rs1.amp;
                         amps(k,2) = obj.M.S(k).Ls1.amp;
                     end
-                end
 
-                if obj.mirrorsides
-                    amps = [amps;amps];
+                    if obj.mirrorsides
+                        amps = [amps;amps];
+                    end
                 end
-
+                
                 %get VTA Size
                 VTAsize(:,side) = sum(gval{side},2);
                 VTAsize((VTAsize==0))=nan; % will prevent division by zero issue in case of empty VTAs
