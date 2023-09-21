@@ -299,6 +299,18 @@ for patients = 1:length(source)
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(recon_dir,[patient_name,'_',bids_name]);
                         ea_mkdir(recon_dir);
+                        if strcmp(which_file, 'ea_reconstruction.mat')
+                            recon = load(fullfile(source_patient,which_file));
+                            for el=1:length(recon.reco.props)
+                                if isfield(recon.reco, 'props') && isfield(recon.reco.props, 'elmodel')
+                                    recon.reco.props(el).elmodel = strrep(recon.reco.props(el).elmodel, 'St. Jude', 'Abbott');
+                                end
+                                if isfield(recon.reco, 'electrode') && isfield(recon.reco.electrode, 'dbs') && isfield(recon.reco.electrode(el).dbs, 'elmodel')
+                                    recon.reco.electrode(el).dbs.elmodel = strrep(recon.reco.electrode(el).dbs.elmodel, 'St. Jude', 'Abbott');
+                                end
+                            end
+                            save(fullfile(source_patient,which_file), '-struct', 'recon');
+                        end
                         copyfile(fullfile(source_patient,which_file),recon_dir)
                         movefile(fullfile(new_path,pipelines{4},which_file),fullfile(recon_dir,[patient_name,'_',reconstruction{1,2}{indx}]));
 
@@ -319,6 +331,9 @@ for patients = 1:length(source)
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{6},bids_name);
                         which_pipeline = pipelines{6};
                         ea_mkdir(fullfile(new_path,pipelines{6}));
+                        uiprefs = load(fullfile(source_patient,'ea_ui.mat'));
+                        uiprefs.elmodel = strrep(uiprefs.elmodel, 'St. Jude', 'Abbott');
+                        save(fullfile(source_patient,'ea_ui.mat'), '-struct', 'uiprefs');
                         copyfile(fullfile(source_patient,'ea_ui.mat'),fullfile(new_path,pipelines{6}));
                         movefile(fullfile(new_path,pipelines{6},'ea_ui.mat'),fullfile(new_path,pipelines{6},bids_name));
 
