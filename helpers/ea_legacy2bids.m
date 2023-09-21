@@ -97,15 +97,20 @@ for patients = 1:length(source)
     files_to_move = filterLegacyFiles(files_to_move);
 
     for j=1:length(files_to_move)
-       if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
-           if any(regexpi(files_to_move{j},'raw_anat_.*\.nii$')) || any(regexpi(files_to_move{j},'^anat_.*\.nii$')) || doOnlyRaw  %we already know their tags in the case of cor,tra,sag
-               to_match = files_to_move{j};
-               bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-               tag = ea_checkacq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
-               tag_cell{end+1} = tag;
-               mod_cell{end+1} = bids_mod;
-           end
-       end
+        if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
+            if any(regexpi(files_to_move{j},'^raw_anat_.*\.nii$')) || any(regexpi(files_to_move{j},'^anat_.*\.nii$')) || doOnlyRaw  %we already know their tags in the case of cor,tra,sag
+                to_match = files_to_move{j};
+                bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
+                if startsWith(to_match, 'anat_') && isfile(fullfile(source_patient, ['raw_', to_match]))
+                    % Use acq tag from raw image if it exists
+                    tag = ea_checkacq(fullfile(source_patient, ['raw_', to_match]));
+                else
+                    tag = ea_checkacq(fullfile(source_patient, to_match));
+                end
+                tag_cell{end+1} = tag;
+                mod_cell{end+1} = bids_mod;
+            end
+        end
     end
     if ~doOnlyRaw
         if any(ismember(files_to_move,'glpostop_tra.nii')) || any(ismember(files_to_move,'glpostop_sag.nii')) || any(ismember(files_to_move,'glpostop_cor.nii'))
