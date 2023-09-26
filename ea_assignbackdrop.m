@@ -108,12 +108,6 @@ elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient 
 
 elseif strcmp(bdstring, [subpat, ' Post-OP'])
     [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
-    if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to files on the fly.
-        scrf=load(options.subj.brainshift.transform.scrf);
-        Vtra.mat=scrf.mat*Vtra.mat;
-        Vcor.mat=scrf.mat*Vcor.mat;
-        Vsag.mat=scrf.mat*Vsag.mat;
-    end
 
     varargout{1} = Vtra;
     varargout{2} = Vcor;
@@ -121,12 +115,6 @@ elseif strcmp(bdstring, [subpat, ' Post-OP'])
 
 elseif strcmp(bdstring, [subpat, ' Post-OP (Tone-mapped)'])
     [Vtra,Vcor,Vsag] = assignpatspecific(options, native, 1);
-    if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to files on the fly.
-        scrf=load(options.subj.brainshift.transform.scrf);
-        Vtra.mat=scrf.mat*Vtra.mat;
-        Vcor.mat=scrf.mat*Vcor.mat;
-        Vsag.mat=scrf.mat*Vsag.mat;
-    end
 
     varargout{1} = Vtra;
     varargout{2} = Vcor;
@@ -164,25 +152,40 @@ end
 
 
 function [Vtra,Vcor,Vsag] = assignpatspecific(options, native, tonemapped)
+scrfSuffix = '';
+if isfile(options.subj.recon.recon)
+    load(options.subj.recon.recon, 'reco');
+    if isfield(reco, 'scrf')
+        scrfSuffix = 'Scrf';
+    end
+end
+
 if native
     switch options.subj.postopModality
         case 'MRI'
-            Vtra = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
-            if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
-                Vcor = spm_vol(options.subj.coreg.anat.postop.cor_MRI);
+            if ~isempty(scrfSuffix) && ~isfile(options.subj.postopAnat.ax_MRI.coregScrf)
+                ea_genscrfimages(options.subj, 'coreg');
+            end
+            Vtra = spm_vol(options.subj.postopAnat.ax_MRI.(['coreg', scrfSuffix]));
+            if isfield(options.subj.postopAnat, 'cor_MRI') && isfile(options.subj.postopAnat.cor_MRI.(['coreg', scrfSuffix]))
+                Vcor = spm_vol(options.subj.postopAnat.cor_MRI.(['coreg', scrfSuffix]));
             else
                 Vcor = Vtra;
             end
-            if isfield(options.subj.coreg.anat.postop, 'sag_MRI') && isfile(options.subj.coreg.anat.postop.sag_MRI)
-                Vsag = spm_vol(options.subj.coreg.anat.postop.sag_MRI);
+            if isfield(options.subj.postopAnat, 'sag_MRI') && isfile(options.subj.postopAnat.sag_MRI.(['coreg', scrfSuffix]))
+                Vsag = spm_vol(options.subj.postopAnat.sag_MRI.(['coreg', scrfSuffix]));
             else
                 Vsag = Vtra;
             end
         case 'CT'
+            if  ~isempty(scrfSuffix) && ~isfile(options.subj.postopAnat.CT.coregScrf)
+                ea_genscrfimages(options.subj, 'coreg');
+            end
+
             if exist('tonemapped', 'var') && tonemapped
-                Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
+                Vtra = spm_vol(options.subj.postopAnat.CT.(['coregTonemap', scrfSuffix]));
             else
-                Vtra = spm_vol(options.subj.coreg.anat.postop.CT);
+                Vtra = spm_vol(options.subj.postopAnat.CT.(['coreg', scrfSuffix]));
             end
             Vcor = Vtra;
             Vsag = Vtra;
@@ -190,22 +193,29 @@ if native
 else
     switch options.subj.postopModality
         case 'MRI'
-            Vtra = spm_vol(options.subj.norm.anat.postop.ax_MRI);
-            if isfield(options.subj.norm.anat.postop, 'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
-                Vcor = spm_vol(options.subj.norm.anat.postop.cor_MRI);
+            if  ~isempty(scrfSuffix) && ~isfile(options.subj.postopAnat.ax_MRI.normScrf)
+                ea_genscrfimages(options.subj, 'norm');
+            end
+            Vtra = spm_vol(options.subj.postopAnat.ax_MRI.(['norm', scrfSuffix]));
+            if isfield(options.subj.postopAnat, 'cor_MRI') && isfile(options.subj.postopAnat.cor_MRI.(['norm', scrfSuffix]))
+                Vcor = spm_vol(options.subj.postopAnat.cor_MRI.(['norm', scrfSuffix]));
             else
                 Vcor = Vtra;
             end
-            if isfield(options.subj.norm.anat.postop, 'sag_MRI') && isfile(options.subj.norm.anat.postop.sag_MRI)
-                Vsag = spm_vol(options.subj.norm.anat.postop.sag_MRI);
+            if isfield(options.subj.postopAnat, 'sag_MRI') && isfile(options.subj.postopAnat.sag_MRI.(['norm', scrfSuffix]))
+                Vsag = spm_vol(options.subj.postopAnat.sag_MRI.(['norm', scrfSuffix]));
             else
                 Vsag = Vtra;
             end
         case 'CT'
+            if  ~isempty(scrfSuffix) && ~isfile(options.subj.postopAnat.CT.normScrf)
+                ea_genscrfimages(options.subj, 'norm');
+            end
+
             if exist('tonemapped', 'var') && tonemapped
-                Vtra = spm_vol(options.subj.norm.anat.postop.tonemapCT);
+                Vtra = spm_vol(options.subj.postopAnat.CT.(['normTonemap', scrfSuffix]));
             else
-                Vtra = spm_vol(options.subj.norm.anat.postop.CT);
+                Vtra = spm_vol(options.subj.postopAnat.CT.(['norm', scrfSuffix]));
             end
             Vcor = Vtra;
             Vsag = Vtra;
