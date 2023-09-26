@@ -59,14 +59,19 @@ if strcmp(bdstring, 'list')
         else
             preop={''};
         end
-        postop = {[subpat,' Post-OP']};
-        if native
-            varargout{1}=[preop,...
-                postop(logical(haspostop))];
+        if haspostop
+            if strcmp(options.subj.postopModality, 'CT')
+                postop = {[subpat,' Post-OP'], [subpat,' Post-OP (Tone-mapped)']};
+            else
+                postop = {[subpat,' Post-OP']};
+            end
         else
-            varargout{1}=[ea_standardspacelist,...
-                preop,...
-                postop(logical(haspostop))];
+            preop={''};
+        end
+        if native
+            varargout{1}=[preop, postop];
+        else
+            varargout{1}=[ea_standardspacelist, preop, postop];
         end
 
     end
@@ -103,7 +108,19 @@ elseif strcmp(bdstring, [subpat, ' Post-OP'])
     varargout{1} = Vtra;
     varargout{2} = Vcor;
     varargout{3} = Vsag;
-    
+
+elseif strcmp(bdstring, [subpat, ' Post-OP (Tone-mapped)'])
+    [Vtra,Vcor,Vsag] = assignpatspecific(options, native, 1);
+    if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to files on the fly.
+        scrf=load(options.subj.brainshift.transform.scrf);
+        Vtra.mat=scrf.mat*Vtra.mat;
+        Vcor.mat=scrf.mat*Vcor.mat;
+        Vsag.mat=scrf.mat*Vsag.mat;
+    end
+
+    varargout{1} = Vtra;
+    varargout{2} = Vcor;
+    varargout{3} = Vsag;
 
 elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)')
 %     if ~ea_checkinstall('bigbrain',0,1)
@@ -136,7 +153,7 @@ else    % custom backdrop file
 end
 
 
-function [Vtra,Vcor,Vsag] = assignpatspecific(options, native)
+function [Vtra,Vcor,Vsag] = assignpatspecific(options, native, tonemapped)
 if native
     switch options.subj.postopModality
         case 'MRI'
@@ -152,7 +169,11 @@ if native
                 Vsag = Vtra;
             end
         case 'CT'
-            Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
+            if exist('tonemapped', 'var') && tonemapped
+                Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
+            else
+                Vtra = spm_vol(options.subj.coreg.anat.postop.CT);
+            end
             Vcor = Vtra;
             Vsag = Vtra;
     end
@@ -171,7 +192,11 @@ else
                 Vsag = Vtra;
             end
         case 'CT'
-            Vtra = spm_vol(options.subj.norm.anat.postop.tonemapCT);
+            if exist('tonemapped', 'var') && tonemapped
+                Vtra = spm_vol(options.subj.norm.anat.postop.tonemapCT);
+            else
+                Vtra = spm_vol(options.subj.norm.anat.postop.CT);
+            end
             Vcor = Vtra;
             Vsag = Vtra;
     end
@@ -203,6 +228,7 @@ if native
     options.subj.coreg.anat.postop.ax_MRI = options.subj.coreg.anat.preop.(whichpreop);
     options.subj.coreg.anat.postop.cor_MRI = options.subj.coreg.anat.preop.(whichpreop);
     options.subj.coreg.anat.postop.sag_MRI = options.subj.coreg.anat.preop.(whichpreop);
+    options.subj.coreg.anat.postop.CT = options.subj.coreg.anat.preop.(whichpreop);
     options.subj.coreg.anat.postop.tonemapCT = options.subj.coreg.anat.preop.(whichpreop);
 else
     normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
@@ -216,5 +242,6 @@ else
     options.subj.norm.anat.postop.ax_MRI = normImage;
     options.subj.norm.anat.postop.cor_MRI = normImage;
     options.subj.norm.anat.postop.sag_MRI = normImage;
+    options.subj.norm.anat.postop.CT = normImage;
     options.subj.norm.anat.postop.tonemapCT = normImage;
 end
