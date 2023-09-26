@@ -35,6 +35,9 @@ ea_mkdir(fileparts(options.subj.brainshift.transform.instore));
 movefile(affineTransform{1}, options.subj.brainshift.transform.instore);
 delete(affineTransform{2});
 
+% Generated brainshift corrected postop images (coreg and norm)
+ea_genscrfimages(options.subj);
+
 % Refresh scrf status
 ea_refreshscrf(options, handles);
 
