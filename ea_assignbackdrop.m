@@ -90,11 +90,21 @@ if strcmp(bdstring, 'list')
 
 elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
     whichpreop = (regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
-    options = ea_switchpost2pre(options, native, whichpreop); % dangerous, likely best to replace sooner or later - took me a while to read
-    [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
-    varargout{1} = Vtra;
-    varargout{2} = Vcor;
-    varargout{3} = Vsag;
+    if native
+        vol = spm_vol(options.subj.preopAnat.(whichpreop).coreg);
+    else
+        normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
+        normImage = strrep(normImage, options.subj.AnchorModality, whichpreop);
+        if ~isfile(normImage)
+            ea_apply_normalization_tofile(options, options.subj.preopAnat.(whichpreop).coreg, normImage, 0, 1);
+        end
+    
+        vol = spm_vol(normImage);
+    end
+    
+    varargout{1} = vol;
+    varargout{2} = vol;
+    varargout{3} = vol;
 
 elseif strcmp(bdstring, [subpat, ' Post-OP'])
     [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
@@ -217,31 +227,4 @@ if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')
     fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt']);
     BDlist=textscan(fid,'%s %s');
     BDlist{2}=ea_underscore2space(BDlist{2});
-end
-
-
-function options = ea_switchpost2pre(options, native, whichpreop)
-% Generates a very temporary fake options struct that links pre-op to
-% post-op data.
-
-if native
-    options.subj.coreg.anat.postop.ax_MRI = options.subj.coreg.anat.preop.(whichpreop);
-    options.subj.coreg.anat.postop.cor_MRI = options.subj.coreg.anat.preop.(whichpreop);
-    options.subj.coreg.anat.postop.sag_MRI = options.subj.coreg.anat.preop.(whichpreop);
-    options.subj.coreg.anat.postop.CT = options.subj.coreg.anat.preop.(whichpreop);
-    options.subj.coreg.anat.postop.tonemapCT = options.subj.coreg.anat.preop.(whichpreop);
-else
-    normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
-    normImage = strrep(normImage,options.subj.AnchorModality,whichpreop);
-    if ~isfile(normImage)
-        to{1} = normImage;
-        from{1} = options.subj.preopAnat.(whichpreop).coreg;
-        ea_apply_normalization_tofile(options,from,to,0);
-    end
-
-    options.subj.norm.anat.postop.ax_MRI = normImage;
-    options.subj.norm.anat.postop.cor_MRI = normImage;
-    options.subj.norm.anat.postop.sag_MRI = normImage;
-    options.subj.norm.anat.postop.CT = normImage;
-    options.subj.norm.anat.postop.tonemapCT = normImage;
 end
