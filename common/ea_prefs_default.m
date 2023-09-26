@@ -127,7 +127,7 @@ prefs.mrcoreg.default = 'SPM (Friston 2007)'; % set to 'spm' or 'ants'
 prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Subcortical refine (Post to Pre):
-prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_').
+prefs.scrf.tonemap='tp_'; % can set to '' to use non-tonemapped CTs for brainshift correction (default = 'tp_').
 
 %% Default parcellation setting for LeadConn and LeadGroup
 prefs.lc.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';

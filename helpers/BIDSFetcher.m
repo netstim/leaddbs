@@ -324,21 +324,25 @@ classdef BIDSFetcher
                     % Set post-op coregistered images
                     for i=1:length(postopFields)
                         subj.postopAnat.(postopFields{i}).coreg = subj.coreg.anat.postop.(postopFields{i});
+                        subj.postopAnat.(postopFields{i}).coregScrf = strrep(subj.coreg.anat.postop.(postopFields{i}), obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
                     end
         
                     % Set post-op coregistered tone-mapped CT
                     if ismember('CT', postopFields)
                         subj.postopAnat.CT.coregTonemap = subj.coreg.anat.postop.tonemapCT;
+                        subj.postopAnat.CT.coregTonemapScrf = setBIDSEntity(subj.coreg.anat.postop.tonemapCT, 'rec', 'tonemappedbrainshift');
                     end
         
                     % Set post-op normalized images
                     for i=1:length(postopFields)
                         subj.postopAnat.(postopFields{i}).norm = subj.norm.anat.postop.(postopFields{i});
+                        subj.postopAnat.(postopFields{i}).normScrf = strrep(subj.norm.anat.postop.(postopFields{i}), obj.spacedef.name, [obj.spacedef.name, '_rec-brainshift']);
                     end
         
                     % Set post-op normalized tone-mapped CT
                     if ismember('CT', postopFields)
                         subj.postopAnat.CT.normTonemap = subj.norm.anat.postop.tonemapCT;
+                        subj.postopAnat.CT.normTonemapScrf = setBIDSEntity(subj.norm.anat.postop.tonemapCT, 'rec', 'tonemappedbrainshift');
                     end
                 end
             end
