@@ -38,6 +38,7 @@ if strcmp(bdstring, 'list')
         if ~isfile(options.subj.preopAnat.(options.subj.AnchorModality).coreg)
             haspreop=0;
         end
+
         if native
             if strcmp(options.subj.postopModality, 'MRI') && ~isfile(options.subj.postopAnat.ax_MRI.coreg)
                 haspostop = 0;
@@ -66,6 +67,7 @@ if strcmp(bdstring, 'list')
         else
             preop={''};
         end
+
         if haspostop
             if strcmp(options.subj.postopModality, 'CT')
                 postop = {[subpat,' Post-OP'], [subpat,' Post-OP (Tone-mapped)']};
@@ -75,28 +77,26 @@ if strcmp(bdstring, 'list')
         else
             postop={''};
         end
+
         if native
             varargout{1}=[preop, postop];
         else
             varargout{1}=[ea_standardspacelist, preop, postop];
         end
-
     end
 
     if ~native
         % check for additional template backdrops
-            for bd=1:length(BDlist{1})
-                varargout{1}=[varargout{1},...
-                    BDlist{2}{bd}];
-            end
+        for bd=1:length(BDlist{1})
+            varargout{1} = [varargout{1}, BDlist{2}{bd}];
+        end
     end
 
     % add manual choose:
-    varargout{1}=[varargout{1},...
-                {'Choose...'}];
+    varargout{1} = [varargout{1}, {'Choose...'}];
 
 elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
-    whichpreop = (regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
+    whichpreop = regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once');
     if native
         vol = spm_vol(options.subj.preopAnat.(whichpreop).coreg);
     else
