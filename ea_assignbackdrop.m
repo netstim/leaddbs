@@ -35,14 +35,21 @@ if strcmp(bdstring, 'list')
 
     % check if preop and postop images exist
     if ~nopatientmode
-        if ~isfield(options.subj, 'coreg') || ~isfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality))
+        if ~isfile(options.subj.preopAnat.(options.subj.AnchorModality).coreg)
             haspreop=0;
         end
-        try
-            % use this as a probe to see if required patient postop images exist.
-            assignpatspecific(options, native);
-        catch
-            haspostop=0;
+        if native
+            if strcmp(options.subj.postopModality, 'MRI') && ~isfile(options.subj.postopAnat.ax_MRI.coreg)
+                haspostop = 0;
+            elseif strcmp(options.subj.postopModality, 'CT') && ~isfile(options.subj.postopAnat.CT.coreg)
+                haspostop = 0;
+            end
+        else
+            if strcmp(options.subj.postopModality, 'MRI') && ~isfile(options.subj.postopAnat.ax_MRI.norm)
+                haspostop = 0;
+            elseif strcmp(options.subj.postopModality, 'CT') && ~isfile(options.subj.postopAnat.CT.norm)
+                haspostop = 0;
+            end
         end
     end
 
@@ -66,7 +73,7 @@ if strcmp(bdstring, 'list')
                 postop = {[subpat,' Post-OP']};
             end
         else
-            preop={''};
+            postop={''};
         end
         if native
             varargout{1}=[preop, postop];
