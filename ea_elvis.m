@@ -124,6 +124,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             if options.d3.mirrorsides
                 elstruct=ea_mirrorsides(elstruct);
+                options.patient_list = [options.patient_list; options.patient_list];
                 try options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             end
         else

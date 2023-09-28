@@ -15,9 +15,9 @@ end
 
 popts = options;
 if strcmp(options.leadprod,'group')
-    [popts.root, popts.patientname] = fileparts(options.patient_list{elstruct(pt).pt});
+    [popts.root, popts.patientname] = fileparts(options.patient_list{pt});
     popts.root = [popts.root, filesep];
-    recon = ea_regexpdir([options.patient_list{elstruct(pt).pt}, filesep, 'reconstruction'], ['^', popts.patientname,'_desc-reconstruction\.mat$'], 0, 'file');
+    recon = ea_regexpdir([options.patient_list{pt}, filesep, 'reconstruction'], ['^', popts.patientname,'_desc-reconstruction\.mat$'], 0, 'file');
     popts.subj.recon.recon = recon{1};
     popts = ea_detsides(popts);
 end

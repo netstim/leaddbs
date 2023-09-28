@@ -711,11 +711,6 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
     end
 end
 
-% amend .pt to identify which patient is selected (needed for isomatrix).
-for pt=1:length(ptidx)
-    M.elstruct(ptidx(pt)).pt=ptidx(pt);
-end
-
 elmodels = [{'Patient specified'};ea_resolve_elspec];
 whichelmodel = elmodels{M.ui.elmodelselect};
 % account for electrode model specified in lead group

@@ -86,7 +86,7 @@ for side=options.sides
                         [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
                     else
                         % Recalc then reload depending on options.native flag
-                        ea_recalc_reco([],[],[options.patient_list{elstruct.pt},filesep]);
+                        ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
                         [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
                     end
                     elstruct.markers=markers;
@@ -96,12 +96,12 @@ for side=options.sides
                     if ~isfield(options,'patient_list') % single subject mode
                         patientname = options.patientname;
                     else
-                        patientname = options.patient_list{elstruct.pt};
+                        patientname = options.patient_list{pt};
                     end
                     if isfolder(patientname)
                         [~, patientname] = fileparts(patientname);
                     end
-                    ea_cprintf('CmdWinWarnings', 'There seems to be some inconsistency with the reconstruction of "%s" that could not be automatically resolved.\n', patientname);
+                    ea_cprintf('CmdWinWarnings', 'There seems to be some inconsistency in the reconstruction of "%s" that could not be automatically resolved.\n', patientname);
                 end
             end
         end
@@ -110,8 +110,8 @@ for side=options.sides
                 patientname = options.patientname;
                 mirrorText = '';
             else
-                patientname = options.patient_list{elstruct.pt};
-                if options.d3.mirrorsides && elstruct.pt ~= pt
+                patientname = options.patient_list{pt};
+                if options.d3.mirrorsides && pt > length(options.patient_list)/2
                     mirrorText = 'mirrored ';
                 else
                     mirrorText = '';
@@ -120,7 +120,7 @@ for side=options.sides
             if isfolder(patientname)
                 [~, patientname] = fileparts(patientname);
             end
-            ea_cprintf('CmdWinWarnings', 'There seems to be some inconsistency with the %sreconstruction of "%s" that could not be automatically resolved.\n', mirrorText, patientname);
+            ea_cprintf('CmdWinWarnings', 'There seems to be some inconsistency in the %sreconstruction of "%s" that could not be automatically resolved.\n', mirrorText, patientname);
         end
         if options.d3.elrendering==2 % show a transparent electrode.
             aData=0.1;
