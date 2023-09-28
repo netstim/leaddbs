@@ -734,11 +734,12 @@ classdef ea_disctract < handle
             end
 
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
+                
 
                 Ihat_voters_prediction=nan(size(Ihat));
                 %Ihat_voters_prediction=nan(size(Ihat_voters));
                 for c=1:cvp.NumTestSets
-
+                    
                     if isobject(cvp)
                         training = cvp.training(c);
                         test = cvp.test(c);
@@ -775,20 +776,35 @@ classdef ea_disctract < handle
                         covariates=[];
                         for cv = 1:length(obj.covars)
                             covariates = [covariates,obj.covars{cv}(patientsel)];
+
                         end
-                        if ~isempty(covariates)
-                            mdl=fitglm([predictor_training(c,training,voter)',covariates(training,:)],useI(training),lower(obj.predictionmodel));
-                        else
-                            mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
-                        end
-                        if size(useI,2) == 1 % global scores
-                            if ~isempty(covariates)
-                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
-                            else
-                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
+                        
+                        if obj.useExternalModelFile == True
+                            mdl = S.mdl;
+                            if size(useI,2) == 1 % global scores
+                                if ~isempty(covariates)
+                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
+                                else
+                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
+                                end
+                            elseif size(useI,2) == 2 %bihemispheric scores
+                                ea_error('Fitting to scores has not been implemented for bihemisoheric scores.');
                             end
-                        elseif size(useI,2)==2 % bihemispheric scores
-                            ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
+                        else
+                            if ~isempty(covariates)
+                                mdl=fitglm([predictor_training(c,training,voter)',covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                            else
+                                mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
+                            end
+                            if size(useI,2) == 1 % global scores
+                                if ~isempty(covariates)
+                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
+                                else
+                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
+                                end
+                            elseif size(useI,2)==2 % bihemispheric scores
+                                ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
+                            end
                         end
                     end
                 end
