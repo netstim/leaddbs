@@ -401,17 +401,26 @@ for patients = 1:length(source)
                         if endsWith(which_file,'.nii')
                             ext = '.nii';
                             op_dir = fullfile(new_path,pipelines{2},'anat');
+                            ea_mkdir(op_dir);
                             source_path = source_patient;
                         elseif endsWith(which_file,'.png')
                             ext = '.png';
                             op_dir = fullfile(new_path,pipelines{2},'checkreg');
+                            ea_mkdir(op_dir);
                             source_path = fullfile(source_patient,'checkreg');
                         elseif endsWith(which_file,'.mat')
                             ext = '.mat';
                             op_dir = fullfile(new_path,pipelines{2},'transformations');
+                            ea_mkdir(op_dir);
                             source_path = source_patient;
+                        else
+                            op_dir = fullfile(new_path,'miscellaneous');
+                            ea_mkdir(op_dir);
+                            if isfile(fullfile(source_patient,which_file))
+                                copyfile(fullfile(source_patient,which_file),op_dir);
+                            end
                         end
-                        ea_mkdir(op_dir);
+
                         if endsWith(which_file,'.nii') || endsWith(which_file,'.png')
                             if endsWith(which_file,'.nii') && ~startsWith(which_file, "raw_anat" | "anat")
                                 bids_mod = 'misc';

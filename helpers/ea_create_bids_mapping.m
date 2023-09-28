@@ -143,7 +143,7 @@ coregistration{:,2} = {'ses-postop_space-anchorNative_desc-preproc_CT.nii';
     'ses-preop_space-anchorNative_desc-preproc_acqTag_FLAIR.nii';
     'ses-preop_space-anchorNative_desc-preproc_acqTag_T2starw.nii';
     'ses-postop_space-anchorNative_rec-tonemapped_desc-preproc_CT.nii';
-    'ses-postop_space-anchorNative_desc-preproc_acq-fa.nii';
+    'ses-preop_space-anchorNative_desc-preproc_acq-fa.nii';
     'ses-preop_space-anchorNative_desc-preproc_acqTag_mod-T1w_label-GM_mask.nii';
     'ses-preop_space-anchorNative_desc-preproc_acqTag_mod-T1w_label-WM_mask.nii';
     'ses-preop_space-anchorNative_desc-preproc_acqTag_mod-T1w_label-CSF_mask.nii';
@@ -260,7 +260,7 @@ preprocessing{:,2} = {'ses-postop_desc-preproc_CT.nii';
     'ses-preop_desc-preproc_acqTag_FLAIR.nii';
     'ses-preop_desc-preproc_acqTag_FGATIR.nii';
     'ses-preop_desc-preproc_acqTag_PDw.nii';
-    'ses-postop_desc-preproc_fa.nii'};
+    'ses-preop_desc-preproc_fa.nii'};
 
 reconstruction{:,1} = {'ea_reconstruction.mat';
     'rct_mask.nii';
