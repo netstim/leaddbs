@@ -1291,7 +1291,7 @@ if endsWith(fname_in,'.mat')
                         try
                             tag = ea_checkacq(fullfile(filepath,[coreg_fieldnames{i},'.nii']));
                         catch
-                            warning("tag may not be set correctly, please recheck if you have issues with coregistration!");
+                            ea_cprintf('CmdWinWarnings', "tag may not be set correctly, please double check if you have issues with coregistration!\n");
                             tag = 'iso';
                         end
                         bids_name = [pt_name,'_ses-preop_space-anchorNative_desc-preproc_acq-',tag,'_',bids_mod,'.nii'];
@@ -1308,7 +1308,7 @@ if endsWith(fname_in,'.mat')
         if isfield(json_mat,'approval')
             savejson('',json_mat,'approval',json_mat.approval,opt);
         else
-            warning("Coregistration files were not transformed. Please review your BIDSified folders with caution")
+            ea_cprintf('CmdWinWarnings', "No coregistration approval status was found for migration.\n");
         end
     elseif strcmp(filename, 'ea_coregctmethod_applied')
         temp_mat = load(fullfile(filepath,'ea_coregctmethod_applied.mat'));
