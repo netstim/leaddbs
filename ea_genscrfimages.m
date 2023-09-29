@@ -1,20 +1,20 @@
 function ea_genscrfimages(subj, type)
 % Generated brainshift corrected postop images under coregistration/anat
 % and normalization/anat.
+arguments
+    subj {mustBeA(subj, {'struct', 'char', 'string'})}
+    type {mustBeMember(type, {'coreg', 'norm', 'all'})} = 'all'
+end
 
-if isfolder(subj)
-    % Input is patient derivatives folder
-    options = ea_getptopts(subj);
-    subj = options.subj;
-else
+if isstruct(subj)
     % Input is BIDS struct
     options.subj = subj;
     spacedef = ea_getspacedef;
     options.primarytemplate = fullfile(ea_space, [spacedef.templates{1}, '.nii']);
-end
-
-if ~exist('type', 'var')
-    type = 'all';
+elseif isfolder(subj)
+    % Input is patient derivatives folder
+    options = ea_getptopts(subj);
+    subj = options.subj;
 end
 
 postopFields = fieldnames(subj.postopAnat);
