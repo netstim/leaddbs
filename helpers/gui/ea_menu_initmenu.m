@@ -155,6 +155,9 @@ if isempty(menuprobe)
                 % Disable hotfix for compiled app
                 insit(l).Checked = 'off';
                 insit(l).Enable = 'off';
+            elseif ismember(commands{l}, {'fixperm', 'leaddata', 'hotfix', 'pyenv'})
+                insit(l).Checked = 'off';
+                insit(l).Enable = 'on';
             else
                 insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
             end

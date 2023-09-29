@@ -45,8 +45,13 @@ downloadIDs = {'leaddata'
                'TorPD'
                'allengenetics'};
 
-assetNames = menuItems(5:end);
-assetsIDs = downloadIDs(5:end);
+if ismac
+    menuItems = ['Fix permission issue on macOS'; menuItems];
+    downloadIDs = ['fixperm'; downloadIDs];
+end
+
+assetNames = menuItems(6:end);
+assetsIDs = downloadIDs(6:end);
 if ismember(cmd, assetsIDs)
     assetName = assetNames{ismember(assetsIDs, cmd)};
 end
@@ -55,6 +60,10 @@ switch cmd
     case 'list' % simply return list of installable datasets
         success = menuItems;
         commands = downloadIDs;
+    case 'fixperm'
+        ea_clear_xattr;
+        ea_cprintf('*Comments', 'Permission issue should have been fixed.\n');
+        return;
     case 'leaddata'
         checkf=[ea_space,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);

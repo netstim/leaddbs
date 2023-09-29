@@ -1,5 +1,10 @@
 function ea_menuinstall(src, ~, cmd)
 
+if strcmp(cmd, 'fixperm')
+    ea_checkinstall(cmd);
+    return;
+end
+
 choice=questdlg(['Please confirm to start downloading: ',cmd],'Download additional data','Proceed','Cancel','Proceed');
 
 if ~strcmp(choice,'Proceed')
