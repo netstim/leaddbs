@@ -33,34 +33,34 @@ fprintf(1,'generating tetrahedral mesh from closed surfaces ...\n');
 if(keepratio>1 | keepratio<0)
    warn(['The "keepratio" parameter is required to be between 0 and 1. '...
          'Your input is out of this range. surf2mesh will not perform '...
-	 'simplification. Please double check to correct this.']);
+         'simplification. Please double check to correct this.']);
 end
 
 % first, resample the surface mesh with cgal
 if(keepratio<1-1e-9 & ~iscell(f))
-	fprintf(1,'resampling surface mesh ...\n');
-	[no,el]=meshresample(v(:,1:3),f(:,1:3),keepratio);
-	el=unique(sort(el,2),'rows');
+    fprintf(1,'resampling surface mesh ...\n');
+    [no,el]=meshresample(v(:,1:3),f(:,1:3),keepratio);
+    el=unique(sort(el,2),'rows');
 
-	% then smooth the resampled surface mesh (Laplace smoothing)
+    % then smooth the resampled surface mesh (Laplace smoothing)
 
-	%% edges=surfedge(el);  % disable on 12/05/08, very slow on octave
-	%% mask=zeros(size(no,1),1);
-	%% mask(unique(edges(:)))=1;  % =1 for edge nodes, =0 otherwise
-	%[conn,connnum,count]=meshconn(el,length(no));
-	%no=smoothsurf(no,mask,conn,2);
+    %% edges=surfedge(el);  % disable on 12/05/08, very slow on octave
+    %% mask=zeros(size(no,1),1);
+    %% mask(unique(edges(:)))=1;  % =1 for edge nodes, =0 otherwise
+    %[conn,connnum,count]=meshconn(el,length(no));
+    %no=smoothsurf(no,mask,conn,2);
 
-	% remove end elements (all nodes are edge nodes)
-	%el=delendelem(el,mask);
+    % remove end elements (all nodes are edge nodes)
+    %el=delendelem(el,mask);
 else
-	no=v;
-	el=f;
+    no=v;
+    el=f;
 end
 if(nargin==6)
-	regions=[];
-	holes=[];
+    regions=[];
+    holes=[];
 elseif(nargin==7)
-	holes=[];
+    holes=[];
 end
 
 if(size(regions,2)>=4 && ~isempty(maxvol))
@@ -70,12 +70,12 @@ end
 
 dobbx=0;
 if(nargin>=9)
-	dobbx=forcebox;
+    dobbx=forcebox;
 end
 
 % dump surface mesh to .poly file format
 if(~iscell(el) & ~isempty(no) & ~isempty(el))
-	saveoff(no(:,1:3),el(:,1:3),mwpath('post_vmesh.off'));
+    saveoff(no(:,1:3),el(:,1:3),mwpath('post_vmesh.off'));
 end
 
 deletemeshfile(mwpath('post_vmesh.mtr'));
@@ -89,8 +89,9 @@ savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
 
 moreopt='';
 if(size(no,2)==4)
-	moreopt=[moreopt ' -m '];
+    moreopt=[moreopt ' -m '];
 end
+
 % call tetgen to create volumetric mesh
 deletemeshfile(mwpath('post_vmesh.1.*'));
 fprintf(1,'creating volumetric mesh from a surface mesh ...\n');
@@ -109,7 +110,7 @@ if isempty(cmdopt) % default run
     cmd = [ea_getExec(mcpath('tetgen')) ' -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"'];
     % cmd = [ea_getExec(mcpath('tetgen')) ' -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"'];
 else
-	cmd = [ea_getExec(mcpath('tetgen')) ' -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"'];
+    cmd = [ea_getExec(mcpath('tetgen')) ' -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"'];
 end
 
 ea_runcmd(cmd, timeout='15m');
@@ -118,9 +119,10 @@ ea_runcmd(cmd, timeout='15m');
 try
     [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
     success = 1;
-	fprintf('volume mesh generation completed\n');
+    fprintf('volume mesh generation completed\n');
 catch ME
-	fprintf('volume mesh generation failed!\n');
+    success = 0;
+    fprintf('volume mesh generation failed!\n');
     rethrow(ME);
 end
 %     system([' "' ea_getExec(mcpath('tetgen')) '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
@@ -144,4 +146,3 @@ function sweeptempdir
  warning('off');
  delete([pth,filesep,'*']);
  warning('on');
-
