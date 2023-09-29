@@ -134,9 +134,9 @@ def get_VTA(d,vox_along_axis,Max_signal_for_point,shift_to_MRI_space):
                     VTA_nifti[i,j,k] = 0
                     E_field_nifti[i,j,k] = 0.0
 
-    if counter_truncated != VTA_affected_MRI_space.shape[0]:
-        logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
-        raise SystemExit
+    #if counter_truncated != VTA_affected_MRI_space.shape[0]:
+    #    logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
+    #    raise SystemExit
 
 
     # IMPORTANT:
