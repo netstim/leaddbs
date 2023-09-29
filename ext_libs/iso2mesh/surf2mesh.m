@@ -119,7 +119,7 @@ try
     [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
     success = 1;
 	fprintf('volume mesh generation completed\n');
-catch
+catch ME
 	fprintf('volume mesh generation failed!\n');
     rethrow(ME);
 end
