@@ -240,8 +240,6 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     #====================================== Setup for Astrom VTA approximation ========================================#
 
     if d["VTA_approx"] == 1:  # for this case, we use a neuron array that matches the VTA array in dimensions
-        logging.critical("VTA calculations are temporarily disabled\n")
-        raise SystemExit
         d['Axon_Model_Type'] = 'Reilly2016'
         d['diam_fib'] = 5.0
         d['x_steps'], d['y_steps'], d['z_steps'] = (4, 4, 4)  # we assume that Z-axis is ventra-dorsal in the MRI
