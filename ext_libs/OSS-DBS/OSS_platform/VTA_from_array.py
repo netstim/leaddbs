@@ -62,7 +62,8 @@ def create_VTA_array(seed_coords, rodent_electrode, MRI_param):    #in mm, in th
     VTA_array = VTA_array[~np.all(VTA_array == -100000000.0, axis=1)]
 
     np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', VTA_array, delimiter=" ")
-    return(x_vector.shape[0], VTA_array.shape[0])
+    print(x_vector.shape[0],y_vector.shape[0],z_vector.shape[0])
+    return([x_vector.shape[0],y_vector.shape[0],z_vector.shape[0]], VTA_array.shape[0])
 
 
 
@@ -112,21 +113,21 @@ def get_VTA(d,vox_along_axis,Max_signal_for_point,shift_to_MRI_space):
 
     np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/VTA_affected.csv', VTA_affected, delimiter=" ")
 
-    VTA_nifti = np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),int)
-    E_field_nifti = np.zeros((vox_along_axis,vox_along_axis,vox_along_axis),float)
+    VTA_nifti = np.zeros((vox_along_axis[0],vox_along_axis[1],vox_along_axis[2]),int)
+    E_field_nifti = np.zeros((vox_along_axis[0],vox_along_axis[1],vox_along_axis[2]),float)
 
     # will throw an error, because we need to have the same number of points (no extractions)
     counter_truncated = 0
 
     logging.critical("vox_along_axis : {}".format(vox_along_axis))
 
-    for i in range(vox_along_axis):  #go over all voxels
-        for j in range(vox_along_axis):  #go over all voxels
-            for k in range(vox_along_axis):  #go over all voxels
+    for i in range(vox_along_axis[0]):  #go over all voxels
+        for j in range(vox_along_axis[1]):  #go over all voxels
+            for k in range(vox_along_axis[2]):  #go over all voxels
                 #total_counter=i+j*vox_along_axis+k*vox_along_axis*vox_along_axis
-                total_counter=k+j*vox_along_axis+i*vox_along_axis*vox_along_axis
+                total_counter=k+j*vox_along_axis[2]+i*vox_along_axis[1]*vox_along_axis[2]
 
-                if np.all(np.round(VTA_affected_MRI_space[counter_truncated,:3],6)==np.round(Array_full_coord[total_counter,:],6)):            # if coordinates match, then
+                if np.all(np.round(VTA_affected_MRI_space[counter_truncated,:3],4)==np.round(Array_full_coord[total_counter,:],4)):            # if coordinates match, then
                     VTA_nifti[i,j,k]=int(VTA_affected_MRI_space[counter_truncated,3])
                     E_field_nifti[i,j,k] = Max_signal_for_point[counter_truncated] * 1000.0  # switch to V/m
                     counter_truncated += 1
@@ -134,9 +135,9 @@ def get_VTA(d,vox_along_axis,Max_signal_for_point,shift_to_MRI_space):
                     VTA_nifti[i,j,k] = 0
                     E_field_nifti[i,j,k] = 0.0
 
-    #if counter_truncated != VTA_affected_MRI_space.shape[0]:
-    #    logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
-    #    raise SystemExit
+    if counter_truncated != VTA_affected_MRI_space.shape[0]:
+        logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
+        raise SystemExit
 
 
     # IMPORTANT:
