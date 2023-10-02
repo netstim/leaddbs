@@ -779,7 +779,7 @@ classdef ea_disctract < handle
 
                         end
                         
-                        if obj.useExternalModelFile == True
+                        if obj.useExternalModel == True
                             mdl = S.mdl;
                             if size(useI,2) == 1 % global scores
                                 if ~isempty(covariates)
