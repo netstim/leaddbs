@@ -733,13 +733,21 @@ classdef ea_disctract < handle
                 end
             end
 
-            if obj.doactualprediction % repeat loops partly to fit to actual response variables:
-                
-
+            if obj.doactualprediction % repeat loops partly to fit to actual response variables:                
                 Ihat_voters_prediction=nan(size(Ihat));
-                %Ihat_voters_prediction=nan(size(Ihat_voters));
-                for c=1:cvp.NumTestSets
-                    
+                %add some warnings
+                switch obj.multitractmode
+                    case 'Single Tract Analysis'
+                        if obj.useExternalModel && size(val_struct{c}.vals,1) > 1
+                            ea_error("You can only use the Fit-to-Score feature with a Single Tract Analysis analysis model");
+                        end
+                    otherwise
+                        if obj.useExternalModel
+                            ea_error("You can only use the Fit-to-Score feature with Single Tract Analysis");
+                        end
+                end
+                numVoters = size(val_struct{c}.vals,1);
+                 for c=1:cvp.NumTestSets
                     if isobject(cvp)
                         training = cvp.training(c);
                         test = cvp.test(c);
@@ -747,7 +755,7 @@ classdef ea_disctract < handle
                         training = cvp.training{c};
                         test = cvp.test{c};
                     end
-                    for voter=1:size(val_struct{c}.vals,1)
+                    for voter=1:numVoters
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
                                 useI=obj.subscore.vars{voter}(patientsel);
@@ -779,16 +787,11 @@ classdef ea_disctract < handle
 
                         end
                         
-                        if obj.useExternalModel == True
-                            mdl = S.mdl;
-                            if size(useI,2) == 1 % global scores
-                                if ~isempty(covariates)
-                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
-                                else
-                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
-                                end
-                            elseif size(useI,2) == 2 %bihemispheric scores
-                                ea_error('Fitting to scores has not been implemented for bihemisoheric scores.');
+                        if obj.useExternalModel == true %only use for single tract analysis
+                            if ~strcmp(obj.multitractmode,'Single Tract Analysis')
+                                ea_error("Sorry, you cannot use exported model and fit-to-scores for multi-tract model");
+                            else
+                                mdl = S.mdl;
                             end
                         else
                             if ~isempty(covariates)
@@ -796,18 +799,19 @@ classdef ea_disctract < handle
                             else
                                 mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
                             end
-                            if size(useI,2) == 1 % global scores
-                                if ~isempty(covariates)
-                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
-                                else
-                                    Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
-                                end
-                            elseif size(useI,2)==2 % bihemispheric scores
-                                ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
+                        end
+                        if size(useI,2) == 1 % global scores
+                            if ~isempty(covariates)
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
+                            else
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
                             end
+                        elseif size(useI,2)==2 % bihemispheric scores
+                            ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
                         end
                     end
                 end
+
 
                 % quantify the prediction accuracy (if Train-Test)
                 if cvp.NumTestSets == 1 && voter == 1 && size(obj.responsevar,2) == 1 && (~exist('Iperm', 'var') || isempty(Iperm))
