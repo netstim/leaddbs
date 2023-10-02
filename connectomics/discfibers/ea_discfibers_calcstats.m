@@ -634,7 +634,12 @@ switch threshstrategy
             end
         end
     case 'Percentage Relative to Amount'
-        fibValThreshold = vals(round((threshold/100)*length(vals)));
+        index = round((threshold/100)*length(vals));
+        if index <=0
+            fibValThreshold = vals(1);
+        else
+            fibValThreshold = vals(index);
+        end
     case 'Fixed Amount'
         if length(vals)>round(threshold)
             fibValThreshold=vals(round(threshold));
