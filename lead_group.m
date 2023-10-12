@@ -1381,7 +1381,7 @@ catch % too many entries..
     options.labelatlas=1;
 end
 options.writeoutpm = 0;
-options.colormap=parula(64);
+options.colormap='parula(64)';
 options.d3.write=1;
 options.d3.prolong_electrode=2;
 options.d3.writeatlases=1;
