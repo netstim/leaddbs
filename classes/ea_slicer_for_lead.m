@@ -9,8 +9,8 @@ classdef ea_slicer_for_lead
     end
 
     properties (Access = private)
-        release_tag = 'v221103-beta'
-        release_version = struct('linux', '0.1.0-2023-01-20', 'mac', '0.1.0-2022-11-03', 'win', '0.1.0-2022-11-03')
+        release_tag = 'v231009-beta'
+        release_version = struct('linux', '0.1.0-2023-10-09', 'mac', '0.1.0-2023-10-09', 'win', '0.1.0-2023-10-09')
     end
 
     methods
