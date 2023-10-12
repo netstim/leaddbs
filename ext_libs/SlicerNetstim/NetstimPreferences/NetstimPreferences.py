@@ -24,7 +24,15 @@ class NetstimPreferences(ScriptedLoadableModule):
 
     # Additional initialization step after application startup is complete
     slicer.app.connect("startupCompleted()", setUpSettingsPanel)
+    slicer.app.connect("startupCompleted()", setUpSliceNames)
 
+def setUpSliceNames():
+  if slicer.app.mainApplicationName == 'SlicerForLeadDBS':
+    for color,name in zip(['Red','Green','Yellow'],['Axial','Coronal','Sagittal']):
+      sliceWidget = slicer.app.layoutManager().sliceWidget(color)
+      if not sliceWidget:
+        continue
+      sliceWidget.mrmlSliceNode().SetName(name)
 
 def setUpSettingsPanel():
   if not slicer.app.commandOptions().noMainWindow:
