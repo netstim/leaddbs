@@ -84,7 +84,11 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
 
                     maxcolor=64;
                     try
-                        jetlist=options.colormap;
+                        if ischar(options.colormap)
+                            jetlist = eval(options.colormap);
+                        else
+                            jetlist = options.colormap;
+                        end
                     catch
                         try
                             jetlist=atlases.colormap;

@@ -23,9 +23,8 @@ try
     end 
 
     for ii = 1:length(M.patient.list)
-        
         [~, old_pname] = fileparts(M.patient.list{ii}); 
- 
+
         new_path = fullfile(dest, 'derivatives', 'leaddbs'); 
 
         if exist('id_list', 'var') % get ID from the list
@@ -36,12 +35,13 @@ try
                 return 
             end
         else % automatic renaming
-            is_underscore = regexp(old_pname,'.*_|-\s.*','match');
-            if ~isempty(is_underscore)
-                new_pname = [ 'sub-' regexprep(old_pname, '[\W_]', '') ];
-            else 
-                new_pname = ['sub-' old_pname]; 
-            end 
+            old_pname = regexprep(old_pname, '[\W_]', '');
+
+            if startsWith(old_pname, 'sub', 'IgnoreCase', true)
+                new_pname = regexprep(old_pname, '^sub', 'sub-', 'ignorecase'); 
+            else
+                new_pname = ['sub-', old_pname]; 
+            end
         end
 
         if ~isfolder(fullfile(new_path, new_pname))

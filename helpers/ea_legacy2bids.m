@@ -70,15 +70,13 @@ for patients = 1:length(source)
         subfolder_cell = {'derivatives','rawdata'};
     end
 
-
-    %get and refactor patient names. specially, don't allow
-    %'_' or '-'
-    [~,patient_name,~] = fileparts(source_patient);
-    if ~startsWith(patient_name,'sub-') && ~startsWith(patient_name,'sub')
-        patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
+    % Patient ID should only contains alphanumeric
+    [~, old_name] = fileparts(source_patient);
+    old_name = regexprep(old_name, '[\W_]', '');
+    if startsWith(old_name, 'sub', 'IgnoreCase', true)
+        patient_name = regexprep(old_name, '^sub', 'sub-', 'ignorecase');
     else
-        patient_name = regexprep(patient_name, '[\W_]', '');
-        patient_name = strrep(patient_name,'sub','sub-');
+        patient_name = ['sub-', old_name];
     end
     spaces_in_pat_name = isspace(patient_name);
     patient_name = patient_name(~spaces_in_pat_name);

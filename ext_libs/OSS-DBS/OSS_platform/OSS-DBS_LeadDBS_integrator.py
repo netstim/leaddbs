@@ -177,16 +177,16 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
     elif Electrode_type == 'Medtronic 3391':
         input_dict['Electrode_type'] = "Medtronic3391"  # 1
         normal_array_length = 21.0
-    elif Electrode_type == 'St. Jude Directed 6172 (short)' or Electrode_type == 'St. Jude Directed 6180':  # just different marker colors
+    elif Electrode_type == 'St. Jude Directed 6172 (short)' or Electrode_type == 'St. Jude Directed 6180' or Electrode_type == 'Abbott Directed 6172 (short)' or Electrode_type == 'Abbott Directed 6180':  # just different marker colors
         input_dict['Electrode_type'] = "St_Jude6180"  # 1
         normal_array_length = 6.0
-    elif Electrode_type == 'St. Jude Directed 6173 (long)':
+    elif Electrode_type == 'St. Jude Directed 6173 (long)' or Electrode_type == 'Abbott Directed 6173 (long)':
         normal_array_length = 9.0
         input_dict['Electrode_type'] = "St_Jude6173"  # 1
-    elif Electrode_type == 'St. Jude ActiveTip (6142-6145)':  # just different tail lenghts, but it does not matter here
+    elif Electrode_type == 'St. Jude ActiveTip (6142-6145)' or Electrode_type == 'Abbott ActiveTip (6142-6145)':  # just different tail lenghts, but it does not matter here
         input_dict['Electrode_type'] = "St_Jude6142"
         normal_array_length = 9.75
-    elif Electrode_type == 'St. Jude ActiveTip (6146-6149)':  # just different tail lenghts, but it does not matter here
+    elif Electrode_type == 'St. Jude ActiveTip (6146-6149)' or Electrode_type == 'Abbott ActiveTip (6146-6149)':  # just different tail lenghts, but it does not matter here
         input_dict['Electrode_type'] = "St_Jude6148"  # 1
         normal_array_length = 6.75
     elif Electrode_type == 'Boston Scientific Vercise':
