@@ -15,7 +15,7 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
   end
   
   % Check Conda environment
-  condaenv = ea_conda_env('easyreg');
+  condaenv = ea_conda_env('EasyReg');
   if ~condaenv.is_created
       ea_cprintf('CmdWinWarnings', 'Initializing easyreg environment...\n')
       condaenv.create;
