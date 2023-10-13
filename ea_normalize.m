@@ -30,6 +30,8 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
             ea_normalize_spmnewseg(options);
         case lower({'SPM12 SHOOT (Ashburner 2011)', 'SPMSHOOT', 'SHOOT'})
             ea_normalize_spmshoot(options);
+        case lower({'EasyReg (Iglesias 2023)', 'EasyReg'})
+            ea_normalize_easyreg(options);
         otherwise
             warning('Normalization method not recognized...');
             if options.prefs.diary

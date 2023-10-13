@@ -282,7 +282,7 @@ if ~isempty(transform)
         json = loadjson(options.subj.norm.log.method);
         normMethod = upper(json.method);
 
-        if contains(normMethod, 'ANTS')
+        if contains(normMethod, {'ANTS', 'EASYREG'})
             if endsWith(transform, 'inverseTransform')
                 useinverse = 1;
             else
@@ -358,7 +358,7 @@ if ~isempty(transform)
 
         switch normMethod
 
-            case {'ANTS'} % ANTs used
+            case {'ANTS', 'EASYREG'} % ANTs used
                 if nargin >= 6
                     useinverse = varargin{6};
                 else
