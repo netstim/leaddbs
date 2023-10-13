@@ -166,7 +166,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
             if ~isfile(nativeTensor) && isfile(templateTensor)
                 % Warp tensor data only when ANTs was used for normalization
                 json = loadjson(options.subj.norm.log.method);
-                if contains(json.method, 'ANTs')
+                if contains(json.method, {'ANTs','EasyReg'})
                     fprintf('Warping tensor data into patient space...\n\n')
                     ea_ants_apply_transforms(options,...
                         [ea_space, tensorName],... % From

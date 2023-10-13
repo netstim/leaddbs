@@ -15,3 +15,4 @@ dependencies:
   - pip:
     - surfa==0.3.7
     - voxelmorph==0.2
+    - ermodels==0.0.3
