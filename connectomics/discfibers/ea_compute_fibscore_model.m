@@ -42,6 +42,14 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
         end
     end
 
+    % fiber values can be sigmoid transform
+    if obj.SigmoidTransform 
+        fibsval_raw = fibsval;
+        for side = 1:size(fibsval_raw,2)
+            fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+        end
+    end
+
     if ~exist('Iperm', 'var') || isempty(Iperm)
         if obj.cvlivevisualize
             if obj.useExternalModel == true
