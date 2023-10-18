@@ -39,8 +39,10 @@ if strcmp(options.leadprod, 'dbs')
     if options.importdcm.do || options.importnii.do
         unsortedFiles = ea_regexpdir(fullfile(options.subj.rawdataDir, 'unsorted'), '.*\.nii(\.gz)?');
         if ~isempty(unsortedFiles)
-            ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
-            ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
+            [~, returnCode] = ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
+            if strcmp(returnCode, 'discard')
+                ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
+            end
         else
             ea_cprintf('CmdWinWarnings', 'No unsorted raw images found for "%s"!\n', options.subj.subjId);
         end

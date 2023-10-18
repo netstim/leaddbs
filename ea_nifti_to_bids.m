@@ -12,7 +12,7 @@ function [sortedFiles, returnCode] = ea_nifti_to_bids(niiFiles, dataset_folder, 
 % output
 %   sortedFiles (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
 %                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
-%   returnCode: 'okay', 'cancel' or 'close'
+%   returnCode: 'okay', 'cancel' or 'discard'
 % __________________________________________________________________________________
 % Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
 % Johannes Achtzehn
@@ -180,11 +180,14 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 % cancel button behaviour
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
+% Close button behaviour
+uiapp.UIFigure.CloseRequestFcn = @(btn,event) cancel_button_function(uiapp);
+
 % looup table behaviour
 uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 
 setappdata(groot, 'sortedFiles', []);
-setappdata(groot, 'returnCode', 'close');
+setappdata(groot, 'returnCode', '');
 
 waitfor(uiapp.UIFigure);
 
@@ -550,13 +553,18 @@ end
 function cancel_button_function(uiapp)
 
 s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
-    'Options', {'Yes', 'No'}, 'Icon', 'question');
+    'Options', {'Yes (keep unsorted files)', 'Yes (discard unsorted files)', 'No'}, 'Icon', 'question');
 
 switch s
-    case 'Yes'
+    case 'Yes (keep unsorted files)'
         sortedFiles = [];
         setappdata(groot, 'sortedFiles', sortedFiles);
         setappdata(groot, 'returnCode', 'cancel');
+        delete(uiapp);
+    case 'Yes (discard unsorted files)'
+        sortedFiles = [];
+        setappdata(groot, 'sortedFiles', sortedFiles);
+        setappdata(groot, 'returnCode', 'discard');
         delete(uiapp);
 end
 end
