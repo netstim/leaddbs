@@ -102,7 +102,7 @@ classdef ea_slicer_for_lead
             if ~exist('command','var')
                 command='';
             end
-            system([obj.executable_path ' ' command]);
+            system([ea_path_helper(obj.executable_path) ' ' command]);
         end
 
     end

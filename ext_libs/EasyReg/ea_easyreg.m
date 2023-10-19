@@ -24,7 +24,10 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
   
   % Run EasyReg
   easyreg_exe = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'mri_easyreg');
-  easyreg_cmd = {'python', easyreg_exe, '--ref', target_image, '--ref_seg', target_seg, '--flo', source_image, '--flo_seg', source_seg, '--fwd_field', fs_fwd_field};
+  easyreg_cmd = {'python', ea_path_helper(easyreg_exe), ...
+      '--ref', ea_path_helper(target_image), '--ref_seg', ea_path_helper(target_seg), ...
+      '--flo', ea_path_helper(source_image), '--flo_seg', ea_path_helper(source_seg), ...
+      '--fwd_field', ea_path_helper(fs_fwd_field)};
   condaenv.system(strjoin(easyreg_cmd, ' '));
 
   %
@@ -44,7 +47,11 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
   % Invert transform
   itk_inv_field = strrep(itk_fwd_field, '_fwd_', '_inv_');
   python_script = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'invert_transform.py');
-  slicer_cmd = {'--no-splash', '--no-main-window', '--ignore-slicerrc', '--python-script', python_script, itk_fwd_field, source_image, itk_inv_field};
+  slicer_cmd = {'--no-splash', '--no-main-window', '--ignore-slicerrc', '--python-script', ...
+      ea_path_helper(python_script), ...
+      ea_path_helper(itk_fwd_field), ...
+      ea_path_helper(source_image), ...
+      ea_path_helper(itk_inv_field)};
   s4l.run(strjoin(slicer_cmd, ' '));
 
   % .h5 to .nii.gz
