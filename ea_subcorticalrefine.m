@@ -206,8 +206,16 @@ function disapprovebutn_Callback(hObject, eventdata, handles)
 
 options=getappdata(handles.scrf,'options');
 
-ea_delete(options.subj.brainshift.transform.converted);
-ea_delete(options.subj.brainshift.transform.scrf);
+% Clear all other folders but keep log folder, as a record to show that
+% brainshift correction was attempted but not approved.
+ea_delete(fullfile(options.subj.brainshiftDir, 'anat'));
+ea_delete(fullfile(options.subj.brainshiftDir, 'checkreg'));
+ea_delete(fullfile(options.subj.brainshiftDir, 'transformations'));
+
+% Clear brainshift corrected images in anchor and template space.
+ea_delete(ea_regexpdir(fullfile(options.subj.coregDir, 'anat'), 'brainshift_desc-d.*\.nii$', 0, 'f'));
+ea_delete(ea_regexpdir(fullfile(options.subj.normDir, 'anat'), 'brainshift_desc-d.*\.nii$', 0, 'f'));
+
 if isfile(options.subj.recon.recon)
     ea_recalc_reco([],[],options.subj.subjDir);
 end
