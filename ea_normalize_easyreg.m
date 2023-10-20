@@ -12,6 +12,7 @@ end
 [fwd_field, inv_field] = ea_easyreg([ea_space, options.primarytemplate, '.nii'], options.subj.coreg.anat.preop.(options.subj.AnchorModality));
 
 % Move transformation file
+ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
 movefile(fwd_field, [options.subj.norm.transform.forwardBaseName, 'ants.nii.gz']);
 movefile(inv_field, [options.subj.norm.transform.inverseBaseName, 'ants.nii.gz']);
 
