@@ -60,7 +60,7 @@ classdef ea_conda_env
             obj.system(['python ' script_path])
         end
 
-        function system(obj, command)
+        function status = system(obj, command)
             if ~obj.is_created
                 error(['Create python environment ' obj.name ' from Lead-DBS menu to use this function']);
             end
@@ -70,7 +70,7 @@ classdef ea_conda_env
                 setup_command = [fullfile(ea_conda.install_path, 'condabin', 'activate.bat') ' ' obj.name ' & '];
                 command = obj.inject_exe_to_command(command);
             end
-            system([setup_command command]);
+            status = system([setup_command command]);
         end
     end
 

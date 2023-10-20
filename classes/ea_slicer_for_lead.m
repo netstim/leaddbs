@@ -98,11 +98,11 @@ classdef ea_slicer_for_lead
             end
         end
 
-        function [] = run(obj, command)
+        function status = run(obj, command)
             if ~exist('command','var')
                 command='';
             end
-            system([ea_path_helper(obj.executable_path) ' ' command]);
+            status = system([ea_path_helper(obj.executable_path) ' ' command]);
         end
 
     end

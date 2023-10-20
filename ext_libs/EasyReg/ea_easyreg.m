@@ -29,7 +29,10 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
       '--flo', ea_path_helper(source_image), '--flo_seg', ea_path_helper(source_seg), ...
       '--fwd_field', ea_path_helper(fs_fwd_field), ...
       '--threads -1'};
-  condaenv.system(strjoin(easyreg_cmd, ' '));
+  status = condaenv.system(strjoin(easyreg_cmd, ' '));
+  if status ~= 0
+      ea_error('Registration using EasyReg failed!', showdlg=false, simpleStack=true);
+  end
 
   %
   % Convert transform
@@ -53,7 +56,10 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
       ea_path_helper(itk_fwd_field), ...
       ea_path_helper(source_image), ...
       ea_path_helper(itk_inv_field)};
-  s4l.run(strjoin(slicer_cmd, ' '));
+  status = s4l.run(strjoin(slicer_cmd, ' '));
+  if status ~= 0
+    ea_error('Failed to invert the EasyReg transformation!', showdlg=false, simpleStack=true);
+  end
 
   % .h5 to .nii.gz
   ea_conv_antswarps(itk_fwd_field, target_image, 1);
