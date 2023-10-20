@@ -37,7 +37,7 @@ if ~isempty(opts.timeout)
         cmd = ['timeout ' opts.timeout ' ' cmd];
     elseif ispc
         binPath = ea_getExec(fullfile(binFolder, 'procgov64'), escapePath=true);
-        cmd = [binPath ' -t ' opts.timeout ' ' cmd];
+        cmd = [binPath ' -t ' opts.timeout ' -- ' cmd];
     end
 end
 
