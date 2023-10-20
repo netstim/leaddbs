@@ -1,74 +1,74 @@
 function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
-  % Wrapper to run EasyReg and get ANTs-like transforms
+    % Wrapper to run EasyReg and get ANTs-like transforms
 
-  %
-  % EasyReg
-  %
+    %
+    % EasyReg
+    %
 
-  target_seg = [target_image(1:end-4) '_synthseg.nii'];
-  source_seg = [source_image(1:end-4) '_synthseg.nii'];
-  fs_fwd_field = [source_image(1:end-4) '_fs_fwd_field.nii'];
-  
-  % Check Conda installation
-  if ~ea_conda.is_installed
-      ea_conda.install;
-  end
-  
-  % Check Conda environment
-  condaenv = ea_conda_env('EasyReg');
-  if ~condaenv.is_created
-      ea_cprintf('CmdWinWarnings', 'Initializing easyreg environment...\n')
-      condaenv.create;
-      ea_cprintf('CmdWinWarnings', 'easyreg conda environment initialized.\n')
-  end
-  
-  % Run EasyReg
-  easyreg_exe = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'mri_easyreg');
-  easyreg_cmd = {'python', ea_path_helper(easyreg_exe), ...
-      '--ref', ea_path_helper(target_image), '--ref_seg', ea_path_helper(target_seg), ...
-      '--flo', ea_path_helper(source_image), '--flo_seg', ea_path_helper(source_seg), ...
-      '--fwd_field', ea_path_helper(fs_fwd_field), ...
-      '--threads -1'};
-  status = condaenv.system(strjoin(easyreg_cmd, ' '));
-  if status ~= 0
-      ea_error('Registration using EasyReg failed!', showdlg=false, simpleStack=true);
-  end
+    target_seg = [target_image(1:end-4) '_synthseg.nii'];
+    source_seg = [source_image(1:end-4) '_synthseg.nii'];
+    fs_fwd_field = [source_image(1:end-4) '_fs_fwd_field.nii'];
 
-  %
-  % Convert transform
-  %
+    % Check Conda installation
+    if ~ea_conda.is_installed
+        ea_conda.install;
+    end
 
-  % Freesurfer to ITK transform
-  itk_fwd_field = [source_image(1:end-4) '_itk_fwd_field.h5'];
-  freesurfer_nii_to_itk_h5(fs_fwd_field, itk_fwd_field);
+    % Check Conda environment
+    condaenv = ea_conda_env('EasyReg');
+    if ~condaenv.is_created
+        ea_cprintf('CmdWinWarnings', 'Initializing easyreg environment...\n')
+        condaenv.create;
+        ea_cprintf('CmdWinWarnings', 'easyreg conda environment initialized.\n')
+    end
 
-  % Set-up Custom Slicer
-  s4l = ea_slicer_for_lead;
-  if ~s4l.is_installed_and_up_to_date()
-      s4l.install();
-  end
+    % Run EasyReg
+    easyreg_exe = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'mri_easyreg');
+    easyreg_cmd = {'python', ea_path_helper(easyreg_exe), ...
+        '--ref', ea_path_helper(target_image), '--ref_seg', ea_path_helper(target_seg), ...
+        '--flo', ea_path_helper(source_image), '--flo_seg', ea_path_helper(source_seg), ...
+        '--fwd_field', ea_path_helper(fs_fwd_field), ...
+        '--threads -1'};
+    status = condaenv.system(strjoin(easyreg_cmd, ' '));
+    if status ~= 0
+        ea_error('Registration using EasyReg failed!', showdlg=false, simpleStack=true);
+    end
 
-  % Invert transform
-  itk_inv_field = strrep(itk_fwd_field, '_fwd_', '_inv_');
-  python_script = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'invert_transform.py');
-  slicer_cmd = {'--no-splash', '--no-main-window', '--ignore-slicerrc', '--python-script', ...
-      ea_path_helper(python_script), ...
-      ea_path_helper(itk_fwd_field), ...
-      ea_path_helper(source_image), ...
-      ea_path_helper(itk_inv_field)};
-  status = s4l.run(strjoin(slicer_cmd, ' '));
-  if status ~= 0
-    ea_error('Failed to invert the EasyReg transformation!', showdlg=false, simpleStack=true);
-  end
+    %
+    % Convert transform
+    %
 
-  % .h5 to .nii.gz
-  ea_conv_antswarps(itk_fwd_field, target_image, 1);
-  ea_conv_antswarps(itk_inv_field, source_image, 1);
+    % Freesurfer to ITK transform
+    itk_fwd_field = [source_image(1:end-4) '_itk_fwd_field.h5'];
+    freesurfer_nii_to_itk_h5(fs_fwd_field, itk_fwd_field);
 
-  itk_fwd_field = strrep(itk_fwd_field, '.h5', '.nii.gz');
-  itk_inv_field = strrep(itk_inv_field, '.h5', '.nii.gz');
+    % Set-up Custom Slicer
+    s4l = ea_slicer_for_lead;
+    if ~s4l.is_installed_and_up_to_date()
+        s4l.install();
+    end
 
-  ea_delete({source_seg, fs_fwd_field});
+    % Invert transform
+    itk_inv_field = strrep(itk_fwd_field, '_fwd_', '_inv_');
+    python_script = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'invert_transform.py');
+    slicer_cmd = {'--no-splash', '--no-main-window', '--ignore-slicerrc', '--python-script', ...
+        ea_path_helper(python_script), ...
+        ea_path_helper(itk_fwd_field), ...
+        ea_path_helper(source_image), ...
+        ea_path_helper(itk_inv_field)};
+    status = s4l.run(strjoin(slicer_cmd, ' '));
+    if status ~= 0
+        ea_error('Failed to invert the EasyReg transformation!', showdlg=false, simpleStack=true);
+    end
+
+    % .h5 to .nii.gz
+    ea_conv_antswarps(itk_fwd_field, target_image, 1);
+    ea_conv_antswarps(itk_inv_field, source_image, 1);
+
+    itk_fwd_field = strrep(itk_fwd_field, '.h5', '.nii.gz');
+    itk_inv_field = strrep(itk_inv_field, '.h5', '.nii.gz');
+
+    ea_delete({source_seg, fs_fwd_field});
 
 end
 
