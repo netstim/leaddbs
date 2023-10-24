@@ -417,7 +417,7 @@ classdef ea_disctract < handle
                     if ~silent
                         fprintf("Iterating fold set: %d",i)
                     end
-                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp, [], 1);
+                    [I_iter{i}, Ihat_iter{i},~,val_struct] = crossval(obj, cvp, [], 1,silent);
                     if ~silent
                         switch obj.multitractmode
                             case 'Split & Color By PCA'
