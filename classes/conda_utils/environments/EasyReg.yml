@@ -13,6 +13,6 @@ dependencies:
   - scipy=1.10.0
   - tensorflow=2.11.0
   - pip:
-    - surfa==0.3.7
+    - surfa==0.6.0
     - voxelmorph==0.2
     - ermodels==0.0.3
