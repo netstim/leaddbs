@@ -56,8 +56,14 @@ for i = 1:numel(oldSubjId)
         oldFiles = ea_regexpdir(BIDSRoot, ['^sub-', old, '_']);
         newFiles = replace(oldFiles, [filesep, 'sub-', old, '_'], [filesep, 'sub-', new, '_']);
     else
-        oldFiles = ea_regexpdir(BIDSRoot, '^sub-[^\W_]+_');
-        newFiles = replace(oldFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldDerivativeFiles = ea_regexpdir(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', new]), '^sub-[^\W_]+_');
+        newDerivativeFiles = replace(oldDerivativeFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldRawFiles = ea_regexpdir(fullfile(BIDSRoot, 'rawdata', ['sub-', new]), '^sub-[^\W_]+_');
+        newRawFiles = replace(oldRawFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldSourceFiles = ea_regexpdir(fullfile(BIDSRoot, 'sourcedata', ['sub-', new]), '^sub-[^\W_]+_');
+        newSourceFiles = replace(oldSourceFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldFiles = [oldDerivativeFiles; oldRawFiles; oldSourceFiles];
+        newFiles = [newDerivativeFiles; newRawFiles; newSourceFiles];
     end
     
     cellfun(@(src, dst) ~strcmp(src, dst) && movefile(src, dst), oldFiles, newFiles);
