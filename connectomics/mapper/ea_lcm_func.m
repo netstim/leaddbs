@@ -12,6 +12,11 @@ if iscell(options.lcm.seeds)
    end
 end
 
+try
+    exportgmtc=evalin('base','exporttc');
+catch
+    exportgmtc=options.lcm.func.exportgmtc;
+end
 cmd = ea_lcm_resolvecmd(options.lcm.cmd);
 [sfile]=ea_handleseeds(options.lcm.seeds);
 if strcmp(cmd,'seed')
@@ -100,7 +105,7 @@ for run=1:chunk:length(sfile)
                             cmd,...
                             '0',...
                             options.lcm.odir,...
-                            options.lcm.func.exportgmtc);
+                            exportgmtc);
                 end
             case 'pmap'
                 switch dataset.type
