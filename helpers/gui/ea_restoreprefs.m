@@ -15,8 +15,8 @@ else
 end
 
 if strcmp(answer,'Sure')
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default', ea_prefsext], [ea_gethome, '.ea_prefs', ea_prefsext]);
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], [ea_gethome, '.ea_prefs.mat']);
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default', ea_prefsext], ea_prefspath(ea_prefsext));
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], ea_prefspath('mat'));
     ea_delete([ea_getearoot, filesep, 'ea_ui.mat'])
 
     if cleanRecentHistory

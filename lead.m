@@ -72,6 +72,8 @@ end
 
 earoot=ea_getearoot;
 
+ea_checkprefs;
+
 ea_checkbuildspace;
 
 ea_checkspm;

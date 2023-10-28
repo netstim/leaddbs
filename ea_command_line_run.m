@@ -68,17 +68,17 @@ setappdata(h,'handles',handles);
 options.leadfigure = h;
 
 % dont show pop up methods
-umachine = load([ea_gethome, '.ea_prefs.mat']); 
+umachine = load(ea_prefspath('mat'));
 machine = umachine.machine;
 machine.methods_show = 0;
-save([ea_gethome, '.ea_prefs.mat'],'machine');
+save(ea_prefspath('mat'),'machine');
 
 % run
 ea_run('run',options);
 
 % restore previous pop up config
 machine.methods_show = umachine.machine.methods_show;
-save([ea_gethome, '.ea_prefs.mat'],'machine');
+save(ea_prefspath('mat'),'machine');
 
 set(h, 'Visible', 'on'); drawnow; % make gui visible so that close request function is executed
 close(h)

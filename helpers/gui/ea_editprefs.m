@@ -1,13 +1,15 @@
 function ea_editprefs(varargin)
 
-if ~exist([ea_gethome,'.ea_prefs',ea_prefsext],'file')
-    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default',ea_prefsext],[ea_gethome,'.ea_prefs',ea_prefsext]);
+prefsPath = ea_prefspath(ea_prefsext);
+
+if ~isfile(prefsPath)
+    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default',ea_prefsext], prefsPath);
 end
 
 if ~isdeployed
-    edit([ea_gethome,'.ea_prefs.m']);
+    edit(prefsPath);
 else
-    msgbox('Open ~/.ea_prefs.json with a text editor to edit preferences.');
+    msgbox('Open ~/.leaddbs/ea_prefs.json with a text editor to edit preferences.');
 
     % prefs = ea_prefs;
     % if ~isfield(prefs, 'textedit')
@@ -21,5 +23,5 @@ else
     %         return
     %     end
     % end
-    % system(['open -a ','''',prefs.textedit,'''',' ',fullfile(ea_gethome,'.ea_prefs.json')])
+    % system(['open -a ','''',prefs.textedit,'''',' ',prefsPath])
 end
