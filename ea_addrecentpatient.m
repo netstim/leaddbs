@@ -1,8 +1,6 @@
 function ea_addrecentpatient(handles,uipatdir,patsub,chosenix)
 
-earoot=ea_getearoot;          
-
-load([earoot,'common',filesep,'ea_recent',patsub,'.mat']);
+load([ea_prefsdir, filesep, 'ea_recent', patsub, '.mat']);
 if strcmp(fullrpts,['No recent ',patsub,' found'])
     fullrpts={};
 end
@@ -31,6 +29,6 @@ if length(fullrpts)>10
    fullrpts=fullrpts(1:10);
 end
 [~,nuchosenix]=ismember(chosenix,fullrpts);
-save([earoot,'common',filesep,'ea_recent',patsub,'.mat'],'fullrpts');
+save([ea_prefsdir, filesep, 'ea_recent', patsub, '.mat'],'fullrpts');
 
 ea_updaterecentpatients(handles,patsub,nuchosenix);

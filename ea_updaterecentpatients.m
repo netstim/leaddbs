@@ -1,7 +1,6 @@
 function ea_updaterecentpatients(handles,patsub,nuchosenix)
 
-earoot=ea_getearoot;
-load([earoot,'common',filesep,'ea_recent',patsub,'.mat']);
+load([ea_prefsdir, filesep, 'ea_recent', patsub, '.mat']);
 
 if strcmp(patsub,'patients')
     for i=1:length(fullrpts)

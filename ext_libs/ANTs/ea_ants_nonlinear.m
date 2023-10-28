@@ -27,7 +27,7 @@ if nargin >= 5
     options = varargin{5};
     options.prefs=ea_prefs; % refresh prefs in case called from recompute window with different settings.
 else
-    umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
+    umachine = load(ea_prefspath('mat'), 'machine');
     options.prefs.machine.normsettings = umachine.machine.normsettings;
 end
 
@@ -42,9 +42,9 @@ if isempty(which(options.prefs.machine.normsettings.ants_preset))
     options.prefs.machine.normsettings.ants_preset = ants_default_preset;
 
     % save default ANTs presets to user preference file
-    load([ea_gethome, '.ea_prefs.mat'], 'machine')
+    load(ea_prefspath('mat'), 'machine')
     machine.normsettings.ants_preset = ants_default_preset;
-    save([ea_gethome, '.ea_prefs.mat'], 'machine', '-append');
+    save(ea_prefspath('mat'), 'machine', '-append');
 end
 
 slabsupport = 1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
@@ -58,7 +58,7 @@ end
 
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
-    
+
     for mov = 1:length(movingimage)
         if ~(weights(mov)>2.9) % segmentations
 
@@ -75,7 +75,7 @@ if slabsupport
                     end
                 end
                 sums(mov) = sum(mnii.img(:));
-                
+
         else
             sums(mov)=nan;
         end
@@ -83,7 +83,7 @@ if slabsupport
     slabspresent = 0; % default no slabs present.
 
     if length(sums)>1 % multispectral warp
-        
+
         slabs = sums(1:end-1) < (sums(end)*0.85);
 
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
@@ -120,7 +120,7 @@ if options.prefs.machine.normsettings.ants_reinforcetargets
         if ~exist([options.root,options.patientname,filesep,'tmp'],'dir')
             mkdir([options.root,options.patientname,filesep,'tmp']);
         end
-        movefile([options.root,options.patientname,filesep,'tmp_mask.nii'],[options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);       
+        movefile([options.root,options.patientname,filesep,'tmp_mask.nii'],[options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);
         ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
         if slabspresent
             bmsk=ea_load_nii([options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);
@@ -142,7 +142,7 @@ apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), optio
 % use fixed global correlations for fiducial helpers or segmentations
 ccnsettg=options.prefs.machine.normsettings;
 ccnsettg.ants_metric='Global Correlation';
-ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg); 
+ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg);
 ccpref.metric='MeanSquares';
 ccpref.metricsuffix='';
 
@@ -305,8 +305,8 @@ if  options.prefs.machine.normsettings.ants_scrf
                 ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
         end
     end
-    
-    
+
+
     strucs={'atlas'}; %{'STN','GPi','GPe','RN'};
     scnt=1;
     if options.prefs.machine.normsettings.ants_reinforcetargets

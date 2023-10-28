@@ -1,10 +1,10 @@
 function ea_rcpatientscallback(handles, patsub)
 
-if get(handles.recentpts,'Value')==1              
+if get(handles.recentpts,'Value')==1
     return
 end
 
-load([ea_getearoot,'common',filesep,'ea_recent',patsub,'.mat']);
+load([ea_prefsdir, filesep, 'ea_recent', patsub, '.mat']);
 if iscell(fullrpts)
     fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
 end

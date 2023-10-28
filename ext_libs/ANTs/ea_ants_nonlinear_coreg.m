@@ -8,7 +8,7 @@ outputimage = varargin{3};
 if nargin >= 4 && ~isempty(varargin{4})
     normsettings = varargin{4};
 else
-    umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
+    umachine = load(ea_prefspath('mat'), 'machine');
     normsettings = umachine.machine.normsettings;
 end
 
