@@ -12,6 +12,8 @@ dependencies:
   - pytorch=1.13.1
   - scipy=1.10.0
   - tensorflow=2.11.0
+  - pip=23.3
+
   - pip:
     - surfa==0.6.0
     - voxelmorph==0.2

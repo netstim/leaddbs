@@ -1,7 +1,7 @@
 classdef (Abstract) ea_conda
 
     properties (Constant)
-        install_path = fullfile(ea_getearoot, 'ext_libs', 'mambaforge');
+        install_path = fullfile(ea_prefsdir, 'miniforge');
     end
 
     methods (Static)
@@ -42,24 +42,24 @@ classdef (Abstract) ea_conda
                 osarch = 'Linux-x86_64';
             end
 
-            mambaforge_installer_url =  ['https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-' osarch];
-            installer_file = fullfile(ea_getearoot, 'mambaforge');
+            miniforge_installer_url =  ['https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-' osarch];
+            installer_file = fullfile(ea_prefsdir, 'miniforge');
 
             if isunix
-                mambaforge_installer_url = [mambaforge_installer_url '.sh'];
+                miniforge_installer_url = [miniforge_installer_url '.sh'];
                 installer_file = [installer_file '.sh'];
                 install_call = ['bash ' installer_file ' -b -f -p ' ea_conda.install_path];
             else
-                mambaforge_installer_url = [mambaforge_installer_url '.exe'];
+                miniforge_installer_url = [miniforge_installer_url '.exe'];
                 installer_file = [installer_file '.exe'];
                 install_call = ['start /wait "" ' installer_file ' /InstallationType=JustMe /RegisterPython=0 /S /D=' ea_conda.install_path];
             end
 
-            ea_conda.websave_verbose(installer_file, mambaforge_installer_url);
+            ea_conda.websave_verbose(installer_file, miniforge_installer_url);
             ea_conda.run_install_call(install_call)
 
             delete(installer_file);
-            disp('mambaforge installed')
+            disp('miniforge installed')
         end
 
         function listenv
@@ -95,10 +95,10 @@ classdef (Abstract) ea_conda
         end
 
         function run_install_call(install_call)
-            disp('Installing mambaforge...')
+            disp('Installing miniforge...')
             [status,~] = system(install_call);
             if status
-                error('Failed to install mambaforge');
+                error('Failed to install miniforge');
             end
         end
     end

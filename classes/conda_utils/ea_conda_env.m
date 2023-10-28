@@ -44,12 +44,12 @@ classdef ea_conda_env
         end
 
         function remove(obj)
-            system([ea_conda_env.conda_path ' env remove --name ' obj.name]);
+            system([obj.conda_path ' env remove --name ' obj.name]);
         end
 
         function create(obj)
             disp(['Creating environment ' obj.name '...'])
-            [status, cmdout] = system([ea_conda_env.conda_path ' env create -f ' obj.yml]);
+            [status, cmdout] = system([obj.conda_path ' env create -f ' obj.yml]);
             if status
                 fprintf('%s\n', strtrim(cmdout));
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)

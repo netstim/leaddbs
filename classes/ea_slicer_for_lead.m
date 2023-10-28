@@ -15,7 +15,7 @@ classdef ea_slicer_for_lead
 
     methods
         function obj = ea_slicer_for_lead()
-            obj.install_path = fullfile(ea_getearoot, 'ext_libs', 'SlicerForLeadDBS');
+            obj.install_path = fullfile(ea_prefsdir, 'SlicerForLeadDBS');
 
             if ismac
                 obj.executable_path = fullfile(obj.install_path, 'SlicerForLeadDBS.app', 'Contents', 'MacOS', 'SlicerForLeadDBS');
@@ -58,7 +58,7 @@ classdef ea_slicer_for_lead
             destination = [obj.install_path '.zip'];
             webopts = weboptions('Timeout', Inf);
             % check install or update
-            installed_apps = ea_regexpdir([ea_getearoot, 'ext_libs'], '^SlicerForLeadDBS.*', 0, 'd');
+            installed_apps = ea_regexpdir(ea_prefsdir, '^SlicerForLeadDBS.*', 0, 'd');
             if isempty(installed_apps)
                 msg_start = 'Installing';
             else
@@ -84,7 +84,7 @@ classdef ea_slicer_for_lead
             % the zip file is packed with a subfolder inside it at the
             % moment, so we need to rename it.
             [~, extracted_folder] = fileparts(obj.download_url);
-            extracted_folder = fullfile(ea_getearoot, 'ext_libs', extracted_folder);
+            extracted_folder = fullfile(ea_prefsdir, extracted_folder);
             try
                 movefile(extracted_folder, obj.install_path);
                 fclose(fopen(fullfile(obj.install_path, ['v' obj.upstream_version]), 'w'));

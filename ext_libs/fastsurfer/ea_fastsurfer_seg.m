@@ -27,7 +27,7 @@ elseif isfile(input) % Input is a NIfTI file
     end
 end
 
-fastsurferFolder = fullfile(ea_getearoot, 'ext_libs', 'fastsurfer');
+fastsurferFolder = fullfile(ea_prefsdir, 'fastsurfer');
 
 % Check Conda installation
 if ~ea_conda.is_installed
@@ -43,18 +43,18 @@ if ~condaenv.is_created
 end
 
 % Check FastSurfer
-runner = fullfile(fastsurferFolder, 'upstream', 'run_fastsurfer.sh');
+runner = fullfile(fastsurferFolder, 'run_fastsurfer.sh');
 if ~isfile(runner)
     ea_cprintf('CmdWinWarnings', 'Downloading FastSurfer...\n')
-    downloadFile = fullfile(fastsurferFolder, 'FastSurfer.zip');
+    downloadFile = fullfile(ea_prefsdir, 'FastSurfer.zip');
     websave(downloadFile, 'https://github.com/Deep-MI/FastSurfer/archive/refs/heads/stable.zip');
-    unzip(downloadFile, fastsurferFolder);
-    movefile(fullfile(fastsurferFolder, 'FastSurfer-stable'), fullfile(fastsurferFolder, 'upstream'));
+    unzip(downloadFile, ea_prefsdir);
+    movefile(fullfile(ea_prefsdir, 'FastSurfer-stable'), fastsurferFolder);
     delete(downloadFile);
     ea_cprintf('CmdWinWarnings', 'FastSurfer downloaded.\n')
 end
 
-segcmd = ['export FASTSURFER_HOME=', fullfile(fastsurferFolder, 'upstream'), ';', ...
+segcmd = ['export FASTSURFER_HOME=', fastsurferFolder, ';', ...
     'bash ', runner, ' --sid ', subjID, ' --sd ', outputFolder, ' --t1 ', t1, ...
     ' --vox_size min --seg_only --viewagg_device ''cpu'''];
 

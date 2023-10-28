@@ -21,3 +21,19 @@ if ~isempty(ui)
     newui = replace(ui, ea_getearoot, [prefsDir, filesep]);
     cellfun(@(x,y) movefile(x,y), ui, newui);
 end
+
+extFolder = [ea_getearoot, 'ext_libs', filesep];
+
+ea_delete({[extFolder, 'mambaforge']});
+
+if isfolder(fullfile(ea_prefsdir, 'SlicerForLeadDBS'))
+    ea_delete([extFolder, 'SlicerForLeadDBS']);
+elseif isfolder([extFolder, 'SlicerForLeadDBS'])
+    movefile([extFolder, 'SlicerForLeadDBS'], ea_prefsdir);
+end
+
+if isfolder(fullfile(ea_prefsdir, 'fastsurfer'))
+    ea_delete([extFolder, 'fastsurfer', filesep, 'upstream']);
+elseif isfolder([extFolder, 'fastsurfer', filesep, 'upstream'])
+    movefile([extFolder, 'fastsurfer', filesep, 'upstream'], fullfile(ea_prefsdir, 'fastsurfer'));
+end
