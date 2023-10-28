@@ -2,34 +2,34 @@ function ea_switch2classic
 
 LeadRoot = ea_getearoot;
 
-if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
+if isfile([ea_prefsdir, filesep, 'ea_recentgroups.mat'])
     disp('Backup recent groups from develop branch ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat.dev'])
+    movefile([ea_prefsdir, filesep, 'ea_recentgroups.mat'], [ea_prefsdir, filesep, 'ea_recentgroups.mat.dev'])
 end
 
-if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.classic'])
+if isfile([ea_prefsdir, filesep, 'ea_recentgroups.mat.classic'])
     disp('Restore recent groups from classic branch  ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.classic'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
+    movefile([ea_prefsdir, filesep, 'ea_recentgroups.mat.classic'], [ea_prefsdir, filesep, 'ea_recentgroups.mat'])
 end
 
-if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
+if isfile([ea_prefsdir, filesep, 'ea_recentpatients.mat'])
     disp('Backup recent patients from develop branch ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat.dev'])
+    movefile([ea_prefsdir, filesep, 'ea_recentpatients.mat'], [ea_prefsdir, filesep, 'ea_recentpatients.mat.dev'])
 end
 
-if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.classic'])
+if isfile([ea_prefsdir, filesep, 'ea_recentpatients.mat.classic'])
     disp('Restore recent patients from classic branch  ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.classic'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
+    movefile([ea_prefsdir, filesep, 'ea_recentpatients.mat.classic'], [ea_prefsdir, filesep, 'ea_recentpatients.mat'])
 end
 
-if isfile([LeadRoot, 'ea_ui.mat'])
+if isfile([ea_prefsdir, filesep, 'ea_ui.mat'])
     disp('Backup ea_ui.mat from develop branch ...');
-    movefile([LeadRoot, 'ea_ui.mat'], [LeadRoot, 'ea_ui.mat.dev'])
+    movefile([ea_prefsdir, filesep, 'ea_ui.mat'], [ea_prefsdir, filesep, 'ea_ui.mat.dev'])
 end
 
-if isfile([LeadRoot, 'ea_ui.mat.classic'])
+if isfile([ea_prefsdir, filesep, 'ea_ui.mat.classic'])
     disp('Restore ea_ui.mat from classic branch  ...');
-    movefile([LeadRoot, 'ea_ui.mat.classic'], [LeadRoot, 'ea_ui.mat'])
+    movefile([ea_prefsdir, filesep, 'ea_ui.mat.classic'], [ea_prefsdir, filesep, 'ea_ui.mat'])
 end
 
 if isfile(ea_prefspath)

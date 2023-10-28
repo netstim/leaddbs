@@ -1,7 +1,7 @@
 function uipatdir = ea_getdataset(options,handles)
 
 try
-    load([ea_getearoot, 'common', filesep, 'ea_recentdatasets.mat'], 'recentfolders');
+    load([ea_prefsdir, filesep, 'ea_recentdatasets.mat'], 'recentfolders');
     startPath = fileparts(recentfolders{1});
 catch
     % Use default location

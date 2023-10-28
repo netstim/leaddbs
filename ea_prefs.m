@@ -15,9 +15,6 @@ end
 dprefs = ea_prefs_default(patientname);
 dmachine = load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat']);
 
-% check user prefs
-home = ea_gethome;
-
 % Check default auto colormap setting
 try
     eval([dprefs.d3.roi.defaultcolormap, ';'])
@@ -27,7 +24,7 @@ catch
 end
 
 % if isdeployed
-%     disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
+%     disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', ea_gethome, '.']);
 % end
 
 if ~isfile(ea_prefspath(ea_prefsext))

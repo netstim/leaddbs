@@ -8,6 +8,6 @@ try
 end
 
 try % Finally try to use the parent folder of the last recent patient folder
-    load([ea_getearoot, 'common', filesep, 'ea_recentpatients.mat'], 'recentfolders');
+    load([ea_prefsdir, filesep, 'ea_recentpatients.mat'], 'recentfolders');
     startPath = fileparts(recentfolders{1});
 end
