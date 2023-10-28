@@ -70,8 +70,9 @@ if ~isdeployed && ~contains(path, fullfile(fileparts(mfilename),'helpers'))
     end
 end
 
-ea_compat_data;
 earoot=ea_getearoot;
+
+ea_checkprefs;
 
 ea_checkbuildspace;
 
