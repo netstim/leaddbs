@@ -1,9 +1,9 @@
 classdef ea_slicer_for_lead
 
     properties
-        installed_version
         install_path
         executable_path
+        installed_version
         upstream_version
         download_url
     end
@@ -49,8 +49,7 @@ classdef ea_slicer_for_lead
             obj.download_url = ['https://github.com/netstim/SlicerForLeadDBS/releases/download/' obj.release_tag '/' download_file];
         end
 
-
-        function up_to_date = is_installed_and_up_to_date(obj)
+        function up_to_date = is_up_to_date(obj)
             up_to_date = strcmp(obj.installed_version, obj.upstream_version);
         end
 
@@ -96,6 +95,10 @@ classdef ea_slicer_for_lead
                 delete(f);
                 msgbox(["Failed to install custom Slicer for Lead-DBS!", ME.message], "Failed", "Error");
             end
+        end
+
+        function update(obj)
+            obj.install;
         end
 
         function status = run(obj, command)
