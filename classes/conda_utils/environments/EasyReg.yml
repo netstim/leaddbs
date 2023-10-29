@@ -1,5 +1,7 @@
 name: easyreg
 
+version: 20231030
+
 channels:
   - conda-forge
   - defaults

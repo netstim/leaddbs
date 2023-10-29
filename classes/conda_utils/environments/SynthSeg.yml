@@ -1,5 +1,7 @@
 name: synthseg
 
+version: 20231030
+
 channels:
   - conda-forge
   - defaults
@@ -15,5 +17,7 @@ dependencies:
   - scikit-learn=0.22.2.post1
   - tensorflow-gpu=2.2.0
   - tqdm=4.45.0
+  - pip=23.3
+
   - pip:
     - protobuf==3.20.3

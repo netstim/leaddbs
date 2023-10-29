@@ -1,13 +1,15 @@
 classdef ea_conda_env
 
     properties
-        yml;
         name;
+        yml;
         path;
     end
 
     properties (Dependent)
         is_created;
+        installed_version;
+        latest_version;
     end
 
     properties (Access = private, Constant)
@@ -38,9 +40,37 @@ classdef ea_conda_env
             b = isfolder(obj.path);
         end
 
+        function ver = get.installed_version(obj)
+            verFile = ea_regexpdir(obj.path, '^v\d+', 0, 'f');
+            if isempty(verFile)
+                ver = '';
+            else
+                [~, verFile] = fileparts(verFile{1});
+                ver = verFile(2:end);
+            end
+        end
+
+        function ver = get.latest_version(obj)
+            yaml = readyaml(obj.yml);
+            if ~isfield(yaml, 'version')
+                ver = '';
+                ea_cprintf('CmdWinWarnings', 'Missing version tag in env yaml definition.\n');
+            else
+                ver = num2str(yaml.version);
+            end
+        end
+
+        function up_to_date = is_up_to_date(obj)
+            up_to_date = strcmp(obj.installed_version, obj.latest_version);
+        end
+
         function force_create(obj)
             obj.remove;
             obj.create;
+        end
+
+        function update(obj)
+            obj.force_create;
         end
 
         function remove(obj)
@@ -48,6 +78,10 @@ classdef ea_conda_env
         end
 
         function create(obj)
+            if isfolder(obj.path)
+                ea_cprintf('CmdWinErrors', 'Conda env installation folder already exists!\nConsider using ''update''.\n');
+                return;
+            end
             disp(['Creating environment ' obj.name '...'])
             [status, cmdout] = system([obj.conda_path ' env create -f ' obj.yml]);
             if status

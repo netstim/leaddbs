@@ -1,5 +1,6 @@
-
 name: DBSegment
+
+version: 20231030
 
 channels:
   - conda-forge
