@@ -65,3 +65,6 @@ Thumbs.db
 /ext_libs/miniconda
 /ext_libs/mambaforge
 /ext_libs/fastsurfer/upstream
+
+/templates/space/Waxholm_Space_Atlas_SD_Rat_Brain/
+
