@@ -36,6 +36,7 @@ connectomes/
 coverage_html/
 
 /templates/space/MNI152NLin2009bAsym/
+/templates/space/WaxholmSpaceSDRat/
 
 # dev only
 ea_make_release.m
