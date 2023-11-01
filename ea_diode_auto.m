@@ -302,22 +302,7 @@ end
 %             scatter3(marker_mm(1)+COG_dir(1),marker_mm(2)+COG_dir(2),marker_mm(3)+COG_dir(3),'b')
 %             caxis([-500 3500])
 %             close
-%% Slice parralel for visualization
-% a 10mm slice with .1mm resolution is sampled vertically
-% through the lead and through the marker center and oriented
-% in the direction of y-vec and unitvector for later
-% visualization
-extract_width = 10; % in mm
-samplingres = .1;
-Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
-Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
-Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
-finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
-finalslice = finalslice';
-finalslice = flipdim(finalslice,2);
-% if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
-%     finalslice = flipdim(finalslice,2);
-% end
+
 %% darkstar method
 checkslices = [-2:0.5:2]; % check neighboring slices for marker
 
@@ -429,7 +414,27 @@ dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
 dirnew_valleys = round(rad2deg(dirnew_angles) +1);
 dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
 
+%% Slice parralel for visualization
+% a 10mm slice with .1mm resolution is sampled vertically
+% through the lead and through the marker center and oriented
+% in the direction of y-vec and unitvector for later
+% visualization
+[M,~,~,~] = ea_diode_rollpitchyaw(rollnew,pitch,yaw);
+yvec_mm = M * [0;1;0];
+xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
 
+
+extract_width = 10; % in mm
+samplingres = .1;
+Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
+Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
+Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
+finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
+finalslice = finalslice';
+finalslice = flipdim(finalslice,2);
+% if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
+%     finalslice = flipdim(finalslice,2);
+% end
 
 
 %% final figure
@@ -579,7 +584,7 @@ ax3 = subplot(3,3,3);
 hold on
 title(ax3,'Sagittal View','FontWeight','bold')
 
-imagesc(finalslice)
+imagesc(ax3,finalslice)
 axis equal
 axis off
 caxis([1500 3000])
