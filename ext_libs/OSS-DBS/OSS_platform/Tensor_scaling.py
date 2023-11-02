@@ -144,7 +144,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,affine,affine_
 
             # re-orient to the world axes
             tensor_complete = np.array([[tensor[0][0],tensor[1][0],tensor[2][0],0],[tensor[1][0],tensor[1][1],tensor[2][1],0],[tensor[2][0],tensor[1][2],tensor[2][2],0],[0,0,0,1]])
-            tensor_WA = np.matmul(np.matmul(affine_inv, tensor_complete), affine)
+            tensor_WA = np.matmul(np.matmul(affine, tensor_complete), affine_inv)
             tmp[i,j,k,:]=np.array([tensor_WA[0][0],tensor_WA[1][0],tensor_WA[2][0],tensor_WA[1][1],tensor_WA[2][1],tensor_WA[2][2]]) #we need to have it as xx,yx,zx,yy,zy,zz (which is FSL standard saving procedure of DTI)
 
 
