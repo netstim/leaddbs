@@ -48,6 +48,12 @@ if (current_control(1) == 0 && current_control(2) == 0) || (isnan(current_contro
     numSources = 4;
     amp = nan(eleNum,numSources);   % 4 - number of sources
     for i=1:eleNum
+        switch i
+            case 1
+                sideCode = 'R';
+            case 2
+                sideCode = 'L';
+        end
         for j=1:numSources
             amp(i,j) = S.amplitude{i}(j);
 
