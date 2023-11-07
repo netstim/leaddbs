@@ -8,12 +8,12 @@ for pt=1:length(uipatdir)
     exptxt=[exptxt,'--------------------------------------','\n','\n'];
     normmethod=ea_whichnormmethod(uipatdir{pt},'coregmrmethod');
     if ~isempty(normmethod)
-        exptxt=[exptxt,'Postoperative MRIs were co-registered to preoperative MRIs using: \n',normmethod{end},'\n'];
+        exptxt=[exptxt,'Postoperative MRIs were co-registered to preoperative MRIs using: \n',normmethod,'\n'];
     end
     
     normmethod=ea_whichnormmethod(uipatdir{pt},'coregctmethod');
     if ~isempty(normmethod)
-        exptxt=[exptxt,'A postoperative CT was co-registered to preoperative MRIs using: \n',normmethod{end},'\n'];
+        exptxt=[exptxt,'A postoperative CT was co-registered to preoperative MRIs using: \n',normmethod,'\n'];
     end
     
     
