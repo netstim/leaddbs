@@ -82,6 +82,12 @@ classdef ea_conda_env
                 ea_cprintf('CmdWinErrors', 'Conda env installation folder already exists!\nConsider using ''update''.\n');
                 return;
             end
+
+            if ~isfile(obj.conda_path)
+                ea_cprintf('CmdWinWarnings', 'Conda installation not found! Installing now...\n');
+                ea_conda.install;
+            end
+
             disp(['Creating environment ' obj.name '...'])
             [status, cmdout] = system([obj.conda_path ' env create -f ' obj.yml]);
             if status
