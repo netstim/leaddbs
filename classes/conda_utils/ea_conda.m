@@ -1,12 +1,33 @@
 classdef (Abstract) ea_conda
 
-    properties (Constant)
-        install_path = fullfile(ea_prefsdir, 'miniforge');
-    end
-
     methods (Static)
+        function path = install_path(custompath)
+            if exist('custompath', 'var') && ~isempty(custompath)
+                % custom installation path
+                path = custompath;
+                return;
+            end
+            prefs = ea_prefs;
+            if ~isempty(prefs.conda.install_path)
+                % Installation path already set in prefs
+                path = prefs.conda.install_path;
+            else
+                % Set installation path
+                path = fullfile(ea_prefsdir, 'miniforge');
+                answer = questdlg(sprintf('Confirm Conda installation folder:\n%s', path), '', 'Yes', 'Custom', 'Yes');
+                if strcmp(answer, 'Custom')
+                    custompath = uigetdir(path, 'Specify Conda installation folder');
+                    if ischar(custompath)
+                        if ~endsWith(custompath, {'conda', 'condaforge', 'miniforge', 'mambaforge'}, 'IgnoreCase', true)
+                            path = fullfile(custompath, 'miniforge');
+                        end
+                    end
+                end
+                ea_setprefs('conda.install_path', path, 'user');
+            end
+        end
 
-        function out = bin_file_path
+        function path = mamba_path
             if isunix
                 bin_folder = 'bin';
                 ext = '';
@@ -14,11 +35,11 @@ classdef (Abstract) ea_conda
                 bin_folder = 'condabin';
                 ext = '.bat';
             end
-            out = fullfile(ea_conda.install_path, bin_folder, ['mamba' ext]);
+            path = fullfile(ea_conda.install_path, bin_folder, ['mamba' ext]);
         end
 
         function b = is_installed
-            b = isfile(ea_conda.bin_file_path);
+            b = isfile(ea_conda.mamba_path);
         end
 
         function remove
@@ -26,7 +47,6 @@ classdef (Abstract) ea_conda
         end
 
         function install
-
             mkdir(ea_conda.install_path);
 
             if ismac
@@ -76,7 +96,7 @@ classdef (Abstract) ea_conda
         end
 
         function update_base
-            conda = ea_conda.bin_file_path;
+            conda = ea_conda.mamba_path;
             system([conda, ' update conda mamba -y']);
             system([conda, ' update --all -y']);
             fprintf('\n');
@@ -84,7 +104,6 @@ classdef (Abstract) ea_conda
     end
 
     methods (Access = private, Static)
-
         function websave_verbose(filename, url)
             disp(['Downloading ' url ' to ' filename]);
             try

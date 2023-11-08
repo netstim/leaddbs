@@ -275,3 +275,7 @@ prefs.platform.glnxa64.load_shipped_runtime=false;  % for Linux default is NOT l
 prefs.platform.maci64.load_shipped_runtime=false;    % for macOS default is NOT loaded
 prefs.platform.maca64.load_shipped_runtime=false;    % for macOS default is NOT loaded
 prefs.platform.win64.load_shipped_runtime=false;  % for Windows default is NOT loaded
+
+
+%% conda
+prefs.conda.install_path = '';

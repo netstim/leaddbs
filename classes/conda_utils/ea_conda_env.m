@@ -13,7 +13,7 @@ classdef ea_conda_env
     end
 
     properties (Access = private, Constant)
-        conda_path = ea_conda.bin_file_path;
+        mamba_path = ea_conda.mamba_path;
     end
 
     methods
@@ -74,7 +74,7 @@ classdef ea_conda_env
         end
 
         function remove(obj)
-            system([obj.conda_path ' env remove --name ' obj.name]);
+            system([obj.mamba_path ' env remove --name ' obj.name]);
         end
 
         function create(obj)
@@ -83,13 +83,13 @@ classdef ea_conda_env
                 return;
             end
 
-            if ~isfile(obj.conda_path)
+            if ~isfile(obj.mamba_path)
                 ea_cprintf('CmdWinWarnings', 'Conda installation not found! Installing now...\n');
                 ea_conda.install;
             end
 
             disp(['Creating environment ' obj.name '...'])
-            [status, cmdout] = system([obj.conda_path ' env create -f ' obj.yml]);
+            [status, cmdout] = system([obj.mamba_path ' env create -f ' obj.yml]);
             if status
                 fprintf('%s\n', strtrim(cmdout));
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)
