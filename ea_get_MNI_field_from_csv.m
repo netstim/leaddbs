@@ -12,8 +12,8 @@ function ea_get_MNI_field_from_csv(options, Field_array_file, Activation_thresho
 
 % split to corrdinates and field
 Field_array = table2array(readtable(Field_array_file));
-Field_coords = Field_array(:,1:3);
-Field_vals = Field_array(:,4);
+Field_coords = Field_array(:,2:4);
+Field_vals = Field_array(:,8);  % others are the components
 
 % convert to native voxel space (will be as floating numbers)
 Field_vox_native = ea_mm2vox(Field_coords, options.subj.preopAnat.(options.subj.AnchorModality).coreg)';

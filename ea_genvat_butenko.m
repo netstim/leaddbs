@@ -3,6 +3,7 @@ function varargout = ea_genvat_butenko(varargin)
 
 % set to 1 if you only want to prep files for cluster comp.
 prepFiles_cluster = 0; % for now hardcoded
+ossdbs_V = 2;
 
 if nargin==2
     S=varargin{1};
@@ -17,12 +18,30 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
+% new parameters
+settings.butenko_segmAlg = options.prefs.machine.vatsettings.butenko_segmAlg;
+settings.butenko_intersectStatus = options.prefs.machine.vatsettings.butenko_intersectStatus;
+settings.removeElectrode = options.prefs.machine.vatsettings.butenko_removeElectrode;
+settings.neuronModel = options.prefs.machine.vatsettings.butenko_axonModel;
+settings.signalType = options.prefs.machine.vatsettings.butenko_signalType;
+settings.pulseWidth = options.prefs.machine.vatsettings.butenko_pulseWidth;
+settings.biphasic = options.prefs.machine.vatsettings.butenko_biphasic;
+settings.butenko_tensorData = options.prefs.machine.vatsettings.butenko_tensorData;
+settings.AdaptiveRef = options.prefs.machine.vatsettings.butenko_AdaptiveRef;
+
+
+
 % Check OSS-DBS installation, set env
 if ~options.prefs.machine.vatsettings.oss_dbs.installed
     ea_checkOSSDBSInstall;
 else
+    % set python path
     binPath = getenv('PATH'); % Current PATH
-    pythonPath = options.prefs.env.pythonPath;
+    pythonPath = [ea_getearoot, 'ext_libs/mambaforge/envs/ossdbsv2/bin'];
+
+%     prefs.env.pythonPath = [ea_getearoot, 'ext_libs/mambaforge/envs/ossdbsv2/bin'];
+%     binPath = getenv('PATH'); % Current PATH
+%     pythonPath = options.prefs.env.pythonPath;
     if isunix
         setenv('PATH', [pythonPath, ':', binPath]);
     else
@@ -57,68 +76,101 @@ end
 %% Set MRI_data_name
 % Segment MRI
 segmaskName = 'segmask.nii';
-if options.native
-    anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
-    [anchorImageDir, anchorImageName] = fileparts(anchorImage);
-    anchorImageDir = [anchorImageDir, filesep];
-    anchorImageName = [anchorImageName, '.nii'];
+switch settings.butenko_segmAlg
+    case 'SPM'
+        if options.native
+            anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+            [anchorImageDir, anchorImageName] = fileparts(anchorImage);
+            anchorImageDir = [anchorImageDir, filesep];
+            anchorImageName = [anchorImageName, '.nii'];
+        
+            mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
+            c1File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'GM', 'suffix', 'mask');
+            c2File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'WM', 'suffix', 'mask');
+            c3File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'CSF', 'suffix', 'mask');
+            if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
+                ea_newseg(anchorImage, 0, 1);
+                movefile([anchorImageDir, 'c1', anchorImageName], c1File);
+                movefile([anchorImageDir, 'c2', anchorImageName], c2File);
+                movefile([anchorImageDir, 'c3', anchorImageName], c3File);
+            end
+        
+            segMaskPath = setBIDSEntity(anchorImage, 'label', 'C123', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
+        else
+            c1File = [ea_space, 'c1mask.nii'];
+            c2File = [ea_space, 'c2mask.nii'];
+            c3File = [ea_space, 'c3mask.nii'];
+            if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
+                ea_newseg(fullfile(ea_space, [options.primarytemplate, '.nii']), 0, 1);
+                movefile([ea_space, 'c1', options.primarytemplate, '.nii'], c1File);
+                movefile([ea_space, 'c2', options.primarytemplate, '.nii'], c2File);
+                movefile([ea_space, 'c3', options.primarytemplate, '.nii'], c3File);
+            end
+        
+            segMaskPath = [ea_space, segmaskName];
+        end
+    
+        if ~isfile(segMaskPath)
+            % Binarize segmentations
+            c1 = ea_load_nii(c1File);
+            c2 = ea_load_nii(c2File);
+            c3 = ea_load_nii(c3File);
+            c1.img = c1.img>0.5;
+            c2.img = c2.img>0.5;
+            c3.img = c3.img>0.5;
+        
+            % Fuse segmentations by voting in the order  CSF -> WM -> GM
+            c2.img(c3.img) = 0;
+            c1.img(c2.img | c3.img) = 0;
+            c1.img = c1.img + c2.img*2 + c3.img*3;
+            c1.fname = segMaskPath;
+            c1.dt = [2 0]; % unit8 according to spm_type
+            c1.descrip = 'Tissue 1 + 2 + 3';
+            c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
+            ea_write_nii(c1);
+        end
+    case 'Atlas Based'
 
-    mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
-    c1File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'GM', 'suffix', 'mask');
-    c2File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'WM', 'suffix', 'mask');
-    c3File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'CSF', 'suffix', 'mask');
-    if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
-        ea_newseg(anchorImage, 0, 1);
-        movefile([anchorImageDir, 'c1', anchorImageName], c1File);
-        movefile([anchorImageDir, 'c2', anchorImageName], c2File);
-        movefile([anchorImageDir, 'c3', anchorImageName], c3File);
-    end
+        % always overwrite in this case
+        if isfile([outputDir, filesep, segmaskName])
+            ea_delete([outputDir, filesep, segmaskName])
+        end
 
-    segMaskPath = setBIDSEntity(anchorImage, 'label', 'C123', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
-else
-    c1File = [ea_space, 'c1mask.nii'];
-    c2File = [ea_space, 'c2mask.nii'];
-    c3File = [ea_space, 'c3mask.nii'];
-    if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
-        ea_newseg(fullfile(ea_space, [options.primarytemplate, '.nii']), 0, 1);
-        movefile([ea_space, 'c1', options.primarytemplate, '.nii'], c1File);
-        movefile([ea_space, 'c2', options.primarytemplate, '.nii'], c2File);
-        movefile([ea_space, 'c3', options.primarytemplate, '.nii'], c3File);
-    end
-
-    segMaskPath = [ea_space, segmaskName];
+        if options.native
+            segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
+            atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
+            ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
+        else
+            % save directly to stim folder
+            segMaskPath = [outputDir,filesep,'segmask.nii'];
+            atlas_gm_mask_path = [ea_space,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
+            ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
+        end
+    case'SynthSeg'
+        ea_warndlg("SynthSeg segmentations are not supported yet")
+        return
+        %SynthSeg_segmask_image = ea_smart_BIDS_function_to_find_SynthSeg;
+        %ea_convert_synthSeg2segmask(SynthSeg_segmask_image, segmask_output);
 end
 
-if ~isfile(segMaskPath)
-    % Binarize segmentations
-    c1 = ea_load_nii(c1File);
-    c2 = ea_load_nii(c2File);
-    c3 = ea_load_nii(c3File);
-    c1.img = c1.img>0.5;
-    c2.img = c2.img>0.5;
-    c3.img = c3.img>0.5;
 
-    % Fuse segmentations by voting in the order  CSF -> WM -> GM
-    c2.img(c3.img) = 0;
-    c1.img(c2.img | c3.img) = 0;
-    c1.img = c1.img + c2.img*2 + c3.img*3;
-    c1.fname = segMaskPath;
-    c1.dt = [2 0]; % unit8 according to spm_type
-    c1.descrip = 'Tissue 1 + 2 + 3';
-    c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
-    ea_write_nii(c1);
-end
+% Put segmened MRI file in stimulation folder
+copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
+
 
 %% Set patient folder
 settings.Patient_folder = options.subj.subjDir;
 
 %% Set native/MNI flag
-settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemplate;
+settings.Estimate_In_Template = ~options.native;
 
 %% Set MRI path
-% Put the MRI file in stimulation folder
-copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
-settings.MRI_data_name = segmaskName;
+
+if ossdbs_V == 2
+    settings.MRI_data_name = [outputDir, filesep, segmaskName];
+else
+    settings.MRI_data_name = segmaskName;
+end
 
 %% Check tensor data
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
@@ -133,7 +185,14 @@ templateTensorScaled = [ea_space, scaledTensorName];
 tensorData = [outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
 
 % Set to empty by default
-settings.DTI_data_name = '';
+settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
+settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
+
+if ossdbs_V == 2
+    settings.DTI_data_name = 'no dti';
+else
+    settings.DTI_data_name = '';
+end
 
 time = datetime('now', 'TimeZone', 'local');
 timezone = time.TimeZone;
@@ -193,16 +252,18 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
         % Scale tensor data
         if exist('tensorDir', 'var')
             fprintf('Scaling tensor data...\n\n')
-            if isempty(getenv('SINGULARITY_NAME')) % Docker
-                system(['docker run ', ...
-                        '-e TZ ', ...
-                        '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                        '--volume ', tensorDir, ':/opt/Patient ', ...
-                        '--rm ', dockerImage, ' ', ...
-                        'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorPrefix, tensorName, ' ', scalingMethod]);
-            else % Singularity
-                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorPrefix, tensorName, ' ', scalingMethod]);
-            end
+%             if isempty(getenv('SINGULARITY_NAME'))  % Docker
+%                 system(['docker run ', ...
+%                         '-e TZ ', ...
+%                         '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+%                         '--volume ', tensorDir, ':/opt/Patient ', ...
+%                         '--rm ', dockerImage, ' ', ...
+%                         'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorPrefix, tensorName, ' ', scalingMethod]);
+%             else % Singularity
+%                 system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorPrefix, tensorName, ' ', scalingMethod]);
+%             end
+
+            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
 
             % Copy scaled tensor data to stimulation directory, update setting
             copyfile([tensorDir, filesep, tensorPrefix, scaledTensorName], tensorData);
@@ -213,6 +274,10 @@ end
 
 if ~isempty(settings.DTI_data_name)
     fprintf('Scaled tensor data added: %s\n\n', settings.DTI_data_name)
+end
+
+if ossdbs_V == 2 && ~strcmp(settings.DTI_data_name, 'no dti') 
+    settings.DTI_data_name = [outputDir, filesep, settings.DTI_data_name];
 end
 
 %% Index of the tissue in the segmented MRI data
@@ -292,6 +357,7 @@ settings.Case_grounding = zeros(eleNum, 1);
 
 % Get the stimulation parameters from S in case stimSetMode is 0, otherwise
 % they will be loaded directly from the Current_protocols_[0|1].csv files
+
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_getStimVector(S, eleNum, conNum);
 end
@@ -307,13 +373,13 @@ else
 end
 
 % Axon activation setting
-settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
 if settings.calcAxonActivation
+    %settings.AxonModel = options.prefs.machine.vatsettings.butenko_AxonModel;
+
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
 
-    %settings.AxonModel = options.prefs.machine.vatsettings.butenko_AxonModel;
 
     preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
     if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
@@ -433,11 +499,15 @@ settings.interactiveMode = options.prefs.machine.vatsettings.butenko_interactive
 parameterFile = [outputDir, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
-
 % Delete previous results from stimSetMode
 ea_delete([outputDir, filesep, 'Result_StimProt_*']);
 if options.native
     ea_delete([templateOutputDir, filesep, 'Result_StimProt_*']);
+end
+
+% full clean-up for V2
+if ossdbs_V == 2
+    ea_delete([outputDir, filesep, 'Results_*']);
 end
 
 %% Run OSS-DBS
@@ -517,38 +587,57 @@ for side=0:1
 
     fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
 
-    % Calculate axon allocation when option enabled
+%     % Calculate axon allocation when option enabled
+%     if settings.calcAxonActivation
+%         fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
+% 
+%         % Make sure to clean up, useful in manually interruption
+%         ea_delete([outputDir, filesep, 'Brain_substitute.brep']);
+%         ea_delete([outputDir, filesep,'Allocated_axons.h5']);
+%         ea_delete(ea_regexpdir(outputDir, '^(?!Current_protocols_).*\.csv$', 0));
+%         ea_delete([outputDir, filesep,'*.py']);
+% 
+%         % Delete this folder in MATLAB since shutil.rmtree may raise I/O error
+%         % ea_delete([outputDir, filesep,'Axons_in_time']);
+% 
+%         % fprintf('ea_getearoot %s \n\n', ea_getearoot)
+%         % fprintf('outputDir %s \n\n', outputDir)
+%         % fprintf('num2str(side) %s \n\n', num2str(side))
+% 
+%         if isempty(getenv('SINGULARITY_NAME')) % Docker
+%             system(['docker run ', ...
+%                     '-e TZ ', ...
+%                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+%                     '--volume ', outputDir, ':/opt/Patient ', ...
+%                     '--rm ', dockerImage, ' ', ...
+%                     'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side), ' Reilly2016']);
+%         else % Singularity
+%             system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputDir, ' ', num2str(side), ' McIntyre2002_ds']);
+%         end
+% 
+%             % Call OSS-DBS GUI to start calculation
+%         system(['python', ' ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
+%             parameterFile, ' ', num2str(side)]);	% 0 is right side, 1 is the left side here
+% 
+% 
+%     else
+%         % use OSS-DBS v2 environment
+%         system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', parameterFile, ...
+%             ' --output_path ', outputDir])
+%         parameterFile_json = [parameterFile(1:end-3), 'json'];
+%         system(['ossdbs ' , parameterFile_json])
+%     end
+
     if settings.calcAxonActivation
-        fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
-
-        % Make sure to clean up, useful in manually interruption
-        ea_delete([outputDir, filesep, 'Brain_substitute.brep']);
-        ea_delete([outputDir, filesep,'Allocated_axons.h5']);
-        ea_delete(ea_regexpdir(outputDir, '^(?!Current_protocols_).*\.csv$', 0));
-        ea_delete([outputDir, filesep,'*.py']);
-
-        % Delete this folder in MATLAB since shutil.rmtree may raise I/O error
-        % ea_delete([outputDir, filesep,'Axons_in_time']);
-
-        % fprintf('ea_getearoot %s \n\n', ea_getearoot)
-        % fprintf('outputDir %s \n\n', outputDir)
-        % fprintf('num2str(side) %s \n\n', num2str(side))
-
-        if isempty(getenv('SINGULARITY_NAME')) % Docker
-            system(['docker run ', ...
-                    '-e TZ ', ...
-                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                    '--volume ', outputDir, ':/opt/Patient ', ...
-                    '--rm ', dockerImage, ' ', ...
-                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side), ' McIntyre2002_ds']);
-        else % Singularity
-            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputDir, ' ', num2str(side), ' McIntyre2002_ds']);
-        end
+        % call axon_allocation script
     end
 
-    % Call OSS-DBS GUI to start calculation
-    system(['python', ' ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
-            parameterFile, ' ', num2str(side)]);	% 0 is right side, 1 is the left side here
+
+    % use OSS-DBS v2 environment
+    system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', parameterFile, ...
+        ' --output_path ', outputDir])
+    parameterFile_json = [parameterFile(1:end-3), 'json'];
+    system(['ossdbs ' , parameterFile_json])
 
     % Check if OSS-DBS calculation is finished
     while ~isfile([outputDir, filesep, 'success_', sideCode, '.txt']) ...
@@ -564,14 +653,19 @@ for side=0:1
     if isfile([outputDir, filesep, 'success_', sideCode, '.txt'])
         runStatus(side+1) = 1;
         fprintf('\nOSS-DBS calculation succeeded!\n\n')
+
+        if options.native && isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_MRI_space.csv']) % Transform to MNI space
+            ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+        end
+
         % Copy VAT files
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
             % IMPORTANT: you can't use the transformation on the E_field_solution.nii computed in native
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
                      [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'])
 
-            if options.native % Transform to MNI space
-                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+            %if options.native % Transform to MNI space
+            %    ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
 %                 ea_apply_normalization_tofile(options,...
 %                     [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],... % from
 %                     [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],... % to
@@ -579,13 +673,20 @@ for side=0:1
 %                     1, ... % linear interpolation
 %                     [ea_space, options.primarytemplate, '.nii']);
 %                 ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
-            end
+            %end
         end
 
-        if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
+        if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii']) || isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution_WA.nii'])
             % IMPORTANT: you can't use the transformation on the VTA_solution.nii computed in native
-            copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
-                     [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'])
+
+            if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
+                copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
+                         [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'])
+            else
+                % but different space!
+                copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution_WA.nii'], ...
+                         [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'])
+            end
 
             vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
             if options.native % Transform to MNI space
@@ -635,6 +736,14 @@ for side=0:1
                 % Get fiber id and state from OSS-DBS result
                 ftr = load(axonState{f});
                 [fibId, ind] = unique(ftr.fibers(:,4));
+
+                % test!!!
+                if strcmp(settings.butenko_intersectStatus,'activated')
+                    ftr.fibers(ftr.fibers == -1 || ftr.fibers == -3,5) = 1;
+                elseif trcmp(settings.butenko_intersectStatus,'actived_at_active_contacts')
+                    ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers);
+                end
+
                 fibState = ftr.fibers(ind,5);
 
                 % Restore full length fiber (as in original filtered fiber)
