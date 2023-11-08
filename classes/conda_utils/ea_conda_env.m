@@ -93,6 +93,8 @@ classdef ea_conda_env
             if status
                 fprintf('%s\n', strtrim(cmdout));
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)
+            else
+                system([obj.mamba_path ' clean -tpyq']);
             end
         end
 

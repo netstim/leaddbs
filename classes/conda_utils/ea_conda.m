@@ -42,10 +42,6 @@ classdef (Abstract) ea_conda
             b = isfile(ea_conda.mamba_path);
         end
 
-        function remove
-            rmdir(ea_conda.install_path, 's')
-        end
-
         function install
             mkdir(ea_conda.install_path);
 
@@ -82,6 +78,23 @@ classdef (Abstract) ea_conda
             disp('miniforge installed')
         end
 
+        function update_base
+            conda = ea_conda.mamba_path;
+            system([conda, ' update conda mamba -y']);
+            system([conda, ' update --all -y']);
+            fprintf('\n');
+        end
+
+        function clean
+            conda = ea_conda.mamba_path;
+            system([conda, ' clean -tpy']);
+            fprintf('\n');
+        end
+
+        function remove
+            ea_delete(ea_conda.install_path)
+        end
+
         function listenv
             ymlFolder = fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments');
             ymlFile = ea_regexpdir(ymlFolder, '\.yml', 0, 'f');
@@ -93,13 +106,6 @@ classdef (Abstract) ea_conda
                 end
             end
             fprintf('%s\n', strjoin(envName, '\n'));
-        end
-
-        function update_base
-            conda = ea_conda.mamba_path;
-            system([conda, ' update conda mamba -y']);
-            system([conda, ' update --all -y']);
-            fprintf('\n');
         end
     end
 
