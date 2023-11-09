@@ -20,6 +20,8 @@ classdef (Abstract) ea_conda
                     if ischar(custompath)
                         if ~endsWith(custompath, {'conda', 'condaforge', 'miniforge', 'mambaforge'}, 'IgnoreCase', true)
                             path = fullfile(custompath, 'miniforge');
+                        else
+                            path = custompath;
                         end
                     end
                 end
