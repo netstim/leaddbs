@@ -22,28 +22,26 @@ home = ea_gethome;
 %     disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
 % end
 
-if ~exist([home, '.ea_prefs', ea_prefsext], 'file')
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default', ea_prefsext], [home, '.ea_prefs', ea_prefsext], 'f');
+if ~isfile(ea_prefspath(ea_prefsext))
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default', ea_prefsext], ea_prefspath(ea_prefsext), 'f');
 end
 
-if ~exist([home, '.ea_prefs.mat'], 'file')
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], [home, '.ea_prefs.mat'], 'f');
+if ~isfile(ea_prefspath('mat'))
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], ea_prefspath('mat'), 'f');
 end
 
 % load user prefs
 try
     if ~isdeployed
-        % file name starting with '.' is not a valid function/script name, so
-        % copy it to a temp file and then run it.
-        tempPrefs = ['ea_prefs_', strrep(ea_generate_uuid, '-', '_')];
-        copyfile([home, '.ea_prefs.m'], [ea_getearoot, tempPrefs, '.m'],'f');
-        uprefs = feval(tempPrefs, patientname);
-        delete([ea_getearoot, tempPrefs, '.m']);
-        umachine = load([home, '.ea_prefs.mat']);
+        % Temporarily add ~/.leaddbs to search path and get user prefs.
+        addpath(ea_prefsdir);
+        uprefs = ea_prefs(patientname);
+        rmpath(ea_prefsdir);
+        umachine = load(ea_prefspath('mat'));
     else
-        fid = fopen([home,'.ea_prefs.json'],'rt');
+        fid = fopen(ea_prefspath('json'),'rt');
         uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
-        umachine = load([home, '.ea_prefs.mat']);
+        umachine = load(ea_prefspath('mat'));
     end
 catch ME
     prefs=dprefs; % it seems user-defined prefs cannot be loaded.

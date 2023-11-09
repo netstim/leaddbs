@@ -14,7 +14,7 @@ switch lower(whichPrefs)
         machine = prefs.machine;
         eval(['machine.', key, ' = value;']);
         try % may not have write permissions
-            save([ea_gethome,'.ea_prefs.mat'],'machine');
+            save(ea_prefspath('mat'),'machine');
         catch
             warning('Could not save preferences to user home directory. Please check permission.');
         end
@@ -28,8 +28,8 @@ switch lower(whichPrefs)
             value = ['''', value, ''''];
         end
 
-        % Replace prefs in .ea_prefs.m
-        prefs = fileread([ea_gethome,'.ea_prefs.m']);
+        % Replace prefs in ea_prefs.m
+        prefs = fileread(ea_prefspath);
         pattern = [strrep(['prefs.',key], '.', '\.'), ' *= *.*?;'];
         if ~isempty(regexp(prefs, pattern,'once')) % Key exists
             prefs = regexprep(prefs, pattern, regexptranslate('escape',['prefs.',key,' = ',value,';']));
@@ -38,7 +38,7 @@ switch lower(whichPrefs)
         end
 
         try % may not have write permissions
-            fid = fopen([ea_gethome,'.ea_prefs.m'], 'w');
+            fid = fopen(ea_prefspath, 'w');
             fwrite(fid, prefs);
             fclose(fid);
         catch

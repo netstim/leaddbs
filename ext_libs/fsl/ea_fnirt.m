@@ -13,7 +13,7 @@ if isempty(dir([movingimage_flirt,'.nii*']))
     ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
 end
 
-umachine = load([ea_gethome, '.ea_prefs.mat']);
+umachine = load(ea_prefspath('mat'));
 normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
     movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
