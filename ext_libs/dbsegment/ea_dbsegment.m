@@ -64,11 +64,15 @@ end
 DBSegment = fullfile(condaenv.path, 'bin', 'DBSegment');
 modelPath = fullfile(condaenv.path, 'share', 'models');
 
-segcmd = [DBSegment ...
-    ' -i ' inputFolder ...
-    ' -o ' outputFolder ...
-    ' -mp ' modelPath];
-condaenv.system(segcmd);
+segcmd = {ea_path_helper(DBSegment), ...
+    '-i', ea_path_helper(inputFolder), ...
+    '-o', ea_path_helper(outputFolder), ...
+    '-mp', ea_path_helper(modelPath)};
+
+status = condaenv.system(strjoin(segcmd, ' '));
+if status ~= 0
+    ea_error('DBSegment failed!', showdlg=false, simpleStack=true);
+end
 
 % Clean up
 % TODO
