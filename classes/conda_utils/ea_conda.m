@@ -5,6 +5,7 @@ classdef (Abstract) ea_conda
             if exist('custompath', 'var') && ~isempty(custompath)
                 % custom installation path
                 path = custompath;
+                ea_setprefs('conda.install_path', path, 'user');
                 return;
             end
             prefs = ea_prefs;
