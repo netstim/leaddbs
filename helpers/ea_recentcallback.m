@@ -5,7 +5,7 @@ if get(handles.(['recent', type]), 'Value') == 1
     return
 end
 
-load([ea_getearoot, 'common', filesep, 'ea_recent', type, '.mat'],  'recentfolders');
+load([ea_prefsdir, filesep, 'ea_recent', type, '.mat'],  'recentfolders');
 if iscell(recentfolders)
     recentfolders = recentfolders(handles.(['recent', type]).Value-1);
 end

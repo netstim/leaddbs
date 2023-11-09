@@ -32,16 +32,15 @@ end
 
 dbsegmentFolder = fullfile(ea_getearoot, 'ext_libs', 'dbsegment');
 
-% Check Conda installation
-if ~ea_conda.is_installed
-    ea_conda.install;
-end
-
 % Check Conda environment
 condaenv = ea_conda_env('DBSegment');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing DBSegment reconsurf environment...\n')
+    ea_cprintf('CmdWinWarnings', 'Initializing DBSegment conda environment...\n')
     condaenv.create;
+    ea_cprintf('CmdWinWarnings', 'DBSegment conda environment initialized.\n')
+elseif ~condaenv.is_up_to_date
+    ea_cprintf('CmdWinWarnings', 'Updating DBSegment conda environment...\n')
+    condaenv.update;
     ea_cprintf('CmdWinWarnings', 'DBSegment conda environment initialized.\n')
 end
 

@@ -821,7 +821,7 @@ uipatdir=getappdata(handles.leadfigure,'uipatdir');
 if length(uipatdir)>1
    %ea_error('Selecting the previous patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
-    load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
+    load([ea_prefsdir, filesep, 'ea_recentpatients.mat']);
     if iscell(recentfolders)
         recentfolders=recentfolders(1);
     end
@@ -875,7 +875,7 @@ if length(uipatdir)>1 % still works
 elseif isempty(uipatdir)
     % load recentpatients patient then.
 
-    load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
+    load([ea_prefsdir, filesep, 'ea_recentpatients.mat']);
     if iscell(recentfolders)
         recentfolders=recentfolders(1);
     end

@@ -1,10 +1,8 @@
 function ea_refreshrecent(handles, type)
 % Refresh recent patients/group analyses popupmenu
 
-earoot = ea_getearoot;
-
 try
-    load([earoot,'common',filesep,'ea_recent',type,'.mat'], 'recentfolders');
+    load([ea_prefsdir, filesep, 'ea_recent',type,'.mat'], 'recentfolders');
 catch
     recentfolders = {};
 end
