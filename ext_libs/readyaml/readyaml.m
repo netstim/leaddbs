@@ -176,7 +176,7 @@ if startsWith(strtrim(thisLine),"- ") || lst.bool
                 lst.data{lstnr,1}.(key{1})=value;
             end
 
-        elseif contains(array,':')
+        elseif contains(array,':') && ~contains(array,'://')
             %array of objects like - name: john
             [key,value] = LineToKeyValue(array);
             lst.data{lstnr,1}.(key{1})=value;
