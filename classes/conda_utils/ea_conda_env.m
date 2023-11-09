@@ -41,12 +41,11 @@ classdef ea_conda_env
         end
 
         function ver = get.installed_version(obj)
-            verFile = ea_regexpdir(obj.path, '^v\d+', 0, 'f');
-            if isempty(verFile)
+            try
+                state = loadjson(fullfile(obj.path, 'conda-meta', 'state'));
+                ver = num2str(state.env_vars.env_version);
+            catch
                 ver = '';
-            else
-                [~, verFile] = fileparts(verFile{1});
-                ver = verFile(2:end);
             end
         end
 
