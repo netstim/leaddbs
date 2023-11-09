@@ -33,19 +33,14 @@ end
 
 fastsurferFolder = fullfile(ea_prefsdir, 'fastsurfer');
 
-% Check Conda installation
-if ~ea_conda.is_installed
-    ea_conda.install;
-end
-
 % Check Conda environment
 condaenv = ea_conda_env('FastSurfer');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer reconsurf environment...\n')
+    ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer conda environment...\n')
     condaenv.create;
     ea_cprintf('CmdWinWarnings', 'FastSurfer conda environment initialized.\n')
 elseif ~condaenv.is_up_to_date
-    ea_cprintf('CmdWinWarnings', 'Updating FastSurfer reconsurf environment...\n')
+    ea_cprintf('CmdWinWarnings', 'Updating FastSurfer conda environment...\n')
     condaenv.update;
     ea_cprintf('CmdWinWarnings', 'FastSurfer conda environment initialized.\n')
 end
