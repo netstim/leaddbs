@@ -1,10 +1,7 @@
 name: fastsurfer
 
-version: 20231030
-
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
   - bash=5.1.16
@@ -23,3 +20,6 @@ dependencies:
   - torchio=0.18.83
   - torchvision=0.13.0
   - yacs=0.1.8
+
+variables:
+  env_version: 20231108

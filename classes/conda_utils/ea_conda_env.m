@@ -52,11 +52,11 @@ classdef ea_conda_env
 
         function ver = get.latest_version(obj)
             yaml = readyaml(obj.yml);
-            if ~isfield(yaml, 'version')
+            try
+                ver = num2str(yaml.variables.env_version);
+            catch
                 ver = '';
                 ea_cprintf('CmdWinWarnings', 'Missing version tag in env yaml definition.\n');
-            else
-                ver = num2str(yaml.version);
             end
         end
 

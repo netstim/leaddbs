@@ -1,22 +1,22 @@
 name: easyreg
 
-version: 20231030
-
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
-  - keras=2.11.0
-  - nibabel=5.0.0
-  - numpy=1.23.1
-  - python=3.8
-  - pytorch=1.13.1
-  - scipy=1.10.0
-  - tensorflow=2.11.0
-  - pip=23.3
+  - keras=2.13.1
+  - nibabel=5.1.0
+  - numpy=1.26.0
+  - pip=23.3.1
+  - python=3.10
+  - pytorch=2.0.0
+  - scipy=1.11.3
+  - tensorflow=2.13.1
 
   - pip:
+    - git+https://github.com/simonoxen/ermodels.git
     - surfa==0.6.0
     - voxelmorph==0.2
-    - ermodels==0.0.3
+
+variables:
+  env_version: 20231108
