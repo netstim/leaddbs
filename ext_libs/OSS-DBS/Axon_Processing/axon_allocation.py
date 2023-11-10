@@ -19,10 +19,7 @@ from nibabel_SequenceArray import ArraySequence
 
 class AxonModels:
 
-    """ Description and methods for axon models used by OSS-DBS
-
-    Parameters
-    ----------
+    """ Model to represent axons for simulation in OSS-DBS
 
     """
 
@@ -38,7 +35,7 @@ class AxonModels:
         description_file: str, full path to oss-dbs_parameters.mat or a .json file that contains the following parameters:
 
              pathway_mat_file: list of full paths to pathways files in lead-dbs format (could be just one)
-             axon_diams_all: list of diameters in micrometers for all provided fibers, one per pathway. diam_fib
+             axon_diams_all: list of diameters in micrometers for all provided fibers, one per pathway
              axon_lengths_all: list of axon lengths in mm, one per pathway
              centering_coordinates: list of lists, 3-D coordinates used to center axons on fibers (e.g. active contacts)
              axon_model: str, NEURON model ('McIntyre2002', 'McIntyre2002_ds' (downsampled), 'McNeal1976' (classic McNeal's))
@@ -72,9 +69,13 @@ class AxonModels:
         else:
             print("Unsupported input format, see AxonModels in Axon_allocation.py")
 
-    def _import_leaddbs_neurons(self, index_side):
+    def _import_leaddbs_neurons(self, hemis_idx):
 
-        """ Import Lead-DBS settings for axon models from oss-dbs_parameters.mat
+        """ Import Lead-DBS description for axon models from oss-dbs_parameters.mat
+
+        Parameters
+        ----------
+        hemis_idx: int, hemisphere ID (0 - right, 1 - left)
 
         """
 
@@ -103,7 +104,7 @@ class AxonModels:
             self.axon_model = 'McNeal1976'
 
         #HEMIS_OUTPUT_PATHS = ["Results_rh", "Results_lh"]
-        #output_folder = os.path.join(os.environ['STIMDIR'], HEMIS_OUTPUT_PATHS[index_side])
+        #output_folder = os.path.join(os.environ['STIMDIR'], HEMIS_OUTPUT_PATHS[hemis_idx])
 
 
         # connectome name within Lead-DBS (e.g. 'Multi-Tract: PetersenLUIC')
@@ -119,7 +120,7 @@ class AxonModels:
         if 'Multi-Tract' in self.connectome_name:
             # this file is pre-filtered connectome assembled in one file in Lead-DBS
             self.pathway_mat_file = [
-                os.environ['STIMDIR'] + '/' + self.connectome_name.rsplit(' ', 1)[1] + '/data' + str(index_side + 1) + '.mat']
+                os.environ['STIMDIR'] + '/' + self.connectome_name.rsplit(' ', 1)[1] + '/data' + str(hemis_idx + 1) + '.mat']
 
             self.projection_names = []
             for i in range(len(file_inp['settings']['connectomeTractNames'][0])):
@@ -132,14 +133,14 @@ class AxonModels:
         else:
             self.projection_names = ['default']
             # this file is pre-filtered connectome in Lead-DBS
-            self.pathway_mat_file = [os.environ['STIMDIR'] + '/' + self.connectome_name + '/data' + str(index_side + 1) + '.mat']
+            self.pathway_mat_file = [os.environ['STIMDIR'] + '/' + self.connectome_name + '/data' + str(hemis_idx + 1) + '.mat']
 
 
         # check which contacts are active to seed axons close to them
         # for StimSets check across all of them
         stimSets = bool(file_inp['settings']['stimSetMode'][0][0])  # if StimSets are used, create a dummy ampl_vector
         if stimSets:
-            stim_protocols = np.genfromtxt(os.environ['STIMDIR'] + '/Current_protocols_' + str(index_side) + '.csv',
+            stim_protocols = np.genfromtxt(os.environ['STIMDIR'] + '/Current_protocols_' + str(hemis_idx) + '.csv',
                                            dtype=float, delimiter=',', names=True)
 
             total_contacts = len(list(stim_protocols[0]))
@@ -154,12 +155,12 @@ class AxonModels:
                     if not math.isnan(protocols_array[j, i]):
                         ampl_vector[i] = 1.0  # you do not need a value, just substitute NaN
         else:
-            ampl_vector = list(file_inp['settings']['Phi_vector'][:, index_side])
+            ampl_vector = list(file_inp['settings']['Phi_vector'][:, hemis_idx])
 
         self.centering_coordinates = []
         for i in range(len(ampl_vector)):
             if not (math.isnan(ampl_vector[i])):
-                a_ref = file_inp['settings']['contactLocation'][index_side][0]
+                a_ref = file_inp['settings']['contactLocation'][hemis_idx][0]
                 b = file_inp[a_ref]
                 self.centering_coordinates.append(b[:, i])
 
@@ -173,6 +174,10 @@ class AxonModels:
         self.axon_diams_all = list(file_inp['settings']['fiberDiameter'][:][0][:])
 
     def _import_custom_neurons(self):
+
+        """ Import custom description for axon models from a .json dictionary
+
+        """
 
         ## Example json input
 
@@ -203,6 +208,7 @@ class AxonModels:
         # strip extention if provided
         if self.combined_h5_file[-3:] == '.h5':
             self.combined_h5_file = self.combined_h5_file[:-3]
+        self.output_directory = self.combined_h5_file.rsplit('/', 1)[0]
 
         if "projection_names" in custom_dict:
             self.projection_names = custom_dict['projection_names']
@@ -217,7 +223,7 @@ class AxonModels:
 
         """ Seed axons iterating over all pathways
 
-         """
+        """
 
         # within a projection (pathway), number of nodes of Ranvier per axon is fixed
         n_Ranviers_per_projection_all = np.zeros(len(self.axon_lengths_all), int)
@@ -254,6 +260,15 @@ class AxonModels:
         self._save_axon_parameters_in_json(n_Ranviers_per_projection)
 
     def _save_axon_parameters_in_json(self, n_Ranviers_per_projection):
+
+        """ Save minimally required axon description in a .json file
+
+        Parameters
+        ----------
+        n_Ranviers_per_projection: list, number of nodes of Ranvier for axons of each pathway (one entry per pathway)
+
+        """
+
         # dictionary to store axon parameters
         axon_dict = {
             'n_Ranvier': n_Ranviers_per_projection,
@@ -270,6 +285,27 @@ class AxonModels:
         #                delimiter=" ")
 
     def deploy_axons_fibers(self, pathway_file, projection_name, axon_morphology, multiple_projections_per_file=False):
+
+        """ Convert streamlines (fibers) to axons and store in OSS-DBS supported format
+
+        Parameters
+        ----------
+        pathway_file,: str, full path to .mat file containing fiber descriptions (Lead-DBS format)
+        projection_name: str, pathway name
+        axon_morphology: dict, geometric description of a single axon, see get_axon_morphology
+        multiple_projections_per_file: bool, optional, flag if pathway_file contains multiple pathways
+
+        Returns
+        -------
+        int, number of nodes of Ranvier for axons in this pathway. Returns 0 if failed to see (fiber is too short)
+
+        Notes
+        -----
+        Pathways are stored as separate groups in the specified .h5 file. Axons are stored in separate 2-D datasets.
+        For Paraview visualization, use axon_array_2D_<projection_name>
+        For Lead-DBS visualization, use <projection_name>_axons.mat
+
+        """
 
         # fallback for non hdf5, TBD!
         try:
@@ -338,18 +374,28 @@ class AxonModels:
 
             glob_ind = glob_ind + axon_morphology['n_total']
 
-
         np.savetxt(self.output_directory + '/' + 'axon_array_2D_' + projection_name + '.csv', axon_array_2D,
                    delimiter=" ")
 
-        #hf.create_dataset(projection_name, data=axon_array_2D)
         hf.close()
 
         mdic = {"fibers": axon_array_2D, "ea_fibformat": "1.0"}
         savemat(self.combined_h5_file + '_' + projection_name + "_axons.mat", mdic)
 
         return axon_morphology['n_Ranviers']
+
 def convert_fibers_to_streamlines(fibers):
+    """ Convert Lead-DBS fibers to Nibabel streamlines
+
+    Parameters
+    ----------
+    fibers,: fiber descriptions (Lead-DBS format)
+
+    Returns
+    -------
+    list, streamlines stored as ArraySequence(), i.e. list that describes each fiber in a sublist
+
+    """
 
     from nibabel_SequenceArray import ArraySequence
     streamlines = ArraySequence()
@@ -357,12 +403,11 @@ def convert_fibers_to_streamlines(fibers):
     # yes, indexing starts with one in those .mat files
     N_streamlines = int(fibers[3, :].max())
 
-    # convert fibers to streamlines
     k = 0
     i_previous = 0
     for i in range(N_streamlines):
         loc_counter = 0
-        while ((i + 1) == fibers[3, k]):  # this is very slow, you need to extract a pack by np.count?
+        while ((i + 1) == fibers[3, k]):  # this is not optimal, you need to extract a pack by np.count?
             k += 1
             loc_counter += 1
             if (k == fibers[3, :].shape[0]):
@@ -375,6 +420,20 @@ def convert_fibers_to_streamlines(fibers):
     return streamlines
 
 def get_axon_morphology(axon_model, axon_diam, axon_length):
+
+    """ Get geometric description of a single axon
+
+    Parameters
+    ----------
+     axon_model: str, NEURON model ('McIntyre2002', 'McIntyre2002_ds' (downsampled), 'McNeal1976' (classic McNeal's))
+     axon_diam: diameter in micrometers for all fibers in the pathway
+     axon_length: axon lengths in mm for all fibers in the pathway
+
+    Returns
+    -------
+    dict
+
+    """
 
     axon_morphology = {
         'axon_model': axon_model,
@@ -437,11 +496,30 @@ def get_axon_morphology(axon_model, axon_diam, axon_length):
     return axon_morphology
 
 
-def normalized(a, axis=-1, order=2):
-    l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
+def normalized(vector, axis=-1, order=2):
+    """ Get L2 norm of a vector
+
+    """
+
+    l2 = np.atleast_1d(np.linalg.norm(vector, order, axis))
     l2[l2 == 0] = 1
-    return a / np.expand_dims(l2, axis)
+    return vector / np.expand_dims(l2, axis)
+
 def place_axons_on_streamlines(streamlines_resampled, axon_morphology, centering_coordinates):
+
+    """ Allocate axons on the streamlines with seeding points defined by centering_coordinates
+
+    Parameters
+    ----------
+     streamlines_resampled: list, streamlines sampled by nodes of Ranvier, stored as ArraySequence()
+     axon_morphology: dict, geometric description of a single axon, see get_axon_morphology
+     centering_coordinates: list of lists, 3-D coordinates used to center axons on fibers (e.g. active contacts)
+
+    Returns
+    -------
+    list, axons (truncated streamlines), stored as ArraySequence()
+
+    """
 
     from scipy import spatial
     axons_ROI_centered = ArraySequence()
@@ -496,6 +574,19 @@ def place_axons_on_streamlines(streamlines_resampled, axon_morphology, centering
 
 def resample_fibers_to_Ranviers(streamlines, axon_morphology):
 
+    """ Get streamlines resampled by nodes of Ranvier for a specific axonal morphology
+
+    Parameters
+    ----------
+     streamlines: list, arbitrary sampled streamlines, stored as ArraySequence()
+     axon_morphology: dict, geometric description of a single axon, see get_axon_morphology
+
+    Returns
+    -------
+    list, resampled streamlines, stored as ArraySequence()
+
+    """
+
     # resampling to nodes of Ranvier for arbitrary fiber length
     from Arbitrary_streamline_to_Ranviers import length_fiber
     lengths_streamlines_filtered = list(length_fiber(streamlines))
@@ -519,6 +610,18 @@ def resample_fibers_to_Ranviers(streamlines, axon_morphology):
     return streamlines_resampled, excluded_streamlines
 
 def get_local_compartment_coords(axon_morphology):
+
+    """ Get 1-D coordinates of internodal compartments relative to the node at 0.0
+
+    Parameters
+    ----------
+     axon_morphology: dict, geometric description of a single axon, see get_axon_morphology
+
+    Returns
+    -------
+    Nx1 numpy.ndarray
+
+    """
 
     loc_coords = np.zeros(axon_morphology['n_comp'] - 1, float)
     loc_pos = 0.0  # just for clarity
@@ -581,7 +684,7 @@ def get_local_compartment_coords(axon_morphology):
 
 if __name__ == '__main__':
 
-    """ Convert fibers defined in Lead-DBS to axon models for OSS-DBS simulations
+    """ Call to allocate axon model for OSS-DBS simulations
 
     Parameters
     ----------
