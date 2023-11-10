@@ -46,6 +46,8 @@ if isempty(menuprobe)
 
     uimenu(f,'Label','Run THOMAS Segmentation for T1w','Callback',{@(~, ~) ea_runthomas_gui(handles)});
 
+    uimenu(f,'Label','Run DBSegment for T1w','Callback',{@(~, ~) ea_dbsegment_menu(handles)});
+
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
 
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
