@@ -80,7 +80,7 @@ for image_idx = 1:length(niiFiles)
         ea_cprintf('CmdWinWarnings', 'There was a problem while loading the .nii file, please ensure this is a correct .nii image:\n%s\n', niiFiles{cnt})
 
         % delete files that have failed to load from the list
-        niiFiles(cnt) = [];       
+        niiFiles(cnt) = [];
         jsonFiles(cnt) = [];
 
         % also delete them from the preset
@@ -112,7 +112,7 @@ if N_fnames == 0
     return;
 end
 
-anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
+anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw', 'WMn'};  % a list of all supported modalities
 func_dwi_modalities = {'bold', 'sbref', 'dwi'};
 postop_modalities = {'CT', 'MRI'};          % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
 postop_acq_tags = {'ax', 'cor', 'sag'};     % a list of required acq-tags for the postop MRI images
@@ -924,7 +924,7 @@ function update_crosschairs(uiapp, dim, sliceUpdated)
     corSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor'); % y, dim(2)
     sagSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag'); % x, dim(1)
     axiSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_axi'); % z, dim(3)
-    
+
     if ~exist('sliceUpdated', 'var')
         sliceUpdated.cor = 0;
         sliceUpdated.sag = 0;

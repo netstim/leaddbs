@@ -44,7 +44,7 @@ if isempty(menuprobe)
     uimenu(normf,'Label','Flatten fiducial helpers for selected patients','Callback',{@ea_flattenfiducialhelpers,handles})
     uimenu(normf,'Label','Delete fiducial helpers for selected patients','Callback',{@ea_deletefiducialhelpers,handles})
 
-    uimenu(f,'Label','Run THOMAS Segmentation for T1w','Callback',{@(~, ~) ea_runthomas_gui(handles)});
+    uimenu(f,'Label','Run THOMAS for T1w/WMn/FGATIR','Callback',{@(~, ~) ea_thomas_menu(handles)});
 
     uimenu(f,'Label','Run DBSegment for T1w','Callback',{@(~, ~) ea_dbsegment_menu(handles)});
 
