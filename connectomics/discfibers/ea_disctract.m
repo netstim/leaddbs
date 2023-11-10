@@ -98,6 +98,8 @@ classdef ea_disctract < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
         kIter = 1;
+        roiintersectdata = {}; %roi, usually efield with which you can calculate fiber intersection 
+        roithresh = 200; %threshold above which efield metrics are considered
         % misc
         runwhite = 0; % flag to calculate connected tracts instead of stat tracts
         SigmoidTransform = 0;  % flag to transform E-field to Sigmoids
@@ -1696,38 +1698,34 @@ classdef ea_disctract < handle
 
         function activate_tractset(obj)
             if ~isempty(obj.activateby)
-                for entry=1:length(obj.activateby)
-                    thisentry=obj.activateby{entry};
-                    weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
-                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
-                    if strfind(thisentry,'cleartune')
-                        thisentry=strrep(thisentry,'cleartune','');
-                        k=strfind(thisentry,'_');
-                        ctentry=str2double(thisentry(1:k-1));
-                        ctside=str2double(thisentry(k+1:end));
-                        weights{ctside}=weights{ctside}+...
-                            full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                    elseif strfind(thisentry,'results')
-                        thisentry=strrep(thisentry,'results','');
-                        k=strfind(thisentry,'_');
-                        ctentry=str2double(thisentry(1:k-1));
-                        ctside=str2double(thisentry(k+1:end));
-                        weights{ctside}=weights{ctside}+...
-                            full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                    else % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
-                        % ignore for now
+                if strcmp(obj.activateby,'roiintersect')
+                    if ~isempty(obj.roiintersectdata) % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
+                        calculateIntersection(obj);
                     end
-                end
-
-                for side=1:size(obj.drawobject,2)
-                    if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
-                        weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
-                    end
-                    for entry=1:size(obj.drawobject,1)
-                        dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
-                        dweights=mat2cell(dweights,1,ones(1,length(dweights)));
-                        if ~isempty(dweights)
-                            [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                else
+                    for entry=1:length(obj.activateby)
+                        thisentry=obj.activateby{entry};
+                        weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                            ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
+                        if strfind(thisentry,'results')
+                            thisentry=strrep(thisentry,'results','');
+                            k=strfind(thisentry,'_');
+                            ctentry=str2double(thisentry(1:k-1));
+                            ctside=str2double(thisentry(k+1:end));
+                            weights{ctside}=weights{ctside}+...
+                                full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                            for side=1:size(obj.drawobject,2)
+                                if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
+                                    weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
+                                end
+                                for entry=1:size(obj.drawobject,1)
+                                    dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
+                                    dweights=mat2cell(dweights,1,ones(1,length(dweights)));
+                                    if ~isempty(dweights)
+                                        [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                                    end
+                                end
+                            end
                         end
                     end
                 end
@@ -1767,5 +1765,70 @@ end
 
 
 function activatebychange(~,event)
-activate_tractset();
+    activate_tractset();
+end
+function calculateIntersection(obj)
+for nroi = 1:length(obj.roiintersectdata)
+    vat = ea_load_nii(obj.roiintersectdata{nroi}); %use only one, otherwise drawing doesn't make sense
+    thresh = obj.roithresh;
+    vatInd = find(abs(vat.img(:))>thresh);
+    [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
+    vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
+    for i=1:size(obj.drawobject,1)
+        for side = 1:size(obj.drawobject,2)
+            vals = {};
+            valsPeak = {};
+            connected = [];
+            trimmedFiberInd = [];
+            resultFibers = obj.fiberdrawn.fibcell{i,side};
+            if isempty(resultFibers)
+                continue
+            end
+            fibers=ea_fibcell2fibmat(resultFibers);
+            filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
+            if ~any(filter)
+                continue
+            end
+            trimmedFiber = fibers(filter,:);
+
+            % Map mm connectome fibers into VAT voxel space
+            [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
+            fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
+
+            % Remove outliers
+            fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
+            trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
+            connected = cellfun(@(fib) any(ismember(fib, vatInd)), fibVoxInd);
+            vals = cellfun(@(fib) vat.img(intersect(fib, vatInd)), fibVoxInd(connected), 'Uni', 0);
+            valsPeak{1}(trimmedFiberInd(connected)) = cellfun(@mean, vals);
+            wts = cell2mat(valsPeak)';
+            if length(wts) ~= size(obj.drawobject{i,side},1)
+                diff = length(wts) - size(obj.drawobject{i,side},1);
+                if diff < 0
+                    wts = [wts;zeros(abs(diff),1)];
+                end
+            end
+            normwts = normalize(wts,'range').^2;
+            normwts =  mat2cell(normwts,ones(size(normwts,1),1));
+            if ~isempty(normwts)
+                [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
+                disp(['Changed alpha of tract',num2str(i)]);
+                normwts = {};
+            end
+        end
+    end
+end
+end
+function fibers=ea_fibcell2fibmat(fibers)
+[idx,~]=cellfun(@size,fibers);
+fibers=cell2mat(fibers);
+idxv=zeros(size(fibers,1),1);
+lid=1; cnt=1;
+for id=idx'
+
+    idxv(lid:lid+id-1)=cnt;
+    lid=lid+id;
+    cnt=cnt+1;
+end
+fibers=[fibers,idxv];
 end
