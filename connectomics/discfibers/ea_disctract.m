@@ -1808,7 +1808,8 @@ for nroi = 1:length(obj.roiintersectdata)
                     wts = [wts;zeros(abs(diff),1)];
                 end
             end
-            normwts = normalize(wts,'range').^2;
+            normwts = normalize(ea_contrast(wts,10,0),'range');
+            
             normwts =  mat2cell(normwts,ones(size(normwts,1),1));
             if ~isempty(normwts)
                 [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
