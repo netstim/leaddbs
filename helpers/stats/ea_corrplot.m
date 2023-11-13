@@ -307,7 +307,9 @@ else
     if all(signCheck)
         pstr = [prefix, ' < 1e-16']; % Show p < 1e-16
     else
-        pstr = [prefix, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+        % pstr = [prefix, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+        pstr = [prefix, ' = ', num2str(p, '%.3e')]; % Show p = 1.XXXe-X
+        pstr = regexprep(pstr, 'e([+-]?)0', 'e$1');
     end
 end
 
