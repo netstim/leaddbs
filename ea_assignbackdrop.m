@@ -201,6 +201,9 @@ else
     switch options.subj.postopModality
         case 'MRI'
             if  ~isempty(scrfSuffix) && ~isfile(options.subj.postopAnat.ax_MRI.normScrf)
+                if ~isfile(options.subj.postopAnat.ax_MRI.coregScrf)
+                    ea_genscrfimages(options.subj, 'coreg');
+                end
                 ea_genscrfimages(options.subj, 'norm');
             end
             Vtra = spm_vol(options.subj.postopAnat.ax_MRI.(['norm', scrfSuffix]));
@@ -216,6 +219,9 @@ else
             end
         case 'CT'
             if  ~isempty(scrfSuffix) && ~isfile(options.subj.postopAnat.CT.normScrf)
+                if ~isfile(options.subj.postopAnat.CT.coregScrf)
+                    ea_genscrfimages(options.subj, 'coreg');
+                end
                 ea_genscrfimages(options.subj, 'norm');
             end
 
