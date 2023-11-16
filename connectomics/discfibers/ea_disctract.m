@@ -1716,7 +1716,7 @@ classdef ea_disctract < handle
                                 full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
                             for side=1:size(obj.drawobject,2)
                                 if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
-                                    weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
+                                    weights{side}=ea_minmax(weights{side}); %ea_contrast(weights{side},0.5,-0.5))*0.5; % enhance constrast a bit
                                 end
                                 for entry=1:size(obj.drawobject,1)
                                     dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
