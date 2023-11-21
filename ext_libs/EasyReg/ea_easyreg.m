@@ -9,17 +9,16 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
     source_seg = [source_image(1:end-4) '_synthseg.nii'];
     fs_fwd_field = [source_image(1:end-4) '_fs_fwd_field.nii'];
 
-    % Check Conda installation
-    if ~ea_conda.is_installed
-        ea_conda.install;
-    end
-
     % Check Conda environment
     condaenv = ea_conda_env('EasyReg');
     if ~condaenv.is_created
-        ea_cprintf('CmdWinWarnings', 'Initializing easyreg environment...\n')
+        ea_cprintf('CmdWinWarnings', 'Initializing EasyReg conda environment...\n')
         condaenv.create;
-        ea_cprintf('CmdWinWarnings', 'easyreg conda environment initialized.\n')
+        ea_cprintf('CmdWinWarnings', 'EasyReg conda environment initialized.\n')
+    elseif ~condaenv.is_up_to_date
+        ea_cprintf('CmdWinWarnings', 'Updating EasyReg conda environment...\n')
+        condaenv.update;
+        ea_cprintf('CmdWinWarnings', 'EasyReg conda environment initialized.\n')
     end
 
     % Run EasyReg
@@ -44,7 +43,7 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
 
     % Set-up Custom Slicer
     s4l = ea_slicer_for_lead;
-    if ~s4l.is_installed_and_up_to_date()
+    if ~s4l.is_up_to_date()
         s4l.install();
     end
 

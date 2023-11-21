@@ -327,9 +327,6 @@ switch cmd
     case python_envs
         py_env = ea_conda_env(cmd);
         if ~checkonly
-            if ~ea_conda.is_installed
-                ea_conda.install;
-            end
             py_env.force_create;
         end
         success = py_env.is_created;

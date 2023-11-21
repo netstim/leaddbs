@@ -21,7 +21,6 @@ level1centerRelative = elspec.contact_length + elspec.contact_spacing;
 level2centerRelative = (elspec.contact_length + elspec.contact_spacing) * 2;
 markercenterRelative = elspec.markerpos - elspec.tip_length*~elspec.tipiscontact - elspec.contact_length/2;
 load(elspec.matfname);
-
 %% load CTs
 %% Recalculate trajvector to optimize position at center of artifacts
 % this part recalculates the exact lead position by calculating the
@@ -36,10 +35,10 @@ samplingvector_mm = vertcat([head_mm(1):unitvector_mm(1)./2:head_mm(1)+ samplele
     ones(1, samplelength*2+1));
 samplingvector_vx = round(tmat_vx2mm\samplingvector_mm);
 
-newcentervector_vx = nan(size(samplingvector_vx));
-% for each slice calculate center of mass, if more than one
+%% for each slice calculate center of mass, if more than one
 % center of mass is found, choose the one nearest to the
 % original lead position
+newcentervector_vx = nan(size(samplingvector_vx));
 for k = 1:size(samplingvector_vx,2)
     [tmp,bb]=ea_sample_slice(ct,'tra',extractradius,'vox',{samplingvector_vx(1:3,k)'},1);
     tmp = tmp > 2000;
@@ -59,11 +58,38 @@ for k = 1:size(samplingvector_vx,2)
         newcentervector_vx(:,k) = nan;
     end
 end
-
 newcentervector_mm = tmat_vx2mm * newcentervector_vx;
+
+%% repeat analysis with HU threshold >1000 in case lead was not detected
+if numel(find(isnan(newcentervector_mm))) > 0.5 * numel(newcentervector_mm)
+    warning('Something went wrong with interpolation of the Lead; Checking again with a threshold of 1000HU')
+    newcentervector_vx = nan(size(samplingvector_vx));
+    for k = 1:size(samplingvector_vx,2)
+        [tmp,bb]=ea_sample_slice(ct,'tra',extractradius,'vox',{samplingvector_vx(1:3,k)'},1);
+        tmp = tmp > 1000;
+        tmpcent = regionprops(tmp,'Centroid');
+        if numel(tmpcent) == 1
+            tmpcent = round(tmpcent.Centroid);
+            tmpcent = [bb{1}(tmpcent(1)),bb{2}(tmpcent(2)),samplingvector_vx(3,k),1]';
+            newcentervector_vx(:,k) = tmpcent;
+        elseif numel(tmpcent) > 1
+            [~,tmpind] = min(sum(abs(vertcat(tmpcent.Centroid) - [(size(tmp,1)+1)/2 (size(tmp,1)+1)/2]),2));
+            tmpcent = tmpcent(tmpind);
+            clear tmpind
+            tmpcent = round(tmpcent.Centroid);
+            tmpcent = [bb{1}(tmpcent(1)),bb{2}(tmpcent(2)),samplingvector_vx(3,k),1]';
+            newcentervector_vx(:,k) = tmpcent;
+        elseif numel(tmpcent) == 0
+            newcentervector_vx(:,k) = nan;
+        end
+    end
+    newcentervector_mm = tmat_vx2mm * newcentervector_vx;
+end
+
 if numel(find(isnan(newcentervector_mm))) > 0.5 * numel(newcentervector_mm)
     error('Something went wrong with interpolation of the Lead - maybe wrong sForm/qForm was chosen?')
 end
+
 % fit linear model to the centers of mass and recalculate head
 % and unitvector
 new = [0:.5:samplelength];
@@ -302,22 +328,7 @@ end
 %             scatter3(marker_mm(1)+COG_dir(1),marker_mm(2)+COG_dir(2),marker_mm(3)+COG_dir(3),'b')
 %             caxis([-500 3500])
 %             close
-%% Slice parralel for visualization
-% a 10mm slice with .1mm resolution is sampled vertically
-% through the lead and through the marker center and oriented
-% in the direction of y-vec and unitvector for later
-% visualization
-extract_width = 10; % in mm
-samplingres = .1;
-Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
-Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
-Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
-finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
-finalslice = finalslice';
-finalslice = flipdim(finalslice,2);
-% if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
-%     finalslice = flipdim(finalslice,2);
-% end
+
 %% darkstar method
 checkslices = [-2:0.5:2]; % check neighboring slices for marker
 
@@ -429,7 +440,27 @@ dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
 dirnew_valleys = round(rad2deg(dirnew_angles) +1);
 dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
 
+%% Slice parralel for visualization
+% a 10mm slice with .1mm resolution is sampled vertically
+% through the lead and through the marker center and oriented
+% in the direction of y-vec and unitvector for later
+% visualization
+[M,~,~,~] = ea_diode_rollpitchyaw(rollnew,pitch,yaw);
+yvec_mm = M * [0;1;0];
+xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
 
+
+extract_width = 10; % in mm
+samplingres = .1;
+Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
+Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
+Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
+finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
+finalslice = finalslice';
+finalslice = flipdim(finalslice,2);
+% if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
+%     finalslice = flipdim(finalslice,2);
+% end
 
 
 %% final figure
@@ -565,6 +596,7 @@ text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,
 text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
 text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
 
+%% Intensity Profile Marker
 ax2 = subplot(3,3,2);
 hold on
 title(ax2,'Intensity Profile','FontWeight','normal')
@@ -575,11 +607,11 @@ scatter(ax2,rad2deg(angle(finalpeak(side))), intensity(finalpeak(side)),'g','fil
 scatter(ax2,rad2deg(angle(valley)), intensity(valley),'r');
 set(ax2,'yticklabel',{[]})
 
+%% Sagittal View
 ax3 = subplot(3,3,3);
 hold on
 title(ax3,'Sagittal View','FontWeight','bold')
-
-imagesc(finalslice)
+imagesc(ax3,finalslice)
 axis equal
 axis off
 caxis([1500 3000])

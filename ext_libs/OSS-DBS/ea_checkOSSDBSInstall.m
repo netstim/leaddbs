@@ -35,15 +35,16 @@ if isunix && ~ismac % Use local built image for Linux to solve permission issue
     cd(currentPath);
 end
 
-% Check conda installation
-if ~ea_conda.is_installed
-    ea_conda.install;
-end
-
 % Check OSS-DBS_Dependency installation
 condaenv = ea_conda_env('OSS-DBS');
 if ~condaenv.is_created
+    ea_cprintf('CmdWinWarnings', 'Initializing OSS-DBS conda environment...\n')
     condaenv.create;
+    ea_cprintf('CmdWinWarnings', 'OSS-DBS conda environment initialized.\n')
+elseif ~condaenv.is_up_to_date
+    ea_cprintf('CmdWinWarnings', 'Updating OSS-DBS conda environment...\n')
+    condaenv.update;
+    ea_cprintf('CmdWinWarnings', 'OSS-DBS conda environment initialized.\n')
 end
 
 fprintf('\n\nOSS-DBS dependencies installed under: %s\n', condaenv.path);

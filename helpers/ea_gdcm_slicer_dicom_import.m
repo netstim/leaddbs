@@ -19,7 +19,7 @@ command = [' --no-splash'...
        ' --python-script "' script_to_run '"'];
 
 s4l = ea_slicer_for_lead;
-if ~s4l.is_installed_and_up_to_date()
+if ~s4l.is_up_to_date()
     s4l.install();
 end
 

@@ -1,9 +1,9 @@
-function ea_runthomas(inputImage, imageType)
+function ea_thomas(inputImage, imageType)
 % Wrapper function to run THOMAS segmentation
 
 arguments
     inputImage {mustBeFile}
-    imageType {mustBeMember(imageType, ["t1", 'wmn'])} = "t1"
+    imageType {mustBeMember(imageType, ["t1", 'wmn', 'fgatir'])} = "t1"
 end
 
 % Check docker image
@@ -15,7 +15,7 @@ inputImage = GetFullPath(inputImage);
 [imageFolder, imageName, imageExt] = fileparts(inputImage);
 imageName = [imageName, imageExt];
 
-if imageType == "t1"
+if lower(imageType) == "t1"
     typeParam = '-t1';
 else
     typeParam = '';
@@ -88,7 +88,7 @@ ea_genatlastable(atlases, imageFolder, options);
 
 
 function atlases = genAtlasesStruct(nucleus)
-% Generate template atlases struct 
+% Generate template atlases struct
 if isfile([ea_getearoot, 'ext_libs', 'THOMAS', 'atlas_index.mat'])
     load([ea_getearoot, 'ext_libs', 'THOMAS', 'atlas_index.mat'], 'atlases');
 else

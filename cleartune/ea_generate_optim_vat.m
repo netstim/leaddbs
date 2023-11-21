@@ -1,4 +1,4 @@
-function [Efields,S]=ea_generate_optim_vat(varargin)
+function [Efields,S,Vvate]=ea_generate_optim_vat(varargin)
 
 patselect = varargin{1};
 ampselect = varargin{2};

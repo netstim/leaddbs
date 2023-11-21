@@ -2,8 +2,10 @@ name: ossdbs
 
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
-  - pyqt=5
   - h5py
+  - pyqt=5
+
+variables:
+  env_version: 20231108

@@ -1,5 +1,9 @@
-function ea_fastsurfer_seg(input, subjID, outputFolder)
+function ea_fastsurfer_seg(input, subjID, outputFolder, updateScript)
 % Wrapper to run FastSurfer seg_only pipeline
+
+if ~exist('updateScript', 'var')
+    updateScript = false; % Update FastSurfer script or not
+end
 
 input = GetFullPath(input);
 
@@ -27,34 +31,34 @@ elseif isfile(input) % Input is a NIfTI file
     end
 end
 
-fastsurferFolder = fullfile(ea_getearoot, 'ext_libs', 'fastsurfer');
-
-% Check Conda installation
-if ~ea_conda.is_installed
-    ea_conda.install;
-end
+fastsurferFolder = fullfile(ea_prefsdir, 'fastsurfer');
 
 % Check Conda environment
 condaenv = ea_conda_env('FastSurfer');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer reconsurf environment...\n')
+    ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer conda environment...\n')
     condaenv.create;
+    ea_cprintf('CmdWinWarnings', 'FastSurfer conda environment initialized.\n')
+elseif ~condaenv.is_up_to_date
+    ea_cprintf('CmdWinWarnings', 'Updating FastSurfer conda environment...\n')
+    condaenv.update;
     ea_cprintf('CmdWinWarnings', 'FastSurfer conda environment initialized.\n')
 end
 
 % Check FastSurfer
-runner = fullfile(fastsurferFolder, 'upstream', 'run_fastsurfer.sh');
-if ~isfile(runner)
+runner = fullfile(fastsurferFolder, 'run_fastsurfer.sh');
+if ~isfile(runner) || updateScript
     ea_cprintf('CmdWinWarnings', 'Downloading FastSurfer...\n')
-    downloadFile = fullfile(fastsurferFolder, 'FastSurfer.zip');
+    ea_delete(fastsurferFolder);
+    downloadFile = fullfile(ea_prefsdir, 'FastSurfer.zip');
     websave(downloadFile, 'https://github.com/Deep-MI/FastSurfer/archive/refs/heads/stable.zip');
-    unzip(downloadFile, fastsurferFolder);
-    movefile(fullfile(fastsurferFolder, 'FastSurfer-stable'), fullfile(fastsurferFolder, 'upstream'));
-    delete(downloadFile);
+    unzip(downloadFile, ea_prefsdir);
+    movefile(fullfile(ea_prefsdir, 'FastSurfer-stable'), fastsurferFolder);
+    ea_delete(downloadFile);
     ea_cprintf('CmdWinWarnings', 'FastSurfer downloaded.\n')
 end
 
-segcmd = ['export FASTSURFER_HOME=', fullfile(fastsurferFolder, 'upstream'), ';', ...
+segcmd = ['export FASTSURFER_HOME=', fastsurferFolder, ';', ...
     'bash ', runner, ' --sid ', subjID, ' --sd ', outputFolder, ' --t1 ', t1, ...
     ' --vox_size min --seg_only --viewagg_device ''cpu'''];
 

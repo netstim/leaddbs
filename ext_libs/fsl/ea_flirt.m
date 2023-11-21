@@ -25,7 +25,7 @@ end
 
 fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 
-umachine = load([ea_gethome, '.ea_prefs.mat']);
+umachine = load(ea_prefspath('mat'));
 normsettings = umachine.machine.normsettings;
 % Prepare bet image for flirt
 if normsettings.fsl_skullstrip % skullstripping is on

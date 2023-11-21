@@ -1,17 +1,19 @@
 classdef ea_conda_env
 
     properties
-        yml;
         name;
+        yml;
         path;
     end
 
     properties (Dependent)
         is_created;
+        installed_version;
+        latest_version;
     end
 
     properties (Access = private, Constant)
-        conda_path = ea_conda.bin_file_path;
+        mamba_path = ea_conda.mamba_path;
     end
 
     methods
@@ -38,21 +40,60 @@ classdef ea_conda_env
             b = isfolder(obj.path);
         end
 
+        function ver = get.installed_version(obj)
+            try
+                state = loadjson(fullfile(obj.path, 'conda-meta', 'state'));
+                ver = num2str(state.env_vars.env_version);
+            catch
+                ver = '';
+            end
+        end
+
+        function ver = get.latest_version(obj)
+            yaml = readyaml(obj.yml);
+            try
+                ver = num2str(yaml.variables.env_version);
+            catch
+                ver = '';
+                ea_cprintf('CmdWinWarnings', 'Missing version tag in env yaml definition.\n');
+            end
+        end
+
+        function up_to_date = is_up_to_date(obj)
+            up_to_date = strcmp(obj.installed_version, obj.latest_version);
+        end
+
         function force_create(obj)
             obj.remove;
             obj.create;
         end
 
+        function update(obj)
+            obj.force_create;
+        end
+
         function remove(obj)
-            system([ea_conda_env.conda_path ' env remove --name ' obj.name]);
+            system([obj.mamba_path ' env remove --name ' obj.name]);
         end
 
         function create(obj)
+            if isfolder(obj.path)
+                ea_cprintf('CmdWinErrors', 'Conda env installation folder already exists!\nConsider using ''update''.\n');
+                return;
+            end
+
+            if ~isfile(obj.mamba_path)
+                ea_cprintf('CmdWinWarnings', 'Conda installation not found! Installing now...\n');
+                ea_conda.install;
+            end
+
             disp(['Creating environment ' obj.name '...'])
-            [status, cmdout] = system([ea_conda_env.conda_path ' env create -f ' obj.yml]);
+            [status, cmdout] = system([obj.mamba_path ' env create -f ' obj.yml]);
             if status
                 fprintf('%s\n', strtrim(cmdout));
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)
+            else
+                system([obj.mamba_path ' clean -tpyq']);
             end
         end
 
