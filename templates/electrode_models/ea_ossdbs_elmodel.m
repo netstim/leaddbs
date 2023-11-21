@@ -12,4 +12,6 @@ elmodel = {'Medtronic 3389'
            'PINS Medical L302'
            'PINS Medical L303'
            'ELAINE Rat Electrode'
-           'FHC WU Rat Electrode'};
+           'FHC WU Rat Electrode'
+           'Medtronic B33005'
+           'Medtronic B33015'};

@@ -12,8 +12,8 @@ function ea_get_MNI_field_from_csv(options, Field_array_file, Activation_thresho
 
 % split to corrdinates and field
 Field_array = table2array(readtable(Field_array_file));
-Field_coords = Field_array(:,1:3);
-Field_vals = Field_array(:,4);
+Field_coords = Field_array(:,2:4);
+Field_vals = Field_array(:,8);  % others are the components
 
 % convert to native voxel space (will be as floating numbers)
 Field_vox_native = ea_mm2vox(Field_coords, options.subj.preopAnat.(options.subj.AnchorModality).coreg)';
@@ -78,7 +78,6 @@ E_field_interp(E_field_interp>10000.0) = 10000.0; % upperlimit files to 10000.
 Vvat.fname = [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat.img = E_field_interp; 
 ea_write_nii(Vvat);
-ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
 
 % also create VATs directly
 VTA_interp = E_field_interp;
@@ -88,7 +87,9 @@ Vvat2.descrip='oss-dbs - VAT';
 Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']);
+ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+
 
 
 
