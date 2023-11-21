@@ -139,11 +139,9 @@ for group=groups
                 switch obj.stattest
                     case 'Mean-Image'
                         thisvals=double(gval{side}(gpatsel,:)).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
-                        Nmap=ea_nansum(double(gval{side}(gpatsel,:)));
-                        nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
-                        thisvals(:,nanidx)=nan;
-                        vals{group,side} = ea_nanmean(thisvals)';
-                        vals{group,side}(vals{group,side} < obj.statimpthreshold) = NaN;
+                        Nmap=ea_nansum(double(gval{side}(gpatsel,:)));                        
+                        Nmap(Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)))=nan;
+                        vals{group,side} = sum(thisvals,1,"omitnan")'./Nmap';
                     case 'N-Image'
                         if ~ea_isbinary(I(gpatsel,side))
                             tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
