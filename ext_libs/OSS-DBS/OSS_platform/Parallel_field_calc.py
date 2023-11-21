@@ -186,7 +186,10 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             perm_encap=perm_encap*d["encap_scaling_perm"]
 
             cond_vector=[cond_default,cond_GM,cond_WM,cond_CSF,cond_encap]
+            #cond_vector=[0.2,0.2,0.2,0.2,0.2]
             perm_vector=[perm_default,perm_GM,perm_WM,perm_CSF,perm_encap]
+            logging.critical("Conductivities: ")
+            logging.critical("{}".format(' '.join(map(str, cond_vector))))
 
             Sim_setup=Simulation_setup(sine_freq,d["freq"],mesh,boundaries,subdomains,cond_vector,perm_vector,d["el_order"],anisotropy,d["current_control"],DTI_tensor,d["CPE_activ"],CPE_param,d["EQS_core"],d["external_grounding"])
 
