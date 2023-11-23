@@ -4,7 +4,7 @@ function ea_discfibers_showroi(obj)
 
 
 
-if ~obj.roivisible
+if ~obj.visualization.roivisible
     if ~isempty(obj.roidata)
         try
             for side=1:length(obj.roidata.nimage)
