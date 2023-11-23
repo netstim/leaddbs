@@ -1,10 +1,10 @@
-function ea_discfibers_showroi(obj)
+function ea_explorer_showroi(obj)
 % Function to draw seeds/roi/VTAs (from E-fields) in Lead-DBS
 % fiberfiltering explorer
 
 
 
-if ~obj.roivisible
+if ~obj.visualization.roivisible
     if ~isempty(obj.roidata)
         try
             for side=1:length(obj.roidata.nimage)

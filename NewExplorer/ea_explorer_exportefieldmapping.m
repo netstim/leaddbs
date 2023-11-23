@@ -1,4 +1,4 @@
-function [AllX,space]=ea_exportefieldmapping(vatlist,obj)
+function [AllX,space]=ea_explorer_exportefieldmapping(vatlist,obj)
 EFthresh = 50;
 templateresolution = .5;
 if size(vatlist,2)>1
@@ -43,7 +43,7 @@ for side=1:size(vatlist,2)
 end
 
 % now conform each VTA to space
-AllX=cell(size(vatlist,2),1);
+AllX=cell(1,size(vatlist,2));
 for vat=1:size(vatlist,1)
     for side=1:size(vatlist,2)
         copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);

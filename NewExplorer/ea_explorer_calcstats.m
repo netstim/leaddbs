@@ -12,13 +12,13 @@ end
 
 % fiber values can be sigmoid transformerd
 if obj.SigmoidTransform 
-    myvals_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+    myvals_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_explorer_method2methodid(obj)).fibsval;
     myvals = myvals_raw;  % initialize
     for side = 1:size(myvals_raw,2)
         myvals{1,side}(:,:) = ea_SigmoidFromEfield(myvals_raw{1,side}(:,:));
     end
 else
-    myvals = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+    myvals = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_explorer_method2methodid(obj)).fibsval, 'Uni', 0);
 end
 
 
@@ -167,10 +167,10 @@ for group=groups
             sumgmyvals=sum(gmyvals{side}(:,gpatsel),2);
         else
             switch obj.statmetric
-                case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}
+                case {'2-Sample T-Test','1-Sample T-Test','Wilcoxon Rank-Sum Test','Wilcoxon Signed-Rank Test'}
                     sumgmyvals=sum(gmyvals{side}(:,gpatsel),2);
-                case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'}
-                    if obj.SigmoidTransform == 1 && (strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak'))
+                case {'Correlations','Reverse T-Test','Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'}
+                    if obj.SigmoidTransform == 1 && (strcmp(ea_explorer_method2methodid(obj), 'spearman_5peak') || strcmp(ea_explorer_method2methodid(obj), 'spearman_peak'))
                         % 0.5 V / mm -> 0.5 probability 
                         sumgmyvals=sum((gmyvals{side}(:,gpatsel)>obj.efieldthreshold/1000.0),2);
                     else
@@ -182,7 +182,7 @@ for group=groups
         % to too many VTAs (connthreshold slider)
         if ~obj.runwhite
             gmyvals{side}(sumgmyvals<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=0;
-            if ~(ismember(obj.statmetric,{'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'})) % efields & reverse t-tests for binary vars cases
+            if ~(ismember(obj.statmetric,{'Correlations','Reverse T-Test'})) % efields & reverse t-tests for binary vars cases
                 % only in case of VTAs (given two-sample-t-test statistic) do we
                 % need to also exclude if tract is connected to too many VTAs:
                 gmyvals{side}(sumgmyvals>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=0;
@@ -208,7 +208,7 @@ for group=groups
             end
         else
             switch obj.statmetric
-                case 'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)' % two-sample t-tests / OSS-DBS
+                case '2-Sample T-Test' % two-sample t-tests / OSS-DBS
                     % check if covariates exist:
                     if exist('covars', 'var')
                         % they do:
@@ -274,7 +274,7 @@ for group=groups
                         
                         %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                     end
-                case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
+                case '1-Sample T-Test'
                     switch obj.corrtype
                         case 'T-Tests'
                             if exist('covars', 'var')
@@ -299,9 +299,8 @@ for group=groups
                                 ea_error('Wilcoxon Tests not yet implemented.')
                             end
 
-                    end
-                    
-                case 'Correlations / E-fields (Irmen 2020)'
+                    end                    
+                case 'Correlations'
                     if ismember(lower(obj.corrtype),{'pearson','spearman'})
                         conventionalcorr=1;
                     else
@@ -415,7 +414,7 @@ for group=groups
                         end
 
                     end
-                case 'Reverse T-Tests / E-Fields (binary vars)'
+                case 'Reverse T-Test'
                     nonempty=sum(gmyvals{side}(:,gpatsel),2)>0;
                     invals=gmyvals{side}(nonempty,gpatsel)';
                     if ~isempty(invals)

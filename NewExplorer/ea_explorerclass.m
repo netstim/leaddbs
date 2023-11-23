@@ -14,7 +14,7 @@ classdef ea_explorerclass < handle
         stimulationmodel = 'ElectricField'
         efieldmetric = 'Peak' % if statmetric == ‘Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
         SigmoidTransform = 0;  % flag to transform E-field to Sigmoids
-        statmetric = 'Correlations / E-fields (Irmen 2020)' % the following stat metric are available:
+        statmetric = 'Correlations' % the following stat metric are available:
         threshstrategy = 'Percentage Relative to Peak'; % can be 'Relative to Amount' or 'Fixed Amount'
         
         visualization        
@@ -567,7 +567,7 @@ classdef ea_explorerclass < handle
 
             if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
                 S = load(obj.ExternalModelFile);
-                if ~strcmp(ea_method2methodid(obj),S.fibsvalType)
+                if ~strcmp(ea_explorer_method2methodid(obj),S.fibsvalType)
                     waitfor(msgbox('Change the Model Setup! See terminal'));
                     disp('The loaded model uses: ')
                     disp(S.fibsvalType)
@@ -575,10 +575,10 @@ classdef ea_explorerclass < handle
 
                 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(S.fibsvalType).fibsval);
             else
-                fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+                fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_explorer_method2methodid(obj)).fibsval);
             end
 
-            %fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+            %fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_explorer_method2methodid(obj)).fibsval);
 
             % for nested LOO, store some statistics
             if obj.nestedLOO
@@ -1097,7 +1097,7 @@ classdef ea_explorerclass < handle
                 end
                 load(cfile, 'fibers', 'idx');
                 %disp('Conn. Type:')
-                %disp(ea_method2methodid(obj))
+                %disp(ea_explorer_method2methodid(obj))
                 obj.results.(ea_conn2connid(obj.connectome)).totalFibers = length(idx);
 
                 try
@@ -1230,7 +1230,7 @@ classdef ea_explorerclass < handle
             end
 
             % print number of significant displayed fibers per pathway (atm only for binary metrics)
-            if obj.multipath.multi_pathways == 1 && (isequal(ea_method2methodid(obj),'VAT_Ttest') || isequal(ea_method2methodid(obj),'PAM_Ttest') || isequal(ea_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS
+            if obj.multipath.multi_pathways == 1 && (isequal(ea_explorer_method2methodid(obj),'VAT_Ttest') || isequal(ea_explorer_method2methodid(obj),'PAM_Ttest') || isequal(ea_explorer_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS
                 %disp("number of drawn fibers per pathway")
                 num_per_path = cell(1, 2); % with obj.multipath.map_list, rates can be computed
                 for side = 1:size(usedidx,2)
@@ -1723,7 +1723,7 @@ classdef ea_explorerclass < handle
                             ctentry=str2double(thisentry(1:k-1));
                             ctside=str2double(thisentry(k+1:end));
                             weights{ctside}=weights{ctside}+...
-                                full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                                full(obj.results.(ea_conn2connid(obj.connectome)).(ea_explorer_method2methodid(obj)).fibsval{ctside}(:,ctentry));
                             for side=1:size(obj.drawobject,2)
                                 if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
                                     weights{side}=ea_minmax(weights{side}); %ea_contrast(weights{side},0.5,-0.5))*0.5; % enhance constrast a bit
