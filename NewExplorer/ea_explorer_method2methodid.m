@@ -5,11 +5,9 @@ end
 
 obj.compat_statmetric; % compatibility for old statmetric notation (used to be stored as integers).
 
-if strcmp(obj.statmetric,'T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)')
-    statmetric_cor = 'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)';
-else
-    statmetric_cor = obj.statmetric;
-end
+
+statmetric_cor = obj.statmetric;
+
 
 switch obj.connectivity_type
     case 2 % PAM
@@ -25,7 +23,7 @@ switch obj.connectivity_type
         switch statmetric_cor
             case {'2-Sample T-Test','1-Sample T-Test','Wilcoxon Rank-Sum Test','Wilcoxon Signed-Rank Test'}  % VTAs
                 id = 'VAT_Ttest';
-            case {'Correlations','Reverse T-Test','Weighted Linear Regression vs. Average','Weighted Linear Regression vs. Unconnected'}  % E-fields
+            case {'Correlations','Reverse T-Test','Weighted Regression vs. Average','Weighted Regression vs. Unconnected'}  % E-fields
                 id='spearman';
                 switch efm
                     case 'Mean'
