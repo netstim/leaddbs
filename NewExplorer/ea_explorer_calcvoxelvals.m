@@ -1,6 +1,5 @@
-function [AllX,space]=ea_explorer_exportefieldmapping(vatlist,obj)
-EFthresh = 50;
-templateresolution = .5;
+function [AllX,space]=ea_explorer_calcvoxelvals(vatlist,obj)
+templateresolution = obj.resolution;
 if size(vatlist,2)>1
     sidesuffices={'_r','_l'};
 else
@@ -10,7 +9,7 @@ disp('Need to export Efields in proper format, this may take a while');
 outdir=[fileparts(obj.leadgroup),filesep,'sweetspots',filesep,obj.ID,filesep];
 mkdir(outdir)
 
-disp(['Creating Voxel Template: EFthreshold = ' num2str(EFthresh) ' V/m; Resolution = ' num2str(templateresolution) ' mm.']);
+disp(['Creating Voxel Template: EFthreshold = ' num2str(obj.calcthreshold) ' V/m; Resolution = ' num2str(templateresolution) ' mm.']);
 mins = repmat({[]},1,size(vatlist,2));
 maxs = repmat({[]},1,size(vatlist,2));
 for side=1:size(vatlist,2)
@@ -18,7 +17,7 @@ for side=1:size(vatlist,2)
         if ~isempty(vatlist{vat,side})
             xyz=[];
             nii=ea_load_nii(vatlist{vat,side});
-            nii.img=nii.img>EFthresh;
+            nii.img=nii.img>obj.calcthreshold;
             [xyz(1,:),xyz(2,:),xyz(3,:)]=ind2sub(size(nii.img),find(nii.img));
             xyz(4,:)=1;
             xyz=nii.mat*xyz;
@@ -38,14 +37,15 @@ for side=1:size(vatlist,2)
         templatecenter(dim) = (mins{side}(dim)+maxs{side}(dim))./2;
     end
     templatecenter = round(templatecenter/templateresolution)*templateresolution;
-    ea_createTemplateSpace(templatecenter,templatesize,repmat(templateresolution,1,3),outdir,['template',sidesuffices{side},'.nii']);   
+    ea_createTemplateSpace(templatecenter,templatesize,repmat(templateresolution,1,3),outdir,['template',sidesuffices{side},'.nii']);
     space{side}=ea_load_nii([outdir,'template',sidesuffices{side},'.nii']);
 end
 
 % now conform each VTA to space
 AllX=cell(1,size(vatlist,2));
-for vat=1:size(vatlist,1)
-    for side=1:size(vatlist,2)
+for side=1:size(vatlist,2)
+    AllX{side}=single(nan(prod(space{side}.dim),size(vatlist,1)));
+    for vat=1:size(vatlist,1)
         copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);
         ea_conformspaceto([outdir,'template',sidesuffices{side},'.nii'],...
             [outdir,'tmp_efield.nii'],0);
@@ -53,10 +53,7 @@ for vat=1:size(vatlist,1)
         % [~,vatnametmp,~]=fileparts(vatlist{vat,side});
         % copyfile([outdir,'tmp_efield.nii'],[outdir,vatnametmp,'.nii'])
         clear vatnametmp
-        if ~exist('AllX','var')
-            AllX{side}=zeros(size(vatlist,1),numel(nii.img));
-        end
-        AllX{side}(vat,:)=nii.img(:);
+        AllX{side}(:,vat)=single(nii.img(:));
     end
 end
 ea_delete([outdir,'template.nii']);
