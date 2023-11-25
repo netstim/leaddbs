@@ -35,26 +35,23 @@ ea_dispt('Converting to equispaced image data...');
 F = scatteredInterpolant(Field_coords_MNI(:,1),Field_coords_MNI(:,2),Field_coords_MNI(:,3),Field_vals,'linear','none');
 gv=cell(3,1); spacing=zeros(3,1);
 
-% define resolution based on options.primarytemplate
-template = ea_load_nii([ea_space, options.primarytemplate, '.nii']);
-n_points = zeros(3,1);
+% hardwired N of points, if changed, also change Lattice shape in lead_settings.py
+n_points = 71;   
 for axis = 1:3
-    n_points(axis) = (max(round(Field_coords_MNI(:,axis))) - min(round(Field_coords_MNI(:,axis)))) / template.voxsize(axis);
-    gv{axis}=linspace(min(round(Field_coords_MNI(:,axis))),max(round(Field_coords_MNI(:,axis))),n_points(axis));
+    %n_points(axis) = (max(round(Field_coords_MNI(:,axis))) - min(round(Field_coords_MNI(:,axis)))) / template.voxsize(axis);
+    gv{axis}=linspace(min(round(Field_coords_MNI(:,axis))),max(round(Field_coords_MNI(:,axis))),n_points);
     spacing(axis)=abs(gv{axis}(1)-gv{axis}(2)); 
 end
 
-
-%% I have no idea what is happening here
-%% check for non-cubic fields
-%chun1=randperm(n_points(1)); chun2=randperm(n_points(2)); chun3=randperm(n_points(3)); 
-%Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,n_points(1))]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,n_points)]')';
+% I have no idea what is happening here
+chun1=randperm(n_points); chun2=randperm(n_points); chun3=randperm(n_points); 
+Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,n_points(1))]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,n_points)]')';
 
 % My approach for MNI. Additional shift by half a voxel
-Vvat.mat = [template.voxsize(1), 0, 0, min(round(Field_coords_MNI(:,1)) - template.voxsize(1) / 2)
-            0, template.voxsize(2), 0, min(round(Field_coords_MNI(:,2)) - template.voxsize(2) / 2)
-            0, 0, template.voxsize(3), min(round(Field_coords_MNI(:,3)) - template.voxsize(3) / 2)
-            0, 0, 0, 1];
+% Vvat.mat = [template.voxsize(1), 0, 0, min(round(Field_coords_MNI(:,1)) - template.voxsize(1) / 2)
+%             0, template.voxsize(2), 0, min(round(Field_coords_MNI(:,2)) - template.voxsize(2) / 2)
+%             0, 0, template.voxsize(3), min(round(Field_coords_MNI(:,3)) - template.voxsize(3) / 2)
+%             0, 0, 0, 1];
 
 ea_dispt('Creating nifti header for export...');
 % create nifti
@@ -65,7 +62,7 @@ switch endian
     case 'B'
         endian = 1;
 end
-Vvat.dim=[n_points(1),n_points(2),n_points(3)];
+Vvat.dim=[n_points,n_points,n_points];
 Vvat.dt = [4, endian];
 Vvat.n=[1 1];
 Vvat.descrip='oss-dbs - Field';
