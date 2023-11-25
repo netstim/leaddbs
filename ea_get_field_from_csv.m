@@ -15,41 +15,43 @@ Field_array = table2array(readtable(Field_array_file));
 Field_coords = Field_array(:,2:4);
 Field_vals = Field_array(:,8);  % others are the components
 
-% convert to native voxel space (will be as floating numbers)
-Field_vox_native = ea_mm2vox(Field_coords, ref_image)';
-ref_image_nii = ea_load_nii(ref_image);
-array_VTA = zeros(size(ref_image_nii.img));
+% just interpolate the magnitude, the vector field can be confusing
+ea_dispt('Converting to equispaced image data...');
+F = scatteredInterpolant(Field_coords(:,1),Field_coords(:,2),Field_coords(:,3),Field_vals,'linear','none');
+gv=cell(3,1); spacing=zeros(3,1);
 
-% there will be overwriting due to lower resolution
-for point_i = 1:size(Field_vox_native,2)
-    x_ind = round(Field_vox_native(1,point_i));
-    y_ind = round(Field_vox_native(2,point_i));
-    z_ind = round(Field_vox_native(3,point_i));
-    array_VTA(x_ind, y_ind,z_ind) = Field_vals(point_i);
-    %disp(array_VTA(x_ind, y_ind,z_ind))
+% hardwired N of points, if changed, also change Lattice shape in lead_settings.py
+n_points = 71;
+for axis = 1:3
+    %n_points(axis) = (max(round(Field_coords_MNI(:,axis))) - min(round(Field_coords_MNI(:,axis)))) / template.voxsize(axis);
+    gv{axis}=linspace(min(round(Field_coords(:,axis))),max(round(Field_coords(:,axis))),n_points);
+    spacing(axis)=abs(gv{axis}(1)-gv{axis}(2)); 
 end
 
-Field_ref.mat = ref_image_nii.mat;
-Field_ref.dim=size(ref_image_nii.img);
-Field_ref.dt = [4, endian];
-Field_ref.n=[1 1];
-Field_ref.descrip='oss-dbs-v2 - Field_ref';
+% I have no idea what is happening here
+chun1=randperm(n_points); chun2=randperm(n_points); chun3=randperm(n_points); 
+Field_interp.mat=mldivide([(chun1);(chun2);(chun3);ones(1,n_points(1))]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,n_points)]')';
+
+Field_interp.dim=[n_points,n_points,n_points];
+Field_interp.dt = [4, endian];
+Field_interp.n=[1 1];
+Field_interp.descrip='oss-dbs-v2 - Field_ref';
 
 [filepath,filename,~] = fileparts(Field_array_file);
 
-Field_ref.img = array_VTA; 
-Field_ref.img(isnan(Field_ref.img)) = 0;
-Field_ref.img(Field_ref.img>1000.0) = 1000.0;
-Field_ref.fname = [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
-ea_write_nii(Field_ref);
+Field_interp.img = F(gv);
+Field_interp.img(isnan(Field_interp.img)) = 0;
+Field_interp.img(Field_interp.img>1000.0) = 1000.0;
+Field_interp.fname = [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+ea_write_nii(Field_interp);
 %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
 
 % also create VATs directly
-VTA_interp = array_VTA >= (Activation_threshold_VTA);
-Vvat2 = Field_ref;
+VTA_interp = Field_interp.img >= (Activation_threshold_VTA);
+Vvat2 = Field_interp;
 Vvat2.descrip='oss-dbs-v2 - VAT_ref';
 Vvat2.fname = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);

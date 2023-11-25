@@ -323,9 +323,16 @@ settings.Case_grounding = zeros(eleNum, 1);
 
 % Get the stimulation parameters from S in case stimSetMode is 0, otherwise
 % they will be loaded directly from the Current_protocols_[0|1].csv files
-
+% also get the center of the grid 
+settings.stim_center = nan(2, 3);
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_getStimVector(S, eleNum, conNum);
+    for side = 1:2
+        stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
+        settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
+    end
+else
+    settings.stim_center = [NaN;NaN];
 end
 
 % Threshold for Astrom VTA (V/mm)
@@ -478,6 +485,7 @@ end
 
 % full clean-up for V2
 ea_delete([outputDir, filesep, 'Results_*']);
+ea_delete([outputDir, filesep, 'oss-dbs_parameters.json']);
 
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
@@ -582,12 +590,22 @@ for side=0:1
         runStatus(side+1) = 1;
         fprintf('\nOSS-DBS calculation succeeded!\n\n')
 
-        % also always create final (Lead-DBS) niftis from .csv files!
-        if options.native
-            ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+
+        if settings.removeElectrode
+            % create nii for distorted grid
+            if options.native
+                ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+            else
+                ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Template_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+            end
         else
-            ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Template_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+            % convert original OSS-DBS VTAs to BIDS in the corresponding space
+            copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_WA.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
+            copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_WA.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+            %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+            %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
         end
+
 
         % always transform to MNI space
         if options.native   
