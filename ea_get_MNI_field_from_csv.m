@@ -84,8 +84,8 @@ Vvat2.descrip='oss-dbs - VAT';
 Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
 
 
 
