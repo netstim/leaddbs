@@ -1,0 +1,173 @@
+/*
+Find excitation threshold to 4 significant figures.
+
+Case A (bipolar electrode)
+Threshold in mA
+
+Parameters
+
+waveform
+  waveform type
+    monophasic pulse
+    biphasic square wave
+    sine
+      number of cycles
+  phase (half cycle) duration TP (ms)
+
+electrode coordinates
+  anode coords    XA, YA (cm)
+  cathode coords  XC, YC
+
+
+Case B (uniform gradient field)
+Threshold in V/m
+
+Parameters
+
+waveform
+  waveform type
+    monophasic pulse
+    biphasic square wave
+  TP (ms)
+
+axon diameter D (um)
+*/
+
+TRUE = 1
+FALSE = 0
+
+// stimulus waveform
+waveform = 0
+PULSE = 1  // single pulse
+SQUARE = 2 // biphasic square wave
+SINE = 3   // sine with NC cycles
+
+TP = 0 // phase duration (ms)
+NC = 0 // number of cycles, a nonnegative integer
+
+// note:  xc is reserved in NEURON
+// therefore all protocol params use upper case
+XA = 0 // electrode coordinates (cm) relative to middle of axon
+YA = 0
+XC = 0
+YC = 0
+
+strdef wstr
+
+func protocol() {
+  waveform = TP = NC = XA = YA = XC = YC = 0
+  if ($1==1) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 5e-3
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==2) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 2.0
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==3) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 5e-3
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 1
+  }
+  if ($1==4) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 2.0
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 1
+  }
+  if ($1==5) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 2.0
+    NC = 1
+    XA = 0   YA = 0.25  XC = 50  YC = 0.25
+  }
+  if ($1==6) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 2.0
+    NC = 1
+    XA = 0   YA = 1     XC = 1   YC = 1
+  }
+  if ($1==7) {
+    waveform = SQUARE
+    wstr = "sqr"
+    TP = 5e-3
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==8) {
+    waveform = SQUARE
+    wstr = "sqr"
+    TP = 2.0
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==9) {
+    waveform = SINE
+    wstr = "sin"
+    TP = 5e-3
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==10) {
+    waveform = SINE
+    wstr = "sin"
+    TP = 0.1
+    NC = 1
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==11) {
+    waveform = SINE
+    wstr = "sin"
+    TP = 5e-3
+    NC = 2e4
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+  if ($1==12) {
+    waveform = SINE
+    wstr = "sin"
+    TP = 0.1
+    NC = 10
+    XA = 50  YA = 0.25  XC = 0   YC = 0.25
+  }
+/*
+  pstr = "" // start anew
+  if (waveform>0) {
+    sprint(pstr, "%s   tp %5.3f   ", wstr, TP) // common to all
+    wstr = pstr
+    if (waveform==SINE) sprint(pstr, "%snc %7.1f \t", wstr, NC) // peculiar to sine
+    wstr = pstr
+    sprint(pstr, "%sxa,ya %5.2f,%5.2f   xc,yc %5.2f,%5.2f   thresh ", wstr, XA, YA, XC, YC) // common to all
+  }
+ print pstr, $1
+*/
+  return waveform>0
+}
+
+strdef pstr
+
+proc testprotocols() { local ii
+  for ii=0,15 {
+    pstr = "" // start anew
+    protocol(ii)
+    if (waveform>0) {
+      sprint(pstr, "%s   tp %5.3f   ", wstr, TP) // common to all
+      wstr = pstr
+      if (waveform==SINE) sprint(pstr, "%snc %7.1f \t", wstr, NC) // peculiar to sine
+      wstr = pstr
+      sprint(pstr, "%sxa,ya %5.2f,%5.2f   xc,yc %5.2f,%5.2f   thresh ", wstr, XA, YA, XC, YC) // common to all
+    }
+    print ii, pstr
+  }
+}
+

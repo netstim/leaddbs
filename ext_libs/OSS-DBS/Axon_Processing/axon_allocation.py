@@ -227,6 +227,7 @@ class AxonModels:
 
         # within a projection (pathway), number of nodes of Ranvier per axon is fixed
         n_Ranviers_per_projection_all = np.zeros(len(self.axon_lengths_all), int)
+        n_Neurons_all = np.zeros(len(self.axon_lengths_all), int)
 
         # iterate over projections (fibers) and seed axons
         for i in range(len(self.axon_diams_all)):
@@ -236,30 +237,32 @@ class AxonModels:
 
             # multiple .mat files (manual input)
             if len(self.pathway_mat_file) > 1:
-                n_Ranviers_per_projection_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[i], self.projection_names[i],axon_morphology,False)
+                n_Ranviers_per_projection_all[i], n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[i], self.projection_names[i],axon_morphology,False)
 
             # multiple pathways in one .mat file (Lead-DBS dMRI_MultiTract connectome)
             elif 'Multi-Tract' in self.connectome_name:
-                n_Ranviers_per_projection_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],axon_morphology,True)
+                n_Ranviers_per_projection_all[i], n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],axon_morphology,True)
 
             # one .mat file without pathway differentiation (Lead-DBS dMRI connectome)
             else:
-                n_Ranviers_per_projection_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],
+                n_Ranviers_per_projection_all[i], n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],
                                                                axon_morphology,False)
 
-            print("Projection", self.projection_names[i], "seeded with", n_Ranviers_per_projection_all[i], "nodes of Ranvier\n")
+            print(n_Neurons_all[i], " axons seeded for ", self.projection_names[i], " with ", n_Ranviers_per_projection_all[i], " nodes of Ranvier\n")
 
         # only add axon diameters for seeded axons
         self.axon_diams = []
         n_Ranviers_per_projection = []
+        n_Neurons = []
         for i in range(len(self.axon_diams_all)):
             if n_Ranviers_per_projection_all[i] != 0:
                 self.axon_diams.append(float(self.axon_diams_all[i]))
                 n_Ranviers_per_projection.append(int(n_Ranviers_per_projection_all[i]))
+                n_Neurons.append(n_Neurons_all[i])
 
-        self._save_axon_parameters_in_json(n_Ranviers_per_projection)
+        self._save_axon_parameters_in_json(n_Ranviers_per_projection, n_Neurons)
 
-    def _save_axon_parameters_in_json(self, n_Ranviers_per_projection):
+    def _save_axon_parameters_in_json(self, n_Ranviers_per_projection, n_Neurons):
 
         """ Save minimally required axon description in a .json file
 
@@ -275,7 +278,8 @@ class AxonModels:
             'axon_diams': self.axon_diams,
             'Axon_Model_Type': self.axon_model,
             'Name_prepared_neuron_array': self.combined_h5_file + '.h5',
-            'Neuron_model_array_prepared': True
+            'Neuron_model_array_prepared': True,
+            'N_seeded_neurons': n_Neurons
         }
 
         with open(self.output_directory + '/Allocated_axons_parameters.json', 'w') as save_as_dict:
@@ -298,6 +302,7 @@ class AxonModels:
         Returns
         -------
         int, number of nodes of Ranvier for axons in this pathway. Returns 0 if failed to see (fiber is too short)
+        int, number of axons seeded for the pathway
 
         Notes
         -----
@@ -321,7 +326,7 @@ class AxonModels:
 
         if fiber_array.ndim == 1:
             print(projection_name, 'projection is empty, check settings for fib. diameter and axon length')
-            return 0  # no nodes were seeded
+            return 0,0  # no nodes were seeded
 
         # covert fiber table to nibabel streamlines
         streamlines = convert_fibers_to_streamlines(fiber_array)
@@ -335,10 +340,10 @@ class AxonModels:
 
         # streamlines_axons already contain the position of Ranvier nodes. Now we get internodal compartments
         # and store all coordinates in a 3D array: compartment index, spatial axis, axon index
-        axon_array = np.zeros((axon_morphology['n_total'], 3, len(streamlines_axons)), float)
+        axon_array = np.zeros((axon_morphology['n_segments'], 3, len(streamlines_axons)), float)
 
         # 2-D version for Paraview visualization
-        axon_array_2D = np.zeros((axon_morphology['n_total'] * len(streamlines_axons), 4), float)
+        axon_array_2D = np.zeros((axon_morphology['n_segments'] * len(streamlines_axons), 4), float)
 
         # save axons as separate datasets within groups that correspond to pathways
         hf = h5py.File(self.combined_h5_file + '.h5', 'a')
@@ -367,12 +372,12 @@ class AxonModels:
             # last node of Ranview
             axon_array[-1, :, inx_axn] = streamlines_axons[inx_axn][-1]
 
-            axon_array_2D[glob_ind:glob_ind + axon_morphology['n_total'], :3] = axon_array[:, :, inx_axn]
-            axon_array_2D[glob_ind:glob_ind + axon_morphology['n_total'], 3] = inx_axn + 1  # because in Matlab they start from 1
+            axon_array_2D[glob_ind:glob_ind + axon_morphology['n_segments'], :3] = axon_array[:, :, inx_axn]
+            axon_array_2D[glob_ind:glob_ind + axon_morphology['n_segments'], 3] = inx_axn + 1  # because in Matlab they start from 1
 
             g.create_dataset('axon' + str(inx_axn), data=axon_array[:, :, inx_axn])
 
-            glob_ind = glob_ind + axon_morphology['n_total']
+            glob_ind = glob_ind + axon_morphology['n_segments']
 
         np.savetxt(self.output_directory + '/' + 'axon_array_2D_' + projection_name + '.csv', axon_array_2D,
                    delimiter=" ")
@@ -382,7 +387,7 @@ class AxonModels:
         mdic = {"fibers": axon_array_2D, "ea_fibformat": "1.0"}
         savemat(self.combined_h5_file + '_' + projection_name + "_axons.mat", mdic)
 
-        return axon_morphology['n_Ranviers']
+        return axon_morphology['n_Ranviers'], len(streamlines_axons)
 
 def convert_fibers_to_streamlines(fibers):
     """ Convert Lead-DBS fibers to Nibabel streamlines
@@ -419,15 +424,16 @@ def convert_fibers_to_streamlines(fibers):
 
     return streamlines
 
-def get_axon_morphology(axon_model, axon_diam, axon_length):
+def get_axon_morphology(axon_model, axon_diam, axon_length=None, n_Ranviers=None):
 
     """ Get geometric description of a single axon
 
     Parameters
     ----------
      axon_model: str, NEURON model ('McIntyre2002', 'McIntyre2002_ds' (downsampled), 'McNeal1976' (classic McNeal's))
-     axon_diam: diameter in micrometers for all fibers in the pathway
-     axon_length: axon lengths in mm for all fibers in the pathway
+     axon_diam: float, diameter in micrometers for all fibers in the pathway
+     axon_length: float, optional, axon lengths in mm for all fibers in the pathway. If not specified, provide n_Ranviers
+     n_Ranviers: int, optional, number of nodes of Ranvier per axon. If not specified, provide axon_length.
 
     Returns
     -------
@@ -438,7 +444,6 @@ def get_axon_morphology(axon_model, axon_diam, axon_length):
     axon_morphology = {
         'axon_model': axon_model,
         'axon_diam': axon_diam,
-        'axon_length': axon_length
     }
 
     if 'McIntyre2002' in axon_model:
@@ -477,18 +482,47 @@ def get_axon_morphology(axon_model, axon_diam, axon_length):
                 axon_morphology['inter_length'] = (axon_morphology['node_step'] - axon_morphology['para1_length'] * 2 -
                                                    axon_morphology['para2_length'] * 2) / 3
 
+        # check what was provided, axon_length takes precedence
+        if axon_length is not None:
+            axon_morphology['axon_length'] = axon_length
+            axon_morphology['n_Ranviers'] = int(axon_length / axon_morphology['node_step'])
+        else:
+            axon_morphology['n_Ranviers'] = n_Ranviers
+            axon_morphology['axon_length'] = n_Ranviers * axon_morphology['node_step']
 
-        axon_morphology['n_Ranviers'] = int(axon_length / axon_morphology['node_step'])
+        # always odd number of nodes of Ranvier!
+        if axon_morphology['n_Ranviers'] % 2 == 0:
+            axon_morphology['n_Ranviers'] -= 1
+            axon_morphology['axon_length'] = axon_morphology['n_Ranviers'] * axon_morphology['node_step']
+
+        axon_morphology['n_para1']=  nr["para1_nodes"]*(axon_morphology['n_Ranviers'] - 1) / (21 - 1)
+        axon_morphology['n_para2'] = nr["para2_nodes"] * (axon_morphology['n_Ranviers'] - 1) / (21 - 1)
+
         axon_morphology['n_segments'] = int((axon_morphology['n_Ranviers'] - 1) * axon_morphology['n_comp'] + 1)  # overall number of points on Axon incl. internodal
-        axon_morphology['n_total'] = (axon_morphology['n_Ranviers'] - 1) * axon_morphology['n_comp'] + 1  # total incl. Ranvier
+        #axon_morphology['n_total'] = (axon_morphology['n_Ranviers'] - 1) * axon_morphology['n_comp'] + 1  # total incl. Ranvier
+
+        # additional params for NEURON model, see axon.py
+        axon_morphology['axon_d'], axon_morphology['node_d'], axon_morphology['para1_d'], axon_morphology['para2_d'], axon_morphology['lamellas'] = (nr["axon_diameter"],nr["node_diameter"],nr["para1_diameter"],nr["para2_diameter"],nr["lamellas"])
 
     elif axon_model == 'McNeal1976':
         # node -- -- -- internodal -- -- -- node
         axon_morphology['n_comp'] = 2  # only nodes and one internodal per segment
         axon_morphology['node_step'] = axon_diam * 0.2  # from 1 to 2 mm
-        axon_morphology['n_Ranviers'] = int(axon_length / axon_morphology['node_step'])
+        # check what was provided, axon_length takes precedence
+        if axon_length is not None:
+            axon_morphology['axon_length'] = axon_length
+            axon_morphology['n_Ranviers'] = int(axon_length / axon_morphology['node_step'])
+        else:
+            axon_morphology['n_Ranviers'] = n_Ranviers
+            axon_morphology['axon_length'] = n_Ranviers * axon_morphology['node_step']
+
+        # always odd number of nodes of Ranvier!
+        if axon_morphology['n_Ranviers'] % 2 == 0:
+            axon_morphology['n_Ranviers'] -= 1
+            axon_morphology['axon_length'] = axon_morphology['n_Ranviers'] * axon_morphology['node_step']
+
         axon_morphology['n_segments'] = int((axon_morphology['n_Ranviers'] - 1) * axon_morphology['n_comp'] + 1)
-        axon_morphology['n_total'] = (axon_morphology['n_Ranviers'] - 1) * 2 + 1  # one internodal per segment + the last Ranvier
+        #axon_morphology['n_total'] = (axon_morphology['n_Ranviers'] - 1) * 2 + 1  # one internodal per segment + the last Ranvier
     else:
         print("The neuron model is not implemented")
         raise SystemExit
