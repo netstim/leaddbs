@@ -75,7 +75,6 @@ E_field_interp(E_field_interp>10000.0) = 10000.0; % upperlimit files to 10000.
 Vvat.fname = [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat.img = E_field_interp; 
 ea_write_nii(Vvat);
-ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
 
 % also create VATs directly
 VTA_interp = E_field_interp;
@@ -85,7 +84,9 @@ Vvat2.descrip='oss-dbs - VAT';
 Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+
 
 
 
