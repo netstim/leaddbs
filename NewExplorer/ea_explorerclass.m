@@ -15,8 +15,9 @@ classdef ea_explorerclass < handle
         recentmodel = struct
         thresholding = struct
         multipath = struct
-
-
+        
+        %%
+        fastrender = 1;
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -206,6 +207,11 @@ classdef ea_explorerclass < handle
             obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval;
 
             obj.recentmodel = struct;
+            obj.recentmodel.resolution = obj.resolution;
+            obj.recentmodel.calcthreshold = obj.calcthreshold;
+            obj.recentmodel.patientselection = obj.patientselection;
+            obj.recentmodel.responsevarlabel = obj.responsevarlabel;
+            obj.recentmodel.mirrorsides = obj.mirrorsides;
             obj.recentmodel.statsettings = obj.statsettings;
             obj.recentmodel.thresholding = obj.thresholding;
             disp('Calculating Voxel Statistics')
