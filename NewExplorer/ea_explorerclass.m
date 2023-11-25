@@ -217,8 +217,10 @@ classdef ea_explorerclass < handle
         %% This function draws statistical results like fibers and Sweetspots
         function draw(obj)
             ea_explorer_cleanfigure(obj)
-            [fibcell,vals,usedidx]=ea_explorer_visualizefibers(obj);            
-            
+            disp('Visualizing Voxels')
+            ea_explorer_visualizevoxels(obj);
+            disp('Visualizing Fibers')
+            ea_explorer_visualizefibers(obj);
         end
         %% Whatever these other functions are
         function Amps = getstimamp(obj)
