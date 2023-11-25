@@ -1,0 +1,32 @@
+objectvar save_window_, rvp_
+objectvar scene_vector_[5]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+{
+save_window_ = new Graph(0)
+save_window_.size(2.5,100252,-80,40)
+scene_vector_[4] = save_window_
+{save_window_.view(2.5, -80, 100250, 120, 652, 25, 300.48, 200.32)}
+flush_list.append(save_window_)
+save_window_.save_name("flush_list.")
+objectvar rvp_
+rvp_ = new RangeVarPlot("v")
+node[0] rvp_.begin(1)
+node[100] rvp_.end(1)
+rvp_.origin(2.5)
+save_window_.addobject(rvp_, 2, 1, 0.8, 0.9)
+}
+
+//Begin Movie Run
+{
+movie_frame_dur_ = 0.01
+
+movierunpanel(0)
+ocbox_ = movierunbox
+ocbox_.map("Movie Run", 352, 422, 280.32, 82.56)
+}
+objref ocbox_
+//End Movie Run
+
+objectvar scene_vector_[1]
+{doNotify()}

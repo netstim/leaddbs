@@ -1,0 +1,279 @@
+/* Extracellular stimulation of FH myelinated axon model.
+Bipolar electrodes applied to surface of a semi-infinite conductive medium.
+*/
+
+load_file("nrngui.hoc")
+
+///// parameters
+
+RHOE = 300 // extracellular resistivity in ohm cm
+
+///// anatomical and biophysical properties of the axon
+///// assuming extracellular medium is perfect conductor
+
+load_file("axon10.hoc") // external diameter is 10 um
+
+v_init = -70 // from ModelDB entry 3507
+// actual resting potential is closer to -69.77 mV
+
+///// stimulation
+
+// steps:
+// 0.  insert extracellular mechanism and specify its parameters
+// 1.  set up transfer resistances
+// 2.  set up stimulus waveform
+// 3.  couple stim waveform to xstim
+
+// 0.  insert extracellular mechanism and specify its parameters
+//     when using extracellular to implement extracelluar stimulation,
+//     use extracellular's xg and xc to play the role of myelin--see axon.hoc
+
+forall insert extracellular
+forsec internodes {
+  for (x,0) {
+    cm(x) = CM // since extracellular's default xc is 0; CM is defined in axon.hoc
+    for i=0,1 xg(x) = 1e-9 // "effectively a perfect insulator"
+  }
+}
+
+// 1.  set up transfer resistances
+
+forall {
+  insert xstim
+  for (x,0) setpointer ex_xstim(x), e_extracellular(x)
+}
+is_xstim = 0 // for development & testing
+             // eventually is driven by a forcing function
+
+/*
+Electrodes:  point sources on the surface of a semi-infinite conductive medium
+so a stimulus current with value istim is twice as effective
+as if the entire extracellular volume were conductive.
+Axonal geometry coordinates:  axon lies along the x axis, 
+with the 0 end of the axon at (0,0,0) and the electrode at (xe,ye,ze).
+Electrode geometry coordinates used in "test cases":
+axon lies along the x axis,
+but (0,0,0) corresponds to the middle of the axon.
+The (xa,ya) and (xc,yc) used in the "test cases"
+correspond to (xa + axlen/2, ya, 0) and (xc + axlen/2, yc, 0).
+where axlen == total length of the axon
+*/
+
+load_file("interpxyz.hoc") // defines proc grindaway()
+
+grindaway(all) // find xyz coords of all internal nodes
+
+// $1   rho in ohm cm
+// $2-4 xyz coords of point A in um
+// $5-7                     B in um
+// $8   lower limit to distance in um
+//        i.e. A and B can never be closer than local neurite radius
+// returns transfer resistance in megohms
+
+// rxm returns transfer resistance between an electrode and a location along the axon
+// includes factor of 2 because electrode is on surface of medium
+
+func rxm() { local rho,x1,y1,z1,x2,y2,z2,dmin,r
+  rho = $1
+  x1 = $2
+  y1 = $3
+  z1 = $4
+  x2 = $5
+  y2 = $6
+  z2 = $7
+  dmin = $8
+  r = sqrt((x1 - x2)^2 + (y1 - y2)^2 + (z1 - z2)^2)   
+  if (r<dmin) r=dmin
+  // calculate the transfer resistance between the node and the grid point
+  return 2*0.01*(rho / 4 / PI)*(1/r)
+}
+
+axlen = 0
+forall axlen+=L
+
+// bipolar stimulating electrodes
+// the conductive medium is linear so the net effect of bipolar stimulation
+// is the sum of the anodal and cathodal stimuli
+
+XA = 50   // cm, must convert to um
+YA = 0.25
+XC = 0
+YC = 0.25
+
+proc calcrx() {
+  forall for (x,0) rx_xstim(x) = rxm(RHOE, x_xstim(x), y_xstim(x), z_xstim(x), \
+                                         XA*1e4 + axlen/2, YA*1e4, 0, diam(x)/2) \
+                               - rxm(RHOE, x_xstim(x), y_xstim(x), z_xstim(x), \
+                                         XC*1e4 + axlen/2, YC*1e4, 0, diam(x)/2)
+}
+
+calcrx()
+
+// 2.  set up stimulus waveform
+// and
+// 3.  couple stim waveform to xstim
+
+objref fsq
+fsq = new Fsquare(0.5) // square wave generator
+setpointer fsq.x, is_xstim
+
+dummy = 0
+objref fzap
+fzap = new Fzap(0.5) // swept sine wave generator
+                     // used here to produce a fixed frequency sine wave
+setpointer fzap.x, dummy
+
+///// graphical user interface
+
+load_file("basicrig.ses") // RunControl
+  // IClamp for direct intracellular stim at node[0](0.5) (for testing)
+  // v vs. t
+IClamp[0].amp = 0 // no intracellularly injected current
+
+load_file("varstep.ses") // variable dt tool
+
+load_file("vvsx.ses") // Movie Run, v vs. x
+
+// additional graphs
+// these have little effect on run time
+
+load_file("vext_eext.ses") // vext and e_extracellular vs. distance along axon
+
+// plot of rx vs distance along axon
+// not updated during simulation!
+
+objref xval, rxval, grx
+xval = new Vector()
+rxval = new Vector()
+grx = new Graph(0)
+
+proc plotrx() { localobj rvp
+  grx = new Graph(0)
+  grx.size(0,100000,0,0.0002)
+  grx.view(0, 0, 100000, 0.0002, 327, 534, 300.48, 200.32)
+  rvp = new RangeVarPlot("rx_xstim")
+  node[0] rvp.begin(0)
+  node[100] rvp.end(1)
+  rvp.origin(0)
+  grx.addobject(rvp)
+  grx.exec_menu("View = plot")
+}
+
+plotrx()
+
+
+///// automatic detection of threshold stimulus intensity
+
+// spike detection
+// for stimulation that triggers spike onset in middle of axon
+// attach an APCount to the node at the proximal end of the axon
+// this assumes spike initiation occurs far from node[0]
+// so that stim artifact doesn't trigger spike detector
+
+objref apc
+node[0] apc = new APCount(0.5) // -20 mV is default thresh for spike detection
+
+stimamp = 0
+
+load_file("thresh4.hoc") // determines spike threshold to 4 significant figures
+
+// This function requires an existing APCount[0] at the user desired location
+// returns 1 if the voltage passed the APCount[0].thresh
+func thresh_excited() {
+  if (waveform==PULSE) {
+    fsq.amp1 = stimamp
+    fsq.amp2 = 0
+  }
+  if (waveform==SQUARE) {
+    fsq.amp1 = stimamp
+    fsq.amp2 = -stimamp
+  }
+  if (waveform==SINE) {
+    fzap.amp = stimamp
+  }
+	run()
+	return APCount[0].n > 0
+}
+
+// print "spike threshold is ", threshold(&stimamp), "mA"
+
+///// define stimulus protocol and find corresponding threshold
+
+load_file("protocolsA.hoc")
+
+proc doprotocols() { local i, thresh, t0
+  t0 = startsw()
+  printf("test \twform \ttp \tnc \txa,ya \t \txc,yc \t\t   thresh\n")  
+  for i=$1,$2 if (protocol(i)) {
+    if (waveform==PULSE) {
+      setpointer fsq.x, is_xstim
+      fsq.del = 1
+      fsq.num = NC
+      fsq.dp = TP // update pulse or square wave stimulus waveform
+
+      setpointer fzap.x, dummy
+      fzap.del = 0
+      fzap.dur = 0
+    }
+    if (waveform==SQUARE) {
+      setpointer fsq.x, is_xstim
+      fsq.del = 1
+      fsq.dp = TP // update pulse or square wave stimulus waveform
+      fsq.num = NC
+
+      setpointer fzap.x, dummy
+      fzap.del = 0
+      fzap.dur = 0
+    }
+    if (waveform==SINE) {
+      setpointer fsq.x, dummy
+      fsq.del = 0
+      fsq.dp = 0
+      fsq.num = 0
+      fsq.amp1 = 0
+      fsq.amp2 = 0
+
+      setpointer fzap.x, is_xstim
+      fzap.del = 1
+      fzap.dur = TP*2*NC
+      fzap.f0 = 1000/2/TP
+      fzap.f1 = fzap.f0
+    }
+
+    calcrx() // update rx, in case the new protocol changed electrode locations
+    plotrx()
+    stimamp = 0
+    thresh = threshold(&stimamp)
+    printf("%d \t%s \t%5.3f \t%d \t%5.2f,%5.2f \t%5.2f,%5.2f \t%11.5f\n", \
+            i, wstr, TP, NC, XA, YA, XC, YC, thresh)
+  }
+  print " "
+  print "run time: ", startsw()-t0
+}
+
+// doprotocols(1,2) // minimal test
+// doprotocols(1,12) // the full battery
+
+print "To run through cases A1-12, enter"
+print "doprotocols(1,12)"
+print "at the oc> prompt, then press return."
+
+/*
+Results obtained with adaptive integration, 
+finding threshold to 4 place accuracy.
+doprotocols(12)
+test 	wform 	tp 	nc 	xa,ya 	 	xc,yc 		   thresh
+1 	pls 	0.005 	1 	50.00, 0.25 	 0.00, 0.25 	   11.08643
+2 	pls 	2.000 	1 	50.00, 0.25 	 0.00, 0.25 	    0.47032
+3 	pls 	0.005 	1 	50.00, 0.25 	 0.00, 1.00 	  409.95312
+4 	pls 	2.000 	1 	50.00, 0.25 	 0.00, 1.00 	   12.83545
+5 	pls 	2.000 	1 	 0.00, 0.25 	50.00, 0.25 	    2.10657
+6 	pls 	2.000 	1 	 0.00, 1.00 	 1.00, 1.00 	   11.00342
+7 	sqr 	0.005 	1 	50.00, 0.25 	 0.00, 0.25 	   32.57227
+8 	sqr 	2.000 	1 	50.00, 0.25 	 0.00, 0.25 	    0.47038
+9 	sin 	0.005 	1 	50.00, 0.25 	 0.00, 0.25 	   48.41992
+10 	sin 	0.100 	1 	50.00, 0.25 	 0.00, 0.25 	    1.44220
+11 	sin 	0.005 	20000 	50.00, 0.25 	 0.00, 0.25 	   14.86279
+12 	sin 	0.100 	10 	50.00, 0.25 	 0.00, 0.25 	    1.30255
+*/
+

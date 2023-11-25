@@ -1,0 +1,8 @@
+load_file("nrngui.hoc")
+
+xpanel("Collections of cases from Rielly 2016")
+  xbutton("cases A1-12 (4 minutes)","{load_file(\"initA.hoc\") doprotocols(1,17)}")
+  xbutton("cases B13, 14, 16, 17 (5 um diam axon) (20 seconds)","load_file(\"initB5.hoc\") doprotocols(13,17)")
+  xbutton("cases B13, 14, 16, 17 (10 um diam axon) (20 seconds)", "load_file(\"initB10.hoc\") doprotocols(13, 17)")
+  xbutton("Quit to run another case", "quit()")
+xpanel()
