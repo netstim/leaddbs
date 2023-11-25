@@ -15,6 +15,7 @@ end
 if isfield(obj.drawnsweetspots,'pos')
     for i=1:numel(obj.drawnsweetspots.pos)
         try
+            obj.drawnsweetspots.pos{i}.delete
             delete(obj.drawnsweetspots.pos{i});
         end
     end
@@ -22,6 +23,7 @@ end
 if isfield(obj.drawnsweetspots,'neg')
     for i=1:numel(obj.drawnsweetspots.neg)
         try
+            obj.drawnsweetspots.pos{i}.delete
             delete(obj.drawnsweetspots.neg{i});
         end
     end

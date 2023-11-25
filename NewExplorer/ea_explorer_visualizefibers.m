@@ -119,7 +119,23 @@ for side=1:size(vals,2)
     % Plot fibers if any survived
     if ~isempty(fibcell{1,side})
         prefs = ea_prefs;
-        obj.drawnstreamlines{1,side} = streamtube(fibcell{1,side}, prefs.d3.fiberwidth);
+        if obj.fastrender
+            tic
+            pointthreshold = 10;
+            numpoints = cellfun('size',fibcell{1,side},1);
+            tmpidx=find(numpoints > pointthreshold);
+            steps=ones(size(numpoints));
+            steps(tmpidx)=numpoints(tmpidx)./pointthreshold;
+            for i=1:numel(fibcell{1,side})
+                fibcell{1,side}{i}=fibcell{1,side}{i}(round(1:steps(i):numpoints(i)),:);
+            end
+            obj.drawnstreamlines{1,side} = streamtube(fibcell{1,side}, prefs.d3.fiberwidth);
+            disp(['Fast Render took: ' num2str(round(toc,2)) 's.'])
+        else
+            tic
+            obj.drawnstreamlines{1,side} = streamtube(fibcell{1,side}, prefs.d3.fiberwidth);
+            disp(['Slow Render took: ' num2str(round(toc,2)) 's.'])
+        end
         set(obj.drawnstreamlines{1,side},'EdgeColor','none')
         % Calulate fiber colors alpha values
         fibcolor = mat2cell(fibcmap(cmapind{side},:), ones(size(fibcell{1,side})));
