@@ -1,0 +1,314 @@
+/*--------------------------------------------------------------------
+Based on MRGaxon.hoc from
+NEURON Yale ModelDB: Spinal Motor Neuron (McInytre et al 2002
+https://senselab.med.yale.edu/modeldb/showModel.cshtml?model=3810&file=/MRGaxon/MRGaxon.hoc#tabs-1
+
+2/02
+Cameron C. McIntyre
+SIMULATION OF PNS MYELINATED AXON
+
+This model is described in detail in:
+
+McIntyre CC, Richardson AG, and Grill WM. Modeling the excitability of
+mammalian nerve fibers: influence of afterpotentials on the recovery
+cycle. Journal of Neurophysiology 87:995-1006, 2002.
+
+This model can not be used with NEURON v5.1 as errors in the
+extracellular mechanism of v5.1 exist related to xc. The original
+stimulations were run on v4.3.1. NEURON v5.2 has corrected the 
+limitations in v5.1 and can be used to run this model.
+
+Modifications:
+01/17
+Christian Schmidt
+Apply external extracellular potential to the sections of the model.
+----------------------------------------------------------------------*/
+
+
+
+//{load_file("nrngui.hoc")}
+{load_file("stdgui.hoc")}
+
+// Initialize variables
+steps_per_ms=1000
+
+// Model settings
+proc model_globels() {			
+	celsius=37			
+	//v_init=-80 //mV//  		
+//	dt=0.005 //ms//         	
+//	tstop=10
+    n_pulse = 1  // number of DBS pulses. default 1
+    opt_run = 0 // if set to 1, the model stops if the APs are not entrained with DBS
+//topological parameters (standard parameters)// 	
+axonnodes=75
+paranodes1=148.0
+paranodes2=148.0
+	//axoninter=120
+axoninter=222
+	//axontotal=221
+axontotal=593
+v_init=-80.0
+//	axonnodes=5  			
+//	paranodes1=8
+//	paranodes2=8	
+//	axoninter=24			
+//	axontotal=45			 
+//morphological parameters (standard parameters)//	
+fiberD=3.0
+paralength1=3.0
+paralength2=17.0
+nodelength=1.0
+nodeD=1.52
+axonD=2.1
+paraD1=1.52
+paraD2=2.1
+deltax=278.0
+nl=43
+	//fiberD=16.0	
+	//paralength1=3.0
+	//paralength2=60.0
+	//nodelength=1.0
+	//nodeD=5.5
+	//axonD=12.7
+	//paraD1=5.5
+	//paraD2=12.7
+	//deltax=1500.0
+	//nl=150.0
+	space_p1=0.002  
+	space_p2=0.004
+	space_i=0.004
+	//fiberD=None	
+	//paralength1=None
+	//paralength2=None
+	//nodelength=None
+	//nodeD=None
+	//axonD=None
+	//paraD1=None
+	//paraD2=None
+	///deltax=None
+	//nl=None
+
+//electrical parameters//		
+	rhoa=0.7e6 //Ohm-um//
+	mycm=0.1 //uF/cm2/lamella membrane//
+	mygm=0.001 //S/cm2/lamella membrane//
+	}
+model_globels ()
+
+proc dependent_var() {
+	Rpn0=(rhoa*.01)/(PI*((((nodeD/2)+space_p1)^2)-((nodeD/2)^2)))
+	Rpn1=(rhoa*.01)/(PI*((((paraD1/2)+space_p1)^2)-((paraD1/2)^2)))
+	Rpn2=(rhoa*.01)/(PI*((((paraD2/2)+space_p2)^2)-((paraD2/2)^2)))
+	Rpx=(rhoa*.01)/(PI*((((axonD/2)+space_i)^2)-((axonD/2)^2)))
+	interlength=(deltax-nodelength-(2*paralength1)-(2*paralength2))/6
+    }
+dependent_var()
+    
+objectvar stim
+
+proc createnodes() {
+    create node[axonnodes], MYSA[paranodes1], FLUT[paranodes2], STIN[axoninter]
+    objectvar wf[axontotal] // input waveforms
+}
+createnodes()
+
+proc deletenodes() {
+    forall delete_section()
+}
+
+proc initialize(){
+
+    //objref m
+    //m = new Matrix(3,4)
+    nstin = int(axoninter/(axonnodes-1))
+    nmysa = int(paranodes1/(axonnodes-1))
+    nflut = int(paranodes2/(axonnodes-1))
+
+	for i=0,axonnodes-1 {
+		node[i]{					
+			nseg=1
+			diam=nodeD
+			L=nodelength
+			Ra=rhoa/10000
+			cm=2
+			insert axnode			
+			insert extracellular xraxial=Rpn0 xg=1e10 xc=0
+		}
+	}
+	for i=0, paranodes1-1 {
+		MYSA[i]{
+			nseg=1
+			diam=fiberD
+			L=paralength1
+			Ra=rhoa*(1/(paraD1/fiberD)^2)/10000
+			cm=2*paraD1/fiberD
+			insert pas
+			g_pas=0.001*paraD1/fiberD		
+			e_pas=v_init
+			insert extracellular xraxial=Rpn1 xg=mygm/(nl*2) xc=mycm/(nl*2)
+		}
+	}
+	for i=0, paranodes2-1 {
+		FLUT[i]{
+			nseg=1
+			diam=fiberD
+			L=paralength2
+			Ra=rhoa*(1/(paraD2/fiberD)^2)/10000
+			cm=2*paraD2/fiberD
+			insert pas
+			g_pas=0.0001*paraD2/fiberD		
+			e_pas=v_init
+			insert extracellular xraxial=Rpn2 xg=mygm/(nl*2) xc=mycm/(nl*2)
+		}
+	}
+	for i=0, axoninter-1 {
+		STIN[i]{
+			nseg=1
+			diam=fiberD
+			L=interlength
+			Ra=rhoa*(1/(axonD/fiberD)^2)/10000
+			cm=2*axonD/fiberD
+			insert pas
+			g_pas=0.0001*axonD/fiberD
+			e_pas=v_init
+			insert extracellular xraxial=Rpx xg=mygm/(nl*2) xc=mycm/(nl*2)
+		}
+	}
+	for i=0, axonnodes-2 {
+	    connect MYSA[nmysa*i](0), node[i](1)
+	    for j=0, int(nmysa/2)-2 {
+	       connect MYSA[nmysa*i+j+1](0), MYSA[nmysa*i+j](1)
+	    }
+		connect FLUT[nflut*i](0), MYSA[nmysa*i](1)
+		for j=0, int(nflut/2)-2 {
+          connect FLUT[nflut*i+j+1](0), FLUT[nflut*i+j](1)
+        }
+		connect STIN[nstin*i](0), FLUT[nflut*i](1)
+		for j=0, nstin-2 {
+          connect STIN[nstin*i+j+1](0), STIN[nstin*i+j](1)
+        }
+		connect FLUT[nflut*i+int(nflut/2)](0), STIN[nstin*(i+1)-1](1)
+		for j=int(nflut/2), nflut-2 {
+          connect FLUT[nflut*i+j+1](0), FLUT[nflut*i+j](1)
+        }
+		connect MYSA[nmysa*i+int(nmysa/2)](0), FLUT[nflut*(i+1)-1](1)
+		for j=int(nmysa/2), nmysa-2 {
+		  connect MYSA[nmysa*i+j+1](0), MYSA[nmysa*i+j](1)
+		}
+		connect node[i+1](0), MYSA[nmysa*(i+1)-1](1)
+	}
+	
+	finitialize(v_init)
+	fcurrent()
+}
+initialize()
+
+// EXTRACELLULAR STIMULUS
+proc stimul() {
+
+        // Set model to default position
+        countspikes_0 = 0
+        countspikes_1 = 0
+        spikeobserved_0 = 0
+        spikeobserved_1 = 0
+        bin_old_0 = -1
+        bin_old_1 = -1
+        stoprun = 0
+        
+        nstin = int(axoninter/(axonnodes-1))
+        nmysa = int(paranodes1/(axonnodes-1))
+        nflut = int(paranodes2/(axonnodes-1))
+        ncomp = nstin+nmysa+nflut+1
+        
+        // Apply extracellular potential stimulus
+    	for i=0,axonnodes-2 {
+		for j=0,ncomp-1 {
+		
+		index = (i)*ncomp+j
+		// print index
+		
+		if (j==0) {
+			// Play the vector into the node of Ranvier
+			wf[(i)*ncomp+j].play(&node[i].e_extracellular(0.5),dt)
+			}
+		if (j>0 && j<(int(nmysa/2)+1)) {
+			// Play the vector into the MYSA
+			wf[(i)*ncomp+j].play(&MYSA[nmysa*i].e_extracellular(0.5),dt)
+			}
+		if (j>int(nmysa/2) && j<(int(nmysa/2)+int(nflut/2)+1)) {
+			// Play the vector into the FLUT
+			wf[(i)*ncomp+j].play(&FLUT[nflut*i].e_extracellular(0.5),dt)
+			}
+		if (j>(int(nmysa/2)+int(nflut/2)) && j<(int(nmysa/2)+int(nflut/2)+nstin+1)) {
+			// Play the vectur into the STIN
+			wf[(i)*ncomp+j].play(&STIN[nstin*i+(j-3)].e_extracellular(0.5),dt)
+			}
+		if (j>(int(nmysa/2)+int(nflut/2)+nstin) && j<(int(nmysa/2)+nflut+nstin+1)) {
+			// Play the vector into the FLUT
+			wf[(i)*ncomp+j].play(&FLUT[nflut*i+1].e_extracellular(0.5),dt)
+			}
+		if (j>(int(nmysa/2)+nflut+nstin)) {
+			// Play the vector into the MYSA
+			wf[(i)*ncomp+j].play(&MYSA[nmysa*i+1].e_extracellular(0.5),dt)
+			}
+		}
+	}
+	// Play the vector into the final node of Ranvier
+	wf[axontotal-1].play(&node[axonnodes-1].e_extracellular(0.5),dt)
+	
+	finitialize(v_init)
+    fcurrent()
+    //print nodeD
+}
+
+// Procedure to set up Net Connection event
+// watcher to detect if we've seen an AP
+
+// Watcher for 'start' of the axon
+objectvar pgnc_0,pgnil_0
+proc setupAPWatcher_0() {
+node[0] pgnc_0 = new NetCon(&v(.5),pgnil_0)
+pgnc_0.record("handle_0()")
+}
+
+// Watcher for 'end' of the axon
+objectvar pgnc_1,pgnil_1
+proc setupAPWatcher_1() {
+node[axonnodes-1] pgnc_1 = new NetCon(&v(.5),pgnil_1)
+pgnc_1.record("handle_1()")
+}
+setupAPWatcher_0()
+setupAPWatcher_1()
+
+
+// Handler to call when we've seen an AP
+// Just sets the global var to 1 signalling an AP
+
+// Handler for 'start' of the axon
+proc handle_0() {
+     bin_0 = int(t/tstop*n_pulse)
+     if (bin_0>bin_old_0) {
+        countspikes_0=countspikes_0+1
+        bin_old_0 = bin_0
+     }
+     if (countspikes_0==n_pulse) {
+        spikeobserved_0=1
+        stoprun=1
+    }
+}
+
+// Handler for 'end' of the axon
+proc handle_1() {
+     bin_1 = int(t/tstop*n_pulse)
+     if (bin_1>bin_old_1) {
+        countspikes_1=countspikes_1+1
+        bin_old_1 = bin_1
+     }
+     if (countspikes_1==n_pulse) {
+        spikeobserved_1=1
+        stoprun=1
+    }
+}
+
+
