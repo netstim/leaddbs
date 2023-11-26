@@ -5,17 +5,16 @@ classdef ea_explorerclass < handle
         M % content of lead group project
         resultfig % figure handle to plot results
         ID % name / ID of discriminative fibers object
-
         resolution = 0.5
         calcthreshold = 50
-
+        modulestate = struct;
         results = struct
         stattests = struct % contains table with information about all statistical tests
         statsettings = struct
         recentmodel = struct
+        storedmodels = struct
         thresholding = struct
-        multipath = struct
-        
+        multipath = struct        
         %%
         fastrender = 1;
         activateby={}; % entry to use to show fiber activations
@@ -31,7 +30,7 @@ classdef ea_explorerclass < handle
         setselections={};
         customselection % selected patients in the custom test list
         allpatients % list of all patients (as from M.patient.list)
-        mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
+        mirrorsides = 1 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
 
@@ -72,15 +71,20 @@ classdef ea_explorerclass < handle
 
         function initialize(obj,datapath,resultfig)
             %% set default variables
-            % Thresholding
-            obj.thresholding.showsignificantonly = 0;
+            obj.modulestate.generation = true;
+            obj.modulestate.data = false;
+            obj.modulestate.stimstats = false;
+            obj.modulestate.threshvis = false;
+            obj.modulestate.crosspred = false;
+            % Thresholding            
+            obj.thresholding.showsignificantonly = 1;
             obj.thresholding.alphalevel = 0.05;
-            obj.thresholding.multcompstrategy = 'FDR'; % could be 'Bonferroni'
-            obj.thresholding.threshstrategy = 'Percentage Relative to Peak'; % can be 'Relative to Amount' or 'Fixed Amount'
+            obj.thresholding.multcompstrategy = 'Uncorrected'; % could be 'Bonferroni' 'FDR'
+            obj.thresholding.threshstrategy = 'Percentage Relative to Amount'; % can be 'Relative to Amount' or 'Fixed Amount'
             obj.thresholding.posvisible = 1; % pos tract visible
-            obj.thresholding.negvisible = 0; % neg tract visible
-            obj.thresholding.showposamount = [25 25]; % two entries for right and left
-            obj.thresholding.shownegamount = [25 25]; % two entries for right and left
+            obj.thresholding.negvisible = 1; % neg tract visible
+            obj.thresholding.showposamount = [100 100]; % two entries for right and left
+            obj.thresholding.shownegamount = [100 100]; % two entries for right and left
             obj.thresholding.poscolor = [0.9176,0.2000,0.1373]; % positive main color
             obj.thresholding.negcolor = [0.2824,0.6157,0.9725]; % negative main color
             % List of statistical Tests
@@ -126,10 +130,10 @@ classdef ea_explorerclass < handle
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
                     obj.allpatients = obj.M.patient.list;
-                    obj.patientselection = obj.M.ui.listselect;
+                    obj.patientselection = 1:numel(obj.M.patient.list); % always initialize with all patients
                 end
-
-                obj.responsevarlabel = obj.M.clinical.labels{1};
+                obj.responsevarlabel = obj.M.clinical.labels{1}; % start with first clinical variable
+                obj.responsevar = obj.M.clinical.vars{1};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
                 for p =  1:length(props) %copy all public properties
@@ -166,7 +170,6 @@ classdef ea_explorerclass < handle
                     end
                 end
             end
-
             % if multi_pathways = 1, assemble cfile from multiple
             % pathway.dat files in dMRI_MultiTract/Connectome_name/
             % stores the result in the LeadGroup folder
@@ -190,7 +193,7 @@ classdef ea_explorerclass < handle
             obj.results.efield = AllX;
             obj.results.space = space;
             %% Calc Fibers
-            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, ~, fibcell,  connFiberInd, totalFibers] = ea_explorer_calcfibervals(vatlist, cfile, obj.calcthreshold,space);
+            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, ~, fibcell,  connFiberInd, totalFibers] = ea_explorer_calcfibervals(vatlist, cfile, obj.calcthreshold);
             obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
             obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
 
@@ -217,12 +220,11 @@ classdef ea_explorerclass < handle
             disp('Calculating Voxel Statistics')
             [obj.recentmodel.voxels.vals,obj.recentmodel.voxels.pvals]=ea_explorer_calcstats(obj,'voxels');
             disp('Calculating Fiber Statistics')
-            [obj.recentmodel.fibers.vals,obj.recentmodel.fibers.pvals]=ea_explorer_calcstats(obj,'fibers');
-            obj.draw;
+            [obj.recentmodel.fibers.vals,obj.recentmodel.fibers.pvals]=ea_explorer_calcstats(obj,'fibers');            
         end
         %% This function draws statistical results like fibers and Sweetspots
-        function draw(obj)
-            ea_explorer_cleanfigure(obj)
+        function visualize(obj)
+            obj.recentmodel.thresholding = obj.thresholding;
             disp('Visualizing Voxels')
             ea_explorer_visualizevoxels(obj);
             disp('Visualizing Fibers')
@@ -836,15 +838,6 @@ classdef ea_explorerclass < handle
             rd=obj.drawnstreamlines; % need to stash handle of drawing before saving.
             try % could be figure is already closed.
                 setappdata(rf,['dt_',tractset.ID],rd); % store handle of tract to figure.
-            end
-
-            %we do not need to store plainconn separately since it is a
-            %duplicate of PAM or VAT connectivity
-            if ~isempty(obj.results)
-                if  isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
-                    connectomeName = ea_conn2connid(obj.connectome);
-                    obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
-                end
             end
 
             % tractset.useExternalModel = false;

@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_explorer_calcfibervals(vatlist, cfile, thresh,space)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_explorer_calcfibervals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
@@ -31,9 +31,8 @@ for side = 1:numSide
     fibsval5Peak{side} = nan(totalFibers, numPatient);
 
     % disp(['Calculate for side ', num2str(side), ':']);
-    ea_dispercent(['Calculate fiber Activation for side ', num2str(side), ':'])
+    ea_dispercent(1/numPatient,['Calculate fiber Activation for side ', num2str(side)])
     for pt = 1:numPatient
-        disp(['VAT ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
         if isstruct(vatlist) % direct nifti structs supplied
             vat = vatlist(pt,side);
         elseif iscell(vatlist) % filenames
@@ -54,8 +53,10 @@ for side = 1:numSide
         fibsvalPeak{side}(fibidx,pt) = peakvals;
         fibsval5Peak{side}(fibidx,pt) = peak5vals;
         clear fibidx peakvals meanvals sumvals binvals peak5vals
+        ea_dispercent(pt/numPatient)
     end
-
+    ea_dispercent(pt/numPatient,'end')
+    disp('Completed.')
     % Remove values for not connected fibers, convert to sparse matrix
     fibIsConnected = any(fibsvalBin{side}, 2);
     fibsvalBin{side} = sparse(fibsvalBin{side}(fibIsConnected, :));
