@@ -60,6 +60,18 @@ end
 
 try
     fibhandle = streamtube(fibersnew(idx), tubeWidth);
+    if strcmp(class(fibhandle),'matlab.graphics.primitive.Surface')
+        for i=1:numel(fibhandle)
+            set(fibhandle(i),'Visible','off')
+            fibhandlenew(i,1)=surf2patch(fibhandle(i));
+        end
+        delete(fibhandle)
+        clear fibhandle
+        for i=1:numel(fibhandlenew)
+            fibhandle(i,1)=patch(fibhandlenew(i,1),'EdgeColor','none');
+        end
+        clear fibhandlenew
+    end
 catch
     keyboard
 end
@@ -93,4 +105,4 @@ end
 afv = ea_concatfv(fibhandle, 0, reduceFactor);
 delete(fibhandle);
 
-fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');
+fibhandle=patch('Faces',afv.Faces,'Vertices',afv.Vertices,'FaceVertexCData',afv.FaceVertexCData,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');
