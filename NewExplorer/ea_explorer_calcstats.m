@@ -68,19 +68,23 @@ for side=1:numel(myvalsgroup)
 
     disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
     switch obj.statsettings.stattest
+        case 'N-Map'
+            valsout = Nvalsgroup(nonemptyidx);
+            psout=zeros(size(valsout));
+        case 'Mean-Map'            
+            [valsout,psout]=ea_explorer_stats_meanmap(valsin,outcomein);
         case '2-Sample T-Test' % two-sample t-tests / OSS-DBS
             [valsout,psout]=ea_explorer_stats_2samplettest(valsin,outcomein);
-        case '1-Sample T-Test'
-            H0='Average';
-            [valsout,psout]=ea_explorer_stats_1samplettest(valsin,outcomein,H0);
-        case 'Wilcoxon Signed-Rank Test'
-            H0='Average';
-            [valsout,psout]=ea_explorer_stats_signedranktest(valsin,outcomein,H0);
+        case '1-Sample T-Test'            
+            [valsout,psout]=ea_explorer_stats_1samplettest(valsin,outcomein,obj.statsettings.H0);
+        case 'Wilcoxon Signed-Rank Test'            
+            [valsout,psout]=ea_explorer_stats_signedranktest(valsin,outcomein,obj.statsettings.H0);
         case 'Wilcoxon Rank-Sum Test'
             [valsout,psout]=ea_explorer_stats_ranksumtest(valsin,outcomein);
-        case '1-Sample Weighted Regression'
-            H0='Average';
-            [valsout,psout]=ea_explorer_stats_1sampleweightedlinreg(valsin,outcomein,H0);
+        case '1-Sample Weighted Regression'            
+            [valsout,psout]=ea_explorer_stats_1sampleweightedlinreg(valsin,outcomein,obj.statsettings.H0);
+             case '2-Sample Weighted Regression'            
+            [valsout,psout]=ea_explorer_stats_2sampleweightedlinreg(valsin,outcomein);
         case 'Spearman'
             [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
         case 'Person'
