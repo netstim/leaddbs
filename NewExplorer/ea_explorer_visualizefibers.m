@@ -77,38 +77,29 @@ if obj.thresholding.negvisible && all(allvals>0)
     warning('on', 'backtrace');
     fprintf('\n')
 end
-
-% colormap(gray);
 gradientLevel = 1024;
-cmapShiftRatio = 0.5;
-shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
-shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
-shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
-shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
-
-alphaind = ones(size(allvals));
+fibcmap = ea_explorer_createcolormap(obj,gradientLevel);
 if obj.thresholding.posvisible && obj.thresholding.negvisible
-    cmap = ea_colorgradient(gradientLevel/2, obj.thresholding.negcolor, [1,1,1]);
-    cmapLeft = ea_colorgradient(gradientLevel/2, obj.thresholding.negcolor, cmap(shiftedCmapLeftEnd,:));
-    cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.thresholding.poscolor);
-    cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.thresholding.poscolor);
-    fibcmap = [cmapLeft;cmapRight];
-    cmapind = ones(size(allvals))*gradientLevel/2;
-    cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
-    cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
-    % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
-    % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
-elseif obj.thresholding.posvisible
-    cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.thresholding.poscolor);
-    fibcmap = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.thresholding.poscolor);
-    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-    % alphaind = normalize(1./(1+exp(-allvals)), 'range');
+    mincolorthresh = prctile(allvals(allvals<0),1);
+    maxcolorthresh = prctile(allvals(allvals>0),99);
+    if abs(mincolorthresh)<abs(maxcolorthresh)
+        maxcolorthresh=-mincolorthresh;
+    else
+        mincolorthresh=-maxcolorthresh;
+    end
+elseif obj.thresholding.posvisible    
+    mincolorthresh = prctile(allvals(allvals>0),1);
+    maxcolorthresh = prctile(allvals(allvals>0),99);
 elseif obj.thresholding.negvisible
-    cmap = ea_colorgradient(gradientLevel, obj.thresholding.negcolor, [1,1,1]);
-    fibcmap = ea_colorgradient(gradientLevel, obj.thresholding.negcolor, cmap(shiftedCmapEnd,:));
-    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-    % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
+    mincolorthresh = prctile(allvals(allvals<0),1);
+    maxcolorthresh = prctile(allvals(allvals<0),99);
+    % cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
 end
+cmapind = round(1+((allvals - mincolorthresh) ./ (diff([mincolorthresh,maxcolorthresh]))) .* (gradientLevel-1));
+cmapind(cmapind<1)=1;
+cmapind(cmapind>gradientLevel)=gradientLevel;
+   
+alphaind = ones(size(allvals));
 
 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
 
@@ -150,30 +141,10 @@ for side=1:size(vals,2)
     end
 end
 
-% Set colorbar tick positions and labels
-if ~isempty(allvals)
-    if obj.thresholding.posvisible && obj.thresholding.negvisible
-        tick = [1, floor(length(fibcmap)/2-40), ceil(length(fibcmap)/2+40), length(fibcmap)];
-        poscbvals = sort(allvals(allvals>0));
-        negcbvals = sort(allvals(allvals<0));
-        ticklabel = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
-        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-    elseif obj.thresholding.posvisible
-        tick = [1, length(fibcmap)];
-        posvals = sort(allvals(allvals>0));
-        ticklabel = [posvals(1), posvals(end)];
-        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-    elseif obj.thresholding.negvisible
-        tick = [1, length(fibcmap)];
-        negvals = sort(allvals(allvals<0));
-        ticklabel = [negvals(1), negvals(end)];
-        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-    end
-end
 % store colorbar in object
 if exist('fibcmap','var') % could be no fibers present at all.
     obj.colorbar.fibers.cmap = fibcmap;
-    obj.colorbar.fibers.tick = tick;
-    obj.colorbar.fibers.ticklabel = ticklabel;
+    obj.colorbar.fibers.tick = [1, length(fibcmap)];
+    obj.colorbar.fibers.ticklabel = round([mincolorthresh, maxcolorthresh],2);
 end
 end

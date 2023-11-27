@@ -1,4 +1,4 @@
-function [fibcell,vals,usedidx]=ea_explorer_visualizevoxels(obj)
+function ea_explorer_visualizevoxels(obj)
 %% Thresholding Part
 if obj.thresholding.showsignificantonly
     obj.recentmodel.voxels.sigvals=ea_explorer_corrsignan(obj.recentmodel.voxels.vals,obj.recentmodel.voxels.pvals,obj);
