@@ -51,8 +51,8 @@ class Importer():
             trajectoryTransform.SetAttribute('Entry', self.stereotaxyReport.getCoordinates('Entry', 'DICOM') + ';RAS;0')
             trajectoryTransform.SetAttribute('Target', self.stereotaxyReport.getCoordinates('Target', 'DICOM') + ';RAS;0')
         trajectoryTransform.SetAttribute('Mounting', self.planningDictionary["Mounting"])
-        trajectoryTransform.SetAttribute('Ring', self.planningDictionary["Ring Angle"])
-        trajectoryTransform.SetAttribute('Arc', self.planningDictionary["Arc Angle"])
+        trajectoryTransform.SetAttribute('Ring', self.planningDictionary["RingAngle"])
+        trajectoryTransform.SetAttribute('Arc', self.planningDictionary["ArcAngle"])
         trajectoryTransform.SetAttribute('Roll', '0')
         # Compute
         if importInFrameSpace:
@@ -62,8 +62,8 @@ class Importer():
         self.logic.computeTrajectoryFromTargetMountingRingArc(trajectoryTransform,
                                                                 targetCoordinatesForComputation,
                                                                 self.planningDictionary["Mounting"],
-                                                                float(self.planningDictionary["Ring Angle"]),
-                                                                float(self.planningDictionary["Arc Angle"]))
+                                                                float(self.planningDictionary["RingAngle"]),
+                                                                float(self.planningDictionary["ArcAngle"]))
         return [trajectoryTransform.GetID()]
     
     def getReferenceVolumeFromDICOM(self, DICOMDir):
@@ -130,7 +130,7 @@ class StereotaxyReport():
         try:
             import pdfplumber
         except:
-            slicer.util.pip_install('pdfplumber')
+            slicer.util.pip_install('pdfplumber==0.10.3')
         import pdfplumber    
         
         self.pdf = pdfplumber.open(PDFPath)
@@ -145,41 +145,45 @@ class StereotaxyReport():
         return side in self.getTrajectoryInformation()['Name']
 
     def getTrajectoryInformation(self):
-        cropRegion = (self.pdfWidth/2, 130, self.pdfWidth, 240)
+        y0 = self.getTextHeightInPDF(0, 'Name.*', 'right')
+        cropRegion = (self.pdfWidth/2, y0-10, self.pdfWidth, y0+90)
         tableSettings = {
             "vertical_strategy": "text",
             "horizontal_strategy": "lines",
-            "intersection_y_tolerance": 20,    
-            "keep_blank_chars": True,
-            }
+            "intersection_y_tolerance": 100
+        }
         outList = self.pdf.pages[0].crop(cropRegion).extract_table(tableSettings)
-        outDict = {r[0]:r[1] for r in outList}
+        outDict = {self.onlyAlphaNumeric(r[0]):r[1] for r in outList}
         return outDict
 
     def getPatientInformation(self):
-        cropRegion = (0, 130, self.pdfWidth/2, 240)
+        y0 = self.getTextHeightInPDF(0, 'Patient\s?Name.*', 'left')
+        cropRegion = (0, y0-10, self.pdfWidth/2, y0+90)
         tableSettings = {
             "vertical_strategy": "text",
             "horizontal_strategy": "lines",
-            "intersection_y_tolerance": 20,    
-            "keep_blank_chars": True,
-            }
+            "intersection_y_tolerance": 100
+        }
         outList = self.pdf.pages[0].crop(cropRegion).extract_table(tableSettings)
-        outDict = {r[0]:r[1] for r in outList}
+        outDict = {self.onlyAlphaNumeric(r[0]):r[1] for r in outList}
         return outDict
 
     def getArcSettings(self):
-        cropRegion = (0, 419, self.pdfWidth, 480)
+        y0 = self.getTextHeightInPDF(0, 'Mounting.*')
+        cropRegion = (0, y0-10, self.pdfWidth, y0+30)
         tableSettings = {
-            "vertical_strategy": "text",
+            "vertical_strategy": "explicit",
             "horizontal_strategy": "text",
             "min_words_vertical": 0,
-            "keep_blank_chars": True,
-            }
+            "min_words_horizontal": 0,
+            "explicit_vertical_lines":[30]+[130+90*i for i in range(6)],
+            "intersection_x_tolerance":100,
+            "snap_y_tolerance":10
+        }
         outList = self.pdf.pages[0].crop(cropRegion).extract_table(tableSettings)
         outList = [[outList[0][i], outList[1][i]] for i in range(len(outList[0]))] # Transpose
-        outDict = {r[0]:r[1].split(' ')[0] for r in outList} # Remove units
-        outDict["Headring Coordinates"] = ",".join([outDict[C] for C in ["X","Y","Z"]]) # Join X Y Z
+        outDict = {self.onlyAlphaNumeric(r[0]):r[1].split(' ')[0] for r in outList} # Remove units
+        outDict["HeadringCoordinates"] = ",".join([outDict[C] for C in ["X","Y","Z"]]) # Join X Y Z
         return outDict
 
     def getCoordinates(self, queryPoint, queryCoordinateSystem):
@@ -190,10 +194,12 @@ class StereotaxyReport():
                 cropBoundingBox = (0, 350 , self.pdfWidth, 395)
             elif queryPoint in ['AC', 'PC', 'MS']:
                 PDFPage = 1
-                cropBoundingBox = (0, self.pdfHeight * 0.57 , self.pdfWidth/2, self.pdfHeight * 0.85)
+                y0 = self.getTextHeightInPDF(PDFPage, 'AC\s?Point.*', 'left')
+                cropBoundingBox = (0, y0-10 , self.pdfWidth/2, y0+50)
         elif queryCoordinateSystem == 'DICOM':
             PDFPage = 1
-            cropBoundingBox = (self.pdfWidth/2, self.pdfHeight * 0.57 , self.pdfWidth, self.pdfHeight * 0.85)
+            y0 = self.getTextHeightInPDF(PDFPage, 'Target.*', 'right')
+            cropBoundingBox = (self.pdfWidth/2, y0-10, self.pdfWidth, y0+90)
         else:
             raise RuntimeError('Invalid queryCoordinateSystem: ' + queryCoordinateSystem)
         # extract text
@@ -213,30 +219,39 @@ class StereotaxyReport():
         return ','.join([str(x) for x in xyz_flt])
 
     def getDICOMInformation(self):
-        hStart = self.findHeightContainingText(1, self.pdfHeight * 0.5, "DICOM Coordinates") + 15
-        hEnd = self.findHeightContainingText(1, self.pdfHeight * 0.61, "X Y Z") - 5
-        cropRegion = (self.pdfWidth/2, hStart , self.pdfWidth, hEnd)
+        y0 = self.getTextHeightInPDF(1, 'DICOM\s?Coordinates.*', 'right') + 20
+        y1 = self.getTextHeightInPDF(1, 'X\s*Y\s*Z.*', 'right')
+        cropRegion = (self.pdfWidth/2, y0 , self.pdfWidth, y1)
         tableSettings = {
-            "vertical_strategy": "text",
+            "vertical_strategy": "explicit",
             "horizontal_strategy": "lines",
-            "min_words_vertical": 1,
-            "keep_blank_chars": True,
-            "intersection_y_tolerance":15,
-            "edge_min_length":15,
-            "explicit_horizontal_lines":[hEnd],
-            "explicit_vertical_lines":[570]
+            "min_words_vertical": 0,
+            "intersection_x_tolerance":30,
+            "explicit_horizontal_lines":[y0+2, y1-2],
+            "explicit_vertical_lines":[self.pdfWidth/2+5,self.pdfWidth/2+70,self.pdfWidth/2+270]
             }
         outList = self.pdf.pages[1].crop(cropRegion).extract_table(tableSettings)
-        outDict = {r[0]:r[1].replace('\n','') for r in outList}
-        outDict['SeriesDescription'] = outDict['Image Set']
-        outDict['AcquisitionDateTime'] = datetime.strptime(outDict['Scanned'], '%m/%d/%Y, %I:%M %p')
+        outDict = {self.onlyAlphaNumeric(r[0]):r[1].replace('\n','') for r in outList}
+        outDict['SeriesDescription'] = outDict['ImageSet']
+        try: # matches 2/25/2014, 5:15 PM
+            outDict['AcquisitionDateTime'] = datetime.strptime(outDict['Scanned'], '%m/%d/%Y, %I:%M %p')
+        except: # matches 17-nov.-2014, 17:43
+            outDict['AcquisitionDateTime'] = datetime.strptime(outDict['Scanned'], '%d-%b.-%Y, %H:%M')
         return outDict
 
-    def findHeightContainingText(self, pageNumber, heightStart, matchText):
-        t = None
-        maxHeight = heightStart
-        while not t or t.find(matchText)==-1:
-            maxHeight = maxHeight+1
-            t = self.pdf.pages[pageNumber].crop((0, heightStart , self.pdfWidth, maxHeight)).extract_text()
-        return maxHeight
+    def getTextHeightInPDF(self, pageNumber, textPattern, side=None):
+        if side == 'left':
+            x0 = 0
+            x1 = self.pdfWidth/2
+        elif side == 'right':
+            x0 = self.pdfWidth/2
+            x1 = self.pdfWidth
+        else:
+            x0 = 0
+            x1 = self.pdfWidth
+        for line in self.pdf.pages[pageNumber].crop((x0, 0, x1, self.pdfHeight)).extract_text_lines():
+            if re.search(textPattern, line['text']):
+                return line['top']
 
+    def onlyAlphaNumeric(self, string):
+        return re.sub(r'[^a-zA-Z0-9]', '', string)
