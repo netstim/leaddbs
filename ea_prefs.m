@@ -46,13 +46,14 @@ end
 %     else
 %         fid = fopen(ea_prefspath('json'),'rt');
 %         uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
-%         umachine = load(ea_prefspath('mat'));
+         umachine = load(ea_prefspath('mat'));
 %     end
-% catch ME
+%catch ME
     prefs=dprefs; % it seems user-defined prefs cannot be loaded.
-    %warning(ME.message);
+    prefs.machine=umachine.machine;
+%    warning(ME.message);
     return
-% end
+%end
 
 % combine default prefs and user prefs
 prefs = combinestructs(dprefs, uprefs);
