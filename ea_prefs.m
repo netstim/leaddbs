@@ -36,23 +36,23 @@ if ~isfile(ea_prefspath('mat'))
 end
 
 % load user prefs
-try
-    if ~isdeployed
-        % Temporarily add ~/.leaddbs to search path and get user prefs.
-        addpath(ea_prefsdir);
-        uprefs = ea_prefs(patientname);
-        rmpath(ea_prefsdir);
-        umachine = load(ea_prefspath('mat'));
-    else
-        fid = fopen(ea_prefspath('json'),'rt');
-        uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
-        umachine = load(ea_prefspath('mat'));
-    end
-catch ME
+% try
+%     if ~isdeployed
+%         % Temporarily add ~/.leaddbs to search path and get user prefs.
+%         addpath(ea_prefsdir);
+%         uprefs = ea_prefs(patientname);
+%         rmpath(ea_prefsdir);
+%         umachine = load(ea_prefspath('mat'));
+%     else
+%         fid = fopen(ea_prefspath('json'),'rt');
+%         uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
+%         umachine = load(ea_prefspath('mat'));
+%     end
+% catch ME
     prefs=dprefs; % it seems user-defined prefs cannot be loaded.
-    warning(ME.message);
+    %warning(ME.message);
     return
-end
+% end
 
 % combine default prefs and user prefs
 prefs = combinestructs(dprefs, uprefs);
