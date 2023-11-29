@@ -15,9 +15,6 @@ end
 dprefs = ea_prefs_default(patientname);
 dmachine = load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat']);
 
-% check user prefs
-home = ea_gethome;
-
 % if isdeployed
 %     disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
 % end
@@ -35,7 +32,7 @@ try
     if ~isdeployed
         % Temporarily add ~/.leaddbs to search path and get user prefs.
         addpath(ea_prefsdir);
-        uprefs = ea_prefs(patientname);
+        uprefs = ea_prefs_user(patientname);
         rmpath(ea_prefsdir);
         umachine = load(ea_prefspath('mat'));
     else
@@ -48,7 +45,6 @@ catch ME
     warning(ME.message);
     return
 end
-
 
 % combine default prefs and user prefs
 prefs = combinestructs(dprefs, uprefs);

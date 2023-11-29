@@ -4,9 +4,14 @@ function ea_checkprefs
 prefsDir = ea_prefsdir;
 
 prefs = ea_regexpdir(ea_gethome, '^\.ea_prefs.*', 0);
-
 if ~isempty(prefs)
     newprefs = replace(prefs, [ea_gethome, '.'], [prefsDir, filesep]);
+    cellfun(@(x,y) movefile(x,y,'f'), prefs, newprefs);
+end
+
+prefs = ea_regexpdir(ea_prefsdir, '^ea_prefs\..*', 0);
+if ~isempty(prefs)
+    newprefs = replace(prefs, 'ea_prefs.', 'ea_prefs_user.');
     cellfun(@(x,y) movefile(x,y,'f'), prefs, newprefs);
 end
 
