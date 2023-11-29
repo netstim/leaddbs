@@ -40,7 +40,9 @@ planningFiles = importerData[1:]
 importlib.import_module('.'.join(['StereotacticPlanLib', 'ImportFrom', importerName]))
 importerModule = getattr(StereotacticPlanLib.ImportFrom, importerName)
 
-referenceLoaded = False
+reference_file = os.path.join(subjectLeadORFolder, savePrefix + 'reference.nii')
+if os.path.isfile(reference_file):
+    os.remove(reference_file)
 
 for i,file in enumerate(planningFiles):
     importer = importerModule.Importer(file)
@@ -48,18 +50,16 @@ for i,file in enumerate(planningFiles):
     for nodeID in loadedNodeIDs:
         node = slicer.util.getNode(nodeID)
         slicer.util.saveNode(node, os.path.join(subjectLeadORFolder, savePrefix + 'planning' + node.GetName().replace(' ','') + '.txt'))
-    if not referenceLoaded:
-        try:
-            referenceToFrameTransformNode = importer.getReferenceToFrameTransform()
-            referenceVolumeNode = importer.getReferenceVolumeFromDICOM(subjectDICOMFolder)
-            slicer.util.saveNode(referenceToFrameTransformNode, os.path.join(subjectLeadORFolder, savePrefix + 'referenceToFrame.txt'))
-            slicer.util.saveNode(referenceVolumeNode, os.path.join(subjectLeadORFolder, savePrefix + 'reference.nii'))
-            referenceLoaded = True
-        except:
-            referenceLoaded = False
+    if not os.path.isfile(reference_file):
+        referenceToFrameTransformNode = importer.getReferenceToFrameTransform()
+        slicer.util.saveNode(referenceToFrameTransformNode, os.path.join(subjectLeadORFolder, savePrefix + 'referenceToFrame.txt'))
+        referenceVolumeNode = importer.getReferenceVolumeFromDICOM(subjectDICOMFolder)
+        if referenceVolumeNode:
+            slicer.util.saveNode(referenceVolumeNode, reference_file)
 
-if not referenceLoaded:
-    print('Couldn''t load reference for: ' + subjectFolder)
+
+if not os.path.isfile(reference_file):
+    raise RuntimeError('Couldn''t load reference for: ' + subjectFolder)
     slicer.util.exit()
 
 #
@@ -81,8 +81,9 @@ cli = slicer.cli.run(slicer.modules.brainsfit, None, parameters, wait_for_comple
 slicer.util.saveNode(anchorNativeToReferenceTransformNode, os.path.join(subjectLeadORFolder, savePrefix + 'anchorNativeToReference.txt'))
 
 for node in subjectAnatNodes:
-    node.ApplyTransform(anchorNativeToReferenceTransformNode.GetTransformToParent())
-    node.ApplyTransform(referenceToFrameTransformNode.GetTransformToParent())
+    node.SetAndObserveTransformNodeID(anchorNativeToReferenceTransformNode.GetID())
+    node.HardenTransform()
+    node.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
     node.HardenTransform()
 
 #
@@ -96,10 +97,12 @@ MNIToAnchorNativeFileTransformNode = slicer.util.loadTransform(MNIToAnchorNative
 shnode = slicer.mrmlScene.GetSubjectHierarchyNode()
 for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')):
     modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-    if shnode.GetItemAttribute(shnode.GetItemByDataNode(modelNode),'atlas') == '1':
-        modelNode.ApplyTransform(MNIToAnchorNativeFileTransformNode.GetTransformToParent())
-        modelNode.ApplyTransform(anchorNativeToReferenceTransformNode.GetTransformToParent())
-        modelNode.ApplyTransform(referenceToFrameTransformNode.GetTransformToParent())
+    if 'atlas' in shnode.GetItemAttributeNames(shnode.GetItemByDataNode(modelNode)):
+        modelNode.SetAndObserveTransformNodeID(MNIToAnchorNativeFileTransformNode.GetID())
+        modelNode.HardenTransform()
+        modelNode.SetAndObserveTransformNodeID(anchorNativeToReferenceTransformNode.GetID())
+        modelNode.HardenTransform()
+        modelNode.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
         modelNode.HardenTransform()
 
 #

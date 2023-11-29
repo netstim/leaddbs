@@ -40,7 +40,7 @@ try
     if ~isdeployed
         % Temporarily add ~/.leaddbs to search path and get user prefs.
         addpath(ea_prefsdir);
-        uprefs = ea_prefs(patientname);
+        uprefs = ea_prefs_user(patientname);
         rmpath(ea_prefsdir);
         umachine = load(ea_prefspath('mat'));
     else

@@ -9,4 +9,4 @@ if ~startsWith(ext, '.')
     ext = ['.', ext];
 end
 
-prefsPath = fullfile(ea_prefsdir, ['ea_prefs', ext]);
+prefsPath = fullfile(ea_prefsdir, ['ea_prefs_user', ext]);
