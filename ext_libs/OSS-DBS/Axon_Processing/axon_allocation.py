@@ -258,7 +258,7 @@ class AxonModels:
             if n_Ranviers_per_projection_all[i] != 0:
                 self.axon_diams.append(float(self.axon_diams_all[i]))
                 n_Ranviers_per_projection.append(int(n_Ranviers_per_projection_all[i]))
-                n_Neurons.append(n_Neurons_all[i])
+                n_Neurons.append(int(n_Neurons_all[i]))
 
         self._save_axon_parameters_in_json(n_Ranviers_per_projection, n_Neurons)
 
@@ -269,7 +269,7 @@ class AxonModels:
         Parameters
         ----------
         n_Ranviers_per_projection: list, number of nodes of Ranvier for axons of each pathway (one entry per pathway)
-
+        n_Neurons: list, number of neurons seeded per pathway
         """
 
         # dictionary to store axon parameters

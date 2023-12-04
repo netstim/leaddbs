@@ -486,6 +486,7 @@ end
 % full clean-up for V2
 ea_delete([outputDir, filesep, 'Results_*']);
 ea_delete([outputDir, filesep, 'oss-dbs_parameters.json']);
+ea_delete([outputDir, filesep, 'Allocated_axons.h5'])
 
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
@@ -575,6 +576,17 @@ for side=0:1
     parameterFile_json = [parameterFile(1:end-3), 'json'];
     system(['ossdbs ' , parameterFile_json])
 
+    if settings.calcAxonActivation
+        % call the NEURON module
+        folder2save = [outputDir,filesep,'Results_', sideCode];
+        timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result.h5'];
+        pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
+        scaling = 1.0;
+
+
+        system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)])
+    end
+
     % Check if OSS-DBS calculation is finished
     while ~isfile([outputDir, filesep, 'success_', sideCode, '.txt']) ...
             && ~isfile([outputDir, filesep, 'fail_', sideCode, '.txt'])
@@ -590,42 +602,44 @@ for side=0:1
         runStatus(side+1) = 1;
         fprintf('\nOSS-DBS calculation succeeded!\n\n')
 
+        if settings.exportVAT
 
-        if settings.removeElectrode
-            % create nii for distorted grid
-            if options.native
-                ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+            if settings.removeElectrode
+                % create nii for distorted grid
+                if options.native
+                    ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                else
+                    ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Template_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                end
             else
-                ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Template_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                % convert original OSS-DBS VTAs to BIDS in the corresponding space
+                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_WA.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
+                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_WA.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+                %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+                %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
             end
-        else
-            % convert original OSS-DBS VTAs to BIDS in the corresponding space
-            copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_WA.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
-            copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_WA.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
-            %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-            %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+    
+    
+            % always transform to MNI space
+            if options.native   
+                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+            end
+    
+            if options.native && ~options.orignative
+                % Visualize MNI space VTA computed in native
+                vatToViz = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+            else
+                vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+            end
+    
+            % Calc vat fv and volume
+            vat = ea_load_nii(vatToViz);
+            vatfv = ea_niiVAT2fvVAT(vat);
+            vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
+            save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
+            stimparams(side+1).VAT.VAT = vatfv;
+            stimparams(side+1).volume = vatvolume;
         end
-
-
-        % always transform to MNI space
-        if options.native   
-            ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
-        end
-
-        if options.native && ~options.orignative
-            % Visualize MNI space VTA computed in native
-            vatToViz = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
-        else
-            vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
-        end
-
-        % Calc vat fv and volume
-        vat = ea_load_nii(vatToViz);
-        vatfv = ea_niiVAT2fvVAT(vat);
-        vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
-        save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
-        stimparams(side+1).VAT.VAT = vatfv;
-        stimparams(side+1).volume = vatvolume;
 
 
         axonState = ea_regexpdir([outputDir, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
@@ -784,7 +798,7 @@ for side=0:1
 
     % Clean up
     ea_delete([outputDir, filesep, 'Brain_substitute.brep']);
-    ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
+    %ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
     %ea_delete(ea_regexpdir(outputDir, '^(?!Current_protocols_).*\.csv$', 0));
     % ea_delete([outputDir, filesep, '*.py']);
 

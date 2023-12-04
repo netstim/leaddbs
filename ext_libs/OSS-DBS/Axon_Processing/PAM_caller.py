@@ -1,0 +1,104 @@
+import h5py
+import numpy as np
+import json
+import os
+import subprocess
+import sys
+
+def launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling):
+    """
+    Parameters
+    ----------
+    folder_to_save: str, path to folder where results are stored. Lead-DBS expects <stim_folder>/Results_<hemis>
+    points_h5_file: str, path to .h5 containing the time domain solution for the pathways (point model, usually oss_time_result.h5)
+    pathways_params_file: str, path to .json containing parameters for the pathways (usually Allocated_axons_parameters.json)
+    scaling: float, optional
+
+    """
+
+    # load files
+    with open(pathways_params_file, 'r') as fp:
+        pathways_dict = json.load(fp)
+
+    # get to the right NEURON folder and compile
+    if pathways_dict['Axon_Model_Type'] == 'McNeal1976':
+
+        os.chdir("/home/konstantin/Documents/GitHub/leaddbs/ext_libs/OSS-DBS/Axon_Processing/Axon_files/McNeal1976")
+        with open(os.devnull, 'w') as FNULL:
+           subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    elif self.axonModel == "McIntyre2002" or self.axonModel == "McIntyre2002_ds":
+
+        os.chdir("/home/konstantin/Documents/GitHub/leaddbs/ext_libs/OSS-DBS/Axon_Processing/Axon_files")
+        #with open(os.devnull, 'w') as FNULL:
+        #    subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL,
+        #                    stderr=subprocess.STDOUT)  # might not work with remote hard drives
+        with open(os.devnull, 'w') as FNULL:
+            subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    from Axon_files.neuron_simulation import NeuronStimulation
+
+    # load solution
+    hf = h5py.File(points_h5_file , 'r')
+    pathways = list(hf.keys())
+    pathways.remove('TimeSteps[s]')
+
+    # signal parameters can be extracted from solution
+    TimeSteps = np.array(hf['TimeSteps[s]'])
+    signal_dict = {
+     'time_step': np.round(1000.0 * (TimeSteps[1] - TimeSteps[0]), 6),   # in ms
+     'scaling': scaling,       # from GUI
+     'N_time_steps': TimeSteps.shape[0]  #
+    }
+
+    #scaling_vectors = [[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],[]]
+
+    pathway_idx = 0
+    for pathway_name in pathways:
+
+        pathway_dataset = hf[pathway_name]
+        #pathway_time_sol_dataset = hf2.get(pathway_name)
+
+        pathway_dict = {
+            'pathway_name': pathway_name,
+            'Axon_Model_Type': pathways_dict['Axon_Model_Type'],
+            'axon_diam': pathways_dict['axon_diams'][pathway_idx],
+            'n_Ranvier': pathways_dict['n_Ranvier'][pathway_idx],
+            'N_seeded_neurons': pathways_dict['N_seeded_neurons'][pathway_idx]
+        }
+
+        pre_status = np.zeros(len(list(pathway_dataset)), int)
+        # mark the last and the first one
+        pre_status[0] = -1
+        pre_status[-1] = -2
+
+        #pathway_time_sol_dataset = get_abstract_pathway_voltage(signal_dict, pathway_dataset,pathway_name,hf2)
+
+        pathwayNEURON = NeuronStimulation(pathway_dict, signal_dict, folder_to_save)
+        #pathwayNEURON.check_pathway_activation(pathway_dataset, pathway_time_sol_dataset, pre_status)
+        pathwayNEURON.check_pathway_activation(pathway_dataset, pre_status)
+
+    hf.close()
+    hf2.close()
+
+if __name__ == '__main__':
+    """ Call to probe action potentials for a given time domain solution
+
+    Parameters
+    ----------
+    folder_to_save: str, path to folder where results are stored. Lead-DBS expects <stim_folder>/Results_<hemis>
+    points_h5_file: str, path to .h5 containing the time domain solution for the pathways (point model)
+    pathways_params_file: str, path to .json containing parameters for the pathways
+    scaling: float, optional
+
+    """
+
+    folder_to_save = sys.argv[1:][0]
+    points_h5_file = sys.argv[1:][1]
+    pathways_params_file = sys.argv[1:][2]
+    if len(sys.argv[1:]) == 4:
+        scaling = float(sys.argv[1:][3])
+    else:
+        scaling = 1.0
+
+    launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling)
