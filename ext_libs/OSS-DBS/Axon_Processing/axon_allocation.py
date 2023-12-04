@@ -269,7 +269,7 @@ class AxonModels:
         Parameters
         ----------
         n_Ranviers_per_projection: list, number of nodes of Ranvier for axons of each pathway (one entry per pathway)
-
+        n_Neurons: list, number of neurons seeded per pathway
         """
 
         # dictionary to store axon parameters
