@@ -578,13 +578,14 @@ for side=0:1
 
     if settings.calcAxonActivation
         % call the NEURON module
+        leaddbs_neuron = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/Axon_files'];
         folder2save = [outputDir,filesep,'Results_', sideCode];
         timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result.h5'];
         pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
         scaling = 1.0;
 
 
-        system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)])
+        system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', leaddbs_neuron, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)])
     end
 
     % Check if OSS-DBS calculation is finished
@@ -668,7 +669,7 @@ for side=0:1
                 % test!!!
                 if strcmp(settings.butenko_intersectStatus,'activated')
                     ftr.fibers(ftr.fibers == -1 || ftr.fibers == -3,5) = 1;
-                elseif trcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+                elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
                     ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers);
                 end
 
