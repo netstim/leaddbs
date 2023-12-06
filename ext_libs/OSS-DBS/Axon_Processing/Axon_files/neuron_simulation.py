@@ -4,12 +4,11 @@ import neuron as n
 import numpy as np
 from pandas import read_csv
 import time as tm
-import multiprocessing as mp, cpu_count
+import multiprocessing as mp
 import logging
 from scipy.io import savemat
 
 
-# get class from axon
 class NeuronStimulation:
 
     """Pathway activation modeling based on extracellular voltage
@@ -187,14 +186,13 @@ class NeuronStimulation:
     #ToDo
     #def create_paraview_outputs(self):
 
-    def check_pathway_activation(self, pathway_points, pathway_time_sol, pre_status):
+    def check_pathway_activation(self, pathway_dataset):
 
         """ Parallelized probing of action potentials at all stimulated neurons (axons) described by supplied pathway datagroups
 
         Parameters
         ----------
-        pathway_points: h5 group, contains datasets that describe geometries for all neuron (axons)
-        pathway_points: h5 group, contains datasets that describe electric potential distribution in space and time for all neuron (axons)
+        pathway_dataset: h5 group, contains datasets that describe geometries for all neuron (axons)
         pre_status: Nx1 numpy.ndarray, vector of initial neuron (axon) statuses (0 - available for probing, -1 - intersected with electrode, -2 - inside CSF)
 
         Note
@@ -203,8 +201,11 @@ class NeuronStimulation:
         """
 
         # use half of CPUs
-        N_proc = cpu_count() / 2
+        N_proc = mp.cpu_count() / 2
         self.modify_hoc_file()
+
+        # check pre-status
+        pre_status = pathway_dataset['Status']
 
         # initialize outputs
         Axon_Lead_DBS = np.zeros((self.N_neurons * self.n_segments_actual, 5), float)
@@ -221,20 +222,30 @@ class NeuronStimulation:
             output = mp.Queue()
             while j_proc < N_proc and neuron_index < self.N_neurons:
 
-                # get neuron geometry
-                neuron_time_sol = np.array(pathway_time_sol.get('axon' + str(neuron_index)))
+                # get neuron geometry and field solution
+                neuron = pathway_dataset['axon' + str(neuron_index)]
                 Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual,
-                :3] = np.array(pathway_points.get('axon' + str(neuron_index)))[:,:3]
+                :3] = np.array(neuron['Points[mm]'])
 
-                # check which neurons were flagged with CSF and electrode intersection
+                # add index
                 Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual,
                 3] = neuron_index + 1  # because Lead-DBS numbering starts from 1
 
-                # skip probing of those
-                if pre_status[neuron_index] != 0:
-                    Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = pre_status[neuron_index]
+                # temp binary solution. True - potential probed
+                #print(list(neuron.keys()), neuron_index)
+                #print(pre_status[neuron_index])
+                if not(pre_status[neuron_index]):
+                    Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = -1
                     neuron_index += 1
                     continue
+
+                # # check which neurons were flagged with CSF and electrode intersection, skip probing of those
+                # if pre_status[neuron_index] != 0:
+                #     Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = pre_status[neuron_index]
+                #     neuron_index += 1
+                #     continue
+
+                neuron_time_sol = np.array(neuron['Potential[V]'])
 
                 processes = mp.Process(target=self.get_axon_status, args=(neuron_index, neuron_time_sol, output))
                 proc.append(processes)
@@ -269,7 +280,7 @@ class NeuronStimulation:
         self.create_leaddbs_outputs(Axon_Lead_DBS)
         print("\n\nPathway ",self.pathway_name, ": ")
         print("Activated neurons: ",np.round(Activated_models/float(self.N_neurons)*100,2), " %")
-        print("Neurons with status -1: ",np.round(np.sum(pre_status == -1)/float(self.N_neurons)*100,2), " %")
+        print("Neurons with status -1: ",np.round(len(pre_status)-np.count_nonzero(pre_status)/float(self.N_neurons)*100,2), " %")
         print("Neurons with status -2: ",np.round(np.sum(pre_status == -2)/float(self.N_neurons)*100,2), " %")
 
 

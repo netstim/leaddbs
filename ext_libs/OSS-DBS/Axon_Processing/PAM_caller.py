@@ -27,7 +27,7 @@ def launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling):
         with open(os.devnull, 'w') as FNULL:
            subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    elif self.axonModel == "McIntyre2002" or self.axonModel == "McIntyre2002_ds":
+    elif pathways_dict['Axon_Model_Type'] == "McIntyre2002" or pathways_dict['Axon_Model_Type'] == "McIntyre2002_ds":
 
         os.chdir("/home/konstantin/Documents/GitHub/leaddbs/ext_libs/OSS-DBS/Axon_Processing/Axon_files")
         #with open(os.devnull, 'w') as FNULL:
@@ -57,7 +57,6 @@ def launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling):
     for pathway_name in pathways:
 
         pathway_dataset = hf[pathway_name]
-        #pathway_time_sol_dataset = hf2.get(pathway_name)
 
         pathway_dict = {
             'pathway_name': pathway_name,
@@ -67,19 +66,20 @@ def launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling):
             'N_seeded_neurons': pathways_dict['N_seeded_neurons'][pathway_idx]
         }
 
-        pre_status = np.zeros(len(list(pathway_dataset)), int)
-        # mark the last and the first one
-        pre_status[0] = -1
-        pre_status[-1] = -2
+        #pre_status = np.zeros(len(list(pathway_dataset)), int)
+        ## mark the last and the first one
+        #pre_status[0] = -1
+        #pre_status[-1] = -2
 
         #pathway_time_sol_dataset = get_abstract_pathway_voltage(signal_dict, pathway_dataset,pathway_name,hf2)
 
         pathwayNEURON = NeuronStimulation(pathway_dict, signal_dict, folder_to_save)
         #pathwayNEURON.check_pathway_activation(pathway_dataset, pathway_time_sol_dataset, pre_status)
-        pathwayNEURON.check_pathway_activation(pathway_dataset, pre_status)
+        pathwayNEURON.check_pathway_activation(pathway_dataset)
+
+        pathway_idx += 1
 
     hf.close()
-    hf2.close()
 
 if __name__ == '__main__':
     """ Call to probe action potentials for a given time domain solution
