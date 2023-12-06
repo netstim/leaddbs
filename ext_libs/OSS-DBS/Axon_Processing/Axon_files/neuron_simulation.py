@@ -280,7 +280,7 @@ class NeuronStimulation:
         self.create_leaddbs_outputs(Axon_Lead_DBS)
         print("\n\nPathway ",self.pathway_name, ": ")
         print("Activated neurons: ",np.round(Activated_models/float(self.N_neurons)*100,2), " %")
-        print("Neurons with status -1: ",np.round(len(pre_status)-np.count_nonzero(pre_status)/float(self.N_neurons)*100,2), " %")
+        print("Neurons with status -1: ",np.round((len(pre_status)-np.count_nonzero(pre_status))/float(self.N_neurons)*100,2), " %")
         print("Neurons with status -2: ",np.round(np.sum(pre_status == -2)/float(self.N_neurons)*100,2), " %")
 
 

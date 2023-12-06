@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-def launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling):
+def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_params_file, scaling):
     """
     Parameters
     ----------
@@ -23,13 +23,13 @@ def launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling):
     # get to the right NEURON folder and compile
     if pathways_dict['Axon_Model_Type'] == 'McNeal1976':
 
-        os.chdir("/home/konstantin/Documents/GitHub/leaddbs/ext_libs/OSS-DBS/Axon_Processing/Axon_files/McNeal1976")
+        os.chdir(leaddbs_neuron_folder + "/McNeal1976")
         with open(os.devnull, 'w') as FNULL:
            subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     elif pathways_dict['Axon_Model_Type'] == "McIntyre2002" or pathways_dict['Axon_Model_Type'] == "McIntyre2002_ds":
 
-        os.chdir("/home/konstantin/Documents/GitHub/leaddbs/ext_libs/OSS-DBS/Axon_Processing/Axon_files")
+        os.chdir(leaddbs_neuron_folder)
         #with open(os.devnull, 'w') as FNULL:
         #    subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL,
         #                    stderr=subprocess.STDOUT)  # might not work with remote hard drives
@@ -86,19 +86,20 @@ if __name__ == '__main__':
 
     Parameters
     ----------
+    leaddbs_neuron_folder: str, path to folder where NEURON models are
     folder_to_save: str, path to folder where results are stored. Lead-DBS expects <stim_folder>/Results_<hemis>
     points_h5_file: str, path to .h5 containing the time domain solution for the pathways (point model)
     pathways_params_file: str, path to .json containing parameters for the pathways
     scaling: float, optional
 
     """
-
-    folder_to_save = sys.argv[1:][0]
-    points_h5_file = sys.argv[1:][1]
-    pathways_params_file = sys.argv[1:][2]
-    if len(sys.argv[1:]) == 4:
-        scaling = float(sys.argv[1:][3])
+    leaddbs_neuron_folder = sys.argv[1:][0]
+    folder_to_save = sys.argv[1:][1]
+    points_h5_file = sys.argv[1:][2]
+    pathways_params_file = sys.argv[1:][3]
+    if len(sys.argv[1:]) == 5:
+        scaling = float(sys.argv[1:][4])
     else:
         scaling = 1.0
 
-    launch_PAM(folder_to_save, points_h5_file, pathways_params_file, scaling)
+    launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_params_file, scaling)
