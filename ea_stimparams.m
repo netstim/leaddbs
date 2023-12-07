@@ -1136,7 +1136,7 @@ for el = 1:length(elstruct)
         else
             options.stimSetMode = 0;
         end
-        if options.prefs.machine.vatsettings.butenko_calcAxonActivation
+        if options.prefs.machine.vatsettings.butenko_calcPAM
             feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
             ea_busyaction('off',handles.stimfig,'stim');
             return;
