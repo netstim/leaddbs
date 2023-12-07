@@ -618,14 +618,12 @@ for side=0:1
                 copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_WA.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
                 %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
                 %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-            end
-    
-    
+
             % always transform to MNI space
             if options.native   
                 ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
             end
-    
+
             if options.native && ~options.orignative
                 % Visualize MNI space VTA computed in native
                 vatToViz = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
@@ -666,13 +664,6 @@ for side=0:1
                 ftr = load(axonState{f});
                 [fibId, ind] = unique(ftr.fibers(:,4));
 
-                % test!!!
-                if strcmp(settings.butenko_intersectStatus,'activated')
-                    ftr.fibers(ftr.fibers == -1 || ftr.fibers == -3,5) = 1;
-                elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
-                    ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers);
-                end
-
                 fibState = ftr.fibers(ind,5);
 
                 % Restore full length fiber (as in original filtered fiber)
@@ -702,6 +693,13 @@ for side=0:1
 
                 % Reset original fiber id as in the connectome
                 ftr.fibers(:,4) = originalFibID;
+
+                if strcmp(settings.butenko_intersectStatus,'activated')
+                    ftr.fibers(ftr.fibers == -1 || ftr.fibers == -3,5) = 1;
+                elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+                    ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
+                end
+
 
                 % Save result for visualization
 

@@ -63,7 +63,8 @@ def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_p
             'Axon_Model_Type': pathways_dict['Axon_Model_Type'],
             'axon_diam': pathways_dict['axon_diams'][pathway_idx],
             'n_Ranvier': pathways_dict['n_Ranvier'][pathway_idx],
-            'N_seeded_neurons': pathways_dict['N_seeded_neurons'][pathway_idx]
+            'N_seeded_neurons': pathways_dict['N_seeded_neurons'][pathway_idx],
+            'connectome_name': pathways_dict['connectome_name'],
         }
 
         #pre_status = np.zeros(len(list(pathway_dataset)), int)

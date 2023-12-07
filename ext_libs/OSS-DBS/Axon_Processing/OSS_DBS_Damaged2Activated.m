@@ -1,5 +1,4 @@
-function fibers = OSS_DBS_Damaged2Activated(settings,fibers)
-clearvars
+function fibers = OSS_DBS_Damaged2Activated(settings,fibers,idx,sideidx)
 
 %% determine mean active contact
 amplitudes = settings.Phi_vector(sideidx,:);
