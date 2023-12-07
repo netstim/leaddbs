@@ -400,7 +400,7 @@ class VTASource():
 
   def createMarkups(self):
     markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    markupsNode.AddFiducialFromArray([0,0,3])
+    markupsNode.AddControlPoint([0,0,3])
     markupsNode.SetDisplayVisibility(0)
     return markupsNode
 

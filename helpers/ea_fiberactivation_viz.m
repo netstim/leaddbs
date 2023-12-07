@@ -6,12 +6,17 @@ fiberActivation = load(fiberActivation, 'fibers');
 set(0, 'CurrentFigure', resultfig);
 
 % Check and creat toolbox if needed
-PL = getappdata(resultfig,'PL');
-if isempty(PL) || ~isfield(PL, 'ht') || ~isvalid(PL.ht)
-    PL.ht = uitoolbar(resultfig);
+stack = dbstack;
+if ismember('ea_addobj', {stack.name})
+    PL = [];
+    toolbar = getappdata(resultfig, 'addht');
+else
+    PL = getappdata(resultfig,'PL');
+    if isempty(PL) || ~isfield(PL, 'ht') || ~isvalid(PL.ht)
+        PL.ht = uitoolbar(resultfig);
+    end
+    toolbar = PL.ht;
 end
-
-toolbar = PL.ht;
 
 if isfield(PL, 'fiberActivation')
     fiberInd = length(PL.fiberActivation);

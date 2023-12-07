@@ -27,7 +27,7 @@ class NetstimPreferences(ScriptedLoadableModule):
     slicer.app.connect("startupCompleted()", setUpSliceNames)
 
 def setUpSliceNames():
-  if slicer.app.mainApplicationName == 'SlicerForLeadDBS':
+  if slicer.app.mainApplicationName == 'SlicerForLeadDBS' and slicer.app.layoutManager() is not None:
     for color,name in zip(['Red','Green','Yellow'],['Axial','Coronal','Sagittal']):
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)
       if not sliceWidget:

@@ -33,9 +33,9 @@ def applyChanges(correctionsTransformNodeID, nativeReferencePath, templateRefere
     "outputFileName" : inverseWarpPath
     }
 
-  forwardCliNode = slicer.cli.createNode(slicer.modules.compositetogridtransform, forwardParams)
+  forwardCliNode = slicer.mrmlScene.AddNode(slicer.cli.createNode(slicer.modules.compositetogridtransform, forwardParams))
   forwardCliNode.SetName('forwardCompositeToGrid')
-  inverseCliNode = slicer.cli.createNode(slicer.modules.compositetogridtransform, inverseParams)
+  inverseCliNode = slicer.mrmlScene.AddNode(slicer.cli.createNode(slicer.modules.compositetogridtransform, inverseParams))
   inverseCliNode.SetName('inverseCompositeToGrid')
 
   subName = os.path.basename(os.path.dirname(subjectWarpDrivePath))
@@ -56,7 +56,7 @@ def applyChanges(correctionsTransformNodeID, nativeReferencePath, templateRefere
                     w.resize(w.width,w.height/2);\
                     qt.QApplication.processEvents();\
                     forwardCliNode.AddObserver(\'ModifiedEvent\', lambda c,e,w=w,icli=inverseCliNode: [slicer.util.getNode(c.GetParameterAsString(\'inputTransform2Node\')).Inverse(), w.setCurrentCommandLineModuleNode(icli), slicer.cli.run(slicer.modules.compositetogridtransform, icli)] if (c.GetStatus() == c.Completed) else None);\
-                    inverseCliNode.AddObserver(\'ModifiedEvent\', lambda c,e,w=w,: [shutil.rmtree(r\''+tmpScenePath+'\') if os.path.isdir(r\''+tmpScenePath+'\') else None, w.close(), slicer.util.exit(0)] if (c.GetStatus() == c.Completed) else None);\
+                    inverseCliNode.AddObserver(\'ModifiedEvent\', lambda c,e,w=w,: [shutil.rmtree(r\''+tmpScenePath+'\') if os.path.isdir(r\''+tmpScenePath+'\') else None, w.close(), slicer.mrmlScene.Clear(), qt.QApplication.processEvents(), qt.QTimer().singleShot(1000, lambda: slicer.util.exit())] if (c.GetStatus() == c.Completed) else None);\
                     slicer.cli.run(slicer.modules.compositetogridtransform, forwardCliNode);'
 
   if useExternalInstance:

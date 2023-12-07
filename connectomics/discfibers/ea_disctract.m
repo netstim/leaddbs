@@ -217,13 +217,6 @@ classdef ea_disctract < handle
         end
         function calculate(obj)
 
-            switch obj.connectivity_type
-                case 2 % PAM
-                    obj.M.vatmodel = 'OSS-DBS (Butenko 2020)';
-                otherwise % Stim. volumes
-                    obj.M.vatmodel= 'SimBio/FieldTrip (see Horn 2017)';
-            end
-
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
