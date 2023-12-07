@@ -24,11 +24,11 @@ class NeuronStimulation:
 
     """
 
-    def __init__(self, pathway_dict, signal_dict, folder_to_save, connectome_name='Connectome', scaling_vector=None, scaling_index=None):
+    def __init__(self, pathway_dict, signal_dict, folder_to_save, scaling_vector=None, scaling_index=None):
 
         self.folder_to_save = folder_to_save
 
-        self.connectome_name = connectome_name
+        self.connectome_name = pathway_dict['connectome_name']
         self.pathway_name = pathway_dict['pathway_name']  # str
         self.axonModel = pathway_dict['Axon_Model_Type']  # str
         self.axonDiam = pathway_dict['axon_diam']    # int, in um

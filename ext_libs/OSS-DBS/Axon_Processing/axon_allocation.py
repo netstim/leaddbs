@@ -279,7 +279,8 @@ class AxonModels:
             'Axon_Model_Type': self.axon_model,
             'Name_prepared_neuron_array': self.combined_h5_file + '.h5',
             'Neuron_model_array_prepared': True,
-            'N_seeded_neurons': n_Neurons
+            'N_seeded_neurons': n_Neurons,
+            'connectome_name': self.connectome_name
         }
 
         with open(self.output_directory + '/Allocated_axons_parameters.json', 'w') as save_as_dict:
