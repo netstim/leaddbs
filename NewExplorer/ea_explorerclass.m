@@ -16,7 +16,7 @@ classdef ea_explorerclass < handle
         thresholding = struct
         multipath = struct        
         %%
-        fastrender = 1;
+        fastrender = 0;
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -91,6 +91,8 @@ classdef ea_explorerclass < handle
             obj.stattests = ea_explorer_stats_list;
             % statsettings
             % initial hard threshold to impose on (absolute) nifti files only when calculating the data
+            obj.statsettings.doVoxels = 1;
+            obj.statsettings.doFibers = 1;
             obj.statsettings.stimulationmodel = 'Electric Field';
             obj.statsettings.efieldmetric = 'Peak'; % if statmetric == ;Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
             obj.statsettings.efieldthreshold = 200;
@@ -217,18 +219,26 @@ classdef ea_explorerclass < handle
             obj.recentmodel.mirrorsides = obj.mirrorsides;
             obj.recentmodel.statsettings = obj.statsettings;
             obj.recentmodel.thresholding = obj.thresholding;
-            disp('Calculating Voxel Statistics')
-            [obj.recentmodel.voxels.vals,obj.recentmodel.voxels.pvals]=ea_explorer_calcstats(obj,'voxels');
-            disp('Calculating Fiber Statistics')
-            [obj.recentmodel.fibers.vals,obj.recentmodel.fibers.pvals]=ea_explorer_calcstats(obj,'fibers');            
+            if obj.recentmodel.statsettings.doVoxels
+                disp('Calculating Voxel Statistics')
+                [obj.recentmodel.voxels.vals,obj.recentmodel.voxels.pvals]=ea_explorer_calcstats(obj,'voxels');
+            end
+            if obj.recentmodel.statsettings.doFibers
+                disp('Calculating Fiber Statistics')
+                [obj.recentmodel.fibers.vals,obj.recentmodel.fibers.pvals]=ea_explorer_calcstats(obj,'fibers');            
+            end
         end
         %% This function draws statistical results like fibers and Sweetspots
         function visualize(obj)
             obj.recentmodel.thresholding = obj.thresholding;
-            disp('Visualizing Voxels')
-            ea_explorer_visualizevoxels(obj);
-            disp('Visualizing Fibers')
-            ea_explorer_visualizefibers(obj);
+            if obj.recentmodel.statsettings.doVoxels
+                disp('Visualizing Voxels')
+                ea_explorer_visualizevoxels(obj);
+            end
+            if obj.recentmodel.statsettings.doFibers
+                disp('Visualizing Fibers')
+                ea_explorer_visualizefibers(obj);
+            end
         end
         %% Whatever these other functions are
         function Amps = getstimamp(obj)
