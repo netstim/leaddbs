@@ -146,7 +146,7 @@ class DrawToolEffect(AbstractDrawEffect):
     p = np.zeros(3)
     for i in range(sourceNode.GetNumberOfControlPoints()):
       sourceNode.GetNthControlPointPosition(i,p)
-      targetNode.AddFiducialFromArray(p, label)
+      targetNode.AddControlPoint(p, label)
 
 
   def curveToFiducial(self, curve):

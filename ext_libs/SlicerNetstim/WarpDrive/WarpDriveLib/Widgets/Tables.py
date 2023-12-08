@@ -188,7 +188,7 @@ class AtlasesTable(baseTable):
     # create markups node, add center as fiducial and jump and center slices
     markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     markupsNode.GetDisplayNode().SetVisibility(False)
-    markupsNode.AddFiducialFromArray(np.array(centerList),'')
+    markupsNode.AddControlPoint(np.array(centerList),'')
     markupsLogic = slicer.modules.markups.logic()
     markupsLogic.JumpSlicesToNthPointInMarkup(markupsNode.GetID(),0,True)
     slicer.mrmlScene.RemoveNode(markupsNode)
