@@ -76,25 +76,21 @@ end
 
 % colormap(gray);
 gradientLevel = 1024;
-cmapShiftRatio = 0.5;
-shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
-shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
-shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
-shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
-
-if obj.thresholding.posvisible
-    cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.thresholding.poscolor);
-    voxcmap.pos = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.thresholding.poscolor);
-    cmapind.pos = round(normalize(allvals,'range',[1,gradientLevel]));
-    cmapind.pos=mat2cell(cmapind.pos, cellfun(@numel,vals))';
-    % alphaind = normalize(1./(1+exp(-allvals)), 'range');
-end
-if obj.thresholding.negvisible
-    cmap = ea_colorgradient(gradientLevel, obj.thresholding.negcolor, [1,1,1]);
-    voxcmap.neg = ea_colorgradient(gradientLevel, obj.thresholding.negcolor, cmap(shiftedCmapEnd,:));
-    cmapind.neg = round(normalize(allvals,'range',[1,gradientLevel]));
-    cmapind.neg = mat2cell(cmapind.neg, cellfun(@numel,vals))';
-    % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
+voxcmap = ea_explorer_createcolormap(obj,gradientLevel);
+if obj.thresholding.posvisible && obj.thresholding.negvisible
+    mincolorthresh = prctile(allvals(allvals<0),1);
+    maxcolorthresh = prctile(allvals(allvals>0),99);
+    if abs(mincolorthresh)<abs(maxcolorthresh)
+        maxcolorthresh=-mincolorthresh;
+    else
+        mincolorthresh=-maxcolorthresh;
+    end
+elseif obj.thresholding.posvisible    
+    mincolorthresh = prctile(allvals(allvals>0),1);
+    maxcolorthresh = prctile(allvals(allvals>0),99);
+elseif obj.thresholding.negvisible
+    mincolorthresh = prctile(allvals(allvals<0),1);
+    maxcolorthresh = prctile(allvals(allvals<0),99);
 end
 
 setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
@@ -109,15 +105,17 @@ for side=1:size(vals,2)
         posspot.nii=obj.results.space{1,side};
         posspot.nii.img(posidx)=vals{1,side}(vals{1,side}>0);
         posspot.name=['Positive' num2str(side)];
-        posspot.niftiFilename=[posspot.name '.nii'];;
+        posspot.niftiFilename=[posspot.name '.nii'];
         posspot.binary=0;
         posspot.usesolidcolor=0;
         posspot.color=obj.thresholding.poscolor;
-        posspot.colormap=voxcmap.pos;
+        % posspot.colormap=voxcmap.pos;
+        posspot.colormap=voxcmap;
+        posspot.colorscale = [mincolorthresh maxcolorthresh];
         posspot.smooth=0;
         posspot.hullsimplify=0;
-        posspot.threshold=0;
-        obj.drawnsweetspots.pos{1,side}=ea_roi(posspot.niftiFilename,posspot);
+        posspot.threshold=posthresh;
+        obj.drawnsweetspots.pos{1,side}=ea_explorer_roi(posspot.niftiFilename,posspot);
     end
     if any(vals{1,side} < 0) && obj.thresholding.negvisible
         negidx = usedidx{1,side}(vals{1,side}<0);
@@ -128,11 +126,18 @@ for side=1:size(vals,2)
         negspot.binary=0;
         negspot.usesolidcolor=0;
         negspot.color=obj.thresholding.negcolor;
-        negspot.colormap=voxcmap.neg;
+        % negspot.colormap=voxcmap.neg;
+        negspot.colormap=voxcmap;
+        negspot.colorscale = [mincolorthresh maxcolorthresh];
         negspot.smooth=0;
         negspot.hullsimplify=0;
-        negspot.threshold=0;
-        obj.drawnsweetspots.neg{1,side}=ea_roi(negspot.niftiFilename,negspot);
+        negspot.threshold=negthresh;
+        %% flip data and threshold to work with isosurface
+        negspot.nii.img = -negspot.nii.img;
+        negspot.threshold = -negspot.threshold;
+        negspot.colorscale = -flip(negspot.colorscale,2);
+        negspot.colormap = flip(negspot.colormap,1);
+        obj.drawnsweetspots.neg{1,side}=ea_explorer_roi(negspot.niftiFilename,negspot);
     end
 end
 
