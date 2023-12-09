@@ -1,4 +1,5 @@
 function ea_explorer_visualizevoxels(obj)
+sides={'right','left'};
 %% Thresholding Part
 if obj.thresholding.showsignificantonly
     obj.recentmodel.voxels.sigvals=ea_explorer_corrsignan(obj.recentmodel.voxels.vals,obj.recentmodel.voxels.pvals,obj);
@@ -104,7 +105,7 @@ for side=1:size(vals,2)
         posidx = usedidx{1,side}(vals{1,side}>0);
         posspot.nii=obj.results.space{1,side};
         posspot.nii.img(posidx)=vals{1,side}(vals{1,side}>0);
-        posspot.name=['Positive' num2str(side)];
+        posspot.name=['Positive_' sides{side}];
         posspot.niftiFilename=[posspot.name '.nii'];
         posspot.binary=0;
         posspot.usesolidcolor=0;
@@ -121,7 +122,7 @@ for side=1:size(vals,2)
         negidx = usedidx{1,side}(vals{1,side}<0);
         negspot.nii=obj.results.space{1,side};
         negspot.nii.img(negidx)=vals{1,side}(vals{1,side}<0);
-        negspot.name=['Negative' num2str(side)];
+        negspot.name=['Negative_' sides{side}];
         negspot.niftiFilename=[negspot.name '.nii'];
         negspot.binary=0;
         negspot.usesolidcolor=0;

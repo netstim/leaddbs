@@ -1,4 +1,5 @@
 function [fibcell,vals,usedidx]=ea_explorer_visualizefibers(obj)
+sides={'right','left'};
 %% Thresholding Part
 fibcell=obj.results.(ea_conn2connid(obj.connectome)).fibcell;
 
@@ -121,11 +122,11 @@ for side=1:size(vals,2)
                 fibcell{1,side}{i}=fibcell{1,side}{i}(round(1:steps(i):numpoints(i)),:);
             end
             obj.drawnstreamlines{1,side} = streamtube(fibcell{1,side}, prefs.d3.fiberwidth);
-            disp(['Fast Render took: ' num2str(round(toc,2)) 's.'])
+            disp(['Fiber Rendering took: ' num2str(round(toc,2)) 's.'])
         else
             tic
             obj.drawnstreamlines{1,side} = streamtube(fibcell{1,side}, prefs.d3.fiberwidth);
-            disp(['Slow Render took: ' num2str(round(toc,2)) 's.'])
+            disp(['Fiber Rendering took: ' num2str(round(toc,2)) 's.'])
         end
         set(obj.drawnstreamlines{1,side},'EdgeColor','none')
         % Calulate fiber colors alpha values
@@ -135,6 +136,10 @@ for side=1:size(vals,2)
         [obj.drawnstreamlines{1,side}.FaceColor]=fibcolor{:};
         [obj.drawnstreamlines{1,side}.FaceAlpha]=fibalpha{:};
         obj.drawvals{1,side} = vals{1,side};
+        % store in figure
+        addht=getappdata(obj.resultfig, 'addht');
+        uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',['Fibers_' sides{side}],'OnCallback',{@(src, evt) ea_atlasvisible(obj.drawnstreamlines{1,side})},'OffCallback',{@(src, evt) ea_atlasinvisible(obj.drawnstreamlines{1,side})},'State','on','UserData','tract');
+        % storeinfigure(resultfig,addht,addbutn,obj.drawnstreamlines{1,side},obj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
     else
         obj.drawnstreamlines{1,side} = {};
         obj.drawvals{1,side} = {};

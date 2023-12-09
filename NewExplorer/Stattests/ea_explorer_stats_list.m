@@ -70,8 +70,15 @@ function mytests = ea_explorer_stats_list
     %%
     row=row+1;
     mytests.name(row) = "Wilcoxon Rank-Sum Test";
-    mytests.file(row) = "ea_explorer_stats_ranrumtest.m";
+    mytests.file(row) = "ea_explorer_stats_ranksumtest.m";
     mytests.type(row) = "2-Sample Tests";
     mytests.outcometype{row} = {'gradual'};
+    mytests.compatibility{row} = {'VTA'};
+    %%
+    row=row+1;
+    mytests.name(row) = "Proportion Test";
+    mytests.file(row) = "ea_explorer_stats_proportiontest.m";
+    mytests.type(row) = "Binary-Outcome Tests";
+    mytests.outcometype{row} = {'binary'};
     mytests.compatibility{row} = {'VTA'};
 end
