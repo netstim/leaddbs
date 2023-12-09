@@ -34,4 +34,9 @@ if isfield(obj.drawnsweetspots,'neg')
         end
     end
 end
+%% clear remaining buttons
+addht=getappdata(obj.resultfig, 'addht');
+if ~isempty(addht) && ~isempty(addht.Children)
+    delete(addht.Children)    
+end
 end

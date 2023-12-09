@@ -89,6 +89,8 @@ for side=1:numel(myvalsgroup)
             [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
         case 'Person'
             [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
+        case 'Proportion Test'
+            [valsout,psout]=ea_explorer_stats_proportiontest(valsin,outcomein);
     end
     vals{1,side}(nonemptyidx)=valsout;
     pvals{1,side}(nonemptyidx)=psout;

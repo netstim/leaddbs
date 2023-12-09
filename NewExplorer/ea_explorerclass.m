@@ -93,6 +93,7 @@ classdef ea_explorerclass < handle
             % initial hard threshold to impose on (absolute) nifti files only when calculating the data
             obj.statsettings.doVoxels = 1;
             obj.statsettings.doFibers = 1;
+            obj.statsettings.outcometype = 'gradual';
             obj.statsettings.stimulationmodel = 'Electric Field';
             obj.statsettings.efieldmetric = 'Peak'; % if statmetric == ;Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
             obj.statsettings.efieldthreshold = 200;
@@ -207,7 +208,8 @@ classdef ea_explorerclass < handle
             obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
         %% This function recalculates the main statistical analysis
-        function recalculate(obj) %for cv live visualize            
+        function recalculate(obj) %for cv live visualize      
+            warning('on','all')
             % re-define plainconn (since we do not store it)
             obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval;
 
