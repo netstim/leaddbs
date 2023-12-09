@@ -328,8 +328,10 @@ settings.stim_center = nan(2, 3);
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_getStimVector(S, eleNum, conNum);
     for side = 1:2
-        stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
-        settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
+        if ~isnan(settings.current_control(side))
+            stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
+            settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
+        end
     end
 else
     settings.stim_center = [NaN;NaN];
