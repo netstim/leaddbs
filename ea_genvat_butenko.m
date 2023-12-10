@@ -610,20 +610,20 @@ for side=0:1
             if settings.removeElectrode
                 % create nii for distorted grid
                 if options.native
-                    ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                    ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
                 else
-                    ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Template_space.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                    ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
                 end
             else
                 % convert original OSS-DBS VTAs to BIDS in the corresponding space
-                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_WA.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
-                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_WA.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
+                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
                 %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
                 %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
 
             % always transform to MNI space
             if options.native   
-                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
             end
 
             if options.native && ~options.orignative
