@@ -143,30 +143,11 @@ for side=1:size(vals,2)
 end
 
 
-% Set colorbar tick positions and labels
-% if ~isempty(allvals)
-%     if obj.thresholding.posvisible && obj.thresholding.negvisible
-%         tick = [1, floor(length(voxcmap)/2-40), ceil(length(voxcmap)/2+40), length(voxcmap)];
-%         poscbvals = sort(allvals(allvals>0));
-%         negcbvals = sort(allvals(allvals<0));
-%         ticklabel = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
-%         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-%     elseif obj.thresholding.posvisible
-%         tick = [1, length(voxcmap)];
-%         posvals = sort(allvals(allvals>0));
-%         ticklabel = [posvals(1), posvals(end)];
-%         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-%     elseif obj.thresholding.negvisible
-%         tick = [1, length(voxcmap)];
-%         negvals = sort(allvals(allvals<0));
-%         ticklabel = [negvals(1), negvals(end)];
-%         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-%     end
-% end
-% % store colorbar in object
-% if exist('voxcmap','var') % could be no fibers present at all.
-%     obj.colorbar.voxels.cmap = voxcmap;
-%     obj.colorbar.voxels.tick = tick;
-%     obj.colorbar.voxels.ticklabel = ticklabel;
-% end
+
+% store colorbar in object
+if exist('voxcmap','var') % could be no fibers present at all.
+     obj.colorbar.voxels.cmap = voxcmap;
+     obj.colorbar.voxels.tick = [1, length(voxcmap)];
+     obj.colorbar.voxels.ticklabel = round([mincolorthresh, maxcolorthresh],2);
+end
 end
