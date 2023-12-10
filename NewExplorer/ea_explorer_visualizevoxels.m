@@ -59,20 +59,16 @@ end
 
 if obj.thresholding.posvisible && all(allvals<0)
     obj.thresholding.posvisible = 0;
-    fprintf('\n')
     warning('off', 'backtrace');
     warning('No positive voxels found, posvisible is set to 0 now!');
     warning('on', 'backtrace');
-    fprintf('\n')
 end
 
 if obj.thresholding.negvisible && all(allvals>0)
     obj.thresholding.negvisible = 0;
-    fprintf('\n')
     warning('off', 'backtrace');
     warning('No negative voxels found, negvisible is set to 0 now!');
     warning('on', 'backtrace');
-    fprintf('\n')
 end
 
 % colormap(gray);

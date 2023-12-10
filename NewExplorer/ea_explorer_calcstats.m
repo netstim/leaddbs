@@ -69,8 +69,7 @@ for side=1:numel(myvalsgroup)
     disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
     switch obj.statsettings.stattest
         case 'N-Map'
-            valsout = Nvalsgroup(nonemptyidx);
-            psout=zeros(size(valsout));
+            [valsout,psout]=ea_explorer_stats_nmap(valsin);
         case 'Mean-Map'            
             [valsout,psout]=ea_explorer_stats_meanmap(valsin,outcomein);
         case '2-Sample T-Test' % two-sample t-tests / OSS-DBS
@@ -95,7 +94,4 @@ for side=1:numel(myvalsgroup)
     vals{1,side}(nonemptyidx)=valsout;
     pvals{1,side}(nonemptyidx)=psout;
 end
-
-% obj.results.tempanalysis.vals = vals;
-% obj.results.tempanalysis.sigvals = ps;
 end
