@@ -1,8 +1,9 @@
 function mycols = ea_explorer_isocolors(img,vertices)
 tic
+vertices=single(vertices);
 [x,y,z] = ind2sub(size(img),[1:numel(img(:))]);
 coords = vertcat(x,y,z)';
-allvals = img(:);
+allvals = single(img(:));
 nanidx = find(isnan(allvals));
 allvals(nanidx) = [];
 coords(nanidx,:) =[];
