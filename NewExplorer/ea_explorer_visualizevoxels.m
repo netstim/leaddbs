@@ -110,7 +110,7 @@ for side=1:size(vals,2)
         posspot.colormap=voxcmap;
         posspot.colorscale = [mincolorthresh maxcolorthresh];
         posspot.smooth=0;
-        posspot.hullsimplify=0;
+        posspot.hullsimplify=10000;
         posspot.threshold=posthresh;
         obj.drawnsweetspots.pos{1,side}=ea_explorer_roi(posspot.niftiFilename,posspot);
     end
@@ -127,7 +127,7 @@ for side=1:size(vals,2)
         negspot.colormap=voxcmap;
         negspot.colorscale = [mincolorthresh maxcolorthresh];
         negspot.smooth=0;
-        negspot.hullsimplify=0;
+        negspot.hullsimplify=10000;
         negspot.threshold=negthresh;
         %% flip data and threshold to work with isosurface
         negspot.nii.img = -negspot.nii.img;

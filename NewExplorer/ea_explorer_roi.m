@@ -144,19 +144,13 @@ classdef ea_explorer_roi < handle
                 if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
                     obj.binary=1;
                 else
-                    % obj.nii.img=obj.nii.img-ea_nanmin(obj.nii.img(:)); % set min to zero
                     obj.binary=0;
                 end
-                % obj.nii.img(isnan(obj.nii.img)) = 0;
-                % obj.nii.img(isinf(obj.nii.img)) = 0;
+
                 options.prefs=ea_prefs;
-
-                % obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
-                % obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
-                % maxmindiff=obj.max-obj.min;
-                % obj.max=obj.max; %-0.1*maxmindiff;
-                % obj.min=obj.min; %+0.1*maxmindiff;
-
+                obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
+                obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
+                
                 if isfield(pobj, 'threshold')
                     obj.threshold = pobj.threshold;
                 else
@@ -295,8 +289,9 @@ classdef ea_explorer_roi < handle
                     if obj.hullsimplify<1 && obj.hullsimplify>0
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
-                        simplify=obj.hullsimplify/length(obj.fv.faces);
-                        obj.sfv=reducepatch(obj.sfv,simplify);
+                        if obj.hullsimplify < size(obj.fv.faces,1) % only use reducepatch if abs
+                            obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
+                        end
                     end
                 end
                 %% coloring
