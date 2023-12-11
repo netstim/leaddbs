@@ -1,7 +1,7 @@
 function [valsout,psout]=ea_explorer_stats_proportiontest(valsin,outcomein)
 valsout=nan(size(valsin,1),1);
 psout=nan(size(valsin,1),1);
-% outcomein=round(outcomein./max(outcomein));
+%%%% outcomein=round(outcomein./max(outcomein)); % debugging tool to binarize outcome
 if ~all(outcomein==1|outcomein==0|isnan(outcomein))
     warning('off','backtrace')
     warning('Values other than 0 or 1 detected. Outcome is not binary. Please choose different test!')
