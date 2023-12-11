@@ -1,4 +1,7 @@
 function mycols = ea_explorer_isocolors(img,vertices)
+
+%% use this if you have RAM issues
+fprintf('Sampling exact isocolors for volume.\nIf taking too long or too RAM-heavy please downsample mesh using the hullsimplify option.\n')
 tic
 vertices=single(vertices);
 [x,y,z] = ind2sub(size(img),[1:numel(img(:))]);
@@ -17,9 +20,9 @@ norms = sqrt(xdiff.^2 + ydiff.^2 + zdiff.^2);
 clear xdiff ydiff zdiff
 minnorms = min(norms,[],1);
 
-if ~isempty(find(minnorms > 1))
-    keyboard
-end
+% if ~isempty(find(minnorms > 1))
+%     keyboard
+% end
 
 minnorms = num2cell(minnorms);
 norms = num2cell(norms,1);
