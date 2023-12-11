@@ -366,7 +366,7 @@ if settings.calcAxonActivation
         fprintf('Loading connectome: %s ...\n', settings.connectome);
         conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
         if options.native
-            originalFib = conn.fibers;
+            originalFib = conn;
             % Convert connectome fibers from MNI space to anchor space
             fprintf('Convert connectome into native space...\n\n');
             fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
@@ -427,7 +427,7 @@ if settings.calcAxonActivation
             fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
             conn = load(tract);
             if options.native
-                originalFib = conn.fibers;
+                originalFib = conn;
                 % Convert connectome fibers from MNI space to anchor space
                 fprintf('Convert connectome into native space...\n\n');
                 fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
@@ -701,7 +701,6 @@ for side=0:1
                 elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
                     ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
                 end
-
 
                 % Save result for visualization
 
