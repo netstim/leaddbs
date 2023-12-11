@@ -12,6 +12,12 @@ if ~exist('patientselection','var') % patientselection can be supplied directly 
     patientselection=obj.patientselection;
 end
 
+if any(isnan(Outcome))
+    nanidx=find(isnan(Outcome));
+    patientselection(nanidx)=[];
+    Outcome(nanidx)=[];
+    disp(['Removed ' num2str(numel(nanidx)) ' Participant(s) because their outcome was NaN.'])
+end
     
 switch obj.statsettings.stimulationmodel
     case 'Electric Field'
