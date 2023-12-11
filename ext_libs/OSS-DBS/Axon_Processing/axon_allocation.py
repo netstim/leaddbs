@@ -228,6 +228,7 @@ class AxonModels:
         # within a projection (pathway), number of nodes of Ranvier per axon is fixed
         n_Ranviers_per_projection_all = np.zeros(len(self.axon_lengths_all), int)
         n_Neurons_all = np.zeros(len(self.axon_lengths_all), int)
+        orig_n_Neurons_all = np.zeros(len(self.axon_lengths_all), int)
 
         # iterate over projections (fibers) and seed axons
         for i in range(len(self.axon_diams_all)):
@@ -237,15 +238,15 @@ class AxonModels:
 
             # multiple .mat files (manual input)
             if len(self.pathway_mat_file) > 1:
-                n_Ranviers_per_projection_all[i], n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[i], self.projection_names[i],axon_morphology,False)
+                n_Ranviers_per_projection_all[i], n_Neurons_all[i], orig_n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[i], self.projection_names[i],axon_morphology,False)
 
             # multiple pathways in one .mat file (Lead-DBS dMRI_MultiTract connectome)
             elif 'Multi-Tract' in self.connectome_name:
-                n_Ranviers_per_projection_all[i], n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],axon_morphology,True)
+                n_Ranviers_per_projection_all[i], n_Neurons_all[i], orig_n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],axon_morphology,True)
 
             # one .mat file without pathway differentiation (Lead-DBS dMRI connectome)
             else:
-                n_Ranviers_per_projection_all[i], n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],
+                n_Ranviers_per_projection_all[i], n_Neurons_all[i], orig_n_Neurons_all[i] = self.deploy_axons_fibers(self.pathway_mat_file[0], self.projection_names[i],
                                                                axon_morphology,False)
 
             print(n_Neurons_all[i], " axons seeded for ", self.projection_names[i], " with ", n_Ranviers_per_projection_all[i], " nodes of Ranvier\n")
@@ -254,15 +255,17 @@ class AxonModels:
         self.axon_diams = []
         n_Ranviers_per_projection = []
         n_Neurons = []
+        orig_n_Neurons = []
         for i in range(len(self.axon_diams_all)):
             if n_Ranviers_per_projection_all[i] != 0:
                 self.axon_diams.append(float(self.axon_diams_all[i]))
                 n_Ranviers_per_projection.append(int(n_Ranviers_per_projection_all[i]))
                 n_Neurons.append(int(n_Neurons_all[i]))
+                orig_n_Neurons.append(int(orig_n_Neurons_all[i]))
 
-        self._save_axon_parameters_in_json(n_Ranviers_per_projection, n_Neurons)
+        self._save_axon_parameters_in_json(n_Ranviers_per_projection, n_Neurons, orig_n_Neurons)
 
-    def _save_axon_parameters_in_json(self, n_Ranviers_per_projection, n_Neurons):
+    def _save_axon_parameters_in_json(self, n_Ranviers_per_projection, n_Neurons, orig_n_Neurons):
 
         """ Save minimally required axon description in a .json file
 
@@ -270,6 +273,7 @@ class AxonModels:
         ----------
         n_Ranviers_per_projection: list, number of nodes of Ranvier for axons of each pathway (one entry per pathway)
         n_Neurons: list, number of neurons seeded per pathway
+        orig_n_Neurons: list, number of neurons per pathway as defined in the connectome (before Kuncel pre-filtering)
         """
 
         # dictionary to store axon parameters
@@ -280,6 +284,7 @@ class AxonModels:
             'Name_prepared_neuron_array': self.combined_h5_file + '.h5',
             'Neuron_model_array_prepared': True,
             'N_seeded_neurons': n_Neurons,
+            'N_orig_neurons': orig_n_Neurons,
             'connectome_name': self.connectome_name
         }
 
@@ -327,7 +332,12 @@ class AxonModels:
 
         if fiber_array.ndim == 1:
             print(projection_name, 'projection is empty, check settings for fib. diameter and axon length')
-            return 0,0  # no nodes were seeded
+            return 0,0,0  # no nodes were seeded
+        else:
+            if multiple_projections_per_file == False:
+                orig_N_fibers = int(file['origNum'][0][0])
+            else:
+                orig_N_fibers = int(file[projection_name]['origNum'][0][0])
 
         # covert fiber table to nibabel streamlines
         streamlines = convert_fibers_to_streamlines(fiber_array)
@@ -388,7 +398,7 @@ class AxonModels:
         mdic = {"fibers": axon_array_2D, "ea_fibformat": "1.0"}
         savemat(self.combined_h5_file + '_' + projection_name + "_axons.mat", mdic)
 
-        return axon_morphology['n_Ranviers'], len(streamlines_axons)
+        return axon_morphology['n_Ranviers'], len(streamlines_axons), orig_N_fibers
 
 def convert_fibers_to_streamlines(fibers):
     """ Convert Lead-DBS fibers to Nibabel streamlines

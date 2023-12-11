@@ -25,7 +25,10 @@ def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_p
 
         os.chdir(leaddbs_neuron_folder + "/McNeal1976")
         with open(os.devnull, 'w') as FNULL:
-           subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+            if sys.platform == 'win32':
+                subprocess.call('mknrndll', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+            else:
+                subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     elif pathways_dict['Axon_Model_Type'] == "McIntyre2002" or pathways_dict['Axon_Model_Type'] == "McIntyre2002_ds":
 
@@ -64,18 +67,11 @@ def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_p
             'axon_diam': pathways_dict['axon_diams'][pathway_idx],
             'n_Ranvier': pathways_dict['n_Ranvier'][pathway_idx],
             'N_seeded_neurons': pathways_dict['N_seeded_neurons'][pathway_idx],
+            'N_orig_neurons': pathways_dict['N_orig_neurons'][pathway_idx],
             'connectome_name': pathways_dict['connectome_name'],
         }
 
-        #pre_status = np.zeros(len(list(pathway_dataset)), int)
-        ## mark the last and the first one
-        #pre_status[0] = -1
-        #pre_status[-1] = -2
-
-        #pathway_time_sol_dataset = get_abstract_pathway_voltage(signal_dict, pathway_dataset,pathway_name,hf2)
-
         pathwayNEURON = NeuronStimulation(pathway_dict, signal_dict, folder_to_save)
-        #pathwayNEURON.check_pathway_activation(pathway_dataset, pathway_time_sol_dataset, pre_status)
         pathwayNEURON.check_pathway_activation(pathway_dataset)
 
         pathway_idx += 1

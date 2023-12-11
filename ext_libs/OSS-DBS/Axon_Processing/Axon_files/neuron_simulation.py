@@ -7,6 +7,7 @@ import time as tm
 import multiprocessing as mp
 import logging
 from scipy.io import savemat
+import json
 
 
 class NeuronStimulation:
@@ -34,6 +35,7 @@ class NeuronStimulation:
         self.axonDiam = pathway_dict['axon_diam']    # int, in um
         self.nRanvier = pathway_dict['n_Ranvier']    # int, number of nodes of Ranvier
         self.N_neurons = pathway_dict['N_seeded_neurons']  # int, number of neurons in the pathway
+        self.orig_N_neurouns = pathway_dict['N_orig_neurons']  # int, number of neurons per pathway as defined in the connectome (before Kuncel pre-filtering)
 
         self.timeStep = signal_dict['time_step']   # float, in ms
         self.nSteps = signal_dict['N_time_steps']  # int, total number of steps
@@ -160,7 +162,7 @@ class NeuronStimulation:
 
     def create_leaddbs_outputs(self, Axon_Lead_DBS):
 
-        """ Convert el. potential distibution (V) in space and time computed by OSS-DBS to extracellular el. potential taking into account scaling parameters
+        """ Export axons with activation state in Lead-DBS supported format
 
         Parameters
         ----------
@@ -183,8 +185,69 @@ class NeuronStimulation:
                 savemat(self.folder_to_save  + "/Axon_state_" + self.pathway_name + "_" + str(
                     scaling_index) + ".mat", mdic)
 
-    #ToDo
-    #def create_paraview_outputs(self):
+
+    def create_paraview_outputs(self, Axon_Lead_DBS):
+
+        """ Export axons with activation state in Paraview supported format
+
+        Parameters
+        ----------
+        Axon_Lead_DBS: NxM numpy.ndarray, geometry, index and activation status of neurons (equivalent of connectome.fibers format in Lead-DBS)
+
+        """
+
+        if self.scaling_index is None:
+            if self.pathway_name is None:
+                np.savetxt(self.folder_to_save + "/Axon_state.csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
+            else:
+                np.savetxt(self.folder_to_save + "/Axon_state_" + self.pathway_name + ".csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
+        else:
+            if self.pathway_name is None:
+                np.savetxt(self.folder_to_save + "/Axon_state_" + str(self.scaling_index) + ".csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
+            else:
+                np.savetxt(self.folder_to_save  + "/Axon_state_" + self.pathway_name + "_" + str(
+                    scaling_index) + ".csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
+
+
+    def store_axon_statuses(self, percent_activated, percent_damaged, percent_csf):
+
+        """ store PAM results
+
+        Parameters
+        ----------
+        percent_activated: float, percent of the original(!) number of neurons that are activated for the particular stimulation
+        percent_damaged: float, percent of the original(!) number of neurons that are 'damaged' for the particular electrode placement
+        percent_csf: float, percent of the original(!) number of neurons that intersect with CSF for the particular brain segmentation
+
+        Note
+        ----------
+        For activation state of particular neuron see 'fiberActivation*' files as those restore original(!) indices as in the connectome.
+        """
+
+        summary_dict = {
+            'percent_activated': percent_activated,
+            'percent_damaged': percent_damaged,
+            'percent_csf': percent_csf,
+        }
+
+        if self.scaling_index is None:
+            if self.pathway_name is None:
+                with open(self.folder_to_save + '/Pathway_status.json', 'w') as save_as_dict:
+                    json.dump(summary_dict, save_as_dict)
+            else:
+                summary_dict['pathway_name'] = self.pathway_name
+                with open(self.folder_to_save + '/Pathway_status_' + self.pathway_name + '.json', 'w') as save_as_dict:
+                    json.dump(summary_dict, save_as_dict)
+        else:
+            summary_dict['scaling_index'] = str(scaling_index)
+            if self.pathway_name is None:
+                with open(self.folder_to_save + '/Pathway_status_' + str(self.scaling_index) + '.json', 'w') as save_as_dict:
+                    json.dump(summary_dict, save_as_dict)
+            else:
+                summary_dict['pathway_name'] = self.pathway_name
+                with open(self.folder_to_save + '/Pathway_status_' + self.pathway_name + "_" + str(self.scaling_index) + '.json', 'w') as save_as_dict:
+                    json.dump(summary_dict, save_as_dict)
+
 
     def check_pathway_activation(self, pathway_dataset):
 
@@ -197,7 +260,8 @@ class NeuronStimulation:
 
         Note
         ----------
-        #ToDo: Paraview and statistic outputs
+        Creates 'Axon_states_*' .mat and .csv files for visualization in Lead-DBS and Paraview, respectively.
+        Also stores summary statistics in 'Pathway_status_*.json'
         """
 
         # use half of CPUs
@@ -278,11 +342,18 @@ class NeuronStimulation:
                 continue
 
         self.create_leaddbs_outputs(Axon_Lead_DBS)
-        print("\n\nPathway ",self.pathway_name, ": ")
-        print("Activated neurons: ",np.round(Activated_models/float(self.N_neurons)*100,2), " %")
-        print("Neurons with status -1: ",np.round((len(pre_status)-np.count_nonzero(pre_status))/float(self.N_neurons)*100,2), " %")
-        print("Neurons with status -2: ",np.round(np.sum(pre_status == -2)/float(self.N_neurons)*100,2), " %")
+        self.create_paraview_outputs(Axon_Lead_DBS)
 
+        percent_activated = np.round(Activated_models/float(self.orig_N_neurouns)*100,2)
+        percent_damaged = np.round((len(pre_status)-np.count_nonzero(pre_status))/float(self.orig_N_neurouns)*100,2)
+        percent_csf = np.round(np.sum(pre_status == -2)/float(self.orig_N_neurouns)*100,2)
+
+        print("\n\nPathway ",self.pathway_name, ": ")
+        print("Activated neurons: ", percent_activated, " %")
+        print("Neurons with status -1: ", percent_damaged, " %")
+        print("Neurons with status -2: ", percent_csf, " %")
+
+        self.store_axon_statuses(percent_activated, percent_damaged, percent_csf)
 
     def get_axon_status(self, neuron_index, v_time_sol, output):
 

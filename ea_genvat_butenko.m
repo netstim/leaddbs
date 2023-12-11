@@ -32,7 +32,7 @@ if isunix
     pythonPath = [env.path, filesep, 'bin'];
     setenv('PATH', [pythonPath, ':', binPath]);
 else
-    pythonPath = [env.path, filesep, 'Scripts'];
+    pythonPath = [env.path,';',env.path,filesep,'Scripts'];
     setenv('PATH', [pythonPath, ';', binPath]);
 end
 
@@ -227,7 +227,9 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
         % Scale tensor data
         if exist('tensorDir', 'var')
             fprintf('Scaling tensor data...\n\n')
-            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
+            
+            system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
+            
 
             % Copy scaled tensor data to stimulation directory, update setting
             copyfile([tensorDir, filesep, tensorPrefix, scaledTensorName], tensorData);
@@ -401,6 +403,9 @@ if settings.calcAxonActivation
         settings.connectomePath = [outputDir, filesep, settings.connectome];
         ea_mkdir(settings.connectomePath);
         for i=1:length(fiberFiltered)
+            % store the original number of fibers
+            % to compute percent activation
+            fiberFiltered{i}.origNum = size(conn.idx,1);
             buffer = fiberFiltered{i};
             save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer', '-v7.3');
         end
@@ -568,7 +573,7 @@ for side=0:1
     fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
 
     if settings.calcAxonActivation
-        system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputDir,' ', num2str(side), ' ', parameterFile])
+        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputDir,' ', num2str(side), ' ', parameterFile])
         % call axon_allocation script
     end
 
@@ -586,8 +591,7 @@ for side=0:1
         pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
         scaling = 1.0;
 
-
-        system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', leaddbs_neuron, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)])
+        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', leaddbs_neuron, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)])
     end
 
     % Check if OSS-DBS calculation is finished
@@ -620,6 +624,7 @@ for side=0:1
                 copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
                 %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
                 %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+            end
 
             % always transform to MNI space
             if options.native   
@@ -635,7 +640,7 @@ for side=0:1
     
             % Calc vat fv and volume
             vat = ea_load_nii(vatToViz);
-            vatfv = ea_niiVAT2fvVAT(vat);
+            vatfv = ea_niiVAT2fvVAT(vat,1,3);
             vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
             save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
             stimparams(side+1).VAT.VAT = vatfv;

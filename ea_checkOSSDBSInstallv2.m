@@ -13,6 +13,10 @@ end
 env = ea_conda_env('OSS-DBS-v2.yml');
 env.create;
 
+if ~isunix
+    ea_warndlg("To run PAM on Windows, please install NEURON from https://www.neuron.yale.edu/neuron/download")
+end
+
 % set installed flag
 prefs = ea_prefs;
 vatsettings = prefs.machine.vatsettings;
