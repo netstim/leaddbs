@@ -157,7 +157,10 @@ def main_part(tensor_order,scaling_method, affine):
     global shared_array
     #global shared_array_DTITK #visulazation with DTI TK
 
-    
+    if affine[0,0] < 0.0 or affine[1,1] < 0.0 or affine[2,2] < 0.0:
+        print("Reverse order of axes is not allowed, please flip!")
+        raise SystemExit
+
     affine_inv = np.linalg.inv(affine)
    
     Mx,My,Mz=(DTI_data.shape[0],DTI_data.shape[1],DTI_data.shape[2])
