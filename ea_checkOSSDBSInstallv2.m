@@ -15,6 +15,8 @@ env.create;
 
 if ~isunix
     ea_warndlg("To run PAM on Windows, please install NEURON from https://www.neuron.yale.edu/neuron/download")
+else
+    env.system('pip3 install neuron==8.2.3')
 end
 
 % set installed flag
