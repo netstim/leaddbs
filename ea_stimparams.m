@@ -2411,7 +2411,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
-        set(handles.addStimSet,'visible','on');
+        set(handles.addStimSet,'visible','off');
 
 end
 S.model=model;
@@ -3469,7 +3469,13 @@ switch model
     case 'Fastfield (Baniasadi 2020)'
         ea_vatsettings_fastfield;
     case 'OSS-DBS (Butenko 2020)'
-        ea_vatsettings_butenko;
+        all_params = getappdata(handles.stimfig);
+        if all_params.groupmode
+            stim_folder = 'None';
+        else
+            stim_folder = [all_params.options.root,all_params.options.patientname,filesep,'stimulations/',ea_nt(all_params.options.native),all_params.stimlabel];
+        end
+        ea_vatsettings_butenko(stim_folder);
 end
 
 
