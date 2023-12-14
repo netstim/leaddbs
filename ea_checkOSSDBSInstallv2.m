@@ -14,7 +14,16 @@ env = ea_conda_env('OSS-DBS-v2.yml');
 env.create;
 
 if ~isunix
-    ea_warndlg("To run PAM on Windows, please install NEURON from https://www.neuron.yale.edu/neuron/download")
+    msgbox(sprintf('An external installer for NEURON will be opened.\nPlease install it using the default parameters.'), '', 'help', 'modal');
+    installer = fullfile(ea_prefsdir, 'temp', 'nrn-8.2.3.exe');
+    ea_mkdir(fileparts(installer));
+    try
+        websave(installer, 'https://github.com/neuronsimulator/nrn/releases/download/8.2.3/nrn-8.2.3.w64-mingw-py-37-38-39-310-311-setup.exe');
+    catch ME
+        ea_error(['Failed to download NEURON installer for Windows:\n', ME.message], simpleStack=true);
+    end
+    system(installer);
+    ea_delete(installer);
 else
     env.system('pip3 install neuron==8.2.3')
 end
