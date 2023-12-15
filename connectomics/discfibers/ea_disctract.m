@@ -271,17 +271,7 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
                 otherwise     % check fiber recruitment via intersection with VTA
                     if isfield(obj.M,'pseudoM')
-                        numPatient = length(obj.allpatients);
-                        vatlist = cell(numPatient*2,2);
-                         for i = 1:numPatient
-                             vatlist{i,1} = obj.M.ROI.list{i,1};
-                             vatlist{i,2} = obj.M.ROI.list{i,2};
-                         end
-                         
-                         for i = numPatient+1 : numPatient*2
-                             vatlist{i,1} = [obj.M.ROI.list{i-numPatient,1}(1:end-20),'fl_vat_efield_left.nii'];
-                             vatlist{i,2} = [obj.M.ROI.list{i-numPatient,1}(1:end-20),'fl_vat_efield_right.nii'];
-                         end
+                        vatlist = obj.M.ROI.list;
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
