@@ -318,9 +318,9 @@ classdef ea_sweetspot < handle
                                 efield(~isnan(efield)) = efield(~isnan(efield)) > obj.efieldthreshold;
                                 switch lower(obj.basepredictionon)
                                     case 'mean of scores'
-                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*efield,1);
+                                        Ihat(test,side) = ea_nanmean(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*efield,1);
                                     case 'sum of scores'
-                                        Ihat(test,side) = ea_nansum(vals{1,side}.*efield,1);
+                                        Ihat(test,side) = ea_nansum(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*efield,1);
                                     case 'peak of scores'
                                         Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*efield, obj.posvisible, obj.negvisible, 'peak');
                                     case 'peak 5% of scores'
@@ -329,15 +329,15 @@ classdef ea_sweetspot < handle
                             case 'E-Fields'
                                 switch lower(obj.basepredictionon)
                                     case 'profile of scores: spearman'
-                                        Ihat(test,side) = atanh(ea_corr(vals{1,side},obj.results.efield{side}(patientsel(test),:)','spearman'));
+                                        Ihat(test,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(test),:)','spearman'));
                                     case 'profile of scores: pearson'
-                                        Ihat(test,side) = atanh(ea_corr(vals{1,side},obj.results.efield{side}(patientsel(test),:)','pearson'));
+                                        Ihat(test,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(test),:)','pearson'));
                                    case 'profile of scores: bend'
-                                        Ihat(test,side) = atanh(ea_corr(vals{1,side},obj.results.efield{side}(patientsel(test),:)','bend'));
+                                        Ihat(test,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(test),:)','bend'));
                                     case 'mean of scores'
-                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
+                                        Ihat(test,side) = ea_nanmean(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*obj.results.efield{side}(patientsel(test),:)',1);
                                     case 'sum of scores'
-                                        Ihat(test,side) = ea_nansum(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
+                                        Ihat(test,side) = ea_nansum(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*obj.results.efield{side}(patientsel(test),:)',1);
                                     case 'peak of scores'
                                         Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)', obj.posvisible, obj.negvisible, 'peak');
                                     case 'peak 5% of scores'
@@ -600,9 +600,14 @@ classdef ea_sweetspot < handle
         end
     end
 
-    methods (Static)
-        function changeevent(~,event)
-            update_trajectory(event.AffectedObject,event.Source.Name);
+    methods (Access = private,  Static)
+        function vals = maskvals(vals, posvisible, negvisible)
+            if ~posvisible
+                vals(vals>0) = nan;
+            end
+            if ~negvisible
+                vals(vals<0) = nan;
+            end
         end
     end
 end
