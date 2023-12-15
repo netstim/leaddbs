@@ -20,6 +20,9 @@ fibtable.distance = mindistances;
 fibtable.statenew = fibtable.state;
 
 meanactivateddistance = mean(fibtable.distance(fibtable.state==1));
+if isnan(meanactivateddistance)
+    meanactivateddistance=0;
+end
 
 fibtable.statenew(fibtable.state == -1 & fibtable.distance < meanactivateddistance) = 1;
 fibtable.statenew(fibtable.state == -1 & fibtable.distance >= meanactivateddistance) = 0;
