@@ -287,7 +287,7 @@ for group=groups
                         thisvals=gval{side}(gpatsel,:);
                         Nmap=ea_nansum(~isnan(thisvals));
 
-                        nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
+                        nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)); % apply N-threshold
                         thisvals=thisvals(:,~nanidx);
                         if obj.showsignificantonly
                             [R,p]=ea_corr(thisvals,I(gpatsel,side),obj.corrtype);
@@ -300,8 +300,11 @@ for group=groups
                         vals{group,side}(~nanidx)=R;
                     case 'Reverse T-Tests (Binary Var)'
 
-                    nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
-                    invals=gval{side}(gpatsel,nonempty)';
+                        nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
+                        thisvals=gval{side}(gpatsel,:);
+                        Nmap=ea_nansum(~isnan(thisvals));
+                        nonempty(Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)))=0; % apply N-threshold
+                        invals=gval{side}(gpatsel,nonempty)';
                     if ~isempty(invals)
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
