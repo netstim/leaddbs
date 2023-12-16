@@ -316,6 +316,8 @@ for group=groups
                             [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
                             outvals=stats.tstat';
                             outps=ps;
+                            outvals=ea_corrsignan(outvals,outps,obj);
+
                         else % no need to calc p-val here
                             [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
                             outvals=stats.tstat';
