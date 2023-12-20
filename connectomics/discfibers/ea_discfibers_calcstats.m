@@ -168,28 +168,28 @@ for group=groups
     for side=1:numel(gfibsval)
         % check connthreshold
         if obj.runwhite || strcmp(obj.statmetric,'Plain Connections')
-            sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
+            Nmap=sum(gfibsval{side}(:,gpatsel),2);
         else
             switch obj.statmetric
                 case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}
-                    sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
+                    Nmap=sum(gfibsval{side}(:,gpatsel),2);
                 case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'}
                     if obj.SigmoidTransform == 1 && (strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak'))
                         % 0.5 V / mm -> 0.5 probability 
-                        sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold/1000.0),2);
+                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold/1000.0),2);
                     else
-                        sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
                     end
             end
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
         if ~obj.runwhite
-            gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+            gfibsval{side}(Nmap<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
             if ~(ismember(obj.statmetric,{'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'})) % efields & reverse t-tests for binary vars cases
                 % only in case of VTAs (given two-sample-t-test statistic) do we
                 % need to also exclude if tract is connected to too many VTAs:
-                gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
+                gfibsval{side}(Nmap>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
             end
         end
         
@@ -199,10 +199,10 @@ for group=groups
             pvals{group,side}=vals{group,side};
         end
         if obj.runwhite || strcmp(obj.statmetric,'Plain Connections')
-            vals{group,side} = sumgfibsval/length(gpatsel);
+            vals{group,side} = Nmap/length(gpatsel);
        
             if ~obj.runwhite % the white fibers will always show connection to any single vta/roi.
-                vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
+                vals{group,side}(Nmap<((obj.connthreshold/100)*length(gpatsel)))=nan;
             else
                 vals{group,side}(vals{group,side}==0)=nan;
             end
@@ -213,6 +213,7 @@ for group=groups
         else
             switch obj.statmetric
                 case 'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)' % two-sample t-tests / OSS-DBS
+                    gfibsval{side}(isnan(gfibsval{side}))=0; % for t-tests safe to convert nans back to zeros (which means unconnected).
                     % check if covariates exist:
                     if exist('covars', 'var')
                         % they do:
@@ -281,6 +282,7 @@ for group=groups
                 case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
                     switch obj.corrtype
                         case 'T-Tests'
+                            gfibsval{side}(isnan(gfibsval{side}))=0; % for t-tests safe to convert nans back to zeros (which means unconnected).
                             if exist('covars', 'var')
                                 ea_error('Covariates not implemented for One-Sample T-Tests.')
                             else
