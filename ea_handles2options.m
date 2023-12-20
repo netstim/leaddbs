@@ -250,7 +250,7 @@ options.expstatvat.do=0;
 options.fiberthresh=10;
 options.writeoutstats=1;
 
-options.colormap=parula(64); % default colormap, use this explicitly rather than 'colormap' to avoid popup window.
+options.colormap='parula(64)'; % default colormap, use this explicitly rather than 'colormap' to avoid popup window.
 try % not working when calling from lead_anatomy
     options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
 catch
@@ -373,12 +373,7 @@ catch
 end
 
 
-function sides=ea_assignsides(handles)
-cnt=1;
+function sides = ea_assignsides(handles)
 elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
-for el=1:elnum
-    if get(handles.(['side',num2str(el)]),'Value')
-        sides(cnt)=el;
-        cnt=cnt+1;
-    end
-end
+sideLabel = "side" + (1:elnum)';
+sides = find(cellfun(@(s) handles.(s).Value, sideLabel'));

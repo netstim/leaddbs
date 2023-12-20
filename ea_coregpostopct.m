@@ -41,6 +41,7 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
     end
 
     if options.overwriteapproved && isfolder(options.subj.brainshiftDir)
+        ea_delete(options.subj.brainshiftDir);
         ea_cprintf('CmdWinWarnings', 'CT coregistration has been rerun. Please also rerun brain shift correction!\n');
     end
 

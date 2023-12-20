@@ -8,7 +8,7 @@ classdef BIDSFetcher
         subjId
         subjDataOverview
     end
-    
+
     properties (Access = private, Constant)
         anchorSpace = 'anchorNative';
     end
@@ -25,7 +25,7 @@ classdef BIDSFetcher
             end
 
             % Set up properties
-            obj.settings = obj.leadPrefs('m');
+            obj.settings = obj.leadPrefs(ea_prefsext);
             obj.spacedef = ea_getspacedef;
             obj.datasetDir = GetFullPath(datasetDir);
 
@@ -287,29 +287,29 @@ classdef BIDSFetcher
                 subj.coreg.transform = obj.getCoregTransform(subjId, preferMRCT);
                 subj.coreg.log = obj.getCoregLog(subjId);
                 subj.coreg.checkreg = obj.getCoregCheckreg(subjId, preferMRCT);
-    
+
                 if preferMRCT ~= 3
                     subj.brainshift.anat = obj.getBrainshiftAnat(subjId, preferMRCT);
                     subj.brainshift.transform = obj.getBrainshiftTransform(subjId);
                     subj.brainshift.log = obj.getBrainshiftLog(subjId);
                     subj.brainshift.checkreg = obj.getBrainshiftCheckreg(subjId, preferMRCT);
                 end
-    
+
                 subj.norm.anat = obj.getNormAnat(subjId, preferMRCT);
                 subj.norm.transform = obj.getNormTransform(subjId);
                 subj.norm.log = obj.getNormLog(subjId);
                 subj.norm.checkreg = obj.getNormCheckreg(subjId, preferMRCT);
-    
+
                 % Set pre-op preprocessed images
                 for i=1:length(preopFields)
                     subj.preopAnat.(preopFields{i}).preproc = subj.preproc.anat.preop.(preopFields{i});
                 end
-    
+
                 % Set pre-op coregistered images
                 for i=1:length(preopFields)
                     subj.preopAnat.(preopFields{i}).coreg = subj.coreg.anat.preop.(preopFields{i});
                 end
-    
+
                 % Set pre-op normalized images
                 subj.preopAnat.(preopFields{1}).norm = subj.norm.anat.preop.(preopFields{1});
             end
@@ -320,25 +320,29 @@ classdef BIDSFetcher
                     for i=1:length(postopFields)
                         subj.postopAnat.(postopFields{i}).preproc = subj.preproc.anat.postop.(postopFields{i});
                     end
-    
+
                     % Set post-op coregistered images
                     for i=1:length(postopFields)
                         subj.postopAnat.(postopFields{i}).coreg = subj.coreg.anat.postop.(postopFields{i});
+                        subj.postopAnat.(postopFields{i}).coregScrf = strrep(subj.coreg.anat.postop.(postopFields{i}), obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
                     end
-        
+
                     % Set post-op coregistered tone-mapped CT
                     if ismember('CT', postopFields)
                         subj.postopAnat.CT.coregTonemap = subj.coreg.anat.postop.tonemapCT;
+                        subj.postopAnat.CT.coregTonemapScrf = setBIDSEntity(subj.coreg.anat.postop.tonemapCT, 'rec', 'tonemappedbrainshift');
                     end
-        
+
                     % Set post-op normalized images
                     for i=1:length(postopFields)
                         subj.postopAnat.(postopFields{i}).norm = subj.norm.anat.postop.(postopFields{i});
+                        subj.postopAnat.(postopFields{i}).normScrf = strrep(subj.norm.anat.postop.(postopFields{i}), obj.spacedef.name, [obj.spacedef.name, '_rec-brainshift']);
                     end
-        
+
                     % Set post-op normalized tone-mapped CT
                     if ismember('CT', postopFields)
                         subj.postopAnat.CT.normTonemap = subj.norm.anat.postop.tonemapCT;
+                        subj.postopAnat.CT.normTonemapScrf = setBIDSEntity(subj.norm.anat.postop.tonemapCT, 'rec', 'tonemappedbrainshift');
                     end
                 end
             end
@@ -348,7 +352,7 @@ classdef BIDSFetcher
 
             % Set stats
             subj.stats = obj.getStats(subjId);
-            
+
             % Set acpc autodetect
             subj.acpc.acpcAutodetect = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcautodetect.mat']);
             subj.acpc.acpcManual     = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcmanual.fcsv']);
@@ -375,7 +379,7 @@ classdef BIDSFetcher
             preniiOrder = obj.settings.prenii_order;
             templateOrder = fieldnames(obj.spacedef.norm_mapping)';
             preopImageOrder = [preniiOrder, setdiff(templateOrder, preniiOrder, 'stable')];
-            
+
             % Set pre-op anat images according to pre-defined orders
             for i=1:length(preopImageOrder)
                 % Find the index in the present images
@@ -834,15 +838,15 @@ classdef BIDSFetcher
         %% Helper functions
         function prefs = leadPrefs(type)
             if ~exist('type', 'var') || isempty(type)
-                type = 'm';
+                type = '.m';
             end
 
             switch type
-                case 'json'
-                    % Read .ea_prefs.json
-                    prefs = loadjson(fullfile(ea_gethome, '.ea_prefs.json'));
-                case 'm'
-                    % Read .ea_prefs.m and .ea_prefs.mat
+                case '.json'
+                    % Read ea_prefs.json
+                    prefs = loadjson(ea_prefspath('json'));
+                case '.m'
+                    % Read ea_prefs.m and ea_prefs.mat
                     prefs = ea_prefs;
             end
         end

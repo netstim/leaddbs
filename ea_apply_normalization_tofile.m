@@ -3,13 +3,17 @@ function ea_apply_normalization_tofile(options,from,to,useinverse,interp,ref)
 % currently just used to generate patient specific atlases,i.e., from MNI
 % space to native space
 
+if ischar(from)
+    from = {from};
+end
+
+if ischar(to)
+    to = {to};
+end
+
 if ~exist('interp', 'var')
     interp=4;
 end
-
-
-
-
 
 if ~exist('ref', 'var')
     ref='';
@@ -19,11 +23,11 @@ json = loadjson(options.subj.norm.log.method);
 
 if ischar(interp)
     if strcmp(interp,'auto') % only works if one image supplied
-        interp=detinterp(from,contains(json.method, 'ANTs'));
+        interp=detinterp(from,contains(json.method, {'ANTs','EasyReg'}));
     end
 end
 
-if contains(json.method, 'ANTs')
+if contains(json.method, {'ANTs','EasyReg'})
     ea_ants_apply_transforms(options, from, to, useinverse, ref, '', interp);
 elseif contains(json.method, 'FNIRT')
     if useinverse

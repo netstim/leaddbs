@@ -98,6 +98,8 @@ classdef ea_disctract < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
         kIter = 1;
+        roiintersectdata = {}; %roi, usually efield with which you can calculate fiber intersection 
+        roithresh = 200; %threshold above which efield metrics are considered
         % misc
         runwhite = 0; % flag to calculate connected tracts instead of stat tracts
         SigmoidTransform = 0;  % flag to transform E-field to Sigmoids
@@ -138,7 +140,6 @@ classdef ea_disctract < handle
                 if isfield(obj.M,'pseudoM')
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
-                    obj.M = ea_map_pseudoM(obj.M);
                     obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list = cell(size(obj.M.ROI.list,1), 1);
                     for i = 1:size(obj.M.ROI.list,1)
@@ -215,13 +216,6 @@ classdef ea_disctract < handle
             end
         end
         function calculate(obj)
-
-            switch obj.connectivity_type
-                case 2 % PAM
-                    obj.M.vatmodel = 'OSS-DBS (Butenko 2020)';
-                otherwise % Stim. volumes
-                    obj.M.vatmodel= 'SimBio/FieldTrip (see Horn 2017)';
-            end
 
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
@@ -418,7 +412,7 @@ classdef ea_disctract < handle
                     if ~silent
                         fprintf("Iterating fold set: %d",i)
                     end
-                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp, [], 1);
+                    [I_iter{i}, Ihat_iter{i},~,val_struct] = crossval(obj, cvp, [], 1,silent);
                     if ~silent
                         switch obj.multitractmode
                             case 'Split & Color By PCA'
@@ -655,8 +649,8 @@ classdef ea_disctract < handle
 
             end
 
-            % check if binary variable
-            if all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
+            % check if binary variable and not permutation test
+            if (~exist('Iperm', 'var') || isempty(Iperm)) && all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
                 % average across sides. This might be wrong for capsular response.
                 Ihat_av_sides = ea_nanmean(Ihat,2);
 
@@ -733,12 +727,21 @@ classdef ea_disctract < handle
                 end
             end
 
-            if obj.doactualprediction % repeat loops partly to fit to actual response variables:
-
+            if obj.doactualprediction % repeat loops partly to fit to actual response variables:                
                 Ihat_voters_prediction=nan(size(Ihat));
-                %Ihat_voters_prediction=nan(size(Ihat_voters));
-                for c=1:cvp.NumTestSets
-
+                %add some warnings
+                switch obj.multitractmode
+                    case 'Single Tract Analysis'
+                        if obj.useExternalModel && size(val_struct{c}.vals,1) > 1
+                            ea_error("You can only use the Fit-to-Score feature with a Single Tract Analysis analysis model");
+                        end
+                    otherwise
+                        if obj.useExternalModel
+                            ea_error("You can only use the Fit-to-Score feature with Single Tract Analysis");
+                        end
+                end
+                numVoters = size(val_struct{c}.vals,1);
+                 for c=1:cvp.NumTestSets
                     if isobject(cvp)
                         training = cvp.training(c);
                         test = cvp.test(c);
@@ -746,7 +749,7 @@ classdef ea_disctract < handle
                         training = cvp.training{c};
                         test = cvp.test{c};
                     end
-                    for voter=1:size(val_struct{c}.vals,1)
+                    for voter=1:numVoters
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
                                 useI=obj.subscore.vars{voter}(patientsel);
@@ -775,11 +778,21 @@ classdef ea_disctract < handle
                         covariates=[];
                         for cv = 1:length(obj.covars)
                             covariates = [covariates,obj.covars{cv}(patientsel)];
+
                         end
-                        if ~isempty(covariates)
-                            mdl=fitglm([predictor_training(c,training,voter)',covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                        
+                        if obj.useExternalModel == true %only use for single tract analysis
+                            if ~strcmp(obj.multitractmode,'Single Tract Analysis')
+                                ea_error("Sorry, you cannot use exported model and fit-to-scores for multi-tract model");
+                            else
+                                mdl = S.mdl;
+                            end
                         else
-                            mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
+                            if ~isempty(covariates)
+                                mdl=fitglm([predictor_training(c,training,voter)',covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                            else
+                                mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
+                            end
                         end
                         if size(useI,2) == 1 % global scores
                             if ~isempty(covariates)
@@ -792,6 +805,7 @@ classdef ea_disctract < handle
                         end
                     end
                 end
+
 
                 % quantify the prediction accuracy (if Train-Test)
                 if cvp.NumTestSets == 1 && voter == 1 && size(obj.responsevar,2) == 1 && (~exist('Iperm', 'var') || isempty(Iperm))
@@ -855,6 +869,7 @@ classdef ea_disctract < handle
                         Ihat = Ihat(test,:,:);
                         Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
                         Improvement = Improvement(test);
+                        return;
                     end
                 case 'Split & Color By PCA'
 
@@ -906,9 +921,6 @@ classdef ea_disctract < handle
             if ~iscell(Ihat)
                 if cvp.NumTestSets == 1
                     Ihat = Ihat(test,:);
-                    if obj.CleartuneOptim
-                        Ihat = reshape(Ihat,2,length(obj.subscore.vars))';
-                    end
                     Improvement = Improvement(test);
                 end
 
@@ -1062,7 +1074,7 @@ classdef ea_disctract < handle
             if obj.switch_connectivity == 1
                 if obj.multi_pathways == 1
                     [filepath,name,ext] = fileparts(obj.leadgroup);
-                    cfile = [filepath,filesep,'merged_pathways.mat'];
+                    cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                 end
@@ -1093,7 +1105,7 @@ classdef ea_disctract < handle
                 if ~isfield(obj.results.(ea_conn2connid(obj.connectome)),'totalFibers')
                     if obj.multi_pathways == 1
                         [filepath,~,~] = fileparts(obj.leadgroup);
-                        cfile = [filepath,filesep,'merged_pathways.mat'];
+                        cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
                     else
                         cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                     end
@@ -1204,7 +1216,7 @@ classdef ea_disctract < handle
             if obj.multi_pathways == 1 && (isequal(ea_method2methodid(obj),'VAT_Ttest') || isequal(ea_method2methodid(obj),'PAM_Ttest') || isequal(ea_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS
                 %disp("number of drawn fibers per pathway")
                 num_per_path = cell(1, 2); % with obj.map_list, rates can be computed
-                for side = 1:length(usedidx)
+                for side = 1:size(usedidx,2)
                     num_per_path{side} = zeros(1,length(obj.map_list));
                     if length(usedidx{side})
                         for inx = 1:length(usedidx{side})
@@ -1679,38 +1691,34 @@ classdef ea_disctract < handle
 
         function activate_tractset(obj)
             if ~isempty(obj.activateby)
-                for entry=1:length(obj.activateby)
-                    thisentry=obj.activateby{entry};
-                    weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
-                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
-                    if strfind(thisentry,'cleartune')
-                        thisentry=strrep(thisentry,'cleartune','');
-                        k=strfind(thisentry,'_');
-                        ctentry=str2double(thisentry(1:k-1));
-                        ctside=str2double(thisentry(k+1:end));
-                        weights{ctside}=weights{ctside}+...
-                            full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                    elseif strfind(thisentry,'results')
-                        thisentry=strrep(thisentry,'results','');
-                        k=strfind(thisentry,'_');
-                        ctentry=str2double(thisentry(1:k-1));
-                        ctside=str2double(thisentry(k+1:end));
-                        weights{ctside}=weights{ctside}+...
-                            full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                    else % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
-                        % ignore for now
+                if strcmp(obj.activateby,'roiintersect')
+                    if ~isempty(obj.roiintersectdata) % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
+                        calculateIntersection(obj);
                     end
-                end
-
-                for side=1:size(obj.drawobject,2)
-                    if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
-                        weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
-                    end
-                    for entry=1:size(obj.drawobject,1)
-                        dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
-                        dweights=mat2cell(dweights,1,ones(1,length(dweights)));
-                        if ~isempty(dweights)
-                            [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                else
+                    for entry=1:length(obj.activateby)
+                        thisentry=obj.activateby{entry};
+                        weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                            ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
+                        if strfind(thisentry,'results')
+                            thisentry=strrep(thisentry,'results','');
+                            k=strfind(thisentry,'_');
+                            ctentry=str2double(thisentry(1:k-1));
+                            ctside=str2double(thisentry(k+1:end));
+                            weights{ctside}=weights{ctside}+...
+                                full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                            for side=1:size(obj.drawobject,2)
+                                if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
+                                    weights{side}=ea_minmax(weights{side}); %ea_contrast(weights{side},0.5,-0.5))*0.5; % enhance constrast a bit
+                                end
+                                for entry=1:size(obj.drawobject,1)
+                                    dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
+                                    dweights=mat2cell(dweights,1,ones(1,length(dweights)));
+                                    if ~isempty(dweights)
+                                        [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                                    end
+                                end
+                            end
                         end
                     end
                 end
@@ -1750,5 +1758,71 @@ end
 
 
 function activatebychange(~,event)
-activate_tractset();
+    activate_tractset();
+end
+function calculateIntersection(obj)
+for nroi = 1:length(obj.roiintersectdata)
+    vat = ea_load_nii(obj.roiintersectdata{nroi}); %use only one, otherwise drawing doesn't make sense
+    thresh = obj.roithresh;
+    vatInd = find(abs(vat.img(:))>thresh);
+    [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
+    vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
+    for i=1:size(obj.drawobject,1)
+        for side = 1:size(obj.drawobject,2)
+            vals = {};
+            valsPeak = {};
+            connected = [];
+            trimmedFiberInd = [];
+            resultFibers = obj.fiberdrawn.fibcell{i,side};
+            if isempty(resultFibers)
+                continue
+            end
+            fibers=ea_fibcell2fibmat(resultFibers);
+            filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
+            if ~any(filter)
+                continue
+            end
+            trimmedFiber = fibers(filter,:);
+
+            % Map mm connectome fibers into VAT voxel space
+            [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
+            fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
+
+            % Remove outliers
+            fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
+            trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
+            connected = cellfun(@(fib) any(ismember(fib, vatInd)), fibVoxInd);
+            vals = cellfun(@(fib) vat.img(intersect(fib, vatInd)), fibVoxInd(connected), 'Uni', 0);
+            valsPeak{1}(trimmedFiberInd(connected)) = cellfun(@mean, vals);
+            wts = cell2mat(valsPeak)';
+            if length(wts) ~= size(obj.drawobject{i,side},1)
+                diff = length(wts) - size(obj.drawobject{i,side},1);
+                if diff < 0
+                    wts = [wts;zeros(abs(diff),1)];
+                end
+            end
+            normwts = normalize(ea_contrast(wts,10,0),'range');
+            
+            normwts =  mat2cell(normwts,ones(size(normwts,1),1));
+            if ~isempty(normwts)
+                [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
+                disp(['Changed alpha of tract',num2str(i)]);
+                normwts = {};
+            end
+        end
+    end
+end
+end
+function fibers=ea_fibcell2fibmat(fibers)
+[idx,~]=cellfun(@size,fibers);
+fibers=cell2mat(fibers);
+idxv=zeros(size(fibers,1),1);
+lid=1; cnt=1;
+for id=idx'
+
+    idxv(lid:lid+id-1)=cnt;
+    lid=lid+id;
+    cnt=cnt+1;
+end
+fibers=[fibers,idxv];
 end

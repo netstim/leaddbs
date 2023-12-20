@@ -20,4 +20,3 @@ if ~exist([ea_getearoot,'.git'],'dir')
 end
 delete(destination);
 ea_unpackspace;
-

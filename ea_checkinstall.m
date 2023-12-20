@@ -45,8 +45,13 @@ downloadIDs = {'leaddata'
                'TorPD'
                'allengenetics'};
 
-assetNames = menuItems(5:end);
-assetsIDs = downloadIDs(5:end);
+if ismac
+    menuItems = ['Fix permission issue on macOS'; menuItems];
+    downloadIDs = ['fixperm'; downloadIDs];
+end
+
+assetNames = menuItems(6:end);
+assetsIDs = downloadIDs(6:end);
 if ismember(cmd, assetsIDs)
     assetName = assetNames{ismember(assetsIDs, cmd)};
 end
@@ -55,6 +60,10 @@ switch cmd
     case 'list' % simply return list of installable datasets
         success = menuItems;
         commands = downloadIDs;
+    case 'fixperm'
+        ea_clear_xattr;
+        ea_cprintf('*Comments', 'Permission issue should have been fixed.\n');
+        return;
     case 'leaddata'
         checkf=[ea_space,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
@@ -318,9 +327,6 @@ switch cmd
     case python_envs
         py_env = ea_conda_env(cmd);
         if ~checkonly
-            if ~ea_conda.is_installed
-                ea_conda.install;
-            end
             py_env.force_create;
         end
         success = py_env.is_created;
@@ -335,25 +341,25 @@ if strcmp(assetname,'LeadDBS Data Files')
 else
     downloadurl = 'https://www.lead-dbs.org/release/download.php';
     success=1;
-    
-    if ~exist(fileparts(destination), 'dir')
+
+    if ~isfolder(fileparts(destination))
         mkdir(fileparts(destination));
     end
-    
+
     % get the file size and display it to inform user of size
     try
         fsize = ea_getassetfilesize(id);    % get the filesize in bytes from the server
     catch
         fsize = 0;
     end
-    
+
     if fsize ~= 0
         fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
     else
         fprintf('Downloading %s\nFilename: %s\n', ea_getspace, destination);
         disp('This could take a while...');
     end
-    
+
     % first see if parallel toolbox is installed and can be utilized to
     % download in the backgroung
     if license('test', 'Distrib_Computing_Toolbox') % check if parallel toolbox is installed

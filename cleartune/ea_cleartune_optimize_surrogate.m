@@ -69,46 +69,61 @@ warning off
 
 for pt = 1:length(patlist)
     ptindx = pt;
-    reconstruction_file = dir([patlist{pt},filesep,'reconstruction',filesep,'*desc-reconstruction.mat']);
+    %we need the reconstruction file for getting current per contact.
+    %Defines the segmented and ring contacts
+    reconstruction_file = dir([patlist{pt},filesep,'reconstruction',filesep,'sub-*desc-reconstruction.mat']);
     reconstruction_file_path = [reconstruction_file.folder,filesep,reconstruction_file.name];
     [reconst, ~, ~, ~] = ea_get_reconstruction(reconstruction_file_path);
     % do not update S here, just get the bounds in mA!
-    [min_bound_per_contact, max_bound_per_contact, ~] = ea_get_currents_per_contact(app.MinCylindricEditField_2.Value,app.MaxCylindricEditField.Value, app.MinSegmentedEditField.Value, app.MaxSegmentedEditField.Value, reconst, 0, 0);
+    [min_bound_per_contactR, max_bound_per_contactR, ~] = ea_get_currents_per_contact(app.MinCylindricEditField_2.Value,app.MaxCylindricEditField.Value, app.MinSegmentedEditField.Value, app.MaxSegmentedEditField.Value, reconst, 0, 0);
+    min_bound_per_contactL = min_bound_per_contactR;
+    max_bound_per_contactL = max_bound_per_contactR;
+    %arbritary start points
+    startcontactR = 5;
+    startcontactL = 3;
     startptsR = zeros(1,app.inputVars.numContacts);
     startptsL = zeros(1,app.inputVars.numContacts);
     % set third contact (k2) to the middle of the higher current bound
-    if abs(max_bound_per_contact(3)) > abs(min_bound_per_contact(3))
-        startptsR(3) = max_bound_per_contact(3) / 2.0;
+    if abs(max_bound_per_contactR(startcontactR)) > abs(min_bound_per_contactR(startcontactR))
+        startptsR(startcontactR) = max_bound_per_contactR(startcontactR)/1.0;
     else
-        startptsR(3) = min_bound_per_contact(3) / 2.0;
+        startptsR(startcontactR) = min_bound_per_contactR(startcontactR)/1.0;
     end
-    startptsL(3) = startptsR(3);
-    lbR = min_bound_per_contact;
-    lbL = min_bound_per_contact;
-    ubR = max_bound_per_contact;
-    ubL = max_bound_per_contact;
+
+    if abs(max_bound_per_contactL(startcontactL)) > abs(min_bound_per_contactL(startcontactL))
+        startptsL(startcontactL) = max_bound_per_contactL(startcontactL)/1.0;
+    else
+        startptsL(startcontactL) = min_bound_per_contactL(startcontactL)/1.0;
+    end
+    %define lower bounds and upper bounds
+    lbR = min_bound_per_contactR;
+    lbL = min_bound_per_contactL;
+    ubR = max_bound_per_contactR;
+    ubL = max_bound_per_contactL;
+    %the current values per contact are not integers. They can assume
+    %decimal values
     intergCond = zeros(1,app.inputVars.numContacts);
+    %the number of contacts is automatically obtained from your
+    %reconstruction file
     A = repmat(-1,1,app.inputVars.numContacts);
     b = 5;
     Aeq = [];
     beq = [];
-
+    %define the right side & left side options
     optionsR=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsR,...
-        'MaxFunctionEvaluations',1,...
+        'MaxFunctionEvaluations',500,... %choose 500 iters for now
         'Display','iter');
     optionsL=optimoptions('surrogateopt',...
         'ObjectiveLimit',-0.9,... % optimal solution with average Ihat ~0.9, lowest theoretical point is zero with an R of 1
         'MinSurrogatePoints',200,...
         'PlotFcn','surrogateoptplot',...
         'InitialPoints',startptsL,...
-        'MaxFunctionEvaluations',1,...
+        'MaxFunctionEvaluations',500,... %choose 500 iters for now
         'Display','iter');
-
-    %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
     % check for parallel processing toolbox
     if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
@@ -116,19 +131,25 @@ for pt = 1:length(patlist)
         optionsL.UseParallel=true;
         parpool('Processes',2);
     end
-
+    
+    % for monopolar case
     if all(ubR(:) <= 0.0)
-        objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist{pt},ptindx));
+        objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist,ptindx));
         [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,find(intergCond),A,b,Aeq,beq,optionsR);
-    else
-        objconstrR=@(x)struct('Fval',nestedfunR(x,patlist{pt},ptindx));
+        if length(ipR.Fval) == 2
+            keyboard
+        end
+    else %bipolar, not well tested
+        objconstrR=@(x)struct('Fval',nestedfunR(x,patlist,ptindx));
         [XOptimR,fvalR,~,~,ipR]=surrogateopt(objconstrR,lbR,ubR,optionsR);
     end
-
+    %to output VTA
     writeVTA = 1;
+    %default: SimBio/FieldTrip
     modelVTA = app.inputVars.modelVTA;
     %remove very small currents
     XOptimR(abs(XOptimR) < 0.000001) = 0.0;
+    %because the inputs are normalized to remove small currents
     newoptimR = reformatX(XOptimR);
     if ~isempty(newoptimR)
         XOptimR = newoptimR;
@@ -140,26 +161,24 @@ for pt = 1:length(patlist)
         end
     end
     save(fullfile(patlist{pt},'optimize_status_surrogate_R.mat'),'ipR','XOptimR');
-    % new way to define inputs
-    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist{pt},XOptimR, modelVTA,writeVTA,1);
+    % generate the VTA
+    [inputsR,ampl_R,perc_val_R] = ea_get_inputs_for_optimizer(patlist,XOptimR, modelVTA,writeVTA,1);
     ea_generate_optim_vat(inputsR{:});
 
     if all(ubL(:) <= 0.0)
-        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist{pt},ptindx));
+        objconstrL=@(x)struct('Fval',nestedfunL_Monopolar(x,patlist,ptindx));
         [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,find(intergCond),A,b,Aeq,beq,optionsL);
     else
-        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist{pt},ptindx));
+        objconstrL=@(x)struct('Fval',nestedfunL(x,patlist,ptindx));
         [XOptimL,fvalL,~,~,ipL]=surrogateopt(objconstrL,lbL,ubL,optionsL);
     end
 
-    % remove very small currents
     XOptimL(abs(XOptimL) < 0.000001) = 0.0;
 
     newoptimL = reformatX(XOptimL);
     if ~isempty(newoptimL)
         XOptimL = newoptimL;
     end
-    writeVTA = 1;
     for i=1:size(ipL.X,1)
         newL = reformatX(ipL.X(i,:));
         if ~isempty(newL)
@@ -169,39 +188,29 @@ for pt = 1:length(patlist)
     save(fullfile(patlist{pt},'optimize_status_surrogate_L.mat'),'ipL','XOptimL');
     [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
     ea_generate_optim_vat(inputsL{:});
+    
+    
+    
+    %finally, we can save the stimulation parameters of the winning VTA
     options = setOPTS(patlist{pt});
     S = ea_initializeS(options);
     S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
     save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
+    
+    %create a plot that shows how Ihat changes with amplitude
     createIhatAmpPlot(app,inputsR,inputsL)
     avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
     disp(['Optimal solution: Average Ihat(R,L) = ',num2str(avgIhat),'.']);
     warning on
+    %end the parallel toolbox
     if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
         poolobj = gcp('nocreate'); delete(poolobj);
     end
 
 end
-function [paramsR,paramsL] = genParams(app)
-
-%for bipolar also add this
-%bool_contact = repmat([0,1,1,0],app.inputVars.numContacts,1);
-%bool_contact(app.inputVars.startContact,end) = 1;
-%paramsR = [amplitude;perc_contactdist;bool_contact;case_contact];
-
-perc_contactdist = repmat([-100, 0, 0, 0],app.inputVars.numContacts,1);
-%case_contact = [100,100,1,100];
-perc_contactdist(app.inputVars.startContact,end) = -100;
-
-amplitude = [app.inputVars.minCurr, app.inputVars.maxCurr, 0, app.inputVars.minCurr];
-paramsR = [amplitude;perc_contactdist];
-paramsL = paramsR;
-
-return
-end
 
 % Nested function that computes the objective function
-function f = nestedfunR(X,pt,ptindx)
+function f = nestedfunR(X,patlist,ptindx)
 
 % limit to 8mA
 if sum(X(X>0)) > sum(abs(X(X<0)))
@@ -218,12 +227,12 @@ if isempty(X)
 end
 constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
-f.Fval=getFval(app,X,pt,1,ptindx);
+f.Fval=getFval(app,X,patlist,1,ptindx);
 
 return
 end
 
-function f = nestedfunL(X,pt,ptindx)
+function f = nestedfunL(X,patlist,ptindx)
 X = reformatX(X);
 
 if sum(X(X>0)) > sum(abs(X(X<0)))
@@ -238,15 +247,14 @@ if isempty(X)
 end
 constCurr = 2;
 tractsetclone=updateStim(tractsetclone,X);
-f.Fval=getFval(app,X,pt,2,ptindx);
+f.Fval=getFval(app,X,patlist,2,ptindx);
 % limit to 8mA
 
 return
 end
-
 
 % Nested function that computes the objective function
-function Fval = nestedfunR_Monopolar(X,pt,ptindx)
+function Fval = nestedfunR_Monopolar(X,patlist,ptindx)
 
 X = reformatX(X);
 
@@ -255,12 +263,12 @@ if isempty(X)
     return
 end
 tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,pt,1,ptindx);
+Fval=getFval(app,X,patlist,1,ptindx);
 
 return
 end
 
-function Fval = nestedfunL_Monopolar(X,pt,ptindx)
+function Fval = nestedfunL_Monopolar(X,patlist,ptindx)
 X = reformatX(X);
 
 if isempty(X)
@@ -269,12 +277,11 @@ if isempty(X)
 end
 
 tractsetclone=updateStim(tractsetclone,X);
-Fval=getFval(app,X,pt,2,ptindx);
+Fval=getFval(app,X,patlist,2,ptindx);
 % limit to 8mA
 
 return
 end
-
 
 function X = reformatX(X)
     if all(~X(1:8)) %all contacts have zero % activation its not allowed
@@ -283,38 +290,6 @@ function X = reformatX(X)
     end
 return
 end
-% best fix ever
-% for bipolar
-%if the indicator is off, the contact should also be off
-% for xx=10:17
-%     if X(xx) == 0
-%         X(xx-8) = 0;
-%     end
-% end
-%doing it this way because harcoding indices is wrong and won't give us
-%flexibility for future
-%switch this on for bipolar setting
-% whichpos = X > 0;
-% whichpos(1) = 0;
-% %whichpos(10:end) = 0;
-% if any(whichpos)
-%    sum_whichpos_r = sum(X(whichpos));
-%    X(whichpos) = (X(whichpos)*100)/(sum_whichpos_r);
-%    X(end) = 0;
-% end
-% else
-%    X(end) = 100;
-% end
-% whichneg = X < 0;
-% whichneg(1) = 0;
-% % whichneg(10:end) = 0;
-% if any(whichneg)
-%     sum_whichneg_r = sum(X(whichneg));
-%     X(whichneg) = (X(whichneg)*-100)/(sum_whichneg_r);
-% end
-% X(end) = X(end)*100;
-% return
-% end
 
 function tractsetclone=updateStim(tractsetclone,X)
     disp('Parameters applied: ');
@@ -325,17 +300,17 @@ function tractsetclone=updateStim(tractsetclone,X)
     %disp('Case activation:100%');
 end
 
-function Fval=getFval(app,X,pt,side,ptindx)
+function Fval=getFval(app,X,patlist,side,ptindx)
       
     %create a vta inside this function, send it to cleartune, get Ihat out and return it as
     %Fval
-    
+    selpat = patlist{ptindx};
     % remove very small currents
     X(abs(X) < 0.000001) = 0.0;
     writeVTA = 0;
 
     % new way to define inputs
-    inputs = ea_get_inputs_for_optimizer(pt,X, app.inputVars.modelVTA,writeVTA,side);
+    inputs = ea_get_inputs_for_optimizer(selpat,X, app.inputVars.modelVTA,writeVTA,side);
     try
         [Efields,allS]=ea_generate_optim_vat(inputs{:});
     catch ME
@@ -351,11 +326,10 @@ function Fval=getFval(app,X,pt,side,ptindx)
     app.protocol{ptindx}.allS=allS;
     tractsetclone=ea_disctract;
     app.tractset.copyobj(tractsetclone);
-    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,{pt},side);
+    [~,Ihat,actualimprovs] = runcrossval(app,'suggest',tractsetclone,patlist,ptindx,side);
     %Ihat=[Ihat(1:length(Ihat)/2),Ihat(length(Ihat)/2+1:end)]; % Ihat is exported as a column vector for both sides. Reformat to Nx2.
-    if sum(isnan(Ihat(:)))/length(Ihat(:))>0.3
-        ea_warning(['Many (',num2str(sum(isnan(Ihat(:)))*100/length(Ihat(:))),' percent) stimulation settings were not covered well by the model. Stimulation suggestions may not be meaningful. Please adjust model parameters in ',...
-            app.fibfiltmodelpath,'.']);
+    if isnan(Ihat(:))
+        ea_warning("Some test values have returned NaNs..why?");
     end
     preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx);
     Fval = -1*preFval;
@@ -411,7 +385,7 @@ function createIhatAmpPlot(app,inputsR,inputsL)
         ea_generate_optim_vat(inputsR{:});
         ea_generate_optim_vat(inputsL{:});
         stimfolder = 'mA_33_14';
-        Ihatvector(i) = predictImprovement(app,inputsR{2},stimfolder,1);
+        Ihatvector(i,:) = predictImprovement(app,patient,stimfolder,1);
         amplitudevector(i) = startamp;
         startamp = startamp + 0.5;
     end
@@ -459,7 +433,7 @@ function options=ea_setopts_local
     options.fiberthresh=1;
     options.writeoutstats=1;
     options.writeoutpm = 0;
-    options.colormap=jet;
+    options.colormap='parula(64)';
     options.d3.write=1;
     options.d3.prolong_electrode=2;
     options.d3.writeatlases=1;

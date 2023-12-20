@@ -32,7 +32,7 @@ end
 % Clean up coregistered image (only transformation needed)
 ea_delete([movingimage_flirt, '.nii*']);
 
-umachine = load([ea_gethome, '.ea_prefs.mat']);
+umachine = load(ea_prefspath('mat'));
 normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
     if isBIDSFileName(movingimage)
@@ -120,9 +120,8 @@ INVWARP = ea_getExec([basedir, 'invwarp'], escapePath = 1);
 fnirtcmd = [FNIRT, fnirtstage];
 invwarpcmd = [INVWARP, invwarpstage];
 
-setenv('FSLOUTPUTTYPE','NIFTI');
-ea_runcmd(fnirtcmd);
-ea_runcmd(invwarpcmd);
+ea_runcmd(fnirtcmd, env='FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(invwarpcmd, env='FSLOUTPUTTYPE=NIFTI');
 
 % Clean up waro coef file
 ea_delete([volumedir, warpprefix, 'WarpCoef.nii'])

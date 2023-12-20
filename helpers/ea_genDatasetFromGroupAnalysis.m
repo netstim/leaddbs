@@ -4,8 +4,8 @@ function [groupdir, analysisFile] = ea_genDatasetFromGroupAnalysis(analysisFile)
 
 analysisFile = GetFullPath(analysisFile);
 
-dataset = regexp(analysisFile, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', 'match', 'once');
-analysis = regexp(analysisFile, '(?<=dataset-.+_analysis-)(.+)(?=\.mat$)', 'match', 'once');
+dataset = regexp(analysisFile, '(?<=dataset-)([^\W_]+)(?=_analysis-[^\W_]+\.mat$)', 'match', 'once');
+analysis = regexp(analysisFile, '(?<=dataset-[^\W_]+_analysis-)([^\W_]+)(?=\.mat$)', 'match', 'once');
 if isfolder(fullfile(fileparts(analysisFile), dataset))
     for i=1:20
         if ~isfolder(fullfile(fileparts(analysisFile), [dataset, num2str(i)]))
@@ -17,8 +17,8 @@ if isfolder(fullfile(fileparts(analysisFile), dataset))
         error('Please specify a new dataset name!');
     else
         dataset = dataset{1};
-        movefile(analysisFile, regexprep(analysisFile, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset));
-        analysisFile = regexprep(analysisFile, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset);
+        movefile(analysisFile, regexprep(analysisFile, '(?<=dataset-)([^\W_]+)(?=_analysis-[^\W_]+\.mat$)', dataset));
+        analysisFile = regexprep(analysisFile, '(?<=dataset-)([^\W_]+)(?=_analysis-[^\W_]+\.mat$)', dataset);
     end
 end
 

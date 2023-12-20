@@ -49,32 +49,32 @@ end
 for atlas=1:length(atlases.names)
     subfolders = {};
     switch atlases.types(atlas)
-        case 1 % left hemispheric atlas.
-            subfolders{end+1} = 'lh';
-        case 2 % right hemispheric atlas.
+        case 1 % right hemispheric atlas.
             subfolders{end+1} = 'rh';
+        case 2 % left hemispheric atlas.
+            subfolders{end+1} = 'lh';
         case 3 % both-sides atlas composed of 2 files.
-            subfolders{end+1} = 'lh';
             subfolders{end+1} = 'rh';
-        case 4 % mixed atlas (one file with both sides information.
+            subfolders{end+1} = 'lh';
+        case 4 % mixed atlas (one file with one cluster on each hemisphere).
             subfolders{end+1} = 'mixed';
-        case 5 % midline atlas (one file with both sides information.
+        case 5 % midline atlas (one file with one cluster in total).
             subfolders{end+1} = 'midline';
     end
-    
+
     for i = 1:length(subfolders)
         file = fullfile(proot, 'atlases', options.atlasset, subfolders{i}, atlases.names{atlas});
-        
+
         if isnumeric(atlases.pixdim{atlas,1})
             ea_apply_normalization_tofile(options, {ea_niigz(file)}, {ea_niigz(file)}, 1, interp);
             ea_crop_nii(file);
-            
+
         elseif ischar(atlases.pixdim{atlas,1})
             fib_load = load(file);
             src = fullfile(ea_space, 't1.nii');
             dest = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
             transform = fullfile(options.subj.subjDir,'forwardTransform');
-            
+
             switch atlases.pixdim{atlas,1}
                 case 'fibers'
                     XYZ_mm = fib_load.fibers(:,1:3);
@@ -96,9 +96,9 @@ for atlas=1:length(atlases.names)
                     warning(['Unrecognized pixdim for ' atlases.names{atlas}]);
                     delete(file);
             end
-            
+
             save(file, '-struct', 'fib_load', '-v7.3');
-            
+
         else
             warning(['Unrecognized pixdim for ' atlases.names{atlas}]);
             delete(file);
@@ -132,14 +132,14 @@ cnt=1;
 
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
-        case 1 % left hemispheric atlas.
-            atlf=[aroot,'lh',filesep];
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            tpmf=[aroot,'tpm',filesep,'lh',filesep];
-        case 2 % right hemispheric atlas.
+        case 1 % right hemispheric atlas.
             atlf=[aroot,'rh',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
             tpmf=[aroot,'tpm',filesep,'rh',filesep];
+        case 2 % left hemispheric atlas.
+            atlf=[aroot,'lh',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            tpmf=[aroot,'tpm',filesep,'lh',filesep];
         case 3 % both-sides atlas composed of 2 files.
             ratlf=[aroot,'rh',filesep];
             pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
@@ -148,11 +148,11 @@ for atlas=1:length(atlases.names)
             platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
             rtpmf=[aroot,'tpm',filesep,'rh',filesep];
             ltpmf=[aroot,'tpm',filesep,'lh',filesep];
-        case 4 % mixed atlas (one file with both sides information.
+        case 4 % mixed atlas (one file with one cluster on each hemisphere).
             atlf=[aroot,'mixed',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
             tpmf=[aroot,'tpm',filesep,'mixed',filesep];
-        case 5 % midline atlas (one file with both sides information.
+        case 5 % midline atlas (one file with one cluster in total).
             atlf=[aroot,'midline',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
             tpmf=[aroot,'tpm',filesep,'midline',filesep];
@@ -320,9 +320,9 @@ end
 function sides=detsides(opt)
 
 switch opt
-    case 1 % left hemispheric atlas
+    case 1 % right hemispheric atlas
         sides=1;
-    case 2 % right hemispheric atlas
+    case 2 % left hemispheric atlas
         sides=2;
     case 3
         sides=1:2;

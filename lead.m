@@ -70,8 +70,9 @@ if ~isdeployed && ~contains(path, fullfile(fileparts(mfilename),'helpers'))
     end
 end
 
-ea_compat_data;
 earoot=ea_getearoot;
+
+ea_checkprefs;
 
 ea_checkbuildspace;
 
@@ -125,10 +126,6 @@ if nargin == 4
             lead_predict;
             delete(handles.leadfigure)
             return
-        case {'import', '-i', 'i'}
-            lead_import;
-            delete(handles.leadfigure)
-            return
         case {'version', 'ver', '-v', 'v'}
             disp(ea_getvsn('local'));
             delete(handles.leadfigure)
@@ -158,7 +155,7 @@ elseif nargin == 5 && strcmp(varargin{1}, 'execute') % execute options specified
 elseif nargin > 5
     ea_command_line_run(varargin{:})
     delete(handles.leadfigure)
-    return            
+    return
 end
 
 set(handles.leadfigure,'name','Welcome to the Lead Neuroimaging Suite');

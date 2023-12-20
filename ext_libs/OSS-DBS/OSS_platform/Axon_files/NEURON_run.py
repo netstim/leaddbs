@@ -474,7 +474,8 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
 
     mdic = {"fibers": Axon_Lead_DBS, "ea_fibformat": "1.0", "connectome_name": d["Name_prepared_neuron_array"][:-3]}  # For Lead-DBS .mat files
     if population_index == -1:
-        logging.critical("{}% activation (including damaged neurons)\n".format(np.round(Activated_models/float(number_neurons_initially)*100,2)))
+        logging.critical("{}% activation".format(np.round(Activated_models/float(number_neurons_initially)*100,2)))
+        logging.critical("{}% intersected \n".format(np.round((Summary_status[2]+Summary_status[4])/float(number_neurons_initially)*100,2)))
 
         if scaling_index == None:
             np.savetxt(os.environ['PATIENTDIR']+'/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
@@ -493,7 +494,11 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
             #np.savetxt(os.environ['PATIENTDIR'] + '/' + stim_folder + 'Activation_Neuron_Array_' + str(Activated_models) + '_' + str(scaling_index) + '.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")            np.savetxt(os.environ['PATIENTDIR'] + '/' + stim_folder + 'Neurons_status.csv', Vert_full_status, delimiter=" ")
     else:
         logging.critical("{}% activation in {} (including damaged neurons)\n".format(np.round(Activated_models/float(number_neurons_initially)*100,2),lst[population_index]))
+        
+        logging.critical("{}% activation in {}".format(np.round(Activated_models/float(number_neurons_initially)*100,2),lst[population_index]))
+        logging.critical("{}% intersected in {} \n".format(np.round((Summary_status[2]+Summary_status[4])/float(number_neurons_initially)*100,2),lst[population_index]))
 
+        
         if scaling_index == None:
             savemat(os.environ['PATIENTDIR'] + "/" + stim_folder + "Axon_state_" + str(lst[population_index]) + ".mat", mdic)
             np.savetxt(os.environ['PATIENTDIR']+'/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")

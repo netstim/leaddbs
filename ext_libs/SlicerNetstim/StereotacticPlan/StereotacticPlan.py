@@ -581,12 +581,12 @@ class StereotacticPlanLogic(ScriptedLoadableModuleLogic):
         auxSourceNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         auxSourceNode.GetDisplayNode().SetVisibility(False)
         for coord in sourceCoords:
-            auxSourceNode.AddFiducialFromArray(coord)
+            auxSourceNode.AddControlPoint(coord)
 
         auxTargetNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         auxTargetNode.GetDisplayNode().SetVisibility(False)
         for coord in targetCoords:
-            auxTargetNode.AddFiducialFromArray(coord)
+            auxTargetNode.AddControlPoint(coord)
             
         parameters = {}
         parameters['fixedLandmarks']  = auxTargetNode.GetID()
@@ -608,9 +608,9 @@ class StereotacticPlanLogic(ScriptedLoadableModuleLogic):
 
         ACPCMSNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         ACPCMSNode.GetDisplayNode().SetVisibility(False)
-        ACPCMSNode.AddFiducialFromArray(AC)
-        ACPCMSNode.AddFiducialFromArray(PC)
-        ACPCMSNode.AddFiducialFromArray(MS)
+        ACPCMSNode.AddControlPoint(AC)
+        ACPCMSNode.AddControlPoint(PC)
+        ACPCMSNode.AddControlPoint(MS)
 
         parameters = {}
         parameters['ACPC']  = auxLineNode.GetID()

@@ -70,7 +70,7 @@ else % Manually chosen seeds: multiple NIfTIs or text file with NIfTI entries
     for i=1:length(sfile)
         seed = ea_load_nii(sfile{i});
         % Intersect roi indices and connectome outidx
-        roiInd{i} = intersect(find(seed.img==1), dataset.vol.outidx);
+        roiInd{i} = intersect(find(round(seed.img)==1), dataset.vol.outidx);
         % Find corresponding indices of connectome X matrix
         roiInd{i} = sort(arrayfun(@(x) find(dataset.vol.outidx==x), roiInd{i}));
     end
@@ -93,7 +93,7 @@ for i=1:length(roiID)
         blockConnMat = blockConnMat(rowInd, colInd);
 
         % Grand mean of the connectivity matrix block
-        connMat(i, j) = mean(blockConnMat, 'all');
+        connMat(i, j) = nanmean(blockConnMat, 'all');
     end
 end
 

@@ -114,7 +114,7 @@ if checkrebuild(atlases,options,root,mifix)
     end
     nm=nm(logical(nmind)); % select which shall be performed.
     if ~isfield(atlases,'colormap')
-        %atlases.colormap=ea_colorlover(12);
+        %atlases.colormap=ea_color_wes('all',length(atlases.names));
         atlases.colormap=othercolor('BuOrR_14',length(atlases.names));
     end
     if ~isfield(atlases,'heatcolormap')
@@ -141,10 +141,10 @@ if checkrebuild(atlases,options,root,mifix)
                 case 3 % both-sides atlas composed of 2 files.
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],atlases,atlas);
-                case 4 % mixed atlas (one file with both sides information).
+                case 4 % mixed atlas (one file with one cluster on each hemisphere).
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],atlases,atlas,'unmix_l');
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],atlases,atlas,'unmix_r');
-                case 5 % midline atlas (one file with both sides information).
+                case 5 % midline atlas (one file with one cluster in total).
                     structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],atlases,atlas);
                 case 6 % probabilistic atlas, two files
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
@@ -276,7 +276,7 @@ if checkrebuild(atlases,options,root,mifix)
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
-        
+
         % save table information that has been generated from nii files (on first run with this atlas set).
         try atlases.fv=ifv; end
         try atlases.cdat=icdat; end
@@ -290,7 +290,7 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'cdat'); end % redundancy cleanup
         try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
-        
+
         ea_saveatlas(root,options.atlasset,atlases);
     end
 end
@@ -388,14 +388,14 @@ elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
 elseif strcmp(fname(end-3:end),'.mat')
     warning('off', 'MATLAB:load:variableNotFound');
 
-    if ismember('ea_fibformat', who('-file', fname)) % tracts in trk format
+    if ismember('fibers', who('-file', fname)) % tracts in trk format
         [fibers,idx]=ea_loadfibertracts(fname);
         structure.fibers=fibers;
         structure.idx=idx;
-    elseif ismember('vals', who('-file', fname)) % discriminative fibers
+    elseif ismember('fibcell', who('-file', fname)) % discriminative fibers
         structure.isdiscfibers = 1;
         % Set default color (blue and red) if not found in mat.
-        if ismember('fibcolor', who('-file', fname))
+        if ~ismember('fibcolor', who('-file', fname))
             fibcolor = [0 0 1;1 0 0];
             save(fname, 'fibcolor', '-append');
         end
@@ -463,9 +463,9 @@ switch atlases.types(atlas)
     case 3 % both-sides atlas composed of 2 files.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
         atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-    case 4 % mixed atlas (one file with both sides information).
+    case 4 % mixed atlas (one file with one cluster on each hemisphere).
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
-    case 5 % midline atlas (one file with both sides information.
+    case 5 % midline atlas (one file with one cluster in total).
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
     case 6 % probabilistic atlas, 2 files.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
@@ -492,7 +492,14 @@ for atl=1:length(atlnames)
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
                     [0.3,0.3,0.3],0,0,1,[],[],1);
             else
-                copyfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality),[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                if isfield(options, 'subj')
+                    copyfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality),[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                elseif isfield(options, 'reference')
+                    copyfile(options.reference, [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                else
+                    ea_error('Reference for gray matter mask not defined! (options.reference)', showdlg = false, simpleStack = 1);
+                    return;
+                end
             end
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);

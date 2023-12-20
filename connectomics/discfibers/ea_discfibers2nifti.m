@@ -7,6 +7,14 @@ function ea_discfibers2nifti(discfiber, threshold, fiberset, outputName, referen
 %     outputName: output file name
 %     reference: reference nifti which defines the space
 
+arguments
+    discfiber {mustBeTextScalar}
+    threshold {mustBeNumeric} = 0.05
+    fiberset {mustBeMember(fiberset, {'both', 'pos', 'positive', 'neg', 'negative'})} = 'positive'
+    outputName {mustBeTextScalar} = ''
+    reference {mustBeTextScalar} = [ea_space, 't1.nii']
+end
+
 load(discfiber, 'fibcell')
 load(discfiber, 'vals')
 
@@ -22,24 +30,12 @@ elseif iscell(vals) && size(vals,2) == 1
     vals = vals{:};
 end
 
-if ~exist('threshold', 'var')
-    threshold = 5/100;
-elseif isempty(threshold)
-    threshold = 0.05;
-elseif threshold>1  % Use percentage
+if threshold>1  % Use percentage
     threshold = threshold/100;
 end
 
-if ~exist('fiberset', 'var') || isempty(fiberset)
-    fiberset = 'pos';
-end
-
-if ~exist('outputName', 'var') || isempty(outputName)
+if isempty(outputName)
     outputName = regexprep(discfiber, '\.mat$', '.nii');
-end
-
-if ~exist('reference', 'var') || isempty(reference)
-    reference = [ea_space, 't1.nii'];
 end
 
 vals(isnan(vals))=0;

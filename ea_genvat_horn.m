@@ -128,6 +128,8 @@ if hmchanged
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
     Ymod=Y;
     success=0;
+    evalin('base', ...
+        'ISO2MESH_TEMP=fullfile(tempdir,''iso2mesh'');ISO2MESH_SESSION=ea_generate_uuid;');
     for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
         try
             [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec);
@@ -166,13 +168,15 @@ if hmchanged
         ea_kill('name', [tetgenName, tetgenExt]);
     end
 
+    evalin('base', 'ea_delete(fullfile(ISO2MESH_TEMP, ISO2MESH_SESSION));clear ISO2MESH_TEMP ISO2MESH_SESSION;');
+
     if ~success
         if exist('ME', 'var')
-            ea_cprintf('CmdWinErrors', '%s\n', ME.message);
+            ea_cprintf('CmdWinErrors', '\n%s\n\n', ME.message);
         end
         ea_error(['Despite all attempts the VTA model could not be created.\n' ...
             'Please check MATLAB Command Window for detailed error information.\n' ...
-            'Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.']);
+            'Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.'], simpleStack = true);
     end
 
     % replace wmboundary

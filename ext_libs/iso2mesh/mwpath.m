@@ -22,38 +22,26 @@ function tempname=mwpath(fname)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-p=getvarfrom({'caller','base'},'ISO2MESH_TEMP');
-session=getvarfrom({'caller','base'},'ISO2MESH_SESSION');
+temp = getvarfrom({'caller','base'}, 'ISO2MESH_TEMP');
+session = getvarfrom({'caller','base'}, 'ISO2MESH_SESSION');
 
-username=getenv('USER'); % for Linux/Unix/Mac OS
-
-if(isempty(username))
-   username=getenv('UserName'); % for windows
-end
-
-if(~isempty(username))
-   username=['iso2mesh-' username];
-end
-
-tempname=[];
-if(isempty(p))
-      if(isoctavemesh & tempdir=='\')
-		tempname=['.'  filesep session fname];
-	else
-		tdir=tempdir;
-		if(tdir(end)~=filesep)
-			tdir=[tdir filesep];
-		end
-		if(~isempty(username))
-                    tdir=[tdir username filesep];
-                    if(exist(tdir)==0) mkdir(tdir); end
-        end
-        if(nargin==0)
-            tempname=tdir;
-        else
-            tempname=[tdir session fname];
-        end
-	end
+if isempty(temp)
+    if isunix
+        username = getenv('USER'); % for Linux/Unix/Mac OS
+    else
+        username = getenv('USERNAME'); % for windows
+    end
+	iso2meshdir = fullfile(tempdir, ['iso2mesh-' username]);
 else
-	tempname=[p filesep session fname];
+    iso2meshdir = fullfile(temp, session);
+end
+
+if ~isfolder(iso2meshdir)
+    mkdir(iso2meshdir);
+end
+
+if(nargin==0)
+    tempname = iso2meshdir;
+else
+    tempname = fullfile(iso2meshdir, fname);
 end

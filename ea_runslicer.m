@@ -157,7 +157,8 @@ function varargout =  ea_runslicer(options, task)
         fprintf(fid, [GetFileXML(i, filepaths{i}, filenames{i}), '\r\n\r\n']);
     end
     if (task == 4 || task == -1)
-        fprintf(fid, GetFiducialEnding(setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', 'fcsv')));
+        fiducialFile = setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', 'fcsv');
+        fprintf(fid, GetFiducialEnding(strrep(fiducialFile, '\', '/')));
     else
         fprintf(fid, GetEnding());
     end

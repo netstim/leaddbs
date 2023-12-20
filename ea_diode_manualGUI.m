@@ -194,7 +194,7 @@ for k = 1:length(myslices)
     Yslice = ([-extract_width:samplingres:extract_width] .* xvec_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + center_act(2);
     Zslice = ea_diode_perpendicularplane(unitvector_mm,center_act,Xslice,Yslice);
     transversalslices{k} = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
-    transversalslices{k} = flipdim(transversalslices{k},1);
+    transversalslices{k} = flipdim(transversalslices{k},2);
 end
 
 %% final figure
@@ -215,6 +215,7 @@ clear theta rotmat tmpvector center
 %% parralel Plot axis
 orientation_act = 360;
 level_act = round(length(transversalslices)/2);
+level_act = 120;
 ax1 = uiaxes(fig(side).figure,'Position',[90 130 300 600]);
 hold(ax1,'on')
 parralelslice_act = imagesc(ax1,parallelslices{orientation_act});

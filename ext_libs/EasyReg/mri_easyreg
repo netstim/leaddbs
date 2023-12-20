@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import argparse
 import numpy as np
@@ -7,6 +9,7 @@ import surfa as sf
 import nibabel as nib
 from scipy.ndimage import gaussian_filter, binary_dilation, binary_erosion, distance_transform_edt, binary_fill_holes
 from scipy.ndimage import label as scipy_label
+import ermodels
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -42,10 +45,7 @@ def main():
 
     #############
 
-    # Very first thing: we require FreeSurfer
-    if not os.environ.get('FREESURFER_HOME'):
-        sf.system.fatal('FREESURFER_HOME is not set. Please source freesurfer.')
-    fs_home = os.environ.get('FREESURFER_HOME')
+    models_home = ermodels.models_dir
 
     if args.ref is None:
         sf.system.fatal('Reference image must be provided')
@@ -71,13 +71,13 @@ def main():
     torch.set_num_threads(args.threads)
 
     # path models
-    path_model_segmentation = fs_home + '/models/synthseg_2.0.h5'
-    path_model_parcellation = fs_home + '/models/synthseg_parc_2.0.h5'
-    path_model_registration_trained = fs_home + '/models/easyreg_v10_230103.h5'
+    path_model_segmentation = os.path.join(models_home, 'synthseg_2.0.h5')
+    path_model_parcellation = os.path.join(models_home, 'synthseg_parc_2.0.h5')
+    path_model_registration_trained = os.path.join(models_home, 'easyreg_v10_230103.h5')
 
     # path labels
-    labels_segmentation = fs_home +  '/models/synthseg_segmentation_labels_2.0.npy'
-    labels_parcellation = fs_home +  '/models/synthseg_parcellation_labels.npy'
+    labels_segmentation = os.path.join(models_home, 'synthseg_segmentation_labels_2.0.npy')
+    labels_parcellation = os.path.join(models_home, 'synthseg_parcellation_labels.npy')
     atlas_volsize = [160, 160, 192]
     atlas_aff = np.matrix([[-1, 0, 0, 79], [0, 0, 1, -104], [0, -1, 0, 79], [0, 0, 0, 1]])
 
@@ -412,7 +412,7 @@ def reformat_to_list(var, length=None, load_as_numpy=False, dtype=None):
     if var is None:
         return None
     var = load_array_if_path(var, load_as_numpy=load_as_numpy)
-    if isinstance(var, (int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.float128)):
+    if isinstance(var, (int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64)):
         var = [var]
     elif isinstance(var, tuple):
         var = list(var)

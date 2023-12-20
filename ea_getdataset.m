@@ -1,7 +1,7 @@
 function uipatdir = ea_getdataset(options,handles)
 
 try
-    load([ea_getearoot, 'common', filesep, 'ea_recentdatasets.mat'], 'recentfolders');
+    load([ea_prefsdir, filesep, 'ea_recentdatasets.mat'], 'recentfolders');
     startPath = fileparts(recentfolders{1});
 catch
     % Use default location
@@ -24,6 +24,19 @@ end
 % Delete created default dataset folder in case of choosing another folder
 if exist('defaultLocation', 'var') && ~defaultLocationExisted && ~strcmp(uipatdir, defaultLocation)
     ea_delete(defaultLocation);
+end
+
+% Just in case "derivatives" or "derivatives/leaddbs" is chosen as dataset
+% folder. This should not happen in the ideal case.
+if endsWith(uipatdir, filesep + "derivatives") && ~isempty(ea_regexpdir(uipatdir, '^leaddbs$', 0, 'd'))
+    uipatdir = erase(uipatdir, filesep + "derivatives" + lineBoundary("end"));
+elseif endsWith(uipatdir, filesep + "derivatives" + filesep + "leaddbs")
+    uipatdir = erase(uipatdir, filesep + "derivatives" + filesep + "leaddbs" + lineBoundary("end"));
+end
+
+[~, datasetName] = fileparts(uipatdir);
+if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+    ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
 end
 
 ea_mkdir(fullfile(uipatdir, 'derivatives', 'leaddbs'));

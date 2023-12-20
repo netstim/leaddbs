@@ -3,7 +3,9 @@ function analysisFile = ea_getGroupAnalysisFile(folder)
 
 pattern = '^dataset-[^\W_]+_analysis-[^\W_]+\.mat$';
 
-if contains(folder, ['derivatives', filesep, 'leadgroup', filesep]) % Input is group analysis folder
+folder = GetFullPath(folder);
+
+if contains(folder, [filesep, 'derivatives', filesep, 'leadgroup', filesep]) % Input is group analysis folder
     analysisFile = ea_regexpdir(folder, pattern, 0);
 elseif isfolder(fullfile(folder, 'derivatives')) % Input is dataset root folder
     analysisFile = ea_regexpdir(fullfile(folder, 'derivatives', 'leadgroup'), pattern, 1);

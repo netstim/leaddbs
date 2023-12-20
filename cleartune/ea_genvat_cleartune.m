@@ -604,7 +604,7 @@ if ~multvat
     vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
     vatfv.vertices=[vatfv.vertices;caps.vertices];
 
-    trysave
+    try
         vatfv=ea_smoothpatch(vatfv,1,35);
     catch
         try

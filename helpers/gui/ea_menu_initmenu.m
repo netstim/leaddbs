@@ -22,10 +22,6 @@ if isempty(menuprobe)
         m_c.Checked='off';
     end
 
-    if ismember('import',cmd)
-        uimenu(f,'Label','Import Legacy Folder to BIDS Dataset','Callback',{@(src, evt) lead_import});
-    end
-
     if ismember('checkregfigs',cmd)
         cr=uimenu(f,'Label','Checkreg');
         uimenu(cr,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles});
@@ -48,6 +44,10 @@ if isempty(menuprobe)
     uimenu(normf,'Label','Flatten fiducial helpers for selected patients','Callback',{@ea_flattenfiducialhelpers,handles})
     uimenu(normf,'Label','Delete fiducial helpers for selected patients','Callback',{@ea_deletefiducialhelpers,handles})
 
+    uimenu(f,'Label','Run THOMAS for T1w/WMn/FGATIR','Callback',{@(~, ~) ea_thomas_menu(handles)});
+
+    uimenu(f,'Label','Run DBSegment for T1w','Callback',{@(~, ~) ea_dbsegment_menu(handles)});
+
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
 
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
@@ -57,7 +57,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
 
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
-        
+
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
 
     uimenu(f,'Label','Run WarpDrive in Segment mode','Callback',{@ea_runwarpdrive_segment,handles});
@@ -65,7 +65,7 @@ if isempty(menuprobe)
         dbs=uimenu(f,'Label','Lead-OR');
         uimenu(dbs,'Label','Create OR Scene','Callback',{@ea_leador_create_or_scene,handles});
     end
-    
+
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
         uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
@@ -153,18 +153,22 @@ if isempty(menuprobe)
     for l=1:length(list)
         if isa([list{l}], 'char')
             insit(l) = uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
-            insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
+            if isdeployed && strcmp(commands{l}, 'hotfix')
+                % Disable hotfix for compiled app
+                insit(l).Checked = 'off';
+                insit(l).Enable = 'off';
+            elseif ismember(commands{l}, {'fixperm', 'leaddata', 'hotfix', 'pyenv'})
+                insit(l).Checked = 'off';
+                insit(l).Enable = 'on';
+            else
+                insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
+            end
         else % cell. create menu in above item
             insit(l-1).Callback = [];
             for j = 1:length(list{l})
                 m = uimenu(insit(l-1),'Label',[list{l}{j}],'Callback',{@ea_menuinstall,commands{l}{j}});
                 m.Checked = ea_checkinstall(commands{l}{j},1);
             end
-        end
-        % disable for compiled app
-        if isdeployed && any(strcmp(insit(l).Text,{'Install development version of Lead'}))
-            insit(l).Checked = 'off';
-            insit(l).Enable = 'off';
         end
     end
 

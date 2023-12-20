@@ -12,7 +12,7 @@ function [sortedFiles, returnCode] = ea_nifti_to_bids(niiFiles, dataset_folder, 
 % output
 %   sortedFiles (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
 %                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
-%   returnCode: 'okay', 'cancel' or 'close'
+%   returnCode: 'okay', 'cancel' or 'discard'
 % __________________________________________________________________________________
 % Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
 % Johannes Achtzehn
@@ -27,11 +27,17 @@ else
     lookup_table = getpref('dcm2bids', 'lookuptable');
 end
 
-% nii folder instead of nii files provided
-if isfolder(niiFiles)
-    niiFiles = ea_regexpdir(niiFiles, '\.nii(\.gz)$', 0);
-    if isempty(niiFiles)
-        ea_cprintf('CmdWinWarnings', 'NIfTI not found in the specified folder!\n')
+if ischar(niiFiles)
+    if isfolder(niiFiles)   % nii folder instead of nii files provided
+        niiFiles = ea_regexpdir(niiFiles, '\.nii(\.gz)$', 0);
+        if isempty(niiFiles)
+            ea_cprintf('CmdWinWarnings', 'NIfTI not found in the specified folder!\n')
+            return;
+        end
+    elseif isfile(niiFiles) % single nii file provided
+        niiFiles = {niiFiles};
+    else
+        ea_cprintf('CmdWinWarnings', 'Can''t retrieve NIfTI from the input!\n')
         return;
     end
 end
@@ -74,7 +80,7 @@ for image_idx = 1:length(niiFiles)
         ea_cprintf('CmdWinWarnings', 'There was a problem while loading the .nii file, please ensure this is a correct .nii image:\n%s\n', niiFiles{cnt})
 
         % delete files that have failed to load from the list
-        niiFiles(cnt) = [];       
+        niiFiles(cnt) = [];
         jsonFiles(cnt) = [];
 
         % also delete them from the preset
@@ -106,7 +112,7 @@ if N_fnames == 0
     return;
 end
 
-anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
+anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw', 'WMn'};  % a list of all supported modalities
 func_dwi_modalities = {'bold', 'sbref', 'dwi'};
 postop_modalities = {'CT', 'MRI'};          % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
 postop_acq_tags = {'ax', 'cor', 'sag'};     % a list of required acq-tags for the postop MRI images
@@ -174,11 +180,14 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 % cancel button behaviour
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
+% Close button behaviour
+uiapp.UIFigure.CloseRequestFcn = @(btn,event) cancel_button_function(uiapp);
+
 % looup table behaviour
 uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 
 setappdata(groot, 'sortedFiles', []);
-setappdata(groot, 'returnCode', 'close');
+setappdata(groot, 'returnCode', '');
 
 waitfor(uiapp.UIFigure);
 
@@ -544,13 +553,18 @@ end
 function cancel_button_function(uiapp)
 
 s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
-    'Options', {'Yes', 'No'}, 'Icon', 'question');
+    'Options', {'Yes (keep unsorted files)', 'Yes (discard unsorted files)', 'No'}, 'Icon', 'question');
 
 switch s
-    case 'Yes'
+    case 'Yes (keep unsorted files)'
         sortedFiles = [];
         setappdata(groot, 'sortedFiles', sortedFiles);
         setappdata(groot, 'returnCode', 'cancel');
+        delete(uiapp);
+    case 'Yes (discard unsorted files)'
+        sortedFiles = [];
+        setappdata(groot, 'sortedFiles', sortedFiles);
+        setappdata(groot, 'returnCode', 'discard');
         delete(uiapp);
 end
 end
@@ -714,6 +728,8 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 
 end
+
+ea_genrawimagesjson(dataset_folder, erase(subjID, lineBoundary("start") + "sub-"));
 
 setappdata(groot, 'sortedFiles', sortedFiles);
 setappdata(groot, 'returnCode', 'okay');
@@ -908,7 +924,7 @@ function update_crosschairs(uiapp, dim, sliceUpdated)
     corSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor'); % y, dim(2)
     sagSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag'); % x, dim(1)
     axiSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_axi'); % z, dim(3)
-    
+
     if ~exist('sliceUpdated', 'var')
         sliceUpdated.cor = 0;
         sliceUpdated.sag = 0;

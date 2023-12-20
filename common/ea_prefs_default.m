@@ -1,12 +1,15 @@
 function prefs = ea_prefs_default(patientname)
-
 % determine preferences here. For filenames, the variable 'patientname' can
 % be used in string-handling. This variable will be a string with the same name as the patient
 % folder.
 
+if nargin == 0
+    patientname = '';
+end
+
 % load loaded prefs (-> prefs.lp)
 try
-    load([ea_getearoot,'ea_prefs']);
+    load([ea_getearoot, 'ea_prefs']);
     prefs.lp = lp;
 end
 
@@ -124,7 +127,7 @@ prefs.mrcoreg.default = 'SPM (Friston 2007)'; % set to 'spm' or 'ants'
 prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Subcortical refine (Post to Pre):
-prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_').
+prefs.scrf.tonemap='tp_'; % can set to '' to use non-tonemapped CTs for brainshift correction (default = 'tp_').
 
 %% Default parcellation setting for LeadConn and LeadGroup
 prefs.lc.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
@@ -272,3 +275,7 @@ prefs.platform.glnxa64.load_shipped_runtime=false;  % for Linux default is NOT l
 prefs.platform.maci64.load_shipped_runtime=false;    % for macOS default is NOT loaded
 prefs.platform.maca64.load_shipped_runtime=false;    % for macOS default is NOT loaded
 prefs.platform.win64.load_shipped_runtime=false;  % for Windows default is NOT loaded
+
+
+%% conda
+prefs.conda.install_path = '';

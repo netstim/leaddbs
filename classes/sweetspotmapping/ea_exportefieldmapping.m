@@ -44,6 +44,8 @@ for side=1:size(vatlist,2)
     nii=ea_load_nii([outdir,'efield_bb',sidesuffices{side},'.nii']);
     if ~isfield(obj.M,'pseudoM')
         nii.img(nii.img<150)=nan;
+    else
+        ea_warndlg("PseudoM VTAs are used, low field filtering disabled! This can result in a large RAM consumption")
     end
     ea_write_nii(nii);
     ea_crop_nii(nii.fname);

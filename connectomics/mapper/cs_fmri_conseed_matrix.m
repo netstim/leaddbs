@@ -181,7 +181,7 @@ for mcfi=usesubjects % iterate across subjects
                 try
                     stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
                 catch
-                    keyboard
+                    stc(s,:)=nan;
                 end
             end
         end

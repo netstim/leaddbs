@@ -6,7 +6,7 @@ if ct.mat(1,1) < 0
 end
 if ct.mat(2,2) < 0    
     for k = 1:length(tmp)
-        tmp{k} = flip(tmp{k},s);
+        tmp{k} = flip(tmp{k},2);
     end
 end
 

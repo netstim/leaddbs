@@ -124,6 +124,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             if options.d3.mirrorsides
                 elstruct=ea_mirrorsides(elstruct);
+                options.patient_list = [options.patient_list; options.patient_list];
                 try options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             end
         else
@@ -417,9 +418,14 @@ hold on
 ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
+adjustlightbutton=uipushtool(ht,'CData',ea_get_icn('adjustlight'),...
+    'TooltipString','Auto-adjust Lighting',...
+    'ClickedCallback',@(~,~) ea_readjustlight(resultfig));
+
 lightbulbbutton=uipushtool(ht,'CData',ea_get_icn('lightbulb'),...
-    'TooltipString','Set Lighting',...
-    'ClickedCallback',{@ea_launch_setlighting,resultfig});
+    'TooltipString','Manually Set Lighting',...
+    'ClickedCallback',@(~,~) ea_launch_setlighting(resultfig));
+
 % clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),...
 %     'TooltipString','Ceiling Lightbulb',...
 %     'OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},...
@@ -538,7 +544,7 @@ set(findobj(ax.Children,'Type','surface'),'HitTest','off');
 ea_mouse_camera(resultfig);
 
 
-function ea_launch_setlighting(~,~,resultfig)
+function ea_launch_setlighting(resultfig)
 ea_set_lighting(resultfig);
 
 % --- Drag and drop callback to load patdir.

@@ -6,6 +6,9 @@ switch side
         contactnames = elspec.contactnames(1:length(elspec.contactnames)/2);
     case 2 % LH
         contactnames = elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+    otherwise
+        contactnames = elspec.contactnames(1:length(elspec.contactnames)/2);
+        contactnames = erase(contactnames, " (L)" | " (R)");
 end
 
 switch elspec.elmodel

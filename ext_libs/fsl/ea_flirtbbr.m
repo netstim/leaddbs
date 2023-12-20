@@ -78,7 +78,7 @@ wmsegcmd = [FSLMATHS, ...
             ' ', ea_path_helper(fixedimage_fast), '_wmseg'];
 
 
-% Creat white matter edge map ???just for visualization???
+% Creat white matter edge map, just for visualization
 wmedgecmd = [FSLMATHS, ...
              ' ', ea_path_helper(fixedimage_fast), '_wmseg', ...
              ' -edge -bin', ...
@@ -120,15 +120,15 @@ end
 setenv('FSLOUTPUTTYPE','NIFTI');
 
 fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
-ea_runcmd(fastcmd);
-ea_runcmd(wmsegcmd);
-ea_runcmd(wmedgecmd);
+ea_runcmd(fastcmd, env='FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(wmsegcmd, env='FSLOUTPUTTYPE=NIFTI');
+ea_runcmd(wmedgecmd, env='FSLOUTPUTTYPE=NIFTI');
 
 fprintf('\n\nRunning FSL FLIRT Pre-alignment: %s\n\n', movingimage);
-ea_runcmd(flirtinitcmd);
+ea_runcmd(flirtinitcmd, env='FSLOUTPUTTYPE=NIFTI');
 
 fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
-ea_runcmd(flirtbbrcmd);
+ea_runcmd(flirtbbrcmd, env='FSLOUTPUTTYPE=NIFTI');
 
 if writeoutmat
     ea_runcmd(convertxfmcmd);

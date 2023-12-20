@@ -11,7 +11,7 @@ subjId = getappdata(handles.leadfigure,'subjId');
 if length(subjId) > 1 || ...
         isfield(handles, 'datasetselect') && strcmp(handles.datasetselect.String, 'Choose Dataset Directory') || ...
         isfield(handles, 'patdir_choosebox') && strcmp(handles.patdir_choosebox.String, 'Choose Patient Directory')
-	prefsPath = fullfile(ea_getearoot, 'ea_ui.mat');
+	prefsPath = fullfile(ea_prefsdir, 'ea_ui.mat');
 else
 	prefsPath = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
 end

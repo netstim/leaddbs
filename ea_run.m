@@ -87,10 +87,19 @@ else
             ea_export(options);
         case 'run'
             for i = 1:length(uipatdirs)
-
                 % set patient specific options
                 options.root = [fileparts(uipatdirs{i}),filesep];
                 [~, options.patientname] = fileparts(uipatdirs{i});
+                if length(uipatdirs) > 1
+                    % In case of multiple patients selected, Use patient
+                    % specific elmodel set in the uiprefs.mat
+                    uiprefsFile = fullfile(options.root, options.patientname, 'prefs', [options.patientname, '_desc-uiprefs.mat']);
+                    if isfile(uiprefsFile)
+                        uiprefs = load(uiprefsFile);
+                        options.elmodel = uiprefs.elmodel;
+                        options.sides = uiprefs.sides;
+                    end
+                end
                 options.subjInd=i;
                 % run main function
                 if length(uipatdirs) > 1 % multi mode. Dont stop at errors.

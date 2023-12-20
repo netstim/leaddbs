@@ -28,7 +28,7 @@ if hotfix
             try
                 urlwrite([updurl,'?id=hotfix'],[earoot,'tmp',filesep,'hotfix.zip'],'Timeout',Inf);
             catch
-                fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+                ea_cprintf('CmdWinWarnings', ['\nDownload error! You may try to download the file manually from:\n',...
                          '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=hotfix']);
                 msgbox('Please check the command window for more information.','Download error!','Error')
                 return
@@ -43,19 +43,11 @@ if hotfix
         end
         delete([earoot,'tmp',filesep,'hotfix.zip']);
 
-        disp('Deleting outdated code...');
         try
             if exist([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'], 'file')
-                dfid = fopen([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
-                dels=textscan(dfid,'%s');
-                fclose(dfid);
-                for f=1:length(dels{1})
-                    if isdir([earoot,dels{1}{f}])
-                        rmdir([earoot,dels{1}{f}],'s')
-                    else
-                        delete([earoot,dels{1}{f}])
-                    end
-                end
+                disp('Deleting outdated code...');
+                dels = readlines([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
+                ea_delete(cellstr(dels));
                 delete([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'])
             end
         catch
@@ -74,14 +66,14 @@ if hotfix
         success=1;
         disp('*** Update finished.');
     catch
-        info=sprintf(['Patch does not exist or failed to install development version of Lead!\n',...
+        info=sprintf(['Patch does not exist or failed to install development version of LeadDBS!\n',...
                       'Please wait for the next release.']);
-        disp(info);
+        ea_cprintf('CmdWinWarnings', '\n%s\n\n', info);
         msgbox(info,'Update','Error');
     end
 else
-    info=sprintf(['Local version is not applicable to install development version of Lead.\n'...
+    info=sprintf(['Local version is not applicable to install development version of LeadDBS.\n'...
         'Please upgrade to the latest release (v', web,') first!']);
-    disp(info);
+    ea_cprintf('CmdWinWarnings', '\n%s\n\n', info);
     msgbox(info,'Update','Help');
 end

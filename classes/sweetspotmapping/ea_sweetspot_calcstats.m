@@ -71,7 +71,8 @@ for group=groups
             case 'VTAs'
                 gval{side}=gval{side}>obj.efieldthreshold; % binarize
             case 'E-Fields'
-                gval{side}(gval{side}<obj.efieldthreshold)=nan; % threshold efields
+                Nmap=ea_nansum(gval{side}>obj.efieldthreshold);
+                gval{side}(:,Nmap<round(size(gval{side},1)*(obj.coverthreshold/100)))=nan; % Set pixels to Nan that do not meet coverthreshold criteria
         end
         switch obj.statlevel
             case 'VTAs'
@@ -81,12 +82,12 @@ for group=groups
                         amps(k,1) = obj.M.S(k).Rs1.amp;
                         amps(k,2) = obj.M.S(k).Ls1.amp;
                     end
-                end
 
-                if obj.mirrorsides
-                    amps = [amps;amps];
+                    if obj.mirrorsides
+                        amps = [amps;amps];
+                    end
                 end
-
+                
                 %get VTA Size
                 VTAsize(:,side) = sum(gval{side},2);
                 VTAsize((VTAsize==0))=nan; % will prevent division by zero issue in case of empty VTAs
@@ -138,11 +139,9 @@ for group=groups
                 switch obj.stattest
                     case 'Mean-Image'
                         thisvals=double(gval{side}(gpatsel,:)).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
-                        Nmap=ea_nansum(double(gval{side}(gpatsel,:)));
-                        nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
-                        thisvals(:,nanidx)=nan;
-                        vals{group,side} = ea_nanmean(thisvals)';
-                        vals{group,side}(vals{group,side} < obj.statimpthreshold) = NaN;
+                        Nmap=ea_nansum(double(gval{side}(gpatsel,:)));                        
+                        Nmap(Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)))=nan;
+                        vals{group,side} = sum(thisvals,1,"omitnan")'./Nmap';
                     case 'N-Image'
                         if ~ea_isbinary(I(gpatsel,side))
                             tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
@@ -289,7 +288,7 @@ for group=groups
                         thisvals=gval{side}(gpatsel,:);
                         Nmap=ea_nansum(~isnan(thisvals));
 
-                        nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
+                        nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)); % apply N-threshold
                         thisvals=thisvals(:,~nanidx);
                         if obj.showsignificantonly
                             [R,p]=ea_corr(thisvals,I(gpatsel,side),obj.corrtype);
@@ -302,8 +301,11 @@ for group=groups
                         vals{group,side}(~nanidx)=R;
                     case 'Reverse T-Tests (Binary Var)'
 
-                    nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
-                    invals=gval{side}(gpatsel,nonempty)';
+                        nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
+                        thisvals=gval{side}(gpatsel,:);
+                        Nmap=ea_nansum(~isnan(thisvals));
+                        nonempty(Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)))=0; % apply N-threshold
+                        invals=gval{side}(gpatsel,nonempty)';
                     if ~isempty(invals)
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
@@ -315,6 +317,8 @@ for group=groups
                             [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
                             outvals=stats.tstat';
                             outps=ps;
+                            outvals=ea_corrsignan(outvals,outps,obj);
+
                         else % no need to calc p-val here
                             [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
                             outvals=stats.tstat';

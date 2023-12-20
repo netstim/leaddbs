@@ -3,22 +3,33 @@ function prefs = ea_setprefs(key, value, whichPrefs)
 % 'whichPrefs' can be either 'machine' (default) to set 'prefs.machine.*'
 % or 'user' to set 'prefs.*'
 
+% In case deployed, only support set user prefs saved in ea_prefs.json
+if isdeployed
+    prefPath = ea_prefspath('json');
+    prefs = loadjson(prefPath);
+    fields = strsplit(key, '.');
+    prefs = setfield(prefs, fields{:}, value);
+    savejson('', prefs, prefPath);
+    return
+end
+
 if ~exist('whichPrefs', 'var') || isempty(whichPrefs)
     % Set prefs.machine.* by default
     whichPrefs = 'machine';
 end
 
 switch lower(whichPrefs)
-    case 'machine'
+    case {'m', 'machine'}
         prefs = ea_prefs;
         machine = prefs.machine;
-        eval(['machine.', key, ' = value;']);
+        fields = strsplit(key, '.');
+        machine = setfield(machine, fields{:}, value);
         try % may not have write permissions
-            save([ea_gethome,'.ea_prefs.mat'],'machine');
+            save(ea_prefspath('.mat'),'machine');
         catch
             warning('Could not save preferences to user home directory. Please check permission.');
         end
-    case 'user'
+    case {'u', 'user'}
         if ~ischar(value)
             error('Input value should be a string!');
         end
@@ -28,17 +39,17 @@ switch lower(whichPrefs)
             value = ['''', value, ''''];
         end
 
-        % Replace prefs in .ea_prefs.m
-        prefs = fileread([ea_gethome,'.ea_prefs.m']);
+        % Replace prefs in ea_prefs.m
+        prefs = fileread(ea_prefspath);
         pattern = [strrep(['prefs.',key], '.', '\.'), ' *= *.*?;'];
-        if ~isempty(regexp(prefs, pattern,'once')) % Key exists
+        if ~isempty(regexp(prefs, pattern, 'once')) % Key exists
             prefs = regexprep(prefs, pattern, regexptranslate('escape',['prefs.',key,' = ',value,';']));
         else % New key added
             prefs = [prefs, sprintf('\nprefs.%s = %s;\n',key,value)];
         end
 
         try % may not have write permissions
-            fid = fopen([ea_gethome,'.ea_prefs.m'], 'w');
+            fid = fopen(ea_prefspath, 'w');
             fwrite(fid, prefs);
             fclose(fid);
         catch

@@ -10,8 +10,8 @@ anchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 postopModality = fieldnames(options.subj.postopAnat);
 
 % Set moving and output image
-moving = cellfun(@(x) options.subj.postopAnat.(x).preproc, postopModality, 'Uni', 0);
-output = cellfun(@(x) options.subj.postopAnat.(x).coreg, postopModality, 'Uni', 0);
+moving = cellfun(@(x) options.subj.preproc.anat.postop.(x), postopModality, 'Uni', 0);
+output = cellfun(@(x) options.subj.coreg.anat.postop.(x), postopModality, 'Uni', 0);
 
 % Check moving image existence
 moving_exists = cellfun(@(x) isfile(x), moving);
@@ -42,6 +42,7 @@ if strcmp(options.coregmr.method, 'ANTs Nonlinear Coregistration')
 end
 
 % Do coregistration
+ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
     affinefile = ea_coregimages(options, moving{i}, anchor, output{i}, [], 1);
@@ -82,6 +83,7 @@ if options.prefs.diary
 end
 
 if options.overwriteapproved && isfolder(options.subj.brainshiftDir)
+    ea_delete(options.subj.brainshiftDir);
     ea_cprintf('CmdWinWarnings', 'Postop MR coregistration has been rerun. Please also rerun brain shift correction!\n');
 end
 

@@ -194,8 +194,8 @@ ea_ListBoxRenderer(handles.fiberspopup);
 function DropFcn(~, event, handles)
 
 % check if dropping area is in patient listbox
-if event.Location.getX < 325 && event.Location.getX > 24 && ...
-   event.Location.getY < 322 && event.Location.getY > 137
+if event.Location.getX < 326 && event.Location.getX > 23 && ...
+   event.Location.getY < 326 && event.Location.getY > 139
     target = 'patientList';
 else
     target = 'groupDir';
@@ -218,11 +218,20 @@ if strcmp(target, 'groupDir')
         M = getappdata(handles.leadfigure,'M');
 
         disp('Saving data to disk...');
-        try
-            save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
-        catch
-            warning('Data could not be saved.');
-            keyboard
+        groupAnalysisFile = ea_getGroupAnalysisFile(handles.groupdir_choosebox.String);
+        if ~isempty(groupAnalysisFile)
+            save(groupAnalysisFile, 'M', '-v7.3');
+        else
+            if ~isfolder(handles.groupdir_choosebox.String)
+                ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
+            else
+                [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(handles.groupdir_choosebox.String, filesep + lineBoundary("end"))))));
+                if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                    ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
+                else
+                    ea_cprintf('CmdWinErrors', 'Could not get the group analysis file.\n')
+                end
+            end
         end
         disp('Done.');
         ea_busyaction('off',handles.leadfigure,'group');
@@ -233,8 +242,12 @@ if strcmp(target, 'groupDir')
         ea_error('Please drag either a dataset root folder or a group analysis folder into Lead Group!', simpleStack = 1);
     end
 
-    if isfile(folders{1}) % Group analysis mat file dragged
-        if ~isempty(regexp(folders{1}, ['derivatives\', filesep, 'leadgroup\', filesep, '.+\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
+    if isfile(folders{1}) % Group analysis file dragged
+        if ~isempty(regexp(folders{1}, ['derivatives\', filesep, 'leadgroup\', filesep, '[^\W_]+\', filesep, 'dataset-[^\W_]+_analysis-[^\W_]+\.mat$'], 'match', 'once'))
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(fileparts(folders{1})))));
+            if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
+            end
             % Group analysis file within dataset folder
             groupdir = [fileparts(folders{1}), filesep];
             load(folders{1}, 'M');
@@ -248,7 +261,7 @@ if strcmp(target, 'groupDir')
                 M.root = groupdir;
                 save(folders{1}, 'M')
             end
-        elseif ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
+        elseif ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-[^\W_]+_analysis-[^\W_]+\.mat$'], 'match', 'once'))
             % Orphan group analysis file, will create proper dataset folder
             [groupdir, analysisFile] = ea_genDatasetFromGroupAnalysis(folders{1});
             load(analysisFile, 'M');
@@ -256,12 +269,33 @@ if strcmp(target, 'groupDir')
             ea_error('Not a Lead Group Analysis file!', simpleStack = 1);
         end
     else % Dataset root folder or group analysis folder dragged
-        if ~contains(folders{1}, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(folders{1}, 'derivatives'))
+        if ~isfolder(fullfile(folders{1}, 'derivatives')) && ~contains(folders{1}, [filesep, 'derivatives', filesep, 'leadgroup', filesep])
+            % Neither a dataset root folder nor a group analysis folder, try to search for group analysis file
             analysisFile = ea_regexpdir(folders{1}, '^dataset-[^\W_]+_analysis-[^\W_]+\.mat$', 0);
             if ~isempty(analysisFile)
                folders{1} = ea_genDatasetFromGroupAnalysis(analysisFile{1});
             end
         end
+
+        % Double check the dataset folder name
+        if isfolder(fullfile(folders{1}, 'derivatives'))
+            % Dataset root folder
+            [~, datasetName] = fileparts(folders{1});
+        elseif contains(folders{1}, [filesep, 'derivatives', filesep, 'leadgroup', filesep])
+            % Group analysis folder
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(folders{1}, filesep + lineBoundary("end"))))));
+        else
+            % Empty folder dragged
+            [~, datasetName] = fileparts(folders{1});
+        end
+
+        if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+            ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
+        elseif exist('analysisFile', 'var') && isempty(analysisFile)
+            ea_cprintf('CmdWinWarnings', 'Initialize new dataset folder:\n%s\n', folders{1});
+            ea_mkdir(fullfile(folders{1}, 'derivatives', 'leadgroup'));
+        end
+
         analysisFile = ea_getGroupAnalysisFile(folders{1});
         if isempty(analysisFile) % Create new analysis file in case not found
             analysisFile = ea_genGroupAnalysisFile(folders{1});
@@ -349,18 +383,27 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Save data for previous selected group folder
-if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory')
     ea_busyaction('on',handles.leadfigure,'group');
     disp('Saving data...');
     % save M
     ea_refresh_lg(handles);
     M=getappdata(handles.leadfigure,'M');
     disp('Saving data to disk...');
-    try
-        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
-    catch
-        warning('Data could not be saved.');
-        % keyboard
+    groupAnalysisFile = ea_getGroupAnalysisFile(handles.groupdir_choosebox.String);
+    if ~isempty(groupAnalysisFile)
+        save(groupAnalysisFile, 'M', '-v7.3');
+    else
+        if ~isfolder(handles.groupdir_choosebox.String)
+            ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
+        else
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(handles.groupdir_choosebox.String, filesep + lineBoundary("end"))))));
+            if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
+            else
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file.\n')
+            end
+        end
     end
     disp('Done.');
     ea_busyaction('off',handles.leadfigure,'group');
@@ -372,7 +415,8 @@ groupdir = uigetdir;
 if ~groupdir % user pressed cancel
     return
 else
-    if ~contains(groupdir, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(groupdir, 'derivatives'))
+    if ~isfolder(fullfile(groupdir, 'derivatives')) && ~contains(groupdir, ['derivatives', filesep, 'leadgroup', filesep])
+        % Neither a dataset root folder nor a group analysis folder, try to search for group analysis file
         analysisFile = ea_regexpdir(groupdir, '^dataset-[^\W_]+_analysis-[^\W_]+\.mat$', 0);
         if ~isempty(analysisFile) % Load group analysis outside of dataset
             if length(analysisFile) > 1
@@ -386,16 +430,40 @@ else
             end
             groupdir = ea_genDatasetFromGroupAnalysis(analysisFile{1});
         else % initialize group analysis in an empty folder.
-            ea_cprintf('CmdWinWarnings', 'Initialize new dataset folder: %s\n', groupdir);
-            ea_mkdir(fullfile(groupdir, 'derivatives', 'leaddbs'));
+            % Double check the dataset folder name
+            [~, datasetName] = fileparts(groupdir);
+            if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
+            end
+            ea_cprintf('CmdWinWarnings', 'Initialize new dataset folder:\n%s\n', groupdir);
             ea_mkdir(fullfile(groupdir, 'derivatives', 'leadgroup'));
         end
     end
+
     analysisFile = ea_getGroupAnalysisFile(groupdir);
     if isempty(analysisFile) % Create new analysis file in case not found
+        % Double check the dataset folder name
+        if isfolder(fullfile(groupdir, 'derivatives'))
+            % Dataset root folder
+            [~, datasetName] = fileparts(groupdir);
+        elseif contains(groupdir, [filesep, 'derivatives', filesep, 'leadgroup', filesep])
+            % Group analysis folder
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(groupdir, filesep + lineBoundary("end"))))));
+        else
+            [~, datasetName] = fileparts(groupdir);
+        end
+        if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+            ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
+        end
         analysisFile = ea_genGroupAnalysisFile(groupdir);
+    else
+        % Double check the dataset folder name
+        [~, datasetName] = fileparts(fileparts(fileparts(fileparts(fileparts(analysisFile)))));
+        if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+            ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
+        end
     end
-    groupdir = fileparts(analysisFile);
+    groupdir = fullfile(fileparts(analysisFile), filesep);
 end
 
 ea_load_group(handles,groupdir);
@@ -641,11 +709,6 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
     elseif strcmpi(choice,'Yes')
         load(filename,'vizstruct')
     end
-end
-
-% amend .pt to identify which patient is selected (needed for isomatrix).
-for pt=1:length(ptidx)
-    M.elstruct(ptidx(pt)).pt=ptidx(pt);
 end
 
 elmodels = [{'Patient specified'};ea_resolve_elspec];
@@ -1318,7 +1381,7 @@ catch % too many entries..
     options.labelatlas=1;
 end
 options.writeoutpm = 0;
-options.colormap=parula(64);
+options.colormap='parula(64)';
 options.d3.write=1;
 options.d3.prolong_electrode=2;
 options.d3.writeatlases=1;
@@ -1513,11 +1576,20 @@ if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group
     ea_refresh_lg(handles);
     M=getappdata(hObject,'M');
     disp('Saving data to disk...');
-    try
-        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
-    catch
-        warning('Data could not be saved.');
-        keyboard
+    groupAnalysisFile = ea_getGroupAnalysisFile(handles.groupdir_choosebox.String);
+    if ~isempty(groupAnalysisFile)
+        save(groupAnalysisFile, 'M', '-v7.3');
+    else
+        if ~isfolder(handles.groupdir_choosebox.String)
+            ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
+        else
+            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(handles.groupdir_choosebox.String, filesep + lineBoundary("end"))))));
+            if ~isempty(regexp(datasetName, '[\W_]', 'once'))
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
+            else
+                ea_cprintf('CmdWinErrors', 'Could not get the group analysis file.\n')
+            end
+        end
     end
     disp('Done.');
     disp('Bye for now.');

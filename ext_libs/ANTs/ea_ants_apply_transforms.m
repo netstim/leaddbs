@@ -166,7 +166,7 @@ for i = 1:length(input)
     end
 
     [~, inputFileName] = ea_niifileparts(input{i});
-    fprintf('\nNormalizing %s ...\n', inputFileName);
+    fprintf('\nRegister %s ...\n', inputFileName);
 
     ea_runcmd(cmd);
 end

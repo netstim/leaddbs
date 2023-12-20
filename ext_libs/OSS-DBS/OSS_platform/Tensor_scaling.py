@@ -35,7 +35,7 @@ def theta_star(w12, w13):
    
    return np.round(theta, -int(np.log10(eps))) # to supress round-off
    
-def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
+def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,affine,affine_inv,args):
     i,j=args
     tmp = np.ctypeslib.as_array(shared_array)
     #tmp_DTITK = np.ctypeslib.as_array(shared_array_DTITK)
@@ -141,16 +141,26 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
                 print(i,j,k)
                 raise SystemExit
 
-            tmp[i,j,k,:]=np.array([tensor[0][0],tensor[1][0],tensor[2][0],tensor[1][1],tensor[2][1],tensor[2][2]]) #we need to have it as xx,yx,zx,yy,zy,zz (which is FSL standard saving procedure of DTI)
+
+            # re-orient to the world axes
+            tensor_complete = np.array([[tensor[0][0],tensor[1][0],tensor[2][0],0],[tensor[1][0],tensor[1][1],tensor[2][1],0],[tensor[2][0],tensor[1][2],tensor[2][2],0],[0,0,0,1]])
+            tensor_WA = np.matmul(np.matmul(affine, tensor_complete), affine_inv)
+            tmp[i,j,k,:]=np.array([tensor_WA[0][0],tensor_WA[1][0],tensor_WA[2][0],tensor_WA[1][1],tensor_WA[2][1],tensor_WA[2][2]]) #we need to have it as xx,yx,zx,yy,zy,zz (which is FSL standard saving procedure of DTI)
+
+
+            #tmp[i,j,k,:]=np.array([tensor[0][0],tensor[1][0],tensor[2][0],tensor[1][1],tensor[2][1],tensor[2][2]]) #we need to have it as xx,yx,zx,yy,zy,zz (which is FSL standard saving procedure of DTI)
             #for visualization with DTI TK
             #tmp_DTITK[i_ind,j_ind,z_ind,:]=np.array([tensor[0][0],tensor[1][0],tensor[1][1],tensor[2][0],tensor[2][1],tensor[2][2]]) #we need to have it as xx,yx,yy,zx,zy,zz (NIFTI standard)
 
     #%%
 
-def main_part(tensor_order,scaling_method):
+def main_part(tensor_order,scaling_method, affine):
     global shared_array
     #global shared_array_DTITK #visulazation with DTI TK
 
+    
+    affine_inv = np.linalg.inv(affine)
+   
     Mx,My,Mz=(DTI_data.shape[0],DTI_data.shape[1],DTI_data.shape[2])
 
     normalized_DTI=np.ctypeslib.as_ctypes(np.zeros((Mx,My,Mz,6),float))
@@ -170,7 +180,7 @@ def main_part(tensor_order,scaling_method):
                itertools.product(range(0, Mx),    #Combinatoric iterators: product() = cartesian product, equivalent to a nested for-loop [(0,0),(0,1),..,(0,len(My)),..(len(Mx),len(My))]
                                  range(0, My))]
     p = Pool(cpu_count()-1)
-    p.map(partial(fill_out_in_parallel,k_vector,tensor_order,scaling_method),window_idxs)
+    p.map(partial(fill_out_in_parallel,k_vector,tensor_order,scaling_method,affine,affine_inv),window_idxs)
     #p.map =  map(func, iterable[, chunksize]) This method chops the iterable into a number of chunks which it submits to the process pool as separate tasks.
     #The (approximate) size of these chunks can be specified by setting chunksize to a positive integer.
     #partial(func,/,*args,**keywords)
@@ -187,7 +197,7 @@ def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order
     img = nib.load(filepath)
     # img.shape
     DTI_data = img.get_fdata()
-    if np.any(np.isnan(DTI_data))
+    if np.any(np.isnan(DTI_data)):
         print("NaN detected in the DTI, please remove them!")
         raise SystemExit
 
@@ -209,7 +219,7 @@ def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order
 #    a.axis('off')
 #    a.set_title('Sagittal_org')
 
-    main_part(tensor_order,scaling_method)
+    main_part(tensor_order,scaling_method,img.affine)
     normalized_DTI=np.ctypeslib.as_array(shared_array)
     #normalized_DTITK=np.ctypeslib.as_array(shared_array_DTITK)
 

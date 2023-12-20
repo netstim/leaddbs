@@ -184,7 +184,7 @@ switch strategy
         if strcmp(tractset.multitractmode, 'Split & Color By PCA')
             if ~isequal(training, tractset.patientselection)
                 ea_error(['You should train the model on the patients used to compute the PCA, ' ...
-                    'otherwise the PCA coefficients will not correspond!'])
+                    'otherwise the PCA coefficients will not correspond!']);
             end
         end
 

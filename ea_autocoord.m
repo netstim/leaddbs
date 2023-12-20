@@ -39,9 +39,10 @@ if strcmp(options.leadprod, 'dbs')
     if options.importdcm.do || options.importnii.do
         unsortedFiles = ea_regexpdir(fullfile(options.subj.rawdataDir, 'unsorted'), '.*\.nii(\.gz)?');
         if ~isempty(unsortedFiles)
-            ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
-            ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
-            ea_genrawimagesjson(bids.datasetDir, options.subj.subjId);
+            [~, returnCode] = ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
+            if strcmp(returnCode, 'discard')
+                ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
+            end
         else
             ea_cprintf('CmdWinWarnings', 'No unsorted raw images found for "%s"!\n', options.subj.subjId);
         end
@@ -55,11 +56,11 @@ end
 options = ea_resolve_elspec(options);
 
 % check connectome-mapper tags
-if isfield(options,'lcm')
+if strcmp(options.leadprod, 'mapper')
     ea_lcm(options);
 end
 
-if isfield(options,'predict')
+if strcmp(options.leadprod, 'predict')
    ea_predict(options);
 end
 
@@ -186,9 +187,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.do
-        
+
         normlock = ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).norm);
-        
+
         if contains(options.normalize.method, 'apply')
             doit = true;
         elseif normlock == 1 % Both pre-op images coreg and norm were approved.
@@ -198,7 +199,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         else
             doit = true;
         end
-        
+
         if doit
             ea_normalize(options);
             ea_gencheckregfigs(options, 'norm');
@@ -208,7 +209,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.scrf.do
         if ~ea_reglocked(options, options.subj.brainshift.anat.scrf) || options.overwriteapproved
             options.autobrainshift = 1;
-            ea_dumpmethod(options, 'brainshift');
             ea_subcorticalrefine(options);
             options = rmfield(options,'autobrainshift');
         end
@@ -217,16 +217,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if isfield(options,'gencheckreg') % Exception when calling from the Tools menu.
         if options.gencheckreg
             ea_gencheckregfigs(options); % generate checkreg figures
-        end
-    end
-
-    if options.dolc % perform lead connectome subroutine..
-        ea_perform_lc(options);
-    end
-
-    if options.d2.write || options.d3.write
-        if options.atl.genpt % generate patient specific atlas set
-            ea_ptspecific_atl(options);
         end
     end
 
@@ -254,33 +244,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.normalize.refine
         ea_runwarpdrive(options, '0');
-    end
-
-    if options.ecog.extractsurface.do
-       switch options.ecog.extractsurface.method
-           case 1 % CAT 12
-               hastb=ea_hastoolbox('cat');
-               if ~hastb
-                   ea_error('CAT12 needs to be installed to the SPM toolbox directory');
-               end
-               ea_cat_seg(options);
-           case 2 % FS
-               if exist([options.subj.freesurferDir,filesep,'sub-',options.subj.subjId,filesep],'dir')
-                   if options.overwriteapproved
-                       % for now still ask user to confirm recalculation
-                       % since fs takes so long.
-                       answ=questdlg('Existing FreeSurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
-                          'FreeSurfer output found','Recalculate & Overwrite','Skip','Skip');
-
-                       switch lower(answ)
-                           case 'recalculate & overwrite'
-                               ea_runfreesurfer(options)
-                       end
-                   end
-               else
-                    ea_runfreesurfer(options);
-               end
-       end
     end
 
     if options.doreconstruction
@@ -350,7 +313,44 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             options.elside=options.sides(1);
             ea_manualreconstruction(mcfig,options.subj.subjId,options);
         end
-    else
+    end
+
+    if options.ecog.extractsurface.do
+       switch options.ecog.extractsurface.method
+           case 1 % CAT 12
+               hastb=ea_hastoolbox('cat');
+               if ~hastb
+                   ea_error('CAT12 needs to be installed to the SPM toolbox directory');
+               end
+               ea_cat_seg(options);
+           case 2 % FS
+               if exist([options.subj.freesurferDir,filesep,'sub-',options.subj.subjId,filesep],'dir')
+                   if options.overwriteapproved
+                       % for now still ask user to confirm recalculation
+                       % since fs takes so long.
+                       answ=questdlg('Existing FreeSurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
+                          'FreeSurfer output found','Recalculate & Overwrite','Skip','Skip');
+
+                       switch lower(answ)
+                           case 'recalculate & overwrite'
+                               ea_runfreesurfer(options)
+                       end
+                   end
+               else
+                    ea_runfreesurfer(options);
+               end
+       end
+    end
+
+    if options.dolc % perform lead connectome subroutine..
+        ea_perform_lc(options);
+    end
+
+    if ~options.refinelocalization && (options.d2.write || options.d3.write)
+        if options.atl.genpt % generate patient specific atlas set
+            ea_ptspecific_atl(options);
+        end
+
         ea_write(options)
     end
 else

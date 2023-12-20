@@ -25,7 +25,7 @@ end
 
 fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 
-umachine = load([ea_gethome, '.ea_prefs.mat']);
+umachine = load(ea_prefspath('mat'));
 normsettings = umachine.machine.normsettings;
 % Prepare bet image for flirt
 if normsettings.fsl_skullstrip % skullstripping is on
@@ -132,8 +132,7 @@ convertxfmcmd = [COVERT_XFM, ...
               ' -omat ', ea_path_helper([volumedir, invxfm, num2str(runs+1), '.mat']), ...
               ' -inverse ', ea_path_helper([volumedir, xfm, num2str(runs+1), '.mat'])];
 
-setenv('FSLOUTPUTTYPE','NIFTI');
-ea_runcmd(flirtcmd);
+ea_runcmd(flirtcmd, env='FSLOUTPUTTYPE=NIFTI');
 ea_runcmd(convertxfmcmd);
 
 if ~isempty(otherfiles)

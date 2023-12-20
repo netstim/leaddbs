@@ -1,5 +1,11 @@
-function ea_rename_pts(BIDSRoot, oldSubjId, newSubjId)
+function ea_rename_pts(BIDSRoot, oldSubjId, newSubjId, opts)
 % Function to rename subj in a BIDS dataset
+arguments
+    BIDSRoot            {mustBeFolder}
+    oldSubjId           {mustBeText}
+    newSubjId           {mustBeText}
+    opts.blindRename    {mustBeNumericOrLogical} = false;  % Blindy rename all files no matter if oldSubjId matches or not.
+end
 
 if ~iscell(oldSubjId)
     oldSubjId = {oldSubjId};
@@ -46,28 +52,52 @@ for i = 1:numel(oldSubjId)
                  fullfile(BIDSRoot, 'sourcedata', ['sub-', new]));
     end
 
-    oldFiles = ea_regexpdir(BIDSRoot, ['^sub-', old, '_']);
-    newFiles = strrep(oldFiles, [filesep, 'sub-', old, '_'], [filesep, 'sub-', new, '_']);
-    cellfun(@(src, dst) movefile(src, dst), oldFiles, newFiles);
+    if ~opts.blindRename
+        oldFiles = ea_regexpdir(BIDSRoot, ['^sub-', old, '_']);
+        newFiles = replace(oldFiles, [filesep, 'sub-', old, '_'], [filesep, 'sub-', new, '_']);
+    else
+        oldDerivativeFiles = ea_regexpdir(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', new]), '^sub-[^\W_]+_');
+        newDerivativeFiles = replace(oldDerivativeFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldRawFiles = ea_regexpdir(fullfile(BIDSRoot, 'rawdata', ['sub-', new]), '^sub-[^\W_]+_');
+        newRawFiles = replace(oldRawFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldSourceFiles = ea_regexpdir(fullfile(BIDSRoot, 'sourcedata', ['sub-', new]), '^sub-[^\W_]+_');
+        newSourceFiles = replace(oldSourceFiles, filesep + "sub-" + alphanumericsPattern, [filesep, 'sub-', new]);
+        oldFiles = [oldDerivativeFiles; oldRawFiles; oldSourceFiles];
+        newFiles = [newDerivativeFiles; newRawFiles; newSourceFiles];
+    end
+    
+    cellfun(@(src, dst) ~strcmp(src, dst) && movefile(src, dst), oldFiles, newFiles);
 
     rawImageJson = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', new], 'prefs', ['sub-', new, '_desc-rawimages.json']);
     if isfile(rawImageJson)
         json = fread(fopen(rawImageJson, 'rt'));
-        json = strrep(char(json'), ['sub-', old, '_'], ['sub-', new, '_']);
+        if ~opts.blindRename
+            json = replace(char(json'), ['sub-', old, '_'], ['sub-', new, '_']);
+        else
+            json = replace(char(json'), "sub-" + alphanumericsPattern + "_", ['sub-', new, '_']);
+        end
         fwrite(fopen(rawImageJson, 'wt'), json);
     end
 
     statsFile = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', new], ['sub-', new, '_desc-stats.mat']);
     if isfile(statsFile)
         load(statsFile, 'ea_stats');
-        ea_stats.patname = strrep(ea_stats.patname, ['sub-', old], ['sub-', new]);
+        if ~opts.blindRename
+            ea_stats.patname = replace(ea_stats.patname, ['sub-', old], ['sub-', new]);
+        else
+            ea_stats.patname = replace(ea_stats.patname, "sub-" + alphanumericsPattern, ['sub-', new]);
+        end
         save(statsFile, 'ea_stats');
     end
 
     statsBackupFile = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', new], ['sub-', new, '_desc-statsbackup.mat']);
     if isfile(statsBackupFile)
         load(statsBackupFile, 'ea_stats');
-        ea_stats.patname = strrep(ea_stats.patname, ['sub-', old], ['sub-', new]);
+        if ~opts.blindRename
+            ea_stats.patname = replace(ea_stats.patname, ['sub-', old], ['sub-', new]);
+        else
+            ea_stats.patname = replace(ea_stats.patname, "sub-" + alphanumericsPattern, ['sub-', new]);
+        end
         save(statsBackupFile, 'ea_stats');
     end
 end

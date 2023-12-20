@@ -44,5 +44,4 @@ cmd = [FLIRT, ...
        ' -interp ', interp, ...
        ' -v'];
 
-setenv('FSLOUTPUTTYPE','NIFTI');
-ea_runcmd(cmd);
+ea_runcmd(cmd, env='FSLOUTPUTTYPE=NIFTI');

@@ -82,13 +82,13 @@ ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.n
 
 % also create VATs directly
 VTA_interp = E_field_interp;
-VTA_interp = E_field_interp > (Activation_threshold_VTA);
+VTA_interp = E_field_interp >= (Activation_threshold_VTA);
 Vvat2 = Vvat;
 Vvat2.descrip='oss-dbs - VAT';
 Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
+ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']);
 
 
 

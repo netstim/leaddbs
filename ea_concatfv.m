@@ -6,13 +6,23 @@ end
 if ~exist('usecork','var')
     usecork=0;
 end
-if strcmp(class(fv),'matlab.graphics.primitive.Surface')
-    for f=1:length(fv)
-        nfv(f)=surf2patch(fv(f),'triangles');
-    end
-    fv=nfv;
-    clear nfv
+
+if isa(fv, 'matlab.graphics.primitive.Surface')
+    fv = arrayfun(@(x) surf2patch(x,'triangles'), fv);
 end
+
+dataTrimmed = 0;
+for f=1:length(fv)
+    if size(fv(f).vertices, 1) < size(fv(f).facevertexcdata, 1)
+        dataTrimmed = 1;
+        fv(f).facevertexcdata = fv(f).facevertexcdata(1:size(fv(f).vertices, 1), :);
+    end
+end
+
+if dataTrimmed
+    ea_cprintf('CmdWinWarnings', '\nNum of vertices doesn''t match facevertexcdata!\n');
+end
+
 if reduce
     ea_dispercent(0,'Reducing patch');
     for f=1:length(fv)

@@ -1,6 +1,5 @@
 function out=ea_query_sim_connectomematrix(seedmap,connectomename,outputfname)
-
-
+% Function to create invert map as used in Li & Hollunder 2021 Biol. Psychiatry
 
 s=ea_load_nii(seedmap);
 seed=s.img(:);

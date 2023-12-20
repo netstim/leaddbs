@@ -28,7 +28,7 @@ for i = 1:length(warpdrive_subs)
         if isfield(options, 'overwriteapproved')
             keep_pts(i) = keep_pts(i) || options.overwriteapproved;
         end
-        if ~contains(approved_load.method, 'ANTs')
+        if ~contains(approved_load.method, {'ANTs', 'EasyReg'})
             keep_pts(i) = 0;
             disp([warpdrive_subs(i).subjId ' was normalized using ' approved_load.method '. Use ANTs in order to run warpdrive.']);
         end
@@ -45,7 +45,7 @@ end
 %
 
 s4l = ea_slicer_for_lead;
-if ~s4l.is_installed_and_up_to_date()
+if ~s4l.is_up_to_date()
     s4l.install();
 end
 

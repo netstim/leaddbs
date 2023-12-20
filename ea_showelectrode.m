@@ -94,19 +94,33 @@ for side=options.sides
                     elstruct.trajectory=trajectory;
                 catch
                     if ~isfield(options,'patient_list') % single subject mode
-                        warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+                        patientname = options.patientname;
                     else
-                        warning(['There seems to be some inconsistency with the reconstruction of ',options.patient_list{pt},' that could not be automatically resolved. Please check data of this patient.']);
+                        patientname = options.patient_list{pt};
                     end
+                    if isfolder(patientname)
+                        [~, patientname] = fileparts(patientname);
+                    end
+                    ea_cprintf('CmdWinWarnings', 'There seems to be some inconsistency in the reconstruction of "%s" that could not be automatically resolved.\n', patientname);
                 end
             end
         end
         if err
             if ~isfield(options,'patient_list') % single subject mode
-                warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+                patientname = options.patientname;
+                mirrorText = '';
             else
-                warning(['There seems to be some inconsistency with the reconstruction of ',options.patient_list{pt},' that could not be automatically resolved. Please check data of this patient.']);
+                patientname = options.patient_list{pt};
+                if options.d3.mirrorsides && pt > length(options.patient_list)/2
+                    mirrorText = 'mirrored ';
+                else
+                    mirrorText = '';
+                end
             end
+            if isfolder(patientname)
+                [~, patientname] = fileparts(patientname);
+            end
+            ea_cprintf('CmdWinWarnings', 'There seems to be some inconsistency in the %sreconstruction of "%s" that could not be automatically resolved.\n', mirrorText, patientname);
         end
         if options.d3.elrendering==2 % show a transparent electrode.
             aData=0.1;

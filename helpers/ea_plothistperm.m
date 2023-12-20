@@ -1,5 +1,5 @@
 function [h,p]=ea_plothistperm(title,similarities,idlabels,ids,cols,onesided)
-if ~exist('cols','var')
+if ~exist('cols','var') || isempty(cols)
    cols=ones(length(ids),1);
 end
 if ~exist('onesided','var')

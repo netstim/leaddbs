@@ -21,7 +21,6 @@ end
 basedir = [fileparts(mfilename('fullpath')), filesep];
 FLIRT = ea_getExec([basedir, 'flirt'], escapePath = 1);
 
-
 cmd = [FLIRT, ...
     ' -in ', ea_path_helper(input), ...
     ' -ref ', ea_path_helper(reference), ...
@@ -32,5 +31,4 @@ if verbose
     fprintf('Reslicing %s to match %s ...\n', input, reference);
 end
 
-setenv('FSLOUTPUTTYPE','NIFTI');
-ea_runcmd(cmd);
+ea_runcmd(cmd, env='FSLOUTPUTTYPE=NIFTI');

@@ -1,9 +1,5 @@
 function ea_write(options)
 
-try
-    ea_updatemodel(options);
-end
-
 % check if sides is specified correctly for visualization
 if isfield(options, 'subj')
     options=ea_detsides(options);
@@ -67,44 +63,5 @@ if options.d3.write
     end
 end
 
-%% check traject sanity
-
-for iside=1:length(options.sides)
-    side=options.sides(iside);
-    try
-        trajectissane=ea_checktrajectsanity(trajvector{side});
-        if ~trajectissane
-            disp(['Trajectory of side ',num2str(side),' seems not to have been correctly reconstructed. Check manually.']);
-        end
-    end
-end
-
-try
-    if isnan(results)
-        clear results
-    end
-
-    results.coords_mm=coords_mm;
-    results.realcoords=realcoords;
-
-    for electrode=1:length(coords_mm)
-        results.distances(electrode)=ea_pdist([coords_mm(electrode,:);realcoords(electrode,:)]);
-    end
-    results.fit=ea_nanmean(results.distances);
-end
-
 % chirp on completed task.
 ea_chirp(options);
-
-
-function y = ea_nanmean(varargin)
-if nargin==2
-    x=varargin{1};
-    dim=varargin{2};
-elseif nargin==1
-    x=varargin{1};
-    dim=1;
-end
-
-N = sum(~isnan(x), dim);
-y = nansum(x, dim) ./ N;
