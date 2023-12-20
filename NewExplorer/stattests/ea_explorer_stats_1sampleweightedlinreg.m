@@ -10,7 +10,7 @@ function varargout=ea_explorer_stats_1sampleweightedlinreg(varargin)
 % - Expects H0 as the value to test against {'Zero','Average' or a number}
 % - Outputs valsout (test results) and psout (p-values of test results) as V x 1 or 2.
 
-if nargin>1
+if nargin>0
     % map inputs
     valsin=varargin{1};
     outcomein=varargin{2};
