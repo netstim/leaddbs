@@ -8,7 +8,7 @@ function varargout=ea_explorer_stats_nmap(varargin)
 %                                       E-Fields/VTAs/Lesions/etc.
 % - Outputs valsout (test results) and psout (p-values of test results) as V x 1 or 2.
 
-if nargin>1
+if nargin>0
     % map inputs
     valsin=varargin{1};
 else
