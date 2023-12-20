@@ -71,7 +71,8 @@ for group=groups
             case 'VTAs'
                 gval{side}=gval{side}>obj.efieldthreshold; % binarize
             case 'E-Fields'
-                gval{side}(gval{side}<obj.efieldthreshold)=nan; % threshold efields
+                Nmap=ea_nansum(gval{side}>obj.efieldthreshold);
+                gval{side}(:,Nmap<round(size(gval{side},1)*(obj.coverthreshold/100)))=nan; % Set pixels to Nan that do not meet coverthreshold criteria
         end
         switch obj.statlevel
             case 'VTAs'
