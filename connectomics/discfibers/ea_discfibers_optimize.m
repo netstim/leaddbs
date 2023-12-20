@@ -814,25 +814,33 @@ tractset.save;
                     out=5;
                 case 'profile of scores: pearson'
                     out=6;
-                case 'profile of scores: bend'
+%                 case 'profile of scores: bend'
+%                     out=7;
+                case 'histogram'
                     out=7;
+%                 case 9
+%                     out='z-scored Histogram';
             end
         else
             switch out
                 case 1
-                    out='mean of scores';
+                    out='Mean of Scores';
                 case 2
-                    out='sum of scores';
+                    out='Sum of Scores';
                 case 3
-                    out='peak of scores';
+                    out='Peak of Scores';
                 case 4
-                    out='peak 5% of scores';
+                    out='Peak 5% of Scores';
                 case 5
-                    out='profile of scores: spearman';
+                    out='Profile of Scores: Spearman';
                 case 6
-                    out='profile of scores: pearson';
+                    out='Profile of Scores: Pearson';
+%                 case 7
+%                     out='Profile of Scores: Bend';
                 case 7
-                    out='profile of scores: bend';
+                    out='Histogram';
+%                 case 'z-scored Histogram'
+%                     out= 9;
             end
         end
 
