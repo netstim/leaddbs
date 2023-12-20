@@ -60,18 +60,6 @@ end
 
 try
     fibhandle = streamtube(fibersnew(idx), tubeWidth);
-    if strcmp(class(fibhandle),'matlab.graphics.primitive.Surface')
-        for i=1:numel(fibhandle)
-            set(fibhandle(i),'Visible','off')
-            fibhandlenew(i,1)=surf2patch(fibhandle(i));
-        end
-        delete(fibhandle)
-        clear fibhandle
-        for i=1:numel(fibhandlenew)
-            fibhandle(i,1)=patch(fibhandlenew(i,1),'EdgeColor','none');
-        end
-        clear fibhandlenew
-    end
 catch
     keyboard
 end
