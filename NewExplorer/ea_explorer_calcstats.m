@@ -92,8 +92,8 @@ for side=1:numel(myvalsgroup)
             [valsout,psout]=ea_explorer_stats_2sampleweightedlinreg(valsin,outcomein);
         case 'Spearman'
             [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
-        case 'Person'
-            [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
+        case 'Pearson'
+            [valsout,psout]=ea_explorer_stats_pearson(valsin,outcomein);
         case 'Proportion Test'
             [valsout,psout]=ea_explorer_stats_proportiontest(valsin,outcomein);
     end
