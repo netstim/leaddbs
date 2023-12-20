@@ -185,11 +185,11 @@ for group=groups
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
         if ~obj.runwhite
-            gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=0;
+            gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
             if ~(ismember(obj.statmetric,{'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'})) % efields & reverse t-tests for binary vars cases
                 % only in case of VTAs (given two-sample-t-test statistic) do we
                 % need to also exclude if tract is connected to too many VTAs:
-                gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=0;
+                gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
             end
         end
         
