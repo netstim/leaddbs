@@ -88,7 +88,7 @@ classdef ea_explorerclass < handle
             obj.thresholding.poscolor = [0.9176,0.2000,0.1373]; % positive main color
             obj.thresholding.negcolor = [0.2824,0.6157,0.9725]; % negative main color
             % List of statistical Tests
-            obj.stattests = ea_explorer_stats_list;
+            obj.stattests = ea_explorer_statlist;
             % statsettings
             % initial hard threshold to impose on (absolute) nifti files only when calculating the data
             obj.statsettings.doVoxels = 1;

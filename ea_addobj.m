@@ -56,7 +56,7 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         end
     elseif all(cellfun(@numel, regexp(obj, '(\.explorer)$', 'match', 'once')))
         for i=1:length(obj)
-            ea_explorer20(obj{i}, resultfig);
+            ea_explorer_lite(obj{i}, resultfig);
         end
     else
         warndlg('Unsupported file(s) found!');
