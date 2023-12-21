@@ -93,4 +93,4 @@ end
 afv = ea_concatfv(fibhandle, 0, reduceFactor);
 delete(fibhandle);
 
-fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');
+fibhandle=patch('Faces',afv.Faces,'Vertices',afv.Vertices,'FaceVertexCData',afv.FaceVertexCData,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');
