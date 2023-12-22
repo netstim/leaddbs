@@ -26,8 +26,8 @@ end
 ImpBinary=double(outcomein>0); % make sure variable is actually binary
 % restore nans
 ImpBinary(isnan(outcomein))=nan;
-upSet=outcomein(ImpBinary==1,:);
-downSet=outcomein(ImpBinary==0,:);
+upSet=valsin(:,ImpBinary==1)';
+downSet=valsin(:,ImpBinary==0)';
 
 [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
 valsout=stats.tstat';
