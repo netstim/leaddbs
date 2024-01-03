@@ -298,16 +298,16 @@ class NeuronStimulation:
                 # temp binary solution. True - potential probed
                 #print(list(neuron.keys()), neuron_index)
                 #print(pre_status[neuron_index])
-                if not(pre_status[neuron_index]):
-                    Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = -1
-                    neuron_index += 1
-                    continue
-
-                # # check which neurons were flagged with CSF and electrode intersection, skip probing of those
-                # if pre_status[neuron_index] != 0:
-                #     Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = pre_status[neuron_index]
+                # if not(pre_status[neuron_index]):
+                #     Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = -1
                 #     neuron_index += 1
                 #     continue
+
+                # check which neurons were flagged with CSF and electrode intersection, skip probing of those
+                if pre_status[neuron_index] != 0:
+                    Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = pre_status[neuron_index]
+                    neuron_index += 1
+                    continue
 
                 neuron_time_sol = np.array(neuron['Potential[V]'])
 
@@ -345,8 +345,12 @@ class NeuronStimulation:
         self.create_paraview_outputs(Axon_Lead_DBS)
 
         percent_activated = np.round(Activated_models/float(self.orig_N_neurouns)*100,2)
-        percent_damaged = np.round((len(pre_status)-np.count_nonzero(pre_status))/float(self.orig_N_neurouns)*100,2)
+        percent_damaged = np.round(np.sum(pre_status == -1)/float(self.orig_N_neurouns)*100,2)
         percent_csf = np.round(np.sum(pre_status == -2)/float(self.orig_N_neurouns)*100,2)
+
+        #percent_activated = np.round(Activated_models/float(self.orig_N_neurouns)*100,2)
+        #percent_damaged = np.round((len(pre_status)-np.count_nonzero(pre_status))/float(self.orig_N_neurouns)*100,2)
+        #percent_csf = np.round(np.sum(pre_status == -2)/float(self.orig_N_neurouns)*100,2)
 
         print("\n\nPathway ",self.pathway_name, ": ")
         print("Activated neurons: ", percent_activated, " %")
