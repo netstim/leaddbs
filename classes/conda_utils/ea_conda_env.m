@@ -19,6 +19,7 @@ classdef ea_conda_env
     methods
 
         function obj = ea_conda_env(ymlname)
+            ymlname = erase(ymlname, '.yml');
             ymlfile = ea_regexpdir(fullfile(fileparts(mfilename('fullpath')), 'environments'), ['^', ymlname, '\.yml$'], 0);
             if ~isempty(ymlfile)
                 obj.yml = ymlfile{1};
