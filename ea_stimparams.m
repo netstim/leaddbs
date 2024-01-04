@@ -142,7 +142,7 @@ if strcmp(options.leadprod, 'dbs')
         funcs = funcs(cell2mat(supportDirected));
         names = names(cell2mat(supportDirected));
     end
-    if ~options.prefs.env.dev || ~ismember(options.elmodel,ea_ossdbs_elmodel)
+    if ~ismember(options.elmodel,ea_ossdbs_elmodel)
         ossdbsInd = find(contains(names,'OSS-DBS'));
         funcs(ossdbsInd) = [];
         names(ossdbsInd) = [];
