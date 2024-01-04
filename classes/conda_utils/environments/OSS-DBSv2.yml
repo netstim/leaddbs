@@ -2,9 +2,12 @@ name: ossdbsv2
 
 channels:
   - defaults
-  
+
 dependencies:
   - python=3.9.10
   - pip=23.3.1
   - pip:
     - -e git+https://github.com/SFB-ELAINE/OSS-DBSv2.git@LeadDBS_integration#egg=ossdbs
+
+variables:
+  env_version: 20231213
