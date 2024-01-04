@@ -10,7 +10,7 @@ end
 % optional: provide the local path to OSS-DBSv2 in OSS-DBSv2.yml if rep is not avaialble
 
 % install OSS-DBS v2 in the virtual environment
-env = ea_conda_env('OSS-DBSv2.yml');
+env = ea_conda_env('OSS-DBSv2');
 env.create;
 
 if ~isunix
