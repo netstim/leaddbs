@@ -21,7 +21,7 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
-env = ea_conda_env('OSS-DBS-v2.yml');
+env = ea_conda_env('OSS-DBSv2.yml');
 % Check OSS-DBS installation, set env
 if ~options.prefs.machine.vatsettings.oss_dbs.installed || ~env.is_created
     ea_checkOSSDBSInstallv2
@@ -75,7 +75,7 @@ switch settings.butenko_segmAlg
             [anchorImageDir, anchorImageName] = fileparts(anchorImage);
             anchorImageDir = [anchorImageDir, filesep];
             anchorImageName = [anchorImageName, '.nii'];
-        
+
             mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
             c1File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'GM', 'suffix', 'mask');
             c2File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'WM', 'suffix', 'mask');
@@ -86,7 +86,7 @@ switch settings.butenko_segmAlg
                 movefile([anchorImageDir, 'c2', anchorImageName], c2File);
                 movefile([anchorImageDir, 'c3', anchorImageName], c3File);
             end
-        
+
             segMaskPath = setBIDSEntity(anchorImage, 'label', 'C123', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
         else
             c1File = [ea_space, 'c1mask.nii'];
@@ -98,10 +98,10 @@ switch settings.butenko_segmAlg
                 movefile([ea_space, 'c2', options.primarytemplate, '.nii'], c2File);
                 movefile([ea_space, 'c3', options.primarytemplate, '.nii'], c3File);
             end
-        
+
             segMaskPath = [ea_space, segmaskName];
         end
-    
+
         if ~isfile(segMaskPath)
             % Binarize segmentations
             c1 = ea_load_nii(c1File);
@@ -110,7 +110,7 @@ switch settings.butenko_segmAlg
             c1.img = c1.img>0.5;
             c2.img = c2.img>0.5;
             c3.img = c3.img>0.5;
-        
+
             % Fuse segmentations by voting in the order  CSF -> WM -> GM
             c2.img(c3.img) = 0;
             c1.img(c2.img | c3.img) = 0;
@@ -227,9 +227,9 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
         % Scale tensor data
         if exist('tensorDir', 'var')
             fprintf('Scaling tensor data...\n\n')
-            
+
             system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
-            
+
 
             % Copy scaled tensor data to stimulation directory, update setting
             copyfile([tensorDir, filesep, tensorPrefix, scaledTensorName], tensorData);
@@ -242,7 +242,7 @@ if ~isempty(settings.DTI_data_name) && ~strcmp('no dti', settings.DTI_data_name)
     fprintf('Scaled tensor data added: %s\n\n', settings.DTI_data_name)
 end
 
-if ~strcmp(settings.DTI_data_name, 'no dti') 
+if ~strcmp(settings.DTI_data_name, 'no dti')
     % get the full path
     settings.DTI_data_name = [outputDir, filesep, settings.DTI_data_name];
 end
@@ -325,7 +325,7 @@ settings.Case_grounding = zeros(eleNum, 1);
 
 % Get the stimulation parameters from S in case stimSetMode is 0, otherwise
 % they will be loaded directly from the Current_protocols_[0|1].csv files
-% also get the center of the grid 
+% also get the center of the grid
 settings.stim_center = nan(2, 3);
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_getStimVector(S, eleNum, conNum);
@@ -627,7 +627,7 @@ for side=0:1
             end
 
             % always transform to MNI space
-            if options.native   
+            if options.native
                 ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
             end
 
@@ -637,7 +637,7 @@ for side=0:1
             else
                 vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
             end
-    
+
             % Calc vat fv and volume
             vat = ea_load_nii(vatToViz);
             vatfv = ea_niiVAT2fvVAT(vat,1,3);

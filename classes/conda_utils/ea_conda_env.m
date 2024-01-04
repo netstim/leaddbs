@@ -19,13 +19,8 @@ classdef ea_conda_env
     methods
 
         function obj = ea_conda_env(ymlname)
-            ymlfile = ea_regexpdir(fullfile(fileparts(mfilename('fullpath')), 'environments'), ymlname, 0);
+            ymlfile = ea_regexpdir(fullfile(fileparts(mfilename('fullpath')), 'environments'), ['^', ymlname, '\.yml$'], 0);
             if ~isempty(ymlfile)
-                if length(ymlfile) > 1
-                    ea_cprintf('CmdWinWarnings', ...
-                        'Duplicated environment files found. Consider cleaning up the folder:\n%s\n', ...
-                        fullfile(fileparts(mfilename('fullpath')), 'environments'));
-                end
                 obj.yml = ymlfile{1};
             else
                 ea_cprintf('CmdWinErrors', 'Environment yml file doesn''t exist!\n');
