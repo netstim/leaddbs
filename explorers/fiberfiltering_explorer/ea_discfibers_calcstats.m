@@ -166,6 +166,9 @@ for group=groups
     end
 
     for side=1:numel(gfibsval)
+
+        %% Step 1: Prefiltering. This part does not use improvements but simply selects potential tracts that fullfil criteria (conn sliders):
+
         % check connthreshold
         if obj.runwhite || strcmp(obj.statsettings.stattest,'N-Map')
             Nmap=sum(gfibsval{side}(:,gpatsel),2);
@@ -206,25 +209,28 @@ for group=groups
         else
 
 
-    nonempty=sum(gfibsval{side}(:,gpatsel),2,'omitmissing')>0;
-    nonemptyidx=find(nonempty);
+            nonempty=sum(gfibsval{side}(:,gpatsel),2,'omitmissing')>0;
+            nonemptyidx=find(nonempty);
 
-    valsin=gfibsval{side}(nonempty,gpatsel);
-    outcomein=I(:,side);
+            valsin=gfibsval{side}(nonempty,gpatsel);
+            outcomein=I(:,side);
 
-    disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
+            disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
 
-    stattests=ea_explorer_statlist;
+            stattests=ea_explorer_statlist;
 
-    [is,idx]=ismember(obj.statsettings.stattest,stattests.name);
-    if ~is
-        ea_error(['Function for test ',obj.statsettings.stattest,' missing.']);
-    end
+            [is,idx]=ismember(obj.statsettings.stattest,stattests.name);
+            if ~is
+                ea_error(['Function for test ',obj.statsettings.stattest,' missing.']);
+            end
 
-    [valsout,psout]=feval(stattests.file(idx),valsin,outcomein); % apply test
+            %% Step 2: Fiberfiltering. This part filters fibers based on outcome variable (except for descriptive tests):
 
-    vals{1,side}(nonemptyidx)=valsout;
-    pvals{1,side}(nonemptyidx)=psout;
+            %this following line calls the actual statistical test:
+            [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
+
+            vals{1,side}(nonemptyidx)=valsout;
+            pvals{1,side}(nonemptyidx)=psout;
 
         end
     end

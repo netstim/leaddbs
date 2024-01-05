@@ -22,7 +22,7 @@ else
     return
 end
 % Actual test:
-% outcomein=repmat(outcomein',size(valsin,1),1);
+outcomein=repmat(outcomein',size(valsin,1),1);
 
 group1=valsin .* outcomein;
 group2=double(isnan(valsin));
