@@ -1361,6 +1361,7 @@ classdef ea_disctract < handle
                     continue;
                 else
                     allvals(isnan(allvals)) = 0;
+                    allvals(isinf(allvals)) = 0; % ignore infs for colormap generation.
                 end
 
                 if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
