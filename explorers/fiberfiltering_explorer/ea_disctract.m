@@ -3,6 +3,7 @@ classdef ea_disctract < handle
     % A. Horn
 
     properties (SetObservable)
+        fileformatversion; % 1.1 is current format
         M % content of lead group project
         resultfig % figure handle to plot results
         ID % name / ID of discriminative fibers object
@@ -174,6 +175,7 @@ classdef ea_disctract < handle
                 obj.subscore.splitbysubscore = 0;
                 obj.subscore.special_case = 0;
                 obj.covarlabels={};
+                obj.fileformatversion=1.1; % new current version with settings to harmonize stats.
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
                 for p =  1:length(props) %copy all public properties
@@ -222,6 +224,7 @@ classdef ea_disctract < handle
                         obj.statmetric='Weighted Linear Regression / EF-Sigmoid (Dembek 2023)';
                 end
             end
+            obj=ea_discfibers_compat_statmetrics2statsettings(obj);
         end
         function calculate(obj)
 

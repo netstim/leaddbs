@@ -30,7 +30,7 @@ switch obj.connectivity_type
                         id = 'VAT_Ttest';
                 end
             case {'Electric Field','Sigmoid Field'}  % E-fields
-                id='spearman';
+                id='efield';
                 switch efm
                     case 'Mean'
                         id=[id,'_mean'];

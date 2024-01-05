@@ -81,13 +81,24 @@ end
 
 
 
-
-
-
-
+% Rename results entries from spearman_* to efield_*:
+connvals=fieldnames(tractset.results);
+for connectome=1:length(connvals)
+    if isfield(tractset.results.(connvals{connectome}),'spearman_sum')
+        tractset.results.(connvals{connectome}).efield_sum=tractset.results.(connvals{connectome}).spearman_sum;
+        tractset.results.(connvals{connectome})=rmfield(tractset.results.(connvals{connectome}),'spearman_sum');
+        tractset.results.(connvals{connectome}).efield_peak=tractset.results.(connvals{connectome}).spearman_peak;
+        tractset.results.(connvals{connectome})=rmfield(tractset.results.(connvals{connectome}),'spearman_peak');
+        tractset.results.(connvals{connectome}).efield_mean=tractset.results.(connvals{connectome}).spearman_mean;
+        tractset.results.(connvals{connectome})=rmfield(tractset.results.(connvals{connectome}),'spearman_mean');
+        tractset.results.(connvals{connectome}).efield_5peak=tractset.results.(connvals{connectome}).spearman_5peak;
+        tractset.results.(connvals{connectome})=rmfield(tractset.results.(connvals{connectome}),'spearman_5peak');
+    end
+end
 
 
 tractset.statmetric=nan; % switch off legacy statmetric.
 tractset.efieldmetric=nan; % switch off legacy
 tractset.efieldthreshold=nan;
 tractset.connthreshold=nan;
+tractset.fileformatversion=1.1;

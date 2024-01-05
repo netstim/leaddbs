@@ -29,7 +29,7 @@ ImpBinary(isnan(outcomein))=nan;
 upSet=valsin(:,ImpBinary==1)';
 downSet=valsin(:,ImpBinary==0)';
 
-[~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+[~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
 valsout=stats.tstat';
 psout=ps;
    

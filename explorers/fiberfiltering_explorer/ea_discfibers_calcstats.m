@@ -13,18 +13,17 @@ if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.p
     patsel=obj.patientselection;
 end
 
-
 % fiber values can be sigmoid transform
-if obj.SigmoidTransform 
-    fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-    fibsval = fibsval_raw;  % initialize
-    for side = 1:size(fibsval_raw,2)
-        fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
-    end
-else
-    fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+switch obj.statsettings.stimulationmodel
+    case 'Sigmoid Field'
+        fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+        fibsval = fibsval_raw;  % initialize
+        for side = 1:size(fibsval_raw,2)
+            fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+        end
+    otherwise
+            fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
 end
-
 
 if size(I,2)==1 % 1 entry per patient, not per electrode
     I=[I,I]; % both sides the same;
@@ -34,12 +33,22 @@ if obj.mirrorsides
     I=[I;I];
 end
 
+
+%% Centrally deal with Covariates here by regressing them out from target variable:
 if ~isempty(obj.covars)
     for i=1:length(obj.covars)
         if obj.mirrorsides
             covars{i} = [obj.covars{i};obj.covars{i}];
         else
             covars{i} = obj.covars{i};
+        end
+        % directly regress out covars from variable here:
+        for side=1:2
+            if size(covars{i},2)==1 % single entry, use the same for both sides
+                I(:,side)=ea_resid(covars{i},I(:,side));
+            elseif size(covars{i},2)==2 % two entries in covars, use each for the respective side:
+                I(:,side)=ea_resid(covars{i}(:,side),I(:,side));
+            end
         end
     end
 end
@@ -179,22 +188,22 @@ for group=groups
                 case 'Sigmoid Field'
                     if (strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak'))
                         % 0.5 V / mm -> 0.5 probability
-                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold/1000.0),2);
+                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold/1000.0),2);
                     else
-                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
                     end
                 case 'Electric Field'
-                    Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+                    Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
             end
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
         if ~obj.runwhite
-            gfibsval{side}(Nmap<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+            gfibsval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
             if strcmp(obj.statsettings.stimulationmodel,'VTA')
                 % only in case of VTAs (given two-sample-t-test statistic) do we
                 % need to also exclude if tract is connected to too many VTAs:
-                gfibsval{side}(Nmap>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
+                gfibsval{side}(Nmap>((1-(obj.statsettings.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
             end
         end
 
@@ -217,7 +226,7 @@ for group=groups
 
             disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
 
-            stattests=ea_explorer_statlist;
+            stattests=ea_explorer_statlist(obj.responsevar);
 
             [is,idx]=ismember(obj.statsettings.stattest,stattests.name);
             if ~is
@@ -228,7 +237,6 @@ for group=groups
 
             %this following line calls the actual statistical test:
             [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
-
             vals{1,side}(nonemptyidx)=valsout;
             pvals{1,side}(nonemptyidx)=psout;
 
