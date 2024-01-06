@@ -4,14 +4,20 @@ function ea_checkOSSDBSInstallv2
 
 % Check conda installation
 if ~ea_conda.is_installed
+    ea_cprintf('*Comments', 'Initializing conda...\n');
     ea_conda.install;
+    ea_cprintf('*Comments', 'Done...\n');
 end
 
 % optional: provide the local path to OSS-DBSv2 in OSS-DBSv2.yml if rep is not avaialble
 
 % install OSS-DBS v2 in the virtual environment
 env = ea_conda_env('OSS-DBSv2');
-env.create;
+if ~env.is_up_to_date
+    ea_cprintf('*Comments', 'Updating OSS-DBS v2 conda environment...\n');
+    env.force_create;
+    ea_cprintf('*Comments', 'Done.\n');
+end
 
 if ~isunix
     msgbox(sprintf('An external installer for NEURON will be opened.\nPlease install it using the default parameters.'), '', 'help', 'modal');
