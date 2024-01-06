@@ -31,7 +31,11 @@ if ~isunix
     system(installer);
     ea_delete(installer);
 else
-    env.system('pip3 install neuron==8.2.3')
+    [status, cmdout] = env.system('python -c ''import neuron;print(neuron.__version__)''');
+    if status || ~strcmp(cmdout, '8.2.3+')
+        ea_cprintf('*Comments', 'Install NEURON 8.2.3...\n');
+        env.system('pip3 install neuron==8.2.3');
+    end
 end
 
 % set installed flag
