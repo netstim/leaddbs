@@ -97,7 +97,7 @@ classdef ea_conda_env
             obj.system(['python ' script_path])
         end
 
-        function status = system(obj, command)
+        function varargout = system(obj, command)
             if ~obj.is_created
                 error(['Create python environment ' obj.name ' from Lead-DBS menu to use this function']);
             end
@@ -107,7 +107,13 @@ classdef ea_conda_env
                 setup_command = [fullfile(ea_conda.install_path, 'condabin', 'activate.bat') ' ' obj.name ' & '];
                 command = obj.inject_exe_to_command(command);
             end
-            status = system([setup_command command]);
+
+            if nargout <= 1
+                varargout{1} = system([setup_command command]);
+            else
+                [varargout{1}, varargout{2}] = system([setup_command command]);
+                varargout{2} = strip(varargout{2});
+            end
         end
     end
 
