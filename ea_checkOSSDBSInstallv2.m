@@ -19,17 +19,27 @@ if ~env.is_up_to_date
     ea_cprintf('*Comments', 'Done.\n');
 end
 
-if ~isunix
-    msgbox(sprintf('An external installer for NEURON will be opened.\nPlease install it using the default parameters.'), '', 'help', 'modal');
-    installer = fullfile(ea_prefsdir, 'temp', 'nrn-8.2.3.exe');
-    ea_mkdir(fileparts(installer));
-    try
-        websave(installer, 'https://github.com/neuronsimulator/nrn/releases/download/8.2.3/nrn-8.2.3.w64-mingw-py-37-38-39-310-311-setup.exe');
-    catch ME
-        ea_error(['Failed to download NEURON installer for Windows:\n', ME.message], simpleStack=true);
+if ispc
+    [status, cmdout] = system('neuron --version');
+    if status || ~contains(cmdout, '8.2.3+')
+        ea_cprintf('*Comments', 'Installing NEURON 8.2.3 for Windows...\n');
+        installer = fullfile(ea_prefsdir, 'temp', 'nrn-8.2.3.exe');
+        ea_mkdir(fileparts(installer));
+        try
+            websave(installer, 'https://github.com/neuronsimulator/nrn/releases/download/8.2.3/nrn-8.2.3.w64-mingw-py-37-38-39-310-311-setup.exe');
+        catch ME
+            ea_error(['Failed to download NEURON installer for Windows:\n', ME.message], simpleStack=true);
+        end
+        installFolder = fullfile(ea_prefsdir, 'neuron');
+        ea_delete(installFolder);
+        try
+            system(['start /b /wait ', installer, ' /S /D=', installFolder]);
+        catch ME
+            ea_error(['Failed to install NEURON for Windows:\n', ME.message], simpleStack=true);
+        end
+        ea_delete(installer);
+        setenv('PATH', [getenv('PATH'), ';', fullfile(installFolder, 'bin')]);
     end
-    system(installer);
-    ea_delete(installer);
 else
     [status, cmdout] = env.system('python -c ''import neuron;print(neuron.__version__)''');
     if status || ~strcmp(cmdout, '8.2.3+')
