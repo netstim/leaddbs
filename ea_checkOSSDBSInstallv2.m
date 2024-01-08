@@ -33,7 +33,7 @@ if ispc
         installFolder = fullfile(ea_prefsdir, 'neuron');
         ea_delete(installFolder);
         try
-            system(['start /b /wait ', installer, ' /S /D=', installFolder]);
+            system(['start /b /wait "Install NEURON"', path_helper(installer), ' /S /D=', path_helper(installFolder)]);
         catch ME
             ea_error(['Failed to install NEURON for Windows:\n', ME.message], simpleStack=true);
         end
@@ -53,3 +53,15 @@ prefs = ea_prefs;
 vatsettings = prefs.machine.vatsettings;
 vatsettings.oss_dbs.installed = 1;
 ea_setprefs('vatsettings', vatsettings);
+
+
+% Handle space in path on Windows
+function path = path_helper(path)
+parts = strsplit(path, filesep);
+for i=1:length(parts)
+    if contains(parts{i}, ' ')
+        parts{i} = ['"' parts{i} '"'];
+    end
+end
+path = strjoin(parts, filesep);
+
