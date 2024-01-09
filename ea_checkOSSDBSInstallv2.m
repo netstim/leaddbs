@@ -33,7 +33,7 @@ if ispc
         installFolder = fullfile(ea_prefsdir, 'neuron');
         ea_delete(installFolder);
         try
-            system(['start /b /wait "Install NEURON"', path_helper(installer), ' /S /D=', path_helper(installFolder)]);
+            system(['start /b /wait "Install NEURON" ', path_helper(installer), ' /S /D=', path_helper(installFolder)]);
         catch ME
             ea_error(['Failed to install NEURON for Windows:\n', ME.message], simpleStack=true);
         end
