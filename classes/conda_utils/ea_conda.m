@@ -81,6 +81,18 @@ classdef (Abstract) ea_conda
             disp('miniforge installed')
         end
 
+        % Run command (for example mamba or pip) in conda base environment
+        function run(command)
+            if ispc
+                bin_folder = fullfile(ea_conda.install_path, 'Scripts');
+                setenv('PATH', [bin_folder ';' getenv('PATH')]);
+            else
+                bin_folder = fullfile(ea_conda.install_path, 'bin');
+                setenv('PATH', [bin_folder ':' getenv('PATH')]);
+            end
+            system(command);
+        end
+
         function update_base
             conda = ea_conda.mamba_path;
             system([conda, ' update conda mamba -y']);
