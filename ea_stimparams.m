@@ -3473,7 +3473,7 @@ switch model
         if all_params.groupmode
             stim_folder = 'None';
         else
-            stim_folder = [all_params.options.root,all_params.options.patientname,filesep,'stimulations/',ea_nt(all_params.options.native),all_params.stimlabel];
+            stim_folder = [all_params.options.root,all_params.options.patientname,filesep,'stimulations/',ea_nt(~handles.estimateInTemplate.Value),all_params.stimlabel];
         end
         ea_vatsettings_butenko(stim_folder);
 end
