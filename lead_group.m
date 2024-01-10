@@ -1986,8 +1986,11 @@ function clinical_score_generator_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M = getappdata(gcf,'M');
-
-ea_score_gen('',M,handles);
+if isfield(M.ui,'groupdir')
+    ea_score_gen('',M,handles);
+else
+    ea_warndlg("Please load a valid lead group file first");
+end
 
 
 % --- Executes on button press in syncFunction.
@@ -2041,3 +2044,11 @@ end
 S = getappdata(handles.stimfig,'S');
 options.gen_newstim = 0;
 ea_savestimulation(S,options)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over clinical_score_generator.
+function clinical_score_generator_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to clinical_score_generator (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
