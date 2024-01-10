@@ -35,7 +35,7 @@ class SpinBoxDelegate(qt.QItemDelegate):
     spinBox = qt.QDoubleSpinBox(parent)
     spinBox.setSingleStep(1)
     spinBox.maximum = 50
-    spinBox.minimum = 5
+    spinBox.minimum = 1
     return spinBox
 
   def setEditorData(self, editor, index):
