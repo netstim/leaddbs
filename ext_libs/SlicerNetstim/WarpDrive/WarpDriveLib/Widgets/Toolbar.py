@@ -141,6 +141,17 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     nextButton.setPopupMode(qt.QToolButton.MenuButtonPopup)
     nextButton.setToolButtonStyle(qt.Qt.ToolButtonTextBesideIcon)
 
+    self.saveSegmentationAction = qt.QAction(self)
+    self.saveSegmentationAction.setIcon(qt.QIcon(":/Icons/Small/SlicerSave.png"))
+    self.saveSegmentationAction.setText('Save')
+    self.saveSegmentationAction.connect("triggered(bool)", self.saveSegmentation)
+
+    saveSegmentationButton = qt.QToolButton()
+    saveSegmentationButton.setFixedWidth(80)
+    saveSegmentationButton.setDefaultAction(self.saveSegmentationAction)
+    saveSegmentationButton.setToolButtonStyle(qt.Qt.ToolButtonTextBesideIcon)
+    saveSegmentationButton.setVisible(int(self.parameterNode.GetParameter("SegmentMode")))
+
     #
     # Set up toolbar
     #
@@ -155,6 +166,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.addWidget(modalityButton)
     self.addSeparator()
     self.addWidget(templateButton)
+    self.addSeparator()
+    self.addWidget(saveSegmentationButton)
     self.addSeparator()
     self.addWidget(nextButton)
 
@@ -199,6 +212,10 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     elif (not slicerWillExitAfterSave):
       slicer.util.exit(0)
     self.parameterNode.EndModify(wasModified)
+
+  def saveSegmentation(self):
+    currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
+    LeadDBSCall.saveSegmentation(os.path.join(os.path.dirname(currentSubject["warpdrive_path"]), 'segmentations'))
 
   def cleanUpNodes(self):
     for param in ["SourceFiducial", "TargetFiducial", "InputNode", "ImageNode", "OutputGridTransform"]:

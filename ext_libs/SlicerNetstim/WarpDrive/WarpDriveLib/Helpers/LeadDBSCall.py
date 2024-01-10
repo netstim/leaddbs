@@ -150,12 +150,15 @@ def saveSegmentation(segmentationsDir):
         node = shNode.GetItemDataNode(shNode.GetItemParent(shNode.GetItemByDataNode(node)))
         name = os.path.join(node.GetName(), name)
       # save segmentation
-      modelNode.HardenTransform()
+      clonedItemID = slicer.modules.subjecthierarchy.logic().CloneSubjectHierarchyItem(shNode, shNode.GetItemByDataNode(modelNode))
+      tmpNode = shNode.GetItemDataNode(clonedItemID)
+      tmpNode.SetAndObserveTransformNodeID(modelNode.GetTransformNodeID())
+      tmpNode.HardenTransform()
       labelNode = modelToLabel(modelNode)
       os.makedirs(os.path.dirname(name), exist_ok=True)
       slicer.util.saveNode(labelNode, os.path.join(segmentationsDir, name + '.nii.gz'))      
       slicer.mrmlScene.RemoveNode(labelNode)
-      slicer.mrmlScene.RemoveNode(modelNode)
+      slicer.mrmlScene.RemoveNode(tmpNode)
 
 def modelToLabel(model_node):
   segmentationsLogic = slicer.modules.segmentations.logic()
