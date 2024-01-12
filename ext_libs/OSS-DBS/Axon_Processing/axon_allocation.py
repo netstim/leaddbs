@@ -62,7 +62,7 @@ class AxonModels:
         # Lead-DBS input
         if self.description_file[-22:] == 'oss-dbs_parameters.mat':
             self._import_leaddbs_neurons(int(hemis_idx))
-        elif self.description_file[-5:] == 'json':
+        elif self.description_file[-4:] == 'json':
             self.projection_names = None
             self.connectome_name = 'MyTracts'
             self._import_custom_neurons()
@@ -335,9 +335,15 @@ class AxonModels:
             return 0,0,0  # no nodes were seeded
         else:
             if multiple_projections_per_file == False:
-                orig_N_fibers = int(file['origNum'][0][0])
+                if 'origNum' in file:
+                    orig_N_fibers = int(file['origNum'][0][0])
+                else:
+                    orig_N_fibers = int(file['idx'][:].shape[1])
             else:
-                orig_N_fibers = int(file[projection_name]['origNum'][0][0])
+                if 'origNum' in file[projection_name]:
+                    orig_N_fibers = int(file[projection_name]['origNum'][0][0])
+                else:
+                    orig_N_fibers = int(file[projection_name]['idx'][:].shape[1])
 
         # covert fiber table to nibabel streamlines
         streamlines = convert_fibers_to_streamlines(fiber_array)
