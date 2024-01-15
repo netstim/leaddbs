@@ -183,7 +183,7 @@ class NeuronStimulation:
                 savemat(self.folder_to_save + "/Axon_state_" + str(self.scaling_index) + ".mat", mdic)
             else:
                 savemat(self.folder_to_save  + "/Axon_state_" + self.pathway_name + "_" + str(
-                    scaling_index) + ".mat", mdic)
+                    self.scaling_index) + ".mat", mdic)
 
 
     def create_paraview_outputs(self, Axon_Lead_DBS):
@@ -206,7 +206,7 @@ class NeuronStimulation:
                 np.savetxt(self.folder_to_save + "/Axon_state_" + str(self.scaling_index) + ".csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
             else:
                 np.savetxt(self.folder_to_save  + "/Axon_state_" + self.pathway_name + "_" + str(
-                    scaling_index) + ".csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
+                    self.scaling_index) + ".csv", Axon_Lead_DBS, delimiter=",", header='x-pt,y-pt,z-pt,idx,status')
 
 
     def store_axon_statuses(self, percent_activated, percent_damaged, percent_csf):
@@ -239,7 +239,7 @@ class NeuronStimulation:
                 with open(self.folder_to_save + '/Pathway_status_' + self.pathway_name + '.json', 'w') as save_as_dict:
                     json.dump(summary_dict, save_as_dict)
         else:
-            summary_dict['scaling_index'] = str(scaling_index)
+            summary_dict['scaling_index'] = str(self.scaling_index)
             if self.pathway_name is None:
                 with open(self.folder_to_save + '/Pathway_status_' + str(self.scaling_index) + '.json', 'w') as save_as_dict:
                     json.dump(summary_dict, save_as_dict)
