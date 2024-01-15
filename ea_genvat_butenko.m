@@ -24,7 +24,7 @@ end
 env = ea_conda_env('OSS-DBSv2');
 % Check OSS-DBS installation, set env
 if ~options.prefs.machine.vatsettings.oss_dbs.installed || ~env.is_created
-    ea_checkOSSDBSInstallv2
+    ea_checkOSSDBSInstallv2;
 end
 
 binPath = getenv('PATH'); % Current PATH
@@ -573,15 +573,15 @@ for side=0:1
     fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
 
     if settings.calcAxonActivation
-        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputDir,' ', num2str(side), ' ', parameterFile])
+        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputDir,' ', num2str(side), ' ', parameterFile]);
         % call axon_allocation script
     end
 
     % use OSS-DBS v2 environment
     system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', parameterFile, ...
-        ' --output_path ', outputDir])
+        ' --output_path ', outputDir]);
     parameterFile_json = [parameterFile(1:end-3), 'json'];
-    system(['ossdbs ' , parameterFile_json])
+    system(['ossdbs ' , parameterFile_json]);
 
     if settings.calcAxonActivation
         % call the NEURON module
@@ -591,7 +591,7 @@ for side=0:1
         pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
         scaling = 1.0;
 
-        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', leaddbs_neuron, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)])
+        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', leaddbs_neuron, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)]);
     end
 
     % Check if OSS-DBS calculation is finished
