@@ -343,8 +343,8 @@ class NeuronStimulation:
         self.create_paraview_outputs(Axon_Lead_DBS)
 
         percent_activated = np.round(Activated_models/float(self.orig_N_neurouns)*100,2)
-        percent_damaged = np.round(np.sum(pre_status == -1)/float(self.orig_N_neurouns)*100,2)
-        percent_csf = np.round(np.sum(pre_status == -2)/float(self.orig_N_neurouns)*100,2)
+        percent_damaged = np.round(np.sum(np.isclose(pre_status,-1.0))/float(self.orig_N_neurouns)*100,2)
+        percent_csf = np.round(np.sum(np.isclose(pre_status,-2.0))/float(self.orig_N_neurouns)*100,2)
 
         #percent_activated = np.round(Activated_models/float(self.orig_N_neurouns)*100,2)
         #percent_damaged = np.round((len(pre_status)-np.count_nonzero(pre_status))/float(self.orig_N_neurouns)*100,2)
@@ -352,8 +352,8 @@ class NeuronStimulation:
 
         print("\n\nPathway ",self.pathway_name, ": ")
         print("Activated neurons: ", percent_activated, " %")
-        print("Neurons with status -1: ", percent_damaged, " %")
-        print("Neurons with status -2: ", percent_csf, " %")
+        print("Neurons damaged: ", percent_damaged, " %")
+        print("Neurons in CSF ", percent_csf, " %")
 
         self.store_axon_statuses(percent_activated, percent_damaged, percent_csf)
 
