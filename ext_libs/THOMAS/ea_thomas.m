@@ -108,11 +108,8 @@ if ~exist('atlases', 'var') || length(names) ~= length(atlases.names) || ~all(st
     atlases.citation.short = 'Su et al. 2019';
     atlases.citation.long = {'Su, J.H., Thomas, F.T., Kasoff, W.S., Tourdias, T., Choi, E.Y., Rutt, B.K., Saranathan, M., 2019. Thalamus Optimized Multi Atlas Segmentation (THOMAS): fast, fully automated segmentation of thalamic nuclei from structural MRI. NeuroImage 194, 272–282. https://doi.org/10.1016/j.neuroimage.2019.03.021'};
 
-    thalamusInd = find(ismember(names, 'THALAMUS.nii.gz'));
-    VLInd = find(ismember(names, 'VL.nii.gz'));
-    VLPInd = find(ismember(names, 'VLP.nii.gz'));
     atlases.presets(1).label = 'Default';
-    atlases.presets(1).hide = [thalamusInd, VLInd, VLPInd]; % Hide thalamus, VL and VLP, only show sub-regions
+    atlases.presets(1).hide = find(ismember(names, {'THALAMUS.nii.gz', 'VL.nii.gz', 'VLP.nii.gz'})); % Hide thalamus, VL and VLP, only show sub-regions
     atlases.presets(1).show = setdiff(1:length(names), atlases.presets(1).hide);
     atlases.presets(1).default = 'relative';
     atlases.defautset = 1;
