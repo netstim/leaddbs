@@ -584,14 +584,17 @@ for side=0:1
     system(['ossdbs ' , parameterFile_json]);
 
     if settings.calcAxonActivation
-        % call the NEURON module
+        % copy NEURON folder to the stimulation folder 
         leaddbs_neuron = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/Axon_files'];
+        neuron_folder = fullfile(outputDir,'Axon_files');
+        copyfile(leaddbs_neuron, neuron_folder)
+
+        % call the NEURON module
         folder2save = [outputDir,filesep,'Results_', sideCode];
         timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result.h5'];
         pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
-        scaling = 1.0;
 
-        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', leaddbs_neuron, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)]);
+        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)]);
     end
 
     % Check if OSS-DBS calculation is finished
