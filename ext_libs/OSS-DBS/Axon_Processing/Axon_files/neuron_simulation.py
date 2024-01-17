@@ -48,7 +48,7 @@ class NeuronStimulation:
 
         from axon_allocation import get_axon_morphology
 
-        if self.axonModel == 'McIntyre_2002_ds':
+        if self.axonModel == 'McIntyre2002_ds':
             axonNEURONModel = 'McIntyre2002'
         else:
             axonNEURONModel = self.axonModel
@@ -140,8 +140,8 @@ class NeuronStimulation:
             if self.axonDiam >= 5.7:
                 axoninter = (self.nRanvier - 1) * 6
             else:
-                axoninter = (self.nRanvier - 1) * 3            
-        
+                axoninter = (self.nRanvier - 1) * 3
+
             v_init = -80.0
             #from Axon_files.Parameter_insertion_python3 import paste_to_hoc_python3
             from Axon_files.Parameter_insertion_python3 import paste_to_hoc_python3
@@ -296,8 +296,6 @@ class NeuronStimulation:
                 3] = neuron_index + 1  # because Lead-DBS numbering starts from 1
 
                 # temp binary solution. True - potential probed
-                #print(list(neuron.keys()), neuron_index)
-                #print(pre_status[neuron_index])
                 # if not(pre_status[neuron_index]):
                 #     Axon_Lead_DBS[neuron_index * self.n_segments_actual:(neuron_index + 1) * self.n_segments_actual, 4] = -1
                 #     neuron_index += 1
@@ -375,7 +373,7 @@ class NeuronStimulation:
         """
 
         if self.axonModel == 'McIntyre2002_ds':
-            v_time_sol = self.upsample_voltage(v_time_sol, self.axon_morphology['n_segments'])
+            v_time_sol = self.upsample_voltage(v_time_sol)
 
         v_ext = self.get_v_ext(v_time_sol)
         spike = self.run_NEURON(v_ext)
@@ -420,21 +418,63 @@ class NeuronStimulation:
                 z = int(k / 11) * 3 + 2
                 v_time_sol_full[k, :] = v_time_sol[z,:]
 
+            # node -- -- intern -- -- -- -- intern -- -- node  ->  node-para1-para2-intern-intern-intern-intern-intern-intern-para2-para1-node
+            internodal_length = (self.axon_morphology['node_step'] - self.axon_morphology['ranvier_length'] - (self.axon_morphology['para2_length'] + self.axon_morphology['para1_length'])*2) / 6.0
+            dist_node_internode = (self.axon_morphology['ranvier_length'] + internodal_length) * 0.5 + self.axon_morphology['para1_length'] + self.axon_morphology['para2_length']
+            ratio_1 = (self.axon_morphology['ranvier_length'] + self.axon_morphology['para1_length']) * 0.5 / dist_node_internode
+            ratio_2 = ratio_1 + (self.axon_morphology['para1_length'] + self.axon_morphology['para2_length']) * 0.5 / dist_node_internode
+            dist_intern_intern = internodal_length * 5
+            ratio_3 = internodal_length / dist_node_internode
+            ratio_4 = ratio_3 + internodal_length / dist_node_internode
+
             # now interpolate to the rest
             list_interp = [[1, 2], [4, 5, 6, 7], [9, 10]]  # local indices of interpolated segments
             for interv in range(len(list_interp)):
                 for j in np.arange(0, self.axon_morphology['n_segments'] - 1, 11):
                     if interv == 0:
-                        v_time_sol_full[j + 1, :] = 0.962 * v_time_sol_full[j, :] + 0.038 * v_time_sol_full[j + 3, :]
-                        v_time_sol_full[j + 2, :] = 0.77 * v_time_sol_full[j, :] + 0.23 * v_time_sol_full[j + 3, :]
+                        v_time_sol_full[j + 1, :] = (1-ratio_1)  * v_time_sol_full[j, :] + (ratio_1) * v_time_sol_full[j + 3, :]
+                        v_time_sol_full[j + 2, :] = (1-ratio_2)  * v_time_sol_full[j, :] + (ratio_2) * v_time_sol_full[j + 3, :]
                     elif interv == 1:
-                        v_time_sol_full[j + 4, :] = 0.80 * v_time_sol_full[j + 3, :] + 0.20 * v_time_sol_full[j + 8, :]
-                        v_time_sol_full[j + 5, :] = 0.60 * v_time_sol_full[j + 3, :] + 0.40 * v_time_sol_full[j + 8, :]
-                        v_time_sol_full[j + 6, :] = 0.40 * v_time_sol_full[j + 3, :] + 0.60 * v_time_sol_full[j + 8, :]
-                        v_time_sol_full[j + 7, :] = 0.20 * v_time_sol_full[j + 3, :] + 0.80 * v_time_sol_full[j + 8, :]
+                        v_time_sol_full[j + 4, :] = (1-ratio_3) * v_time_sol_full[j + 3, :] + ratio_3 * v_time_sol_full[j + 8, :]
+                        v_time_sol_full[j + 5, :] = (1-ratio_4) * v_time_sol_full[j + 3, :] + ratio_4 * v_time_sol_full[j + 8, :]
+                        v_time_sol_full[j + 6, :] = ratio_4 * v_time_sol_full[j + 3, :] + (1-ratio_4) * v_time_sol_full[j + 8, :]
+                        v_time_sol_full[j + 7, :] = ratio_3 * v_time_sol_full[j + 3, :] + (1-ratio_3) * v_time_sol_full[j + 8, :]
                     else:
-                        v_time_sol_full[j + 9, :] = 0.23 * v_time_sol_full[j + 8, :] + 0.77 * v_time_sol_full[j + 11, :]
-                        v_time_sol_full[j + 10, :] = 0.038 * v_time_sol_full[j + 8, :] + 0.962 * v_time_sol_full[j + 11, :]
+                        v_time_sol_full[j + 9, :] = ratio_2 * v_time_sol_full[j + 8, :] + (1-ratio_2) * v_time_sol_full[j + 11, :]
+                        v_time_sol_full[j + 10, :] = ratio_1 * v_time_sol_full[j + 8, :] + (1-ratio_1) * v_time_sol_full[j + 11, :]
+        else:
+            # let's interpolate voltage between node - center - node
+            # assume 8 segments
+            # fill out nodes first
+            for k in np.arange(0, self.axon_morphology['n_segments'], 8):
+                z = int(k / 8) * 2
+                v_time_sol_full[k, :] = v_time_sol[z,:]
+
+            # now the center between nodes
+            for k in np.arange(4, self.axon_morphology['n_segments'], 8):
+                z = int(k / 8) * 2 + 1
+                v_time_sol_full[k, :] = v_time_sol[z,:]
+
+            # node -- -- -- internodal -- -- -- node  ->  node-para1-para2-intern-intern-intern-para2-para1-node
+            dist_node_internode = self.axon_morphology['node_step'] / 2.0
+            internodal_length = (self.axon_morphology['node_step'] - self.axon_morphology['ranvier_length'] - (self.axon_morphology['para2_length'] + self.axon_morphology['para1_length'])*2) / 3.0
+            ratio_1 = (self.axon_morphology['ranvier_length'] + self.axon_morphology['para1_length']) * 0.5/ dist_node_internode
+            ratio_2 = ratio_1 + (self.axon_morphology['para1_length'] + self.axon_morphology['para2_length']) * 0.5/ dist_node_internode
+            ratio_3 = ratio_2 + (
+                        self.axon_morphology['para2_length'] + internodal_length) * 0.5 / dist_node_internode
+
+            # now interpolate to the rest
+            list_interp = [[1, 2, 3], [5, 6, 7]]  # local indices of interpolated segments
+            for interv in range(len(list_interp)):
+                for j in np.arange(0, self.axon_morphology['n_segments'] - 1, 8):
+                    if interv == 0:  # ratios based on intercompartment distances
+                        v_time_sol_full[j + 1, :] = (1-ratio_1) * v_time_sol_full[j, :] + (ratio_1) * v_time_sol_full[j + 4, :]
+                        v_time_sol_full[j + 2, :] = (1-ratio_2) * v_time_sol_full[j, :] + (ratio_2) * v_time_sol_full[j + 4, :]
+                        v_time_sol_full[j + 3, :] = (1-ratio_3) * v_time_sol_full[j, :] + (ratio_3) * v_time_sol_full[j + 4, :]
+                    else:
+                        v_time_sol_full[j + 5, :] = (ratio_3) * v_time_sol_full[j + 4, :] + (1-ratio_3) * v_time_sol_full[j + 8, :]
+                        v_time_sol_full[j + 6, :] = (ratio_2) * v_time_sol_full[j + 4, :] + (1-ratio_2) * v_time_sol_full[j + 8, :]
+                        v_time_sol_full[j + 7, :] = (ratio_1) * v_time_sol_full[j + 4, :] + (1-ratio_1) * v_time_sol_full[j + 8, :]
 
         return v_time_sol_full
 
