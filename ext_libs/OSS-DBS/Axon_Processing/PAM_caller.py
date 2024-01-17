@@ -5,14 +5,15 @@ import os
 import subprocess
 import sys
 
-def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_params_file, scaling):
+def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_params_file, scaling, scaling_index=None):
     """
     Parameters
     ----------
     folder_to_save: str, path to folder where results are stored. Lead-DBS expects <stim_folder>/Results_<hemis>
     points_h5_file: str, path to .h5 containing the time domain solution for the pathways (point model, usually oss_time_result.h5)
     pathways_params_file: str, path to .json containing parameters for the pathways (usually Allocated_axons_parameters.json)
-    scaling: float, optional
+    scaling: float, optional, scaling factor for the whole solution (different from scaling_vector)
+    scaling_index: int, optional, index of the scaling factor or scaling vector
 
     """
 
@@ -71,7 +72,7 @@ def launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_p
             'connectome_name': pathways_dict['connectome_name'],
         }
 
-        pathwayNEURON = NeuronStimulation(pathway_dict, signal_dict, folder_to_save)
+        pathwayNEURON = NeuronStimulation(pathway_dict, signal_dict, folder_to_save, None, scaling_index)
         pathwayNEURON.check_pathway_activation(pathway_dataset)
 
         pathway_idx += 1
@@ -87,16 +88,22 @@ if __name__ == '__main__':
     folder_to_save: str, path to folder where results are stored. Lead-DBS expects <stim_folder>/Results_<hemis>
     points_h5_file: str, path to .h5 containing the time domain solution for the pathways (point model)
     pathways_params_file: str, path to .json containing parameters for the pathways
-    scaling: float, optional
+    scaling: float, optional, scaling factor for the whole solution (different from scaling_vector)
+    scaling_index: int, optional, index of the scaling factor or scaling vector
 
     """
     leaddbs_neuron_folder = sys.argv[1:][0]
     folder_to_save = sys.argv[1:][1]
     points_h5_file = sys.argv[1:][2]
     pathways_params_file = sys.argv[1:][3]
-    if len(sys.argv[1:]) == 5:
+    if len(sys.argv[1:]) >= 5:
         scaling = float(sys.argv[1:][4])
     else:
         scaling = 1.0
 
-    launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_params_file, scaling)
+    if len(sys.argv[1:]) >= 6:
+        scaling_index = int(sys.argv[1:][5])
+    else:
+        scaling_index = None
+
+    launch_PAM(leaddbs_neuron_folder, folder_to_save, points_h5_file, pathways_params_file, scaling, scaling_index)
