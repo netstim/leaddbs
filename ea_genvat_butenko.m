@@ -594,7 +594,7 @@ for side=0:1
         timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result.h5'];
         pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
 
-        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ',num2str(scaling)]);
+        system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
     end
 
     % Check if OSS-DBS calculation is finished
