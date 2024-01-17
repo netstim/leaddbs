@@ -15,7 +15,7 @@ else
     if isempty(preopModalities)
         ea_cprintf('CmdWinWarnings', 'Pre-op T1w/FGATIR/WMn image not found!\n');
         return;
-    elseif numel(preopModalities) == 1
+    elseif isscalar(preopModalities)
         modality = preopModalities{1};
     else
         modality = questdlg('Choose pre-op image to be segmented', '', preopModalities{:}, preopModalities{1});

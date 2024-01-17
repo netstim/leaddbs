@@ -89,30 +89,33 @@ ea_genatlastable(atlases, imageFolder, options);
 
 function atlases = genAtlasesStruct(nucleus)
 % Generate template atlases struct
-if isfile([ea_getearoot, 'ext_libs', 'THOMAS', 'atlas_index.mat'])
-    load([ea_getearoot, 'ext_libs', 'THOMAS', 'atlas_index.mat'], 'atlases');
-else
-    [~, nucleusName, nucleusExt] = fileparts(nucleus);
-    atlases.names = sort(strcat(nucleusName, nucleusExt))';
+if isfile(fullfile(ea_getearoot, 'ext_libs', 'THOMAS', 'atlas_index.mat'))
+    load(fullfile(ea_getearoot, 'ext_libs', 'THOMAS', 'atlas_index.mat'), 'atlases');
+end
+
+[~, nucleusName, nucleusExt] = fileparts(nucleus);
+names = sort(strcat(nucleusName, nucleusExt))';
+
+if ~exist('atlases', 'var') || length(names) ~= length(atlases.names) || ~all(strcmp(names, atlases.names))
+    atlases = struct;
+    atlases.names = names;
     atlases.types = ones(size(atlases.names)) * 3;
     atlases.threshold.type='relative_intensity';
     atlases.threshold.value=0.5;
     atlases.colormap = ea_color_wes('all', length(atlases.names));
+
     atlases.citation.name = 'THOMAS Atlas (Su 2019)';
     atlases.citation.short = 'Su et al. 2019';
     atlases.citation.long = {'Su, J.H., Thomas, F.T., Kasoff, W.S., Tourdias, T., Choi, E.Y., Rutt, B.K., Saranathan, M., 2019. Thalamus Optimized Multi Atlas Segmentation (THOMAS): fast, fully automated segmentation of thalamic nuclei from structural MRI. NeuroImage 194, 272–282. https://doi.org/10.1016/j.neuroimage.2019.03.021'};
+
+    thalamusInd = find(ismember(names, 'THALAMUS.nii.gz'));
+    VLInd = find(ismember(names, 'VL.nii.gz'));
+    VLPInd = find(ismember(names, 'VLP.nii.gz'));
     atlases.presets(1).label = 'Default';
-    atlases.presets(1).hide = [9, 11, 12]; % Hide thalamus, VL and VLP, only show sub-regions
-    atlases.presets(1).show = setdiff(1:16, atlases.presets(1).hide);
+    atlases.presets(1).hide = [thalamusInd, VLInd, VLPInd]; % Hide thalamus, VL and VLP, only show sub-regions
+    atlases.presets(1).show = setdiff(1:length(names), atlases.presets(1).hide);
     atlases.presets(1).default = 'relative';
-    atlases.presets(2).label = 'Thalamus';
-    atlases.presets(2).show = 9;
-    atlases.presets(2).hide = setdiff(1:16, atlases.presets(2).show);
-    atlases.presets(2).default = 'relative';
-    atlases.presets(3).label = 'VL';
-    atlases.presets(3).show = 11;
-    atlases.presets(3).hide = setdiff(1:16, atlases.presets(3).show);
-    atlases.presets(3).default = 'relative';
     atlases.defautset = 1;
+
     atlases.rebuild = 1;
 end
