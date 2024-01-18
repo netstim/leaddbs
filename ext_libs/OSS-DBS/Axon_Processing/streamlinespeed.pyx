@@ -68,7 +68,7 @@ def set_number_of_points(streamlines, nb_points=3):
     else:
         return new_streamlines
         
-cdef void c_arclengths(Streamline streamline, double* out) nogil:
+cdef void c_arclengths(Streamline streamline, double* out) noexcept nogil:
     cdef np.npy_intp i = 0
     cdef double dn
 
@@ -76,12 +76,13 @@ cdef void c_arclengths(Streamline streamline, double* out) nogil:
     for i in range(1, streamline.shape[0]):
         out[i] = 0.0
         for j in range(streamline.shape[1]):
-            dn = streamline[i, j] - streamline[i-1, j]
-            out[i] += dn*dn
+            with cython.boundscheck(False):
+                dn = streamline[i, j] - streamline[i-1, j]
+                out[i] += dn*dn
 
         out[i] = out[i-1] + sqrt(out[i])
         
-cdef void c_set_number_of_points(Streamline streamline, Streamline out) nogil:
+cdef void c_set_number_of_points(Streamline streamline, Streamline out) noexcept nogil:
     cdef:
         np.npy_intp N = streamline.shape[0]
         np.npy_intp D = streamline.shape[1]
@@ -103,7 +104,8 @@ cdef void c_set_number_of_points(Streamline streamline, Streamline out) nogil:
     while next_point < arclengths[N-1]:
         if next_point == arclengths[k]:
             for dim in range(D):
-                out[i, dim] = streamline[j, dim]
+                with cython.boundscheck(False):
+                    out[i, dim] = streamline[j, dim]
 
             next_point += step
             i += 1
@@ -114,8 +116,9 @@ cdef void c_set_number_of_points(Streamline streamline, Streamline out) nogil:
                          (arclengths[k]-arclengths[k-1]))
 
             for dim in range(D):
-                delta = streamline[j, dim] - streamline[j-1, dim]
-                out[i, dim] = streamline[j-1, dim] + ratio * delta
+                with cython.boundscheck(False):
+                    delta = streamline[j, dim] - streamline[j-1, dim]
+                    out[i, dim] = streamline[j-1, dim] + ratio * delta
 
             next_point += step
             i += 1
@@ -125,6 +128,7 @@ cdef void c_set_number_of_points(Streamline streamline, Streamline out) nogil:
 
     # Last resampled point always the one from original streamline.
     for dim in range(D):
-        out[new_N-1, dim] = streamline[N-1, dim]
+        with cython.boundscheck(False):
+            out[new_N-1, dim] = streamline[N-1, dim]
 
     free(arclengths)
