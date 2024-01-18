@@ -705,7 +705,8 @@ for side=0:1
                 ftr.fibers(:,4) = originalFibID;
 
                 if strcmp(settings.butenko_intersectStatus,'activated')
-                    ftr.fibers(ftr.fibers == -1 || ftr.fibers == -3,5) = 1;
+                    ftr.fibers(ftr.fibers(:,5) == -1,5) = 1;
+                    ftr.fibers(ftr.fibers(:,5) == -3,5) = 1;
                 elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
                     ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
                 end
