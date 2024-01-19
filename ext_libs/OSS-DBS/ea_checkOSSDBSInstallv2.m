@@ -1,6 +1,4 @@
-function ea_checkOSSDBSInstallv2
-
-% OSS-DBS v2 deployment
+function ea_checkOSSDBSInstallv2(env)
 
 % Check conda installation
 if ~ea_conda.is_installed
@@ -9,19 +7,22 @@ if ~ea_conda.is_installed
     ea_cprintf('*Comments', 'Done...\n');
 end
 
-% optional: provide the local path to OSS-DBSv2 in OSS-DBSv2.yml if rep is not avaialble
+if ~exist('env', 'var')
+    env = ea_conda_env('OSS-DBSv2');
+end
 
-% install OSS-DBS v2 in the virtual environment
-env = ea_conda_env('OSS-DBSv2');
+% Install/Update OSS-DBS v2 conda environment
 if ~env.is_up_to_date
     ea_cprintf('*Comments', 'Updating OSS-DBS v2 conda environment...\n');
     env.force_create;
     ea_cprintf('*Comments', 'Done.\n');
 end
 
+% Check NEURON install
+version = '8.2.3';
 if ispc
     [status, cmdout] = system('neuron --version');
-    if status || ~contains(cmdout, '8.2.3+')
+    if status || ~contains(cmdout, version)
         ea_cprintf('*Comments', 'Installing NEURON 8.2.3 for Windows...\n');
         installer = fullfile(ea_prefsdir, 'temp', 'nrn-8.2.3.exe');
         ea_mkdir(fileparts(installer));
@@ -42,17 +43,11 @@ if ispc
     end
 else
     [status, cmdout] = env.system('python -c ''import neuron;print(neuron.__version__)''');
-    if status || ~strcmp(cmdout, '8.2.3+')
+    if status || ~contains(cmdout, version)
         ea_cprintf('*Comments', 'Install NEURON 8.2.3...\n');
-        env.system('pip3 install neuron==8.2.3');
+        env.system('pip3 install -U neuron==8.2.3');
     end
 end
-
-% set installed flag
-prefs = ea_prefs;
-vatsettings = prefs.machine.vatsettings;
-vatsettings.oss_dbs.installed = 1;
-ea_setprefs('vatsettings', vatsettings);
 
 
 % Handle space in path on Windows

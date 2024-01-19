@@ -21,11 +21,9 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
-env = ea_conda_env('OSS-DBSv2');
 % Check OSS-DBS installation, set env
-if ~options.prefs.machine.vatsettings.oss_dbs.installed || ~env.is_created
-    ea_checkOSSDBSInstallv2;
-end
+env = ea_conda_env('OSS-DBSv2');
+ea_checkOSSDBSInstallv2(env);
 
 binPath = getenv('PATH'); % Current PATH
 if isunix
