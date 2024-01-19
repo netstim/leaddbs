@@ -69,7 +69,12 @@ classdef ea_conda_env
         end
 
         function remove(obj)
-            system([obj.mamba_path ' env remove --name ' obj.name]);
+            if isfile(obj.mamba_path)
+                system([obj.mamba_path ' env remove --name ' obj.name]);
+            elseif isfolder(obj.path)
+                ea_cprintf('CmdWinWarnings', 'Missing mamba binary! Deleting %s env folder directly.\n', obj.name);
+                ea_delete(obj.path);
+            end
         end
 
         function create(obj)
