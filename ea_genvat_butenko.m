@@ -521,18 +521,6 @@ end
 runStatus = [0 0]; % Succeed or not
 stimparams = struct();
 for side=0:1
-%     % Stop and Remove running docker container on start
-%     if isempty(getenv('SINGULARITY_NAME')) % Only do it when using docker
-%         [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
-%         if ~isempty(containerID)
-%             containerID = strsplit(strip(containerID));
-%             fprintf('\nStop running container...\n')
-%             cellfun(@(id) system(['docker stop ', id, newline]), containerID);
-%             % fprintf('\nClean up running container...\n')
-%             % cellfun(@(id) system(['docker rm ', id, newline]), containerID);
-%         end
-%     end
-
     switch side
         case 0
             sideLabel = 'R';
@@ -703,8 +691,7 @@ for side=0:1
                 ftr.fibers(:,4) = originalFibID;
 
                 if strcmp(settings.butenko_intersectStatus,'activated')
-                    ftr.fibers(ftr.fibers(:,5) == -1,5) = 1;
-                    ftr.fibers(ftr.fibers(:,5) == -3,5) = 1;
+                    ftr.fibers(ftr.fibers(:,5) == -1 | ftr.fibers(:,5) == -3, 5) = 1;
                 elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
                     ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
                 end
