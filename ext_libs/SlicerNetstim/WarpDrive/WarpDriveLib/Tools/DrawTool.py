@@ -75,6 +75,9 @@ class DrawToolEffect(AbstractDrawEffect):
 
       self.sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
 
+      if int(self.parameterNode.GetParameter("ModifiableCorrections")):
+        self.modifyPreviousCorrections(self.sourceFiducial, targetFiducial)
+
       self.setFiducialNodeAs("Source", self.sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
       self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
 

@@ -539,6 +539,8 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       parameterNode.SetParameter("Running", "false")
     if not parameterNode.GetParameter("SnapOptions"):
       parameterNode.SetParameter("SnapOptions", json.dumps({'SnapRun':False, 'AutoApply': False}))
+    if not parameterNode.GetParameter("ModifiableCorrections"):
+      parameterNode.SetParameter("ModifiableCorrections", "0")
 
   def run(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
 
@@ -551,7 +553,7 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       return
     return cliNode
 
-  def computeWarp(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
+  def computeWarp(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, wait_for_completion=False):
 
     # Compute the warp with FiducialRegistrationVariableRBF
     cliParams = {
@@ -563,7 +565,7 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       "stiffness" : stiffness,
       } 
 
-    cliNode = slicer.cli.run(slicer.modules.fiducialregistrationvariablerbf, None, cliParams, wait_for_completion=False, update_display=False)
+    cliNode = slicer.cli.run(slicer.modules.fiducialregistrationvariablerbf, None, cliParams, wait_for_completion, update_display=False)
 
     return cliNode
 

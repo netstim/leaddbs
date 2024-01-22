@@ -94,6 +94,12 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     menu = qt.QMenu(self)
     menu.addAction(action)
+    templateSelectorMenu = menu.addMenu("Select Template")
+    for file in sorted(glob.glob(os.path.join(self.parameterNode.GetParameter("MNIPath"), "*.nii"))):
+      a = qt.QAction(self)
+      a.setText(os.path.basename(file))
+      a.connect("triggered(bool)", lambda b, file=file: self.updateTemplateImage(file))
+      templateSelectorMenu.addAction(a)
 
     templateAction = qt.QAction(self)
     templateAction.setIcon(qt.QIcon(":/Icons/Small/SlicerVisible.png"))
@@ -377,6 +383,17 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       templateNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))
     else:
       imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))
+
+  def updateTemplateImage(self, file):
+    slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("TemplateNode"))
+    templateNode = slicer.util.loadVolume(file, properties={'show':False})
+    templateNode.GetDisplayNode().AutoWindowLevelOff()
+    templateNode.GetDisplayNode().SetWindow(100)
+    templateNode.GetDisplayNode().SetLevel(70)
+    slicer.util.setSliceViewerLayers(foreground=templateNode.GetID())
+    self.parameterNode.SetNodeReferenceID("TemplateNode", templateNode.GetID())
+    if self.inverseAction.checked:
+      templateNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))
 
   def onInverseTriggered(self, useInverse):
     wasModified = self.parameterNode.StartModify()
