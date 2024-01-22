@@ -286,10 +286,9 @@ for group=groups
                     case 'Correlations'
 
                         thisvals=gval{side}(gpatsel,:);
-%                         Nmap=ea_nansum(~isnan(thisvals));
-% 
-%                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)); % apply N-threshold
-%                         thisvals=thisvals(:,~nanidx);
+                        nanidx = isnan(ea_nansum(thisvals));
+                        thisvals = thisvals(:, ~nanidx);
+
                         if obj.showsignificantonly
                             [R,p]=ea_corr(thisvals,I(gpatsel,side),obj.corrtype);
                             R=ea_corrsignan(R,p,obj);
@@ -298,7 +297,7 @@ for group=groups
                         end
 
                         vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
-                        vals{group,side}(:)=R;
+                        vals{group,side}(~nanidx)=R;
                     case 'Reverse T-Tests (Binary Var)'
 
                         nonempty=ea_nansum(gval{side}(gpatsel,:),1)>0;
