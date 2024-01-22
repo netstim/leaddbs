@@ -251,18 +251,29 @@ class WarpDriveCorrectionsTable(baseTable):
     visibilityGroup.addAction(self.sourceVisibleAction)
     visibilityGroup.addAction(self.targetVisibleAction)
     visibilityGroup.addAction(self.previewSelectedAction)
-    visibilityMenu = qt.QMenu(self)
+
+    modifiableCorrectionsAction = qt.QAction(self)
+    modifiableCorrectionsAction.setText('Modifiable corrections')
+    modifiableCorrectionsAction.setCheckable(True)
+    modifiableCorrectionsAction.setChecked(False)
+    modifiableCorrectionsAction.setToolTip('When checked, corrections are modified by new ones.')
+    modifiableCorrectionsAction.connect('toggled(bool)', self.modiableCorrectionsChanged)
+
+    settingsMenu = qt.QMenu(self)
+    visibilityMenu = settingsMenu.addMenu("Visibility")
     visibilityMenu.addActions(visibilityGroup.actions())
-    visibilityAction = qt.QAction(self)
-    visibilityAction.setIcon(qt.QIcon(":/Icons/Small/SlicerVisible.png"))
-    visibilityAction.setText('Visibility')
-    visibilityButton = qt.QToolButton()
-    visibilityButton.setDefaultAction(visibilityAction)
-    visibilityButton.setMenu(visibilityMenu)
-    visibilityButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    visibilityButton.setPopupMode(qt.QToolButton.InstantPopup)
-    visibilityButton.setIconSize(effectPixmap.rect().size())
-    visibilityButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
+    settingsMenu.addAction(modifiableCorrectionsAction)
+
+    settingsAction = qt.QAction(self)
+    settingsAction.setIcon(qt.QIcon(":/Icons/Small/SlicerConfigure.png"))
+    settingsAction.setText('Settings')
+    settingsButton = qt.QToolButton()
+    settingsButton.setDefaultAction(settingsAction)
+    settingsButton.setMenu(settingsMenu)
+    settingsButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    settingsButton.setPopupMode(qt.QToolButton.InstantPopup)
+    settingsButton.setIconSize(effectPixmap.rect().size())
+    settingsButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
 
     self.snapAutoApplyCheckBox = qt.QCheckBox('Auto apply')
     self.snapAutoApplyCheckBox.setToolTip('When checked, Snap will run after every correction is made.')
@@ -308,7 +319,7 @@ class WarpDriveCorrectionsTable(baseTable):
     snapToolButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
 
     self.buttonsFrame.layout().addWidget(self.undoButton,1)
-    self.buttonsFrame.layout().addWidget(visibilityButton,1)
+    self.buttonsFrame.layout().addWidget(settingsButton,1)
     if hasattr(slicer.modules,'antsregistration'):
       self.buttonsFrame.layout().addWidget(snapToolButton,1)
 
@@ -340,6 +351,8 @@ class WarpDriveCorrectionsTable(baseTable):
     for selectedRow in selectedRows:
       return selectedRow.row() # is a single selection view
 
+  def modiableCorrectionsChanged(self, checked):
+    pass
 
 class WarpDriveCorrectionsManager(VTKObservationMixin, WarpDriveCorrectionsTable):
   def __init__(self):
@@ -610,3 +623,6 @@ class WarpDriveCorrectionsManager(VTKObservationMixin, WarpDriveCorrectionsTable
     targetImageNodeID = self.snapTargetComboBox.currentNodeID
     targetFiducialNodeID = self.targetFiducialNodeID
     WarpDrive.WarpDriveLogic().runSnap(snapMode, sourceImageNodeID, targetImageNodeID, targetFiducialNodeID)
+
+  def modiableCorrectionsChanged(self, checked):
+    self.parameterNode.SetParameter("ModifiableCorrections",str(int(checked)))

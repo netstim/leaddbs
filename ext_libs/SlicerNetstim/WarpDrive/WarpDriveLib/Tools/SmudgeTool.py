@@ -55,6 +55,8 @@ class SmudgeToolEffect(AbstractCircleEffect):
       # get source and target
       sourceFiducial, targetFiducial = self.getSourceTargetFromPoints()
       # apply
+      if int(self.parameterNode.GetParameter("ModifiableCorrections")):
+        self.modifyPreviousCorrections(sourceFiducial, targetFiducial)
       self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
       self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
       self.parameterNode.SetParameter("Update","true")
