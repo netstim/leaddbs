@@ -1153,10 +1153,7 @@ for pt=selection
         if strcmp(M.S(pt).model, 'OSS-DBS (Butenko 2020)')
             if options.prefs.machine.vatsettings.butenko_calcAxonActivation
                 feval(ea_genvat,M.S(pt),options);
-                fprintf('\n');
-                warning('off', 'backtrace');
-                warning('OSS-DBS axon activation mode detect, skipping calc stats for %s!\n', options.patientname);
-                warning('on', 'backtrace');
+                ea_cprintf('CmdWinWarnings', 'OSS-DBS axon activation mode detect, skipping calc stats for %s!\n', options.patientname);
                 continue;
             else
                 [vatCalcPassed, stimparams] = feval(ea_genvat,M.S(pt),options);

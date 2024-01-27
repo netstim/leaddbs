@@ -1091,13 +1091,14 @@ S = ea_activecontacts(S);
 options = getappdata(resultfig,'options'); % selected atlas could have refreshed.
 options.orignative = options.native;
 
-if strcmp('on',get(handles.estimateInTemplate,'Visible')) % only allowed for specific VTA functions
-    switch get(handles.estimateInTemplate,'Value')
+if handles.estimateInTemplate.Visible % only allowed for specific VTA functions
+    switch handles.estimateInTemplate.Value
         case 0
             S.template = 'warp';
             options.native = 1;
         case 1
             S.template = 'direct';
+            options.native = 0;
     end
 end
 

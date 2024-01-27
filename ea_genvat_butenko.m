@@ -476,8 +476,9 @@ if settings.calcAxonActivation
 end
 
 %% Save settings for OSS-DBS
-parameterFile = [outputDir, filesep, 'oss-dbs_parameters.mat'];
+parameterFile = fullfile(outputDir, 'oss-dbs_parameters.mat');
 save(parameterFile, 'settings', '-v7.3');
+ea_savestimulation(S,options);
 
 % Delete previous results from stimSetMode
 ea_delete([outputDir, filesep, 'Result_StimProt_*']);
