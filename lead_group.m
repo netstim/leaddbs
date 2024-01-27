@@ -1117,7 +1117,7 @@ for pt=selection
         try
             setappdata(resultfig,'curS',M.S(pt));
         catch
-            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
+            ea_error(['Stimulation parameters for ', options.subj.subjId, ' are not set.']);
         end
         vfnames=getappdata(handles.leadfigure,'vatfunctionnames');
 
