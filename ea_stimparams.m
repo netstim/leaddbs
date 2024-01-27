@@ -1094,10 +1094,8 @@ options.orignative = options.native;
 if handles.estimateInTemplate.Visible % only allowed for specific VTA functions
     switch handles.estimateInTemplate.Value
         case 0
-            S.template = 'warp';
             options.native = 1;
         case 1
-            S.template = 'direct';
             options.native = 0;
     end
 end
@@ -1186,9 +1184,6 @@ end
 setappdata(resultfig,'PL',PL);
 
 ea_busyaction('off',handles.stimfig,'stim');
-
-
-
 
 
 function k12u_Callback(hObject, eventdata, handles)

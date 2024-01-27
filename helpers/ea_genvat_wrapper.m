@@ -102,11 +102,9 @@ for i=1:numel(cathode)
 end
 
 % Save stimulation parameters in template space output folder
-S.template = 'direct';
 save(fullfile(templateStimFolder, [patientName, '_desc-stimparameters.mat']), 'S');
 
 % Save stimulation parameters in native space output folder
-S.template = 'warp';
 save(fullfile(nativeStimFolder, [patientName, '_desc-stimparameters.mat']), 'S');
 
 % Fix missing atlasset in options
