@@ -19,5 +19,9 @@ elmodel = {'Medtronic 3389'
            'SceneRay SR1200'
            'NeuroPace DL-344-3.5'
            'NeuroPace DL-344-10'
+           'DIXI D08-05AM'
+           'DIXI D08-08AM'
            'DIXI D08-10AM'
-           'DIXI D08-15AM'};
+           'DIXI D08-12AM'
+           'DIXI D08-15AM'
+           'DIXI D08-18AM'};
