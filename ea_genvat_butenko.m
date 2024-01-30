@@ -312,6 +312,13 @@ if settings.stimSetMode
     return
 end
 
+% if right electrode only, insert null Stim Protocol for the left
+% this work around is not needed for the left only, handled by Lead-DBS
+if eleNum == 1
+    S = ea_add_StimVector_to_S(S, zeros(1, conNum),1);
+    eleNum = 2;
+end
+
 % Initialize current control flag
 settings.current_control = nan(eleNum, 1);
 
