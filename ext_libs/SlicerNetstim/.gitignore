@@ -6,3 +6,4 @@ AlphaOmega-build/
 *.DS_Store
 /LeadOR/.DS_Store
 .vscode/*
+!**/*.png

@@ -9,6 +9,7 @@ set(MODULE_PYTHON_SCRIPTS
   WarpDriveLib/Effects/Effect.py
   WarpDriveLib/Effects/PointerEffect.py
   WarpDriveLib/Effects/PointToPointEffect.py
+  WarpDriveLib/Effects/ShrinkExpandEffect.py
   WarpDriveLib/Effects/__init__.py
   WarpDriveLib/Helpers/GridNodeHelper.py
   WarpDriveLib/Helpers/LeadDBSCall.py
@@ -17,6 +18,7 @@ set(MODULE_PYTHON_SCRIPTS
   WarpDriveLib/Tools/NoneTool.py
   WarpDriveLib/Tools/PointToPointTool.py
   WarpDriveLib/Tools/SmudgeTool.py
+  WarpDriveLib/Tools/ShrinkExpandTool.py
   WarpDriveLib/Tools/__init__.py
   WarpDriveLib/Widgets/Buttons.py
   WarpDriveLib/Widgets/Toolbar.py
@@ -39,6 +41,7 @@ set(MODULE_PYTHON_RESOURCES
   Resources/Icons/SlicerVisible.png
   Resources/Icons/SlicerUndo.png
   Resources/Icons/Magnet.png
+  Resources/Icons/ShrinkExpand.png
   Resources/UI/${MODULE_NAME}.ui
   )
 

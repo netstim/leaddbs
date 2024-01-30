@@ -8,7 +8,7 @@ import json
 
 import numpy as np
 
-from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
+from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool, ShrinkExpandTool
 from WarpDriveLib.Helpers import GridNodeHelper, LeadDBSCall
 from WarpDriveLib.Widgets import Tables, Toolbar, Buttons
 
@@ -92,12 +92,16 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     toolWidgets = [NoneTool.NoneToolWidget(),
                    SmudgeTool.SmudgeToolWidget(),
                    DrawTool.DrawToolWidget(),
-                   PointToPointTool.PointToPointToolWidget()]
+                   PointToPointTool.PointToPointToolWidget(),
+                   ShrinkExpandTool.ShrinkExpandToolWidget()]
 
     for toolWidget in toolWidgets:
       toolsLayout.addWidget(toolWidget.effectButton)
 
     self.ui.drawModeMenu = toolWidgets[2].effectButton.menu()
+    self.ui.shrinkExpandModeMenu = next(filter(lambda x: isinstance(x,qt.QMenu), toolWidgets[4].effectButton.menu().children()))
+    self.ui.shrinkExpandAmmountSlider = next(filter(lambda x: isinstance(x,ctk.ctkSliderWidget), toolWidgets[4].effectButton.menu().children()))
+    self.ui.shrinkExpandButton = toolWidgets[4].effectButton
 
     # Add Tree View
     correctionsLayout = qt.QVBoxLayout(self.ui.correctionsFrame)
@@ -138,6 +142,8 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.spacingSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.stiffnessSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.drawModeMenu.triggered.connect(self.updateParameterNodeFromGUI)
+    self.ui.shrinkExpandModeMenu.triggered.connect(self.updateParameterNodeFromGUI)
+    self.ui.shrinkExpandAmmountSlider.valueChanged.connect(self.updateParameterNodeFromGUI)
     
     # MRML Scene
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
@@ -350,6 +356,9 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.calculateButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
 
     next(filter(lambda a: a.text == self._parameterNode.GetParameter("DrawMode"), self.ui.drawModeMenu.actions())).setChecked(True)
+    next(filter(lambda a: a.text == self._parameterNode.GetParameter("ShrinkExpandMode"), self.ui.shrinkExpandModeMenu.actions())).setChecked(True)
+    self.ui.shrinkExpandButton.text = self._parameterNode.GetParameter("ShrinkExpandMode")
+    self.ui.shrinkExpandAmmountSlider.value = float(self._parameterNode.GetParameter("ShrinkExpandAmmount"))
 
     # calculate warp
     if self._parameterNode.GetParameter("Update") == "true" and self._parameterNode.GetParameter("Running") == "false" and self.ui.autoUpdateCheckBox.checked:
@@ -383,6 +392,8 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._parameterNode.SetNodeReferenceID("TargetFiducial", self.ui.targetFiducialsComboBox.currentNodeID)
     self._parameterNode.SetNodeReferenceID("OutputGridTransform", self.ui.outputSelector.currentNodeID)
     self._parameterNode.SetParameter("DrawMode", next(filter(lambda a: a.checked, self.ui.drawModeMenu.actions())).text)
+    self._parameterNode.SetParameter("ShrinkExpandMode", next(filter(lambda a: a.checked, self.ui.shrinkExpandModeMenu.actions())).text)
+    self._parameterNode.SetParameter("ShrinkExpandAmmount", str(self.ui.shrinkExpandAmmountSlider.value))
     self._parameterNode.SetParameter("Radius", "%.2f" % self.ui.radiusSlider.value)
     self._parameterNode.SetParameter("Stiffness", str(self.ui.stiffnessSpinBox.value))
     # spacing
@@ -535,6 +546,10 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       parameterNode.SetParameter("Stiffness", "0.1")
     if not parameterNode.GetParameter("DrawMode"):
       parameterNode.SetParameter("DrawMode", 'To Nearest Model')
+    if not parameterNode.GetParameter("ShrinkExpandMode"):
+      parameterNode.SetParameter("ShrinkExpandMode", 'Shrink')
+    if not parameterNode.GetParameter("ShrinkExpandAmmount"):
+      parameterNode.SetParameter("ShrinkExpandAmmount", '25')
     if not parameterNode.GetParameter("Running"):
       parameterNode.SetParameter("Running", "false")
     if not parameterNode.GetParameter("SnapOptions"):
