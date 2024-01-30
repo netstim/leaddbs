@@ -19,13 +19,9 @@ classdef ea_conda_env
     methods
 
         function obj = ea_conda_env(ymlname)
-            ymlfile = ea_regexpdir(fullfile(fileparts(mfilename('fullpath')), 'environments'), ymlname, 0);
+            ymlname = erase(ymlname, '.yml');
+            ymlfile = ea_regexpdir(fullfile(fileparts(mfilename('fullpath')), 'environments'), ['^', ymlname, '\.yml$'], 0);
             if ~isempty(ymlfile)
-                if length(ymlfile) > 1
-                    ea_cprintf('CmdWinWarnings', ...
-                        'Duplicated environment files found. Consider cleaning up the folder:\n%s\n', ...
-                        fullfile(fileparts(mfilename('fullpath')), 'environments'));
-                end
                 obj.yml = ymlfile{1};
             else
                 ea_cprintf('CmdWinErrors', 'Environment yml file doesn''t exist!\n');
@@ -73,7 +69,12 @@ classdef ea_conda_env
         end
 
         function remove(obj)
-            system([obj.mamba_path ' env remove --name ' obj.name]);
+            if isfile(obj.mamba_path)
+                system([obj.mamba_path ' env remove --name ' obj.name]);
+            elseif isfolder(obj.path)
+                ea_cprintf('CmdWinWarnings', 'Missing mamba binary! Deleting %s env folder directly.\n', obj.name);
+                ea_delete(obj.path);
+            end
         end
 
         function create(obj)
@@ -101,7 +102,7 @@ classdef ea_conda_env
             obj.system(['python ' script_path])
         end
 
-        function status = system(obj, command)
+        function varargout = system(obj, command)
             if ~obj.is_created
                 error(['Create python environment ' obj.name ' from Lead-DBS menu to use this function']);
             end
@@ -111,7 +112,13 @@ classdef ea_conda_env
                 setup_command = [fullfile(ea_conda.install_path, 'condabin', 'activate.bat') ' ' obj.name ' & '];
                 command = obj.inject_exe_to_command(command);
             end
-            status = system([setup_command command]);
+
+            if nargout <= 1
+                varargout{1} = system([setup_command command]);
+            else
+                [varargout{1}, varargout{2}] = system([setup_command command]);
+                varargout{2} = strip(varargout{2});
+            end
         end
     end
 

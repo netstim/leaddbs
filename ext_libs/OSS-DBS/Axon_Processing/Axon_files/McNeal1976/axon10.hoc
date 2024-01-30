@@ -1,0 +1,159 @@
+/*
+Frankenhaeuser-Huxley model of myelinated axon
+with parameters from Reilly.
+External diameter is 10 um.
+
+Origin of cell is the 0 node of the first node of Ranvier.
+
+Note:  Resting potential is close to, but not exactly, -70 mV.
+Actual value is approximately -69.77 mV.
+
+Spike threshold for intracellular stimulus at middle of first node
+is 0.943 nA x 0.1 ms for adaptive integration 
+and 
+1.015 nA x 0.1 ms for integration with fixed dt = 0.025 ms.
+Distance between centers of first and last nodes is 100250 um = 10.025 cm.
+
+Conduction velocity
+spike detection threshold = -20 mV
+path length = 81201.25 - 21051.25 = 60150 um
+integrator  internode[20](1)  [80](1)   latency   CV
+fixed dt      2.7 ms          6.05 ms   3.35 ms   17960 um/ms = 17.96 mm/ms = 17.96 m/s
+adaptive      2.315 ms        4.967 ms  2.652 ms  22680 um/ms = 22.67 mm/ms = 22.67 m/s
+*/
+
+NNODES = 101 // # nodes of Ranvier--must be an odd number!
+// NNODES = 5 // # nodes of Ranvier for debugging
+GAP = 2.5e-4 // width of node of Ranvier in cm
+DIAM = 10 // fiber diameter in um including myelin
+SDD = 0.7 // axon diameter is SDD*DIAM
+ELD = 100 // length of internode/fiber diameter
+
+RHOI = 100 // cytoplasmic resistivity in ohm cm
+// RHOI = 110 // cytoplasmic resistivity in ohm cm (McNeal 1976)
+// note:  Hines and Shrager 1991 agree with McNeal 1976
+
+// RHOE = 300 // extracellular resistivity in ohm cm, now defined in initxstim.hoc
+CM = 2 // specific membrane capacitance in uf/cm2
+
+///// topology
+
+create node[NNODES], internode[NNODES-1] // node at each end
+access node[0]
+
+for ii=0,NNODES-2 {
+  connect internode[ii](0), node[ii](1)
+  connect node[ii+1](0), internode[ii](1)
+}
+
+// topology() // to verify node-internode-node architecture
+
+///// subsets
+
+objref all, nodes, internodes
+all = new SectionList()
+nodes = new SectionList()
+internodes = new SectionList()
+forall all.append() // all sections
+forsec "internode" internodes.append() // all internodes
+forsec "node" nodes.append() // all nodes and internodes
+forsec internodes nodes.remove() // now nodes contains only nodes
+
+/*
+print "NODES:"
+forsec nodes print secname()
+print "INTERNODES:"
+forsec internodes print secname()
+*/
+
+///// geometry
+
+forsec nodes {
+pt3dclear()
+pt3dadd(0,0,0, SDD*DIAM)
+pt3dadd(GAP*1e4,0,0, SDD*DIAM) 
+}
+
+forsec internodes {
+pt3dclear()
+pt3dadd(0,0,0, SDD*DIAM) 
+pt3dadd(ELD*DIAM,0,0, SDD*DIAM) 
+}
+
+define_shape() // adjust all pt3d data relative to root section
+
+/* don't bother with this--control location of stimulus electrode instead
+
+// move axon to left so the middle of its middle node is at (0,0,0)
+proc centerit() { local i, axlen, offset
+  node[0] distance() // distance is relative to node[0](0)
+  node[NNODES-1] axlen = distance(1) // total length of model
+  // move node[0](0) to (-axlen/2, 0, 0)
+  node[0] for i = 0,n3d()-1 pt3dchange(i, -axlen/2 + x3d(i), y3d(i), z3d(i), diam3d(i))
+  define_shape() // adjust all pt3d data relative to root section
+  node[(NNODES-1)/2] print "middle of node ", (NNODES-1)/2, \
+                           "is now at ", (x3d(n3d()-1)+x3d(0))/2 
+}
+
+centerit()
+
+*/
+
+///// biophysics
+
+/*
+fh and related parameters from MLH implementation of
+Frankenhaeuser B, Huxley AF (1964)
+The action potential in the myelinated nerve fiber
+of Xenopus Laevis as computed on the basis of
+voltage clamp data. J Physiol 171:302-15
+ModelDB entry 3507
+according to which v_init = -70
+
+Values for pnabar_fh, pkbar_fh, ppbar_fh, and gl_fh
+are from
+Hines M, Shrager P (1991)
+A computational test of the requirements for conduction
+in demyelinated axons
+Restorative Neurology And Neuroscience 3:81-93 
+ModelDB entry 3798
+
+Hines and Shrager included FH space 
+and detailed electrical properties of myelin,
+which the following omits.
+They also assumed extracellular resistivity 
+adjacent to the fiber was 80 ohm cm.
+*/
+
+// forall Ra = 110 // from Hines and Shrager 1991
+forall Ra = RHOI // Reilly
+
+PNabar = 8e-3 // cm/s from Hines and Shrager 1991
+PKbar = 1.2e-3
+PPbar = 0.54e-3
+nGm = 0.0303
+// nGm = 0.0304 (table 1 in McNeal 1977
+// but note 0.0303 on p. 336 of McNeal 1977)
+
+// iGm = .0005 // internode membrane conductance--unused here
+
+forsec nodes {
+  cm = CM
+  insert fh
+  pnabar_fh = PNabar
+  pkbar_fh = PKbar
+  ppbar_fh = PPbar
+  gl_fh = nGm
+  nai = 13.74
+  nao = 114.5
+  ki = 120
+  ko = 2.5
+}
+
+forsec internodes {
+  cm = 1e-6 // unless using extracellular, in which case set it to CM
+}
+
+celsius = 20
+// celsius = 22.03 // 295.18 - 273.15 (McNeal 1977)
+
