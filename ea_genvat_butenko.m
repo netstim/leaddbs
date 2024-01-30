@@ -119,6 +119,7 @@ switch settings.butenko_segmAlg
             c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
             ea_write_nii(c1);
         end
+        copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
     case 'Atlas Based'
 
         % always overwrite in this case
@@ -130,6 +131,7 @@ switch settings.butenko_segmAlg
             segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
             atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
+            copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
         else
             % save directly to stim folder
             segMaskPath = [outputDir,filesep,'segmask.nii'];
@@ -142,10 +144,6 @@ switch settings.butenko_segmAlg
         %SynthSeg_segmask_image = ea_smart_BIDS_function_to_find_SynthSeg;
         %ea_convert_synthSeg2segmask(SynthSeg_segmask_image, segmask_output);
 end
-
-% Put segmened MRI file in stimulation folder
-copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
-
 
 %% Set patient folder
 settings.Patient_folder = options.subj.subjDir;
