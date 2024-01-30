@@ -1,19 +1,16 @@
-name: synthseg
+name: synthstrip
 
 channels:
   - conda-forge
 
 dependencies:
-  - keras=2.13.1
-  - nibabel=5.1.0
   - numpy=1.26.0
   - pip=23.3.1
   - python=3.10
-  - scipy=1.11.3
-  - tensorflow=2.13.1
+  - pytorch=2.0.0
 
   - pip:
-    - git+https://github.com/ningfei/synthseg-models.git
+    - git+https://github.com/ningfei/synthstrip-models.git
     - surfa==0.6.0
 
 variables:
