@@ -10,7 +10,7 @@ import surfa as sf
 import sys
 import time
 import traceback
-import ssmodels
+import synthseg_models as models
 
 from datetime import timedelta
 from itertools import combinations
@@ -67,7 +67,7 @@ def main():
         sys.exit(1)
 
     # set model dir
-    models_home = ssmodels.models_dir
+    models_home = models.models_dir
 
     # parse commandline
     args = parser.parse_args()
