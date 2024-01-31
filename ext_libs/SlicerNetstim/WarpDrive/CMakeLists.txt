@@ -20,7 +20,6 @@ set(MODULE_PYTHON_SCRIPTS
   WarpDriveLib/Tools/SmudgeTool.py
   WarpDriveLib/Tools/ShrinkExpandTool.py
   WarpDriveLib/Tools/__init__.py
-  WarpDriveLib/Widgets/Buttons.py
   WarpDriveLib/Widgets/Toolbar.py
   WarpDriveLib/Widgets/ToolWidget.py
   WarpDriveLib/Widgets/Tables.py

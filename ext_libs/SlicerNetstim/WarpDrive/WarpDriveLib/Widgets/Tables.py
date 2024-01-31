@@ -4,6 +4,7 @@ from PythonQt import BoolResult
 from slicer.util import VTKObservationMixin
 import WarpDrive, ImportAtlas
 import numpy as np
+import glob
 import json
 
 class TextEditDelegate(qt.QItemDelegate):
@@ -111,16 +112,14 @@ class baseTable(qt.QWidget):
   def onRemoveButton(self):
     pass
 
-class AtlasesTable(baseTable):
+class AtlasSegmentationBaseTable(baseTable):
 
   def __init__(self):
 
-    self.view = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
     self.view.setMRMLScene(slicer.mrmlScene)
     self.view.contextMenuEnabled = False
     self.view.setEditTriggers(0) # disable double click to edit
     self.view.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
-    self.view.attributeNameFilter = ('atlas')
     for key in ['idColumn', 'transformColumn', 'descriptionColumn']:
       self.view.setColumnHidden(eval('self.view.model().'+key), True)
 
@@ -128,38 +127,58 @@ class AtlasesTable(baseTable):
 
     super().__init__()
 
-    self.addButton.setText('Atlas')
-    self.addButton.setToolTip('Add atlas')
+    self.saveButton = qt.QToolButton()
+    self.saveButton.setVisible(False)
+    self.saveButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    self.saveButton.setText('Save')
+    self.saveButton.setIcon(qt.QIcon(":/Icons/Small/SlicerSave.png"))
+    self.saveButton.setIconSize(self.removeButton.iconSize)
+    self.saveButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
+    self.saveButton.clicked.connect(self.onSaveClicked)
 
-    self.buttonsFrame.layout().addStretch(2)
+    self.buttonsFrame.layout().addWidget(self.saveButton,1)
 
-    self.updateTable()
+  def onSaveClicked(self):
+    currentSubjectPath = os.path.dirname(json.loads(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("CurrentSubject"))['warpdrive_path'])
+    outputDir = os.path.join(currentSubjectPath, 'segmentations') if int(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("InverseMode")) else os.path.join(currentSubjectPath, 'segmentations_mni')
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
+    self.saveSegmentation(outputDir)
+    qt.QApplication.restoreOverrideCursor()
+  
+  def saveSegmentation(self, segmentationPath):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    modelNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
+    modelNodes.UnRegister(slicer.mrmlScene)
+    for i in range(modelNodes.GetNumberOfItems()):
+      modelNode = modelNodes.GetItemAsObject(i)
+      modelItem = shNode.GetItemByDataNode(modelNode)
+      if modelNode.GetDisplayNode().GetVisibility() and self.view.attributeNameFilter in shNode.GetItemAttributeNames(modelItem):
+        # construct name
+        name = modelNode.GetName()
+        node = modelNode
+        while shNode.GetItemParent(shNode.GetItemByDataNode(node)) != shNode.GetSceneItemID():
+          node = shNode.GetItemDataNode(shNode.GetItemParent(shNode.GetItemByDataNode(node)))
+          name = os.path.join(node.GetName(), name)
+        # save segmentation
+        clonedItemID = slicer.modules.subjecthierarchy.logic().CloneSubjectHierarchyItem(shNode, shNode.GetItemByDataNode(modelNode))
+        tmpNode = shNode.GetItemDataNode(clonedItemID)
+        tmpNode.SetAndObserveTransformNodeID(modelNode.GetTransformNodeID())
+        tmpNode.HardenTransform()
+        labelNode = self.modelToLabel(modelNode)
+        os.makedirs(os.path.dirname(name), exist_ok=True)
+        slicer.util.saveNode(labelNode, os.path.join(segmentationPath, name + '.nii.gz'))      
+        slicer.mrmlScene.RemoveNode(labelNode)
+        slicer.mrmlScene.RemoveNode(tmpNode)
 
-  def updateTable(self):
-    currentValue = self.view.attributeNameFilter
-    self.view.attributeNameFilter = ('')
-    self.view.attributeNameFilter = currentValue
-
-  def onAddButton(self):
-    leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
-    if leadDBSPath == "":
-      qt.QMessageBox().warning(qt.QWidget(), "", "Add Lead-DBS path to Slicer preferences")
-      return
-    validAtlasesNames = ImportAtlas.ImportAtlasLogic().getValidAtlases()
-    if not validAtlasesNames:
-      return
-    result = BoolResult()
-    atlasName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',validAtlasesNames,0,0,result) 
-    if result:
-      qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
-      qt.QApplication.processEvents()
-      try:
-        ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(ImportAtlas.ImportAtlasLogic().getAtlasesPath(), atlasName, 'atlas_index.mat'))    
-      finally:
-        qt.QApplication.restoreOverrideCursor()
-    tb = next(filter(lambda x: isinstance(x,qt.QToolBar) and x.windowTitle=='LeadDBS', slicer.util.mainWindow().children()))
-    tb.invertAtlases(WarpDrive.WarpDriveLogic().getParameterNode().GetNodeReference("InputNode"))
-    self.updateTable()
+  def modelToLabel(self, model_node):
+    segmentationsLogic = slicer.modules.segmentations.logic()
+    segmentNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', 'segmentation')
+    labelNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode', 'label')
+    segmentationsLogic.ImportModelToSegmentationNode(model_node, segmentNode)
+    segmentationsLogic.ExportAllSegmentsToLabelmapNode(segmentNode, labelNode)
+    slicer.mrmlScene.RemoveNode(segmentNode)
+    return labelNode
 
   def onRemoveButton(self):
     nodeID = self.view.currentItem()
@@ -192,6 +211,141 @@ class AtlasesTable(baseTable):
     markupsLogic = slicer.modules.markups.logic()
     markupsLogic.JumpSlicesToNthPointInMarkup(markupsNode.GetID(),0,True)
     slicer.mrmlScene.RemoveNode(markupsNode)
+
+  def updateTable(self):
+    currentValue = self.view.attributeNameFilter
+    self.view.attributeNameFilter = ('')
+    self.view.attributeNameFilter = currentValue
+
+class SegmentationsTable(AtlasSegmentationBaseTable):
+
+  def __init__(self):
+
+    self.view = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
+    self.view.attributeNameFilter = ('segmentation')
+
+    super().__init__()
+
+    self.addButton.setText('Segmentation')
+    self.addButton.setToolTip('Add segmentation')
+
+    self.buttonsFrame.layout().addStretch(2)
+
+    self.updateTable()
+
+  def onAddButton(self):
+    currentSubject = json.loads(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("CurrentSubject"))
+    segmentationsPath = os.path.join(os.path.dirname(currentSubject['warpdrive_path']), 'segmentations')
+    subFolders = [os.path.basename(x) for x in sorted(glob.glob(os.path.join(segmentationsPath, '*')))]
+    result = BoolResult()
+    segmentationName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',subFolders,0,0,result) 
+    if result:
+      qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+      qt.QApplication.processEvents()
+      try:
+        self.loadSegmentation(os.path.join(segmentationsPath, segmentationName))    
+      finally:
+        qt.QApplication.restoreOverrideCursor()
+    self.updateTable()
+
+  def loadSegmentation(self, segmentationPath):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    niiFiles = glob.glob(os.path.join(segmentationPath, '**', '*.nii*'), recursive=True)
+    for file in niiFiles:
+      # load
+      volumeNode = slicer.util.loadVolume(file,{'show':False})
+      modelNode = self.volumeToModel(volumeNode)
+      slicer.mrmlScene.RemoveNode(volumeNode)
+      modelNode.GetDisplayNode().SetVisibility2D(1)
+      # set in hierarchy
+      basePath,fileName = os.path.split(file)
+      parentFolders = os.path.relpath(basePath, os.path.dirname(segmentationPath)).split(os.sep)
+      folderID = self.getOrCreateFolderItem(shNode.GetSceneItemID(), parentFolders.pop(0))
+      for parentName in parentFolders:
+        folderID = self.getOrCreateFolderItem(folderID, parentName)
+      shNode.SetItemParent(shNode.GetItemByDataNode(modelNode), folderID)
+      shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'segmentation', '1')
+      modelNode.SetName(fileName.split('.')[0])
+    WarpDrive.WarpDriveLogic().invertAtlases(WarpDrive.WarpDriveLogic().getParameterNode().GetNodeReference("InputNode"), int(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("InverseMode")))
+
+  def volumeToModel(self, volumeNode):
+    labelNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+    volumeArray = slicer.util.array(volumeNode.GetID())
+    volumeArray[:] = volumeArray > 0.5
+    volumeNode.Modified()
+    slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(slicer.mrmlScene, labelNode, volumeNode)
+    segmentationsLogic = slicer.modules.segmentations.logic()
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    segmentNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', 'segmentation')
+    segmentationsLogic.ImportLabelmapToSegmentationNode(labelNode, segmentNode)
+    itemID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'aux')
+    segmentationsLogic.ExportAllSegmentsToModels(segmentNode, itemID)
+    childID = []
+    shNode.GetItemChildren(itemID, childID, False)
+    shNode.SetItemParent(childID[0], shNode.GetSceneItemID())
+    shNode.RemoveItem(itemID)
+    slicer.mrmlScene.RemoveNode(segmentNode)
+    slicer.mrmlScene.RemoveNode(labelNode)
+    return shNode.GetItemDataNode(childID[0])
+
+  def createFolderDisplayNode(self, folderID, color=[0.66,0.66,0.66], opacity=1.0):
+    # from qSlicerSubjectHierarchyFolderPlugin.cxx
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    displayNode = slicer.vtkMRMLFolderDisplayNode()
+    displayNode.SetName(shNode.GetItemName(folderID))
+    displayNode.SetHideFromEditors(0)
+    displayNode.SetAttribute('SubjectHierarchy.Folder', "1")
+    displayNode.SetColor(*color)
+    displayNode.SetOpacity(opacity)
+    shNode.GetScene().AddNode(displayNode)
+    shNode.SetItemDataNode(folderID, displayNode)
+    shNode.ItemModified(folderID)
+
+  def getOrCreateFolderItem(self, parentID, name):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    folderID = shNode.GetItemChildWithName(parentID, name)
+    if folderID == 0:
+      folderID = shNode.CreateFolderItem(parentID, name)
+      self.createFolderDisplayNode(folderID)
+      shNode.SetItemAttribute(folderID, 'segmentation', '1')
+    return folderID
+
+
+class AtlasesTable(AtlasSegmentationBaseTable):
+
+  def __init__(self):
+
+    self.view = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
+    self.view.attributeNameFilter = ('atlas')
+
+    super().__init__()
+
+    self.addButton.setText('Atlas')
+    self.addButton.setToolTip('Add atlas')
+
+    self.buttonsFrame.layout().addStretch(2)
+
+    self.updateTable()
+
+  def onAddButton(self):
+    leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
+    if leadDBSPath == "":
+      qt.QMessageBox().warning(qt.QWidget(), "", "Add Lead-DBS path to Slicer preferences")
+      return
+    validAtlasesNames = ImportAtlas.ImportAtlasLogic().getValidAtlases()
+    if not validAtlasesNames:
+      return
+    result = BoolResult()
+    atlasName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',validAtlasesNames,0,0,result) 
+    if result:
+      qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+      qt.QApplication.processEvents()
+      try:
+        ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(ImportAtlas.ImportAtlasLogic().getAtlasesPath(), atlasName, 'atlas_index.mat'))    
+      finally:
+        qt.QApplication.restoreOverrideCursor()
+    WarpDrive.WarpDriveLogic().invertAtlases(WarpDrive.WarpDriveLogic().getParameterNode().GetNodeReference("InputNode"), int(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("InverseMode")))
+    self.updateTable()
 
 class WarpDriveCorrectionsTable(baseTable):
 
