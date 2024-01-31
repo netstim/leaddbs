@@ -66,10 +66,10 @@ end
 %% Set MRI_data_name
 % Segment MRI
 segmaskName = 'segmask.nii';
+anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 switch settings.butenko_segmAlg
     case 'SPM'
         if options.native
-            anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
             [anchorImageDir, anchorImageName] = fileparts(anchorImage);
             anchorImageDir = [anchorImageDir, filesep];
             anchorImageName = [anchorImageName, '.nii'];
