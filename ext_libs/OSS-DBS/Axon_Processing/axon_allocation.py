@@ -334,16 +334,24 @@ class AxonModels:
             print(projection_name, 'projection is empty, check settings for fib. diameter and axon length')
             return 0,0,0  # no nodes were seeded
         else:
+            
+            # flip check
+            if fiber_array.shape[1] == 4 and fiber_array.shape[0] != 4:
+                fiber_array = fiber_array.T
+                idx_shape_inx = 0
+            else:
+                idx_shape_inx = 1
+            
             if multiple_projections_per_file == False:
                 if 'origNum' in file:
                     orig_N_fibers = int(file['origNum'][0][0])
                 else:
-                    orig_N_fibers = int(file['idx'][:].shape[1])
+                    orig_N_fibers = int(file['idx'][:].shape[idx_shape_inx])
             else:
                 if 'origNum' in file[projection_name]:
                     orig_N_fibers = int(file[projection_name]['origNum'][0][0])
                 else:
-                    orig_N_fibers = int(file[projection_name]['idx'][:].shape[1])
+                    orig_N_fibers = int(file[projection_name]['idx'][:].shape[idx_shape_inx])
 
         # covert fiber table to nibabel streamlines
         streamlines = convert_fibers_to_streamlines(fiber_array)

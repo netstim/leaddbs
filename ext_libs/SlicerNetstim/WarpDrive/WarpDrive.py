@@ -10,7 +10,7 @@ import numpy as np
 
 from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool, ShrinkExpandTool
 from WarpDriveLib.Helpers import GridNodeHelper, LeadDBSCall
-from WarpDriveLib.Widgets import Tables, Toolbar, Buttons
+from WarpDriveLib.Widgets import Tables, Toolbar
 
 #
 # WarpDrive
@@ -110,7 +110,13 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.atlasesTable = Tables.AtlasesTable()
     atlasesLayout = qt.QVBoxLayout(self.ui.atlasesFrame)
     atlasesLayout.addWidget(self.atlasesTable)
-    self.ui.tabWidget.currentChanged.connect(lambda i,a=self.atlasesTable: a.updateTable())
+
+    self.segmentationsTable = Tables.SegmentationsTable()
+    self.segmentationsTable.setVisible(False)
+    segmentationsLayout = qt.QVBoxLayout(self.ui.segmentationsFrame)
+    segmentationsLayout.addWidget(self.segmentationsTable)
+    
+    self.ui.tabWidget.currentChanged.connect(lambda i,at=self.atlasesTable,st=self.segmentationsTable: [at.updateTable(), st.updateTable()])
 
     # add cli progress bar
     self.ui.landwarpWidget = slicer.modules.fiducialregistrationvariablerbf.createNewWidgetRepresentation()
@@ -188,10 +194,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         n.SetParameter('sliceViewAnnotationsEnabled','0')
 
     # set name
-    if int(WarpDriveLogic().getParameterNode().GetParameter('SegmentMode')):
-      slicer.util.mainWindow().setWindowTitle("Warp Drive - Segment")
-    else:
-      slicer.util.mainWindow().setWindowTitle("Warp Drive")
+    slicer.util.mainWindow().setWindowTitle("Warp Drive")
     slicer.util.mainWindow().showMaximized()
     qt.QApplication.processEvents()
 
@@ -221,10 +224,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Add custom ToolBar
     slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
-    # Add add segmentation button
-    button = Buttons.addSegmentationButton()
-    self.atlasesTable.buttonsFrame.layout().insertWidget(1,button,1)
-    button.clicked.connect(self.atlasesTable.updateTable)
+    # Show save segmentation button
+    self.atlasesTable.saveButton.setVisible(True)
+    self.segmentationsTable.setVisible(True)
+    self.segmentationsTable.saveButton.setVisible(True)
     # Put all toolbars in same row
     for tb in slicer.util.mainWindow().findChildren('QToolBar'):
       slicer.util.mainWindow().removeToolBarBreak(tb)
@@ -556,6 +559,8 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       parameterNode.SetParameter("SnapOptions", json.dumps({'SnapRun':False, 'AutoApply': False}))
     if not parameterNode.GetParameter("ModifiableCorrections"):
       parameterNode.SetParameter("ModifiableCorrections", "0")
+    if not parameterNode.GetParameter("InverseMode"):
+      parameterNode.SetParameter("InverseMode", "0")
 
   def run(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
 
@@ -729,7 +734,20 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       backupNode = markupsNodes.GetItemAsObject(i)
       if ('SnapBackUp' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(backupNode))):
         slicer.mrmlScene.RemoveNode(backupNode)
-      
+
+  def invertAtlases(self, inputNode, useInverse=None):
+    useInverse = useInverse if useInverse is not None else self.inverseAction.checked
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    nModels = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')
+    for i in range(nModels):
+      modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
+      modelItem = shNode.GetItemByDataNode(modelNode)
+      if 'atlas' in shNode.GetItemAttributeNames(modelItem):
+        modelNode.SetAndObserveTransformNodeID(inputNode.GetID() if useInverse else None)
+      elif 'segmentation' in shNode.GetItemAttributeNames(modelItem):
+        modelNode.SetAndObserveTransformNodeID(None if useInverse else inputNode.GetID())
+
+
 #
 # WarpDriveTest
 #

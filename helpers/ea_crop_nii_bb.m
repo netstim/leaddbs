@@ -12,7 +12,7 @@ path(oldpath, fullfile(fileparts(which('spm')), 'toolbox', 'OldNorm'));
 
 filename = varargin{1};
 
-if strcmp(filename(end-2:end), '.gz')
+if endsWith(filename, '.gz')
     wasgz = 1;
     gunzip(filename);
     filename = filename(1:end-3);

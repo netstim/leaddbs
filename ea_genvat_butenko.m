@@ -66,10 +66,10 @@ end
 %% Set MRI_data_name
 % Segment MRI
 segmaskName = 'segmask.nii';
+anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 switch settings.butenko_segmAlg
     case 'SPM'
         if options.native
-            anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
             [anchorImageDir, anchorImageName] = fileparts(anchorImage);
             anchorImageDir = [anchorImageDir, filesep];
             anchorImageName = [anchorImageName, '.nii'];
@@ -298,7 +298,11 @@ for i=1:eleNum
             settings.Second_coordinate(i,:) = markersMNI(i).tail;
         end
     elseif ~isempty(coords_mm{i})
-        settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
+        if contains(options.elmodel, 'DIXI D08')
+            settings.Second_coordinate(i,:) = coords_mm{i}(4,:);
+        else
+            settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
+        end
     end
 end
 
@@ -308,6 +312,13 @@ settings.stimSetMode = options.stimSetMode;
 if settings.stimSetMode
     ea_warndlg("Not yet supported in V2")
     return
+end
+
+% if right electrode only, insert null Stim Protocol for the left
+% this work around is not needed for the left only, handled by Lead-DBS
+if eleNum == 1
+    S = ea_add_StimVector_to_S(S, zeros(1, conNum),1);
+    eleNum = 2;
 end
 
 % Initialize current control flag
