@@ -50,6 +50,7 @@ settings.biphasic = options.prefs.machine.vatsettings.butenko_biphasic;
 settings.butenko_tensorData = options.prefs.machine.vatsettings.butenko_tensorData;
 settings.AdaptiveRef = options.prefs.machine.vatsettings.butenko_AdaptiveRef;
 settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsulation;
+settings.outOfCore = 0;
 
 % Set output path
 subDescPrefix = ['sub-', options.subj.subjId, '_desc-'];
@@ -119,6 +120,7 @@ switch settings.butenko_segmAlg
             c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
             ea_write_nii(c1);
         end
+        copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
     case 'Atlas Based'
 
         % always overwrite in this case
@@ -130,6 +132,7 @@ switch settings.butenko_segmAlg
             segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
             atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
+            copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
         else
             % save directly to stim folder
             segMaskPath = [outputDir,filesep,'segmask.nii'];
@@ -142,10 +145,6 @@ switch settings.butenko_segmAlg
         %SynthSeg_segmask_image = ea_smart_BIDS_function_to_find_SynthSeg;
         %ea_convert_synthSeg2segmask(SynthSeg_segmask_image, segmask_output);
 end
-
-% Put segmened MRI file in stimulation folder
-copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
-
 
 %% Set patient folder
 settings.Patient_folder = options.subj.subjDir;
@@ -586,7 +585,7 @@ for side=0:1
 
         % call the NEURON module
         folder2save = [outputDir,filesep,'Results_', sideCode];
-        timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result.h5'];
+        timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
         pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
 
         system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
@@ -612,21 +611,21 @@ for side=0:1
             if settings.removeElectrode
                 % create nii for distorted grid
                 if options.native
-                    ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                    ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
                 else
-                    ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
+                    ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath)
                 end
             else
                 % convert original OSS-DBS VTAs to BIDS in the corresponding space
-                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
-                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
+                copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
                 %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
                 %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
             end
 
             % always transform to MNI space
             if options.native
-                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
             end
 
             if options.native && ~options.orignative
