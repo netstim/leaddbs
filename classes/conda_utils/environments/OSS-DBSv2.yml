@@ -7,7 +7,7 @@ dependencies:
   - python=3.9.10
   - pip=23.3.1
   - pip:
-    - git+https://github.com/SFB-ELAINE/OSS-DBSv2.git@LeadDBS_integration
+    - git+https://github.com/SFB-ELAINE/OSS-DBSv2.git
 
 variables:
-  env_version: 20240203
+  env_version: 20240204
