@@ -10,16 +10,10 @@ nii.img(:)=nan;
 ea_write_nii(nii);
 allV{1}=[outdir,'bb_nan.nii'];
 
-cnt=2;
-for vat=1:size(vatlist,1)
-    for side=1:size(vatlist,2)
-        allV{cnt}=vatlist{vat,side};
-        cnt=cnt+1;
-    end
-end
+allV = [allV; reshape(vatlist', [], 1)];
 
 % export mean to get bounding box
-matlabbatch{1}.spm.util.imcalc.input = allV';
+matlabbatch{1}.spm.util.imcalc.input = allV;
 matlabbatch{1}.spm.util.imcalc.output = 'efield_bb.nii';
 matlabbatch{1}.spm.util.imcalc.outdir = {outdir};
 matlabbatch{1}.spm.util.imcalc.expression = 'ea_nansum(X)';
@@ -39,17 +33,19 @@ else
     sidesuffices={''};
 end
 
-% create final space:
+% create final space
+space = cell(1, size(vatlist,2));
 for side=1:size(vatlist,2)
-    nii=ea_load_nii([outdir,'efield_bb',sidesuffices{side},'.nii']);
+    fname = [outdir, 'efield_bb', sidesuffices{side}, '.nii'];
     if ~isfield(obj.M,'pseudoM')
+        nii = ea_load_nii(fname);
         nii.img(nii.img<150)=nan;
+        ea_write_nii(nii);
     else
-        ea_warndlg("PseudoM VTAs are used, low field filtering disabled! This can result in a large RAM consumption")
+        ea_cprintf('CmdWinWarnings', "PseudoM VTAs are used, low field filtering disabled! This can result in a large RAM consumption.\n");
     end
-    ea_write_nii(nii);
-    ea_crop_nii(nii.fname);
-    nii=ea_load_nii(nii.fname); % reload for space function.
+    ea_crop_nii(fname);
+    nii=ea_load_nii(fname); % reload for space function.
     space{side}=nii;
 end
 
