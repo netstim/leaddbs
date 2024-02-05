@@ -529,6 +529,7 @@ end
 runStatus = [0 0]; % Succeed or not
 stimparams = struct();
 for side=0:1
+
     switch side
         case 0
             sideLabel = 'R';
@@ -567,6 +568,7 @@ for side=0:1
     fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
 
     if settings.calcAxonActivation
+        ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
         system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputDir,' ', num2str(side), ' ', parameterFile]);
         % call axon_allocation script
     end
@@ -800,7 +802,6 @@ for side=0:1
 
     % Clean up
     ea_delete([outputDir, filesep, 'Brain_substitute.brep']);
-    %ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
     %ea_delete(ea_regexpdir(outputDir, '^(?!Current_protocols_).*\.csv$', 0));
     % ea_delete([outputDir, filesep, '*.py']);
 
