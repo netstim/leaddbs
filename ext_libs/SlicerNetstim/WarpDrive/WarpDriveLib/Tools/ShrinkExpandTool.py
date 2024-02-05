@@ -60,15 +60,7 @@ class ShrinkExpandToolEffect(AbstractShrinkExpandEffect):
       # create source and target fiducials from points
       sourceFiducial, targetFiducial = self.getSourceTargetFromPoints()
 
-      sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
-
-      if int(self.parameterNode.GetParameter("ModifiableCorrections")):
-        self.modifyPreviousCorrections(sourceFiducial, targetFiducial)
-
-      self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
-      self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
-
-      self.parameterNode.SetParameter("Update","true")
+      self.applyCorrection(sourceFiducial, targetFiducial)
  
       self.previewing = False
       self.removeAuxNodes()
