@@ -6,7 +6,7 @@ fprintf('\nCollecting stimulation parameters...\n')
 % Active contacts indices
 if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     stimProtocol = S;
-    stimProtocol = cellfun(@(f) table2array(readtable(f,'NumHeaderLines',1)), stimProtocol, 'Uni', 0)';
+    stimProtocol = cellfun(@(f) table2array(readtable(f, ReadVariableNames=false)), stimProtocol, 'Uni', 0)';
     % special case for unilateral StimSets
     % assign a null stim protocol for the other side
     if size(stimProtocol,2) == 1

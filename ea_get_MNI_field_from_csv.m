@@ -11,7 +11,7 @@ function ea_get_MNI_field_from_csv(options, Field_array_file, Activation_thresho
 
 
 % split to corrdinates and field
-Field_array = table2array(readtable(Field_array_file));
+Field_array = table2array(readtable(Field_array_file, ReadVariableNames=false));
 Field_coords = Field_array(:,2:4);
 Field_vals = Field_array(:,8) * 1000.0;  % others are the components
 
