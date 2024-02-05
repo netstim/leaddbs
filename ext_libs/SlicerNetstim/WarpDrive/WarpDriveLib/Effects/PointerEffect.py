@@ -63,6 +63,13 @@ class AbstractPointerEffect(AbstractEffect):
         self.parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(self.previousTransformNodeID)
         self.previousTransformNodeID = None
       
+  def applyCorrection(self, sourceFiducial, targetFiducial):
+    if int(self.parameterNode.GetParameter("ModifiableCorrections")):
+      self.modifyPreviousCorrections(sourceFiducial, targetFiducial)
+    sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
+    self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+    self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+    self.parameterNode.SetParameter("Update","true")
 
   def setFiducialNodeAs(self, type, fromNode, name, radius):
     toNode = self.parameterNode.GetNodeReference(type + "Fiducial")

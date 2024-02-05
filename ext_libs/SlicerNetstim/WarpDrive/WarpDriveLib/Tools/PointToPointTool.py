@@ -33,15 +33,7 @@ class PointToPointToolEffect(AbstractPointToPointEffect):
       # reset
       self.resetPoints()
 
-      sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
-
-      if int(self.parameterNode.GetParameter("ModifiableCorrections")):
-        self.modifyPreviousCorrections(sourceFiducial, targetFiducial)
-
-      self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
-      self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
-
-      self.parameterNode.SetParameter("Update","true")
+      self.applyCorrection(sourceFiducial, targetFiducial)
  
 
   def getSourceTargetFromPoints(self):

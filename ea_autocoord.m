@@ -243,7 +243,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.refine
-        ea_runwarpdrive(options, '0');
+        ea_runwarpdrive(options);
     end
 
     if options.doreconstruction
