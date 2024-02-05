@@ -51,16 +51,23 @@ for k = 1:length(myFiles)
         indices_picked = randperm(length(ftr_full.idx),New_N)';
         indices_picked = sort(indices_picked);
 
-        % check how well this works for large dMRI connectomes
         ftr.idx = zeros(length(indices_picked),1);
         ftr.fibers = zeros(sum(ftr_full.idx(indices_picked)),4);
 
         segm_counter = 1;
         for fib_i = 1:length(indices_picked)
 
-            fib = ftr_full.fibers(ftr_full.fibers(:,4) == indices_picked(fib_i),:);
+            disp(fib_i)
+
+            if indices_picked(fib_i) == 1
+                start_point = 1;
+            else
+                start_point = sum(ftr_full.idx(1:indices_picked(fib_i)-1)) + 1;
+            end
+            fib = ftr_full.fibers(start_point:start_point+ftr_full.idx(indices_picked(fib_i))-1,1:3);
+
             ftr.idx(fib_i) = size(fib,1);
-            ftr.fibers(segm_counter:segm_counter + ftr.idx(fib_i) - 1,:) = fib;
+            ftr.fibers(segm_counter:segm_counter + ftr.idx(fib_i) - 1,1:3) = fib;
             ftr.fibers(segm_counter:segm_counter + ftr.idx(fib_i) - 1,4) = fib_i;
             segm_counter = segm_counter + ftr.idx(fib_i);
 
