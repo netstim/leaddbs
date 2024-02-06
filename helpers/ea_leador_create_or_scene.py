@@ -85,6 +85,9 @@ for node in subjectAnatNodes:
     node.HardenTransform()
     node.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
     node.HardenTransform()
+    # for scene writing in WinOS, fails if not
+    node.GetStorageNode().SetFileName('')
+    node.SetName(node.GetName().split('_')[-1])
 
 #
 # Load atlas and transform to frame space
@@ -115,6 +118,6 @@ slicer.mrmlScene.RemoveNode(referenceToFrameTransformNode)
 slicer.mrmlScene.RemoveNode(referenceVolumeNode)
 
 sceneSaveFilename = os.path.join(subjectLeadORFolder, savePrefix + 'ORScene.mrb')
-slicer.util.saveScene(sceneSaveFilename)
+slicer.mrmlScene.WriteToMRB(sceneSaveFilename)
 
 slicer.util.exit()
