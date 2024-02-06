@@ -348,7 +348,15 @@ for source=S.sources
     end
 end
 
-gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
+%gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
+
+% % quick fix: check which source has a higher gradient magnitude and use it
+gradient_max = zeros(size(gradient{1}));
+for source_i = 1:4
+    inx_overwrite = find(vecnorm(gradient{source_i}') > vecnorm(gradient_max'));
+    gradient_max(inx_overwrite,:) = gradient{source_i}(inx_overwrite,:);
+end
+gradient = gradient_max;
 
 vol.pos=vol.pos*SIfx; % convert back to mm.
 
