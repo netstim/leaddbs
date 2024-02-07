@@ -93,20 +93,20 @@ for node in subjectAnatNodes:
 # Load atlas and transform to frame space
 #
 
-ImportAtlas.ImportAtlasLogic().readAtlas(atlasPath)
-
 MNIToAnchorNativeFileTransformNode = slicer.util.loadTransform(MNIToAnchorNativeFile)
 
-shnode = slicer.mrmlScene.GetSubjectHierarchyNode()
-for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')):
-    modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-    if 'atlas' in shnode.GetItemAttributeNames(shnode.GetItemByDataNode(modelNode)):
-        modelNode.SetAndObserveTransformNodeID(MNIToAnchorNativeFileTransformNode.GetID())
-        modelNode.HardenTransform()
-        modelNode.SetAndObserveTransformNodeID(anchorNativeToReferenceTransformNode.GetID())
-        modelNode.HardenTransform()
-        modelNode.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
-        modelNode.HardenTransform()
+if 'Use none' not in atlasPath:
+    ImportAtlas.ImportAtlasLogic().readAtlas(atlasPath)
+    shnode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')):
+        modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
+        if 'atlas' in shnode.GetItemAttributeNames(shnode.GetItemByDataNode(modelNode)):
+            modelNode.SetAndObserveTransformNodeID(MNIToAnchorNativeFileTransformNode.GetID())
+            modelNode.HardenTransform()
+            modelNode.SetAndObserveTransformNodeID(anchorNativeToReferenceTransformNode.GetID())
+            modelNode.HardenTransform()
+            modelNode.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
+            modelNode.HardenTransform()
 
 #
 # Clean-up and save Scene
