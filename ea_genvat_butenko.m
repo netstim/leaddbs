@@ -593,6 +593,11 @@ for side=0:1
         system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
     end
 
+    % clean-up for outOfCore
+    if settings.outOfCore == 1
+        ea_delete([outputDir, filesep, 'Results_',sideCode,filesep,'oss_freq_domain_tmp_PAM.hdf5']);
+    end
+
     % Check if OSS-DBS calculation is finished
     while ~isfile([outputDir, filesep, 'success_', sideCode, '.txt']) ...
             && ~isfile([outputDir, filesep, 'fail_', sideCode, '.txt'])
