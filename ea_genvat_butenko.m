@@ -225,8 +225,13 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
         if exist('tensorDir', 'var')
             fprintf('Scaling tensor data...\n\n')
 
-            system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
 
+            system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
+            
+            if ~isfile([tensorDir, filesep, tensorPrefix, scaledTensorName])
+                disp('Parallel tensor scaling failed, trying a single thread...')
+                system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling_one_thread.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
+            end
 
             % Copy scaled tensor data to stimulation directory, update setting
             copyfile([tensorDir, filesep, tensorPrefix, scaledTensorName], tensorData);
