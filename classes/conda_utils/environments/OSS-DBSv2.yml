@@ -10,4 +10,4 @@ dependencies:
     - git+https://github.com/SFB-ELAINE/OSS-DBSv2.git
 
 variables:
-  env_version: 20240208
+  env_version: 20240212
