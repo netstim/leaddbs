@@ -90,12 +90,6 @@ funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*\.m$', 0);
 funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
 names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
 
-if ~options.prefs.env.dev
-    ossdbsInd = find(contains(names, 'OSS-DBS'));
-    funcs(ossdbsInd) = [];
-    names(ossdbsInd) = [];
-end
-
 setappdata(handles.leadfigure,'genvatfunctions',funcs);
 setappdata(handles.leadfigure,'vatfunctionnames',names);
 
