@@ -17,14 +17,14 @@ if isempty(obj.roidata)
                 obj.roidata.nii{v,side} = [];
                 vatlist{v,side} = [];
                 ea_cprintf('CmdWinWarnings', 'vatlist{%d,%d} doesn''t exist!\n', v, side);
-                continue;
-            end
-            obj.roidata.nii{v,side}=ea_load_nii(vatlist{v,side});
-            [~,~,ext]=fileparts(vatlist{v});
-            if strcmp(ext,'.gz')
-                obj.roidata.nii{v,side}.fname=fullfile(tdir,[ea_generate_uuid,'.nii']);
-                ea_write_nii(obj.roidata.nii{v,side});
-                vatlist{v,side}=obj.roidata.nii{v,side}.fname;
+            else
+                obj.roidata.nii{v,side}=ea_load_nii(vatlist{v,side});
+                [~,~,ext]=fileparts(vatlist{v});
+                if strcmp(ext,'.gz')
+                    obj.roidata.nii{v,side}.fname=fullfile(tdir,[ea_generate_uuid,'.nii']);
+                    ea_write_nii(obj.roidata.nii{v,side});
+                    vatlist{v,side}=obj.roidata.nii{v,side}.fname;
+                end
             end
         end
     end
