@@ -551,6 +551,7 @@ for side=0:1
         warning('No stimulation exists for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
         fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+        runStatus(side+1) = 1;
         continue;
     end
 
@@ -559,6 +560,7 @@ for side=0:1
         warning('No stimulation set for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
         fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+        runStatus(side+1) = 1;
         continue;
     end
 
@@ -567,6 +569,7 @@ for side=0:1
         warning('No fibers found for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
         fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+        runStatus(side+1) = 1;
         continue;
     end
 
