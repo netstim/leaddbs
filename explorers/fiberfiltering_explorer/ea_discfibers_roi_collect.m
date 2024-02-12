@@ -19,8 +19,7 @@ if isempty(obj.roidata)
                 ea_cprintf('CmdWinWarnings', 'vatlist{%d,%d} doesn''t exist!\n', v, side);
             else
                 obj.roidata.nii{v,side}=ea_load_nii(vatlist{v,side});
-                [~,~,ext]=fileparts(vatlist{v});
-                if strcmp(ext,'.gz')
+                if endsWith(vatlist{v,side}, '.gz')
                     obj.roidata.nii{v,side}.fname=fullfile(tdir,[ea_generate_uuid,'.nii']);
                     ea_write_nii(obj.roidata.nii{v,side});
                     vatlist{v,side}=obj.roidata.nii{v,side}.fname;
