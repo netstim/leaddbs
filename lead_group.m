@@ -1170,17 +1170,12 @@ for pt=selection
         options.native=options.orignative; % restore
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
+
     % Calc VAT stats (atlas intersection and volume)
     if all(vatCalcPassed)
         ea_calc_vatstats(resultfig,options);
     else
-        try
-            ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
-                'Try re-calculating this VTA with a different atlas or with no atlas.'],...
-                options.patientname));
-        catch
-            continue;
-        end
+        ea_cprintf('CmdWinErrors', 'Failed to calculate VTA for patient %s side %s!\n', options.patientname, num2str(find(~vatCalcPassed)));
     end
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
