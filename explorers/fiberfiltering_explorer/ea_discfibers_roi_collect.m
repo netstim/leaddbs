@@ -13,6 +13,12 @@ if isempty(obj.roidata)
 
     for side=1:size(vatlist,2)
         for v=1:size(vatlist,1)
+            if ~isfile(vatlist{v,side})
+                obj.roidata.nii{v,side} = [];
+                vatlist{v,side} = [];
+                ea_cprintf('CmdWinWarnings', 'vatlist{%d,%d} doesn''t exist!\n', v, side);
+                continue;
+            end
             obj.roidata.nii{v,side}=ea_load_nii(vatlist{v,side});
             [~,~,ext]=fileparts(vatlist{v});
             if strcmp(ext,'.gz')
@@ -27,7 +33,9 @@ if isempty(obj.roidata)
     vatlist=[repmat({[ea_space,'t1.nii']},1,size(vatlist,2));...
         vatlist];
     for side=1:size(vatlist,2)
-        matlabbatch{1}.spm.util.imcalc.input = vatlist(:,side);
+        fileList = vatlist(:,side);
+        fileList(cellfun(@isempty, fileList)) = [];
+        matlabbatch{1}.spm.util.imcalc.input = fileList;
         matlabbatch{1}.spm.util.imcalc.output = 'N.nii';
         matlabbatch{1}.spm.util.imcalc.outdir = {tdir};
         matlabbatch{1}.spm.util.imcalc.expression = 'ea_nansum(X(2:end,:))';
