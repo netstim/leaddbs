@@ -156,8 +156,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             try
                 load_nii(options.subj.preopAnat.(fields{1}).coreg);
             catch
-                ea_cprintf('CmdWinWarnings', 'Anchor image was not properly pre-coregistered. Fallback to preproc image instead.');
+                ea_cprintf('CmdWinWarnings', 'Anchor image was not properly pre-coregistered. Fallback to preproc image instead.\n');
                 ea_delete(options.subj.coreg.transform.(fields{1}));
+                ea_mkdir(fileparts(options.subj.preopAnat.(fields{1}).coreg));
                 copyfile(options.subj.preopAnat.(fields{1}).preproc, options.subj.preopAnat.(fields{1}).coreg);
             end
         end
@@ -243,7 +244,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.refine
-        ea_runwarpdrive(options, '0');
+        ea_runwarpdrive(options);
     end
 
     if options.doreconstruction

@@ -1,0 +1,17 @@
+name: synthstrip
+
+channels:
+  - conda-forge
+
+dependencies:
+  - numpy=1.26.0
+  - pip=23.3.1
+  - python=3.10
+  - pytorch=2.0.0
+
+  - pip:
+    - git+https://github.com/ningfei/synthstrip-models.git
+    - surfa==0.6.0
+
+variables:
+  env_version: 20240130

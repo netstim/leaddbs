@@ -85,25 +85,28 @@ for node in subjectAnatNodes:
     node.HardenTransform()
     node.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
     node.HardenTransform()
+    # for scene writing in WinOS, fails if not
+    node.GetStorageNode().SetFileName('')
+    node.SetName(node.GetName().split('_')[-1])
 
 #
 # Load atlas and transform to frame space
 #
 
-ImportAtlas.ImportAtlasLogic().readAtlas(atlasPath)
-
 MNIToAnchorNativeFileTransformNode = slicer.util.loadTransform(MNIToAnchorNativeFile)
 
-shnode = slicer.mrmlScene.GetSubjectHierarchyNode()
-for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')):
-    modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-    if 'atlas' in shnode.GetItemAttributeNames(shnode.GetItemByDataNode(modelNode)):
-        modelNode.SetAndObserveTransformNodeID(MNIToAnchorNativeFileTransformNode.GetID())
-        modelNode.HardenTransform()
-        modelNode.SetAndObserveTransformNodeID(anchorNativeToReferenceTransformNode.GetID())
-        modelNode.HardenTransform()
-        modelNode.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
-        modelNode.HardenTransform()
+if 'Use none' not in atlasPath:
+    ImportAtlas.ImportAtlasLogic().readAtlas(atlasPath)
+    shnode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    for i in range(slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')):
+        modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
+        if 'atlas' in shnode.GetItemAttributeNames(shnode.GetItemByDataNode(modelNode)):
+            modelNode.SetAndObserveTransformNodeID(MNIToAnchorNativeFileTransformNode.GetID())
+            modelNode.HardenTransform()
+            modelNode.SetAndObserveTransformNodeID(anchorNativeToReferenceTransformNode.GetID())
+            modelNode.HardenTransform()
+            modelNode.SetAndObserveTransformNodeID(referenceToFrameTransformNode.GetID())
+            modelNode.HardenTransform()
 
 #
 # Clean-up and save Scene
@@ -115,6 +118,6 @@ slicer.mrmlScene.RemoveNode(referenceToFrameTransformNode)
 slicer.mrmlScene.RemoveNode(referenceVolumeNode)
 
 sceneSaveFilename = os.path.join(subjectLeadORFolder, savePrefix + 'ORScene.mrb')
-slicer.util.saveScene(sceneSaveFilename)
+slicer.mrmlScene.WriteToMRB(sceneSaveFilename)
 
 slicer.util.exit()

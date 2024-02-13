@@ -131,24 +131,32 @@ end
 
 function atlases = genAtlasesStruct(nucleusFiles)
 % Generate template atlases struct 
-if isfile([ea_getearoot, 'ext_libs', 'DBSegment', 'atlas_index.mat'])
-    load([ea_getearoot, 'ext_libs', 'DBSegment', 'atlas_index.mat'], 'atlases');
-else
-    [~, nucleusName, nucleusExt] = fileparts(nucleusFiles);
-    atlases.names = sort(strcat(nucleusName, nucleusExt))';
+if isfile(fullfile(ea_getearoot, 'ext_libs', 'DBSegment', 'atlas_index.mat'))
+    load(fullfile(ea_getearoot, 'ext_libs', 'DBSegment', 'atlas_index.mat'), 'atlases');
+end
+
+[~, nucleusName, nucleusExt] = fileparts(nucleusFiles);
+names = sort(strcat(nucleusName, nucleusExt))';
+
+if ~exist('atlases', 'var') || length(names) ~= length(atlases.names) || ~all(strcmp(names, atlases.names))
+    atlases = struct;
+    atlases.names = names;
     atlases.types = ones(size(atlases.names)) * 3;
     atlases.threshold.type='relative_intensity';
     atlases.threshold.value=0.5;
     atlases.colormap = ea_color_wes('all', length(atlases.names));
+
     atlases.citation.name = 'DBSegment Atlas (Baniasadi 2023)';
     atlases.citation.short = 'Baniasadi et al. 2023';
     atlases.citation.long = {'Baniasadi, M., Petersen, M.V., Gonçalves, J., Horn, A., Vlasov, V., Hertel, F., Husch, A., 2023. DBSegment: Fast and robust segmentation of deep brain structures considering domain generalization. Hum. Brain Mapp. 44, 762–778. https://doi.org/10.1002/hbm.26097'};
+
+    
     atlases.presets(1).label = 'Default';
-    atlases.presets(1).show = [2, 3, 8, 11];
-    atlases.presets(1).hide = setdiff(1:15, atlases.presets(1).show);
+    atlases.presets(1).show = find(ismember(names, {'GPI.nii.gz', 'GPE.nii.gz', 'RN.nii.gz', 'STN.nii.gz'}));
+    atlases.presets(1).hide = setdiff(1:length(names), atlases.presets(1).show);
     atlases.presets(1).default = 'relative';
     atlases.defautset = 1;
+
     atlases.rebuild = 1;
-    save([ea_getearoot, 'ext_libs', 'DBSegment', 'atlas_index.mat'], 'atlases');
 end
 

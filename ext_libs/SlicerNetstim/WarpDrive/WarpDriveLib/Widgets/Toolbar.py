@@ -34,13 +34,12 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.inverseAction.setText('Inverse')
     self.inverseAction.setToolTip('Switch between native and template views. Default is with template fixed, and deform the native image. In inverse mode, the native image is fixed, and the template is deformed.')
     self.inverseAction.setCheckable(True)
-    self.inverseAction.setChecked(int(self.parameterNode.GetParameter("SegmentMode")))
+    self.inverseAction.setChecked(0)
     self.inverseAction.connect("triggered(bool)", self.onInverseTriggered)
 
     inverseToolButton = qt.QToolButton()
     inverseToolButton.setDefaultAction(self.inverseAction)
     inverseToolButton.setToolButtonStyle(qt.Qt.ToolButtonTextBesideIcon)
-    inverseToolButton.setVisible(not int(self.parameterNode.GetParameter("SegmentMode")))
 
     #
     # Subject
@@ -94,6 +93,12 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     menu = qt.QMenu(self)
     menu.addAction(action)
+    templateSelectorMenu = menu.addMenu("Select Template")
+    for file in sorted(glob.glob(os.path.join(self.parameterNode.GetParameter("MNIPath"), "*.nii"))):
+      a = qt.QAction(self)
+      a.setText(os.path.basename(file))
+      a.connect("triggered(bool)", lambda b, file=file: self.updateTemplateImage(file))
+      templateSelectorMenu.addAction(a)
 
     templateAction = qt.QAction(self)
     templateAction.setIcon(qt.QIcon(":/Icons/Small/SlicerVisible.png"))
@@ -200,6 +205,10 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       slicer.util.exit(0)
     self.parameterNode.EndModify(wasModified)
 
+  def saveSegmentation(self):
+    currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
+    LeadDBSCall.saveSegmentation(os.path.join(os.path.dirname(currentSubject["warpdrive_path"]), 'segmentations'))
+
   def cleanUpNodes(self):
     for param in ["SourceFiducial", "TargetFiducial", "InputNode", "ImageNode", "OutputGridTransform"]:
       if self.parameterNode.GetNodeReference(param):
@@ -209,7 +218,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
     print("Initialize subject: %s" % currentSubject["id"])
     jsonFileName = os.path.join(currentSubject["warpdrive_path"],'info.json')
-    if os.path.isfile(jsonFileName) and not int(self.parameterNode.GetParameter("SegmentMode")):
+    if os.path.isfile(jsonFileName):
       with open(jsonFileName, 'r') as jsonFile:
         subjectInfo = json.load(jsonFile)
     else:
@@ -220,7 +229,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     inputNode.SetAndObserveTransformNodeID(outputNode.GetID())
 
-    if os.path.isfile(os.path.join(currentSubject["warpdrive_path"],'target.json')) and not int(self.parameterNode.GetParameter("SegmentMode")):
+    if os.path.isfile(os.path.join(currentSubject["warpdrive_path"],'target.json')):
       print("Loading previous session")
       targetFiducial = slicer.util.loadMarkups(os.path.join(currentSubject["warpdrive_path"],'target.json'))
       sourceFiducial = slicer.util.loadMarkups(os.path.join(currentSubject["warpdrive_path"],'source.json'))
@@ -259,25 +268,22 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
     sourceFiducial = self.parameterNode.GetNodeReference("SourceFiducial")
     targetFiducial = self.parameterNode.GetNodeReference("TargetFiducial")
-    if int(self.parameterNode.GetParameter("SegmentMode")):
-      LeadDBSCall.saveSegmentation(os.path.join(os.path.dirname(currentSubject["warpdrive_path"]), 'segmentations'))
-    else:
-      if sourceFiducial.GetNumberOfControlPoints(): # corrections made
-        if self.hardenChangesAction.checked:
-          sourceFiducial.Copy(targetFiducial) # set all as fixed points
-        LeadDBSCall.saveSourceTarget(currentSubject["warpdrive_path"], sourceFiducial, targetFiducial)
-        LeadDBSCall.saveSceneInfo(currentSubject["warpdrive_path"], self.inverseAction.checked)
-        if self.hardenChangesAction.checked:
-          slicerWillExit = True
-          if self.inverseAction.checked:
-            self.parameterNode.GetNodeReference("OutputGridTransform").Inverse()
-          LeadDBSCall.applyChanges(self.parameterNode.GetNodeReferenceID("OutputGridTransform"), 
-                                  self.parameterNode.GetNodeReference("ImageNode").GetStorageNode().GetFileName(), 
-                                  os.path.join(self.parameterNode.GetParameter("MNIPath"), "t1.nii"),
-                                  currentSubject["forward_transform"], 
-                                  currentSubject["inverse_transform"], 
-                                  currentSubject["warpdrive_path"],
-                                  saveInExternalInstance)
+    if sourceFiducial.GetNumberOfControlPoints(): # corrections made
+      if self.hardenChangesAction.checked:
+        sourceFiducial.Copy(targetFiducial) # set all as fixed points
+      LeadDBSCall.saveSourceTarget(currentSubject["warpdrive_path"], sourceFiducial, targetFiducial)
+      LeadDBSCall.saveSceneInfo(currentSubject["warpdrive_path"], self.inverseAction.checked)
+      if self.hardenChangesAction.checked:
+        slicerWillExit = True
+        if self.inverseAction.checked:
+          self.parameterNode.GetNodeReference("OutputGridTransform").Inverse()
+        LeadDBSCall.applyChanges(self.parameterNode.GetNodeReferenceID("OutputGridTransform"), 
+                                self.parameterNode.GetNodeReference("ImageNode").GetStorageNode().GetFileName(), 
+                                os.path.join(self.parameterNode.GetParameter("MNIPath"), "t1.nii"),
+                                currentSubject["forward_transform"], 
+                                currentSubject["inverse_transform"], 
+                                currentSubject["warpdrive_path"],
+                                saveInExternalInstance)
     return slicerWillExit
 
   def setUpAtlases(self, info):
@@ -296,7 +302,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     for i in range(folderNodes.GetNumberOfItems()):
       folderNode = folderNodes.GetItemAsObject(i)
       folderItem = shNode.GetItemByDataNode(folderNode)
-      if ('atlas' in shNode.GetItemAttributeNames(folderItem) and shNode.GetItemAttribute(folderItem,'atlas') == 'template') and (folderNode.GetName() in atlasNames):
+      if ('atlas' in shNode.GetItemAttributeNames(folderItem)) and (folderNode.GetName() in atlasNames):
         atlasNames.pop(atlasNames.index(folderNode.GetName()))
     for name in atlasNames:
       print("Loading atlas %s" % name)
@@ -305,7 +311,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       except:
         print("Could not load atlas %s" % name)
     if self.inverseAction.checked:
-      self.invertAtlases(self.parameterNode.GetNodeReference("InputNode"), 1)
+      WarpDrive.WarpDriveLogic().invertAtlases(self.parameterNode.GetNodeReference("InputNode"), 1)
 
   def updateModalitiesToolButton(self):
     print("Update modalities")
@@ -361,6 +367,17 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     else:
       imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))
 
+  def updateTemplateImage(self, file):
+    slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("TemplateNode"))
+    templateNode = slicer.util.loadVolume(file, properties={'show':False})
+    templateNode.GetDisplayNode().AutoWindowLevelOff()
+    templateNode.GetDisplayNode().SetWindow(100)
+    templateNode.GetDisplayNode().SetLevel(70)
+    slicer.util.setSliceViewerLayers(foreground=templateNode.GetID())
+    self.parameterNode.SetNodeReferenceID("TemplateNode", templateNode.GetID())
+    if self.inverseAction.checked:
+      templateNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))
+
   def onInverseTriggered(self, useInverse):
     wasModified = self.parameterNode.StartModify()
     outputTransformID = self.parameterNode.GetNodeReferenceID("OutputGridTransform")
@@ -373,7 +390,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     targetFiducialNode = self.parameterNode.GetNodeReference("TargetFiducial")
     self.invertSourceTargetNodes(sourceFiducialNode, targetFiducialNode, inputNode)
     # transform atlas
-    self.invertAtlases(inputNode, useInverse)
+    WarpDrive.WarpDriveLogic().invertAtlases(inputNode, useInverse)
     # set output
     inputNode.SetAndObserveTransformNodeID(outputTransformID)
     # set parameter
@@ -391,21 +408,9 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
           elif sliceNode.GetName() in ['Yellow', 'Sagittal']:
               sliceNode.SetOrientationToSagittal()
     # update
+    self.parameterNode.SetParameter("InverseMode", str(int(useInverse)))
     self.parameterNode.SetParameter("Update", "true")
     self.parameterNode.EndModify(wasModified)
-
-  def invertAtlases(self, inputNode, useInverse=None):
-    useInverse = useInverse if useInverse is not None else self.inverseAction.checked
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    nModels = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')
-    for i in range(nModels):
-      modelNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
-      modelItem = shNode.GetItemByDataNode(modelNode)
-      if 'atlas' in shNode.GetItemAttributeNames(modelItem):
-        if shNode.GetItemAttribute(modelItem,'atlas') == 'template':
-          modelNode.SetAndObserveTransformNodeID(inputNode.GetID() if useInverse else None)
-        elif shNode.GetItemAttribute(modelItem,'atlas') == 'native':
-          modelNode.SetAndObserveTransformNodeID(None if useInverse else inputNode.GetID())
 
   def invertSourceTargetNodes(self, sourceFiducialNode, targetFiducialNode, transformNode):
     sourcePoints = vtk.vtkPoints()

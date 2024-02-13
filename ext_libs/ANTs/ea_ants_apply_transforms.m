@@ -8,9 +8,43 @@ options = varargin{1};
 
 useinverse = 0;
 
-if nargin > 1 % manual application
-    input = varargin{2};
-    output = varargin{3};
+if nargin == 1
+    input{1} = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+    output{1} = options.subj.norm.anat.preop.(options.subj.AnchorModality);
+
+    if strcmp(options.subj.postopModality, 'MRI')
+        if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+            fn=fieldnames(options.subj.coreg.anat.postop);
+            for postopfile=1:length(fn)
+                uuid=ea_generate_uuid;
+                copyfile(options.subj.coreg.anat.postop.(fn{postopfile}),[ea_getleadtempdir,uuid,'.nii']);
+                nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
+                scrf=load(options.subj.brainshift.transform.scrf);
+                nii.mat=scrf.mat*nii.mat;
+                ea_write_nii(nii);
+                input = [input; [ea_getleadtempdir,uuid,'.nii']];
+            end
+        else
+            input = [input; struct2cell(options.subj.coreg.anat.postop)];
+        end
+        output = [output; struct2cell(options.subj.norm.anat.postop)];
+    elseif strcmp(options.subj.postopModality, 'CT')
+        if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+            uuid=ea_generate_uuid;
+            copyfile(options.subj.coreg.anat.postop.CT,[ea_getleadtempdir,uuid,'.nii']);
+            nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
+            scrf=load(options.subj.brainshift.transform.scrf);
+            nii.mat=scrf.mat*nii.mat;
+            ea_write_nii(nii);
+            input = [input; [ea_getleadtempdir,uuid,'.nii']];
+        else
+            input = [input; options.subj.coreg.anat.postop.CT];
+        end
+        output = [output; options.subj.norm.anat.postop.CT];
+    end
+elseif nargin > 1 % manual application
+    input = GetFullPath(varargin{2});
+    output = GetFullPath(varargin{3});
     if ischar(input)
         input = {input};
     end
@@ -94,45 +128,8 @@ if isempty(transform)
     end
 end
 
-if nargin == 1
-    input{1} = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
-    output{1} = options.subj.norm.anat.preop.(options.subj.AnchorModality);
-
-    if strcmp(options.subj.postopModality, 'MRI')
-        if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
-            fn=fieldnames(options.subj.coreg.anat.postop);
-            for postopfile=1:length(fn)
-                uuid=ea_generate_uuid;
-                copyfile(options.subj.coreg.anat.postop.(fn{postopfile}),[ea_getleadtempdir,uuid,'.nii']);
-                nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
-                scrf=load(options.subj.brainshift.transform.scrf);
-                nii.mat=scrf.mat*nii.mat;
-                ea_write_nii(nii);
-                input = [input; [ea_getleadtempdir,uuid,'.nii']];
-            end
-        else
-            input = [input; struct2cell(options.subj.coreg.anat.postop)];
-        end
-        output = [output; struct2cell(options.subj.norm.anat.postop)];
-    elseif strcmp(options.subj.postopModality, 'CT')
-        if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
-            uuid=ea_generate_uuid;
-            copyfile(options.subj.coreg.anat.postop.CT,[ea_getleadtempdir,uuid,'.nii']);
-            nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
-            scrf=load(options.subj.brainshift.transform.scrf);
-            nii.mat=scrf.mat*nii.mat;
-            ea_write_nii(nii);
-            input = [input; [ea_getleadtempdir,uuid,'.nii']];
-        else
-            input = [input; options.subj.coreg.anat.postop.CT];
-        end
-        output = [output; options.subj.norm.anat.postop.CT];
-    end
-end
-
 basedir = [fileparts(mfilename('fullpath')), filesep];
 applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
-
 
 for i = 1:length(input)
     if ~exist(input{i},'file')   % skip if unnormalized file doesn't exist
@@ -140,6 +137,7 @@ for i = 1:length(input)
         continue
     end
 
+    ea_mkdir(fileparts(output{i}));
     cmd = [applyTransforms, ...
         ' --verbose 1' ...
         ' --dimensionality ', imageDim, ...

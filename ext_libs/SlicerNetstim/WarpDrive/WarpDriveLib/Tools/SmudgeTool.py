@@ -55,9 +55,7 @@ class SmudgeToolEffect(AbstractCircleEffect):
       # get source and target
       sourceFiducial, targetFiducial = self.getSourceTargetFromPoints()
       # apply
-      self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
-      self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
-      self.parameterNode.SetParameter("Update","true")
+      self.applyCorrection(sourceFiducial, targetFiducial)
       # reset
       self.parameterNode.GetNodeReference("OutputGridTransform").HardenTransform()
       self.interactionPoints = vtk.vtkPoints()
@@ -109,7 +107,6 @@ class SmudgeToolEffect(AbstractCircleEffect):
     sourceFiducial.GetDisplayNode().SetGlyphScale(1)
     sourceFiducial.GetDisplayNode().SetVisibility(0)
     sourceFiducial.SetControlPointPositionsWorld(self.interactionPoints)
-    sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
     # target
     targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     targetFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')

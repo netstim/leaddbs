@@ -34,6 +34,10 @@ if ~exist('fname','var')
     fname=0;
 end
 
+if isempty(fname)
+    fname=0;
+end
+
 if ~fname || isempty(fname)
     if useinverse
         defaultPath = ea_space;

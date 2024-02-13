@@ -1,6 +1,9 @@
 import vtk, qt, slicer
 
+import numpy as np
+
 from .Effect import AbstractEffect
+from ..Helpers import GridNodeHelper
 
 import WarpDrive
 
@@ -60,6 +63,13 @@ class AbstractPointerEffect(AbstractEffect):
         self.parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(self.previousTransformNodeID)
         self.previousTransformNodeID = None
       
+  def applyCorrection(self, sourceFiducial, targetFiducial):
+    if int(self.parameterNode.GetParameter("ModifiableCorrections")):
+      self.modifyPreviousCorrections(sourceFiducial, targetFiducial)
+    sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
+    self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+    self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+    self.parameterNode.SetParameter("Update","true")
 
   def setFiducialNodeAs(self, type, fromNode, name, radius):
     toNode = self.parameterNode.GetNodeReference(type + "Fiducial")
@@ -67,3 +77,30 @@ class AbstractPointerEffect(AbstractEffect):
       toNode.AddControlPoint(vtk.vtkVector3d(fromNode.GetNthControlPointPosition(i)), name)
       toNode.SetNthControlPointDescription(toNode.GetNumberOfControlPoints()-1, radius)
     slicer.mrmlScene.RemoveNode(fromNode)
+
+  def modifyPreviousCorrections(self, sourceFiducial, targetFiducial):
+    if self.parameterNode.GetNodeReference("TargetFiducial").GetNumberOfControlPoints() == 0:
+      return
+    # reference
+    size,origin,spacing,directionMatrix = GridNodeHelper.getGridDefinition(self.parameterNode.GetNodeReference("InputNode"))
+    userSpacing = np.ones(3) * float(self.parameterNode.GetParameter("Spacing"))
+    size = size * (spacing / userSpacing)
+    auxVolumeNode = GridNodeHelper.emptyVolume(size.astype(int), origin, userSpacing, directionMatrix)
+    # output
+    outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
+    # params
+    RBFRadius = []
+    for i in range(targetFiducial.GetNumberOfControlPoints()):
+      if targetFiducial.GetNthControlPointSelected(i):
+        RBFRadius.append(self.parameterNode.GetParameter("Radius"))
+    RBFRadius = ",".join(RBFRadius)
+    stiffness = float(self.parameterNode.GetParameter("Stiffness"))
+
+    self.parameterNode.SetParameter("Running", "true")
+    cliNode = WarpDrive.WarpDriveLogic().computeWarp(auxVolumeNode, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, wait_for_completion=True)
+
+    self.parameterNode.GetNodeReference("TargetFiducial").ApplyTransform(outputNode.GetTransformToParent())
+    self.parameterNode.SetParameter("Running", "false")
+    slicer.mrmlScene.RemoveNode(auxVolumeNode)
+    slicer.mrmlScene.RemoveNode(outputNode)
+    slicer.mrmlScene.RemoveNode(cliNode)

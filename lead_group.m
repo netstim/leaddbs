@@ -90,12 +90,6 @@ funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*\.m$', 0);
 funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
 names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
 
-if ~options.prefs.env.dev
-    ossdbsInd = find(contains(names, 'OSS-DBS'));
-    funcs(ossdbsInd) = [];
-    names(ossdbsInd) = [];
-end
-
 setappdata(handles.leadfigure,'genvatfunctions',funcs);
 setappdata(handles.leadfigure,'vatfunctionnames',names);
 
@@ -1117,7 +1111,7 @@ for pt=selection
         try
             setappdata(resultfig,'curS',M.S(pt));
         catch
-            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
+            ea_error(['Stimulation parameters for ', options.subj.subjId, ' are not set.']);
         end
         vfnames=getappdata(handles.leadfigure,'vatfunctionnames');
 
@@ -1153,10 +1147,7 @@ for pt=selection
         if strcmp(M.S(pt).model, 'OSS-DBS (Butenko 2020)')
             if options.prefs.machine.vatsettings.butenko_calcAxonActivation
                 feval(ea_genvat,M.S(pt),options);
-                fprintf('\n');
-                warning('off', 'backtrace');
-                warning('OSS-DBS axon activation mode detect, skipping calc stats for %s!\n', options.patientname);
-                warning('on', 'backtrace');
+                ea_cprintf('CmdWinWarnings', 'OSS-DBS axon activation mode detect, skipping calc stats for %s!\n', options.patientname);
                 continue;
             else
                 [vatCalcPassed, stimparams] = feval(ea_genvat,M.S(pt),options);
@@ -1179,17 +1170,12 @@ for pt=selection
         options.native=options.orignative; % restore
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
+
     % Calc VAT stats (atlas intersection and volume)
     if all(vatCalcPassed)
         ea_calc_vatstats(resultfig,options);
     else
-        try
-            ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
-                'Try re-calculating this VTA with a different atlas or with no atlas.'],...
-                options.patientname));
-        catch
-            continue;
-        end
+        ea_cprintf('CmdWinErrors', 'Failed to calculate VTA for patient %s side %s!\n', options.patientname, num2str(find(~vatCalcPassed)));
     end
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.

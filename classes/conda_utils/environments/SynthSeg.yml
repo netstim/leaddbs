@@ -13,8 +13,8 @@ dependencies:
   - tensorflow=2.13.1
 
   - pip:
-    - git+https://github.com/ningfei/ssmodels.git
+    - git+https://github.com/ningfei/synthseg-models.git
     - surfa==0.6.0
 
 variables:
-  env_version: 20231108
+  env_version: 20240130
