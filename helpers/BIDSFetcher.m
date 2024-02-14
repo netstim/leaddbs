@@ -372,7 +372,8 @@ classdef BIDSFetcher
             end
 
             % Get images and modalities
-            images = fullfile(rawDataDir, 'ses-preop', 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
+            preopRawDataDir = ea_regexpdir(rawDataDir, '^ses-preop$', 0, 'd');
+            images = fullfile(preopRawDataDir{1}, 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
             modality = fieldnames(rawImages.preop.anat)';
 
             % Set pre-defined orders
@@ -427,7 +428,8 @@ classdef BIDSFetcher
             end
 
             % Get images and modalities
-            images = fullfile(rawDataDir, 'ses-postop', 'anat', append(struct2cell(rawImages.postop.anat), obj.settings.niiFileExt));
+            postopRawDataDir = ea_regexpdir(rawDataDir, '^ses-postop$', 0, 'd');
+            images = fullfile(postopRawDataDir, 'anat', append(struct2cell(rawImages.postop.anat), obj.settings.niiFileExt));
             modality = fieldnames(rawImages.postop.anat);
 
             % Check presence of CT and MR
@@ -477,7 +479,7 @@ classdef BIDSFetcher
             for i=1:length(fields)
                 modality = fields{i};
                 parsed = parseBIDSFilePath(preopAnat.(modality));
-                preprocAnat.preop.(modality) = strrep(preopAnat.(modality), [parsed.dir, filesep, 'sub-', subjId, '_ses-preop_'], [baseDir, filesep, baseName]);
+                preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, '_', parsed.suffix, parsed.ext]);
             end
 
             if ~exist('preferMRCT', 'var')
