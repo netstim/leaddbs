@@ -36,6 +36,7 @@ end
 for i = 1:numel(oldSubjId)
     old = oldSubjId{i};
     new = newSubjId{i};
+    ea_cprintf('*Comment', 'Renaming subj %s to %s ...\n', old, new);
 
     if isfolder(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', old]))
         movefile(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', old]), ...
