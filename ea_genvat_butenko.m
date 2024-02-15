@@ -583,6 +583,11 @@ for source_index = 1:4
             source_use_index = source_index; 
         end
 
+        if ~multiSourceMode(side+1) && all(isnan(settings.current_control))
+            % skip without message
+            continue
+        end
+
 
         switch side
             case 0
@@ -881,6 +886,12 @@ for source_index = 1:4
         % I/O error
         % ea_delete([outputDir, filesep, 'Axons_in_time']);
     end
+
+    % check only the first source for PAM
+    if settings.calcAxonActivation
+        break
+    end
+
 end
 
 % here we merge and display multiSourceModes
