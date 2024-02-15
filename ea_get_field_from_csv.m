@@ -1,4 +1,4 @@
-function ea_get_field_from_csv(ref_image, Field_array_file, Activation_threshold_VTA, sideLabel, outputBasePath)
+function ea_get_field_from_csv(ref_image, Field_array_file, Activation_threshold_VTA, sideLabel, outputBasePath, source_index)
 
 ea_dispt('Creating nifti header for export...');
 % create nifti
@@ -42,7 +42,11 @@ Field_interp.descrip='oss-dbs-v2 - Field_ref';
 Field_interp.img = F(gv);
 Field_interp.img(isnan(Field_interp.img)) = 0;
 Field_interp.img(Field_interp.img>1000.0) = 1000.0;
-Field_interp.fname = [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+if source_index == 5  % no source indexing
+    Field_interp.fname = [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+else
+    Field_interp.fname = [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_index), '.nii'];
+end
 ea_write_nii(Field_interp);
 %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
 
@@ -50,7 +54,11 @@ ea_write_nii(Field_interp);
 VTA_interp = Field_interp.img >= (Activation_threshold_VTA);
 Vvat2 = Field_interp;
 Vvat2.descrip='oss-dbs-v2 - VAT_ref';
-Vvat2.fname = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+if source_index == 5  % no source indexing
+    Vvat2.fname = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+else
+    Vvat2.fname = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_index), '.nii'];
+end
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
 %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
