@@ -3,9 +3,9 @@ function ea_rename_pts_from_file(BIDSRoot, renameListFile)
 
 firstLine = fgetl(fopen(renameListFile, 'rt'));
 if isempty(regexpi(firstLine, '^oldSubjId.*newSubjId$', 'once'))
-    table = readtable(renameListFile, 'NumHeaderLines', 0);
+    table = readtable(renameListFile, 'NumHeaderLines', 0, ReadVariableNames=false);
 else
-    table = readtable(renameListFile, 'NumHeaderLines', 1);
+    table = readtable(renameListFile, 'NumHeaderLines', 1, ReadVariableNames=false);
 end
 
 subjID = table2cell(table);
