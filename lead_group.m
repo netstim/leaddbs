@@ -178,11 +178,12 @@ ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
 
-ea_ListBoxRenderer(handles.recentgroups);
-ea_ListBoxRenderer(handles.atlassetpopup);
-ea_ListBoxRenderer(handles.labelpopup);
-ea_ListBoxRenderer(handles.fiberspopup);
-
+try
+    ea_ListBoxRenderer(handles.recentgroups);
+    ea_ListBoxRenderer(handles.atlassetpopup);
+    ea_ListBoxRenderer(handles.labelpopup);
+    ea_ListBoxRenderer(handles.fiberspopup);
+end
 
 % --- Drag and drop callback to load patdirs.
 function DropFcn(~, event, handles)
