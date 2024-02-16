@@ -3500,7 +3500,7 @@ switch model
         else
             stim_folder = [all_params.options.root,all_params.options.patientname,filesep,'stimulations/',ea_nt(~handles.estimateInTemplate.Value),all_params.stimlabel];
         end
-        ea_vatsettings_butenko(stim_folder);
+        ea_vatsettings_butenko(stim_folder, handles);
 end
 
 
