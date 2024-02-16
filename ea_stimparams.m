@@ -2337,53 +2337,28 @@ is_side_present=arrayfun(@(xside) ~ea_arenopoints4side(elstruct(actpt).trajector
 if is_side_present(1)>0%check if R side is present
     set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'on')
     %fix color (ensure they are reloaded correctly)
-    try
-        handles.Rs1am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Rs1am.BackgroundColor=[0.953 0.871 0.733];%orange
-        handles.Rs2am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Rs2am.BackgroundColor=[0.729 0.831 0.957];%blue
-        handles.Rs3am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Rs3am.BackgroundColor=[0.925 0.839 0.839];%red
-        handles.Rs4am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Rs4am.BackgroundColor=[0.757 0.867 0.776];%green
-    catch
-        %for older versions of matlab (remove if dropping support of older Matlabs)
-        set(findall(handles.Rs1am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Rs1am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.953 0.871 0.733]);%orange
-        set(findall(handles.Rs2am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Rs2am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.729 0.831 0.957]);%blue
-        set(findall(handles.Rs3am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Rs3am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.925 0.839 0.839]);%red
-        set(findall(handles.Rs4am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Rs4am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.757 0.867 0.776]);%green
-    end
+    handles.Rs1am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Rs1am.BackgroundColor=[0.953 0.871 0.733];%orange
+    handles.Rs2am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Rs2am.BackgroundColor=[0.729 0.831 0.957];%blue
+    handles.Rs3am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Rs3am.BackgroundColor=[0.925 0.839 0.839];%red
+    handles.Rs4am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Rs4am.BackgroundColor=[0.757 0.867 0.776];%green
 else
     set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
 end
 if is_side_present(2)>0%check if L side is present
     set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'on')
-
     %fix color (ensure they are reloaded correctly)
-    try
-        handles.Ls1am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Ls1am.BackgroundColor=[0.953 0.871 0.733];%orange
-        handles.Ls2am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Ls2am.BackgroundColor=[0.729 0.831 0.957];%blue
-        handles.Ls3am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Ls3am.BackgroundColor=[0.925 0.839 0.839];%red
-        handles.Ls4am.BackgroundColor=[1 1 1];%force redraw color
-        handles.Ls4am.BackgroundColor=[0.757 0.867 0.776];%green
-    catch
-        %for older versions of matlab (remove if dropping support of older Matlabs)
-        set(findall(handles.Ls1am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Ls1am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.953 0.871 0.733]);%orange
-        set(findall(handles.Ls2am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Ls2am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.729 0.831 0.957]);%blue
-        set(findall(handles.Ls3am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Ls3am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.925 0.839 0.839]);%red
-        set(findall(handles.Ls4am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
-        set(findall(handles.Ls4am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.757 0.867 0.776]);%green
-    end
+    handles.Ls1am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Ls1am.BackgroundColor=[0.953 0.871 0.733];%orange
+    handles.Ls2am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Ls2am.BackgroundColor=[0.729 0.831 0.957];%blue
+    handles.Ls3am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Ls3am.BackgroundColor=[0.925 0.839 0.839];%red
+    handles.Ls4am.BackgroundColor=[1 1 1];%force redraw color
+    handles.Ls4am.BackgroundColor=[0.757 0.867 0.776];%green
 else
     set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
 end
