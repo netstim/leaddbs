@@ -383,10 +383,28 @@ for source_index = 1:4
     if ~settings.stimSetMode
         [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_get_OneSourceStimVector(S, eleNum, conNum,activeSources(:,source_index));
         for side = 1:2
+
+            % estimate center of VAT grid
             if ~isnan(settings.current_control(side))
                 stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
                 settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
+            
+                 % estimate extent of the stimulation along the lead
+                phi_temp = settings.Phi_vector(side,:);
+                phi_temp(isnan(phi_temp)) = 0;
+                first_active = find(phi_temp,1,'first');
+                last_active = find(phi_temp,1,'last');
+                length_active_span = norm(settings.contactLocation{side}(last_active,:)-settings.contactLocation{side}(first_active,:));
+                if strcmp('Boston Scientific Vercise', options.elmodel)
+                    if length_active_span > 24.0
+                        ea_warndlg("Large span of active contacts is detected. Consider extending VAT grid, see PointModel.Lattice.Shape in lead_settings.py")
+                    end
+                elseif length_active_span > 18.0
+                    ea_warndlg("Large span of active contacts is detected. Consider extending VAT grid, see PointModel.Lattice.Shape in lead_settings.py")
+                end
+            
             end
+
         end
     else
         settings.stim_center = [NaN;NaN];
