@@ -2047,19 +2047,24 @@ if isfield(S, 'model')
         ea_error('The model of the selected stimulation is not available.');
     else
         set(handles.modelselect,'Value',ix);
+        model = handles.modelselect.String{ix};
     end
 else
     set(handles.modelselect,'Value',1);
+    model = handles.modelselect.String{1};
 end
-% 
-% if contains(handles.modelselect.String{handles.modelselect.Value}, 'OSS-DBS')
-%     handles.Rs2am.Value = 0;
-%     handles.Rs3am.Value = 0;
-%     handles.Rs4am.Value = 0;
-%     handles.Ls2am.Value = 0;
-%     handles.Ls3am.Value = 0;
-%     handles.Ls4am.Value = 0;
-% end
+
+% Get vatsetting from prefs stored in appdata
+% Can also consider using ea_getprefs('vatsettings.butenko_calcPAM')
+opts = getappdata(getappdata(handles.stimfig, 'resultfig'), 'options');
+if contains(model, 'OSS-DBS') && opts.prefs.machine.vatsettings.butenko_calcPAM
+    handles.Rs2am.Value = 0;
+    handles.Rs3am.Value = 0;
+    handles.Rs4am.Value = 0;
+    handles.Ls2am.Value = 0;
+    handles.Ls3am.Value = 0;
+    handles.Ls4am.Value = 0;
+end
 
 Ractive=S.active(1);
 Lactive=S.active(2);
@@ -2283,14 +2288,6 @@ if ~isfield(options,'elspec')
     end
 end
 
-models=get(handles.modelselect,'String');
-try
-    model=models{get(handles.modelselect,'Value')};
-catch
-    set(handles.modelselect,'Value',1);
-    model=models{1};
-end
-
 if options.elspec.numel > 8
     warning('Only electrode with less than 8 contacts are fully supported.');
 else
@@ -2368,21 +2365,21 @@ else
     set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
 end
 
-% if contains(model, 'OSS-DBS')
-%     handles.Rs2am.Enable = "off";
-%     handles.Rs3am.Enable = "off";
-%     handles.Rs4am.Enable = "off";
-%     handles.Ls2am.Enable = "off";
-%     handles.Ls3am.Enable = "off";
-%     handles.Ls4am.Enable = "off";
-% else
-%     handles.Rs2am.Enable = "on";
-%     handles.Rs3am.Enable = "on";
-%     handles.Rs4am.Enable = "on";
-%     handles.Ls2am.Enable = "on";
-%     handles.Ls3am.Enable = "on";
-%     handles.Ls4am.Enable = "on";
-% end
+if contains(model, 'OSS-DBS') && opts.prefs.machine.vatsettings.butenko_calcPAM
+    handles.Rs2am.Enable = "off";
+    handles.Rs3am.Enable = "off";
+    handles.Rs4am.Enable = "off";
+    handles.Ls2am.Enable = "off";
+    handles.Ls3am.Enable = "off";
+    handles.Ls4am.Enable = "off";
+else
+    handles.Rs2am.Enable = "on";
+    handles.Rs3am.Enable = "on";
+    handles.Rs4am.Enable = "on";
+    handles.Ls2am.Enable = "on";
+    handles.Ls3am.Enable = "on";
+    handles.Ls4am.Enable = "on";
+end
 
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
@@ -2429,9 +2426,13 @@ switch model
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','on');
         S.monopolarmodel=0;
-%         ea_disable_vas(handles,options);
-%         handles.Rs1va.Enable = "on";
-%         handles.Ls1va.Enable = "on";
+        if opts.prefs.machine.vatsettings.butenko_calcPAM
+            ea_disable_vas(handles,options);
+            handles.Rs1va.Enable = "on";
+            handles.Ls1va.Enable = "on";
+        else
+            ea_enable_vas(handles,options);
+        end
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
@@ -3484,6 +3485,7 @@ catch
     set(handles.modelselect,'Value',1);
     model=models{1};
 end
+
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
         ea_vatsettings_horn;
