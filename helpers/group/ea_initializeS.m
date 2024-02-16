@@ -61,6 +61,7 @@ for source=1:4
     eval(['S.Rs',num2str(source),'.va=1;']);
     eval(['S.Rs',num2str(source),'.case.perc=100;']);
     eval(['S.Rs',num2str(source),'.case.pol=2;']);
+    eval(['S.Rs',num2str(source),'.pulseWidth=60;']);
 end
 
 % left sources
@@ -74,6 +75,7 @@ for source=1:4
     eval(['S.Ls',num2str(source),'.va=1;']);
     eval(['S.Ls',num2str(source),'.case.perc=100;']);
     eval(['S.Ls',num2str(source),'.case.pol=2;']);
+    eval(['S.Ls',num2str(source),'.pulseWidth=60;']);
 end
 
 S.active=[1,1];

@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 03-Mar-2021 16:26:12
+% Last Modified by GUIDE v2.5 16-Feb-2024 15:14:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2120,6 +2120,26 @@ if nargin==3
     end
 end
 
+if contains(model, 'OSS-DBS')
+    for source = 1:4
+        if eval(['~isfield(', 'S.Rs', num2str(source), ',''pulseWidth'')'])
+            eval(['S.Rs',num2str(source),'.pulseWidth=',num2str(opts.prefs.machine.vatsettings.butenko_pulseWidth),';']);
+        end
+        if eval(['~isfield(', 'S.Ls', num2str(source), ',''pulseWidth'')'])
+            eval(['S.Ls',num2str(source),'.pulseWidth=',num2str(opts.prefs.machine.vatsettings.butenko_pulseWidth),';']);
+        end
+    end
+else
+    for source = 1:4
+        if eval(['isfield(', 'S.Rs', num2str(source), ',''pulseWidth'')'])
+            eval(['S.Rs', num2str(source), ' = rmfield(', 'S.Rs', num2str(source), ',''pulseWidth'');']);
+        end
+        if eval(['isfield(', 'S.Ls', num2str(source), ',''pulseWidth'')'])
+            eval(['S.Ls', num2str(source), ' = rmfield(', 'S.Ls', num2str(source), ',''pulseWidth'');']);
+        end
+    end
+end
+
 setappdata(handles.stimfig,'S',S);
 
 % set stim amplitudes
@@ -2179,7 +2199,6 @@ for source=1:4
 end
 
 %% model to handles: all GUI elements.
-
 source=Ractive;
 for k=0:7
     val=eval(['S.Rs',num2str(source),'.k',num2str(k),'.perc']);
@@ -2188,8 +2207,8 @@ for k=0:7
     val=eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp']);
     set(eval(['handles.k',num2str(k),'im']),'String',num2str(val));
 end
-% set case
 
+% set case
 set(handles.RCu,'String',num2str(eval(['S.Rs',num2str(source),'.case.perc'])));
 
 source=Lactive;
@@ -2202,8 +2221,12 @@ for k=8:15
 end
 
 % set case
-
 set(handles.LCu,'String',num2str(eval(['S.Ls',num2str(source),'.case.perc'])));
+
+if contains(model, 'OSS-DBS')
+    handles.pulseWidthTextbox_R.String = num2str(eval(['S.Rs',num2str(S.active(1)),'.pulseWidth']));
+    handles.pulseWidthTextbox_L.String = num2str(eval(['S.Ls',num2str(S.active(2)),'.pulseWidth']));
+end
 
 %% model to handles: Axes objects:
 for k=0:7
@@ -2387,6 +2410,7 @@ switch model
         set(handles.estimateInTemplate,'Visible','on');
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
+        ea_toggle_pulsewidth(handles, 'off');
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
@@ -2395,6 +2419,7 @@ switch model
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
+        ea_toggle_pulsewidth(handles, 'off');
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
         set(handles.addStimSet,'visible','off');
@@ -2403,6 +2428,7 @@ switch model
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
+        ea_toggle_pulsewidth(handles, 'off');
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
         set(handles.addStimSet,'visible','off');
@@ -2411,6 +2437,7 @@ switch model
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_enable_vas(handles,options);
+        ea_toggle_pulsewidth(handles, 'off');
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
@@ -2419,6 +2446,7 @@ switch model
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
+        ea_toggle_pulsewidth(handles, 'off');
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
@@ -2433,6 +2461,7 @@ switch model
         else
             ea_enable_vas(handles,options);
         end
+        ea_toggle_pulsewidth(handles, 'on');
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
@@ -2524,6 +2553,15 @@ for iside=1:length(options.sides)
 end
 
 
+function ea_toggle_pulsewidth(handles, status)
+handles.pulseWidthLabel_R.Visible = status;
+handles.pulseWidthTextbox_R.Visible = status;
+handles.usLabel_R.Visible = status;
+handles.pulseWidthLabel_L.Visible = status;
+handles.pulseWidthTextbox_L.Visible = status;
+handles.usLabel_L.Visible = status;
+
+
 function ea_hide_impedance(handles)
 
 for k=0:15
@@ -2551,6 +2589,7 @@ Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
 Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 LcontsCase=[Lconts,{'case'}];
 RcontsCase=[Rconts,{'case'}];
+pulseWidthTextbox = {'pulseWidthTextbox_R', 'pulseWidthTextbox_L'};
 if ischar(changedobj) % different polarity on the block
     switch changedobj
         case Rconts
@@ -2577,6 +2616,8 @@ if ischar(changedobj) % different polarity on the block
             changedobj='case';
             side=2;
             sidec='L';
+        case pulseWidthTextbox
+            return;
     end
 
     % check polarity of changed object:
@@ -2686,6 +2727,9 @@ if ischar(changedobj) % different polarity on the block
 
 else % voltage percentage changed
     changedobj=get(changedobj,'Tag');
+    if ismember(changedobj, {'pulseWidthTextbox_R', 'pulseWidthTextbox_L'})
+        return;
+    end
     changedobj=changedobj(1:end-1);
 
     switch changedobj
@@ -3556,3 +3600,61 @@ if hObject.Value
         setappdata(resultfig, 'M');
     end
 end
+
+
+% --- Executes during object creation, after setting all properties.
+function pulseWidthTextbox_R_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pulseWidthTextbox_R (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function pulseWidthTextbox_R_Callback(hObject, eventdata, handles)
+% hObject    handle to pulseWidthTextbox_R (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of pulseWidthTextbox_R as text
+%        str2double(get(hObject,'String')) returns contents of pulseWidthTextbox_R as a double
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.pulseWidth=',hObject.String,';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
+
+
+% --- Executes during object creation, after setting all properties.
+function pulseWidthTextbox_L_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pulseWidthTextbox_L (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function pulseWidthTextbox_L_Callback(hObject, eventdata, handles)
+% hObject    handle to pulseWidthTextbox_L (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of pulseWidthTextbox_L as text
+%        str2double(get(hObject,'String')) returns contents of pulseWidthTextbox_L as a double
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
+
+eval(['S.Ls',num2str(S.active(2)),'.pulseWidth=',hObject.String,';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
