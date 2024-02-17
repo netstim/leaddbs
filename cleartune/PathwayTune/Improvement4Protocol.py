@@ -29,7 +29,7 @@ import shutil
 #
 #     # create an output folder in the stim folder of the patient
 #     try:
-#         os.makedirs(os.environ['STIMDIR'] + '/NB_' + str(side))
+#         os.makedirs(stim_dir + '/NB_' + str(side))
 #     except:
 #         print("NB folder already exists")
 #
@@ -41,7 +41,7 @@ import shutil
 #         fp.close()
 #
 #         if 'profile_dict' in profiles.keys():
-#             with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'w') as save_as_dict:
+#             with open(stim_dir + '/NB_' + str(side) + '/profile_dict.json', 'w') as save_as_dict:
 #                 json.dump(profiles['profile_dict'], save_as_dict)
 #             profile_dict = profiles['profile_dict']
 #         else:
@@ -55,7 +55,7 @@ import shutil
 #             print("Will continue, but consider exporting negative tracts from FF")
 #             Soft_SE_dict = {}
 #
-#         with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Soft_SE_dict.json', 'w') as save_as_dict:
+#         with open(stim_dir + '/NB_' + str(side) + '/Soft_SE_dict.json', 'w') as save_as_dict:
 #             json.dump(Soft_SE_dict, save_as_dict)
 #
 #         # IMPORTANT: What about SE_dict? Take it from some prior studies?
@@ -66,7 +66,7 @@ import shutil
 #             print("Will continue, but consider exporting negative tracts from FF")
 #             SE_dict = {}
 #
-#         with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'w') as save_as_dict:
+#         with open(stim_dir + '/NB_' + str(side) + '/SE_dict.json', 'w') as save_as_dict:
 #             json.dump(SE_dict, save_as_dict)
 #
 #     else:
@@ -74,13 +74,13 @@ import shutil
 #         [profile_dict, Soft_SE_dict, SE_dict] = get_disease_profiles(disease)
 #         # here we need to implement a selection mechanism (but no adjustment)
 #
-#         with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'w') as save_as_dict:
+#         with open(stim_dir + '/NB_' + str(side) + '/profile_dict.json', 'w') as save_as_dict:
 #             json.dump(profile_dict, save_as_dict)
 #
-#         with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Soft_SE_dict.json', 'w') as save_as_dict:
+#         with open(stim_dir + '/NB_' + str(side) + '/Soft_SE_dict.json', 'w') as save_as_dict:
 #             json.dump(Soft_SE_dict, save_as_dict)
 #
-#         with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'w') as save_as_dict:
+#         with open(stim_dir + '/NB_' + str(side) + '/SE_dict.json', 'w') as save_as_dict:
 #             json.dump(SE_dict, save_as_dict)
 #
 #     return profile_dict, Soft_SE_dict, SE_dict
@@ -90,18 +90,19 @@ class ResultPAM:
 
     """ Pathway percent activations for a given current protocol that can be used to estimate stimulation outcome"""
 
-    def __init__(self, side, current_protocol=None, inters_as_stim=False):
+    def __init__(self, side, stim_dir, current_protocol=None, inters_as_stim=False):
 
         # create an output folder in the stim folder of the patient
         self.target_profiles = None
         self.side = side
+        self.stim_dir = stim_dir
         if current_protocol:
             self.current_protocol = current_protocol
         else:
             self.current_protocol = self.get_current_protocol()
 
         try:
-            os.makedirs(os.environ['STIMDIR'] + '/NB_' + str(self.side))
+            os.makedirs(self.stim_dir + '/NB_' + str(self.side))
         except:
             print("NB folder already exists")
 
@@ -135,7 +136,7 @@ class ResultPAM:
             self.target_profiles = get_disease_profiles(disease)
 
         # copy to NB/ in stim folder for the reference
-        shutil.copyfile(FF_dictionary,os.environ['STIMDIR'] + '/NB_' + str(self.side) + '/target_profiles.json')
+        shutil.copyfile(FF_dictionary,self.stim_dir + '/NB_' + str(self.side) + '/target_profiles.json')
 
 
     def load_AP_from_OSSDBS(self,inters_as_stim=False):
@@ -159,9 +160,9 @@ class ResultPAM:
         pathways, axons_in_path = get_simulated_pathways(self.side)
 
         if self.side == 0:
-            res_folder = os.environ['STIMDIR'] + '/' + 'Results_rh/'
+            res_folder = self.stim_dir + '/' + 'Results_rh/'
         else:
-            res_folder = os.environ['STIMDIR'] + '/' + 'Results_lh/'
+            res_folder = self.stim_dir + '/' + 'Results_lh/'
 
         perc_activation = np.zeros(len(pathways), float)
         pathway_index = 0
@@ -293,7 +294,7 @@ class ResultPAM:
 
         """
 
-        file = h5py.File(os.environ['STIMDIR'] + '/oss-dbs_parameters.mat', mode='r')
+        file = h5py.File(self.stim_dir + '/oss-dbs_parameters.mat', mode='r')
 
         # if file['settings']['current_control'][0][index_side] != 1:
         #    print('The imported protocol is not current-controlled!')
@@ -441,10 +442,10 @@ class ResultPAM:
 
         # save json
         if self.side == 0:
-            with open(os.environ['STIMDIR'] + '/NB_' + str(self.side) + '/Estim_symp_improv_rh.json', 'w') as save_as_dict:
+            with open(self.stim_dir + '/NB_' + str(self.side) + '/Estim_symp_improv_rh.json', 'w') as save_as_dict:
                 json.dump(estim_symp_improv_dict, save_as_dict)
         else:
-            with open(os.environ['STIMDIR'] + '/NB_' + str(self.side) + '/Estim_symp_improv_lh.json', 'w') as save_as_dict:
+            with open(self.stim_dir + '/NB_' + str(self.side) + '/Estim_symp_improv_lh.json', 'w') as save_as_dict:
                 json.dump(estim_symp_improv_dict, save_as_dict)
 
         if plot_results == True:
@@ -505,7 +506,7 @@ class ResultPAM:
         ax.set_xticks(pos_adjusted)
         ax.set_xticklabels(symptom_labels_marked, rotation=45)
         fig.tight_layout()
-        plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(self.side) + '/Symptom_profiles_' + str(self.side) + '.png',
+        plt.savefig(self.stim_dir + '/NB_' + str(self.side) + '/Symptom_profiles_' + str(self.side) + '.png',
                     format='png',
                     dpi=1000)
 
@@ -567,7 +568,7 @@ class ResultPAM:
         ax.set_xticks(pos)
         plt.xticks(rotation=45)
         fig.tight_layout()
-        plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(self.side) + '/Activation_profile_' + str(self.side) + '.png',
+        plt.savefig(self.stim_dir + '/NB_' + str(self.side) + '/Activation_profile_' + str(self.side) + '.png',
                     format='png',
                     dpi=1000)
 
@@ -597,7 +598,7 @@ class ResultPAM:
 
         # get symptom-wise difference between activation and target profiles
         # we do not need non-fixed symptom distances here
-        [symptom_diff, symptom_list, __] = self.get_symptom_distances(self.activation_profile,
+        [symptom_diff, self.symptom_list, __] = self.get_symptom_distances(self.activation_profile,
                                                    fixed_symptom_weights, score_symptom_metric=score_symptom_metric)
         # symptom_diff is in the symptom space, not pathway! So it might have a different dimensionality
 
@@ -612,7 +613,7 @@ if __name__ == '__main__':
     # sys.argv[4] - Fixed Symptoms Dictionary
     # sys.argv[5] - Score Symptom Metric
 
-    os.environ['STIMDIR'] = sys.argv[1]
+    stim_dir = sys.argv[1]
 
-    stim_result = ResultPAM(int(sys.argv[2]))
+    stim_result = ResultPAM(int(sys.argv[2]),sys.argv[1])
     stim_result.make_prediction(sys.argv[5], sys.argv[3], sys.argv[4])
