@@ -489,9 +489,13 @@ switch model
         set(handles.estimateInTemplate,'Visible','on');
         S.monopolarmodel=0;
         if vatsettings.butenko_calcPAM
+            Rs1va = handles.Rs1va.Value;
+            Ls1va = handles.Ls1va.Value;
             ea_disable_vas(handles,options);
             handles.Rs1va.Enable = "on";
+            handles.Rs1va.Value = Rs1va;
             handles.Ls1va.Enable = "on";
+            handles.Ls1va.Value = Ls1va;
         else
             ea_enable_vas(handles,options);
         end
