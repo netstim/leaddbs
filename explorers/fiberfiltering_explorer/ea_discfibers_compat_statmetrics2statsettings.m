@@ -1,4 +1,4 @@
-function tractset=ea_discfibers_compat_statmetrics2statsettings(tractset)
+function tractset = ea_discfibers_compat_statmetrics2statsettings(tractset)
 
 if isnan(tractset.statmetric)
     return

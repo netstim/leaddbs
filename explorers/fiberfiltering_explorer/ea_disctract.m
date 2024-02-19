@@ -223,7 +223,7 @@ classdef ea_disctract < handle
                         obj.statmetric='Weighted Linear Regression / EF-Sigmoid (Dembek 2023)';
                 end
             end
-            obj=ea_discfibers_compat_statmetrics2statsettings(obj);
+            ea_discfibers_compat_statmetrics2statsettings(obj);
         end
 
 

@@ -21,7 +21,7 @@ switch obj.statsettings.stimulationmodel
             fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
         end
     otherwise
-            fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+        fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
 end
 
 if size(I,2)==1 % 1 entry per patient, not per electrode
