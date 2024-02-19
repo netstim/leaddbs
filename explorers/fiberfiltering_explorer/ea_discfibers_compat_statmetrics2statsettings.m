@@ -27,7 +27,7 @@ switch tractset.statmetric
         tractset.statsettings.efieldthreshold = tractset.efieldthreshold;
         tractset.statsettings.connthreshold = tractset.connthreshold;
         tractset.statsettings.statfamily = 'Correlations';
-        tractset.statsettings.stattest = 'Pearson';
+        tractset.statsettings.stattest = tractset.corrtype;
         tractset.statsettings.H0 = 'Zero';
     case 'Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'
         tractset.statsettings.stimulationmodel = 'Sigmoid Field';
