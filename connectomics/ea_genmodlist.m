@@ -25,7 +25,7 @@ switch lower(conntype)
         checkdmri = 0;
         checkdmri_mt = 1;
         checkfmri = 0;
-        
+
 end
 
 % check for canonical fiber sets
@@ -57,7 +57,7 @@ if checkfmri
     end
 end
 if checkdmri_mt
-    fdfibs=dir(ea_getconnectomebase('dmri_multitract'));
+    fdfibs=dir(ea_getconnectomebase('dMRI_MultiTract'));
     for fdf=1:length(fdfibs)
         if fdfibs(fdf).isdir && ~strcmp(fdfibs(fdf).name(1),'.')
             [~,fn]=fileparts(fdfibs(fdf).name);
@@ -96,7 +96,7 @@ if exist('directory','var') && ~isempty(directory)
             cnt=cnt+1;
         end
     end
-    
+
     if checkdmri_mt
         if exist([directory,'connectomes',filesep,'dMRI_MultiTract',filesep,options.prefs.FTR_normalized],'file')
             modlist{cnt}='Patient''s fiber tracts';

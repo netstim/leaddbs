@@ -5,7 +5,7 @@ function [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj)
 % also returns global indices of the first fibers in pathways and the
 % corresponding list of pathways' names
 
-myDir = [ea_getconnectomebase('dMRI_multitract'), obj.connectome];
+myDir = [ea_getconnectomebase('dMRI_MultiTract'), obj.connectome];
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
 myFiles = myFiles(~endsWith({myFiles.name}, '_ADJ.mat'));
 

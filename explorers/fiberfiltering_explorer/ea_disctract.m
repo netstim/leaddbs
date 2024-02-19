@@ -98,7 +98,7 @@ classdef ea_disctract < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
         kIter = 1;
-        roiintersectdata = {}; %roi, usually efield with which you can calculate fiber intersection 
+        roiintersectdata = {}; %roi, usually efield with which you can calculate fiber intersection
         roithresh = 200; %threshold above which efield metrics are considered
         % misc
         runwhite = 0; % flag to calculate connected tracts instead of stat tracts
@@ -242,7 +242,7 @@ classdef ea_disctract < handle
             % merged_pathways.mat
             if obj.use_adjacency
                 if obj.multi_pathways == 1
-                    connectome_folder = [ea_getconnectomebase('dMRI_multitract'), obj.connectome];
+                    connectome_folder = [ea_getconnectomebase('dMRI_MultiTract'), obj.connectome];
                     ADJ_connectome_path = [connectome_folder,filesep,'merged_pathways_ADJ.mat'];
                     obj.ADJ = load(ADJ_connectome_path); % but we need to precompute (ourselves!)
                 else
@@ -727,7 +727,7 @@ classdef ea_disctract < handle
                 end
             end
 
-            if obj.doactualprediction % repeat loops partly to fit to actual response variables:                
+            if obj.doactualprediction % repeat loops partly to fit to actual response variables:
                 Ihat_voters_prediction=nan(size(Ihat));
                 %add some warnings
                 switch obj.multitractmode
@@ -780,7 +780,7 @@ classdef ea_disctract < handle
                             covariates = [covariates,obj.covars{cv}(patientsel)];
 
                         end
-                        
+
                         if obj.useExternalModel == true %only use for single tract analysis
                             if ~strcmp(obj.multitractmode,'Single Tract Analysis')
                                 ea_error("Sorry, you cannot use exported model and fit-to-scores for multi-tract model");
@@ -1802,7 +1802,7 @@ for nroi = 1:length(obj.roiintersectdata)
                 end
             end
             normwts = normalize(ea_contrast(wts,10,0),'range');
-            
+
             normwts =  mat2cell(normwts,ones(size(normwts,1),1));
             if ~isempty(normwts)
                 [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
