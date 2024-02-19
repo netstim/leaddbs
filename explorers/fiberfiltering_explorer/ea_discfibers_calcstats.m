@@ -7,7 +7,6 @@ else % used in permutation based statistics - in this case the real improvement 
     I=Iperm;
 end
 
-
 % quickly recalc stats
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
     patsel=obj.patientselection;
@@ -32,7 +31,6 @@ end
 if obj.mirrorsides
     I=[I;I];
 end
-
 
 %% Centrally deal with Covariates here by regressing them out from target variable:
 if ~isempty(obj.covars)
@@ -220,7 +218,7 @@ for group=groups
             nonemptyidx=find(nonempty);
 
             valsin=gfibsval{side}(nonempty,gpatsel);
-            outcomein=I(:,side);
+            outcomein=I(gpatsel,side);
 
             disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
 
