@@ -116,7 +116,6 @@ classdef ea_disctract < handle
         end
 
         function initialize(obj,datapath,resultfig)
-            
             % statsettings
             % initial hard threshold to impose on (absolute) nifti files only when calculating the data
             obj.statsettings.doVoxels = 1;
@@ -226,8 +225,9 @@ classdef ea_disctract < handle
             end
             obj=ea_discfibers_compat_statmetrics2statsettings(obj);
         end
-        function calculate(obj)
 
+
+        function calculate(obj)
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
@@ -1165,9 +1165,6 @@ classdef ea_disctract < handle
                         end
                     end
                 end
-
-
-
                 [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
             elseif ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);

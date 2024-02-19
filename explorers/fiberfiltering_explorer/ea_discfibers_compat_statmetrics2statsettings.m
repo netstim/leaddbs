@@ -21,7 +21,7 @@ switch tractset.statmetric
         tractset.statsettings.statfamily = '1-Sample Tests';
         tractset.statsettings.stattest = '1-Sample T-Test';
         tractset.statsettings.H0 = 'Zero';
-    case 'Correlations / E-Fields (Irmen 2020)'
+    case 'Correlations / E-fields (Irmen 2020)'
         tractset.statsettings.stimulationmodel = 'Electric Field';
         tractset.statsettings.efieldmetric = tractset.efieldmetric;
         tractset.statsettings.efieldthreshold = tractset.efieldthreshold;
@@ -79,8 +79,6 @@ switch tractset.statmetric
         tractset.statsettings.H0 = 'Zero';
 end
 
-
-
 % Rename results entries from spearman_* to efield_*:
 connvals=fieldnames(tractset.results);
 for connectome=1:length(connvals)
@@ -95,7 +93,6 @@ for connectome=1:length(connvals)
         tractset.results.(connvals{connectome})=rmfield(tractset.results.(connvals{connectome}),'spearman_5peak');
     end
 end
-
 
 tractset.statmetric=nan; % switch off legacy statmetric.
 tractset.efieldmetric=nan; % switch off legacy
