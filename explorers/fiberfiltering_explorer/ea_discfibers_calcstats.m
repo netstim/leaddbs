@@ -214,7 +214,7 @@ for group=groups
             vals{group,side} = Nmap/length(gpatsel);
             vals{group,side}(vals{group,side}==0)=nan;
         else
-            nonempty=sum(gfibsval{side}(:,gpatsel),2,'omitmissing')>0;
+            nonempty=sum(gfibsval{side}(:,gpatsel),2,'omitnan')>0;
             nonemptyidx=find(nonempty);
 
             valsin=gfibsval{side}(nonempty,gpatsel);
