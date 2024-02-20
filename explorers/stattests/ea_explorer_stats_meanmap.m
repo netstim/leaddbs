@@ -25,7 +25,7 @@ end
 % Actual test:
 outcomein=repmat(outcomein',size(valsin,1),1);
 valsin=~isnan(valsin); % valsin already only includes values above the threshold;
-valsout=sum((outcomein.*valsin),2,'omitmissing')./sum(valsin,2,'omitmissing');
+valsout=sum((outcomein.*valsin),2,'omitnan')./sum(valsin,2,'omitnan');
 psout=zeros(size(valsout));
 
 % map outputs

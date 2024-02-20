@@ -66,7 +66,7 @@ for side=1:numel(myvalsgroup)
     vals{1,side}=nan(size(myvalsgroup{side},1),1);
     pvals{1,side}=nan(size(myvalsgroup{side},1),1);
 
-    nonempty=sum(myvalsgroup{side}(:,patientselectiongroup),2,'omitmissing')>0;
+    nonempty=sum(myvalsgroup{side}(:,patientselectiongroup),2,'omitnan')>0;
     nonemptyidx=find(nonempty);
 
     valsin=myvalsgroup{side}(nonempty,patientselectiongroup);

@@ -28,7 +28,7 @@ end
 if ischar(H0)
     switch H0
         case 'Average'
-            H0=mean(outcomein,'all','omitmissing');
+            H0=mean(outcomein,'all','omitnan');
         case 'Zero'
             H0=0;
     end
