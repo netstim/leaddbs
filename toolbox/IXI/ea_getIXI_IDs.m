@@ -38,12 +38,12 @@ prefs=ea_prefs('');
 try
 basedir=prefs.ixi.dir;
 catch
-   ea_error('IXI database path not set. Please specify the path to the IXI database by using the variable prefs.ixi.dir in ea_prefs.m'); 
+   ea_error('IXI database path not set. Please specify the path to the IXI database by using the variable prefs.ixi.dir in your prefs');
 end
 
 % check if basedir is mounted:
 if ~exist(basedir,'file')
-   ea_error('IXI database path is specified but the folder cannot be accessed. Please make sure that the absolute path in ea_prefs.m (prefs.ixi.dir) points to the correct folder containing the IXI database.'); 
+   ea_error('IXI database path is specified but the folder cannot be accessed. Please make sure that the absolute path in your prefs (prefs.ixi.dir) points to the correct folder containing the IXI database.');
 end
 
 for i=1:length(IDs)

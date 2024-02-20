@@ -3,7 +3,7 @@ function prefs = ea_setprefs(key, value, whichPrefs)
 % 'whichPrefs' can be either 'machine' (default) to set 'prefs.machine.*'
 % or 'user' to set 'prefs.*'
 
-% In case deployed, only support set user prefs saved in ea_prefs.json
+% In case deployed, only support set user prefs saved in ea_prefs_user.json
 if isdeployed
     prefPath = ea_prefspath('json');
     prefs = loadjson(prefPath);
@@ -39,7 +39,7 @@ switch lower(whichPrefs)
             value = ['''', value, ''''];
         end
 
-        % Replace prefs in ea_prefs.m
+        % Replace prefs in ea_prefs_user.m
         prefs = fileread(ea_prefspath);
         pattern = [strrep(['prefs.',key], '.', '\.'), ' *= *.*?;'];
         if ~isempty(regexp(prefs, pattern, 'once')) % Key exists
