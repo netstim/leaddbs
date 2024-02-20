@@ -22,6 +22,10 @@ else
     return
 end
 
+if ea_isbinary(outcomein)
+    ea_error('Outcome variable is binary, please use N-map instead.');
+end
+
 % Actual test:
 outcomein=repmat(outcomein',size(valsin,1),1);
 valsin=~isnan(valsin); % valsin already only includes values above the threshold;

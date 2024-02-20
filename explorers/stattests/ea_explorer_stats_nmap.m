@@ -22,7 +22,7 @@ end
 
 % Actual test:
 valsout=sum(valsin,2,'omitnan');
-psout=zeros(size(valsout));
+psout=nan(size(valsout));
 % map outputs
 varargout{1}=valsout;
 varargout{2}=psout;

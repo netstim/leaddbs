@@ -32,16 +32,15 @@ if ~all(outcomein==1|outcomein==0|isnan(outcomein))
     warning('on','backtrace')
     return
 else
-    numtrue = sum(outcomein==1);
-    numfalse = sum(outcomein==0);
+    Nresponders = sum(outcomein==1);
+    Nnonresponders = sum(outcomein==0);
     
-    outcomein=repmat(outcomein',size(valsin,1),1);
-    valsin=valsin .* outcomein;
-    sumtrue = sum(valsin==1,2);
-    sumfalse = sum(valsin==0,2);
+    
+    Nconnectedresponders = sum(valsin(:,outcomein==1),2); % for each voxel, how many vtas cover it of patients that also had the effect (binary outcome)
+    Nconnectednonresponders = sum(valsin(:,outcomein==0),2); % for each voxel, how many vtas cover it of patients that did not have the effect (binary var)
 
     for i=1:size(valsin,1)
-        [~,psout(i), valsout(i)]  = ea_prop_test([sumtrue(i),sumfalse(i)],[numtrue,numfalse],1);
+        [~,psout(i), valsout(i)]  = ea_prop_test([Nconnectedresponders(i),Nconnectednonresponders(i)],[Nresponders,Nnonresponders],1);
     end
 end
 

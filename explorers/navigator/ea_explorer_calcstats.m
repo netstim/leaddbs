@@ -88,7 +88,7 @@ for side=1:numel(myvalsgroup)
             [valsout,psout]=ea_explorer_stats_ranksumtest(valsin,outcomein);
         case '1-Sample Weighted Regression'            
             [valsout,psout]=ea_explorer_stats_1sampleweightedlinreg(valsin,outcomein,obj.statsettings.H0);
-             case '2-Sample Weighted Regression'            
+        case '2-Sample Weighted Regression'
             [valsout,psout]=ea_explorer_stats_2sampleweightedlinreg(valsin,outcomein);
         case 'Spearman'
             [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
