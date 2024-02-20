@@ -8,7 +8,7 @@ function k=ea_concavehull(XYZ,thresh)
 % old two midpoints.
 %
 % You can choose to use this option or to use the convhull routine in
-% ea_prefs.m
+% ea_prefs_user.m
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn

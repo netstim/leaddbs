@@ -845,10 +845,10 @@ classdef BIDSFetcher
 
             switch type
                 case '.json'
-                    % Read ea_prefs.json
+                    % Read ea_prefs_user.json
                     prefs = loadjson(ea_prefspath('json'));
                 case '.m'
-                    % Read ea_prefs.m and ea_prefs.mat
+                    % Read ea_prefs_user.m and ea_prefs_user.mat
                     prefs = ea_prefs;
             end
         end

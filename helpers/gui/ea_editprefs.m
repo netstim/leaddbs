@@ -9,7 +9,7 @@ end
 if ~isdeployed
     edit(prefsPath);
 else
-    msgbox('Open ~/.leaddbs/ea_prefs.json with a text editor to edit preferences.');
+    msgbox('Open ~/.leaddbs/ea_prefs_user.json with a text editor to edit preferences.');
 
     % prefs = ea_prefs;
     % if ~isfield(prefs, 'textedit')
