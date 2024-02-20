@@ -670,6 +670,12 @@ for source_index = 1:4
             folder2save = [outputDir,filesep,'Results_', sideCode];
             timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
             pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
+
+            % check if the time domain results is available
+            if ~isfile(timeDomainSolution)
+                ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, set settings.outOfCore to 1')
+                return
+            end
     
             system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
         end
