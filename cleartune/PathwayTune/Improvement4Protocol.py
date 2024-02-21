@@ -13,9 +13,9 @@ import copy
 import h5py
 import shutil
 
-# def create_netblend_dictionaries(side, FF_dictionary, disease='spontaneous human combustion'):
+# def create_netblend_dictionaries(side, ActivProfileDict, disease='spontaneous human combustion'):
 #
-#     ''' Either imports Activation Profile Dictionary from Fiber Filtering (FF_dictionary)
+#     ''' Either imports Activation Profile Dictionary from Fiber Filtering (ActivProfileDict)
 #         or takes a pre-defined dictionary for the given disease from TractSymptomLibrary
 #         and saves them in separate dictionaries for modulated symptoms, "soft" side-effects and "hard" side-effects
 #         in the stimulation folder / NB_
@@ -23,7 +23,7 @@ import shutil
 #     Parameters
 #     ----------
 #     side: int, hemisphere index (0 - right, 1 - left)
-#     FF_dictionary: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
+#     ActivProfileDict: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
 #
 #     '''
 #
@@ -35,8 +35,8 @@ import shutil
 #
 #     # retrieve activation profiles for the specific disease
 #     # "side" in the name does not actually play the role, it will be checked "on site"
-#     if FF_dictionary != 'no dictionary':
-#         with open(FF_dictionary, 'r') as fp:
+#     if ActivProfileDict != 'no dictionary':
+#         with open(ActivProfileDict, 'r') as fp:
 #             profiles = json.load(fp)
 #         fp.close()
 #
@@ -112,13 +112,13 @@ class ResultPAM:
         # activation_profile: Nx1 numpy.ndarray, percent activation for simulated pathways
         # sim_pathways: list, pathways simulated in OSS-DBS for this patient
 
-    def get_target_profiles(self, FF_dictionary=None, disease='spontaneous human combustion'):
+    def get_target_profiles(self, ActivProfileDict=None, disease='spontaneous human combustion'):
 
         """
 
         Parameters
         ----------
-        FF_dictionary: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
+        ActivProfileDict: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
         disease: str, optional, key to retrieve Activation Profile Dictionary from TractSymptomLibrary
 
         Returns
@@ -127,8 +127,8 @@ class ResultPAM:
 
         """
 
-        if FF_dictionary:
-            with open(FF_dictionary, 'r') as fp:
+        if ActivProfileDict:
+            with open(ActivProfileDict, 'r') as fp:
                 self.target_profiles = json.load(fp)
             fp.close()
         else:
@@ -136,7 +136,7 @@ class ResultPAM:
             self.target_profiles = get_disease_profiles(disease)
 
         # copy to NB/ in stim folder for the reference
-        shutil.copyfile(FF_dictionary,self.stim_dir + '/NB_' + str(self.side) + '/target_profiles.json')
+        shutil.copyfile(ActivProfileDict,self.stim_dir + '/NB_' + str(self.side) + '/target_profiles.json')
 
 
     def load_AP_from_OSSDBS(self,inters_as_stim=False):
@@ -572,7 +572,7 @@ class ResultPAM:
                     format='png',
                     dpi=1000)
 
-    def make_prediction(self, score_symptom_metric, FF_dictionary=None, fixed_symptoms_dict=None, disease='spontaneous human combustion'):
+    def make_prediction(self, score_symptom_metric, ActivProfileDict=None, fixed_symptoms_dict=None, disease='spontaneous human combustion'):
 
         """ Predict symptom-profile improvement for a given activation profile based on the target activation profiles
             fixed symptom dictionary is only needed for weight optimization
@@ -580,7 +580,7 @@ class ResultPAM:
         Parameters
         ----------
         score_symptom_metric: str, optional, metric to compute distances in symptom space
-        FF_dictionary: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
+        ActivProfileDict: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
         fixed_symptoms_dict: str, optinal, dictionary with fixed weights in network blending
         disease: str, optional, key to retrieve Activation Profile Dictionary from TractSymptomLibrary
 
@@ -594,7 +594,7 @@ class ResultPAM:
                 fixed_symptom_weights = json.load(fp)
             fp.close()
 
-        self.get_target_profiles(FF_dictionary,disease)
+        self.get_target_profiles(ActivProfileDict,disease)
 
         # get symptom-wise difference between activation and target profiles
         # we do not need non-fixed symptom distances here
