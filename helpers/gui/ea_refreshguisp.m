@@ -496,10 +496,11 @@ switch model
             handles.Rs1va.Value = Rs1va;
             handles.Ls1va.Enable = "on";
             handles.Ls1va.Value = Ls1va;
+            ea_toggle_pulsewidth(handles, 'on');
         else
             ea_enable_vas(handles,options);
+            ea_toggle_pulsewidth(handles, 'off');
         end
-        ea_toggle_pulsewidth(handles, 'on');
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
