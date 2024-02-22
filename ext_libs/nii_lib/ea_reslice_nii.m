@@ -124,6 +124,10 @@ else
 
     old_M = nii.hdr.hist.old_affine;
 
+    if interp == 0
+        interp = 2; % NN interp is 2 in ea_affine
+    end
+
     if nii.hdr.dime.dim(5) > 1
         for i = 1:nii.hdr.dime.dim(5)
             [img(:,:,:,i) M] = ea_affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, interp);
