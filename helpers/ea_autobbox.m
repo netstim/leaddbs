@@ -18,3 +18,5 @@ transform = ea_get_affine(input);
 
 bbox = round([ea_vox2mm([min(i)-margin, min(j)-margin, min(k)-margin], transform);
               ea_vox2mm([max(i)+margin, max(j)+margin, max(k)+margin], transform)]);
+
+bbox = sort(bbox);
