@@ -34,7 +34,7 @@ end
 % Match bounding box
 if opts.matchBBox
     % Calculate largest bounding box
-    [bbox, voxsize] = cellfun(@(x) spm_get_bbox(x), input, 'Uni', 0);
+    [bbox, voxsize] = cellfun(@(x) spm_get_bbox(x, 'nz'), input, 'Uni', 0);
     bbox = cell2mat(bbox);
     bbox = [min(bbox(1:2:end, :)); max(bbox(2:2:end, :))];
 
