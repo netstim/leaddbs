@@ -26,11 +26,11 @@ def launch_PAM(neuron_folder, folder_to_save, points_h5_file, pathways_params_fi
     if pathways_dict['Axon_Model_Type'] == 'McNeal1976':
 
         os.chdir(neuron_folder + "/McNeal1976")
-        with open(os.devnull, 'w') as FNULL:
-            if sys.platform == 'win32':
-                subprocess.call('mknrndll', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-            else:
-                subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        #with open(os.devnull, 'w') as FNULL:
+        #    if sys.platform == 'win32':
+        #        subprocess.call('mknrndll', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        #    else:
+        #        subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     elif pathways_dict['Axon_Model_Type'] == "McIntyre2002" or pathways_dict['Axon_Model_Type'] == "McIntyre2002_ds":
 
@@ -38,8 +38,8 @@ def launch_PAM(neuron_folder, folder_to_save, points_h5_file, pathways_params_fi
         #with open(os.devnull, 'w') as FNULL:
         #    subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL,
         #                    stderr=subprocess.STDOUT)  # might not work with remote hard drives
-        with open(os.devnull, 'w') as FNULL:
-            subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        #with open(os.devnull, 'w') as FNULL:
+        #    subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     from Axon_files.neuron_simulation import NeuronStimulation
 
