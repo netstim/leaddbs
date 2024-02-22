@@ -202,13 +202,45 @@ for sub=1:numsub % iterate across subjects
             else % volume seed
                 stc=mean(r{run}.gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(r{run}.gmtc,2)),1); % seed time course
             end
-            thiscorr(:,run)=corr(stc',r{run}.gmtc(maskuseidx,:)','type','Pearson');
+
+            try %use different matric instead of correlations; manually entered by user
+                lcm_custommetric=evalin('base','lcm_custommetric');
+            end 
+            if exist('lcm_custommetric','var')
+                switch evalin('base','lcm_custommetric')
+                    case 'mutualinf' %use mutual information
+                        tic
+                        stc=double(stc);
+                        r{run}.gmtc=double(r{run}.gmtc);
+                        %ea_dispercent(0,'iterating brains')
+                        for vox=1:length(maskuseidx)
+%                             thiscorr(vox,run)=MutualInformation(stc',r{run}.gmtc(maskuseidx(vox),:)');
+%                             %my function
+                            thiscorr(vox,run)=mutualinfo(stc,r{run}.gmtc(maskuseidx(vox),:)); %someone else's function 
+                            %ea_dispercent(vox/length(maskuseidx));
+                        end
+                        toc
+                    case 'pdistance'
+                        try
+                            usemethod=evalin('base','usemethod');
+                        end
+                        if exist('usemethod','var')
+                            usemethod=usemethod; % specify the distances, such as euclidean, cosine, spearman.
+                        else
+                            usemethod='euclidean';
+                        end                                     
+                        thiscorr(:,run)=-pdist2(stc, r{run}.gmtc(maskuseidx,:),usemethod)';
+
+                end
+            else
+                thiscorr(:,run)=corr(stc',r{run}.gmtc(maskuseidx,:)','type','Pearson');
+            end
             if isfield(dataset,'surf') && prefs.lcm.includesurf
                 % include surface:
                 lsthiscorr(:,run)=corr(stc',r{run}.ls.gmtc','type','Pearson');
                 rsthiscorr(:,run)=corr(stc',r{run}.rs.gmtc','type','Pearson');
             end
-        end
+
         fX{s}(:,sub)=mean(thiscorr,2);
         if isfield(dataset,'surf') && prefs.lcm.includesurf
             lhfX{s}(:,sub)=mean(lsthiscorr,2);
@@ -220,6 +252,7 @@ for sub=1:numsub % iterate across subjects
             else
                 ea_writeoutsinglefiles(dataset,outputfolder,sfile,s,usesubjects(sub),thiscorr,omaskidx)
             end
+        end
         end
     end
 
@@ -254,6 +287,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     if ~isNetworkMappingRun
+        mmap.fname = [ea_niifileparts(mmap.fname), '.nii'];
         ea_write_nii(mmap);
         if usegzip
             gzip(mmap.fname);
@@ -280,6 +314,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     if ~isNetworkMappingRun
+        mmap.fname = [ea_niifileparts(mmap.fname), '.nii'];
         ea_write_nii(mmap);
         if usegzip
             gzip(mmap.fname);
@@ -361,6 +396,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
         end
     end
+    mmap.fname = [ea_niifileparts(mmap.fname), '.nii'];
 
     spm_write_vol(mmap,mmap.img);
 
@@ -439,6 +475,8 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         if ~isNetworkMappingRun
+                tmap.fname = [ea_niifileparts(tmap.fname), '.nii'];
+
             spm_write_vol(tmap,tmap.img);
             if usegzip
                 gzip(tmap.fname);
@@ -509,7 +547,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
 end
 
 toc
-
 
 function ea_writeoutsinglefiles(dataset,outputfolder,sfile,s,mcfi,thiscorr,omaskidx,lsthiscorr,rsthiscorr)
 ccmap=dataset.vol.space;
