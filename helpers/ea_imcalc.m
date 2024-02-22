@@ -1,13 +1,13 @@
-function nii = ea_imcalc(input, output, expr, mask, interp, dtype)
+function nii = ea_imcalc(input, output, expr, opts)
 % warpper of SPM ImCalc
 
 arguments
     input   {mustBeText}
     output  {mustBeTextScalar}
     expr    {mustBeTextScalar} = 'i2' % Reslice the image to to match reference by default
-    mask    {mustBeNumeric} = 0 % 0: non implicit zero mask, 1:  implicit zero mask, -1: NaNs should be zeroed
-    interp  {mustBeNumeric} = 1  % Use trilinear interpolation by default
-    dtype   {mustBeNumeric} = 4  % 2: 'uint8', 4: 'int16', 8: 'int32', 16: 'float32', 64: 'float64', 256: 'int8', 512: 'uint16', 768: 'uint32'
+    opts.mask    {mustBeNumeric} = 0 % 0: non implicit zero mask, 1:  implicit zero mask, -1: NaNs should be zeroed
+    opts.interp  {mustBeNumeric} = 1  % Use trilinear interpolation by default
+    opts.dtype   {mustBeNumeric} = 4  % 2: 'uint8', 4: 'int16', 8: 'int32', 16: 'float32', 64: 'float64', 256: 'int8', 512: 'uint16', 768: 'uint32'
 end
 
 % Make sure input to SPM ImCalc is cell
@@ -47,9 +47,9 @@ matlabbatch{1}.spm.util.imcalc.outdir = {fileparts(outputWithoutExt)};
 matlabbatch{1}.spm.util.imcalc.expression = expr;
 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
 matlabbatch{1}.spm.util.imcalc.options.dmtx = dmtxFlag;
-matlabbatch{1}.spm.util.imcalc.options.mask = mask;
-matlabbatch{1}.spm.util.imcalc.options.interp = interp;
-matlabbatch{1}.spm.util.imcalc.options.dtype = dtype;
+matlabbatch{1}.spm.util.imcalc.options.mask = opts.mask;
+matlabbatch{1}.spm.util.imcalc.options.interp = opts.interp;
+matlabbatch{1}.spm.util.imcalc.options.dtype = opts.dtype;
 
 spm_jobman('run', {matlabbatch});
 clear matlabbatch
