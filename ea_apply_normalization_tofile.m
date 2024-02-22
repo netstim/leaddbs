@@ -34,7 +34,7 @@ elseif contains(json.method, 'FNIRT')
         % In case inverse transformation using FSL, make sure the input has
         % exactly the same affine matrix as the template.
         for i=1:length(from)
-            ea_imcalc(from{i}, [ea_space, options.primarytemplate, '.nii'], '', interp);
+            ea_imcalc({[ea_space, options.primarytemplate, '.nii'], from{i}}, from{i}, 'i2', 0, interp);
         end
     end
     ea_fsl_apply_normalization(options, from,to, useinverse, ref, '', interp);
