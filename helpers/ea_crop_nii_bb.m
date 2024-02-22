@@ -4,7 +4,7 @@ arguments
     input   {mustBeFile}
     bbox    {mustBeNumeric}
     output  {mustBeTextScalar} = ''
-    interp  {mustBeNumeric, mustBeMember(interp, [0, 1])} = 0 % 0 for nearest neighbor, 1 for trilinear
+    interp  {mustBeMember(interp, [0, 1])} = 0 % 0 for nearest neighbor, 1 for trilinear
 end
 
 % Validate bbox size
