@@ -101,10 +101,16 @@ class ResultPAM:
         else:
             self.current_protocol = self.get_current_protocol()
 
+        if self.side == 0:
+            self.side_suffix = '_rh'
+        else:
+            self.side_suffix = '_lh'
+
         try:
-            os.makedirs(self.stim_dir + '/NB_' + str(self.side))
+            os.makedirs(self.stim_dir + '/NB' + self.side_suffix)
         except:
             print("NB folder already exists")
+
 
         # we can just check the distance for one activation profile across all simulated fibers
         self.activation_profile, self.sim_pathways = self.load_AP_from_OSSDBS(inters_as_stim)
@@ -136,7 +142,7 @@ class ResultPAM:
             self.target_profiles = get_disease_profiles(disease)
 
         # copy to NB/ in stim folder for the reference
-        shutil.copyfile(ActivProfileDict,self.stim_dir + '/NB_' + str(self.side) + '/target_profiles.json')
+        shutil.copyfile(ActivProfileDict,self.stim_dir + '/NB' + self.side_suffix + '/target_profiles.json')
 
 
     def load_AP_from_OSSDBS(self,inters_as_stim=False):
@@ -157,18 +163,15 @@ class ResultPAM:
         # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
         # this function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
         from Pathways_Stats import get_simulated_pathways
-        pathways, axons_in_path = get_simulated_pathways(self.side)
+        pathways, axons_in_path = get_simulated_pathways(self.side, self.stim_dir)
 
-        if self.side == 0:
-            res_folder = self.stim_dir + '/' + 'Results_rh/'
-        else:
-            res_folder = self.stim_dir + '/' + 'Results_lh/'
+        res_folder = self.stim_dir + '/' + 'Results' + self.side_suffix
 
         perc_activation = np.zeros(len(pathways), float)
         pathway_index = 0
         for pathway in pathways:
 
-            with open(res_folder + 'Pathway_status_' + pathway + '.json', 'r') as fp:
+            with open(res_folder + '/Pathway_status_' + pathway + '.json', 'r') as fp:
                 pathway_results = json.load(fp)
             fp.close()
 
@@ -441,12 +444,9 @@ class ResultPAM:
                                                                                                  fixed_symptom_weights)
 
         # save json
-        if self.side == 0:
-            with open(self.stim_dir + '/NB_' + str(self.side) + '/Estim_symp_improv_rh.json', 'w') as save_as_dict:
-                json.dump(estim_symp_improv_dict, save_as_dict)
-        else:
-            with open(self.stim_dir + '/NB_' + str(self.side) + '/Estim_symp_improv_lh.json', 'w') as save_as_dict:
-                json.dump(estim_symp_improv_dict, save_as_dict)
+        with open(self.stim_dir + '/NB' + self.side_suffix + '/Estim_symp_improv' + self.side_suffix + '.json', 'w') as save_as_dict:
+            json.dump(estim_symp_improv_dict, save_as_dict)
+
 
         if plot_results == True:
             self.plot_results_with_weights(I_hat, symptom_labels_marked)
@@ -506,7 +506,7 @@ class ResultPAM:
         ax.set_xticks(pos_adjusted)
         ax.set_xticklabels(symptom_labels_marked, rotation=45)
         fig.tight_layout()
-        plt.savefig(self.stim_dir + '/NB_' + str(self.side) + '/Symptom_profiles_' + str(self.side) + '.png',
+        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Symptom_profiles_' + str(self.side) + '.png',
                     format='png',
                     dpi=1000)
 
@@ -568,7 +568,7 @@ class ResultPAM:
         ax.set_xticks(pos)
         plt.xticks(rotation=45)
         fig.tight_layout()
-        plt.savefig(self.stim_dir + '/NB_' + str(self.side) + '/Activation_profile_' + str(self.side) + '.png',
+        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Activation_profile_' + str(self.side) + '.png',
                     format='png',
                     dpi=1000)
 
@@ -579,9 +579,9 @@ class ResultPAM:
 
         Parameters
         ----------
-        score_symptom_metric: str, optional, metric to compute distances in symptom space
+        score_symptom_metric: str, metric to compute distances in symptom space
         ActivProfileDict: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
-        fixed_symptoms_dict: str, optinal, dictionary with fixed weights in network blending
+        fixed_symptoms_dict: str, optional, path to dictionary with fixed weights in network blending
         disease: str, optional, key to retrieve Activation Profile Dictionary from TractSymptomLibrary
 
         """

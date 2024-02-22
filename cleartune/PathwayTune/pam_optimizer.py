@@ -8,36 +8,87 @@ from scipy.optimize import dual_annealing
 from Improvement4Protocol import ResultPAM
 
 
-def prepare_swarm(x, args_to_pass=[]):
-    """Higher-level method to do forward_prop in the
-    whole swarm.
 
-    Inputs
-    ------
-    x: numpy.ndarray of shape (n_particles, dimensions)
-        The swarm that will perform the search
+class PamOptimizer:
 
-    Returns
-    -------
-    numpy.ndarray of shape (n_particles, )
-        The computed loss for each particle
+    """ Class for current optimization based on pathway activation modeling for symptom tracts
+
+    Parameters
+    ----------
+    side : int
+        hemisphere ID (0 - right, 1 - left)
+    stim_folder : str
+        path to the stimulation folder
+    optim_settings_file : str
+        path to Activation Profile Dictionary from Fiber Filtering
+    neuron_folder: str
+        path to the folder containing NEURON models
+    PAM_caller_script: str
+        path to the high-level script for NEURON
     """
-    n_particles = x.shape[0]
-    j = [compute_global_score(x[i], args_to_pass[:]) for i in range(n_particles)]
-    return np.array(j)
 
-class PamOptimizer():
+    def __init__(self, side, stim_folder, optim_settings_file, neuron_folder, PAM_caller_script):
 
-    def __init__(self, side, stim_dir, current_protocol=None, inters_as_stim=False):
+        self.side = side
+        self.stim_folder = stim_folder
+        self.neuron_folder = neuron_folder
+        self.PAM_caller_script = PAM_caller_script
 
-    def store_iteration_results(self, S_vector,global_score,symptoms_list,estim_Ihat,side_suffix):
+        if self.side == 0:
+            self.side_suffix = '_rh'
+        else:
+            self.side_suffix = '_lh'
 
-        """ maybe make this script into a class """
+        self.results_folder = os.path.join(stim_folder, 'Results' + self.side_suffix)
+        self.timeDomainSolution = self.results_folder + '/oss_time_result_PAM.h5'
+        self.pathwayParameterFile = self.stim_folder + "/Allocated_axons_parameters.json"
+
+        with open(optim_settings_file, 'r') as fp:
+            optim_settings = json.load(fp)
+        fp.close()
+        self.optim_settings = optim_settings['netblendict']
+
+        if self.optim_settings['optim_alg'] == 'Dual Annealing':
+            if os.path.isfile(os.path.join(self.results_folder,'Best_scaling_yet.csv')):
+                initial_scaling = np.genfromtxt(os.path.join(self.results_folder,'Best_scaling_yet.csv'), delimiter=' ')
+                optimized_current = dual_annealing(self.compute_global_score,
+                                     bounds=list(zip(self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])),
+                                     x0=initial_scaling, maxfun=self.optim_settings['num_iterations'], seed=42, visit=2.62,
+                                     no_local_search=True)
+            else:
+                optimized_current = dual_annealing(self.compute_global_score,
+                                     bounds=list(zip(self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])),
+                                     maxfun=self.optim_settings['num_iterations'], seed=42, visit=2.62,
+                                     no_local_search=True)
+
+        elif optim_settings['optim_alg'] == 'PSO':
+
+            from pyswarms.single.global_best import GlobalBestPSO
+            bounds = (self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])
+            options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+            optimizer = GlobalBestPSO(n_particles=20, dimensions=len(self.optim_settings['min_bound_per_contact']), options=options, bounds=bounds)
+
+            cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=self.optim_settings['num_iterations_ANN'])
+
+
+    def store_iteration_results(self, S_vector,global_score,symptoms_list,estim_Ihat):
+
+        """ Store data on each iteration in a .csv file
+
+        Inputs
+        ------
+        S_vector: numpy.ndarray, stimulation protocol tested by the optimizer
+        global_score: float, summed up weighted symptom improvements
+        symptoms_list: list, labels of the analyzed symptoms
+        estim_Ihat: dict, estimated symptom improvements
+
+        """
 
         # store info about the iteration
+        print(global_score)
         df = pd.DataFrame(
             {
-                "weighted_total_score": global_score,
+                "weighted_total_score": [global_score],
             }
         )
 
@@ -54,43 +105,65 @@ class PamOptimizer():
         for i in range(len(S_vector)):
             df['Contact_' + str(i)] = S_vector[i]  # Lead-DBS notation!
 
-        iter_file = stim_folder + '/NB' + side_suffix + '/optim_iterations.csv'
+        iter_file = self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations.csv'
         df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
-    def compute_global_score(self, S_vector, *args):
 
-        stim_folder, side, profile_dict, fixed_symptoms_dict, score_symptom_metric = args
+    def prepare_swarm(self, x, args_to_pass=[]):
 
-        if side == 0:
-            side_suffix = '_0'
-        else:
-            side_suffix = '_1'
+        """ Higher-level method to do forward_prop in the
+        whole swarm.
+
+        Inputs
+        ------
+        x: numpy.ndarray of shape (n_particles, dimensions)
+            The swarm that will perform the search
+
+        Returns
+        -------
+        numpy.ndarray of shape (n_particles, )
+            The computed loss for each particle
+        """
+
+        n_particles = x.shape[0]
+        j = [self.compute_global_score(x[i], args_to_pass[:]) for i in range(n_particles)]
+        return np.array(j)
+    def compute_global_score(self, S_vector):
+
+        """ Estimate the goal function (weighted symptom improvements) for a given stimulation protocol
+
+        Inputs
+        ------
+        S_vector: numpy.ndarray, stimulation protocol tested by the optimizer
+
+        Returns
+        -------
+        float, goal function to maximize - summed up weighted symptom improvements
+        """
 
         # we use scaling, but later we will switch to scaling_vector
         with open(os.devnull, 'w') as FNULL:
             # we can also specify which python to use
-            subprocess.call('python ' + PAM_caller_script + ' ' + neuron_folder + ' ' +
-                results_folder + ' ' + timeDomainSolution + ' ' + pathwayParameterFile + ' ' + str(
-                    S_vector[0]), shell=True)
+            subprocess.call('python ' + self.PAM_caller_script + ' ' + self.neuron_folder + ' ' +
+                self.results_folder + ' ' + self.timeDomainSolution + ' ' + self.pathwayParameterFile + ' ' + str(
+                    S_vector[0]*100), shell=True)
+                # the original solution for 10 mA
+                # so scale by 100
 
         # make a prediction
-        stim_result = ResultPAM(side, stim_folder)
-        stim_result.make_prediction(score_symptom_metric, profile_dict, fixed_symptoms_dict)
+        stim_result = ResultPAM(self.side, self.stim_folder)
+        stim_result.make_prediction(self.optim_settings['similarity_metric'], self.optim_settings['ActivProfileDict'], self.optim_settings['symptom_weights_file'])
         symptoms_list = stim_result.symptom_list
-        activation_profile = stim_result.activation_profile
 
         # put this in a separate function
         # load predicted symptom improvement and weights
-        if side == 0:
-            estim_Ihat_json = stim_folder + '/NB_0/Estim_symp_improv_rh.json'
-        else:
-            estim_Ihat_json = stim_folder + '/NB_1/Estim_symp_improv_lh.json'
+        estim_Ihat_json = self.stim_folder + '/NB' + self.side_suffix + '/Estim_symp_improv' + self.side_suffix + '.json'
 
         with open(estim_Ihat_json, 'r') as fp:
             estim_Ihat = json.load(fp)
         fp.close()
 
         # load fixed symptom weights
-        fp = open(fixed_symptoms_dict)
+        fp = open(self.optim_settings['symptom_weights_file'])
         symptom_weights = json.load(fp)
         symptom_weights = symptom_weights['fixed_symptom_weights']
         remaining_weights = 1.0
@@ -108,9 +181,9 @@ class PamOptimizer():
 
         # for now, the global score is a simple summation (exactly like in Optim_strategies.py)
         for key in symptoms_list:
-            if side == 0 and not ("_rh" in key):
+            if self.side == 0 and not ("_rh" in key):
                 continue
-            elif side == 1 and not ("_lh" in key):
+            elif self.side == 1 and not ("_lh" in key):
                 continue
 
             if key in symptom_weights:
@@ -118,9 +191,9 @@ class PamOptimizer():
             else:
                 global_score = rem_weight * estim_Ihat[key]
 
-        self.store_iteration_results(S_vector,global_score,symptoms_list,estim_Ihat,side_suffix)
+        self.store_iteration_results(S_vector,global_score,symptoms_list,estim_Ihat)
 
-        return global_score
+        return -1 * global_score
 
 if __name__ == '__main__':
 
@@ -128,45 +201,11 @@ if __name__ == '__main__':
     PAM_caller_script = sys.argv[1]
     neuron_folder = sys.argv[2]
     optim_settings_file = sys.argv[3]
-    proper_python = sys.argv[4]
-    results_folder = sys.argv[5]
+    stim_folder = sys.argv[4]
+    side = int(sys.argv[5])
+    #proper_python = sys.argv[5]
 
-    with open(optim_settings_file, 'r') as fp:
-        optim_settings = json.load(fp)
-    fp.close()
-    optim_settings = optim_settings['netblendict']
-
-    timeDomainSolution = results_folder + '/oss_time_result_PAM.h5'
-    stim_folder = os.path.dirname(results_folder)
-    pathwayParameterFile = stim_folder + "/Allocated_axons_parameters.json"
-
-
-    args_all = [stim_folder, side, optim_settings['ActivProfileDict'], optim_settings['symptom_weights_file'], optim_settings['similiarity_metric']]
-
-    # these ones are in netblend_dict.json
-    # optim_alg, profile_dict, fixed_symptoms_dict, score_symptom_metric;
     # side and stim_folder - from ea_optimizePAM_butenko
+    optimization = PamOptimizer(side, stim_folder, optim_settings_file, neuron_folder, PAM_caller_script)
 
-    optimization = PamOptimizer(optim_settings_file, timeDomainSolution, PAM_caller_script, neuron_folder, pathwayParameterFile, stim_folder, side)
 
-
-    if optim_settings['optim_alg'] == 'Dual Annealing':
-        if os.path.isfile(os.environ['PATIENTDIR'] + '/Best_scaling_yet.csv'):
-            initial_scaling = np.genfromtxt(os.environ['PATIENTDIR'] + '/Best_scaling_yet.csv', delimiter=' ')
-            res = dual_annealing(compute_global_score,
-                                 bounds=list(zip(optim_settings['min_bound_per_contact'], optim_settings['max_bound_per_contact'])),
-                                 args=args_all, x0=initial_scaling, maxfun=optim_settings['num_iterations'], seed=42, visit=2.62,
-                                 no_local_search=True)
-        else:
-            res = dual_annealing(compute_global_score,
-                                 bounds=list(zip(optim_settings['min_bound_per_contact'], optim_settings['max_bound_per_contact'])),
-                                 args=args_all, maxfun=optim_settings['num_iterations'], seed=42, visit=2.62,
-                                 no_local_search=True)
-    elif optim_settings['optim_alg'] == 'PSO':
-
-        from pyswarms.single.global_best import GlobalBestPSO
-        bounds = (optim_settings['min_bound_per_contact'], optim_settings['max_bound_per_contact'])
-        options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
-        optimizer = GlobalBestPSO(n_particles=20, dimensions=len(optim_settings['min_bound_per_contact']), options=options, bounds=bounds)
-
-        cost, optimized_current = optimizer.optimize(prepare_swarm, iters=optim_settings['num_iterations_ANN'], args_to_pass=args_all)
