@@ -48,7 +48,7 @@ else
     Field_interp.fname = [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_index), '.nii'];
 end
 ea_write_nii(Field_interp);
-%ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
+%ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
 
 % also create VATs directly
 VTA_interp = Field_interp.img >= (Activation_threshold_VTA);
@@ -61,5 +61,5 @@ else
 end
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-%ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-%ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'],, margin=10);
+%ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],, margin=10);
