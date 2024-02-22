@@ -254,6 +254,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     if ~isNetworkMappingRun
+        mmap.fname = [ea_niifileparts(mmap.fname), '.nii'];
         ea_write_nii(mmap);
         if usegzip
             gzip(mmap.fname);
@@ -280,6 +281,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     if ~isNetworkMappingRun
+        mmap.fname = [ea_niifileparts(mmap.fname), '.nii'];
         ea_write_nii(mmap);
         if usegzip
             gzip(mmap.fname);
@@ -361,6 +363,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
         end
     end
+    mmap.fname = [ea_niifileparts(mmap.fname), '.nii'];
 
     spm_write_vol(mmap,mmap.img);
 
@@ -439,6 +442,8 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         if ~isNetworkMappingRun
+                tmap.fname = [ea_niifileparts(tmap.fname), '.nii'];
+
             spm_write_vol(tmap,tmap.img);
             if usegzip
                 gzip(tmap.fname);
@@ -509,7 +514,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
 end
 
 toc
-
 
 function ea_writeoutsinglefiles(dataset,outputfolder,sfile,s,mcfi,thiscorr,omaskidx,lsthiscorr,rsthiscorr)
 ccmap=dataset.vol.space;
