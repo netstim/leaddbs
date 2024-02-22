@@ -8,6 +8,7 @@ arguments
     opts.mask    {mustBeNumeric} = 0 % 0: non implicit zero mask, 1:  implicit zero mask, -1: NaNs should be zeroed
     opts.interp  {mustBeNumeric} = 1  % Use trilinear interpolation by default
     opts.dtype   {mustBeNumeric} = 4  % 2: 'uint8', 4: 'int16', 8: 'int32', 16: 'float32', 64: 'float64', 256: 'int8', 512: 'uint16', 768: 'uint32'
+    opts.matchBBox {mustBeNumericOrLogical} = false % Do not match the bbox of inputs by default
 end
 
 % Make sure input to SPM ImCalc is cell
@@ -28,6 +29,27 @@ gzInputs = input(endsWith(input, '.gz'));
 if ~isempty(gzInputs)
     gunzip(gzInputs);
     input = erase(input, ".gz" + textBoundary('end'));
+end
+
+% Match bounding box
+if opts.matchBBox
+    % Calculate largest bounding box
+    [bbox, voxsize] = cellfun(@(x) spm_get_bbox(x), input, 'Uni', 0);
+    bbox = cell2mat(bbox);
+    bbox = [min(bbox(1:2:end, :)); max(bbox(2:2:end, :))];
+
+    % Crop input to the largest bounding boxs
+    tempFolder = [ea_getleadtempdir, ea_genid_rand(1,6)];
+    ea_mkdir(tempFolder);
+    [~, inputNames] = fileparts(input);
+    croppedFile = strcat(tempFolder, filesep, inputNames, '.nii');
+    cellfun(@(x, y) ea_crop_nii_bb(x, bbox, y, opts.interp), input, croppedFile);
+
+    % Reslice the first image to the finest resolution
+    ea_resample_image_by_spacing(croppedFile{1}, min(abs(cell2mat(voxsize))), 0, 0, ~opts.interp, croppedFile{1});
+
+    % Override input
+    input = croppedFile;
 end
 
 % Parse output
@@ -67,4 +89,9 @@ end
 % Delete unzipped input
 if ~isempty(gzInputs)
     ea_delete(erase(gzInputs, ".gz" + textBoundary('end')));
+end
+
+% Delete cropped image
+if opts.matchBBox
+    ea_delete(tempFolder);
 end
