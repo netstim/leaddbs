@@ -72,7 +72,8 @@ for side=1:numel(myvalsgroup)
     valsin=myvalsgroup{side}(nonempty,patientselectiongroup);
     outcomein=Outcome(:,side);
 
-    disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
+    disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...']);
+
     switch obj.statsettings.stattest
         case 'N-Map'
             [valsout,psout]=ea_explorer_stats_nmap(valsin);
@@ -99,5 +100,4 @@ for side=1:numel(myvalsgroup)
     end
     vals{1,side}(nonemptyidx)=valsout;
     pvals{1,side}(nonemptyidx)=psout;
-end
 end

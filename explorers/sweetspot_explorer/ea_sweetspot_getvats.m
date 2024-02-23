@@ -13,13 +13,13 @@ for sub=1:numPatient
     try
         vatlist(sub,1) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-R\.nii$'], 0);
     catch
-        ea_cprintf('CmdWinWarnings', 'Right side VTA doesn''t exist under stimulation folder:\n%s\n', stimFolder);
+        ea_cprintf('CmdWinWarnings', 'Right side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
         vatlist(sub,1) = {''};
     end
     try
         vatlist(sub,2) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-L\.nii$'], 0);
     catch
-        ea_cprintf('CmdWinWarnings', 'Left side VTA doesn''t exist under stimulation folder:\n%s\n', stimFolder);
+        ea_cprintf('CmdWinWarnings', 'Left side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
         vatlist(sub,2) = {''};
     end
 
@@ -28,13 +28,13 @@ for sub=1:numPatient
     try
         vatlist(numPatient+sub, 1) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-R_hemidesc-FlippedFromLeft\.nii$'], 0);
     catch
-        ea_cprintf('CmdWinWarnings', 'Right side VTA (flipped from left) doesn''t exist under stimulation folder:\n%s\n', stimFolder);
+        ea_cprintf('CmdWinWarnings', 'Right side VTA (flipped from left) doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
         vatlist(numPatient+sub, 1) = {''};
     end
     try
         vatlist(numPatient+sub, 2) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-L_hemidesc-FlippedFromRight\.nii$'], 0);
     catch
-        ea_cprintf('CmdWinWarnings', 'Left side VTA (flipped from right) doesn''t exist under stimulation folder:\n%s\n', stimFolder);
+        ea_cprintf('CmdWinWarnings', 'Left side VTA (flipped from right) doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
         vatlist(numPatient+sub, 2) = {''};
     end
 end

@@ -5,7 +5,7 @@ files = {rightFile; leftFile};
 
 for f=1:2
     if ~isfile(files{f})
-        ea_cprintf('CmdWinWarnings', 'Skipping flipping image: VTA doesn''t exist!\n');
+        ea_cprintf('CmdWinWarnings', 'VTA doesn''t exist! Skipping flipping image.\n\n');
         continue;
     end
 
