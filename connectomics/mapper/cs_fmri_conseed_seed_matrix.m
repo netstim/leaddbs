@@ -221,7 +221,7 @@ for subj = 1:numSubUse % iterate across subjects
             if ~isBIDSFileName(sfile{s})
                 mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
             else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap');
+                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap', 'ext', '.nii');
             end
         end
 
@@ -244,7 +244,7 @@ for subj = 1:numSubUse % iterate across subjects
             if ~isBIDSFileName(sfile{s})
                 mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
             else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
+                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap', 'ext', '.nii');
             end
         end
 
