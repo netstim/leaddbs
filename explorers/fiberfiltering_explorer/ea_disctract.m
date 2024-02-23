@@ -158,6 +158,7 @@ classdef ea_disctract < handle
                     obj.patientselection = obj.M.ui.listselect;
                 end
 
+                obj.responsevar = obj.M.clinical.vars{1};
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.subscore.vars = {};
                 obj.subscore.labels = {};
