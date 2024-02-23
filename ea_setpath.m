@@ -31,6 +31,7 @@ else
 end
 
 savepath;
+rehash toolboxcache;
 
 
 function subDirs = listDir(inputDir, opts)
