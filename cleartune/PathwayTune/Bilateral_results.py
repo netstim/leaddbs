@@ -201,20 +201,20 @@ if __name__ == '__main__':
 
     # load previously approved symptom-specific profiles
     # side is not relevant here, should be the same for bilateral
-    with open(os.environ['STIMDIR'] + '/NB_' + str(0) + 'target_profiles.json', 'r') as fp:
+    with open(os.environ['STIMDIR'] + '/NB_rh' + '/target_profiles.json', 'r') as fp:
         target_profiles = json.load(fp)
     fixed_symptom_weights_json = os.environ['STIMDIR'] + '/Fixed_symptoms.json'
 
     if reconcile_mode == 'improvement':
         # estimated improvements were stored in json
-        estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_symp_improv_rh.json'
-        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_symp_improv_lh.json'
+        estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_rh' + '/Estim_symp_improv_rh.json'
+        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_lh' + '/Estim_symp_improv_lh.json'
         fp.close()
         estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_profiles)
     elif reconcile_mode == 'weights':
         # estimated weights were stored in json
-        estim_w_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_weights_rh.json'
-        estim_w_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_weights_lh.json'
+        estim_w_rh_json = os.environ['STIMDIR'] + '/NB_rh' + '/Estim_weights_rh.json'
+        estim_w_lh_json = os.environ['STIMDIR'] + '/NB_lh' + '/Estim_weights_lh.json'
         estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights_json)
 
 

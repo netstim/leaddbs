@@ -148,6 +148,8 @@ class PamOptimizer:
                     S_vector[0]*100), shell=True)
                 # the original solution for 10 mA
                 # so scale by 100
+                
+        # maybe call PAM_caller via python to avoid memory build up
 
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)
