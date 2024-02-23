@@ -163,6 +163,7 @@ for s=1:length(sfile)
             mapFile = fullfile(outputfolder, [fname, '_conn-', connLabel, '_strucmap.nii']);
         else
             mapFile = setBIDSEntity(sfile{s}, 'conn', connLabel, 'suffix', 'strucmap');
+            mapFile = [ea_niifileparts(mapFile), '.nii'];
         end
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
