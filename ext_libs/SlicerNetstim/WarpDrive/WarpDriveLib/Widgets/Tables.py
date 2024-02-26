@@ -240,17 +240,18 @@ class SegmentationsTable(AtlasSegmentationBaseTable):
     result = BoolResult()
     segmentationName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',subFolders,0,0,result) 
     if result:
+      selection = os.path.join(segmentationsPath, segmentationName)
+      segmentationFiles = [selection] if os.path.isfile(selection) else glob.glob(os.path.join(selection, '**', '*.nii*'), recursive=True)
       qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
       qt.QApplication.processEvents()
       try:
-        self.loadSegmentation(os.path.join(segmentationsPath, segmentationName))    
+        self.loadSegmentations(segmentationsPath, segmentationFiles)    
       finally:
         qt.QApplication.restoreOverrideCursor()
     self.updateTable()
 
-  def loadSegmentation(self, segmentationPath):
+  def loadSegmentations(self, segmentationPath, niiFiles):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    niiFiles = glob.glob(os.path.join(segmentationPath, '**', '*.nii*'), recursive=True)
     for file in niiFiles:
       # load
       volumeNode = slicer.util.loadVolume(file,{'show':False})
