@@ -166,7 +166,8 @@ class AtlasSegmentationBaseTable(baseTable):
         tmpNode.SetAndObserveTransformNodeID(modelNode.GetTransformNodeID())
         tmpNode.HardenTransform()
         labelNode = self.modelToLabel(modelNode)
-        os.makedirs(os.path.dirname(name), exist_ok=True)
+        if os.path.dirname(name):
+          os.makedirs(os.path.dirname(name), exist_ok=True)
         slicer.util.saveNode(labelNode, os.path.join(segmentationPath, name + '.nii.gz'))      
         slicer.mrmlScene.RemoveNode(labelNode)
         slicer.mrmlScene.RemoveNode(tmpNode)
