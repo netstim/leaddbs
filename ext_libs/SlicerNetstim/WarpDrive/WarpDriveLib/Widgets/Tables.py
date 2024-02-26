@@ -260,11 +260,13 @@ class SegmentationsTable(AtlasSegmentationBaseTable):
       modelNode.GetDisplayNode().SetVisibility2D(1)
       # set in hierarchy
       basePath,fileName = os.path.split(file)
-      parentFolders = os.path.relpath(basePath, os.path.dirname(segmentationPath)).split(os.sep)
-      folderID = self.getOrCreateFolderItem(shNode.GetSceneItemID(), parentFolders.pop(0))
-      for parentName in parentFolders:
-        folderID = self.getOrCreateFolderItem(folderID, parentName)
-      shNode.SetItemParent(shNode.GetItemByDataNode(modelNode), folderID)
+      parentFolders = os.path.relpath(basePath, segmentationPath).split(os.sep)
+      if '.' in parentFolders:
+        parentFolders.remove('.')
+      parentID = shNode.GetSceneItemID()
+      while(parentFolders):
+        parentID = self.getOrCreateFolderItem(parentID, parentFolders.pop(0))
+      shNode.SetItemParent(shNode.GetItemByDataNode(modelNode), parentID)
       shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'segmentation', '1')
       modelNode.SetName(fileName.split('.')[0])
     WarpDrive.WarpDriveLogic().invertAtlases(WarpDrive.WarpDriveLogic().getParameterNode().GetNodeReference("InputNode"), int(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("InverseMode")))
