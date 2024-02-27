@@ -43,7 +43,7 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
     end
 
     % fiber values can be sigmoid transform
-    if obj.SigmoidTransform 
+    if strcmp(obj.statsettings.stimulationmodel, 'Sigmoid Field')
         fibsval_raw = fibsval;
         for side = 1:size(fibsval_raw,2)
             fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
