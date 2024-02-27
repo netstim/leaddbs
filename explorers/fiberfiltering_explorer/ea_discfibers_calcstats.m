@@ -237,8 +237,10 @@ for group=groups
 
             %this following line calls the actual statistical test:
             [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
-            vals{1,side}(nonemptyidx)=valsout;
-            pvals{1,side}(nonemptyidx)=psout;
+            vals{group,side}(nonemptyidx)=valsout;
+            if exist('pvals','var')
+                pvals{group,side}(nonemptyidx)=psout;
+            end
 
         end
     end
