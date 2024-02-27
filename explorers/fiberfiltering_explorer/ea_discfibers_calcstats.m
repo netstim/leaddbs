@@ -109,7 +109,7 @@ end
 
 switch obj.multitractmode
     case 'Split & Color By Group'
-        groups = unique(obj.M.patient.group)';
+        groups = unique(obj.M.patient.group(obj.patientselection))';
         dogroups = 1;
         dosubscores = 0;
     case 'Split & Color By Subscore'
@@ -236,12 +236,13 @@ for group=groups
             %% Step 2: Fiberfiltering. This part filters fibers based on outcome variable (except for descriptive tests):
 
             %this following line calls the actual statistical test:
-            [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
-            vals{group,side}(nonemptyidx)=valsout;
-            if exist('pvals','var')
-                pvals{group,side}(nonemptyidx)=psout;
+            if ~isempty(outcomein)
+                [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
+                vals{group,side}(nonemptyidx)=valsout;
+                if exist('pvals','var')
+                    pvals{group,side}(nonemptyidx)=psout;
+                end
             end
-
         end
     end
 end
