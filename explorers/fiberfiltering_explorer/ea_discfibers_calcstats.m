@@ -236,11 +236,18 @@ for group=groups
             %% Step 2: Fiberfiltering. This part filters fibers based on outcome variable (except for descriptive tests):
 
             %this following line calls the actual statistical test:
-            if ~isempty(outcomein)
+            if ~isempty(valsin) && ~isempty(outcomein)
                 [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
                 vals{group,side}(nonemptyidx)=valsout;
                 if exist('pvals','var')
                     pvals{group,side}(nonemptyidx)=psout;
+                end
+            else
+                if isempty(valsin)
+                    ea_cprintf('CmdWinWarnings', 'group %d side %d: empty valsin!\n', group, side);
+                end
+                if isempty(outcomein)
+                    ea_cprintf('CmdWinWarnings', 'group %d side %d: empty outcomein!\n', group, side);
                 end
             end
         end
