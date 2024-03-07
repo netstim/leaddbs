@@ -22,13 +22,18 @@ ea_mkdir(fullfile(outfolder,'darkfield'));
 
 
 ea_dispercent(0,'Exporting slices');
+fullslice=zeros(4912,7360);
+xfrom=850:6000;
 for slice=1:size(nii.img,3)
     thisslice=nii.img(:,:,slice);
-    imwrite(thisslice,fullfile(outfolder,[sprintf('%03.f',slice),'.png']));
-    if any(thisslice(:)) % also export overlays
+    fullslice(:,xfrom)=thisslice;
+    fullslice=fullslice(end:-1:1,:);
+    clear thisslice
+    imwrite(fullslice,fullfile(outfolder,[sprintf('%03.f',slice),'.png']));
+    if any(fullslice(:)) % also export overlays
 
         h=figure('Visible','off');
-        [c,cont] = contour(mean(thisslice,3),2);
+        [c,cont] = contour(mean(fullslice,3),2);
         contP = get(cont,'Parent');
         X = contP.XLim;
         Y = contP.YLim;
