@@ -54,7 +54,6 @@ V.dt = [2, 0];
 V.n = [1, 1];
 V.descrip = 'USPhisto';
 V.pinfo = [1; 0; 352];
-% You might need to adjust the header load if it's in a different location
 V.mat = load(fullfile (ea_getearoot,'tools','uspatlas','header_correct.mat')).V.mat;
 
 % Create volume header
