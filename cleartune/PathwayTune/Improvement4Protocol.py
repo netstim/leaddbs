@@ -506,9 +506,9 @@ class ResultPAM:
         ax.set_xticks(pos_adjusted)
         ax.set_xticklabels(symptom_labels_marked, rotation=45)
         fig.tight_layout()
-        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Symptom_profiles_' + str(self.side) + '.png',
+        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Symptom_profiles' + self.side_suffix + '.png',
                     format='png',
-                    dpi=1000)
+                    dpi=500)
 
         # ============= Plot activation profile and current procotol (Lead-DBS notation) =============#
 
@@ -568,9 +568,9 @@ class ResultPAM:
         ax.set_xticks(pos)
         plt.xticks(rotation=45)
         fig.tight_layout()
-        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Activation_profile_' + str(self.side) + '.png',
+        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Activation_profile' + self.side_suffix + '.png',
                     format='png',
-                    dpi=1000)
+                    dpi=500)
 
     def make_prediction(self, score_symptom_metric, ActivProfileDict=None, fixed_symptoms_dict=None, disease='spontaneous human combustion'):
 
