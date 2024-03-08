@@ -39,7 +39,8 @@ var_threshold = 0.01; % acceptable variance of val within one spatial group
 val_metric_coef = 0.9; % accepted fraction of otsu metric for val variance (1.0 is defined by the maximum number of bins)
 
 % should be passed to the function
-symptoms_list = {'Brady', 'Rigidity', 'Axial', 'Tremor'};
+symptoms_list = obj.subscore.labels;
+%symptoms_list = {'Brady', 'Rigidity', 'Axial', 'Tremor'};
 
 % we extract each voter and side separately
 for voter=1:size(vals,1)  % I would restrict to one voter for now
