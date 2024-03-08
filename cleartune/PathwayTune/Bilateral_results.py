@@ -32,7 +32,7 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles
         if "_rh" in key:
             # internal loop to check for _lh counterpart
             for key2 in target_profiles_and_SE:
-                if key2[:-3] == key[:-3]:
+                if key2[:-3] == key[:-3] and key2 != key:
 
                     activ_target_profile = list(target_profiles_and_SE[key].keys())
                     sum_val_symptom_rh = 0.0
@@ -94,7 +94,6 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles
 
                 total_weight_count = total_weight_count + final_weights[key[:-3]]
 
-
     ## we need to normalize them
     #for key in final_weights:
     #    final_weights[key] = final_weights[key] / total_weight_count
@@ -130,7 +129,7 @@ def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_
         if "_rh" in key:
             # internal loop to check for _lh counterpart
             for key2 in target_profiles_and_SE:
-                if key2[:-3] == key[:-3]:
+                if key2[:-3] == key[:-3] and key2 != key:
 
                     activ_target_profile = list(target_profiles_and_SE[key].keys())
                     sum_val_symptom_rh = 0.0

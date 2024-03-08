@@ -34,6 +34,9 @@ class PamOptimizer:
         self.neuron_folder = neuron_folder
         self.PAM_caller_script = PAM_caller_script
 
+        # import external function
+        sys.path.insert(1, os.path.dirname(self.PAM_caller_script))
+
         if self.side == 0:
             self.side_suffix = '_rh'
         else:
@@ -141,15 +144,10 @@ class PamOptimizer:
         """
 
         # we use scaling, but later we will switch to scaling_vector
-        with open(os.devnull, 'w') as FNULL:
-            # we can also specify which python to use
-            subprocess.call('python ' + self.PAM_caller_script + ' ' + self.neuron_folder + ' ' +
-                self.results_folder + ' ' + self.timeDomainSolution + ' ' + self.pathwayParameterFile + ' ' + str(
-                    S_vector[0]*100), shell=True)
+        from PAM_caller import launch_PAM
+        launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 100)
                 # the original solution for 10 mA
                 # so scale by 100
-                
-        # maybe call PAM_caller via python to avoid memory build up
 
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)
