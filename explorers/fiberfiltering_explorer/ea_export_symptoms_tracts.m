@@ -39,7 +39,8 @@ var_threshold = 0.01; % acceptable variance of val within one spatial group
 val_metric_coef = 0.9; % accepted fraction of otsu metric for val variance (1.0 is defined by the maximum number of bins)
 
 % should be passed to the function
-symptoms_list = {'Brady', 'Rigidity', 'Axial', 'Tremor'};
+symptoms_list = obj.subscore.labels;
+%symptoms_list = {'Brady', 'Rigidity', 'Axial', 'Tremor'};
 
 % we extract each voter and side separately
 for voter=1:size(vals,1)  % I would restrict to one voter for now
@@ -58,7 +59,7 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
         % load cfile
         [filepath,~,~] = fileparts(obj.leadgroup);
         if obj.multi_pathways == 1
-            cfile = [filepath,filesep,'merged_pathways.mat'];
+            cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
         else
             cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
         end

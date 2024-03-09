@@ -1,7 +1,9 @@
-function options = ea_get_OSS_DBS_options(options, patientPath, N_tracts, ConnectomeName)
+function options = ea_get_OSS_DBS_options(patientPath, N_tracts, ConnectomeName)
 
     % update options for OSS-DBS launch without GUI
+    % unupdated parameters are the same as during the last GUI settings session
 
+    options = ea_prefs('');
     options = ea_getptopts(patientPath, options);
    
     options.native = 1;
