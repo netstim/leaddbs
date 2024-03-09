@@ -38,7 +38,7 @@ class AxonModels:
              axon_diams_all: list of diameters in micrometers for all provided fibers, one per pathway
              axon_lengths_all: list of axon lengths in mm, one per pathway
              centering_coordinates: list of lists, 3-D coordinates used to center axons on fibers (e.g. active contacts)
-             axon_model: str, NEURON model ('McIntyre2002', 'McIntyre2002_ds' (downsampled), 'McNeal1976' (classic McNeal's))
+             axon_model: str, NEURON model ('MRG2002', 'MRG2002_DS' (downsampled), 'McNeal1976' (classic McNeal's))
              combined_h5_file: str, full path to the file where axons are stored
              projection_names: list of str, optional
              connectome_name: str, optional
@@ -96,7 +96,7 @@ class AxonModels:
                 list_ascii.append(array_ascii[i][0])
             # list_ascii = map(lambda s: s.strip(), list_ascii)
             self.axon_model = ''.join(chr(i) for i in list_ascii)
-            if self.axon_model not in ['McIntyre2002', 'McIntyre2002_ds', 'McNeal1976']:
+            if self.axon_model not in ['MRG2002', 'MRG2002_DS', 'McNeal1976']:
                 print('The selected NEURON models is not recognized, check oss-dbs_parameters.mat')
                 raise SystemExit
         else:
@@ -455,7 +455,7 @@ def get_axon_morphology(axon_model, axon_diam, axon_length=None, n_Ranviers=None
 
     Parameters
     ----------
-     axon_model: str, NEURON model ('McIntyre2002', 'McIntyre2002_ds' (downsampled), 'McNeal1976' (classic McNeal's))
+     axon_model: str, NEURON model ('MRG2002', 'MRG2002_DS' (downsampled), 'McNeal1976' (classic McNeal's))
      axon_diam: float, diameter in micrometers for all fibers in the pathway
      axon_length: float, optional, axon lengths in mm for all fibers in the pathway. If not specified, provide n_Ranviers
      n_Ranviers: int, optional, number of nodes of Ranvier per axon. If not specified, provide axon_length.
@@ -471,7 +471,7 @@ def get_axon_morphology(axon_model, axon_diam, axon_length=None, n_Ranviers=None
         'axon_diam': axon_diam,
     }
 
-    if 'McIntyre2002' in axon_model:
+    if 'MRG2002' in axon_model:
 
         from Axon_files.axon import Axon
         param_ax = {
@@ -484,7 +484,7 @@ def get_axon_morphology(axon_model, axon_diam, axon_length=None, n_Ranviers=None
         axon_morphology['ranvier_length'], axon_morphology['para1_length'], axon_morphology['para2_length'], axon_morphology['node_step'] = (
             nr["ranvier_length"] * 1e-3, nr["para1_length"] * 1e-3, nr["para2_length"] * 1e-3, nr["deltax"] * 1e-3)
 
-        if axon_model == 'McIntyre2002_ds':
+        if axon_model == 'MRG2002_DS':
             # downsampled version
             if axon_diam >= 5.7:
                 # node -- -- internodal -- -- -- -- internodal -- -- node
@@ -685,7 +685,7 @@ def get_local_compartment_coords(axon_morphology):
     loc_coords = np.zeros(axon_morphology['n_comp'] - 1, float)
     loc_pos = 0.0  # just for clarity
 
-    if axon_morphology['axon_model'] == 'McIntyre2002' and axon_morphology['axon_diam'] >= 5.7:
+    if axon_morphology['axon_model'] == 'MRG2002' and axon_morphology['axon_diam'] >= 5.7:
         # only internodal compartments. The distances will be computed from the node of Ranvier using loc_pos
 
         for inx_loc in np.arange(1, axon_morphology['n_comp']):
@@ -704,7 +704,7 @@ def get_local_compartment_coords(axon_morphology):
 
         loc_coords[inx_loc-1] = loc_pos
 
-    elif axon_morphology['axon_model'] == 'McIntyre2002' and axon_morphology['axon_diam'] < 5.7:
+    elif axon_morphology['axon_model'] == 'MRG2002' and axon_morphology['axon_diam'] < 5.7:
         for inx_loc in np.arange(1, axon_morphology['n_comp']):
             if inx_loc == 1:
                 loc_pos = (axon_morphology['ranvier_length'] + axon_morphology['para1_length']) / 2
@@ -719,7 +719,7 @@ def get_local_compartment_coords(axon_morphology):
 
         loc_coords[inx_loc-1] = loc_pos
 
-    elif axon_morphology['axon_model'] == 'McIntyre2002_ds' and axon_morphology['axon_diam'] >= 5.7:
+    elif axon_morphology['axon_model'] == 'MRG2002_DS' and axon_morphology['axon_diam'] >= 5.7:
         # node -- -- internodal -- -- -- -- internodal -- -- node
         for inx_loc in np.arange(1,axon_morphology['n_comp']):  # only internodal compartments. The distances will be computed from the node of Ranvier using loc_pos
             if inx_loc == 1:
@@ -731,7 +731,7 @@ def get_local_compartment_coords(axon_morphology):
 
         loc_coords[inx_loc - 1] = loc_pos
 
-    elif axon_morphology['axon_model'] == 'McIntyre2002_ds' and axon_morphology['axon_diam'] < 5.7:
+    elif axon_morphology['axon_model'] == 'MRG2002_DS' and axon_morphology['axon_diam'] < 5.7:
         # mode -- -- -- internodal -- -- -- node
         loc_coords[0] = 0.5 * axon_morphology['ranvier_length'] + 1.5 * axon_morphology['inter_length'] + axon_morphology['para1_length'] + axon_morphology['para2_length']
 
@@ -749,7 +749,7 @@ if __name__ == '__main__':
     ----------
     stim_dir: str, path to stimulation folder where oss-dbs_parameter.mat is stored
     hemis_idx: int, hemisphere ID (0 - right, 1 - left)
-    NEURON model: str, optional, possible options :'McIntyre2002', 'McIntyre2002_ds' (downsampled), 'McNeal1976'
+    NEURON model: str, optional, possible options :'MRG2002', 'MRG2002_DS' (downsampled), 'McNeal1976'
      (classic McNeal's)
         
     """
