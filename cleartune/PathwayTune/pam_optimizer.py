@@ -145,9 +145,9 @@ class PamOptimizer:
 
         # we use scaling, but later we will switch to scaling_vector
         from PAM_caller import launch_PAM
-        launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 100)
-                # the original solution for 10 mA
-                # so scale by 100
+        launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 1000)
+        # the original solution for 1 mA
+        # so scale by 1000
 
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)
