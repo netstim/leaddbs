@@ -48,8 +48,8 @@ class NeuronStimulation:
 
         from axon_allocation import get_axon_morphology
 
-        if self.axonModel == 'McIntyre2002_ds':
-            axonNEURONModel = 'McIntyre2002'
+        if self.axonModel == 'MRG2002_DS':
+            axonNEURONModel = 'MRG2002'
         else:
             axonNEURONModel = self.axonModel
 
@@ -77,7 +77,7 @@ class NeuronStimulation:
         if self.axonModel == 'McNeal1976':
             v_init = -70.0
             n.h('{load_file("init_B5_extracellular.hoc")}')
-        elif self.axonModel == "McIntyre2002" or self.axonModel == "McIntyre2002_ds":
+        elif self.axonModel == "MRG2002" or self.axonModel == "MRG2002_DS":
             v_init = -80.0
             n.h('{load_file("axon4pyfull.hoc")}')
             n.h.deletenodes()
@@ -135,7 +135,7 @@ class NeuronStimulation:
 
         """
 
-        if self.axonModel == "McIntyre2002" or self.axonModel == "McIntyre2002_ds":
+        if self.axonModel == "MRG2002" or self.axonModel == "MRG2002_DS":
         
             if self.axonDiam >= 5.7:
                 axoninter = (self.nRanvier - 1) * 6
@@ -372,7 +372,7 @@ class NeuronStimulation:
 
         """
 
-        if self.axonModel == 'McIntyre2002_ds':
+        if self.axonModel == 'MRG2002_DS':
             v_time_sol = self.upsample_voltage(v_time_sol)
 
         v_ext = self.get_v_ext(v_time_sol)
