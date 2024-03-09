@@ -1,7 +1,5 @@
 '''
     By K. Butenko
-    Generate training and test datasets for OSS-DBS to train ANN
-    Output: Current_protocols_ and StimSets_info.json in stim. folder
 '''
 
 
@@ -13,10 +11,29 @@ import csv
 import h5py
 import json
 
+# hardwired: max total currents allowed
 one_pol_current_threshold = 8.0  # in mA
 total_current_threshold = 8.0
 
 def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm_threshold, side):
+
+    """ Generate current sets to solve for training (using LHS) and testing (random) of the approximation model
+
+    Inputs
+    ------
+    stim_folder : str
+        path to the stimulation folder
+
+    Returns
+    -------
+    trainSize_actual, int, number of protocols for training
+    testSize_actual, int, number of protocols for testing
+    """
+
+    if side == 0:
+        side_suffix = '_rh'
+    else:
+        side_suffix = '_lh'
 
     # check the electrode configuration
     from NB_outline import determine_el_type
@@ -119,10 +136,10 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
         'segm_threshold': segm_threshold,
         }
 
-    if not os.path.exists(stim_folder + '/NB_' + str(side)):
-        os.mkdir(stim_folder + '/NB_' + str(side))
+    if not os.path.exists(stim_folder + '/NB' + side_suffix):
+        os.mkdir(stim_folder + '/NB' + side_suffix)
 
-    with open(stim_folder + '/NB_' + str(side) + '/StimSets_info.json', 'w') as save_as_dict:
+    with open(stim_folder + '/NB' + side_suffix + '/StimSets_info.json', 'w') as save_as_dict:
         json.dump(StimSets_info, save_as_dict)
 
     return trainSize_actual, testSize_actual
@@ -135,7 +152,7 @@ if __name__ == '__main__':
     # passed from Currentune
     # sys.argv[1] - stimfolder
     # sys.argv[2] - electrode model (-1 if not implanted)
-    # sys.argv[3] - side
+    # sys.argv[3] - side (0-rh)
     # sys.argv[4:] - min cylind, max cylind, min segm, max_segm
 
     create_Training_Test_sets(sys.argv[1], sys.argv[2], [float(sys.argv[4]), float(sys.argv[5])],

@@ -17,7 +17,7 @@ def determine_el_type(el_model):
 
     concentric4 = ['PINS_Medical_L303','PINS_Medical_L302','PINS_Medical_L301', 'Medtronic_3389','Medtronic_3387','Medtronic_3391','St._Jude ActiveTip_(6142-6145)', 'St._Jude_ActiveTip_(6146-6149)']
     concentric8 = ['Boston_Scientific_Vercise']
-    segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed']
+    segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed', 'Medtronic_B33005', 'Medtronic B33015']
     if el_model in concentric4:
         return 'concentric4'
     elif el_model in concentric8:
