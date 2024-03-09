@@ -1,4 +1,4 @@
-function varargout = ea_genvat_butenko(varargin)
+function varargout = ea_oss2optimizePAM(varargin)
 % Wrapper for OSS-DBS for VTA calculation
 
 time = datetime('now', 'TimeZone', 'local');
@@ -46,7 +46,6 @@ settings.removeElectrode = options.prefs.machine.vatsettings.butenko_removeElect
 settings.neuronModel = options.prefs.machine.vatsettings.butenko_axonModel;
 settings.signalType = options.prefs.machine.vatsettings.butenko_signalType;
 %settings.pulseWidth = options.prefs.machine.vatsettings.butenko_pulseWidth;
-settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
 settings.biphasic = options.prefs.machine.vatsettings.butenko_biphasic;
 settings.butenko_tensorData = options.prefs.machine.vatsettings.butenko_tensorData;
 settings.AdaptiveRef = options.prefs.machine.vatsettings.butenko_AdaptiveRef;
@@ -387,7 +386,7 @@ for source_index = 1:4
 
             % to optimize monopolar
             % solve for 10 mA(!)
-            settings.Phi_vector(side,:) = [10,0,0,0,0,0,0,0];
+            settings.Phi_vector(side,:) = [1,0,0,0,0,0,0,0];
 
             % estimate center of VAT grid
             if ~isnan(settings.current_control(side))
@@ -429,11 +428,11 @@ for source_index = 1:4
     settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
     settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
     
-    
     % Axon activation setting
     if settings.calcAxonActivation
         %settings.AxonModel = options.prefs.machine.vatsettings.butenko_AxonModel;
-    
+
+        settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
         settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
         settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
         settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
@@ -551,11 +550,13 @@ for source_index = 1:4
             save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
             save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
         end
+    else
+        % for now, hardcode 60 us pw for all VATs
+        settings.pulseWidth = [60.0;60.0];
     end
     
     %% Save settings for OSS-DBS
     if any(~isnan(settings.current_control))
-
         parameterFile = fullfile(outputDir, 'oss-dbs_parameters.mat');
         save(parameterFile, 'settings', '-v7.3');
         ea_savestimulation(S,options);
@@ -675,12 +676,17 @@ for source_index = 1:4
             folder2save = [outputDir,filesep,'Results_', sideCode];
             timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
             pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
+
+            % check if the time domain results is available
+            if ~isfile(timeDomainSolution)
+                ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, set settings.outOfCore to 1')
+                return
+            end
     
             % instead of PAM_caller, we call optimization algorithm here
             PAM_caller_script = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py'];
             optim_settings_dict = [outputDir,filesep,'netblend_dict.json'];
             system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', PAM_caller_script, ' ', neuron_folder, ' ', optim_settings_dict, ' ', outputDir, ' ', num2str(side)])
-            %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
         end
     
         % clean-up for outOfCore
@@ -721,8 +727,8 @@ for source_index = 1:4
                         copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
                         copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
                     end
-                    %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-                    %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+                    %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
+                    %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
                 end
     
                 % always transform to MNI space
