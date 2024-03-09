@@ -3,36 +3,50 @@ import numpy as np
 import json
 import os
 import sys
+import copy
 
-def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, Target_profiles, Soft_SE_thresh, fixed_symptom_weights_json):
+def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights_json):
 
-    # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
-    Target_profiles.update(Soft_SE_thresh)
+    """ Find bilateral symptoms and estimate bilateral weights accounting for possible asymmetry in fiber values
 
-    sum_symptom_vals = np.zeros(len(Target_profiles), float)
+    Parameters
+    ----------
+    estim_w_rh_json: str, path to dict with estimated weights for right hemisphere stim
+    estim_w_lh_json: str, path to dict with estimated weights for left hemisphere stim
+    target_profiles: dict, Activation Profile Dictionary
+    fixed_symptom_weights_json: str, path to dict with fixed weights in network blending
+
+    """
+
+    # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
+    target_profiles_and_SE = copy.deepcopy(target_profiles['profile_dict'])
+    if 'Soft_SE_thresh' in target_profiles_and_SE:
+        target_profiles_and_SE.update(target_profiles_and_SE['Soft_SE_thresh'])
+
+    sum_symptom_vals = np.zeros(len(target_profiles_and_SE), float)
 
     bilateral_symptoms = {}  # store their names and sum vals across hemispheres
 
-    for key in Target_profiles:
+    for key in target_profiles_and_SE:
 
         if "_rh" in key:
             # internal loop to check for _lh counterpart
-            for key2 in Target_profiles:
-                if key2[:-3] == key[:-3]:
+            for key2 in target_profiles_and_SE:
+                if key2[:-3] == key[:-3] and key2 != key:
 
-                    activ_target_profile = list(Target_profiles[key].keys())
+                    activ_target_profile = list(target_profiles_and_SE[key].keys())
                     sum_val_symptom_rh = 0.0
                     for i in range(len(activ_target_profile)):
                         # sum across all pathways of this symptom (separated for two sides)
                         sum_val_symptom_rh = sum_val_symptom_rh + \
-                                                     Target_profiles[key][activ_target_profile[i]][2]
+                                                     target_profiles_and_SE[key][activ_target_profile[i]][2]
 
-                    activ_target_profile = list(Target_profiles[key2].keys())
+                    activ_target_profile = list(target_profiles_and_SE[key2].keys())
                     sum_val_symptom_lh = 0.0
                     for i in range(len(activ_target_profile)):
                         # sum across all pathways of this symptom (separated for two sides)
                         sum_val_symptom_lh = sum_val_symptom_lh + \
-                                                     Target_profiles[key2][activ_target_profile[i]][2]
+                                                     target_profiles_and_SE[key2][activ_target_profile[i]][2]
 
                     bilateral_symptoms[key[:-3]] = [sum_val_symptom_rh, sum_val_symptom_lh]
 
@@ -80,7 +94,6 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, Target_profiles
 
                 total_weight_count = total_weight_count + final_weights[key[:-3]]
 
-
     ## we need to normalize them
     #for key in final_weights:
     #    final_weights[key] = final_weights[key] / total_weight_count
@@ -90,35 +103,47 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, Target_profiles
 
 
 
-def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, Target_profiles, Soft_SE_thresh, fixed_symptom_weights_json):
+def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_profiles):
 
-    # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
-    Target_profiles.update(Soft_SE_thresh)
+    """ Find bilateral symptoms and estimate bilateral improvement accounting for possible asymmetry in fiber values
 
-    sum_symptom_vals = np.zeros(len(Target_profiles), float)
+    Parameters
+    ----------
+    estim_imp_rh_json: str, path to dict with predicted improvements for right hemisphere stim
+    estim_imp_lh_json: str, path to dict with predicted improvements for left hemisphere stim
+    target_profiles: dict, Activation Profile Dictionary
+
+    """
+
+    # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
+    target_profiles_and_SE = copy.deepcopy(target_profiles['profile_dict'])
+    if 'Soft_SE_thresh' in target_profiles_and_SE:
+        target_profiles_and_SE.update(target_profiles_and_SE['Soft_SE_thresh'])
+
+    sum_symptom_vals = np.zeros(len(target_profiles_and_SE), float)
 
     bilateral_symptoms = {}  # store their names and sum vals across hemispheres
 
-    for key in Target_profiles:
+    for key in target_profiles_and_SE:
 
         if "_rh" in key:
             # internal loop to check for _lh counterpart
-            for key2 in Target_profiles:
-                if key2[:-3] == key[:-3]:
+            for key2 in target_profiles_and_SE:
+                if key2[:-3] == key[:-3] and key2 != key:
 
-                    activ_target_profile = list(Target_profiles[key].keys())
+                    activ_target_profile = list(target_profiles_and_SE[key].keys())
                     sum_val_symptom_rh = 0.0
                     for i in range(len(activ_target_profile)):
                         # sum across all pathways of this symptom (separated for two sides)
                         sum_val_symptom_rh = sum_val_symptom_rh + \
-                                                     Target_profiles[key][activ_target_profile[i]][2]
+                                                     target_profiles_and_SE[key][activ_target_profile[i]][2]
 
-                    activ_target_profile = list(Target_profiles[key2].keys())
+                    activ_target_profile = list(target_profiles_and_SE[key2].keys())
                     sum_val_symptom_lh = 0.0
                     for i in range(len(activ_target_profile)):
                         # sum across all pathways of this symptom (separated for two sides)
                         sum_val_symptom_lh = sum_val_symptom_lh + \
-                                                     Target_profiles[key2][activ_target_profile[i]][2]
+                                                     target_profiles_and_SE[key2][activ_target_profile[i]][2]
 
                     bilateral_symptoms[key[:-3]] = [sum_val_symptom_rh, sum_val_symptom_lh]
 
@@ -175,26 +200,20 @@ if __name__ == '__main__':
 
     # load previously approved symptom-specific profiles
     # side is not relevant here, should be the same for bilateral
-    with open(os.environ['STIMDIR'] + '/NB_' + str(0) + '/profile_dict.json', 'r') as fp:
-        profile_dict = json.load(fp)
-    fp.close()
-
-    with open(os.environ['STIMDIR'] + '/NB_' + str(0) + '/Soft_SE_dict.json', 'r') as fp:
-        Soft_SE_dict = json.load(fp)
-    fp.close()
-
+    with open(os.environ['STIMDIR'] + '/NB_rh' + '/target_profiles.json', 'r') as fp:
+        target_profiles = json.load(fp)
     fixed_symptom_weights_json = os.environ['STIMDIR'] + '/Fixed_symptoms.json'
 
     if reconcile_mode == 'improvement':
         # estimated improvements were stored in json
-        estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_symp_improv_rh.json'
-        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_symp_improv_lh.json'
+        estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_rh' + '/Estim_symp_improv_rh.json'
+        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_lh' + '/Estim_symp_improv_lh.json'
         fp.close()
-        estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, profile_dict, Soft_SE_dict, fixed_symptom_weights_json)
+        estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_profiles)
     elif reconcile_mode == 'weights':
         # estimated weights were stored in json
-        estim_w_rh_json = os.environ['STIMDIR'] + '/NB_' + str(0) + '/Estim_weights_rh.json'
-        estim_w_lh_json = os.environ['STIMDIR'] + '/NB_' + str(1) + '/Estim_weights_lh.json'
-        estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, profile_dict, Soft_SE_dict, fixed_symptom_weights_json)
+        estim_w_rh_json = os.environ['STIMDIR'] + '/NB_rh' + '/Estim_weights_rh.json'
+        estim_w_lh_json = os.environ['STIMDIR'] + '/NB_lh' + '/Estim_weights_lh.json'
+        estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights_json)
 
 

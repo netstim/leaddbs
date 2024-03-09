@@ -15,15 +15,28 @@ os.environ['PATIENTDIR'] = '/opt/Patient'
 sys.path.insert(1, os.environ['PATIENTDIR'])
 
 
-def get_simulated_pathways(side):
+def get_simulated_pathways(side, stim_dir):
 
-    ''' based on Lead-DBS files for OSS-DBS, get names of Kuncel filtered pathways and original number of fibers per pathway'''
+    """ Get names of Kuncel-filtered pathways and original number of fibers per pathway
+
+    Parameters
+    ----------
+    side: int, hemisphere index (0 - right, 1 - left)
+    stim_dir: str, path to the stimulation folder
+
+    Returns
+    ----------
+
+    pathway names, list
+    original number of fibers, list
+
+    """
 
     # later we should store connectome name in GUI_inp_dict.py
     # load parameters from the file prepared by Lead-DBS
     #file_inp = h5py.File(os.environ['PATIENTDIR'] + '/oss-dbs_parameters.mat', mode='r')
 
-    file_inp = h5py.File(os.environ['STIMDIR'] + '/oss-dbs_parameters.mat', mode='r')
+    file_inp = h5py.File(stim_dir + '/oss-dbs_parameters.mat', mode='r')
     array_ascii = file_inp['settings']['connectome'][:]
     list_ascii = []
     for i in range(array_ascii.shape[0]):
@@ -48,7 +61,7 @@ def get_simulated_pathways(side):
         #Full_paths = [
         #    os.environ['PATIENTDIR'] + '/' + Connectome_name.rsplit(' ', 1)[1] + '/data' + str(side + 1) + '.mat']
         Full_paths = [
-            os.environ['STIMDIR'] + '/' + Connectome_name.rsplit(' ', 1)[1] + '/data' + str(side + 1) + '.mat']
+            stim_dir + '/' + Connectome_name.rsplit(' ', 1)[1] + '/data' + str(side + 1) + '.mat']
 
         file = h5py.File(Full_paths[0], mode='r')
         number_original = []
@@ -69,7 +82,7 @@ def get_simulated_pathways(side):
 
 def get_current_protocol(index_side):
 
-    ''' based on Lead-DBS files for OSS-DBS, get the simulated current protocol (in A)'''
+    """ based on Lead-DBS files for OSS-DBS, get the simulated current protocol (in A) """
 
     file = h5py.File(os.environ['STIMDIR'] + '/oss-dbs_parameters.mat', mode='r')
 

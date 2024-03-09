@@ -11,14 +11,25 @@ from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, c
 import json
 import copy
 
-def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, fixed_symptom_weights, approx_pathways, side, score_symptom_metric='Canberra'):
+def get_symptom_distances(activation_profile, target_profiles, fixed_symptom_weights, approx_pathways, side, score_symptom_metric='Canberra'):
 
-    ''' Compute distances in pathway activation space from Target_profiles of symptoms and soft-side effects
-        to the activation_profile '''
+    """ Compute distances in pathway activation space from target_profiles of symptoms and soft-side effects
+        to the activation_profile
 
-    # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
-    Target_profiles_and_SE = copy.deepcopy(Target_profiles)
-    Target_profiles_and_SE.update(Soft_SE_thresh)
+    Parameters
+    ----------
+    activation_profile: Nx1 numpy.ndarray, percent activation for approx_pathways
+    target_profiles: dict, Activation Profile Dictionary
+    fixed_symptom_weights: dictionary with fixed weights in network blending
+    approx_pathways: list, pathways simulated in OSS-DBS for this patient
+    side: int, hemisphere index (0 - right, 1 - left)
+    score_symptom_metric: str, optional, metric to compute distances in symptom space
+
+    """
+
+    # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
+    Target_profiles_and_SE = copy.deepcopy(target_profiles['profile_dict'])
+    Target_profiles_and_SE.update(target_profiles['Soft_SE_thresh'])
 
     N_symptoms_side = 0
     for key in Target_profiles_and_SE:
@@ -54,12 +65,13 @@ def get_symptom_distances(activation_profile, Target_profiles, Soft_SE_thresh, f
                 inx = approx_pathways.index(activ_target_profile[i])
 
                 # if the activation is below the threshold, assign the threshold (so that the distance is 0)
-                if key in Soft_SE_thresh and Target_profiles_and_SE[key][activ_target_profile[i]][0] > activation_profile[inx]:
+                if key in target_profiles['Soft_SE_thresh'] and Target_profiles_and_SE[key][activ_target_profile[i]][0] > activation_profile[inx]:
                     predicted_rates.append(Target_profiles_and_SE[key][activ_target_profile[i]][0])
                 else:
                     predicted_rates.append(activation_profile[inx])
 
-            else:  # if not a part of the approx model, assign the threshold (so that the distance is 0)
+            else:
+                # if not a part of the approx model, assign the threshold (so that the distance is 0)
                 predicted_rates.append(Target_profiles_and_SE[key][activ_target_profile[i]][0])
                 #print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
 

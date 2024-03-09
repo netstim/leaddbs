@@ -40,7 +40,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
 
         if check_S == 1
             % we need to change S for 4-electrode
-            load([ea_getearoot,'cleartune/cleartunePAM/S_4contact.mat']);
+            load([ea_getearoot,'cleartune/PathwayTune/S_4contact.mat']);
             if min_conc < 0.0
                 if length(side) == 2
                     S.Rs1.amp = 4 * (max_conc - min_conc);
@@ -67,7 +67,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
 
         if check_S == 1
             % we need to change S for 8-electrode same %
-            load([ea_getearoot,'cleartune/cleartunePAM/S_8contact_conc.mat']);
+            load([ea_getearoot,'cleartune/PathwayTune/S_8contact_conc.mat']);
             if min_conc < 0.0
                 if length(side) == 2
                     S.Rs1.amp = 8 * (max_conc - min_conc);
@@ -100,7 +100,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
         max_bound_per_contact(1,2:7) = max_segm;
 
         if check_S == 1
-            load([ea_getearoot,'cleartune/cleartunePAM/S_8contact_segm.mat']);
+            load([ea_getearoot,'cleartune/PathwayTune/S_8contact_segm.mat']);
             if min_conc < 0.0  % we assume that both concentric and segmented will have either both or one polarity
                 if length(side) == 2
                     S.Rs1.amp = 2 * (max_conc - min_conc) + 6 * (max_segm - min_segm);
@@ -140,4 +140,9 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     else
         S = 0;  % won't be used
     end
+
+    % hardcode pulse width to 60 us for now
+    S.Rs1.pulseWidth = 60.0;
+    S.Ls1.pulseWidth = 60.0;
+
 end
