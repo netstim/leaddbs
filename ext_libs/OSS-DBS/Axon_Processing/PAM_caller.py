@@ -32,7 +32,7 @@ def launch_PAM(neuron_folder, folder_to_save, points_h5_file, pathways_params_fi
             else:
                 subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    elif pathways_dict['Axon_Model_Type'] == "McIntyre2002" or pathways_dict['Axon_Model_Type'] == "McIntyre2002_ds":
+    elif pathways_dict['Axon_Model_Type'] == "MRG2002" or pathways_dict['Axon_Model_Type'] == "MRG2002_DS":
 
         os.chdir(neuron_folder)
         with open(os.devnull, 'w') as FNULL:
