@@ -27,6 +27,7 @@ if exist('ref','var')
     ref = ea_load_nii(ref);
 else
     ref = ea_load_nii([ea_space,'t1.nii']);
+    ref.pinfo(1:2) = [1, 0];
 end
 
 % Preset background
