@@ -15,6 +15,8 @@ if ischar(files)
     files = {files};
 end
 
+files = GetFullPath(files);
+
 ea_create_tpm_darteltemplate; % function will check if needs to run (again).
 
 [directory, fname] = fileparts(files{1});
