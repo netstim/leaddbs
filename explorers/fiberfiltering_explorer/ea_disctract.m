@@ -650,20 +650,22 @@ classdef ea_disctract < handle
             end
 
             % check if binary variable and not permutation test
-            if (~exist('Iperm', 'var') || isempty(Iperm)) && all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
-                % average across sides. This might be wrong for capsular response.
-                Ihat_av_sides = ea_nanmean(Ihat,2);
-
-                if isobject(cvp)
-                    % In-sample
-                    AUC = ea_logit_regression(0 ,Ihat_av_sides, Improvement, 1:size(Improvement,1), 1:size(Improvement,1));
-                elseif isstruct(cvp)
-                    % actual training and test
-                    Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3); % in this case, dimens is (1, N, sides)
-                    AUC = ea_logit_regression(Ihat_train_global_av_sides(training)', Ihat_av_sides, Improvement, training, test);
+            if ~iscell(Improvement)
+                if (~exist('Iperm', 'var') || isempty(Iperm)) && all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
+                    % average across sides. This might be wrong for capsular response.
+                    Ihat_av_sides = ea_nanmean(Ihat,2);
+    
+                    if isobject(cvp)
+                        % In-sample
+                        AUC = ea_logit_regression(0 ,Ihat_av_sides, Improvement, 1:size(Improvement,1), 1:size(Improvement,1));
+                    elseif isstruct(cvp)
+                        % actual training and test
+                        Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3); % in this case, dimens is (1, N, sides)
+                        AUC = ea_logit_regression(Ihat_train_global_av_sides(training)', Ihat_av_sides, Improvement, training, test);
+                    end
+    
                 end
-
-            end
+            end 
 
             if ~silent
                 % plot patient score correlation matrix over folds
