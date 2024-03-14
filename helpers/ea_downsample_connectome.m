@@ -29,6 +29,7 @@ myFiles = dir(fullfile(connectome_path,'*.mat'));
 
 % remove adjacency matrix if present
 myFiles = myFiles(~endsWith({myFiles.name}, '_ADJ.mat'));
+myFiles = myFiles(~endsWith({myFiles.name}, '_info.mat'));
 
 
 for k = 1:length(myFiles)
