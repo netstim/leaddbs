@@ -1,6 +1,6 @@
 function ea_savestimulation(S,options)
 
-if ~isfield(options, 'subj') % called from lead group
+if ~isfield(options, 'subj') % when open/refresh stimparams GUI from Lead Group
     return
 end
 
