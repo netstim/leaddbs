@@ -556,7 +556,12 @@ for source_index = 1:4
     if any(~isnan(settings.current_control))
         parameterFile = fullfile(outputDir, 'oss-dbs_parameters.mat');
         save(parameterFile, 'settings', '-v7.3');
-        ea_savestimulation(S,options);
+        ea_savestimulation(S, options);
+        if options.native
+            poptions = options;
+            poptions.native = 0;
+            ea_savestimulation(S, poptions);
+        end
         
         % Delete previous results from stimSetMode
         ea_delete([outputDir, filesep, 'Result_StimProt_*']);
