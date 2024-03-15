@@ -23,7 +23,7 @@ function varargout = lead_group(varargin)
 % Edit the above text to modify the response to help lead_group
 
 
-% Last Modified by GUIDE v2.5 23-Feb-2023 11:08:23
+% Last Modified by GUIDE v2.5 15-Mar-2024 10:15:44
 
 
 % Begin initialization code - DO NOT EDIT
@@ -857,10 +857,9 @@ end
 % delete data: old code
 %%%%M.clinical.vars(get(handles.clinicallist,'Value'))=[];
 %%%%M.clinical.labels(get(handles.clinicallist,'Value'))=[];
-
+ea_refresh_lg(handles);
 % store model and refresh UI
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
 
 
 function [pathname] = ea_uigetdir(start_path, dialog_title)
@@ -1993,108 +1992,39 @@ else
     ea_warndlg("Please load a valid lead group file first");
 end
 
-
-% --- Executes on button press in syncFunction.
-function syncFunction_Callback(hObject, eventdata, handles)
-% hObject    handle to syncFunction (see GCBO)
+% --- Executes on button press in SyncFunction.
+function SyncFunction_Callback(hObject, eventdata, handles)
+% hObject    handle to SyncFunction (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 ea_busyaction('on',handles.leadfigure,'group');
 M=getappdata(gcf,'M');
-%%First we sync clinical scores
-if isfield(M,'clinical')
-    if ~isempty(M.clinical)
-        disp("Syncing scores from Lead Group file to Patient Directory");
-        for pt=1:length(M.patient.list)
-            guid = ['gs_',M.guid];
-            [~,subj_id,~] = fileparts(M.patient.list{pt});
-            if exist(fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']),'file')
-                load(fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']), 'clinical');
-                mystruct = clinical.(guid).scores;
-                scoreTypes = fieldnames(mystruct.baseline);
-                allFlags = fieldnames(mystruct);
-                indices = ~strcmp(allFlags, 'baseline');
-                postopFlags = allFlags(indices);
-                if ~isfield(M,'clinical')
-                    bvarLabelIndex = 1;
-                    pvarLabelIndex = 2;
+%check if the clinical file matches with the value inside the patient
+%folder
 
-                end
-                for scoreType=1:length(scoreTypes)
-                    %first lets get baseline flags out of the way
-                    baselineVars = fieldnames(mystruct.baseline.(scoreTypes{scoreType}));
-                    for bvars = 1:length(baselineVars)
-                        if ~strcmp(baselineVars{bvars},'raw_values')
-                            baselineVarValue = clinical.(guid).scores.baseline.(scoreTypes{scoreType}).(baselineVars{bvars});
-                            baselineVarLabel = [scoreTypes{scoreType} '-baseline-' baselineVars{bvars}];
-
-                        end
-                    end
-                    for flag=1:length(postopFlags)
-                        %Get postop flags, can be Postop6M for example
-                        %define possible fields, used to check for any misc.
-                        %scores
-                        %Further check fields
-                        postopFlag = postopFlags{flag};
-                        postopVars = fieldnames(mystruct.(postopFlag).(scoreTypes{scoreType}));
-                        for pvars = 1:length(postopVars)
-                            if ~strcmp(postopVars{pvars},'raw_values')
-                                PostopvarValue = clinical.(guid).scores.(postopFlag).(scoreTypes{scoreType}).(postopVars{pvars});
-                                PostopvarLabel = [scoreTypes{scoreType} '-' postopFlag '-' postopVars{pvars}];
-                            end
-                        end
-                    end
-                    if isfield(M,'clinical')
-                        bvarLabelIndex = find(ismember(M.clinical.labels, baselineVarLabel), 1);
-                        pvarLabelIndex = find(ismember(M.clinical.labels, PostopvarLabel), 1);
-                        success = 0;
-                        if isempty(bvarLabelIndex) % Variable not existing.
-                            % Append variable label
-                            bvarLabelIndex = length(M.clinical.labels) + 1;
-                            M.clinical.labels{bvarLabelIndex} = baselineVarLabel;
-                            % Append variable, initialized with nan
-                            M.clinical.vars{bvarLabelIndex} = nan(length(M.patient.list),1);
-                        end
-                        if isempty(pvarLabelIndex) % Variable not existing.
-                            % Append variable label
-                            pvarLabelIndex = length(M.clinical.labels) + 1;
-                            M.clinical.labels{pvarLabelIndex} = PostopvarLabel;
-                            % Append variable, initialized with nan
-                            M.clinical.vars{pvarLabelIndex} = nan(length(M.patient.list),1);
-                        end
-
-                    else
-                        M.clinical.vars{bvarLabelIndex}(pt,:) = baselineVarValue;
-                        M.clinical.labels{bvarLabelIndex} = baselineVarLabel;
-                        M.clinical.labels{pvarLabelIndex} = PostopvarLabel;
-                        M.clinical.vars{pvarLabelIndex}(pt,:) = PostopvarValue;
-                        success = 1;
-                        pvarLabelIndex = pvarLabelIndex + 1;
-                        bvarLabelIndex = bvarLabelIndex + 1;
-                    end
-                    %Set score to variable
-                    if success == 0
-                        M.clinical.vars{bvarLabelIndex}(pt,:) = baselineVarValue;
-                        M.clinical.vars{pvarLabelIndex}(pt,:) = PostopvarValue;
-
-                    end
-                end
-            else
-                disp("Please first generate the clinical scores using either the clinical score generator OR by manually editing the Lead group file.")
-            end
+guidVal = ['gs_', M.guid];
+for pt = 1:length(M.patient.list)
+    [~,subjid,~] = fileparts(M.patient.list{pt});
+    odir = fullfile(M.patient.list{pt},'clinical',guidVal);
+    ofile = fullfile(odir,[subjid,'_desc-clinicalScores.mat']);
+    if ~exist(ofile,'file')
+        mkdir(odir);
+    else
+        load(ofile);
+    end
+    if isfield(M.clinical,'vars') && isfield(M.clinical,'labels')
+        for varIdx = 1:length(M.clinical.vars)
+            matcell = strsplit(M.clinical.labels{varIdx},'-');
+            nummat = M.clinical.vars{varIdx};
+            score_type = matcell{1};
+            postop_flag = matcell{2};
+            val_name = matcell{3};
+            clinical.(guidVal).scores.(postop_flag).(score_type).(val_name) = nummat(pt);
         end
     end
+    save(ofile,'clinical');
 end
 %%then we sync stim params values
 S = getappdata(handles.stimfig,'S');
 options.gen_newstim = 0;
 ea_savestimulation(S,options)
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over clinical_score_generator.
-function clinical_score_generator_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to clinical_score_generator (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)

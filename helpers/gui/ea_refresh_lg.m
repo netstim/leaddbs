@@ -375,117 +375,102 @@ if ~isfield(M.ui,'lastupdated') || scoreType-M.ui.lastupdated>0 % 0 mins time li
             end
         end
         disp('Trying to load clinical data for group...');
-        for pt=1:length(M.patient.list)
-            guid = ['gs_',M.guid];
-            [~,subj_id,~] = fileparts(M.patient.list{pt});
-            if exist(fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']),'file')
-                load(fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']), 'clinical');
-                mystruct = clinical.(guid).scores;
-                scoreTypes = fieldnames(mystruct.baseline);
-                allFlags = fieldnames(mystruct);
-                indices = ~strcmp(allFlags, 'baseline');
-                postopFlags = allFlags(indices);
-                if ~isfield(M,'clinical')
-                    bvarLabelIndex = 1;
-                    pvarLabelIndex = 2;
-
-                end
-                for scoreType=1:length(scoreTypes)
-                    %first lets get baseline flags out of the way
-                    baselineVars = fieldnames(mystruct.baseline.(scoreTypes{scoreType}));
-                    for bvars = 1:length(baselineVars)
-                        if ~strcmp(baselineVars{bvars},'raw_values')
-                            baselineVarValue = clinical.(guid).scores.baseline.(scoreTypes{scoreType}).(baselineVars{bvars});
-                            baselineVarLabel = [scoreTypes{scoreType} '-baseline-' baselineVars{bvars}];
-
+        try
+            for pt=1:length(M.patient.list)
+                guid = ['gs_',M.guid];
+                [~,subj_id,~] = fileparts(M.patient.list{pt});
+                if exist(fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']),'file')
+                    load(fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']), 'clinical');
+                    mystruct = clinical.(guid).scores;
+                    scoreTypes = fieldnames(mystruct.baseline);
+                    allFlags = fieldnames(mystruct);
+                    indices = ~strcmp(allFlags, 'baseline');
+                    postopFlags = allFlags(indices);
+                    for scoreType=1:length(scoreTypes)
+                        %first lets get baseline flags out of the way
+                        baselineVars = fieldnames(mystruct.baseline.(scoreTypes{scoreType}));
+                        for bvars = 1:length(baselineVars)
+                            if ~strcmp(baselineVars{bvars},'raw_values')
+                                baselineVarValue = clinical.(guid).scores.baseline.(scoreTypes{scoreType}).(baselineVars{bvars});
+                                baselineVarLabel = [scoreTypes{scoreType} '-baseline-' baselineVars{bvars}];
+                            end
                         end
-                    end
-                    for flag=1:length(postopFlags)
-                        %Get postop flags, can be Postop6M for example
-                        %define possible fields, used to check for any misc.
-                        %scores
-                        %Further check fields
-                        postopFlag = postopFlags{flag};
-                        postopVars = fieldnames(mystruct.(postopFlag).(scoreTypes{scoreType}));
-                        for pvars = 1:length(postopVars)
-                            if ~strcmp(postopVars{pvars},'raw_values')
-                                PostopvarValue = clinical.(guid).scores.(postopFlag).(scoreTypes{scoreType}).(postopVars{pvars});
-                                PostopvarLabel = [scoreTypes{scoreType} '-' postopFlag '-' postopVars{pvars}];
+                        for flag=1:length(postopFlags)
+                            %Get postop flags, can be Postop6M for example
+                            %define possible fields, used to check for any misc.
+                            %scores
+                            postopFlag = postopFlags{flag};
+                            postopVars = fieldnames(mystruct.(postopFlag).(scoreTypes{scoreType}));
+                            for pvars = 1:length(postopVars)
+                                if ~strcmp(postopVars{pvars},'raw_values')
+                                    PostopVarValue = clinical.(guid).scores.(postopFlag).(scoreTypes{scoreType}).(postopVars{pvars});
+                                    PostopVarLabel = [scoreTypes{scoreType} '-' postopFlag '-' postopVars{pvars}];
+                                    if isfield(M,'clinical')
+                                        bvarLabelIndex = find(ismember(M.clinical.labels, baselineVarLabel), 1);
+                                        pvarLabelIndex = find(ismember(M.clinical.labels, PostopVarLabel), 1);
+                                        if isempty(bvarLabelIndex) % Variable not existing.
+                                            % Append variable label
+                                            bvarLabelIndex = length(M.clinical.labels) + 1;
+                                            M.clinical.labels{bvarLabelIndex} = baselineVarLabel;
+                                            % Append variable, initialized with nan
+                                            M.clinical.vars{bvarLabelIndex} = nan(length(M.patient.list),1);
+                                        end
+                                        if isempty(pvarLabelIndex) % Variable not existing.
+                                            % Append variable label
+                                            pvarLabelIndex = length(M.clinical.labels) + 1;
+                                            M.clinical.labels{pvarLabelIndex} = PostopVarLabel;
+                                            % Append variable, initialized with nan
+                                            M.clinical.vars{pvarLabelIndex} = nan(length(M.patient.list),1);
+                                        end
+                                        M.clinical.vars{bvarLabelIndex}(pt,:) = baselineVarValue;
+                                        M.clinical.vars{pvarLabelIndex}(pt,:) = PostopVarValue;
+                                    else
+                                        M.clinical.labels{1} = baselineVarLabel;
+                                        M.clinical.labels{2} = PostopVarLabel;
+                                        M.clinical.vars{1}(pt,:) = baselineVarValue;
+                                        M.clinical.vars{2}(pt,:) = PostopVarValue;
+                                    end
+                                end
                             end
                         end
                     end
-                    if isfield(M,'clinical')
-                        bvarLabelIndex = find(ismember(M.clinical.labels, baselineVarLabel), 1);
-                        pvarLabelIndex = find(ismember(M.clinical.labels, PostopvarLabel), 1);
-                        success = 0;
-                        if isempty(bvarLabelIndex) % Variable not existing.
-                            % Append variable label
-                            bvarLabelIndex = length(M.clinical.labels) + 1;
-                            M.clinical.labels{bvarLabelIndex} = baselineVarLabel;
-                            % Append variable, initialized with nan
-                            M.clinical.vars{bvarLabelIndex} = nan(length(M.patient.list),1);
-                        end
-                        if isempty(pvarLabelIndex) % Variable not existing.
-                            % Append variable label
-                            pvarLabelIndex = length(M.clinical.labels) + 1;
-                            M.clinical.labels{pvarLabelIndex} = PostopvarLabel;
-                            % Append variable, initialized with nan
-                            M.clinical.vars{pvarLabelIndex} = nan(length(M.patient.list),1);
-                        end
-
-                    else
-                        M.clinical.vars{bvarLabelIndex}(pt,:) = baselineVarValue;
-                        M.clinical.labels{bvarLabelIndex} = baselineVarLabel;
-                        M.clinical.labels{pvarLabelIndex} = PostopvarLabel;
-                        M.clinical.vars{pvarLabelIndex}(pt,:) = PostopvarValue;
-                        success = 1;
-                        pvarLabelIndex = pvarLabelIndex + 1;
-                        bvarLabelIndex = bvarLabelIndex + 1;
-                    end
-                    %Set score to variable
-                    if success == 0
-                        M.clinical.vars{bvarLabelIndex}(pt,:) = baselineVarValue;
-                        M.clinical.vars{pvarLabelIndex}(pt,:) = PostopvarValue;
-
-                    end
                 end
             end
-
-        end
-        if isfield(M,'clinical')
-            % Refresh clinical variable list
-            disp('Refreshing clinical list...');
-            set(handles.clinicallist, 'String', M.clinical.labels);
-            if M.ui.clinicallist <= length(M.clinical.labels)
-                set(handles.clinicallist, 'Value', M.ui.clinicallist);
-            else % Reset to the 1st variable in case out of range
-                set(handles.clinicallist, 'Value', 1);
+            if isfield(M,'clinical')
+                % Refresh clinical variable list
+                disp('Refreshing clinical list...');
+                set(handles.clinicallist, 'String', M.clinical.labels);
+                if M.ui.clinicallist <= length(M.clinical.labels)
+                    set(handles.clinicallist, 'Value', M.ui.clinicallist);
+                else % Reset to the 1st variable in case out of range
+                    set(handles.clinicallist, 'Value', 1);
+                end
             end
-        end
-        % sync stimulation parameters for group
-        disp('Syncing stimulation parameters for group...');
-        for pt=1:length(M.patient.list)
-            stimParamFile = fullfile(M.patient.list{pt}, 'stimulations', ea_nt(0), ['gs_', M.guid], [options.patientname, '_desc-stimparameters.mat']);
-            if isfile(stimParamFile)
-                ptS=load(stimParamFile);
+            % sync stimulation parameters for group
+            disp('Syncing stimulation parameters for group...');
+            for pt=1:length(M.patient.list)
+                stimParamFile = fullfile(M.patient.list{pt}, 'stimulations', ea_nt(0), ['gs_', M.guid], [options.patientname, '_desc-stimparameters.mat']);
+                if isfile(stimParamFile)
+                    ptS=load(stimParamFile);
 
-                try % could fail if M.S(pt) is not defined.
-                    if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
-                            isequal(ptS.S.Rs2,M.S(pt).Rs2),...
-                            isequal(ptS.S.Rs3,M.S(pt).Rs3),...
-                            isequal(ptS.S.Rs4,M.S(pt).Rs4),...
-                            isequal(ptS.S.Ls1,M.S(pt).Ls1),...
-                            isequal(ptS.S.Ls2,M.S(pt).Ls2),...
-                            isequal(ptS.S.Ls3,M.S(pt).Ls3),...
-                            isequal(ptS.S.Ls4,M.S(pt).Ls4),...
-                            isequal(ptS.S.amplitude,M.S(pt).amplitude)])
-                        warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                    try % could fail if M.S(pt) is not defined.
+                        if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
+                                isequal(ptS.S.Rs2,M.S(pt).Rs2),...
+                                isequal(ptS.S.Rs3,M.S(pt).Rs3),...
+                                isequal(ptS.S.Rs4,M.S(pt).Rs4),...
+                                isequal(ptS.S.Ls1,M.S(pt).Ls1),...
+                                isequal(ptS.S.Ls2,M.S(pt).Ls2),...
+                                isequal(ptS.S.Ls3,M.S(pt).Ls3),...
+                                isequal(ptS.S.Ls4,M.S(pt).Ls4),...
+                                isequal(ptS.S.amplitude,M.S(pt).amplitude)])
+                            warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                        end
                     end
                 end
             end
         end
-        
-        
+
+
         try
             setappdata(handles.leadfigure,'elstruct',elstruct);
         end
@@ -496,7 +481,7 @@ if ~isfield(M.ui,'lastupdated') || scoreType-M.ui.lastupdated>0 % 0 mins time li
 end
 
 
-if isfield(M,'clinical') 
+if isfield(M,'clinical')
     % Refresh clinical variable list
     disp('Refreshing clinical list...');
     set(handles.clinicallist, 'String', M.clinical.labels);
@@ -511,7 +496,7 @@ end
 % % refresh clinical list
 % set(handles.clinicallist,'String',M.clinical.labels);
 % try set(handles.clinicallist,'Value',M.ui.clinicallist); end
-% 
+%
 % if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
 %     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 % end
