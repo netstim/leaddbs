@@ -8,6 +8,8 @@ if isfield(M,'clinical')
         score_file = fullfile(M.patient.list{pt},'clinical',guid,[subj_id,'_desc-clinicalScores.mat']);
         if exist(score_file,'file')
             load(score_file);
+        else
+            mkdir(fullfile(M.patient.list{pt},'clinical',guid));
         end
         if new_var == 0 % changing the old variable
             matcell = strsplit(matname,'-');
@@ -17,6 +19,7 @@ if isfield(M,'clinical')
             if pt==1
                 disp("Storing modified clinical scores into patient folders")
             end
+            clinical.(guid).scores.(postop_flag).(score_type).(val_name) = nummat(pt);
         elseif new_var == 1 %ading a new variable
             score_type = 'newvar';
             postop_flag = 'postop';
@@ -27,8 +30,9 @@ if isfield(M,'clinical')
             if pt==1
                 disp("Storing new clinical stores into patient folders")
             end
+            clinical.(guid).scores.(postop_flag).(score_type).(val_name) = nummat(pt);
+
         end
-        clinical.(guid).scores.(postop_flag).(score_type).(val_name) = nummat(pt);
         if ~strcmp(val_to_rm,'')
             matcell = strsplit(val_to_rm{1},'-');
             score_type = matcell{1};
@@ -41,7 +45,7 @@ if isfield(M,'clinical')
                 end
             end
         end
-        save(score_file,'clinical')
+     save(score_file,'clinical')   
     end
 end
 end

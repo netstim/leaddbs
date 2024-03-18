@@ -840,7 +840,7 @@ function removevarbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 
 % delete data
-if isfield(M, 'clinical')
+if ~isempty(M.clinical.labels)
     val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
     %support for creation of variables w/o using app
     try
@@ -849,9 +849,7 @@ if isfield(M, 'clinical')
         disp("This score does not seem to be present in your score directory, deleting from the lead group file instead.")
     end
     M.clinical.vars(get(handles.clinicallist,'Value'))=[];
-    M.clinical.labels(get(handles.clinicallist,'Value'))=[];
-        
-    
+    M.clinical.labels(get(handles.clinicallist,'Value'))=[];  
 end
 
 % delete data: old code
