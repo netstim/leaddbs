@@ -2022,7 +2022,11 @@ for pt = 1:length(M.patient.list)
     end
     save(ofile,'clinical');
 end
-%%then we sync stim params values
-S = getappdata(handles.stimfig,'S');
-options.gen_newstim = 0;
-ea_savestimulation(S,options)
+if isfield(handles,'stimfig')
+    %%then we sync stim params values
+    S = getappdata(handles.stimfig,'S');
+    options.gen_newstim = 0;
+    ea_savestimulation(S,options)
+else
+    warning("Stimulation parameters are not added and could not be synced");
+end
