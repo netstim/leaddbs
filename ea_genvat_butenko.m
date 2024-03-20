@@ -590,8 +590,8 @@ for source_index = 1:4
     
     if prepFiles_cluster == 1
         % Restore working directory and environment variables
-        runStatusMultiSource(source_index,:) = [0 0];
-        varargout{1} = runStatus;
+        %runStatusMultiSource(source_index,:) = [0 0];
+        varargout{1} = [0 0];
         varargout{2} = struct(); % empty for stimparameters
     
         % Restore working directory and environment variables
