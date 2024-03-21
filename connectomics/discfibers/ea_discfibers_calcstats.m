@@ -314,33 +314,38 @@ if obj.showsignificantonly
     vals=ea_corrsignan(vals,pvals,obj);
 end
 
-% reopen group loop for thresholding etc:
-
+% Clean up non-finite values from fibcell and vals
 for group=groups
     for side=1:numel(gfibsval)
         usedidx{group,side} = find(isfinite(vals{group,side}));
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(usedidx{group,side});
-        % Remove vals and fibers outside the thresholding range
-        obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0); % only collected for first group (positives)
-        obj.stats.neg.available(side)=sum(cat(1,vals{:,side})<0);
-        if dosubscores || dogroups
-            if ~obj.subscore.special_case
-                obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,side})>0); % collected for every group
-                obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,side})<0);
-            end
-        end
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         if exist('pvals','var')
             pvals{group,side}=pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         end
+
+        obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0);
+        obj.stats.neg.available(side)=sum(cat(1,vals{:,side})<0);
+
+        if dosubscores || dogroups
+            if ~obj.subscore.special_case
+                obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,side})>0);
+                obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,side})<0);
+            end
+        end
     end
 end
 
+unthresholdedVals = vals; % Need to keep this original vals when calculating the (same) threshold to both sides. 
+
+% Thresholding
 for group=groups
     for side=1:numel(gfibsval)
-        allvals = vertcat(vals{group,:});
+        allvals = vertcat(unthresholdedVals{group,:});
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
+
+        % Get positive threshold
         if dosubscores || dogroups
             if obj.subscore.special_case
                 if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
@@ -379,6 +384,8 @@ for group=groups
             end
 
         end
+
+        % Get negative threshold
         if dosubscores || dogroups
             if obj.subscore.special_case
                 if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
@@ -417,7 +424,7 @@ for group=groups
         end
         % Remove vals and fibers outside the thresholding range (set by
         % sliders)
-        remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
+        remove = vals{group,side}<posthresh & vals{group,side}>negthresh;
         vals{group,side}(remove)=[];
         fibcell{group,side}(remove)=[];
         usedidx{group,side}(remove)=[];
