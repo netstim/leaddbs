@@ -264,7 +264,7 @@ end
 % reopen group loop for thresholding etc:
 for group=groups
     for side=1:numel(gfibsval)
-        usedidx{group,side} = find(~isfinite(vals{group,side}));
+        usedidx{group,side} = find(isfinite(vals{group,side}));
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(usedidx{group,side});
         % Remove vals and fibers outside the thresholding range
         obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0); % only collected for first group (positives)
