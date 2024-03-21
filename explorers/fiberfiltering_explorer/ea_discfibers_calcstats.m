@@ -502,11 +502,12 @@ if ~obj.runwhite
     end
 end
 
-unthresholdedVals = vals; % retains the original size of vals for correct computation of thresholds
-
-% get number of fibers available BEFORE thresholding vals 
+% reopen group loop for thresholding etc:
 for group=groups
     for side=1:numel(gfibsval)
+        usedidx{group,side} = find(isfinite(vals{group,side}));
+        fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(usedidx{group,side});
+        % Remove vals and fibers outside the thresholding range
         obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0); % only collected for first group (positives)
         obj.stats.neg.available(side)=sum(cat(1,vals{:,side})<0);
         if dosubscores || dogroups
@@ -515,26 +516,21 @@ for group=groups
                 obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,side})<0);
             end
         end
-    end
-end
-
-% reopen group loop for thresholding etc:
-for group=groups
-    for side=1:numel(gfibsval)
-        fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
-        usedidx{group,side}=find(~isnan(vals{group,side}));
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         if exist('pvals','var')
             pvals{group,side}=pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         end
+    end
+end
 
-
+for group=groups
+    for side=1:numel(gfibsval)
         switch obj.threshstrategy
             case 'Fixed Amount' % here we want to create threshs for each side separately.
                 posvals = sort(vals{group,side}(vals{group,side}>0),'descend');
                 negvals = sort(vals{group,side}(vals{group,side}<0),'ascend');
             otherwise % in other cases, we want to apply the same thresh to both sides.
-                allvals = vertcat(unthresholdedVals{group,:});
+                allvals = vertcat(vals{group,:});
                 posvals = sort(allvals(allvals>0),'descend');
                 negvals = sort(allvals(allvals<0),'ascend');
         end
@@ -584,15 +580,15 @@ for group=groups
             end
         end
         if ~obj.runwhite
-            % Remove vals and fibers outside the thresholding range 
-            remove = vals{group,side}<posthresh & vals{group,side}>negthresh; 
+            % Remove vals and fibers outside the thresholding range (set by
+            % sliders)
+            remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
             vals{group,side}(remove)=[];
             fibcell{group,side}(remove)=[];
             usedidx{group,side}(remove)=[];
         end
     end
 end
-
 
 
 function vals=ea_corrsignan(vals,ps,obj)
@@ -665,6 +661,7 @@ switch threshstrategy
     case 'Fixed Fiber Value'
         fibValThreshold = threshold;
 end
+
 
 function result = ea_isnan(input_array,flag)
 if size(input_array,2) > 1

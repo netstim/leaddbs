@@ -343,6 +343,7 @@ settings.stim_center = nan(2, 3);
 nActiveSources = zeros(2,1); % count sources for each side
 activeSources = nan(2,4);
 multiSourceMode = [0;0];
+runStatusMultiSource = zeros(4,2);  % check status for each source
 for side = 1:2
     for source_index = 1:4
         if S.amplitude{side}(source_index) ~= 0 && ~isnan(S.amplitude{side}(source_index))
@@ -589,8 +590,8 @@ for source_index = 1:4
     
     if prepFiles_cluster == 1
         % Restore working directory and environment variables
-        runStatus = [0 0];
-        varargout{1} = runStatus;
+        %runStatusMultiSource(source_index,:) = [0 0];
+        varargout{1} = [0 0];
         varargout{2} = struct(); % empty for stimparameters
     
         % Restore working directory and environment variables
@@ -600,8 +601,7 @@ for source_index = 1:4
     end
     
     % Iterate sides, index side: 0 - rh , 1 - lh
-    runStatus = [0 0]; % Succeed or not
-    for side=0:1
+    for side = 0:1
     
         if ~multiSourceMode(side+1)
             % not relevant in this case, terminate after one iterationrce_vtas = {};
@@ -612,9 +612,9 @@ for source_index = 1:4
 
         if ~multiSourceMode(side+1) && all(isnan(settings.current_control))
             % skip without message
+            runStatusMultiSource(source_index,side+1) = 1;
             continue
         end
-
 
         switch side
             case 0
@@ -632,7 +632,7 @@ for source_index = 1:4
             warning('No stimulation exists for %s side! Skipping...\n', sideStr);
             warning('on', 'backtrace');
             fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
-            runStatus(side+1) = 1;
+            runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
     
@@ -641,7 +641,7 @@ for source_index = 1:4
             warning('No stimulation set for %s side! Skipping...\n', sideStr);
             warning('on', 'backtrace');
             fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
-            runStatus(side+1) = 1;
+            runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
     
@@ -650,7 +650,7 @@ for source_index = 1:4
             warning('No fibers found for %s side! Skipping...\n', sideStr);
             warning('on', 'backtrace');
             fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
-            runStatus(side+1) = 1;
+            runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
     
@@ -705,7 +705,7 @@ for source_index = 1:4
         end
     
         if isfile([outputDir, filesep, 'success_', sideCode, '.txt'])
-            runStatus(side+1) = 1;
+            runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
     
             if settings.exportVAT
@@ -908,6 +908,7 @@ for source_index = 1:4
             warning('off', 'backtrace');
             warning('OSS-DBS calculation failed for %s side!\n', sideStr);
             warning('on', 'backtrace');
+            %runStatus(side+1) = 0;
         end
     
         % Clean up
@@ -922,6 +923,7 @@ for source_index = 1:4
 
     % check only the first source for PAM
     if settings.calcAxonActivation
+        runStatusMultiSource(2:end,:) = 1;
         break
     end
 
@@ -992,7 +994,8 @@ for side = 1:2
     end
 end
 
-
+% unused sources are set to 1 above
+runStatus = [all(runStatusMultiSource(:,1)==1), all(runStatusMultiSource(:,2)==1)];
 varargout{1} = runStatus;
 
 if ~settings.calcAxonActivation && exist('stimparams', 'var')

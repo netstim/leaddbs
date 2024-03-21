@@ -450,6 +450,7 @@ switch model
         set(handles.addStimSet,'visible','off');
     case 'Maedler 2012'
         ea_show_impedance(handles);
+        ea_setprefs('vatsettings.estimateInTemplate', 1);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
@@ -459,6 +460,7 @@ switch model
         set(handles.addStimSet,'visible','off');
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
+        ea_setprefs('vatsettings.estimateInTemplate', 1);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
@@ -468,6 +470,7 @@ switch model
         set(handles.addStimSet,'visible','off');
     case 'Dembek 2017'
         ea_show_impedance(handles);
+        ea_setprefs('vatsettings.estimateInTemplate', 1);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_enable_vas(handles,options);
@@ -477,6 +480,7 @@ switch model
         set(handles.addStimSet,'visible','off');
     case 'Fastfield (Baniasadi 2020)'
         ea_show_impedance(handles);
+        ea_setprefs('vatsettings.estimateInTemplate', 1);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
