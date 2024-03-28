@@ -50,6 +50,7 @@ settings.biphasic = options.prefs.machine.vatsettings.butenko_biphasic;
 settings.butenko_tensorData = options.prefs.machine.vatsettings.butenko_tensorData;
 settings.AdaptiveRef = options.prefs.machine.vatsettings.butenko_AdaptiveRef;
 settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsulation;
+settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive_ethresh;
 settings.outOfCore = 0;
 
 % Set output path
@@ -354,6 +355,10 @@ for side = 1:2
 
     if nActiveSources(side) > 1
         multiSourceMode(side) = 1;
+        if settings.adaptive_threshold
+            ea_warndlg('Adaptive Thresholding is not supported for MultiSource. Switching to machine.vatsettings.butenko_ethresh')
+            settings.adaptive_threshold = 0;
+        end
     end
 end
 
@@ -381,12 +386,24 @@ end
 stimparams = struct();
 
 for source_index = 1:4
+
+    settings.Activation_threshold_VTA = [];
+
     if ~settings.stimSetMode
         [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_get_OneSourceStimVector(S, eleNum, conNum,activeSources(:,source_index));
+        settings.pulseWidth = [double(S.(['Rs', num2str(source_index)]).pulseWidth);double(S.(['Ls', num2str(source_index)]).pulseWidth)];
         for side = 1:2
 
             % estimate center of VAT grid
             if ~isnan(settings.current_control(side))
+
+                % Threshold for Astrom VTA (V/m)
+                if settings.adaptive_threshold
+                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;ea_get_adaptiveEthreshold(settings.pulseWidth(side))];
+                else
+                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh];
+                end
+
                 stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
                 settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
             
@@ -403,16 +420,16 @@ for source_index = 1:4
                 elseif length_active_span > 18.0
                     ea_warndlg("Large span of active contacts is detected. Consider extending VAT grid, see PointModel.Lattice.Shape in lead_settings.py")
                 end
-            
+            else
+                % add nonsense value as a placeholder
+                settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;-1.0];
             end
 
         end
     else
         settings.stim_center = [NaN;NaN];
     end
-    
-    % Threshold for Astrom VTA (V/mm)
-    settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_ethresh;
+
     
     % Set stimulation protocol
     if settings.stimSetMode
@@ -713,9 +730,9 @@ for source_index = 1:4
                 if settings.removeElectrode
                     % create nii for distorted grid
                     if options.native
-                        ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath, source_use_index)
+                        ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputBasePath, source_use_index)
                     else
-                        ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA, sideLabel, outputBasePath, source_use_index)
+                        ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputBasePath, source_use_index)
                     end
                 else
                     % convert original OSS-DBS VTAs to BIDS in the corresponding space
@@ -732,7 +749,7 @@ for source_index = 1:4
     
                 % always transform to MNI space
                 if options.native
-                    ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath, source_use_index)
+                    ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, templateOutputBasePath, source_use_index)
                 end
     
                 if options.native && ~options.orignative &&  ~multiSourceMode(side+1)
@@ -942,7 +959,7 @@ for side = 1:2
 
         if nActiveSources(side,:) > 0
             % don't call it if all zeros
-            ea_merge_multisource_fields(outputBasePath,source_efields,side,settings.Activation_threshold_VTA,sideLabel)
+            ea_merge_multisource_fields(outputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
         else
             continue
         end
@@ -966,7 +983,7 @@ for side = 1:2
                 end
             end
 
-            ea_merge_multisource_fields(templateOutputBasePath,source_efields,side,settings.Activation_threshold_VTA,sideLabel)
+            ea_merge_multisource_fields(templateOutputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
             % clean-up to avoid any misimport downstream
             for i = 1:size(source_efields,2)
                 if ~isempty(source_efields{side,i})
