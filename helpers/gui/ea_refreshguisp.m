@@ -503,7 +503,7 @@ switch model
             ea_toggle_pulsewidth(handles, 'on');
         else
             ea_enable_vas(handles,options);
-            ea_toggle_pulsewidth(handles, 'off');
+            ea_toggle_pulsewidth(handles, 'on');
         end
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
