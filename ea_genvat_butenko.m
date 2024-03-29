@@ -325,6 +325,8 @@ end
 if eleNum == 1
     S = ea_add_StimVector_to_S(S, zeros(1, conNum),1);
     eleNum = 2;
+elseif isempty(coords_mm)
+    S = ea_add_StimVector_to_S(S, zeros(1, conNum),0);
 end
 
 % Initialize current control flag
