@@ -8,7 +8,7 @@ end
 
 % Check docker image
 dockerImage = 'anagrammarian/thomasmerged:latest';
-ea_checkDocker('dockerImage');
+ea_checkDocker(dockerImage);
 
 % Prepare parameters for docker run
 inputImage = GetFullPath(inputImage);
@@ -24,8 +24,8 @@ end
 %% Run segmentation via docker
 fprintf('\nRunning THOMAS segmentation...\n\n');
 system(['docker run ', ...
-        '--volume ', imageFolder, ':', imageFolder, ' '...
-        '--workdir ', imageFolder, ' '...
+        '--volume ', ea_path_helper(imageFolder), ':/thomas '...
+        '--workdir /thomas '...
         '--rm -t ', dockerImage, ' ', ...
         'bash -c "hipsthomas_csh -i ', imageName, ' ', typeParam, '"']);
 
