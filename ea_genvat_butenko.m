@@ -1,13 +1,6 @@
 function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS for VTA calculation
 
-time = datetime('now', 'TimeZone', 'local');
-timezone = time.TimeZone;
-setenv('TZ', timezone);
-
-% set to 1 if you only want to prep files for cluster comp.
-prepFiles_cluster = 0; % for now hardcoded
-
 if nargin==2
     S=varargin{1};
     options=varargin{2};
@@ -21,37 +14,14 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
-% Check OSS-DBS installation, set env
-env = ea_conda_env('OSS-DBSv2');
-ea_checkOSSDBSInstallv2(env);
 
-binPath = getenv('PATH'); % Current PATH
-if isunix
-    pythonPath = [env.path, filesep, 'bin'];
-    setenv('PATH', [pythonPath, ':', binPath]);
-else
-    pythonPath = [env.path,';',env.path,filesep,'Scripts'];
-    setenv('PATH', [pythonPath, ';', binPath]);
-end
+time = datetime('now', 'TimeZone', 'local');
+timezone = time.TimeZone;
+setenv('TZ', timezone);
+% set to 1 if you only want to prep files for cluster comp.
+prepFiles_cluster = 0; % for now hardcoded
 
-% Double check if lead is supported by OSS-DBS.
-if ~ismember(options.elmodel, ea_ossdbs_elmodel)
-    ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], simpleStack = 1);
-end
-
-% new parameters
-settings.butenko_segmAlg = options.prefs.machine.vatsettings.butenko_segmAlg;
-settings.butenko_intersectStatus = options.prefs.machine.vatsettings.butenko_intersectStatus;
-settings.removeElectrode = options.prefs.machine.vatsettings.butenko_removeElectrode;
-settings.neuronModel = options.prefs.machine.vatsettings.butenko_axonModel;
-settings.signalType = options.prefs.machine.vatsettings.butenko_signalType;
-%settings.pulseWidth = options.prefs.machine.vatsettings.butenko_pulseWidth;
-settings.biphasic = options.prefs.machine.vatsettings.butenko_biphasic;
-settings.butenko_tensorData = options.prefs.machine.vatsettings.butenko_tensorData;
-settings.AdaptiveRef = options.prefs.machine.vatsettings.butenko_AdaptiveRef;
-settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsulation;
-settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive_ethresh;
-settings.outOfCore = 0;
+settings = ea_prepare_ossdbs(options);
 
 % Set output path
 subDescPrefix = ['sub-', options.subj.subjId, '_desc-'];
@@ -65,383 +35,50 @@ if options.native
     templateOutputBasePath = [templateOutputDir, filesep, subSimPrefix];
 end
 
-%% Set MRI_data_name
-% Segment MRI
-segmaskName = 'segmask.nii';
-anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
-switch settings.butenko_segmAlg
-    case 'SPM'
-        if options.native
-            [anchorImageDir, anchorImageName] = fileparts(anchorImage);
-            anchorImageDir = [anchorImageDir, filesep];
-            anchorImageName = [anchorImageName, '.nii'];
+% Segment MRI image
+settings = ea_segment_MRI(options, settings, outputDir);
 
-            mod = replace(options.subj.AnchorModality, textBoundary('start') + alphanumericsPattern + "_", "");
-            c1File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'GM', 'suffix', 'mask');
-            c2File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'WM', 'suffix', 'mask');
-            c3File = setBIDSEntity(anchorImage, 'mod', mod, 'label', 'CSF', 'suffix', 'mask');
-            if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
-                ea_newseg(anchorImage, 0, 1);
-                movefile([anchorImageDir, 'c1', anchorImageName], c1File);
-                movefile([anchorImageDir, 'c2', anchorImageName], c2File);
-                movefile([anchorImageDir, 'c3', anchorImageName], c3File);
-            end
+% Prepare tensor data
+settings.DTI_data_name = ea_prepare_DTI(options);
 
-            segMaskPath = setBIDSEntity(anchorImage, 'label', 'C123', 'mod', options.subj.AnchorModality, 'suffix', 'mask');
-        else
-            c1File = [ea_space, 'c1mask.nii'];
-            c2File = [ea_space, 'c2mask.nii'];
-            c3File = [ea_space, 'c3mask.nii'];
-            if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
-                ea_newseg(fullfile(ea_space, [options.primarytemplate, '.nii']), 0, 1);
-                movefile([ea_space, 'c1', options.primarytemplate, '.nii'], c1File);
-                movefile([ea_space, 'c2', options.primarytemplate, '.nii'], c2File);
-                movefile([ea_space, 'c3', options.primarytemplate, '.nii'], c3File);
-            end
-
-            segMaskPath = [ea_space, segmaskName];
-        end
-
-        if ~isfile(segMaskPath)
-            % Binarize segmentations
-            c1 = ea_load_nii(c1File);
-            c2 = ea_load_nii(c2File);
-            c3 = ea_load_nii(c3File);
-            c1.img = c1.img>0.5;
-            c2.img = c2.img>0.5;
-            c3.img = c3.img>0.5;
-
-            % Fuse segmentations by voting in the order  CSF -> WM -> GM
-            c2.img(c3.img) = 0;
-            c1.img(c2.img | c3.img) = 0;
-            c1.img = c1.img + c2.img*2 + c3.img*3;
-            c1.fname = segMaskPath;
-            c1.dt = [2 0]; % unit8 according to spm_type
-            c1.descrip = 'Tissue 1 + 2 + 3';
-            c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
-            ea_write_nii(c1);
-        end
-        copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
-    case 'Atlas Based'
-
-        % always overwrite in this case
-        if isfile([outputDir, filesep, segmaskName])
-            ea_delete([outputDir, filesep, segmaskName])
-        end
-
-        if options.native
-            segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
-            atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
-            ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
-            copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
-        else
-            % save directly to stim folder
-            segMaskPath = [outputDir,filesep,'segmask.nii'];
-            atlas_gm_mask_path = [ea_space,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
-            ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
-        end
-    case'SynthSeg'
-        ea_warndlg("SynthSeg segmentations are not supported yet")
-        return
-        %SynthSeg_segmask_image = ea_smart_BIDS_function_to_find_SynthSeg;
-        %ea_convert_synthSeg2segmask(SynthSeg_segmask_image, segmask_output);
-end
-
-%% Set patient folder
-settings.Patient_folder = options.subj.subjDir;
-
-%% Set native/MNI flag
-settings.Estimate_In_Template = ~options.native;
-
-%% Set MRI path
-settings.MRI_data_name = [outputDir, filesep, segmaskName];
-
-%% Check tensor data
-tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
-scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;
-scaledTensorName = strrep(tensorName, '.nii', ['_', scalingMethod, '.nii']);
-
-ea_mkdir([options.subj.coregDir, filesep, 'dwi']);
-nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, subDescPrefix, tensorName];
-nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, subDescPrefix, scaledTensorName];
-templateTensor = [ea_space, tensorName];
-templateTensorScaled = [ea_space, scaledTensorName];
-tensorData = [outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
-
-% initialize
-settings.DTI_data_name = 'no dti';
-
-if options.prefs.machine.vatsettings.butenko_useTensorData
-    if isfile(tensorData)
-        % Scaled tensor data found in stimulation folder
-        settings.DTI_data_name = scaledTensorName;
-
-    elseif ~options.native && isfile(templateTensorScaled)
-        % MNI mode, scaled tensor data found in MNI space folder
-        copyfile(templateTensorScaled, outputDir);
-        settings.DTI_data_name = scaledTensorName;
-
-    elseif options.native && isfile(nativeTensorScaled)
-        % native mode, scaled tensor data found in patient folder
-        copyfile(nativeTensorScaled, tensorData);
-        settings.DTI_data_name = scaledTensorName;
-
-    else
-        if ~options.native
-            % MNI mode, tensor data found
-            if isfile(templateTensor)
-                tensorDir = ea_space;
-                tensorPrefix = '';
-            end
-        else
-            % native mode, tensor data not found, warp template tensor data
-            if ~isfile(nativeTensor) && isfile(templateTensor)
-                % Warp tensor data only when ANTs was used for normalization
-                json = loadjson(options.subj.norm.log.method);
-                if contains(json.method, {'ANTs','EasyReg'})
-                    fprintf('Warping tensor data into patient space...\n\n')
-                    ea_ants_apply_transforms(options,...
-                        [ea_space, tensorName],... % From
-                        nativeTensor,... % To
-                        1, ... % Useinverse is 1
-                        '', ... % Reference, auto-detected
-                        '', ... % Transformation, auto-detected
-                        0, ... % NearestNeighbor interpolation
-                        3, ... % Dimension
-                        'tensor');
-                else
-                    warning('off', 'backtrace');
-                    warning('Warping tensor data is only supported when ANTs was used for normalization! Skipping...');
-                    warning('on', 'backtrace');
-                end
-            end
-
-            if isfile(nativeTensor) % Scale tensor data
-                tensorDir = fileparts(nativeTensor);
-                tensorPrefix = subDescPrefix;
-            end
-        end
-
-        % Scale tensor data
-        if exist('tensorDir', 'var')
-            fprintf('Scaling tensor data...\n\n')
-
-            system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
-            
-            if ~isfile([tensorDir, filesep, tensorPrefix, scaledTensorName])
-                disp('Parallel tensor scaling failed, trying a single thread...')
-                system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling_one_thread.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
-            end
-
-            % Copy scaled tensor data to stimulation directory, update setting
-            copyfile([tensorDir, filesep, tensorPrefix, scaledTensorName], tensorData);
-            settings.DTI_data_name = scaledTensorName;
-        end
-    end
-end
-
-if ~isempty(settings.DTI_data_name) && ~strcmp('no dti', settings.DTI_data_name)
-    fprintf('Scaled tensor data added: %s\n\n', settings.DTI_data_name)
-end
-
-if ~strcmp(settings.DTI_data_name, 'no dti')
-    % get the full path
-    settings.DTI_data_name = [outputDir, filesep, settings.DTI_data_name];
-end
-
-%% Index of the tissue in the segmented MRI data
-settings.GM_index = 1;
-settings.WM_index = 2;
-settings.CSF_index = 3;
-
-settings.default_material = 'GM'; % GM, WM or CSF
-
-%% Electrodes information
-settings.Electrode_type = options.elmodel;
-
-% Reload reco since we need to decide whether to use native or MNI coordinates.
-coords_mm = ea_load_reconstruction(options);
-settings.contactLocation = coords_mm;
-eleNum = length(coords_mm); % Number of electrodes
-conNum = options.elspec.numel; % Number of contacts per electrode
-
-% Save both native and MNI space y and head markers for OSS-DBS
-settings.yMarkerNative = nan(eleNum, 3);
-settings.yMarkerMNI = nan(eleNum, 3);
-settings.headNative = nan(eleNum, 3);
-settings.headMNI = nan(eleNum, 3);
-[markersNative, markersMNI] = ea_get_markers(options);
-for i=1:eleNum
-    if ~isempty(markersNative) && ~isempty(markersNative(i).y)
-    	settings.yMarkerNative(i,:) = markersNative(i).y;
-    end
-    if ~isempty(markersMNI) && ~isempty(markersMNI(i).y)
-    	settings.yMarkerMNI(i,:) = markersMNI(i).y;
-    end
-    if ~isempty(markersNative) && ~isempty(markersNative(i).head)
-    	settings.headNative(i,:) = markersNative(i).head;
-    end
-    if ~isempty(markersMNI) && ~isempty(markersMNI(i).head)
-    	settings.headMNI(i,:) = markersMNI(i).head;
-    end
-end
-
-% Head
-settings.Implantation_coordinate = nan(eleNum, 3);
-for i=1:eleNum
-    if ~isempty(coords_mm{i})
-        settings.Implantation_coordinate(i,:) = coords_mm{i}(1,:);
-    end
-end
-
-% Tail
-settings.Second_coordinate = nan(eleNum, 3);
-for i=1:eleNum
-    if conNum == 1 % Exception for electrode with only one contact
-        if options.native
-            settings.Second_coordinate(i,:) = markersNative(i).tail;
-        else
-            settings.Second_coordinate(i,:) = markersMNI(i).tail;
-        end
-    elseif ~isempty(coords_mm{i})
-        if contains(options.elmodel, 'DIXI D08')
-            settings.Second_coordinate(i,:) = coords_mm{i}(4,:);
-        else
-            settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
-        end
-    end
-end
+% get electrode reconstruction parameters in OSS-DBS format
+[settings,eleNum] = ea_get_oss_reco(options, settings);
 
 %% Stimulation Information
-% Set stimSetMode flag
-settings.stimSetMode = options.stimSetMode;
+[settings, runStatusMultiSource, activeSources] = ea_check_stimSources(S,settings,eleNum);
+nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
+stimparams = struct();
+
+% Set stimulation protocol
 if settings.stimSetMode
-    ea_warndlg("Not yet supported in V2")
-    return
-end
-
-% if right electrode only, insert null Stim Protocol for the left
-% this work around is not needed for the left only, handled by Lead-DBS
-if eleNum == 1
-    S = ea_add_StimVector_to_S(S, zeros(1, conNum),1);
-    eleNum = 2;
-end
-
-% Initialize current control flag
-settings.current_control = nan(eleNum, 1);
-
-% Initalize Phi vector
-settings.Phi_vector = nan(eleNum, conNum);
-
-% Initialize grounding
-settings.Case_grounding = zeros(eleNum, 1);
-
-% Get the stimulation parameters from S in case stimSetMode is 0, otherwise
-% they will be loaded directly from the Current_protocols_[0|1].csv files
-% also get the center of the grid
-settings.stim_center = nan(2, 3);
-
-nActiveSources = zeros(2,1); % count sources for each side
-activeSources = nan(2,4);
-multiSourceMode = [0;0];
-runStatusMultiSource = zeros(4,2);  % check status for each source
-for side = 1:2
-    for source_index = 1:4
-        if S.amplitude{side}(source_index) ~= 0 && ~isnan(S.amplitude{side}(source_index))
-            nActiveSources(side) = nActiveSources(side) + 1;
-            activeSources(side,source_index) = source_index;
-        end
-    end
-
-    if nActiveSources(side) > 1
-        multiSourceMode(side) = 1;
-        if settings.adaptive_threshold
-            ea_warndlg('Adaptive Thresholding is not supported for MultiSource. Switching to machine.vatsettings.butenko_ethresh')
-            settings.adaptive_threshold = 0;
-        end
-    end
+    stimProtocol = ea_regexpdir(outputDir, '^Current_protocols_\d\.csv$', 0);
+else
+    stimProtocol = S;
 end
 
 if any(nActiveSources > 1)
+    % files to store results for each source
     source_efields = cell(2,4);
     source_vtas = cell(2,4);
     if options.prefs.machine.vatsettings.butenko_calcPAM
         ea_warndlg('MultiSource Mode is not supported for PAM!')
         % Restore working directory and environment variables
-        runStatus = [0 0];
-        varargout{1} = runStatus;
-        varargout{2} = struct(); % empty for stimparameters
-    
-        % Restore working directory and environment variables
-        libpath = getenv('LD_LIBRARY_PATH');
-        setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
-        setenv('LD_LIBRARY_PATH', libpath);
-        setenv('PATH', binPath);
+        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
     else
         ea_warndlg('MultiSource Mode is used! Stimulation volumes will be computed separately and merged using max(|E|)')
     end
 end
 
-stimparams = struct();
-
+% if single source, we will run only one iteration
 for source_index = 1:4
 
-    settings.Activation_threshold_VTA = [];
+    % get stim settings for particular source    
+    settings = ea_get_stimProtocol(S,settings,activeSources);
 
-    if ~settings.stimSetMode
-        [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_get_OneSourceStimVector(S, eleNum, conNum,activeSources(:,source_index));
-        settings.pulseWidth = [double(S.(['Rs', num2str(source_index)]).pulseWidth);double(S.(['Ls', num2str(source_index)]).pulseWidth)];
-        for side = 1:2
-
-            % estimate center of VAT grid
-            if ~isnan(settings.current_control(side))
-
-                % Threshold for Astrom VTA (V/m)
-                if settings.adaptive_threshold
-                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;ea_get_adaptiveEthreshold(settings.pulseWidth(side))];
-                else
-                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh];
-                end
-
-                stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
-                settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
-            
-                 % estimate extent of the stimulation along the lead
-                phi_temp = settings.Phi_vector(side,:);
-                phi_temp(isnan(phi_temp)) = 0;
-                first_active = find(phi_temp,1,'first');
-                last_active = find(phi_temp,1,'last');
-                length_active_span = norm(settings.contactLocation{side}(last_active,:)-settings.contactLocation{side}(first_active,:));
-                if strcmp('Boston Scientific Vercise', options.elmodel)
-                    if length_active_span > 24.0
-                        ea_warndlg("Large span of active contacts is detected. Consider extending VAT grid, see PointModel.Lattice.Shape in lead_settings.py")
-                    end
-                elseif length_active_span > 18.0
-                    ea_warndlg("Large span of active contacts is detected. Consider extending VAT grid, see PointModel.Lattice.Shape in lead_settings.py")
-                end
-            else
-                % add nonsense value as a placeholder
-                settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;-1.0];
-            end
-
-        end
-    else
-        settings.stim_center = [NaN;NaN];
-    end
-
-    
-    % Set stimulation protocol
-    if settings.stimSetMode
-        stimProtocol = ea_regexpdir(outputDir, '^Current_protocols_\d\.csv$', 0);
-    else
-        stimProtocol = S;
-    end
-    
-    %% check what we simulate
+    % check what we simulate
     settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
     settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
-    
     
     % Axon activation setting
     if settings.calcAxonActivation
@@ -593,7 +230,6 @@ for source_index = 1:4
         ea_delete([outputDir, filesep, 'Allocated_axons.h5'])
         
         %% Run OSS-DBS
-        libpath = getenv('LD_LIBRARY_PATH');
         setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
         
         % Delete flag files before running
@@ -608,12 +244,7 @@ for source_index = 1:4
     if prepFiles_cluster == 1
         % Restore working directory and environment variables
         %runStatusMultiSource(source_index,:) = [0 0];
-        varargout{1} = [0 0];
-        varargout{2} = struct(); % empty for stimparameters
-    
-        % Restore working directory and environment variables
-        setenv('LD_LIBRARY_PATH', libpath);
-        setenv('PATH', binPath);
+        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
     end
     
@@ -1020,30 +651,44 @@ if ~settings.calcAxonActivation && exist('stimparams', 'var')
 end
 
 % Restore working directory and environment variables
-setenv('LD_LIBRARY_PATH', libpath);
-setenv('PATH', binPath);
+setenv('LD_LIBRARY_PATH', getenv('LD_LIBRARY_PATH'));
+setenv('PATH', getenv('PATH'));
 
 
 %% Helper function to get markers in bothe native and MNI space
 function [markersNative, markersMNI] = ea_get_markers(options)
-options.native = 1;
-try
-    [~, ~, markersNative] = ea_load_reconstruction(options);
-catch
-    markersNative = [];
-    fprintf('\n')
-    warning('off', 'backtrace');
-    warning('Failed to load native reconstruction!');
-    warning('on', 'backtrace');
-end
+    options.native = 1;
+    try
+        [~, ~, markersNative] = ea_load_reconstruction(options);
+    catch
+        markersNative = [];
+        fprintf('\n')
+        warning('off', 'backtrace');
+        warning('Failed to load native reconstruction!');
+        warning('on', 'backtrace');
+    end
+    
+    options.native = 0;
+    try
+        [~, ~, markersMNI] = ea_load_reconstruction(options);
+    catch
+        markersMNI = [];
+        fprintf('\n')
+        warning('off', 'backtrace');
+        warning('Failed to load MNI reconstruction!');
+        warning('on', 'backtrace');
+    end
 
-options.native = 0;
-try
-    [~, ~, markersMNI] = ea_load_reconstruction(options);
-catch
-    markersMNI = [];
-    fprintf('\n')
-    warning('off', 'backtrace');
-    warning('Failed to load MNI reconstruction!');
-    warning('on', 'backtrace');
-end
+
+%% Helper function to fail exit
+function [runStatus, stimparameters] = ea_exit_genvat_butenko()
+
+    runStatus = [0 0];  % runStatus
+    stimparameters = struct(); % empty for stimparameters
+
+    % Restore working directory and environment variables
+    setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
+    setenv('LD_LIBRARY_PATH', getenv('LD_LIBRARY_PATH'));
+    setenv('PATH', getenv('PATH'));
+
+
