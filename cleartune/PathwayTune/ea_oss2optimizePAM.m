@@ -386,7 +386,8 @@ for source_index = 1:4
 
             % to optimize monopolar
             % solve for 10 mA(!)
-            settings.Phi_vector(side,:) = [1,0,0,0,0,0,0,0];
+            settings.Phi_vector(side,1) = -10;
+            settings.Phi_vector(side,2:end) = 0; 
 
             % estimate center of VAT grid
             if ~isnan(settings.current_control(side))

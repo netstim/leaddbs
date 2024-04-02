@@ -52,6 +52,7 @@ class PamOptimizer:
         self.optim_settings = optim_settings['netblendict']
 
         if self.optim_settings['optim_alg'] == 'Dual Annealing':
+
             if os.path.isfile(os.path.join(self.results_folder,'Best_scaling_yet.csv')):
                 initial_scaling = np.genfromtxt(os.path.join(self.results_folder,'Best_scaling_yet.csv'), delimiter=' ')
                 optimized_current = dual_annealing(self.compute_global_score,
@@ -74,7 +75,7 @@ class PamOptimizer:
             cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=self.optim_settings['num_iterations_ANN'])
 
 
-    def store_iteration_results(self, S_vector,global_score,symptoms_list,estim_Ihat):
+    def store_iteration_results(self, S_vector, global_score, symptoms_list, estim_Ihat, SE_dict={}):
 
         """ Store data on each iteration in a .csv file
 
@@ -84,6 +85,7 @@ class PamOptimizer:
         global_score: float, summed up weighted symptom improvements
         symptoms_list: list, labels of the analyzed symptoms
         estim_Ihat: dict, estimated symptom improvements
+        SE_dict: dict, info on critical side-effects
 
         """
 
@@ -101,9 +103,14 @@ class PamOptimizer:
             current_data.append(S_vector[i])
         current_data_array = np.vstack((current_data)).T
 
+        # critical side-effect status if provided
+        if SE_dict:
+            for key in SE_dict:
+                df[key] = SE_dict[key]["predicted"]
+
         # predicted improvement of symptoms
         for key in symptoms_list:
-            df[key] =  estim_Ihat[key]
+            df[key] = estim_Ihat[key]
 
         for i in range(len(S_vector)):
             df['Contact_' + str(i)] = S_vector[i]  # Lead-DBS notation!
@@ -130,6 +137,7 @@ class PamOptimizer:
         n_particles = x.shape[0]
         j = [self.compute_global_score(x[i], args_to_pass[:]) for i in range(n_particles)]
         return np.array(j)
+
     def compute_global_score(self, S_vector):
 
         """ Estimate the goal function (weighted symptom improvements) for a given stimulation protocol
@@ -145,14 +153,13 @@ class PamOptimizer:
 
         # we use scaling, but later we will switch to scaling_vector
         from PAM_caller import launch_PAM
-        launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 1000)
-        # the original solution for 1 mA
-        # so scale by 1000
+        launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 100)
+        # the original solution for 10 mA
+        # so scale by 100
 
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)
-        stim_result.make_prediction(self.optim_settings['similarity_metric'], self.optim_settings['ActivProfileDict'], self.optim_settings['symptom_weights_file'])
-        symptoms_list = stim_result.symptom_list
+        stim_result.make_prediction(self.optim_settings['similarity_metric'], self.optim_settings['ActivProfileDict'], self.optim_settings['symptom_weights_file'], plot_results=False)
 
         # put this in a separate function
         # load predicted symptom improvement and weights
@@ -174,24 +181,34 @@ class PamOptimizer:
             N_fixed += 1
 
         # compute weight for non-fixed as the equal distribution of what remained
-        if len(symptoms_list) != N_fixed:
-            rem_weight = remaining_weights / (len(symptoms_list) - N_fixed)
+        if len(stim_result.symptom_list) != N_fixed:
+            rem_weight = remaining_weights / (len(stim_result.symptom_list) - N_fixed)
         else:
             rem_weight = 0.0
 
+        print(stim_result.symptom_list)
+
         # for now, the global score is a simple summation (exactly like in Optim_strategies.py)
-        for key in symptoms_list:
+        global_score = 0.0
+        for key in stim_result.symptom_list:
             if self.side == 0 and not ("_rh" in key):
                 continue
             elif self.side == 1 and not ("_lh" in key):
                 continue
 
+            # soft side-effect have negative estim_Ihat
             if key in symptom_weights:
-                global_score = symptom_weights[key] * estim_Ihat[key]
+                global_score = global_score + symptom_weights[key] * estim_Ihat[key]
             else:
-                global_score = rem_weight * estim_Ihat[key]
+                global_score = global_score + rem_weight * estim_Ihat[key]
 
-        self.store_iteration_results(S_vector,global_score,symptoms_list,estim_Ihat)
+        self.store_iteration_results(S_vector, global_score, stim_result.symptom_list, estim_Ihat, stim_result.SE_dict)
+
+        # check if any side-effect responses were predicted
+        if stim_result.SE_dict:
+            for key in stim_result.SE_dict:
+                if stim_result.SE_dict[key]["predicted"]:
+                    return 1e9
 
         return -1 * global_score
 

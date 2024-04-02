@@ -397,6 +397,8 @@ for voter=1:size(vals,1)  % I would restrict to one voter for now
                     pathway_name = strrep(pathway_name,'0.','0');
                 end
 
+                pathway_name = strrep(pathway_name,'-','_');
+
                 if negative_vals == 0
                     jsonDict.profile_dict.(genvarname(symptomName)).(genvarname(pathway_name)) = [1.0, pathway_mean_vals{1,group_i}(bin_i), pathway_sum_vals{1,group_i}(bin_i)];
                 else
