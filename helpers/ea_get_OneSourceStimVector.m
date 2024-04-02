@@ -59,6 +59,7 @@ for i = 1:eleNum
         end
 
         for cnt = 1:conNum
+            v_source = S.([sideCode, 's', num2str(source_i(i))]);
             if current_control(i) == 1
                 % OSS-DBS will make sure that all excess of current is
                 % grounded
@@ -75,7 +76,6 @@ for i = 1:eleNum
                 % negative volts and grounding
                 % if you have bipolar stim 3V k0+ k1-, OSS-DBS will solve
                 % for 0V vs -3V
-                v_source = S.([sideCode, 's', num2str(source_i(i))]);
                 if v_source.(cntlabel{cnt}).perc    % the contact is active for this source
                     switch v_source.(cntlabel{cnt}).pol
                         case 1

@@ -1,4 +1,4 @@
-function settings = ea_get_stimProtocol(S, settings, activeSources)
+function settings = ea_get_stimProtocol(options, S, settings, activeSources, conNum, source_index)
 
 settings.Activation_threshold_VTA = []; % initialize
 

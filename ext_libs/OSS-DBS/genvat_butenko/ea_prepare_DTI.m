@@ -1,4 +1,4 @@
-function DTI_data_name = ea_prepare_DTI(options)
+function DTI_data_name = ea_prepare_DTI(options,subDescPrefix,outputDir)
 
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
 scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;

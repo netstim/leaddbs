@@ -1,4 +1,4 @@
-function [settings,runStatusMultiSource,activeSources] = ea_check_stimSources(S,settings,eleNum)
+function [settings,runStatusMultiSource,activeSources,multiSourceMode] = ea_check_stimSources(options,S,settings,eleNum,conNum)
 
 % Set stimSetMode flag
 settings.stimSetMode = options.stimSetMode;
@@ -7,12 +7,12 @@ if settings.stimSetMode
     return
 end
 
-% if right electrode only, insert null Stim Protocol for the left
-% this work around is not needed for the left only, handled by Lead-DBS
 if eleNum == 1
+    % if right electrode only, insert null Stim Protocol for the left
     S = ea_add_StimVector_to_S(S, zeros(1, conNum),1);
     eleNum = 2;
-elseif isempty(coords_mm)
+elseif all(isnan(settings.Implantation_coordinate(1,:)))
+    % check if the right electrode is missing
     S = ea_add_StimVector_to_S(S, zeros(1, conNum),0);
 end
 

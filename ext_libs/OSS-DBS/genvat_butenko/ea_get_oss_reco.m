@@ -1,4 +1,4 @@
-function [settings,eleNum] = ea_get_oss_reco(options, settings)
+function [settings,eleNum,conNum] = ea_get_oss_reco(options, settings)
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
 coords_mm = ea_load_reconstruction(options);
@@ -52,3 +52,27 @@ for i=1:eleNum
         end
     end
 end
+
+%% Helper function to get markers in bothe native and MNI space
+function [markersNative, markersMNI] = ea_get_markers(options)
+    options.native = 1;
+    try
+        [~, ~, markersNative] = ea_load_reconstruction(options);
+    catch
+        markersNative = [];
+        fprintf('\n')
+        warning('off', 'backtrace');
+        warning('Failed to load native reconstruction!');
+        warning('on', 'backtrace');
+    end
+    
+    options.native = 0;
+    try
+        [~, ~, markersMNI] = ea_load_reconstruction(options);
+    catch
+        markersMNI = [];
+        fprintf('\n')
+        warning('off', 'backtrace');
+        warning('Failed to load MNI reconstruction!');
+        warning('on', 'backtrace');
+    end

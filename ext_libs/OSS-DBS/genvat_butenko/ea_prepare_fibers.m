@@ -1,4 +1,4 @@
-function originalFib = ea_prepare_fibers(options, S, settings)
+function [fibersFound] = ea_prepare_fibers(options, S, settings)
 
 % check if classic S or stimSets are used
 % note that PAM works only for one source
@@ -13,7 +13,7 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     fprintf('Loading connectome: %s ...\n', settings.connectome);
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
     if options.native
-        originalFib = conn;
+        %originalFib = conn;
         % Convert connectome fibers from MNI space to anchor space
         fprintf('Convert connectome into native space...\n\n');
         fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
@@ -77,7 +77,7 @@ else % Multi-Tract connectome
         fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
         conn = load(tract);
         if options.native
-            originalFib = conn;
+            %originalFib = conn;
             % Convert connectome fibers from MNI space to anchor space
             fprintf('Convert connectome into native space...\n\n');
             fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
