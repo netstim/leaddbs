@@ -106,11 +106,12 @@ class ResultPAM:
         else:
             self.side_suffix = '_lh'
 
+        self.SE_dict = {}  # will be filled out if SE_dict is in self.target_profiles
+
         try:
             os.makedirs(self.stim_dir + '/NB' + self.side_suffix)
         except:
             print("NB folder already exists")
-
 
         # we can just check the distance for one activation profile across all simulated fibers
         self.activation_profile, self.sim_pathways = self.load_AP_from_OSSDBS(inters_as_stim)
@@ -183,6 +184,7 @@ class ResultPAM:
             pathway_index += 1
 
         return perc_activation, pathways
+    
     def get_symptom_distances(self, profile_to_check, fixed_symptom_weights,
                               score_symptom_metric='Canberra'):
 
@@ -192,7 +194,6 @@ class ResultPAM:
         Parameters
         ----------
         profile_to_check: Nx1 numpy.ndarray, percent activation for simulated pathways
-        target_profiles: dict, Activation Profile Dictionary
         fixed_symptom_weights: dictionary with fixed weights in network blending
         score_symptom_metric: str, optional, metric to compute distances in symptom space
 
@@ -206,8 +207,8 @@ class ResultPAM:
 
         # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
         Target_profiles_and_SE = copy.deepcopy(self.target_profiles['profile_dict'])
-        if 'Soft_SE_thresh' in self.target_profiles:
-            Target_profiles_and_SE.update(self.target_profiles['Soft_SE_thresh'])
+        if 'Soft_SE_dict' in self.target_profiles:
+            Target_profiles_and_SE.update(self.target_profiles['Soft_SE_dict'])
 
         N_symptoms_side = 0
         for key in Target_profiles_and_SE:
@@ -243,7 +244,7 @@ class ResultPAM:
                     inx = self.sim_pathways.index(activ_target_profile[i])
 
                     # if the activation is below the threshold, assign the threshold (so that the distance is 0)
-                    if 'Soft_SE_thresh' in self.target_profiles and key in self.target_profiles['Soft_SE_thresh'] and \
+                    if 'Soft_SE_dict' in self.target_profiles and key in self.target_profiles['Soft_SE_dict'] and \
                             Target_profiles_and_SE[key][activ_target_profile[i]][0] > profile_to_check[inx]:
                         predicted_rates.append(Target_profiles_and_SE[key][activ_target_profile[i]][0])
                     else:
@@ -286,6 +287,57 @@ class ResultPAM:
             symp_inx += 1
 
         return symp_dist, symp_list, sum_symp_dist_nf
+
+    def check_for_side_effects(self, profile_to_check):
+
+        """ Check if induced pathway activations are above threshold for critical side-effects.
+
+        Parameters
+        ----------
+        profile_to_check: Nx1 numpy.ndarray, percent activation for simulated pathways
+
+        Returns:
+        ----------
+        dict, side-effect dictionary with response status
+
+        """
+
+        SE_threshold_profile = copy.deepcopy(self.target_profiles['SE_dict'])
+        SE_threshold_profile_side = {}
+        for key in SE_threshold_profile:
+            if self.side == 0 and not ("_rh" in key):
+                continue
+            elif self.side == 1 and not ("_lh" in key):
+                continue
+            else:
+                SE_threshold_profile_side[key] = SE_threshold_profile[key]
+
+            target_rates = []
+            predicted_rates = []
+
+            activ_target_profile = list(SE_threshold_profile[key].keys())
+
+            for i in range(len(activ_target_profile)):
+
+                target_rates.append(SE_threshold_profile[key][activ_target_profile[i]][0])
+
+                if activ_target_profile[i] in self.sim_pathways:
+
+                    inx = self.sim_pathways.index(activ_target_profile[i])
+                    predicted_rates.append(profile_to_check[inx])
+
+                else:  # if not a part of the approx model, assign 0 for side-effect pathways
+                    predicted_rates.append(0.0)
+                    # print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
+
+                # check if above the threshold
+                if predicted_rates[-1] >= target_rates[-1]:
+                    SE_threshold_profile_side[key]["predicted"] = 1
+                    break
+                else:
+                    SE_threshold_profile_side[key]["predicted"] = 0
+
+        return SE_threshold_profile_side
 
     def get_current_protocol(self):
 
@@ -338,8 +390,8 @@ class ResultPAM:
 
         # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
         Target_profiles_and_SE = copy.deepcopy(self.target_profiles['profile_dict'])
-        if 'Soft_SE_thresh' in self.target_profiles:
-            Target_profiles_and_SE.update(self.target_profiles['Soft_SE_thresh'])
+        if 'Soft_SE_dict' in self.target_profiles:
+            Target_profiles_and_SE.update(self.target_profiles['Soft_SE_dict'])
 
         # check how many symptoms / soft side-effects we have for that hemisphere
         N_symptoms_side = 0
@@ -364,8 +416,8 @@ class ResultPAM:
                 continue
 
 
-            if 'Soft_SE_thresh' in self.target_profiles and symptom in self.target_profiles[
-                'Soft_SE_thresh']:  # we assume there are no soft side-effects at null protocol
+            if 'Soft_SE_dict' in self.target_profiles and symptom in self.target_profiles[
+                'Soft_SE_dict']:  # we assume there are no soft side-effects at null protocol
 
                 # IMPORTANT: for soft-side effect we calculate predicted worsening in comparison to the maximum worsening at 100% activation
                 if max_symptom_dist[symp_inx] == 0.0:
@@ -408,14 +460,14 @@ class ResultPAM:
                                   plot_results=False, score_symptom_metric='Canberra', estim_weights_and_total_score=False,
                                   fixed_symptom_weights=[]):
 
-        """ Predict and store symptom-profile improvement for given symptom distances, optinally generate relevant plots
+        """ Predict and store symptom-profile improvement for given symptom distances, optimally generate relevant plots
 
         Parameters
         ----------
         symp_dist: Nx1 numpy.ndarray, distances to target profiles for simulated pathways
         plot_results: bool, optional
         score_symptom_metric: str, optional, metric to compute distances in symptom space
-        estim_weights_and_total_score: dNxM numpy.ndarray,
+        estim_weights_and_total_score: NxM numpy.ndarray,
         fixed_symptom_weights: list, optional, labels for symptoms with fixed weighting
 
         """
@@ -446,7 +498,6 @@ class ResultPAM:
         # save json
         with open(self.stim_dir + '/NB' + self.side_suffix + '/Estim_symp_improv' + self.side_suffix + '.json', 'w') as save_as_dict:
             json.dump(estim_symp_improv_dict, save_as_dict)
-
 
         if plot_results == True:
             self.plot_results_with_weights(I_hat, symptom_labels_marked)
@@ -572,7 +623,7 @@ class ResultPAM:
                     format='png',
                     dpi=500)
 
-    def make_prediction(self, score_symptom_metric, ActivProfileDict=None, fixed_symptoms_dict=None, disease='spontaneous human combustion'):
+    def make_prediction(self, score_symptom_metric, ActivProfileDict=None, fixed_symptoms_dict=None, plot_results=True, disease='spontaneous human combustion'):
 
         """ Predict symptom-profile improvement for a given activation profile based on the target activation profiles
             fixed symptom dictionary is only needed for weight optimization
@@ -582,6 +633,7 @@ class ResultPAM:
         score_symptom_metric: str, metric to compute distances in symptom space
         ActivProfileDict: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
         fixed_symptoms_dict: str, optional, path to dictionary with fixed weights in network blending
+        plot_results: bool, true to generate activation profile and symptom profile plots
         disease: str, optional, key to retrieve Activation Profile Dictionary from TractSymptomLibrary
 
         """
@@ -602,7 +654,12 @@ class ResultPAM:
                                                    fixed_symptom_weights, score_symptom_metric=score_symptom_metric)
         # symptom_diff is in the symptom space, not pathway! So it might have a different dimensionality
 
-        self.get_activation_prediction(symptom_diff,plot_results=True, score_symptom_metric=score_symptom_metric, estim_weights_and_total_score=False, fixed_symptom_weights=fixed_symptom_weights)
+        self.get_activation_prediction(symptom_diff, plot_results, score_symptom_metric=score_symptom_metric, estim_weights_and_total_score=False, fixed_symptom_weights=fixed_symptom_weights)
+
+        # check critical side-effects if available
+        if 'SE_dict' in self.target_profiles:
+            self.SE_dict = self.check_for_side_effects(self.activation_profile)
+
 
 if __name__ == '__main__':
 

@@ -4,8 +4,8 @@ function ea_connectome_from_pathways(obj, connectomeName, N_voters, N_sides, neg
     % store in one folder in connectomes/dMRI_MultiTract
     % give original names to connectomes, the function will overwrite
     % files!
-
-    connectome_folder = [ea_getconnectomebase('dMRI_MultiTract'), connectomeName];
+    
+    connectome_folder = [ea_getconnectomebase('dMRI_multitract'), connectomeName];
     % add pathways to the connectome if exists (Symptoms + side-effects)
     if ~isfolder(connectome_folder)
         mkdir(connectome_folder)
@@ -16,7 +16,7 @@ function ea_connectome_from_pathways(obj, connectomeName, N_voters, N_sides, neg
     disp("Copying pathways to dMRI_MultiTract/...")
     for voter = 1:N_voters
         for side = 1:N_sides
-
+    
             if side == 1
                 prefix_side = '_rh';
             else
@@ -30,19 +30,19 @@ function ea_connectome_from_pathways(obj, connectomeName, N_voters, N_sides, neg
             else
                 symptomName = [obj.responsevarlabel,prefix_side];
             end
-
+        
             % change - to _
             symptomName = strrep(symptomName,'-','_');
-
+    
             % prepare output folders for pathways
             [filepath,~,~] = fileparts(obj.leadgroup);
             symptomNameFolder = [filepath,filesep,symptomName(1:end-3)];
-
+    
             % store soft side-effect pathways separately
             if negative_vals == 1
                 symptomNameFolder = [symptomNameFolder,'_SE'];
             end
-
+    
             pathways_files = dir([symptomNameFolder,filesep,'*.mat']);
             if side == 1
                 pathways_files = pathways_files(contains({pathways_files.name}, '_rh_'));
@@ -54,13 +54,14 @@ function ea_connectome_from_pathways(obj, connectomeName, N_voters, N_sides, neg
                 pathway_file = fullfile(pathways_files(k).folder, pathways_files(k).name);
                 % we only need the vector of global indices (defined for each point here)
                 load(pathway_file, 'glob_ind');
-
+                
                 gl_indices = unique(glob_ind)';
                 all_indices = [all_indices, gl_indices];
                 % fibers are unique within the symptom, so we compare only with
                 % other symptoms at the end
 
-
+                pathways_files(k).name = strrep(pathways_files(k).name,'-','_');
+    
                 pathway_file_conn = fullfile(connectome_folder, pathways_files(k).name);
                 copyfile(pathway_file, pathway_file_conn)
             end

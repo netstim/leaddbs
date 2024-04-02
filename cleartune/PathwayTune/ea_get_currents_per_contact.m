@@ -141,6 +141,10 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
         S = 0;  % won't be used
     end
 
+    % always current-controlled for now
+    S.Rs1.va = 2;
+    S.Ls1.va = 2;
+
     % hardcode pulse width to 60 us for now
     S.Rs1.pulseWidth = 60.0;
     S.Ls1.pulseWidth = 60.0;

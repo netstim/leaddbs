@@ -20,8 +20,8 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles
 
     # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
     target_profiles_and_SE = copy.deepcopy(target_profiles['profile_dict'])
-    if 'Soft_SE_thresh' in target_profiles_and_SE:
-        target_profiles_and_SE.update(target_profiles_and_SE['Soft_SE_thresh'])
+    if 'Soft_SE_dict' in target_profiles_and_SE:
+        target_profiles_and_SE.update(target_profiles_and_SE['Soft_SE_dict'])
 
     sum_symptom_vals = np.zeros(len(target_profiles_and_SE), float)
 
@@ -117,8 +117,8 @@ def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_
 
     # "flatten" target profiles for symptoms and threshold profiles for soft side-effects
     target_profiles_and_SE = copy.deepcopy(target_profiles['profile_dict'])
-    if 'Soft_SE_thresh' in target_profiles_and_SE:
-        target_profiles_and_SE.update(target_profiles_and_SE['Soft_SE_thresh'])
+    if 'Soft_SE_dict' in target_profiles_and_SE:
+        target_profiles_and_SE.update(target_profiles_and_SE['Soft_SE_dict'])
 
     sum_symptom_vals = np.zeros(len(target_profiles_and_SE), float)
 
