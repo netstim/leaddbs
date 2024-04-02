@@ -42,3 +42,10 @@ if ~settings.stimSetMode
 else
     settings.stim_center = [NaN;NaN];
 end
+
+if settings.calcAxonActivation
+    settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
+    settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
+    settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
+    settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
+end

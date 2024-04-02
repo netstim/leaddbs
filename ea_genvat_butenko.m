@@ -49,13 +49,6 @@ settings.DTI_data_name = ea_prepare_DTI(options);
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
 stimparams = struct();
 
-% Set stimulation protocol
-if settings.stimSetMode
-    stimProtocol = ea_regexpdir(outputDir, '^Current_protocols_\d\.csv$', 0);
-else
-    stimProtocol = S;
-end
-
 if any(nActiveSources > 1)
     % files to store results for each source
     source_efields = cell(2,4);
@@ -75,175 +68,17 @@ for source_index = 1:4
 
     % get stim settings for particular source    
     settings = ea_get_stimProtocol(S,settings,activeSources);
-
-    % check what we simulate
-    settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
-    settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
     
     % Axon activation setting
     if settings.calcAxonActivation
-        %settings.AxonModel = options.prefs.machine.vatsettings.butenko_AxonModel;
-
-        settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
-        settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
-        settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
-        settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
-    
-    
-        preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
-        if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
-            fprintf('Loading connectome: %s ...\n', settings.connectome);
-            conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
-            if options.native
-                originalFib = conn;
-                % Convert connectome fibers from MNI space to anchor space
-                fprintf('Convert connectome into native space...\n\n');
-                fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
-                conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-                    [ea_space, options.primarytemplate, '.nii'], ...
-                    [options.subj.subjDir, filesep, 'forwardTransform'], ...
-                    preopAnchor)';
-            end
-    
-            % Filter fibers based on the spherical ROI
-            if options.native
-        	    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
-            else
-                fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
-            end
-    
-            % Filter fibers based on the minimal length
-            fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
-    
-            % Move original fiber id to the 5th column, the 4th column will be 1:N
-            fibersFound = zeros(size(fiberFiltered));
-            for i=1:length(fiberFiltered)
-                if ~isempty(fiberFiltered{i}.fibers)
-                    fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
-                    fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
-                    fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
-                    fiberFiltered{i}.fibers = fibers;
-                    fibersFound(i) = 1;
-                end
-            end
-    
-            settings.connectomePath = [outputDir, filesep, settings.connectome];
-            ea_mkdir(settings.connectomePath);
-            for i=1:length(fiberFiltered)
-                % store the original number of fibers
-                % to compute percent activation
-                fiberFiltered{i}.origNum = size(conn.idx,1);
-                buffer = fiberFiltered{i};
-                save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer', '-v7.3');
-            end
-        else % Multi-Tract connectome
-            % Extract connectome name
-            connName = strrep(settings.connectome, 'Multi-Tract: ', '');
-    
-            % Create output folder
-            settings.connectomePath = [outputDir, filesep, connName];
-            ea_mkdir(settings.connectomePath);
-    
-            % Get paths of tracts
-            connFolder = [ea_getconnectomebase, 'dMRI_MultiTract', filesep, connName];
-            tracts = ea_regexpdir(connFolder, '\.mat$', 0);
-    
-            settings.connectomeTractNames = cell(size(tracts));
-            data1 = struct;
-            data2 = struct;
-            fibersFound = zeros(numel(tracts),2);
-            for t=1:numel(tracts)
-                tract = tracts{t};
-                [~, tractName] = fileparts(tract);
-                settings.connectomeTractNames{t} = tractName;
-                fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
-                conn = load(tract);
-                if options.native
-                    originalFib = conn;
-                    % Convert connectome fibers from MNI space to anchor space
-                    fprintf('Convert connectome into native space...\n\n');
-                    fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
-                    conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-                        [ea_space, options.primarytemplate, '.nii'], ...
-                        [options.subj.subjDir, filesep, 'forwardTransform'], ...
-                        preopAnchor)';
-                end
-    
-                % Filter fibers based on the spherical ROI
-                if options.native
-        	        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
-                else
-                    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
-                end
-    
-                % Filter fibers based on the minimal length
-                fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
-    
-                % Move original fiber id to the 5th column, the 4th column will be 1:N
-                for i=1:length(fiberFiltered)
-                    if ~isempty(fiberFiltered{i}.fibers)
-                        fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
-                        fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
-                        fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
-                        fiberFiltered{i}.fibers = fibers;
-    
-                        % store the original number of fibers
-                        % to compute percent activation
-                        fiberFiltered{i}.origNum = size(conn.idx,1);
-    
-                        fibersFound(t,i) = 1;
-                    end
-                end
-                eval(['data1.', tractName, ' = fiberFiltered{1};']);
-                eval(['data2.', tractName, ' = fiberFiltered{2};']);
-            end
-    
-            % Save filtered fibers
-            save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
-            save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
-        end
-    else
-        % for now, hardcode 60 us pw for all VATs
-        settings.pulseWidth = [60.0;60.0];
+        originalFib = ea_prepare_fibers(options, S, settings);
     end
     
-    %% Save settings for OSS-DBS
-    if any(~isnan(settings.current_control))
-        parameterFile = fullfile(outputDir, 'oss-dbs_parameters.mat');
-        save(parameterFile, 'settings', '-v7.3');
-        ea_savestimulation(S, options);
-        if options.native
-            poptions = options;
-            poptions.native = 0;
-            ea_savestimulation(S, poptions);
-        end
-        
-        % Delete previous results from stimSetMode
-        ea_delete([outputDir, filesep, 'Result_StimProt_*']);
-        if options.native
-            ea_delete([templateOutputDir, filesep, 'Result_StimProt_*']);
-        end
-        
-        % full clean-up for V2
-        ea_delete([outputDir, filesep, 'Results_*']);
-        ea_delete([outputDir, filesep, 'oss-dbs_parameters.json']);
-        ea_delete([outputDir, filesep, 'Allocated_axons.h5'])
-        
-        %% Run OSS-DBS
-        setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
-        
-        % Delete flag files before running
-        ea_delete([outputDir, filesep, 'success_rh.txt']);
-        ea_delete([outputDir, filesep, 'fail_rh.txt']);
-        ea_delete([outputDir, filesep, 'skip_rh.txt']);
-        ea_delete([outputDir, filesep, 'success_lh.txt']);
-        ea_delete([outputDir, filesep, 'fail_lh.txt']);
-        ea_delete([outputDir, filesep, 'skip_lh.txt']);
-    end
+    % Save settings for OSS-DBS
+    ea_save_ossdbs_settings(options, S, settings, outputDir, templateOutputDir)
     
     if prepFiles_cluster == 1
-        % Restore working directory and environment variables
-        %runStatusMultiSource(source_index,:) = [0 0];
+        % now you can run OSS-DBS externally
         [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
     end

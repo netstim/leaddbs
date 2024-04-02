@@ -30,6 +30,9 @@ settings.AdaptiveRef = options.prefs.machine.vatsettings.butenko_AdaptiveRef;
 settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsulation;
 settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive_ethresh;
 settings.outOfCore = 0;
+% check what we simulate
+settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
+settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
 
 %% Lead-DBS hardwired parameters
 
