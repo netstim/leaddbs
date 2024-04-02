@@ -559,8 +559,8 @@ for source_index = 1:4
                         fibersFound(t,i) = 1;
                     end
                 end
-                eval(['data1.', tractName, ' = fiberFiltered{1};']);
-                eval(['data2.', tractName, ' = fiberFiltered{2};']);
+                data1.(tractName) = fiberFiltered{1};
+                data2.(tractName) = fiberFiltered{2};
             end
     
             % Save filtered fibers
