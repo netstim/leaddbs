@@ -1,4 +1,4 @@
-function ea_convert_ossdbs_axons(settings,side,resultfig,outputDir,outputBasePath,templateOutputBasePath)
+function ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputDir,outputBasePath,templateOutputBasePath)
 
 switch side
     case 0
@@ -10,7 +10,6 @@ switch side
         sideCode = 'lh';
         sideStr = 'left';
 end
-
 
 if prob_PAM 
     axonStateProb = ea_regexpdir([outputDir, filesep, 'Results_', sideCode], 'Axon_state.*\_prob.mat', 0);
@@ -28,6 +27,7 @@ if ~isempty(axonState)
 
         % Determine tract name
         if startsWith(settings.connectome, 'Multi-Tract: ')
+            connName = strrep(settings.connectome, 'Multi-Tract: ', '');
             tractName = regexp(axonState{f}, '(?<=Axon_state_).+(?=\.mat$)', 'match', 'once');
         end
 
@@ -113,11 +113,13 @@ if ~isempty(axonState)
         if options.native % Generate fiber activation file in MNI space
             fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
 
+            % if true_VTA, we should skip this step
+
             if startsWith(settings.connectome, 'Multi-Tract: ')
                 % load the particular pathway in MNI
-                connName = strrep(settings.connectome, 'Multi-Tract: ', '');
+                %connName = strrep(settings.connectome, 'Multi-Tract: ', '');
                 connFolder = [ea_getconnectomebase, 'dMRI_MultiTract', filesep, connName];
-                conn = load([connFolder,tractName]);
+                conn = load([connFolder, filesep,tractName]);
             else
                 conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
             end

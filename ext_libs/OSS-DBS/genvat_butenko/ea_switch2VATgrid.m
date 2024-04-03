@@ -1,7 +1,18 @@
-function settings = ea_switch2VATgrid(options,settings,side)
+function settings = ea_switch2VATgrid(options, S, settings, side, outputDir)
 
 % change connectome fibers to regular grid aligned with the electrode
 % for parameters, see ea_till_creategridforelectrode
+
+preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+coords_mm = ea_load_reconstruction(options);
+% check if classic S or stimSets are used
+% note that PAM works only for one source
+if settings.stimSetMode
+    stimProtocol = ea_regexpdir(outputDir, '^Current_protocols_\d\.csv$', 0);
+else
+    stimProtocol = S;
+end
+
 
 reco = load(options.subj.recon.recon);
 reco = reco.reco;
@@ -19,6 +30,7 @@ settings.axonLength = [15;15;20];
 connName = 'OSSDBSgrid';
 connFolder = [options.subj.subjDir,filesep,'connectomes',filesep,'dMRI_MultiTract',filesep,connName];
 tracts = ea_regexpdir(connFolder, '\.mat$', 0);
+settings.connectomeTractNames = cell(size(tracts));
 data1 = struct;
 data2 = struct;
 fibersFound = zeros(numel(tracts),2);
@@ -43,9 +55,9 @@ for t=1:numel(tracts)
 
     % Filter fibers based on the spherical ROI
     if options.native
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 1, preopAnchor);
+        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
     else
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 1, [ea_space, options.primarytemplate, '.nii']);
+        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
     end
 
     % Filter fibers based on the minimal length

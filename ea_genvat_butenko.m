@@ -32,6 +32,8 @@ subSimPrefix = ['sub-', options.subj.subjId, '_sim-'];
 outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
 outputBasePath = [outputDir, filesep, subSimPrefix];
 ea_mkdir(outputDir);
+templateOutputDir = [];
+templateOutputBasePath = [];
 if options.native
     templateOutputDir = [options.subj.stimDir, filesep, ea_nt(0), S.label];
     ea_mkdir(templateOutputDir);
@@ -84,20 +86,22 @@ for source_index = 1:4
             % should be tested for unilateral!
             fibersFound = [[0],[0]];
             if ~isnan(activeSources(1,source_index))
-                settings = ea_switch2VATgrid(options,settings,0);
+                settings = ea_switch2VATgrid(options,S,settings,0,outputDir);
                 fibersFound(:,1) = 1; 
             end
-            if ~isnan(activeSources(side+1,source_index))
-                settings = ea_switch2VATgrid(options,settings,1);
+            if ~isnan(activeSources(2,source_index))
+                settings = ea_switch2VATgrid(options,S,settings,1,outputDir);
                 fibersFound(:,2) = 1;
             end
         else
-            [fibersFound] = ea_prepare_fibers(options, S, settings);
+            [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputDir);
         end
     end
     
     % Save settings for OSS-DBS
-    parameterFile = ea_save_ossdbs_settings(options, S, settings, outputDir, templateOutputDir);
+    if ~all(isnan(activeSources(:,source_index)))
+        parameterFile = ea_save_ossdbs_settings(options, S, settings, outputDir, templateOutputDir);
+    end
     
     if prepFiles_cluster == 1
         % now you can run OSS-DBS externally
@@ -139,6 +143,7 @@ for source_index = 1:4
                 warning('No stimulation exists for %s side! Skipping...\n', sideStr);
                 warning('on', 'backtrace');
             end
+
             fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
@@ -197,6 +202,7 @@ for source_index = 1:4
                 end
         
                 % clean-up
+                folder2save = [outputDir,filesep,'Results_', sideCode];
                 ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
                 ea_delete([folder2save,filesep,'oss_time_result.h5'])
     
@@ -219,7 +225,6 @@ for source_index = 1:4
                 copyfile(leaddbs_neuron, neuron_folder)
         
                 % call the NEURON module
-                folder2save = [outputDir,filesep,'Results_', sideCode];
                 timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
                 pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
     
@@ -264,7 +269,7 @@ for source_index = 1:4
             end
 
             if settings.calcAxonActivation
-                ea_convert_ossdbs_axons(settings,side,resultfig,outputDir,outputBasePath,templateOutputBasePath)
+                ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputDir,outputBasePath,templateOutputBasePath)
             end
 
         elseif isfile([outputDir, filesep, 'fail_', sideCode, '.txt'])
@@ -278,7 +283,7 @@ for source_index = 1:4
     end
 
     % check only the first source for PAM
-    if settings.calcAxonActivation
+    if settings.calcAxonActivation || all(~multiSourceMode)
         runStatusMultiSource(2:end,:) = 1;
         break
     end
@@ -287,8 +292,8 @@ end
 
 % here we merge and display multiSourceModes
 for side = 0:1
-    if multiSourceMode(side+1) && nActiveSources(side+1,:) > 0
-        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas);
+    if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0
+        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,templateOutputBasePath,outputBasePath);
     end
 end
 

@@ -1,4 +1,4 @@
-function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas)
+function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas,templateOutputBasePath,outputBasePath)
 
 switch side
     case 1

@@ -1,4 +1,4 @@
-function [fibersFound] = ea_prepare_fibers(options, S, settings)
+function [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputDir)
 
 % check if classic S or stimSets are used
 % note that PAM works only for one source
@@ -7,6 +7,7 @@ if settings.stimSetMode
 else
     stimProtocol = S;
 end
+coords_mm = ea_load_reconstruction(options);
 
 preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
