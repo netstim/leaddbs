@@ -1,10 +1,17 @@
 function settings = ea_prepare_ossdbs(options)
+% Import settings from Lead-DBS.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options % Lead-DBS options for electrode reconstruction and stimulation
+end
 
 % Check OSS-DBS installation, set env
 env = ea_conda_env('OSS-DBSv2');
 ea_checkOSSDBSInstallv2(env);
 
-binPath = getenv('PATH'); % Current PATH
+% Set python path
+binPath = getenv('PATH');
 if isunix
     pythonPath = [env.path, filesep, 'bin'];
     setenv('PATH', [pythonPath, ':', binPath]);
@@ -33,13 +40,13 @@ settings.outOfCore = 0;
 % check what we simulate
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
 settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
+% Set native/MNI flag
+settings.Estimate_In_Template = ~options.native;
+% Set stimSetMode flag
+settings.stimSetMode = options.stimSetMode;
 
 %% Lead-DBS hardwired parameters
 
 % Set patient folder
 settings.Patient_folder = options.subj.subjDir;
-
-% Set native/MNI flag
-settings.Estimate_In_Template = ~options.native;
-
 settings.Electrode_type = options.elmodel;

@@ -1,4 +1,4 @@
-function [vatfv,vatvolume,source_efield_side_source,source_vta_side_source] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode, source_use_index,outputDir,outputBasePath,templateOutputBasePath)
+function [vatfv,vatvolume,source_efield_side_source,source_vta_side_source] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode, source_use_index,outputPaths)
 
 anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 source_efield_side_source = [];
@@ -21,18 +21,18 @@ end
 if settings.removeElectrode
     % create nii for distorted grid
     if options.native
-        ea_get_field_from_csv(anchorImage, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputBasePath, source_use_index)
+        ea_get_field_from_csv(anchorImage, [outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.outputBasePath, source_use_index)
     else
-        ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputBasePath, source_use_index)
+        ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.outputBasePath, source_use_index)
     end
 else
     % convert original OSS-DBS VTAs to BIDS in the corresponding space
     if ~multiSourceMode(side+1)
-        copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
-        copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
+        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
     else
-        copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
-        copyfile(fullfile([outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
+        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
+        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
     end
     %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
     %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
@@ -40,14 +40,14 @@ end
 
 % always transform to MNI space
 if options.native
-    ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, templateOutputBasePath, source_use_index)
+    ea_get_MNI_field_from_csv(options, [outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.templateOutputBasePath, source_use_index)
 end
 
 if options.native && ~options.orignative &&  ~multiSourceMode(side+1)
     % Visualize MNI space VTA computed in native
-    vatToViz = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+    vatToViz = [outputPaths.templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 else
-    vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+    vatToViz = [outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 end
 
 if ~multiSourceMode(side+1)
@@ -57,6 +57,6 @@ if ~multiSourceMode(side+1)
     vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
     save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
 else
-    source_efield_side_source = fullfile([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']);
-    source_vta_side_source = fullfile([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']);
+    source_efield_side_source = fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']);
+    source_vta_side_source = fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']);
 end

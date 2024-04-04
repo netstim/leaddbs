@@ -1,6 +1,14 @@
-function settings = ea_segment_MRI(options, settings, outputDir)
+function settings = ea_segment_MRI(options, settings, outputPaths)
+% Create segmentation into GM, WM, CSF either based on T1 or Atlas or just
+% copy for templates/ when computing in Template space.
+% By Butenko and Li, konstantinmgtu@gmail.com
 
-%% Set MRI_data_name
+arguments
+    options     % Lead-DBS options for electrode reconstruction and stimulation
+    settings    % parameters for OSS-DBS simulation
+    outputPaths % various paths to conform with lead-dbs BIDS structure 
+end
+
 % Segment MRI
 segmaskName = 'segmask.nii';
 anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
@@ -56,22 +64,22 @@ switch settings.butenko_segmAlg
             c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
             ea_write_nii(c1);
         end
-        copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
+        copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
     case 'Atlas Based'
 
         % always overwrite in this case
-        if isfile([outputDir, filesep, segmaskName])
-            ea_delete([outputDir, filesep, segmaskName])
+        if isfile([outputPaths.outputDir, filesep, segmaskName])
+            ea_delete([outputPaths.outputDir, filesep, segmaskName])
         end
 
         if options.native
             segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
             atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
-            copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
+            copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
         else
             % save directly to stim folder
-            segMaskPath = [outputDir,filesep,'segmask.nii'];
+            segMaskPath = [outputPaths.outputDir,filesep,'segmask.nii'];
             atlas_gm_mask_path = [ea_space,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
         end
@@ -88,4 +96,4 @@ settings.WM_index = 2;
 settings.CSF_index = 3;
 settings.default_material = 'GM'; % GM, WM or CSF
 
-settings.MRI_data_name = [outputDir, filesep, segmaskName];
+settings.MRI_data_name = [outputPaths.outputDir, filesep, segmaskName];

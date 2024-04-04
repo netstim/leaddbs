@@ -1,7 +1,19 @@
-function settings = ea_get_stimProtocol(options, S, settings, activeSources, conNum, source_index)
+function settings = ea_get_stimProtocol(options, S, settings, activeSources, source_index)
+% Get stimulation settings for particular source 
+% By Butenko and Li, konstantinmgtu@gmail.com
 
+arguments
+    options         % Lead-DBS options for electrode reconstruction and stimulation
+    S               % Lead-DBS stimulation settings
+    settings        % parameters for OSS-DBS simulation
+    activeSources   % 2(sides)x4 array of sources' indices. Non active are NaNs
+    source_index    {mustBeNumeric} % index of the current source
+end
+
+conNum = options.elspec.numel;
 settings.Activation_threshold_VTA = []; % initialize
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
+settings.stim_center = nan(2, 3);
 
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_get_OneSourceStimVector(S, 2, conNum, activeSources(:,source_index));
@@ -43,12 +55,13 @@ if ~settings.stimSetMode
         end
 
     end
-else
-    settings.stim_center = [NaN;NaN];
 end
+%else
+%    settings.stim_center = [NaN;NaN];
+%end
 
 if settings.calcAxonActivation
-    settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
+    %settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;

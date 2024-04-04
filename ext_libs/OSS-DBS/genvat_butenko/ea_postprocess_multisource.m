@@ -1,4 +1,4 @@
-function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas,templateOutputBasePath,outputBasePath)
+function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas)
 
 switch side
     case 1
@@ -7,7 +7,7 @@ switch side
         sideLabel = 'L';
 end
 
-ea_merge_multisource_fields(outputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
+ea_merge_multisource_fields(outputPaths.outputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
 
 % clean-up to avoid any misimport downstream
 for i = 1:size(source_efields,2)
@@ -23,26 +23,26 @@ if options.native
 
     for i = 1:size(source_efields,2)
         if ~isempty(source_efields{side,i})
-            source_efields{side,i} = fullfile([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']);
-            source_vtas{side,i} = fullfile([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']);
+            source_efields{side,i} = fullfile([outputPaths.templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']);
+            source_vtas{side,i} = fullfile([outputPaths.templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']);
         end
     end
 
-    ea_merge_multisource_fields(templateOutputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
+    ea_merge_multisource_fields(outputPaths.templateOutputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
     % clean-up to avoid any misimport downstream
     for i = 1:size(source_efields,2)
         if ~isempty(source_efields{side,i})
-            ea_delete(fullfile([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']));
-            ea_delete(fullfile([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']));
+            ea_delete(fullfile([outputPaths.templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']));
+            ea_delete(fullfile([outputPaths.templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(i), '.nii']));
         end
     end
 end
 
 if options.native && ~options.orignative
     % Visualize MNI space VTA computed in native
-    vatToViz = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+    vatToViz = [outputPaths.templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 else
-    vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+    vatToViz = [outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
 end
 
 % Calc vat fv and volume

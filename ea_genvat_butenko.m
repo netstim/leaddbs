@@ -1,5 +1,6 @@
 function varargout = ea_genvat_butenko(varargin)
-% Wrapper for OSS-DBS for VTA calculation
+% Wrapper for OSS-DBS simulations.
+% By Butenko and Li, konstantinmgtu@gmail.com
 
 if nargin==2
     S=varargin{1};
@@ -12,6 +13,12 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{1} = 'OSS-DBS (Butenko 2020)';
     varargout{2} = true; % Support directed lead
     return
+end
+% get resultfig handle
+if exist('hFigure', 'var')
+    resultfig = getappdata(hFigure,'resultfig');
+else
+    resultfig = [];
 end
 
 time = datetime('now', 'TimeZone', 'local');
@@ -26,49 +33,41 @@ prob_PAM = 0; % set to 1 to compute PAM over uncertain parameters (e.g. fiber di
 % import settings from Lead-DBS GUI
 settings = ea_prepare_ossdbs(options);
 
-% Set output path
-subDescPrefix = ['sub-', options.subj.subjId, '_desc-'];
-subSimPrefix = ['sub-', options.subj.subjId, '_sim-'];
-outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
-outputBasePath = [outputDir, filesep, subSimPrefix];
-ea_mkdir(outputDir);
-templateOutputDir = [];
-templateOutputBasePath = [];
-if options.native
-    templateOutputDir = [options.subj.stimDir, filesep, ea_nt(0), S.label];
-    ea_mkdir(templateOutputDir);
-    templateOutputBasePath = [templateOutputDir, filesep, subSimPrefix];
-end
-% Get resultfig handle
-if exist('hFigure', 'var')
-    resultfig = getappdata(hFigure,'resultfig');
+if settings.stimSetMode
+    ea_warndlg("Not yet supported in V2")
+    return
 end
 
-% Segment MRI image
-settings = ea_segment_MRI(options, settings, outputDir);
+% set outputs
+outputPaths = ea_get_oss_outputPaths(options,S);
 
-% Prepare tensor data
-settings.DTI_data_name = ea_prepare_DTI(options,subDescPrefix,outputDir);
+% segment MRI image
+settings = ea_segment_MRI(options, settings, outputPaths);
+
+% prepare tensor data
+settings.DTI_data_name = ea_prepare_DTI(options,outputPaths);
 
 % get electrode reconstruction parameters in OSS-DBS format
-[settings,eleNum,conNum] = ea_get_oss_reco(options, settings);
+settings = ea_get_oss_reco(options, settings);
 
 %% Stimulation Information
-[settings, runStatusMultiSource, activeSources, multiSourceMode] = ea_check_stimSources(options,S,settings,eleNum,conNum);
+% Check which sources are active and insert blank stimulation for unilateral cases
+[S, settings, activeSources] = ea_check_stimSources(options,S,settings);
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
+multiSourceMode = [nActiveSources(1) > 1; nActiveSources(2) > 1];
+runStatusMultiSource = zeros(4,2);  % check status for each source
+source_efields = cell(2,4);  % temp files to store results for each source
+source_vtas = cell(2,4);
 stimparams = struct();
 
 if any(nActiveSources > 1)
-    % files to store results for each source
-    source_efields = cell(2,4);
-    source_vtas = cell(2,4);
     if options.prefs.machine.vatsettings.butenko_calcPAM
         ea_warndlg('MultiSource Mode is not supported for PAM!')
         % Restore working directory and environment variables
         [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
     else
-        ea_warndlg('MultiSource Mode is used! Stimulation volumes will be computed separately and merged using max(|E|)')
+        ea_warndlg('MultiSource Mode is used! Stimulation volumes will be computed separately and merged using max(||E||)')
     end
 end
 
@@ -76,7 +75,7 @@ end
 for source_index = 1:4
 
     % get stim settings for particular source    
-    settings = ea_get_stimProtocol(options,S,settings,activeSources,conNum,source_index);
+    settings = ea_get_stimProtocol(options,S,settings,activeSources,source_index);
     
     % Axon activation setting
     if settings.calcAxonActivation
@@ -86,21 +85,21 @@ for source_index = 1:4
             % should be tested for unilateral!
             fibersFound = [[0],[0]];
             if ~isnan(activeSources(1,source_index))
-                settings = ea_switch2VATgrid(options,S,settings,0,outputDir);
+                settings = ea_switch2VATgrid(options,S,settings,0,outputPaths);
                 fibersFound(:,1) = 1; 
             end
             if ~isnan(activeSources(2,source_index))
-                settings = ea_switch2VATgrid(options,S,settings,1,outputDir);
+                settings = ea_switch2VATgrid(options,S,settings,1,outputPaths);
                 fibersFound(:,2) = 1;
             end
         else
-            [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputDir);
+            [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths);
         end
     end
     
     % Save settings for OSS-DBS
     if ~all(isnan(activeSources(:,source_index)))
-        parameterFile = ea_save_ossdbs_settings(options, S, settings, outputDir, templateOutputDir);
+        parameterFile = ea_save_ossdbs_settings(options, S, settings, outputPaths);
     end
     
     if prepFiles_cluster == 1
@@ -144,17 +143,17 @@ for source_index = 1:4
                 warning('on', 'backtrace');
             end
 
-            fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+            fclose(fopen([outputPaths.outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
 
         % skip stimSets if not provided for this side
-        if settings.stimSetMode && ~isfile(strcat(outputDir, filesep, 'Current_protocols_',string(side),'.csv'))
+        if settings.stimSetMode && ~isfile(strcat(outputPaths.outputDir, filesep, 'Current_protocols_',string(side),'.csv'))
             warning('off', 'backtrace');
             warning('No stimulation set for %s side! Skipping...\n', sideStr);
             warning('on', 'backtrace');
-            fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+            fclose(fopen([outputPaths.outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
@@ -164,7 +163,7 @@ for source_index = 1:4
             warning('off', 'backtrace');
             warning('No fibers found for %s side! Skipping...\n', sideStr);
             warning('on', 'backtrace');
-            fclose(fopen([outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+            fclose(fopen([outputPaths.outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
@@ -197,12 +196,12 @@ for source_index = 1:4
                     settings.fiberDiameter(:) = parameter_limits(1);
                     settings.fiberDiameter(:) = settings.fiberDiameter(:) + (i-1)*parameter_step;
 
-                    parameterFile = fullfile(outputDir, 'oss-dbs_parameters.mat');
+                    parameterFile = fullfile(outputPaths.outputDir, 'oss-dbs_parameters.mat');
                     save(parameterFile, 'settings', '-v7.3');
                 end
         
                 % clean-up
-                folder2save = [outputDir,filesep,'Results_', sideCode];
+                folder2save = [outputPaths.outputDir,filesep,'Results_', sideCode];
                 ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
                 ea_delete([folder2save,filesep,'oss_time_result.h5'])
     
@@ -211,7 +210,7 @@ for source_index = 1:4
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
             system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', parameterFile, ...
-                ' --output_path ', outputDir]);
+                ' --output_path ', outputPaths.outputDir]);
             parameterFile_json = [parameterFile(1:end-3), 'json'];
     
             % run OSS-DBS
@@ -221,12 +220,12 @@ for source_index = 1:4
             if settings.calcAxonActivation
                 % copy NEURON folder to the stimulation folder 
                 leaddbs_neuron = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/Axon_files'];
-                neuron_folder = fullfile(outputDir,'Axon_files');
+                neuron_folder = fullfile(outputPaths.outputDir,'Axon_files');
                 copyfile(leaddbs_neuron, neuron_folder)
         
                 % call the NEURON module
-                timeDomainSolution = [outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
-                pathwayParameterFile = [outputDir,filesep, 'Allocated_axons_parameters.json'];
+                timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
+                pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
     
                 % check if the time domain results is available
                 if ~isfile(timeDomainSolution)
@@ -250,29 +249,29 @@ for source_index = 1:4
         %% Postprocessing in Lead-DBS
 
         % Check if OSS-DBS calculation is finished
-        while ~isfile([outputDir, filesep, 'success_', sideCode, '.txt']) ...
-                && ~isfile([outputDir, filesep, 'fail_', sideCode, '.txt'])
+        while ~isfile([outputPaths.outputDir, filesep, 'success_', sideCode, '.txt']) ...
+                && ~isfile([outputPaths.outputDir, filesep, 'fail_', sideCode, '.txt'])
             continue;
         end
 
         % clean-up if outOfCore was used
         if settings.outOfCore == 1
-            ea_delete([outputDir, filesep, 'Results_',sideCode,filesep,'oss_freq_domain_tmp_PAM.hdf5']);
+            ea_delete([outputPaths.outputDir, filesep, 'Results_',sideCode,filesep,'oss_freq_domain_tmp_PAM.hdf5']);
         end
     
-        if isfile([outputDir, filesep, 'success_', sideCode, '.txt'])
+        if isfile([outputPaths.outputDir, filesep, 'success_', sideCode, '.txt'])
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
     
             if settings.exportVAT
-                [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputDir,outputBasePath,templateOutputBasePath);
+                [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
             if settings.calcAxonActivation
-                ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputDir,outputBasePath,templateOutputBasePath)
+                ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
             end
 
-        elseif isfile([outputDir, filesep, 'fail_', sideCode, '.txt'])
+        elseif isfile([outputPaths.outputDir, filesep, 'fail_', sideCode, '.txt'])
             fprintf('\n')
             warning('off', 'backtrace');
             warning('OSS-DBS calculation failed for %s side!\n', sideStr);
@@ -293,7 +292,7 @@ end
 % here we merge and display multiSourceModes
 for side = 0:1
     if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0
-        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,templateOutputBasePath,outputBasePath);
+        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas);
     end
 end
 

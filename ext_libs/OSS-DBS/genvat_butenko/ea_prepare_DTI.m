@@ -1,15 +1,24 @@
-function DTI_data_name = ea_prepare_DTI(options,subDescPrefix,outputDir)
+function DTI_data_name = ea_prepare_DTI(options,outputPaths)
+% Warp and recompute DTI for native space modeling, otherwise just copy for
+% templates/.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options     % Lead-DBS options for electrode reconstruction and stimulation
+    outputPaths % various paths to conform with lead-dbs BIDS structure 
+end
+
 
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
 scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;
 scaledTensorName = strrep(tensorName, '.nii', ['_', scalingMethod, '.nii']);
 
 ea_mkdir([options.subj.coregDir, filesep, 'dwi']);
-nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, subDescPrefix, tensorName];
-nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, subDescPrefix, scaledTensorName];
+nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, outputPaths.subDescPrefix, tensorName];
+nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, outputPaths.subDescPrefix, scaledTensorName];
 templateTensor = [ea_space, tensorName];
 templateTensorScaled = [ea_space, scaledTensorName];
-tensorData = [outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
+tensorData = [outputPaths.outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
 
 if options.prefs.machine.vatsettings.butenko_useTensorData
     if isfile(tensorData)
@@ -18,7 +27,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
 
     elseif ~options.native && isfile(templateTensorScaled)
         % MNI mode, scaled tensor data found in MNI space folder
-        copyfile(templateTensorScaled, outputDir);
+        copyfile(templateTensorScaled, outputPaths.outputDir);
         DTI_data_name = scaledTensorName;
 
     elseif options.native && isfile(nativeTensorScaled)
@@ -58,7 +67,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
 
             if isfile(nativeTensor) % Scale tensor data
                 tensorDir = fileparts(nativeTensor);
-                tensorPrefix = subDescPrefix;
+                tensorPrefix = outputPaths.subDescPrefix;
             end
         end
 
@@ -81,7 +90,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
 
     fprintf('Scaled tensor data added: %s\n\n', DTI_data_name)
     % get the full path
-    DTI_data_name = [outputDir, filesep, DTI_data_name];
+    DTI_data_name = [outputPaths.outputDir, filesep, DTI_data_name];
 
 else
     DTI_data_name = 'no dti';

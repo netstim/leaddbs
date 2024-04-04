@@ -1,4 +1,4 @@
-function settings = ea_switch2VATgrid(options, S, settings, side, outputDir)
+function settings = ea_switch2VATgrid(options, S, settings, side, outputPaths)
 
 % change connectome fibers to regular grid aligned with the electrode
 % for parameters, see ea_till_creategridforelectrode
@@ -8,7 +8,7 @@ coords_mm = ea_load_reconstruction(options);
 % check if classic S or stimSets are used
 % note that PAM works only for one source
 if settings.stimSetMode
-    stimProtocol = ea_regexpdir(outputDir, '^Current_protocols_\d\.csv$', 0);
+    stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
 else
     stimProtocol = S;
 end
@@ -83,7 +83,7 @@ for t=1:numel(tracts)
 end
 
 % Create output folder
-settings.connectomePath = [outputDir, filesep, connName];
+settings.connectomePath = [outputPaths.outputDir, filesep, connName];
 ea_mkdir(settings.connectomePath);
 settings.connectome = ['Multi-Tract: ', connName];
 

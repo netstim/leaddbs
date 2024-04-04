@@ -1,9 +1,9 @@
-function [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputDir)
+function [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths)
 
 % check if classic S or stimSets are used
 % note that PAM works only for one source
 if settings.stimSetMode
-    stimProtocol = ea_regexpdir(outputDir, '^Current_protocols_\d\.csv$', 0);
+    stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
 else
     stimProtocol = S;
 end
@@ -46,7 +46,7 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         end
     end
 
-    settings.connectomePath = [outputDir, filesep, settings.connectome];
+    settings.connectomePath = [outputPaths.outputDir, filesep, settings.connectome];
     ea_mkdir(settings.connectomePath);
     for i=1:length(fiberFiltered)
         % store the original number of fibers
@@ -60,7 +60,7 @@ else % Multi-Tract connectome
     connName = strrep(settings.connectome, 'Multi-Tract: ', '');
 
     % Create output folder
-    settings.connectomePath = [outputDir, filesep, connName];
+    settings.connectomePath = [outputPaths.outputDir, filesep, connName];
     ea_mkdir(settings.connectomePath);
 
     % Get paths of tracts

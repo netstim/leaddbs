@@ -1,4 +1,4 @@
-function ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputDir,outputBasePath,templateOutputBasePath)
+function ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
 
 switch side
     case 0
@@ -12,10 +12,10 @@ switch side
 end
 
 if prob_PAM 
-    axonStateProb = ea_regexpdir([outputDir, filesep, 'Results_', sideCode], 'Axon_state.*\_prob.mat', 0);
+    axonStateProb = ea_regexpdir([outputPaths.outputDir, filesep, 'Results_', sideCode], 'Axon_state.*\_prob.mat', 0);
     axonState = axonStateProb;
 else
-    axonState = ea_regexpdir([outputDir, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
+    axonState = ea_regexpdir([outputPaths.outputDir, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
 end   
 
 if ~isempty(axonState)
@@ -93,7 +93,7 @@ if ~isempty(axonState)
 
         % If stimSets, save to a corresponding folder
         if settings.stimSetMode
-            resultProtocol = [outputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+            resultProtocol = [outputPaths.outputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
             ea_mkdir(resultProtocol);
             if startsWith(settings.connectome, 'Multi-Tract: ')
                 fiberActivation = [resultProtocol, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
@@ -102,9 +102,9 @@ if ~isempty(axonState)
             end
         else
             if startsWith(settings.connectome, 'Multi-Tract: ')
-                fiberActivation = [outputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
+                fiberActivation = [outputPaths.outputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
             else
-                fiberActivation = [outputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
+                fiberActivation = [outputPaths.outputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
             end
         end
 
@@ -143,7 +143,7 @@ if ~isempty(axonState)
 
             % If stimSets, save to a corresponding folder
             if settings.stimSetMode
-                resultProtocol = [templateOutputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+                resultProtocol = [outputPaths.templateOutputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
                 ea_mkdir(resultProtocol);
                 if startsWith(settings.connectome, 'Multi-Tract: ')
                     fiberActivationMNI = [resultProtocol, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
@@ -152,9 +152,9 @@ if ~isempty(axonState)
                 end
             else
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivationMNI = [templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
+                    fiberActivationMNI = [outputPaths.templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
                 else
-                    fiberActivationMNI = [templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
+                    fiberActivationMNI = [outputPaths.templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
                 end
             end
 
@@ -173,7 +173,7 @@ if ~isempty(axonState)
 
         % Visualize fiber activation, but not for stimSetMode
         if ~settings.stimSetMode
-            if exist('resultfig', 'var')
+            if ~isempty(resultfig)
                 set(0, 'CurrentFigure', resultfig);
                 if prob_PAM
                     ea_plot_prob_fiber_state(fiberActivation);

@@ -1,4 +1,11 @@
-function [settings,eleNum,conNum] = ea_get_oss_reco(options, settings)
+function [settings,eleNum] = ea_get_oss_reco(options, settings)
+% Get electrode reconstruction parameters in OSS-DBS format.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options     % Lead-DBS options for electrode reconstruction and stimulation
+    settings    % parameters for OSS-DBS simulation
+end
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
 coords_mm = ea_load_reconstruction(options);
