@@ -1,7 +1,17 @@
 function [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths)
+% Preprocess fibers: warp to native (if neccesary), remove those far away
+% from the stimulating contacts and too short to allocate axons.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options     % Lead-DBS options for electrode reconstruction and stimulation
+    S           % Lead-DBS stimulation settings
+    settings    % parameters for OSS-DBS simulation
+    outputPaths % various paths to conform with lead-dbs BIDS structure
+end
+
 
 % check if classic S or stimSets are used
-% note that PAM works only for one source
 if settings.stimSetMode
     stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
 else

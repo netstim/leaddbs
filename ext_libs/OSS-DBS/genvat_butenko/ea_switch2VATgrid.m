@@ -1,28 +1,37 @@
 function settings = ea_switch2VATgrid(options, S, settings, side, outputPaths)
+% Change connectome fibers to a regular grid aligned with the electrode
+% (classic VAT).
+% For parameters, see ea_till_creategridforelectrode.
+% By Dembek, Butenko and Li, konstantinmgtu@gmail.com
 
-% change connectome fibers to regular grid aligned with the electrode
-% for parameters, see ea_till_creategridforelectrode
+arguments
+    options     % Lead-DBS options for electrode reconstruction and stimulation
+    S           % Lead-DBS stimulation settings
+    settings    % parameters for OSS-DBS simulation
+    side        {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+    outputPaths % various paths to conform with lead-dbs BIDS structure
+end
 
 preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 coords_mm = ea_load_reconstruction(options);
 % check if classic S or stimSets are used
-% note that PAM works only for one source
 if settings.stimSetMode
     stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
 else
     stimProtocol = S;
 end
 
-
+% load electrode reconstruction
 reco = load(options.subj.recon.recon);
 reco = reco.reco;
-% we actually need to ensure that this 
+% create regular grid of axons aligned with the electrode (classic VAT)
 if options.native
     ea_till_creategridforelectrode(reco,side+1,'scrf',options)
 else
     ea_till_creategridforelectrode(reco,side+1,'mni',options)
 end
 
+% for classic VTA, axon length is hardwired, fiber diameter from GUI
 settings.axonLength = [15;15;20];
 
 % re-create data
@@ -91,10 +100,6 @@ settings.connectome = ['Multi-Tract: ', connName];
 save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
 save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
 
-
-%if settings.axonLength > 1
-%    settings.axonLength = repmat(options.prefs.machine.vatsettings.butenko_axonLength(1),3,1);
-%endI 
 if settings.fiberDiameter > 1
     settings.fiberDiameter = repmat(options.prefs.machine.vatsettings.butenko_fiberDiameter(1),3,1);
 end

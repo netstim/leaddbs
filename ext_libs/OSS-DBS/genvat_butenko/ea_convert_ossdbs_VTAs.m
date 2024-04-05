@@ -1,11 +1,21 @@
 function [vatfv,vatvolume,source_efield_side_source,source_vta_side_source] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode, source_use_index,outputPaths)
+% Prepare Lead-DBS BIDS format VATs.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options             % Lead-DBS options for electrode reconstruction and stimulation
+    settings            % parameters for OSS-DBS simulation
+    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+    multiSourceMode     % 2x1 array, [1;1] if multiple sources are used in both hemispheres
+    source_use_index    {mustBeNumeric} % index of the current source
+    outputPaths         % various paths to conform with lead-dbs BIDS structure 
+end
 
 anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
-source_efield_side_source = [];
+source_efield_side_source = [];  % full path to the e-field computed for source_use_index 
 source_vta_side_source = [];
 vatfv = [];
 vatvolume = [];
-
 
 switch side
     case 0

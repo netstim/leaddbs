@@ -25,13 +25,14 @@ time = datetime('now', 'TimeZone', 'local');
 timezone = time.TimeZone;
 setenv('TZ', timezone);
 
+% import settings from Lead-DBS GUI
+settings = ea_prepare_ossdbs(options);
+
 % some hardcoded parameters, can be added to GUI later
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
-prob_PAM = 0; % set to 1 to compute PAM over uncertain parameters (e.g. fiber diameter)
-
-% import settings from Lead-DBS GUI
-settings = ea_prepare_ossdbs(options);
+prob_PAM = 0; % set to 1 to compute PAM over an uncertain parameter (e.g. fiber diameter)
+settings.outOfCore = 0;  % set to 1 if RAM capacity is exceeded during PAM
 
 if settings.stimSetMode
     ea_warndlg("Not yet supported in V2")
@@ -60,6 +61,7 @@ source_efields = cell(2,4);  % temp files to store results for each source
 source_vtas = cell(2,4);
 stimparams = struct();
 
+% multiple sources are not supported for PAM
 if any(nActiveSources > 1)
     if options.prefs.machine.vatsettings.butenko_calcPAM
         ea_warndlg('MultiSource Mode is not supported for PAM!')
@@ -77,13 +79,12 @@ for source_index = 1:4
     % get stim settings for particular source    
     settings = ea_get_stimProtocol(options,S,settings,activeSources,source_index);
     
-    % Axon activation setting
     if settings.calcAxonActivation
         % will exit after the first source
         if true_VTA
-            % custom case of PAM is original VTA
+            % custom case of PAM is original VAT
             % should be tested for unilateral!
-            fibersFound = [[0],[0]];
+            fibersFound = [0,0];
             if ~isnan(activeSources(1,source_index))
                 settings = ea_switch2VATgrid(options,S,settings,0,outputPaths);
                 fibersFound(:,1) = 1; 
@@ -93,6 +94,7 @@ for source_index = 1:4
                 fibersFound(:,2) = 1;
             end
         else
+            % warp fibers, remove too short and too far away ones
             [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths);
         end
     end
@@ -108,25 +110,23 @@ for source_index = 1:4
         return
     end
     
-    % Iterate sides, index side: 0 - rh , 1 - lh
+    % Iterate over hemispheres: 0 - rh , 1 - lh
     for side = 0:1
-    
+
+        switch side
+            case 0
+                sideCode = 'rh';
+                sideStr = 'right';
+            case 1
+                sideCode = 'lh';
+                sideStr = 'left';
+        end
+
         if ~multiSourceMode(side+1)
             % not relevant in this case, terminate after one iteration;
             source_use_index = 5;  
         else
             source_use_index = source_index; 
-        end
-
-        switch side
-            case 0
-                sideLabel = 'R';
-                sideCode = 'rh';
-                sideStr = 'right';
-            case 1
-                sideLabel = 'L';
-                sideCode = 'lh';
-                sideStr = 'left';
         end
     
         % skip non-active sources when using single source
@@ -170,21 +170,12 @@ for source_index = 1:4
     
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
     
-        if settings.calcAxonActivation
-            if prob_PAM 
-
-                % parameters for "probabilistic" run
-                % here we iterate over different fiber diameters 2.0 - 4.0 um
-                N_samples = 5;
-                parameter_limits = [2.0,4.0];
-                parameter_step = (parameter_limits(2)-parameter_limits(1)) / (N_samples - 1);
-                scaling = -1.0;
-                % one can swap it to probabilistic 
-            else
-                N_samples = 1;
-            end
-        else
-            N_samples = 1;
+        N_samples = 1;  % by default, run one instance
+        if settings.calcAxonActivation && prob_PAM
+            % "probabilistic" run
+            % here we iterate over different fiber diameters 2.0 - 4.0 um
+            N_samples = 5;  % hardcoded for now
+            % one can swap it to probabilistic values
         end
     
         %% OSS-DBS part (using the corresponding conda environment)
@@ -192,20 +183,17 @@ for source_index = 1:4
 
             if settings.calcAxonActivation
                 if prob_PAM 
-                    settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
-                    settings.fiberDiameter(:) = parameter_limits(1);
-                    settings.fiberDiameter(:) = settings.fiberDiameter(:) + (i-1)*parameter_step;
-
-                    parameterFile = fullfile(outputPaths.outputDir, 'oss-dbs_parameters.mat');
-                    save(parameterFile, 'settings', '-v7.3');
+                    settings = ea_updatePAM_parameter(options,settings,N_samples,i);
+                    scaling = 1.0; % same current scaling across the parameter sweep
                 end
         
                 % clean-up
                 folder2save = [outputPaths.outputDir,filesep,'Results_', sideCode];
-                ea_delete([outputDir, filesep, 'Allocated_axons.h5']);
+                ea_delete([outputPaths.outputDir, filesep, 'Allocated_axons.h5']);
                 ea_delete([folder2save,filesep,'oss_time_result.h5'])
     
-                system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputDir,' ', num2str(side), ' ', parameterFile]);
+                % allocate computational axons on fibers
+                system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
@@ -241,11 +229,6 @@ for source_index = 1:4
             end
         end
 
-        if prob_PAM
-            % convert binary PAM status over uncertain parameter to "probabilistic activation"
-            ea_get_probab_axon_state(folder2save,1,strcmp(settings.butenko_intersectStatus,'activated'));
-        end
-
         %% Postprocessing in Lead-DBS
 
         % Check if OSS-DBS calculation is finished
@@ -254,7 +237,12 @@ for source_index = 1:4
             continue;
         end
 
-        % clean-up if outOfCore was used
+        if prob_PAM
+            % convert binary PAM status over uncertain parameter to "probabilistic activations"
+            ea_get_probab_axon_state(folder2save,1,strcmp(settings.butenko_intersectStatus,'activated'));
+        end
+
+        % clean-up time domain solution if outOfCore was used
         if settings.outOfCore == 1
             ea_delete([outputPaths.outputDir, filesep, 'Results_',sideCode,filesep,'oss_freq_domain_tmp_PAM.hdf5']);
         end
@@ -263,10 +251,12 @@ for source_index = 1:4
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
     
+            % prepare Lead-DBS BIDS format VATs
             if settings.exportVAT
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
+            % prepare Lead-DBS BIDS format fiber activations
             if settings.calcAxonActivation
                 ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
             end
@@ -289,10 +279,10 @@ for source_index = 1:4
 
 end
 
-% here we merge and display multiSourceModes
+% merge multisource VATs
 for side = 0:1
     if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0
-        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas);
+        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
     end
 end
 

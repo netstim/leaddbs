@@ -1,4 +1,15 @@
-function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas)
+function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas,outputPaths)
+% Merge multisource VATs.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options             % Lead-DBS options for electrode reconstruction and stimulation
+    settings            % parameters for OSS-DBS simulation
+    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+    source_efields      % cell array, full paths to the e-field computed for source_use_index 
+    source_vtas         % cell array, full paths to the VATs computed for source_use_index 
+    outputPaths         % various paths to conform with lead-dbs BIDS structure 
+end
 
 switch side
     case 1
@@ -7,7 +18,8 @@ switch side
         sideLabel = 'L';
 end
 
-ea_merge_multisource_fields(outputPaths.outputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
+% use SPM imcalc to merge fields
+ea_merge_multisource_fields(outputPaths.outputBasePath,source_efields,side,settings.Activation_threshold_VTA(side))
 
 % clean-up to avoid any misimport downstream
 for i = 1:size(source_efields,2)
@@ -28,7 +40,7 @@ if options.native
         end
     end
 
-    ea_merge_multisource_fields(outputPaths.templateOutputBasePath,source_efields,side,settings.Activation_threshold_VTA(side),sideLabel)
+    ea_merge_multisource_fields(outputPaths.templateOutputBasePath,source_efields,side,settings.Activation_threshold_VTA(side))
     % clean-up to avoid any misimport downstream
     for i = 1:size(source_efields,2)
         if ~isempty(source_efields{side,i})

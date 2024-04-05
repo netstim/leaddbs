@@ -8,7 +8,6 @@ arguments
     outputPaths % various paths to conform with lead-dbs BIDS structure 
 end
 
-
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
 scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;
 scaledTensorName = strrep(tensorName, '.nii', ['_', scalingMethod, '.nii']);

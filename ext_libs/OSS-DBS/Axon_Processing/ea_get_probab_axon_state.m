@@ -1,20 +1,12 @@
-function ea_get_probab_axon_state(varargin)
+function ea_get_probab_axon_state(results_folder,plot_rates,damaged_as_activated)
+% Estimate probability of axon activation based on a sweep of parameters
+% (e.g. fiber diameters).
+% By Butenko and Li, konstantinmgtu@gmail.com
 
-% estimate probability of axon activation based on a sweep of parameters (e.g. fiber diameters)
-
-% inputs
-results_folder = varargin{1};
-if nargin >=2
-    plot_rates = varargin{2};
-else
-    plot_rates = 0;
-end
-
-% do not allow Till's option here!
-if nargin >=3
-    damaged_as_activated = varargin{3};
-else
-    damaged_as_activated = 0;
+arguments
+    results_folder          % path to save the output
+    plot_rates              {mustBeNumericOrLogical} = 0  % if true, plot activation rates over parameter sweep
+    damaged_as_activated    {mustBeNumericOrLogical} = 0  % if true, interpret axons intersected with the electrode (damaged) as activated
 end
 
 % check which pathways were simulated and their percent activations

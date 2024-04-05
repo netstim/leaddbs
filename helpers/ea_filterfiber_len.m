@@ -1,5 +1,11 @@
 function fiberFiltered = ea_filterfiber_len(ftr, minFibLen)
-% Filter fibers based on the fiber length threshold
+% Filter fibers based on the axon length threshold chosen in the settings GUI
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    ftr         % Lead-DBS structure for fibers
+    minFibLen   {mustBeNumeric}  % minimal length in mm
+end
 
 % Load fiber connectome
 if ischar(ftr) && isfile(ftr)

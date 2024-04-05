@@ -1,5 +1,14 @@
 function parameterFile = ea_save_ossdbs_settings(options,S,settings,outputPaths)
-%if any(~isnan(activeSources))
+% Save simulation parameters in oss-dbs_parameters.mat and do a clean-up.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options     % Lead-DBS options for electrode reconstruction and stimulation
+    S           % Lead-DBS stimulation settings
+    settings    % parameters for OSS-DBS simulation
+    outputPaths % various paths to conform with lead-dbs BIDS structure
+end
+
 parameterFile = fullfile(outputPaths.outputDir, 'oss-dbs_parameters.mat');
 save(parameterFile, 'settings', '-v7.3');
 ea_savestimulation(S, options);

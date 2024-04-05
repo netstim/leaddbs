@@ -1,4 +1,15 @@
 function ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
+% Prepare Lead-DBS BIDS format fiber activations.
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    options             % Lead-DBS options for electrode reconstruction and stimulation
+    settings            % parameters for OSS-DBS simulation
+    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+    prob_PAM            {mustBeNumericOrLogical} % 1 if PAM is computed over an uncertain parameter (e.g. fiber diameter)
+    resultfig           % figure handle
+    outputPaths         % various paths to conform with lead-dbs BIDS structure 
+end
 
 switch side
     case 0
