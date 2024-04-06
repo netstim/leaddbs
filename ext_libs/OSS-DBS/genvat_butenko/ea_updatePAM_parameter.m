@@ -1,4 +1,4 @@
-function settings = ea_updatePAM_parameter(options,settings,N_samples,sample_i)
+function settings = ea_updatePAM_parameter(options,settings,N_samples,outputPaths,sample_i)
 % Update one PAM parameter that is subjected to uncertainty, for example,
 % fiber diameter
 % By Butenko and Li, konstantinmgtu@gmail.com
@@ -7,6 +7,7 @@ arguments
     options     % Lead-DBS options for electrode reconstruction and stimulation
     settings    % parameters for OSS-DBS simulation
     N_samples {mustBeNumeric} % total number of samples
+    outputPaths % various paths to conform with lead-dbs BIDS structure
     sample_i  {mustBeNumeric} % sample index
 end
 

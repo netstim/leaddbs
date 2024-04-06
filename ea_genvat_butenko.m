@@ -183,7 +183,7 @@ for source_index = 1:4
 
             if settings.calcAxonActivation
                 if prob_PAM 
-                    settings = ea_updatePAM_parameter(options,settings,N_samples,i);
+                    settings = ea_updatePAM_parameter(options,settings,N_samples,outputPaths,i);
                     scaling = 1.0; % same current scaling across the parameter sweep
                 end
         
