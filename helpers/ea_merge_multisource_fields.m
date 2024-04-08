@@ -1,5 +1,23 @@
-function ea_merge_multisource_fields(basepath,source_efields,side,Activation_threshold_VTA,sideLabel)
-  
+function ea_merge_multisource_fields(basepath,source_efields,side,Activation_threshold_VTA)
+% Using SPM, merge multisource e-fields and compute final VAT.
+% Potential issue is a mismatch of bounding boxes across e-fields
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    basepath            % BIDS fullpath prefix
+    source_efields      % cell array, full paths to the e-field computed for source_use_index 
+    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+    Activation_threshold_VTA      % e-field magnitude threshold for binarization (V/m)
+end
+
+switch side
+    case 1
+        sideLabel = 'R';
+    case 2
+        sideLabel = 'L';
+end
+
+% can use Lead-DBS bounding box as the common space
 %     copyfile([ea_space,'bb.nii'],[basepath,'bb_zero.nii']);
 %     nii=ea_load_nii([basepath,'bb_zero.nii']);
 %     nii.dt(1) = 16;

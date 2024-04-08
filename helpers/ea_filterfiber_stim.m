@@ -1,5 +1,17 @@
 function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor, ref)
-% Filter fibers based on the active contacts and stimulation amplitudes
+% Pre-filter fibers based on the active contacts and stimulation amplitudes.
+% This allows to reduce the computational burden, but in some cases should be
+% disabled!
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    ftr         % Lead-DBS structure for fibers
+    coords      % Lead-DBS array of contact coordinates
+    S           % Lead-DBS stimulation settings
+    type        {mustBeTextScalar} % VAT approximation model, 'kuncel' or 'madler'
+    factor      {mustBeNumeric}    % multiplicative factor for radius of VAT approximation
+    ref         % reference image to define space
+end
 
 fprintf('\nCollecting stimulation parameters...\n')
 

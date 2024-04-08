@@ -404,13 +404,13 @@ class AxonModels:
 
             glob_ind = glob_ind + axon_morphology['n_segments']
 
-        np.savetxt(self.output_directory + '/' + 'axon_array_2D_' + projection_name + '.csv', axon_array_2D,
-                   delimiter=" ")
+        #np.savetxt(self.output_directory + '/' + 'axon_array_2D_' + projection_name + '.csv', axon_array_2D,
+        #           delimiter=" ")
 
         hf.close()
 
         mdic = {"fibers": axon_array_2D, "ea_fibformat": "1.0"}
-        savemat(self.combined_h5_file + '_' + projection_name + "_axons.mat", mdic)
+        #savemat(self.combined_h5_file + '_' + projection_name + "_axons.mat", mdic)
 
         return axon_morphology['n_Ranviers'], len(streamlines_axons), orig_N_fibers
 
