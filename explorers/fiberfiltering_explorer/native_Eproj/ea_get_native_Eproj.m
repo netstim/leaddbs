@@ -54,7 +54,7 @@ for pt_i = 1:size(tractset.M.patient.list,1)
             % compute projection of the E-fields onto the fibers
             for field_i = 1:length(myFields)
                 e_field_file = fullfile(myFields(field_i).folder, myFields(field_i).name);
-                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i},e_field_file, merged_connectome, side_suffix)
+                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i},['gs_',tractset.M.guid],e_field_file, merged_connectome, side_suffix)
             end
         else
             [~,pt_label,~] = fileparts(tractset.M.patient.list{pt_i});

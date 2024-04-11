@@ -52,7 +52,7 @@ for side = 1:numSide
         end
 
         % Find connected fibers, we don't use VATs here (but can create them from magnitude computed in native and warped)
-        connected = E_proj_Peak.E_peak(connected)*1000.0 > thresh;
+        connected = E_proj_Peak.E_peak*1000.0 > thresh;
 
         % Generate binary fibsval for the T-test method
         fibsvalBin{side}(connected, pt)=1;
