@@ -103,11 +103,6 @@ class PamOptimizer:
             current_data.append(S_vector[i])
         current_data_array = np.vstack((current_data)).T
 
-        # critical side-effect status if provided
-        if SE_dict:
-            for key in SE_dict:
-                df[key] = SE_dict[key]["predicted"]
-
         # predicted improvement of symptoms
         for key in symptoms_list:
             df[key] = estim_Ihat[key]
@@ -116,6 +111,14 @@ class PamOptimizer:
             df['Contact_' + str(i)] = S_vector[i]  # Lead-DBS notation!
 
         iter_file = self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations.csv'
+        df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
+
+        # critical side-effect status if provided
+        if SE_dict:
+            for key in SE_dict:
+                df[key] = SE_dict[key]["predicted"]
+
+        iter_file = self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations_CSE.csv'
         df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
 
     def prepare_swarm(self, x, args_to_pass=[]):

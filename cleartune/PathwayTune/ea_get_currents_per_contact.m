@@ -149,4 +149,6 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     S.Rs1.pulseWidth = 60.0;
     S.Ls1.pulseWidth = 60.0;
 
+    S.model = 'OSS-DBS (Butenko 2020)';
+
 end

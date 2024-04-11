@@ -1,10 +1,13 @@
-function S = ea_cleartune_generateMfile(rightsets,leftsets,S,volcur)
+function S = ea_cleartune_generateSfile(rightsets,leftsets,S,volcur)
+
+% rightsets - [amplitude,I1, I2, I3,...] in mA
+% volcur - 1 for voltage-controlled, 2 for current-controlled
 
 rightsets(isnan(rightsets)) = 0;
 leftsets(isnan(leftsets)) = 0;
 
 % Generates M. file out of stimulation data
-S.label = 'setting';
+S.label = 'NBstim';
 
 % Stim OFF
 fields1 = fieldnames(S);
@@ -21,10 +24,10 @@ for source = 2:9
     S.(fields1{source}).case.pol = 2;
     S.(fields1{source}).case.imp = 1;
 end
-S.activecontacts{1,1} = [0,0,0,0,0,0,0,0];
-S.activecontacts{1,2} = [0,0,0,0,0,0,0,0];
-S.amplitude{1,1} = [0,0,0,0];
-S.amplitude{1,2} = [0,0,0,0];
+%S.activecontacts{1,1} = [0,0,0,0,0,0,0,0];
+%S.activecontacts{1,2} = [0,0,0,0,0,0,0,0];
+%S.amplitude{1,1} = [0,0,0,0];
+%S.amplitude{1,2} = [0,0,0,0];
 
 % Stim ON
 S.Rs1.amp = rightsets(1);
@@ -80,9 +83,9 @@ else
     S.Ls1.case.pol = 0;
 end
 
+cont_number = length(rightsets)-1;
 
-
-for cont = 1:8
+for cont = 1:cont_number
     kr = ['k' num2str(cont-1)];
     S.Rs1.(kr).perc = abs(rightsets(cont+1));
 
