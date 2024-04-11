@@ -67,7 +67,7 @@ for i = 1:eleNum
                     switch stimSource.(cntlabel{cnt}).pol
                         case 1 % Negative, cathode
                             Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
-                        case 2 % Postive, anode
+                        case 2 % Positive, anode
                             Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
                     end
                 end

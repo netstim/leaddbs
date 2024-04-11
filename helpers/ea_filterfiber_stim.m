@@ -62,10 +62,10 @@ else % normal mode
     
     % define the stim vector as in OSS-DBS (sources are merged)
     stimAmplitudes = cell(size(S.amplitude));
-    eleNum = length(coords); % Number of electrodes
+    %eleNum = length(coords); % Number of electrodes
     conNum = cellfun(@(x) size(x,1), coords); % Number of contacts per electrode
     conNum = conNum(find(conNum, 1));
-    stimVector = ea_getStimVector(S, eleNum, conNum);
+    stimVector = ea_getStimVector(S, 2, conNum);
     for side = 1:size(S.amplitude,2)
         for cnt = 1:size(stimVector(side,:),2)
             if isnan(stimVector(side,cnt))
@@ -80,7 +80,11 @@ end
 % Active contacts coordinates
 stimCoords = cell(size(coords));
 for i=1:length(stimCoords)
-    stimCoords{i} = coords{i}(activeContacts{i},:);
+    if  isempty(coords{i})
+        stimCoords{i} = [0 0 0];  % placeholder
+    else
+        stimCoords{i} = coords{i}(activeContacts{i},:);
+    end
 end
 
 % Only keep amplitudes for active contacts
@@ -101,8 +105,6 @@ switch lower(type)
         calcr = @(U) maedler12_eq3(U);
         fprintf('\nEstimating radius based on Maedler et al. 2012...\n')
 end
-
-
 
 % Calculate radius
 if ~exist('factor', 'var')
