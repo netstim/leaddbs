@@ -8,7 +8,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     % side - (OSS-DBS notation, 0 = right_hemisphere, 1 = left_hemisphere)
     % check_S - if 1, adjust amplitude on sources
 
-    if size({reconst.reco.props.elmodel},2) == 2
+    if length(side) == 2
         %sides = 2;  % both sides implanted
         el_models{1} = strrep(reconst.reco.props(1).elmodel, ' ','_');
         el_models{2} = strrep(reconst.reco.props(2).elmodel, ' ','_');
@@ -16,14 +16,14 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
             disp("Bilateral stim with different electrode models currently not supported")
             return
         end
-    elseif reconst.reco.mni.markers(1).head(1) > 0.0
+    elseif side == 0
         %sides = 0; % right side
         el_models{1} = strrep(reconst.reco.props(1).elmodel, ' ','_');
         el_models{2} = -1;
     else
         %sides = 1; % left side
         el_models{2} = -1;
-        el_models{1} = strrep(reconst.reco.props(1).elmodel, ' ','_');
+        el_models{1} = strrep(reconst.reco.props(2).elmodel, ' ','_');
     end
 
     % electrode models, should be expanded
@@ -148,5 +148,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     % hardcode pulse width to 60 us for now
     S.Rs1.pulseWidth = 60.0;
     S.Ls1.pulseWidth = 60.0;
+
+    S.model = 'OSS-DBS (Butenko 2020)';
 
 end
