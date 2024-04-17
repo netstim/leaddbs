@@ -147,13 +147,20 @@ synconvergence = apref.convergence.syn;
 synshrinkfactors = apref.shrinkfactors.syn;
 synsmoothingssigmas = apref.smoothingsigmas.syn;
 
-if options.prefs.machine.normsettings.ants_skullstripped
-    fixedmask = ea_path_helper([ea_space,'brainmask.nii.gz']);
+fixedmask = ea_niigz(fullfile(fileparts(fileparts(fileparts(movingimage{end}))), 'masks', 'mask_fixed.nii'));
+
+if isfile(fixedmask)
+    fixedmask = ea_path_helper(fixedmask);
 else
-    fixedmask = 'NULL';
+    if options.prefs.machine.normsettings.ants_skullstripped
+        fixedmask = ea_path_helper([ea_space,'brainmask.nii.gz']);
+    else
+        fixedmask = 'NULL';
+    end
 end
 
-movingmask = fullfile(fileparts(fileparts(fileparts(movingimage{end}))), 'masks', 'mask_anatomy.nii');
+
+movingmask = ea_niigz(fullfile(fileparts(fileparts(fileparts(movingimage{end}))), 'masks', 'mask_anatomy.nii'));
 if isfile(movingmask)
     movingmask = ea_path_helper(movingmask);
 else
