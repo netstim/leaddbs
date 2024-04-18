@@ -25,7 +25,7 @@ else
     % modify to search for non-ants as well
     transform = ea_regexpdir([pt_folder, '/normalization/transformations'],'.*from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz',0,'f',0);
     anchor_img = ea_regexpdir([pt_folder,'/coregistration/anat'], '.*ses-preop_space-anchorNative.*',0,'f',0);
-    ftr = ea_warp_fibers_MNI2native(pt_folder, MNI_connectome_file, transform{1}, anchor_img{1});
+    ftr = kb2_warp_fibers_MNI2native(pt_folder, MNI_connectome_file, transform{1}, anchor_img{1});
 end
 % load the 4-D E-field nii (in native space!)
 % , we assume that the first 3 components are X,Y,Z
@@ -151,7 +151,7 @@ for fib_idx = 1:size(ftr.idx,1)
         E_5perc_peak(fib_idx) = 0.0;
     else
         E_peak(fib_idx) = max(fib_E_proj(:,5));
-        E_5perc_peak(fib_idx) = mean(maxk(fib_E_proj(:,5),5));
+        E_5perc_peak(fib_idx) = mean(maxk(fib_E_proj(:,5),ceil(0.05*numel(size(ftr.idx,1)))));
     end
 end
     
