@@ -3,6 +3,7 @@ import qt, vtk, slicer
 from PythonQt import BoolResult
 from slicer.util import VTKObservationMixin
 import WarpDrive, ImportAtlas
+from ..Helpers import GridNodeHelper
 import numpy as np
 import glob
 import json
@@ -179,6 +180,20 @@ class AtlasSegmentationBaseTable(baseTable):
     segmentationsLogic.ImportModelToSegmentationNode(model_node, segmentNode)
     segmentationsLogic.ExportAllSegmentsToLabelmapNode(segmentNode, labelNode)
     slicer.mrmlScene.RemoveNode(segmentNode)
+    # pad image
+    extend_mm = 5
+    dimensions, origin, spacing, directionMatrix = GridNodeHelper.getGridDefinition(labelNode)
+    origin = [x - extend_mm for x in origin]
+    dimensions = [int(d + (2*extend_mm) / s) for (d,s) in zip(dimensions, spacing)]
+    auxVolumeNode = GridNodeHelper.emptyVolume(dimensions, origin, spacing, directionMatrix)
+    parameters = {}
+    parameters['inputVolume'] = labelNode.GetID()
+    parameters['referenceVolume'] =  auxVolumeNode.GetID()
+    parameters['outputVolume'] = labelNode.GetID()
+    parameters['pixelType'] = 'uchar'
+    parameters['interpolationMode'] = 'NearestNeighbor'
+    slicer.cli.run(slicer.modules.brainsresample, None, parameters, wait_for_completion=True, update_display=False)
+    slicer.mrmlScene.RemoveNode(auxVolumeNode)
     return labelNode
 
   def onRemoveButton(self):
