@@ -1140,7 +1140,21 @@ for el = 1:length(elstruct)
             ea_busyaction('off',handles.stimfig,'stim');
             return;
         else
-            [~, stimparams] = feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+            getappdata(handles.stimfig,'S')
+            S_old = S;
+            file_path = '/Users/savirmadan/Downloads/exportedData.json';
+            new_data = fileread(file_path);
+            importedS = jsondecode(new_data);
+            S = importedS.S;
+            S.label = S_old.label;
+%             S.model = S_old.model;
+            S.amplitude = {S.amplitude.rightAmplitude.', S.amplitude.leftAmplitude.'};
+%             S.amplitude{2}(2:)
+%             S.activecontacts = S.activecontacts{1};
+            S.monopolarmodel = 0;
+%             S.activecontacts = {cell2mat(S.activecontacts(6)).', cell2mat(S.activecontacts(2)).'};
+            % Encode new data to JSON format
+            [~, stimparams] = feval(ea_genvat,S,options,handles.stimfig);
             flix = 1;
         end
     else

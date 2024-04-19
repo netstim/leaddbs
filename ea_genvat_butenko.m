@@ -8,7 +8,7 @@ if nargin==2
 elseif nargin==3
     S=varargin{1};
     options=varargin{2};
-    hFigure=varargin{3};
+    resultfig=varargin{3};
 elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{1} = 'OSS-DBS (Butenko 2020)';
     varargout{2} = true; % Support directed lead
@@ -32,6 +32,21 @@ settings = ea_prepare_ossdbs(options);
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
 settings.outOfCore = 0;  % set to 1 if RAM capacity is exceeded during PAM
+
+options.prefs.machine.vatsettings.butenko_useTensorData = 0;
+options.stimSetMode = 0;
+
+% Set output path
+subDescPrefix = ['sub-', options.subj.subjId, '_desc-'];
+subSimPrefix = ['sub-', options.subj.subjId, '_sim-'];
+outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
+outputBasePath = [outputDir, filesep, subSimPrefix];
+ea_mkdir(outputDir);
+if options.native
+    templateOutputDir = [options.subj.stimDir, filesep, ea_nt(0), S.label];
+    ea_mkdir(templateOutputDir);
+    templateOutputBasePath = [templateOutputDir, filesep, subSimPrefix];
+end
 
 if settings.stimSetMode
     ea_warndlg("Not yet supported in V2")
@@ -83,9 +98,9 @@ end
 % if single source, we will run only one iteration
 for source_index = 1:4
 
-    % get stim settings for particular source    
+    % get stim settings for particular source
     settings = ea_get_stimProtocol(options,S,settings,activeSources,source_index);
-    
+
     if settings.calcAxonActivation
         % will exit after the first source
         if true_VTA
@@ -94,7 +109,7 @@ for source_index = 1:4
             fibersFound = [0,0];
             if ~isnan(activeSources(1,source_index))
                 settings = ea_switch2VATgrid(options,S,settings,0,outputPaths);
-                fibersFound(:,1) = 1; 
+                fibersFound(:,1) = 1;
             end
             if ~isnan(activeSources(2,source_index))
                 settings = ea_switch2VATgrid(options,S,settings,1,outputPaths);
@@ -105,18 +120,18 @@ for source_index = 1:4
             [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths);
         end
     end
-    
+
     % Save settings for OSS-DBS
     if ~all(isnan(activeSources(:,source_index)))
         parameterFile = ea_save_ossdbs_settings(options, S, settings, outputPaths);
     end
-    
+
     if prepFiles_cluster == 1
         % now you can run OSS-DBS externally
         [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
     end
-    
+
     % Iterate over hemispheres: 0 - rh , 1 - lh
     for side = 0:1
 
@@ -131,11 +146,11 @@ for source_index = 1:4
 
         if ~multiSourceMode(side+1)
             % not relevant in this case, terminate after one iteration;
-            source_use_index = 5;  
+            source_use_index = 5;
         else
-            source_use_index = source_index; 
+            source_use_index = source_index;
         end
-    
+
         % skip non-active sources when using single source
         if ~multiSourceMode(side+1) && isnan(activeSources(side+1,source_index))
             runStatusMultiSource(source_index,side+1) = 1;
@@ -164,7 +179,7 @@ for source_index = 1:4
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
-    
+
         % skip PAM if no fibers were preserved for the stim protocol
         if settings.calcAxonActivation && ~any(fibersFound(:,side+1))
             warning('off', 'backtrace');
@@ -174,9 +189,9 @@ for source_index = 1:4
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
-    
+
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
-        
+
         %% OSS-DBS part (using the corresponding conda environment)
         for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
@@ -184,12 +199,12 @@ for source_index = 1:4
                 if settings.prob_PAM
                     settings = ea_updatePAM_parameter(options,settings,outputPaths,i);
                 end
-        
+
                 % clean-up
                 folder2save = [outputPaths.outputDir,filesep,'Results_', sideCode];
                 ea_delete([outputPaths.outputDir, filesep, 'Allocated_axons.h5']);
                 ea_delete([folder2save,filesep,'oss_time_result.h5'])
-    
+
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
                 system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
@@ -199,13 +214,13 @@ for source_index = 1:4
             system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
                 ' --output_path ', ea_path_helper(outputPaths.outputDir)]);
             parameterFile_json = [parameterFile(1:end-3), 'json'];
-    
+
             % run OSS-DBS
             system(['ossdbs ', ea_path_helper(parameterFile_json)]);
-        
+
             % prepare NEURON simulation
             if settings.calcAxonActivation
-    
+
                 % check if the time domain results is available
                 timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
                 if ~isfile(timeDomainSolution)
@@ -240,11 +255,11 @@ for source_index = 1:4
         if settings.outOfCore == 1
             ea_delete([outputPaths.outputDir, filesep, 'Results_',sideCode,filesep,'oss_freq_domain_tmp_PAM.hdf5']);
         end
-    
+
         if isfile([outputPaths.outputDir, filesep, 'success_', sideCode, '.txt'])
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
-    
+
             % prepare Lead-DBS BIDS format VATs
             if settings.exportVAT
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
@@ -262,7 +277,7 @@ for source_index = 1:4
             warning('on', 'backtrace');
             %runStatus(side+1) = 0;
         end
-   
+
     end
 
     % check only the first source for PAM
