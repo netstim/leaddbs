@@ -1,6 +1,6 @@
 function id=ea_method2methodid(obj,efm)
 
-projection_mode = 1;
+projection_mode = 0;
 
 obj.compat_statmetric; % old compatibility for old statmetric notation (used to be stored as integers).
 obj=ea_discfibers_compat_statmetrics2statsettings(obj);

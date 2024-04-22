@@ -40,7 +40,7 @@ else
     stim_space = ['/native/',stim_ID];
 end
 
-for pt_i = 1:3%size(tractset.M.patient.list,1)
+for pt_i = 1:size(tractset.M.patient.list,1)
 
     stim_folder = strcat(tractset.M.patient.list{pt_i},filesep,'stimulations',stim_space);
 
