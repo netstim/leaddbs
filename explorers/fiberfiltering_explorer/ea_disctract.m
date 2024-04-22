@@ -1078,15 +1078,24 @@ classdef ea_disctract < handle
                 disp("Recalculate or stay with the same model (VAT or PAM)")
                 disp("====================================================")
             end
-
-            %disp('Connectivity switch')
-            %disp(obj.switch_connectivity)
-
+            
             % update the connectivity if switched between PAM and VAT
             if obj.switch_connectivity == 1
                 if obj.multi_pathways == 1
-                    [filepath,name,ext] = fileparts(obj.leadgroup);
+                    % check if merged_pathways is in fibfiltering folder
+                    [filepath,~,~] = fileparts(obj.analysispath);
                     cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                    if ~isfile(cfile)
+                        % else check if it is in the original lead-group folder
+                        [filepath,~,~] = fileparts(obj.leadgroup);
+                        cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                        if ~isfile(cfile)
+                            % or if it is in another lead-group folder (where fibfiltering file is)
+                            [filepath,~,~] = fileparts(obj.analysispath);
+                            [filepath,~,~] = fileparts(filepath);
+                            cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                        end
+                    end
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                 end
