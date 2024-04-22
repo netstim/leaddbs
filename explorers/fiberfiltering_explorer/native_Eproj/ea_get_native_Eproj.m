@@ -9,13 +9,28 @@ arguments
     stim_ID        % when using PseudoM, provide stimulation folder full(!) name
 end
 
+%obj.connectome = 'PPU_rh_downsampled_by_4';
+
 % use connectome with all pathways combined
 if tractset.multi_pathways == 1
-    [filepath,~,~] = fileparts(tractset.leadgroup);
+    % check if merged_pathways is in fibfiltering folder
+    [filepath,~,~] = fileparts(tractset.analysispath);
     merged_connectome = [filepath,filesep,tractset.connectome,filesep,'merged_pathways.mat'];
+    if ~isfile(merged_connectome)
+        % else check if it is in the original lead-group folder
+        [filepath,~,~] = fileparts(tractset.leadgroup);
+        merged_connectome = [filepath,filesep,tractset.connectome,filesep,'merged_pathways.mat'];
+        if ~isfile(merged_connectome)
+            % or if it is in another lead-group folder (where fibfiltering file is)
+            [filepath,~,~] = fileparts(tractset.analysispath);
+            [filepath,~,~] = fileparts(filepath);
+            merged_connectome = [filepath,filesep,tractset.connectome,filesep,'merged_pathways.mat'];
+        end
+    end
 else
     merged_connectome = [ea_getconnectomebase('dMRI'), tractset.connectome, filesep, 'data.mat'];
 end
+
 
 % find where VATs are
 if ~isfield(tractset.M,'pseudoM')
@@ -25,7 +40,7 @@ else
     stim_space = ['/native/',stim_ID];
 end
 
-for pt_i = 1:size(tractset.M.patient.list,1)
+for pt_i = 1:3%size(tractset.M.patient.list,1)
 
     stim_folder = strcat(tractset.M.patient.list{pt_i},filesep,'stimulations',stim_space);
 
@@ -54,7 +69,7 @@ for pt_i = 1:size(tractset.M.patient.list,1)
             % compute projection of the E-fields onto the fibers
             for field_i = 1:length(myFields)
                 e_field_file = fullfile(myFields(field_i).folder, myFields(field_i).name);
-                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i},['gs_',tractset.M.guid],e_field_file, merged_connectome, side_suffix)
+                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i},['gs_',tractset.M.guid],e_field_file, merged_connectome, side_suffix,tractset.calcthreshold)
             end
         else
             [~,pt_label,~] = fileparts(tractset.M.patient.list{pt_i});

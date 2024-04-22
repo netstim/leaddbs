@@ -1,5 +1,7 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, thresh,obj)
+function [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, thresh,obj)
 % Calculate fiber connection values based on the VATs and the connectome
+
+%obj.connectome = 'PPU_rh_downsampled_by_4';
 
 disp('Load Connectome...');
 load(cfile, 'fibers', 'idx');
@@ -18,23 +20,38 @@ else
     numPatient = length(obj.allpatients);  % no mirroring
 end
 
-fibsvalBin = cell(1, numSide);
-fibsvalSum = cell(1, numSide);
-fibsvalMean = cell(1, numSide);
-fibsvalPeak = cell(1, numSide);
-fibsval5Peak = cell(1, numSide);
+fibsvalBin_magn = cell(1, numSide);
+fibsvalSum_magn = cell(1, numSide);
+fibsvalMean_magn = cell(1, numSide);
+fibsvalPeak_magn = cell(1, numSide);
+fibsval5Peak_magn = cell(1, numSide);
 
-fibcell = cell(1, numSide);
-connFiberInd = cell(1, numSide);
+fibcell_magn = cell(1, numSide);
+connFiberInd_magn = cell(1, numSide);
+
+fibsvalBin_proj = cell(1, numSide);
+fibsvalSum_proj = cell(1, numSide);
+fibsvalMean_proj = cell(1, numSide);
+fibsvalPeak_proj = cell(1, numSide);
+fibsval5Peak_proj = cell(1, numSide);
+
+fibcell_proj = cell(1, numSide);
+connFiberInd_proj = cell(1, numSide);
 
 totalFibers = length(idx); % total number of fibers in the connectome to work with global indices
 
 for side = 1:numSide
-    fibsvalBin{side} = zeros(length(idx), numPatient);
-    fibsvalSum{side} = zeros(length(idx), numPatient);
-    fibsvalMean{side} = zeros(length(idx), numPatient);
-    fibsvalPeak{side} = zeros(length(idx), numPatient);
-    fibsval5Peak{side} = zeros(length(idx), numPatient);
+    fibsvalBin_magn{side} = zeros(length(idx), numPatient);
+    fibsvalSum_magn{side} = zeros(length(idx), numPatient);
+    fibsvalMean_magn{side} = zeros(length(idx), numPatient);
+    fibsvalPeak_magn{side} = zeros(length(idx), numPatient);
+    fibsval5Peak_magn{side} = zeros(length(idx), numPatient);
+
+    fibsvalBin_proj{side} = zeros(length(idx), numPatient);
+    fibsvalSum_proj{side} = zeros(length(idx), numPatient);
+    fibsvalMean_proj{side} = zeros(length(idx), numPatient);
+    fibsvalPeak_proj{side} = zeros(length(idx), numPatient);
+    fibsval5Peak_proj{side} = zeros(length(idx), numPatient);
 
     if side == 1
         side_tag = '_rh';
@@ -48,14 +65,13 @@ for side = 1:numSide
         disp(['E-field projection ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
         if pt <= length(obj.allpatients)
             E_proj_folder = [obj.allpatients{pt},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,side_tag];
-            if isfile([E_proj_folder,filesep,'E_peak.mat'])
+            if isfile([E_proj_folder,filesep,'E_metrics.mat'])
     
-                E_proj_Peak = load([E_proj_folder,filesep,'E_peak.mat']);
-                E_proj_5Peak = load([E_proj_folder,filesep,'E_5perc_peak.mat']);
+                load([E_proj_folder,filesep,'E_metrics.mat']);
     
                 % no mirroring allowed atm
             else
-                ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: E-proj doesn''t exist!\n');
+                ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: E_metrics file does not exist!\n');
                 continue;
             end
         else
@@ -66,17 +82,35 @@ for side = 1:numSide
                 E_proj_folder = [obj.allpatients{pt-size(obj.allpatients,1)},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,'_rh'];
             end
                 
-            if isfile([E_proj_folder,filesep,'E_peak.mat'])
-                E_proj_Peak_raw = load([E_proj_folder,filesep,'E_peak.mat']);
-                E_proj_5Peak_raw = load([E_proj_folder,filesep,'E_5perc_peak.mat']);
+            if isfile([E_proj_folder,filesep,'E_metrics.mat'])
+                load([E_proj_folder,filesep,'E_metrics.mat']);
             else
-                ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: E-proj doesn''t exist!\n');
+                ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: E_metrics file does not exist!\n');
                 continue;
             end
+            
+            % copy results from the other side
+            proj_5perc_peak_raw = E_metrics.proj_5perc_peak;
+            proj_peak_raw = E_metrics.proj_peak;
+            proj_sum_raw = E_metrics.proj_sum;
+            proj_mean_raw = E_metrics.proj_mean;
 
-            E_proj_Peak.E_peak = zeros(size(E_proj_Peak_raw.E_peak ,1),1);
-            E_proj_5Peak.E_5perc_peak = zeros(size(E_proj_5Peak_raw.E_5perc_peak,1),1);
+            magn_5perc_peak_raw = E_metrics.magn_5perc_peak;
+            magn_peak_raw = E_metrics.magn_peak;
+            magn_sum_raw = E_metrics.magn_sum;
+            magn_mean_raw = E_metrics.magn_mean;
 
+            % initialize actual mirrored metrics
+            E_metrics.proj_peak = zeros(size(proj_peak_raw ,1),1);
+            E_metrics.proj_5perc_peak = zeros(size(proj_5perc_peak_raw,1),1);
+            E_metrics.proj_sum = zeros(size(proj_sum_raw ,1),1);
+            E_metrics.proj_mean = zeros(size(proj_mean_raw,1),1);
+
+            E_metrics.magn_peak = zeros(size(magn_peak_raw ,1),1);
+            E_metrics.magn_5perc_peak = zeros(size(magn_5perc_peak_raw,1),1);
+            E_metrics.magn_sum = zeros(size(magn_sum_raw ,1),1);
+            E_metrics.magn_mean = zeros(size(magn_mean_raw,1),1);
+            
 
             % for mirrored we find indices of pathway counterparts as defined in
             % obj.map_list (order is path1_rh,path1_lh,path2_rh...)
@@ -101,43 +135,85 @@ for side = 1:numSide
 
                 % copy fiber state to the counterpart
                 if pathway_i == length(obj.map_list)-1
-                    E_proj_Peak.E_peak(path_start:path_end) = E_proj_Peak_raw.E_peak(path_start_counter:end);
-                    E_proj_5Peak.E_5perc_peak(path_start:path_end) = E_proj_5Peak_raw.E_5perc_peak(path_start_counter:end);
+                    E_metrics.proj_peak(path_start:path_end) = proj_peak_raw(path_start_counter:end);
+                    E_metrics.proj_5perc_peak(path_start:path_end) = proj_5perc_peak_raw(path_start_counter:end);
+                    E_metrics.proj_sum(path_start:path_end) = proj_sum_raw(path_start_counter:end);
+                    E_metrics.proj_mean(path_start:path_end) = proj_mean_raw(path_start_counter:end);
+
+                    E_metrics.magn_peak(path_start:path_end) = magn_peak_raw(path_start_counter:end);
+                    E_metrics.magn_5perc_peak(path_start:path_end) = magn_5perc_peak_raw(path_start_counter:end);
+                    E_metrics.magn_sum(path_start:path_end) = magn_sum_raw(path_start_counter:end);
+                    E_metrics.magn_mean(path_start:path_end) = magn_mean_raw(path_start_counter:end);
                 elseif pathway_i == length(obj.map_list)
-                    E_proj_Peak.E_peak(path_start:end) = E_proj_Peak_raw.E_peak(path_start_counter:path_end_counter);
-                    E_proj_5Peak.E_5perc_peak(path_start:end) = E_proj_5Peak_raw.E_5perc_peak(path_start_counter:path_end_counter);
+                    E_metrics.proj_peak(path_start:end) = proj_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.proj_5perc_peak(path_start:end) = proj_5perc_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.proj_sum(path_start:end) = proj_sum_raw(path_start_counter:path_end_counter);
+                    E_metrics.proj_mean(path_start:end) = proj_mean_raw(path_start_counter:path_end_counter);
+
+                    E_metrics.magn_peak(path_start:end) = magn_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.magn_5perc_peak(path_start:end) = magn_5perc_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.magn_sum(path_start:end) = magn_sum_raw(path_start_counter:path_end_counter);
+                    E_metrics.magn_mean(path_start:end) = magn_mean_raw(path_start_counter:path_end_counter);
                 else
-                    E_proj_Peak.E_peak(path_start:path_end) = E_proj_Peak_raw.E_peak(path_start_counter:path_end_counter);
-                    E_proj_5Peak.E_5perc_peak(path_start:path_end) = E_proj_5Peak_raw.E_5perc_peak(path_start_counter:path_end_counter);
+                    E_metrics.proj_peak(path_start:path_end) = proj_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.proj_5perc_peak(path_start:path_end) = proj_5perc_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.proj_sum(path_start:path_end) = proj_sum_raw(path_start_counter:path_end_counter);
+                    E_metrics.proj_mean(path_start:path_end) = proj_mean_raw(path_start_counter:path_end_counter);
+
+                    E_metrics.magn_peak(path_start:path_end) = magn_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.magn_5perc_peak(path_start:path_end) = magn_5perc_peak_raw(path_start_counter:path_end_counter);
+                    E_metrics.magn_sum(path_start:path_end) = magn_sum_raw(path_start_counter:path_end_counter);
+                    E_metrics.magn_mean(path_start:path_end) = magn_mean_raw(path_start_counter:path_end_counter);
                 end
                 %last_loc_i = fib_state_raw.idx(fib_i)+last_loc_i;            
             end
         end            
 
-        % Find connected fibers, we don't use VATs here (but can create them from magnitude computed in native and warped)
-        connected = E_proj_Peak.E_peak*1000.0 > thresh;
+        % Find connected fibers, we don't use VATs here
+        connected_magn = E_metrics.magn_peak*1000.0 > thresh;
 
         % Generate binary fibsval for the T-test method
-        fibsvalBin{side}(connected, pt)=1;
+        fibsvalBin_magn{side}(connected_magn, pt)=1;
+        fibsvalPeak_magn{side}(connected_magn, pt) = E_metrics.magn_peak(connected_magn)*1000.0;
+        fibsval5Peak_magn{side}(connected_magn, pt) = E_metrics.magn_5perc_peak(connected_magn)*1000.0;
+        fibsvalSum_magn{side}(connected_magn, pt) = E_metrics.magn_sum(connected_magn)*1000.0;
+        fibsvalMean_magn{side}(connected_magn, pt) = E_metrics.magn_mean(connected_magn)*1000.0;
 
-        % Generate fibsval for the Spearman's correlation method
-        %fibsvalSum{side}(trimmedFiberInd(connected), pt) = cellfun(@sum, vals);
-        %fibsvalMean{side}(trimmedFiberInd(connected), pt) = cellfun(@mean, vals);
+        % Find connected fibers, we don't use VATs here
+        connected_proj = E_metrics.proj_peak*1000.0 > thresh;
 
-        fibsvalPeak{side}(connected, pt) = E_proj_Peak.E_peak(connected)*1000.0;
-        fibsval5Peak{side}(connected, pt) = E_proj_5Peak.E_5perc_peak(connected)*1000.0;
+        % Generate binary fibsval for the T-test method
+        fibsvalBin_proj{side}(connected_proj, pt)=1;
+        fibsvalPeak_proj{side}(connected_proj, pt) = E_metrics.magn_peak(connected_proj)*1000.0;
+        fibsval5Peak_proj{side}(connected_proj, pt) = E_metrics.magn_5perc_peak(connected_proj)*1000.0;
+        fibsvalSum_proj{side}(connected_proj, pt) = E_metrics.magn_sum(connected_proj)*1000.0;
+        fibsvalMean_proj{side}(connected_proj, pt) = E_metrics.magn_mean(connected_proj)*1000.0;
     end
 
     % Remove values for not connected fibers, convert to sparse matrix
-    fibIsConnected = any(fibsvalBin{side}, 2);
-    fibsvalBin{side} = sparse(fibsvalBin{side}(fibIsConnected, :));
-    fibsvalSum{side} = sparse(fibsvalSum{side}(fibIsConnected, :));
-    fibsvalMean{side} = sparse(fibsvalMean{side}(fibIsConnected, :));
-    fibsvalPeak{side} = sparse(fibsvalPeak{side}(fibIsConnected, :));
-    fibsval5Peak{side} = sparse(fibsval5Peak{side}(fibIsConnected, :));
+    fibIsConnected_magn = any(fibsvalBin_magn{side}, 2);
+    fibsvalBin_magn{side} = sparse(fibsvalBin_magn{side}(fibIsConnected_magn, :));
+    fibsvalSum_magn{side} = sparse(fibsvalSum_magn{side}(fibIsConnected_magn, :));
+    fibsvalMean_magn{side} = sparse(fibsvalMean_magn{side}(fibIsConnected_magn, :));
+    fibsvalPeak_magn{side} = sparse(fibsvalPeak_magn{side}(fibIsConnected_magn, :));
+    fibsval5Peak_magn{side} = sparse(fibsval5Peak_magn{side}(fibIsConnected_magn, :));
 
     % Extract connected fiber cell
-    connFiberInd{side} = find(fibIsConnected);
-    connFiber = fibers(ismember(fibers(:,4), connFiberInd{side}), 1:3);
-    fibcell{side} = mat2cell(connFiber, idx(connFiberInd{side}));
+    connFiberInd_magn{side} = find(fibIsConnected_magn);
+    connFiber_magn = fibers(ismember(fibers(:,4), connFiberInd_magn{side}), 1:3);
+    fibcell_magn{side} = mat2cell(connFiber_magn, idx(connFiberInd_magn{side}));
+
+
+    % Remove values for not connected fibers, convert to sparse matrix
+    fibIsConnected_proj = any(fibsvalBin_proj{side}, 2);
+    fibsvalBin_proj{side} = sparse(fibsvalBin_proj{side}(fibIsConnected_proj, :));
+    fibsvalSum_proj{side} = sparse(fibsvalSum_proj{side}(fibIsConnected_proj, :));
+    fibsvalMean_proj{side} = sparse(fibsvalMean_proj{side}(fibIsConnected_proj, :));
+    fibsvalPeak_proj{side} = sparse(fibsvalPeak_proj{side}(fibIsConnected_proj, :));
+    fibsval5Peak_proj{side} = sparse(fibsval5Peak_proj{side}(fibIsConnected_proj, :));
+
+    % Extract connected fiber cell
+    connFiberInd_proj{side} = find(fibIsConnected_proj);
+    connFiber_proj = fibers(ismember(fibers(:,4), connFiberInd_proj{side}), 1:3);
+    fibcell_proj{side} = mat2cell(connFiber_proj, idx(connFiberInd_proj{side}));
 end

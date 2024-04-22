@@ -1,5 +1,7 @@
 function id=ea_method2methodid(obj,efm)
 
+projection_mode = 1;
+
 obj.compat_statmetric; % old compatibility for old statmetric notation (used to be stored as integers).
 obj=ea_discfibers_compat_statmetrics2statsettings(obj);
 
@@ -13,7 +15,11 @@ switch obj.connectivity_type
             case 'VTA'
                 switch obj.statsettings.stattest
                     case 'N-Map'
-                        id = 'plainconn';
+                        if projection_mode
+                            id = 'plainconn_proj';
+                        else
+                            id = 'plainconn';
+                        end
                     otherwise
                         id = 'PAM_Ttest';
                 end
@@ -25,21 +31,42 @@ switch obj.connectivity_type
             case 'VTA'
                 switch obj.statsettings.stattest
                     case 'N-Map' % do we even need an extra results entry for these?
-                        id = 'plainconn';
+                        if projection_mode
+                            id = 'plainconn_proj';
+                        else
+                            id = 'plainconn';
+                        end
                     otherwise
-                        id = 'VAT_Ttest';
+                        if projection_mode
+                            id = 'VAT_Ttest_proj';
+                        else
+                            id = 'VAT_Ttest';
+                        end
                 end
             case {'Electric Field','Sigmoid Field'}  % E-fields
                 id='efield';
-                switch efm
-                    case 'Mean'
-                        id=[id,'_mean'];
-                    case 'Peak'
-                        id=[id,'_peak'];
-                    case 'Sum'
-                        id=[id,'_sum'];
-                    case 'Peak 5%'
-                        id=[id,'_5peak'];
+                if projection_mode
+                    switch efm
+                        case 'Mean'
+                            id=[id,'_proj_mean'];
+                        case 'Peak'
+                            id=[id,'_proj_peak'];
+                        case 'Sum'
+                            id=[id,'_proj_sum'];
+                        case 'Peak 5%'
+                            id=[id,'_proj_5peak'];
+                    end
+                else
+                    switch efm
+                        case 'Mean'
+                            id=[id,'_mean'];
+                        case 'Peak'
+                            id=[id,'_peak'];
+                        case 'Sum'
+                            id=[id,'_sum'];
+                        case 'Peak 5%'
+                            id=[id,'_5peak'];
+                    end
                 end
         end
 end

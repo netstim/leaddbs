@@ -1,4 +1,4 @@
-function ea_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix)
+function ea_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix, threshold)
 
 % get E-field along fibers (computed in native space)
 % By J.Roediger and K.Butenko
@@ -130,31 +130,61 @@ end
 
 
 %% Obtain fiber orientation in relation to efield vector
+% there could be nans in fibvector, because some connectomes have
+% repetitions
 fibvector_norm = fibvector./vecnorm(fibvector,2,2);
 E_along_fiber = abs(dot(effiber,fibvector_norm,2));
+E_magn_fiber = sqrt(dot(effiber,effiber,2));
 
 % there is no sense to restore dimensionality of ftr, just keep reference to orig idx
-fibers_E_proj = zeros(size(fibmididx,1),5);
+fibers_E_proj = zeros(size(fibmididx,1),6);
 fibers_E_proj(:,1:3) = fibmidcoords;  % we should recompute them in MNI?
 fibers_E_proj(:,4) = fibmididx;
 fibers_E_proj(:,5) = E_along_fiber;
+fibers_E_proj(:,6) = E_magn_fiber;   % just for consistency
 
-% we can also compute 5% peak here, etc.
-% But better pass the whole thing to FF
-E_peak = zeros(size(ftr.idx));
-E_5perc_peak = zeros(size(ftr.idx));
+% we should consider different thresholds for these
+% E-field projections on fiber
+E_metrics.proj_peak = zeros(size(ftr.idx));
+E_metrics.proj_5perc_peak = zeros(size(ftr.idx));
+E_metrics.proj_sum = zeros(size(ftr.idx));   % only where E-metric > threshold
+E_metrics.proj_mean = zeros(size(ftr.idx));  % only where E-metric > threshold
+
+% E-field magnitudes on fiber
+E_metrics.magn_peak = zeros(size(ftr.idx));
+E_metrics.magn_5perc_peak = zeros(size(ftr.idx));
+E_metrics.magn_sum = zeros(size(ftr.idx));   % only where E-metric > threshold
+E_metrics.magn_mean = zeros(size(ftr.idx));  % only where E-metric > threshold
+
+% we do not need to do any VAT intersections anymore, because we have all
+% metrics available on fibers already
+
+
 
 for fib_idx = 1:size(ftr.idx,1)
     fib_E_proj = fibers_E_proj(fibers_E_proj(:,4) == fib_idx,:);
-    if isempty(fib_E_proj)
-        E_peak(fib_idx) = 0.0;
-        E_5perc_peak(fib_idx) = 0.0;
-    else
-        E_peak(fib_idx) = max(fib_E_proj(:,5));
-        E_5perc_peak(fib_idx) = mean(maxk(fib_E_proj(:,5),ceil(0.05*numel(size(ftr.idx,1)))));
+    if ~isempty(fib_E_proj)
+
+        idx_thresh_proj =  find(fib_E_proj(:,5)>=threshold*0.001);
+   
+        if ~isempty(idx_thresh_proj)
+            E_metrics.proj_peak(fib_idx) = ea_nanmax(fib_E_proj(:,5));
+            E_metrics.proj_5perc_peak(fib_idx) = ea_nanmean(maxk(fib_E_proj(:,5),ceil(0.05*numel(size(ftr.idx,1)))));
+            E_metrics.proj_sum(fib_idx) = ea_nansum(fib_E_proj(idx_thresh_proj,5));
+            E_metrics.proj_mean(fib_idx) = ea_nanmean(fib_E_proj(idx_thresh_proj,5));
+        end
+    
+        idx_thresh_magn = find(fib_E_proj(:,6)>=threshold*0.001);
+
+        if ~isempty(idx_thresh_magn)
+            E_metrics.magn_peak(fib_idx) = ea_nanmax(fib_E_proj(:,6));
+            E_metrics.magn_5perc_peak(fib_idx) = ea_nanmean(maxk(fib_E_proj(:,6),ceil(0.05*numel(size(ftr.idx,1)))));
+            E_metrics.magn_sum(fib_idx) = ea_nansum(fib_E_proj(idx_thresh_magn,6));
+            E_metrics.magn_mean(fib_idx) = ea_nanmean(fib_E_proj(idx_thresh_magn,6));
+        end
     end
 end
-    
+
 %% Store the projections in patient_folder/miscellaneous/connectome_name/stim_folder_side
 [~,stim_folder_name,~] = fileparts(stim_folder);
 stim_folder_name = [stim_folder_name, side_suffix];
@@ -163,5 +193,4 @@ if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName, files
     mkdir([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name])
 end
 
-save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_peak.mat'], 'E_peak')
-save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_5perc_peak.mat'], 'E_5perc_peak')
+save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_metrics.mat'], 'E_metrics')

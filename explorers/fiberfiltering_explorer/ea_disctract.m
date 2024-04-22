@@ -287,7 +287,7 @@ classdef ea_disctract < handle
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
-                    ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
+                    %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
 
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
@@ -1085,8 +1085,20 @@ classdef ea_disctract < handle
             % update the connectivity if switched between PAM and VAT
             if obj.switch_connectivity == 1
                 if obj.multi_pathways == 1
-                    [filepath,name,ext] = fileparts(obj.leadgroup);
+                    % check if merged_pathways is in fibfiltering folder
+                    [filepath,~,~] = fileparts(obj.analysispath);
                     cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                    if ~isfile(cfile)
+                        % else check if it is in the original lead-group folder
+                        [filepath,~,~] = fileparts(obj.leadgroup);
+                        cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                        if ~isfile(cfile)
+                            % or if it is in another lead-group folder (where fibfiltering file is)
+                            [filepath,~,~] = fileparts(obj.analysispath);
+                            [filepath,~,~] = fileparts(filepath);
+                            cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                        end
+                    end
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                 end
