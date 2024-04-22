@@ -1,4 +1,4 @@
-function kb2_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix)
+function ea_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix)
 
 % get E-field along fibers (computed in native space)
 % By J.Roediger and K.Butenko
