@@ -1,4 +1,4 @@
-function ea_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix, threshold)
+function ea_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix, threshold, space)
 
 % get E-field along fibers (computed in native space)
 % By J.Roediger and K.Butenko
@@ -16,16 +16,20 @@ end
 
 pt_folder = char(pt_folder);
 
-connectomeFile_in_native = strcat([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension]);
-% check if the connectome was already warped in native
-if isfile(connectomeFile_in_native)
-    disp("The connectome was already warped, loading...")
-    ftr = load(connectomeFile_in_native);
+if strcmp(space,'native')
+    connectomeFile_in_native = strcat([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension]);
+    % check if the connectome was already warped in native
+    if isfile(connectomeFile_in_native)
+        disp("The connectome was already warped, loading...")
+        ftr = load(connectomeFile_in_native);
+    else
+        % modify to search for non-ants as well
+        transform = ea_regexpdir([pt_folder, '/normalization/transformations'],'.*from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz',0,'f',0);
+        anchor_img = ea_regexpdir([pt_folder,'/coregistration/anat'], '.*ses-preop_space-anchorNative.*',0,'f',0);
+        ftr = ea_warp_fibers_MNI2native(pt_folder, MNI_connectome_file, transform{1}, anchor_img{1});
+    end
 else
-    % modify to search for non-ants as well
-    transform = ea_regexpdir([pt_folder, '/normalization/transformations'],'.*from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz',0,'f',0);
-    anchor_img = ea_regexpdir([pt_folder,'/coregistration/anat'], '.*ses-preop_space-anchorNative.*',0,'f',0);
-    ftr = ea_warp_fibers_MNI2native(pt_folder, MNI_connectome_file, transform{1}, anchor_img{1});
+    ftr = load(MNI_connectome_file);
 end
 % load the 4-D E-field nii (in native space!)
 % , we assume that the first 3 components are X,Y,Z
@@ -193,4 +197,11 @@ if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName, files
     mkdir([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name])
 end
 
-save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_metrics.mat'], 'E_metrics')
+if strcmp(space,'native')
+    save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_metrics.mat'], 'E_metrics')
+else
+    if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'MNI'])
+        mkdir([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'MNI'])
+    end
+    save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep,'MNI',filesep,'E_metrics.mat'], 'E_metrics')
+end

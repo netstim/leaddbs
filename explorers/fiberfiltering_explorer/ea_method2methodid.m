@@ -13,16 +13,10 @@ switch obj.connectivity_type
     case 2 % PAM
         switch obj.statsettings.stimulationmodel
             case 'VTA'
-                switch obj.statsettings.stattest
-                    case 'N-Map'
-                        if projection_mode
-                            id = 'plainconn_proj';
-                        else
-                            id = 'plainconn';
-                        end
-                    otherwise
-                        id = 'PAM_Ttest';
-                end
+                % plainconn is reserved for e-fields
+                id = 'PAM_Ttest';
+            case {'Sigmoid Field'}
+                id = 'PAM_probA';
             otherwise
                 disp('The metric is not supported by PAM')
         end
