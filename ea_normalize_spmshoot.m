@@ -96,12 +96,10 @@ movefile([directory, 'c1', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1
 movefile([directory, 'c2', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'WM', 'suffix', 'mask'));
 movefile([directory, 'c3', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1}, 'mod', mod, 'label', 'CSF', 'suffix', 'mask'));
 
-% Deformation fields to itk
+% Rename deformation fields
 ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
-ea_spm_fwd_displacement_field_to_ants([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'ants.nii.gz']);
-ea_slicer_invert_transform([options.subj.norm.transform.forwardBaseName, 'ants.nii.gz'], options.subj.coreg.anat.preop.(options.subj.AnchorModality), [options.subj.norm.transform.inverseBaseName, 'ants.nii.gz']);
-delete([directory, 'y_ea_normparams.nii'])
-delete([directory, 'y_ea_inv_normparams.nii'])
+movefile([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
+movefile([directory, 'y_ea_inv_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
 
 ea_apply_normalization(options)
 
