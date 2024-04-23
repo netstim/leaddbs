@@ -6,8 +6,10 @@ function ea_apply_normalization(options)
 
 json = loadjson(options.subj.norm.log.method);
 
-if contains(json.method, {'ANTs', 'EasyReg', 'SPM'})
+if contains(json.method, {'ANTs','EasyReg'})
     ea_ants_apply_transforms(options);
 elseif contains(json.method, 'FNIRT')
     ea_fsl_apply_normalization(options);
+elseif contains(json.method, 'SPM')
+    ea_spm_apply_normalization(options);
 end
