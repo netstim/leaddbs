@@ -15,10 +15,14 @@ end
 % fiber values can be sigmoid transform
 switch obj.statsettings.stimulationmodel
     case 'Sigmoid Field'
-        fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-        fibsval = fibsval_raw;  % initialize
-        for side = 1:size(fibsval_raw,2)
-            fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+        if obj.connectivity_type == 2
+            fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
+        else
+            fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval = fibsval_raw;  % initialize
+            for side = 1:size(fibsval_raw,2)
+                fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+            end
         end
     otherwise
         fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
@@ -183,13 +187,15 @@ for group=groups
             switch obj.statsettings.stimulationmodel
                 case 'VTA'
                     Nmap=sum(gfibsval{side}(:,gpatsel),2);
+%                 case 'Sigmoid Field'
+%                     if strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak')
+%                         % 0.5 V / mm -> 0.5 probability
+%                         Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold/1000.0),2);
+%                     else
+%                         Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
+%                     end
                 case 'Sigmoid Field'
-                    if (strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak'))
-                        % 0.5 V / mm -> 0.5 probability
-                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold/1000.0),2);
-                    else
-                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
-                    end
+                    Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
                 case 'Electric Field'
                     Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
             end
