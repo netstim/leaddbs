@@ -1,10 +1,24 @@
-function pamlist = ea_discfibers_getpams(obj)
+function pamlist = ea_discfibers_getpams_mirrored(obj)
 % Return list of VATs
 
-% For multiple protocols, we should look for indexed files in the stim
-% folder, but mark that they are from the same patient
-numPatient = length(obj.allpatients);
-pamlist = cell(numPatient,2);   % no mirroring
+% this is a special version where the connectome is mirrored
+% and we can just flip PAM results
+
+PAM_mirror_enabled = 1;
+
+if PAM_mirror_enabled == 1
+    ea_warndlg("PAM mirroring is used, make sure the connecome is index-symmetric!")
+
+    numPatient = length(obj.allpatients);
+    pamlist = cell(numPatient*2,2);   % no mirroring
+
+else
+    % For multiple protocols, we should look for indexed files in the stim
+    % folder, but mark that they are from the same patient
+    numPatient = length(obj.allpatients);
+    pamlist = cell(numPatient,2);   % no mirroring
+end
+% here we will add the missing ones (you just need to know how much you have in total, iterate, set to zero for no match)
 
 % here we will add the missing ones (you just need to know how much you have in total, iterate, set to zero for no match)
 
@@ -21,6 +35,15 @@ for sub=1:numPatient % Original VAT E-field
         ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
     pamlist{sub,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
+
+
+    % Mirrored PAM, here we just initialize with a counterpart
+    % actual mirroring later in calcvals
+    pamlist{sub+numPatient,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
+        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
+    pamlist{sub+numPatient,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
+        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
+
 end
 
 end

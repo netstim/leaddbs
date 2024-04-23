@@ -277,7 +277,9 @@ classdef ea_disctract < handle
             switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
+                    %[fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
+                    [fibsvalBin, fibsvalprob,~, ~, ~, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam_prob(pamlist, obj, cfile);
+                    obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval = fibsvalprob;
                     obj.results.(ea_conn2connid(obj.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM = connFiberInd;
                     obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
@@ -287,19 +289,22 @@ classdef ea_disctract < handle
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
-                    ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
+                    %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
 
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
                     obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
+
+                    % only for e-fields
+                    obj.results.(ea_conn2connid(obj.connectome)).('efield_sum').fibsval = fibsvalSum;
+                    obj.results.(ea_conn2connid(obj.connectome)).('efield_mean').fibsval = fibsvalMean;
+                    obj.results.(ea_conn2connid(obj.connectome)).('efield_peak').fibsval = fibsvalPeak;
+                    obj.results.(ea_conn2connid(obj.connectome)).('efield_5peak').fibsval = fibsval5Peak;
+                    obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
             end
 
-            obj.results.(ea_conn2connid(obj.connectome)).('efield_sum').fibsval = fibsvalSum;
-            obj.results.(ea_conn2connid(obj.connectome)).('efield_mean').fibsval = fibsvalMean;
-            obj.results.(ea_conn2connid(obj.connectome)).('efield_peak').fibsval = fibsvalPeak;
-            obj.results.(ea_conn2connid(obj.connectome)).('efield_5peak').fibsval = fibsval5Peak;
-            obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
+            % this metric is overwritten atm
             obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
 
