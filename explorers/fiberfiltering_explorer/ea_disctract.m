@@ -99,7 +99,7 @@ classdef ea_disctract < handle
         roithresh = 200; %threshold above which efield metrics are considered
         % misc
         runwhite = 0; % flag to calculate connected tracts instead of stat tracts
-        
+        e_field_metric = 'Magnitude'; % 'Magnitude' or 'Projection'
     end
 
     properties (Access = private)
@@ -1271,32 +1271,33 @@ classdef ea_disctract < handle
                     %disp(num_per_path{side})  % for now just print number of fibers per pathway
                 end
 
-                figure
-                t = tiledlayout(1,2,'TileSpacing','compact');
-                nonZero_idx = [num_per_path{1}] > 0;
-                num_per_path{1} = num_per_path{1}(nonZero_idx);
-                if ~isempty(num_per_path{1})
-                    % Create pie charts
-                    ax1 = nexttile;
-                    pie1 = pie(ax1,num_per_path{1});
-                    ax1.Colormap = parula(numel(pie1)/2);  % they are all ugl
-                    title('Right HS')
-                    % Create legend
-                    lgd = legend(obj.pathway_list(nonZero_idx));
-                    lgd.Layout.Tile = 'west';
-                end
-
-                ax2 = nexttile;
-                colormap(ax2,winter)
-                nonZero_idx = [num_per_path{2}] > 0;
-                num_per_path{2} = num_per_path{2}(nonZero_idx);
-                if ~isempty(num_per_path{2})
-                    pie(ax2,num_per_path{2})
-                    title('Left HS')
-                    % Create legend
-                    lgd2 = legend(obj.pathway_list(nonZero_idx));
-                    lgd2.Layout.Tile = 'east';
-                end
+                % uncomment to create pie plots of pathways metrics
+%                 figure
+%                 t = tiledlayout(1,2,'TileSpacing','compact');
+%                 nonZero_idx = [num_per_path{1}] > 0;
+%                 num_per_path{1} = num_per_path{1}(nonZero_idx);
+%                 if ~isempty(num_per_path{1})
+%                     % Create pie charts
+%                     ax1 = nexttile;
+%                     pie1 = pie(ax1,num_per_path{1});
+%                     ax1.Colormap = parula(numel(pie1)/2);  % they are all ugl
+%                     title('Right HS')
+%                     % Create legend
+%                     lgd = legend(obj.pathway_list(nonZero_idx));
+%                     lgd.Layout.Tile = 'west';
+%                 end
+% 
+%                 ax2 = nexttile;
+%                 colormap(ax2,winter)
+%                 nonZero_idx = [num_per_path{2}] > 0;
+%                 num_per_path{2} = num_per_path{2}(nonZero_idx);
+%                 if ~isempty(num_per_path{2})
+%                     pie(ax2,num_per_path{2})
+%                     title('Left HS')
+%                     % Create legend
+%                     lgd2 = legend(obj.pathway_list(nonZero_idx));
+%                     lgd2.Layout.Tile = 'east';
+%                 end
             end
 
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
