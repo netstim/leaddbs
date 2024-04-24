@@ -24,21 +24,21 @@ end
 
 % Actual test:
 outcomein=repmat(outcomein',size(valsin,1),1);
-
 group1=outcomein;
-group1(isnan(valsin))=NaN;
-group2=outcomein;
-group2(~isnan(valsin))=NaN;
+
+% we don't need group 2 in this test!
+%group2=outcomein;
+%group2(~isnan(valsin))=NaN;
 valsout=nan(size(valsin,1),1);
 psout=nan(size(valsin,1),1);
 
-mysyntax = 'outcome ~ 1+condition';
+mysyntax = 'outcome ~ 1 + condition';
 ea_dispercent(1/size(valsin,1),'Calculating Weighted regression')
 for i = 1:size(valsin,1)
     ea_dispercent(i/size(valsin,1))
     mytable = table;
-    mytable.outcome= vertcat(group2(i,:)',group1(i,:)');
-    mytable.weight = vertcat(valsin(i,:)',1-valsin(i,:)');
+    mytable.outcome= vertcat(group1(i,:)',group1(i,:)');
+    mytable.weight = vertcat(1-valsin(i,:)',valsin(i,:)');
     mytable.condition = vertcat(zeros(size(valsin(i,:)')),ones(size(valsin(i,:)')));
     mymdl = fitlm(mytable,mysyntax,'Weights',mytable.weight);
     %% storing statitic values in maps
