@@ -36,7 +36,12 @@ if ischar(H0)
 end
 outcomein=repmat(outcomein',size(valsin,1),1);
 
-group1=valsin .* outcomein;
+valsout = ~valsin;
+valsin_new = ones(size(valsin));
+% zero entries are meaningless!
+valsin_new(valsin==0) = nan;
+
+group1=valsin_new .* outcomein;
 valsout=nan(size(valsin,1),1);
 psout=nan(size(valsin,1),1);
 [~,psout,~,stats]=ttest(group1',H0);
