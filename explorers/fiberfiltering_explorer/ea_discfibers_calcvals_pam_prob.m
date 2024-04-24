@@ -146,8 +146,8 @@ for side = 1:numSide
        
         % alternatively, you could also add fib_state == -1
         % probabilistic_PA
-        activated = find(fib_state >= 0.1);
-        %activated = find(fib_state == 1  | fib_state == -1);
+        activated = find(fib_state >= 0.1);     % use low threshold when doing pPAM
+        %activated = find(fib_state >= 0.5);    % maybe use higher threshold when doing binary tests
 
         % needed
         % Generate binary fibsval for the T-test method
