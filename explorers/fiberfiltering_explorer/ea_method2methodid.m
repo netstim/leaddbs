@@ -1,7 +1,5 @@
 function id=ea_method2methodid(obj,efm)
 
-projection_mode = 0;
-
 obj.compat_statmetric; % old compatibility for old statmetric notation (used to be stored as integers).
 obj=ea_discfibers_compat_statmetrics2statsettings(obj);
 
@@ -25,13 +23,13 @@ switch obj.connectivity_type
             case 'VTA'
                 switch obj.statsettings.stattest
                     case 'N-Map' % do we even need an extra results entry for these?
-                        if projection_mode
+                        if strcmp(obj.e_field_metric,'Projection')
                             id = 'plainconn_proj';
                         else
                             id = 'plainconn';
                         end
                     otherwise
-                        if projection_mode
+                        if strcmp(obj.e_field_metric,'Projection')
                             id = 'VAT_Ttest_proj';
                         else
                             id = 'VAT_Ttest';
@@ -39,7 +37,7 @@ switch obj.connectivity_type
                 end
             case {'Electric Field','Sigmoid Field'}  % E-fields
                 id='efield';
-                if projection_mode
+                if strcmp(obj.e_field_metric,'Projection')
                     switch efm
                         case 'Mean'
                             id=[id,'_proj_mean'];
