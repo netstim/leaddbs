@@ -527,10 +527,10 @@ class WarpDriveCorrectionsTable(baseTable):
   def modiableCorrectionsChanged(self, checked):
     pass
 
-class WarpDriveCorrectionsManager(VTKObservationMixin, WarpDriveCorrectionsTable):
+class WarpDriveCorrectionsManager(WarpDriveCorrectionsTable, VTKObservationMixin):
   def __init__(self):
-    VTKObservationMixin.__init__(self)
     WarpDriveCorrectionsTable.__init__(self)
+    VTKObservationMixin.__init__(self)
     self.sourceFiducialNodeID = ""
     self.targetFiducialNodeID = ""
     self._updatingFiducials = False
