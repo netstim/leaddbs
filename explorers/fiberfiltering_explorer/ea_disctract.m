@@ -278,11 +278,15 @@ classdef ea_disctract < handle
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
                     %[fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
-                    [fibsvalBin, fibsvalprob,~, ~, ~, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam_prob(pamlist, obj, cfile);
+                    [fibsvalBin, fibsvalprob,~, ~, ~, fibcell_pam, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam_prob(pamlist, obj, cfile);
                     obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval = fibsvalprob;
                     obj.results.(ea_conn2connid(obj.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM = connFiberInd;
                     obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
+                    obj.results.(ea_conn2connid(obj.connectome)).('pam_fibers').fibcell= fibcell_pam;
+                    % temp. duplicate fibcell, will be fixed in the new explorer
+                    obj.results.(ea_conn2connid(obj.connectome)).fibcell = obj.results.(ea_conn2connid(obj.connectome)).('pam_fibers').fibcell;
+
                 otherwise     % check fiber recruitment via intersection with VTA
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
@@ -291,7 +295,7 @@ classdef ea_disctract < handle
                     end
                     %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
 
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
                     obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
@@ -302,10 +306,11 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).('efield_peak').fibsval = fibsvalPeak;
                     obj.results.(ea_conn2connid(obj.connectome)).('efield_5peak').fibsval = fibsval5Peak;
                     obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
+                    obj.results.(ea_conn2connid(obj.connectome)).('efield_fibers').fibcell= fibcell_efield;
+                    % temp. duplicate fibcell, will be fixed in the new explorer
+                    obj.results.(ea_conn2connid(obj.connectome)).fibcell = obj.results.(ea_conn2connid(obj.connectome)).('efield_fibers').fibcell;
             end
 
-            % this metric is overwritten atm
-            obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
 
 
