@@ -1,7 +1,7 @@
 function ea_plot_prob_fiber_state(varargin)
 
-
-    %ea_plot_prob_fiber_state('/media/konstantin/LaCie/backup/OCD/derivatives/leaddbs/sub-CologneAlic12/stimulations/native/gs_20200317121650/sub-CologneAlic12_sim-fiberActivation_model-ossdbs_hemi-L.mat', 1000)
+    % example 
+    % ea_plot_prob_fiber_state('/media/konstantin/Konstantin/StimFit_Cohort/StimFitBIDS/derivatives/leaddbs/sub-SBN7F4E4/stimulations/native/gs_20230506011354/sub-SBN7F4E4_sim-fiberActivation_model-ossdbs_hemi-L_tract-cerebellothalamic_left.mat', 125)
 
     fiberActivationProb = varargin{1};
     load(fiberActivationProb);
@@ -57,10 +57,11 @@ function ea_plot_prob_fiber_state(varargin)
             mytract = streamtube(fibersnew(myfibs(fiber_i)),0.05);
             set(mytract,'FaceColor',[1,1,1],'FaceAlpha',0.25,'EdgeColor','none')
         else
-            mytract = streamtube(fibersnew(myfibs(fiber_i)),exp_norm_probability(myfibs(fiber_i))*0.66);
+            mytract = streamtube(fibersnew(myfibs(fiber_i)),exp_norm_probability(myfibs(fiber_i))*0.3+0.1);
             %mytract = streamtube(fibersnew(myfibs(fiber_i)),probability(myfibs(fiber_i))*1.0);
             %set(mytract,'FaceColor',[probability(myfibs(fiber_i))*0.8+0.2,(1-probability(myfibs(fiber_i)))*0.33,0],'FaceAlpha',exp_norm_probability(myfibs(fiber_i)),'EdgeColor','none')
-            set(mytract,'FaceColor',[probability(myfibs(fiber_i))*0.75+0.25,(1-probability(myfibs(fiber_i)))*0.4,0],'FaceAlpha',exp_norm_probability(myfibs(fiber_i)),'EdgeColor','none')
+            %set(mytract,'FaceColor',[probability(myfibs(fiber_i))*0.75+0.25,(1-probability(myfibs(fiber_i)))*0.75,0],'FaceAlpha',exp_norm_probability(myfibs(fiber_i)),'EdgeColor','none')
+            set(mytract,'FaceColor',[1.0,(1-probability(myfibs(fiber_i))),0],'FaceAlpha',exp_norm_probability(myfibs(fiber_i)),'EdgeColor','none')
         end
     end
 
