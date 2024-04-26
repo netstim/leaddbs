@@ -184,7 +184,6 @@ for source_index = 1:4
             if settings.calcAxonActivation
                 if prob_PAM 
                     settings = ea_updatePAM_parameter(options,settings,N_samples,outputPaths,i);
-                    scaling = 1.0; % same current scaling across the parameter sweep
                 end
         
                 % clean-up
@@ -193,7 +192,8 @@ for source_index = 1:4
                 ea_delete([folder2save,filesep,'oss_time_result.h5'])
     
                 % allocate computational axons on fibers
-                system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
+                %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
+                system(['prepareaxonmodel ',outputPaths.outputDir,' --hemi_side ',num2str(side),' --description_file ', parameterFile]);
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
@@ -206,25 +206,20 @@ for source_index = 1:4
         
             % prepare NEURON simulation
             if settings.calcAxonActivation
-                % copy NEURON folder to the stimulation folder 
-                leaddbs_neuron = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/Axon_files'];
-                neuron_folder = fullfile(outputPaths.outputDir,'Axon_files');
-                copyfile(leaddbs_neuron, neuron_folder)
-        
-                % call the NEURON module
-                timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
-                pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
     
                 % check if the time domain results is available
+                timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
                 if ~isfile(timeDomainSolution)
                     ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, set settings.outOfCore to 1')
                     return
                 end
 
                 if prob_PAM
-                    system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
+                    %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
+                    system(['run_pathway_activation ', parameterFile_json, ' --scaling_index ', num2str(i)]);
                 else
-                    system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
+                    %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
+                    system(['run_pathway_activation ', parameterFile_json]);
                 end
             end
         end
