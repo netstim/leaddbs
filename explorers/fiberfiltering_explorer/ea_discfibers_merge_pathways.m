@@ -139,17 +139,23 @@ for sub=1:numPatient
             C_fibState_idx{k} = C_idx{k};
         end
 
-        ftr2 = fib_state_raw; % just initialization
-        % merge cell contents along axis 0
-        ftr2.fibers = cat(1, C_fibState{:});
-        ftr2.idx = cat(1, C_fibState_idx{:});
-
-        % store as fiberActivation_side.mat in the corresp. stim folder
-        [filepath,~,~] = fileparts(pam_file);
-        %BIDS notation
-        [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
-        subSimPrefix = [subj_tag, '_sim-'];
-        fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
-        save(fiberActivation_merged, '-struct', 'ftr2');
+        if ~exist('fib_state_raw')
+            warning("No fiber activation files were found for")
+            warning(subj_tag)
+        else
+            ftr2 = fib_state_raw; % just initialization
+            % merge cell contents along axis 0
+            ftr2.fibers = cat(1, C_fibState{:});
+            ftr2.idx = cat(1, C_fibState_idx{:});
+    
+            % store as fiberActivation_side.mat in the corresp. stim folder
+            [filepath,~,~] = fileparts(pam_file);
+            %BIDS notation
+            [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
+            subSimPrefix = [subj_tag, '_sim-'];
+            fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
+            save(fiberActivation_merged, '-struct', 'ftr2');
+            clear fib_state_raw;
+        end
     end
 end
