@@ -130,4 +130,7 @@ else % Multi-Tract connectome
     % Save filtered fibers
     save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
     save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
+
+    % path to a json with axon model description 
+    settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
 end
