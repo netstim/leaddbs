@@ -59,6 +59,9 @@ classdef ea_sweetspot < handle
         kfold = 5 % divide into k sets when doing k-fold CV
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
+        ExternalModelFile = 'None'
+        useExternalModel = false;
+        visualizeExternalModel = 0;
     end
 
     properties (Access = private)
@@ -292,24 +295,37 @@ classdef ea_sweetspot < handle
                     test = cvp.test{c};
                 end
 
-                if ~exist('Iperm', 'var')
+                if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
+                    % load external model, and assign vals from the
+                    % external model.
+                    S=ea_sweetspot_importedModel2Efields(obj, obj.ExternalModelFile);;
                     if obj.cvlivevisualize
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                        [vals] = S.model_vals;
                         obj.draw(vals);
                         drawnow;
                     else
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                        [vals] = S.model_vals;
+
                     end
                 else
-                    if obj.cvlivevisualize
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals);
-                        drawnow;
+                    if ~exist('Iperm', 'var')
+                        if obj.cvlivevisualize
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                            obj.draw(vals);
+                            drawnow;
+                        else
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                        end
                     else
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
+                        if obj.cvlivevisualize
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
+                            obj.draw(vals);
+                            drawnow;
+                        else
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
+                        end
                     end
                 end
-
                 for side=1:numel(vals)
                     if ~isempty(vals{1,side})
                         switch obj.statlevel % also differentiate between methods in the prediction part.
@@ -420,7 +436,12 @@ classdef ea_sweetspot < handle
         end
 
         function export=draw(obj,vals)
-            if ~exist('vals','var')
+            if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None') && obj.visualizeExternalModel == 1
+                % load external model, and assign vals from the
+                % external model.
+                S=ea_sweetspot_importedModel2Efields(obj, obj.ExternalModelFile);
+                [vals] = S.model_vals;           
+            elseif ~exist('vals','var')
                 [vals]=ea_sweetspot_calcstats(obj);
             end
             obj.spotdrawn.vals=vals;
