@@ -1,7 +1,7 @@
 function ea_get_Eproj(tractset,stim_ID,space)
-% Comptute E-field metrics on fibers warped into native space.
+% Comptute E-field metrics directly on fibers (optionally in native space).
 % The results are stored as
-% patient_folder/miscellaneous/connnectomeName/stim_ID/E_peak.mat (values for all fibers in the connectome!)
+% patient_folder/miscellaneous/connnectomeName/stim_ID/E_metrics.mat (values for all fibers in the connectome!)
 % By Butenko and Roediger, konstantinmgtu@gmail.com
 
 arguments
@@ -9,8 +9,6 @@ arguments
     stim_ID        % when using PseudoM, provide stimulation folder full(!) name
     space          % space where to compute E-proj, 'MNI' or 'native'
 end
-
-%obj.connectome = 'PPU_rh_downsampled_by_4';
 
 % use connectome with all pathways combined
 if tractset.multi_pathways == 1
@@ -62,8 +60,8 @@ for pt_i = 1:size(tractset.M.patient.list,1)
                 side_suffix = '_lh';
         end
 
-        % OSS-DBS format
-        result_folder = strcat(stim_folder,'/Results',side_suffix);
+        % OSS-DBS format (for Simbio, the function is not available)
+        result_folder = strcat(stim_folder,filesep,'Results',side_suffix);
        
         if isfolder(result_folder)
             % get the solution(s)
@@ -78,7 +76,7 @@ for pt_i = 1:size(tractset.M.patient.list,1)
             % compute projection of the E-fields onto the fibers
             for field_i = 1:length(myFields)
                 e_field_file = fullfile(myFields(field_i).folder, myFields(field_i).name);
-                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i},['gs_',tractset.M.guid],e_field_file, merged_connectome, side_suffix,tractset.calcthreshold, space)
+                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i}, stim_space, e_field_file, merged_connectome, side_suffix, tractset.calcthreshold)
             end
         else
             [~,pt_label,~] = fileparts(tractset.M.patient.list{pt_i});
