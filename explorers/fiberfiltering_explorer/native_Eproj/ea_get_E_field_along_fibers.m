@@ -1,12 +1,25 @@
-function ea_get_E_field_along_fibers(pt_folder,stim_folder,e_field_file, MNI_connectome_file, side_suffix, threshold, space)
-
-% get E-field along fibers (computed in native space)
+function ea_get_E_field_along_fibers(pt_folder,stim_space,e_field_file, MNI_connectome_file, side_suffix, threshold)
+% get E-field metrics along fibers (computed in native space)
 % By J.Roediger and K.Butenko
 
-% first warp the connectome to native space (and store in patient folder / miscellaneous)
-[connectomePath,connectomeFileName,connectomeExtension] = fileparts(MNI_connectome_file);
+arguments
+    pt_folder               % full path to the patient folder in the Lead-DBS dataset
+    stim_space              % identifier for the stimulation ID and space, e.g. '/native/gs_111'
+    e_field_file            % full path to the 4-D nifti (see ea_get_4Dfield_from_csv)
+    MNI_connectome_file     % full path to the connectome, use merged_pathways.mat for pathway atlases
+    side_suffix             % _rh - right hemisphere
+    threshold               % sum and mean E-field metrics are only computed on segments above this E-field threshold (in V/m) 
+end
+
+% interpolation from the E-field grid to the fiber compartments
+interpolation_method = 'linear';
+
+% check which space is used
+[space, stim_folder_name,~] = fileparts(stim_space);
+space = space(2:end);
 
 % check the folder name if stored in data or merged_pathways.mat
+[connectomePath,connectomeFileName,connectomeExtension] = fileparts(MNI_connectome_file);
 if strcmp('data',connectomeFileName) || strcmp('merged_pathways',connectomeFileName)
     [~,connectomeName,~] = fileparts(connectomePath);
 else
@@ -15,7 +28,7 @@ else
 end
 
 pt_folder = char(pt_folder);
-
+% warp the connectome to native if necessary
 if strcmp(space,'native')
     connectomeFile_in_native = strcat([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension]);
     % check if the connectome was already warped in native
@@ -23,7 +36,7 @@ if strcmp(space,'native')
         disp("The connectome was already warped, loading...")
         ftr = load(connectomeFile_in_native);
     else
-        % modify to search for non-ants as well
+        % otherwise warp the connectome to native space (and store in patient folder / miscellaneous)
         transform = ea_regexpdir([pt_folder, '/normalization/transformations'],'.*from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz',0,'f',0);
         anchor_img = ea_regexpdir([pt_folder,'/coregistration/anat'], '.*ses-preop_space-anchorNative.*',0,'f',0);
         ftr = ea_warp_fibers_MNI2native(pt_folder, MNI_connectome_file, transform{1}, anchor_img{1});
@@ -31,19 +44,16 @@ if strcmp(space,'native')
 else
     ftr = load(MNI_connectome_file);
 end
-% load the 4-D E-field nii (in native space!)
-% , we assume that the first 3 components are X,Y,Z
+
+% load the 4-D E-field nii 
+% we assume that the first 3 components are X,Y,Z (see ea_get_4Dfield_from_csv)
 nii = ea_load_nii(e_field_file);
 
-% interpolation_method = 'neighbor';
-interpolation_method = 'linear';
-    
 %% Extract data from nii
 efmat = nii.mat;
 efdims = nii.dim;
 for d = 1:3
-    %efield{d} = nii.img(:,:,:,d+1);        % Extract nii in x,y and z dimension
-    efield{d} = nii.img(:,:,:,d);        % Extract nii in x,y and z dimension
+    efield{d} = nii.img(:,:,:,d);           % Extract nii in x,y and z dimension
 end
 
 %% Get fibervectors and corresponding coordinates (mid), exclude points outside efield window
@@ -102,7 +112,6 @@ fibmididx(extmp) = [];
 
 fibmidcoords(:,4) = 1;
 
-
 % Calculate efield vectors at fiber coordinates
 efsub = fibmidcoords/efmat';
 efsub(:,4) = [];
@@ -132,13 +141,12 @@ else
      end
 end
 
-
-%% Obtain fiber orientation in relation to efield vector
+%% Obtain fiber E-metrics
 % there could be nans in fibvector, because some connectomes have
 % repetitions
 fibvector_norm = fibvector./vecnorm(fibvector,2,2);
-E_along_fiber = abs(dot(effiber,fibvector_norm,2));
-E_magn_fiber = sqrt(dot(effiber,effiber,2));
+E_along_fiber = abs(dot(effiber,fibvector_norm,2));  % field projection onto the tangential unit vector, the directionality (the sign) is not relevant
+E_magn_fiber = sqrt(dot(effiber,effiber,2));         % a magnitude of the E-field vector
 
 % there is no sense to restore dimensionality of ftr, just keep reference to orig idx
 fibers_E_proj = zeros(size(fibmididx,1),6);
@@ -163,26 +171,26 @@ E_metrics.magn_mean = zeros(size(ftr.idx));  % only where E-metric > threshold
 % we do not need to do any VAT intersections anymore, because we have all
 % metrics available on fibers already
 
-
-
 for fib_idx = 1:size(ftr.idx,1)
     fib_E_proj = fibers_E_proj(fibers_E_proj(:,4) == fib_idx,:);
     if ~isempty(fib_E_proj)
 
+        E_metrics.proj_peak(fib_idx) = ea_nanmax(fib_E_proj(:,5));
+        E_metrics.proj_5perc_peak(fib_idx) = ea_nanmean(maxk(fib_E_proj(:,5),ceil(0.05*numel(size(ftr.idx,1)))));
+
+        % only compute sum and mean for segments above the threshold
         idx_thresh_proj =  find(fib_E_proj(:,5)>=threshold*0.001);
-   
         if ~isempty(idx_thresh_proj)
-            E_metrics.proj_peak(fib_idx) = ea_nanmax(fib_E_proj(:,5));
-            E_metrics.proj_5perc_peak(fib_idx) = ea_nanmean(maxk(fib_E_proj(:,5),ceil(0.05*numel(size(ftr.idx,1)))));
             E_metrics.proj_sum(fib_idx) = ea_nansum(fib_E_proj(idx_thresh_proj,5));
             E_metrics.proj_mean(fib_idx) = ea_nanmean(fib_E_proj(idx_thresh_proj,5));
         end
     
-        idx_thresh_magn = find(fib_E_proj(:,6)>=threshold*0.001);
+        E_metrics.magn_peak(fib_idx) = ea_nanmax(fib_E_proj(:,6));
+        E_metrics.magn_5perc_peak(fib_idx) = ea_nanmean(maxk(fib_E_proj(:,6),ceil(0.05*numel(size(ftr.idx,1)))));
 
+        % only compute sum and mean for segments above the threshold
+        idx_thresh_magn = find(fib_E_proj(:,6)>=threshold*0.001);
         if ~isempty(idx_thresh_magn)
-            E_metrics.magn_peak(fib_idx) = ea_nanmax(fib_E_proj(:,6));
-            E_metrics.magn_5perc_peak(fib_idx) = ea_nanmean(maxk(fib_E_proj(:,6),ceil(0.05*numel(size(ftr.idx,1)))));
             E_metrics.magn_sum(fib_idx) = ea_nansum(fib_E_proj(idx_thresh_magn,6));
             E_metrics.magn_mean(fib_idx) = ea_nanmean(fib_E_proj(idx_thresh_magn,6));
         end
@@ -190,7 +198,6 @@ for fib_idx = 1:size(ftr.idx,1)
 end
 
 %% Store the projections in patient_folder/miscellaneous/connectome_name/stim_folder_side
-[~,stim_folder_name,~] = fileparts(stim_folder);
 stim_folder_name = [stim_folder_name, side_suffix];
 
 if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name])

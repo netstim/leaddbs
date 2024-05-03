@@ -18,6 +18,8 @@ C_idx = cell(1,numel(myFiles));
 
 disp('Merging different pathways ...')
 
+assume_mirrored = 1;  % the alg. checks if all pathways have this flag true, otherwise set to false
+
 for k = 1:length(myFiles)
     baseFileName = myFiles(k).name;
     fullFileName = fullfile(myFiles(k).folder, baseFileName);
@@ -34,6 +36,15 @@ for k = 1:length(myFiles)
 
     C{k} = fiber_file.fibers;
     C_idx{k} = fiber_file.idx;
+    
+    % check if mirrored
+    if isfield(fiber_file,'mirrored')
+        if fiber_file.mirrored = 0;
+            assume_mirrored = 0;
+        end
+    else
+        assume_mirrored = 0;
+    end
 
     glob_index = glob_index + num_of_fibers;
 end
@@ -42,6 +53,7 @@ ftr = fiber_file; % just initialization
 % merge cell contents along axis 0
 ftr.fibers = cat(1, C{:});
 ftr.idx = cat(1, C_idx{:});
+ftr.mirrored = assume_mirrored;
 
 if isprop(obj.M, 'pseudoM')
     if obj.M.pseudoM == 1
