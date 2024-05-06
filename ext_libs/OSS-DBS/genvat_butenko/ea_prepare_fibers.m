@@ -19,7 +19,11 @@ else
 end
 coords_mm = ea_load_reconstruction(options);
 
+% path to a json with axon model description 
+settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
+
 preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+
 if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     fprintf('Loading connectome: %s ...\n', settings.connectome);
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
@@ -130,7 +134,4 @@ else % Multi-Tract connectome
     % Save filtered fibers
     save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
     save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
-
-    % path to a json with axon model description 
-    settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
 end
