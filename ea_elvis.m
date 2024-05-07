@@ -602,10 +602,44 @@ formattedDate = datestr(dt, 'yyyymmddHHMMSS');
 inputStruct.numElectrodes = length(elstruct.markers);
 inputStruct.electrodeModel = options.elmodel;
 inputStruct.label = formattedDate;
-fprintf(fid, '%s', jsonencode(inputStruct));
-fclose(fid);
+inputStruct.patientname = options.patientname;
 programmerDir = strcat(options.earoot, 'lead-dbs-programmer');
 releaseDir = strcat(programmerDir, '/release/build');
+stimDir = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym');
+stimFileName = strcat(options.patientname, '_desc-stimparameters.mat');
+jsonFileName = strcat(options.patientname, '_desc-stimparameters.json');
+directoryList = dir(stimDir);
+% Initialize a cell array to store folder names
+indicesToRemove = [];
+for i = 1:numel(directoryList)
+    % Check if the item is a file or matches the name 'segmask.nii'
+    if ~directoryList(i).isdir || strcmp(directoryList(i).name, 'segmask.nii')
+        indicesToRemove(end+1) = i;
+    end
+end
+
+% Remove the items at the specified indices
+directoryList(indicesToRemove) = [];
+if exist(stimDir, 'Dir')
+    inputStruct.priorStims = {};
+    inputStruct.priorStims = directoryList;
+end
+fprintf(fid, '%s', jsonencode(inputStruct));
+fclose(fid);
+
+% for i = 1: size(directoryList, 1)
+%     if ~contains(directoryList(i).name, '.')
+%         jsonFilePath = fullfile(stimDir, directoryList(i).name, jsonFileName);
+%         currentMatFile = fullfile(stimDir, directoryList(i).name, stimFileName);
+%         if exist(currentMatFile)
+%             loadMatFile = load(currentMatFile);
+%             jsonFileData = jsonencode(loadMatFile);
+%             fkd = fopen(jsonFilePath, 'w');
+%             fprintf(fkd, '%s', jsonFileData);
+%             fclose(fkd);
+%         end
+%     end
+% end
 
 currentOS = computer;
 if exist(releaseDir, 'Dir')
@@ -631,10 +665,10 @@ numRows = size(S.activecontacts, 2);
 numCols = size(S.activecontacts, 2);
 
 % Initialize the cell array
-newVariable = cell(numRows/4, 4);
+newVariable = cell(2, 4);
 
 % Fill the cell array
-for i = 1:numRows/4
+for i = 1:2
     for j = 1:4
         newVariable{i, j} = S.activecontacts((i-1)*4+j, :);
     end
@@ -657,25 +691,48 @@ for i = 1:length(S.activecontacts)
     S.activecontacts{i} = term;
 end
 
-S.label = formattedDate;
+% S.label = formattedDate;
 %             S.model = S_old.model;
 S.amplitude = {S.amplitude.rightAmplitude.', S.amplitude.leftAmplitude.'};
 S.monopolarmodel = 0;
 % ea_genvat_butenko(S, options, resultfig);
-if options.prefs.machine.vatsettings.butenko_calcPAM
-            feval(ea_genvat_butenko,S,options,resultfig);
-            ea_busyaction('off',resultfig,'stim');
-            return;
-        else
-%             [~, stimparams] = feval(ea_genvat_butenko,S,options,resultfig);
-            [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
-            flix = 1;
- end
+if isequal(S.model, 'SimBio/FieldTrip (see Horn 2017)')
+    for side=1:2
+        try 
+            [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
+            vtaCalcPassed(side) = 1;
+        catch 
+            vtafv=[];
+            vtavolume=0;
+            vatCalcPassed(side) = 0;
+        end
+        stimparams(1,side).VAT(1).VAT = vtafv;
+        stimparams(1,side).volume = vtavolume;
+    end
+    elseif isequal(S.model, 'OSS-DBS (Butenko 2020)') 
+        [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
+        flix = 1; 
+end
+
+% if (S.model == 'Butenko')
+%     [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
+% 
+% end
+% if options.prefs.machine.vatsettings.butenko_calcPAM
+%             feval(ea_genvat_butenko,S,options,resultfig);
+%             ea_busyaction('off',resultfig,'stim');
+%             return;
+%         else
+% %             [~, stimparams] = feval(ea_genvat_butenko,S,options,resultfig);
+%             [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
+%             flix = 1;
+%  end
 % stimparams=getappdata(resultfig,'stimparams');
 setappdata(resultfig,'stimparams',stimparams);
 setappdata(resultfig,'curS',S);
 hmchanged = 1;
-ea_calc_vatstats(resultfig,options,hmchanged);
+% ea_calc_vatstats(resultfig,options,hmchanged);
+ea_calc_vatstats(resultfig,options);
 outputFileName = strcat(options.patientname, '-program.json');
 outputFilePath = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym/', S.label, '/', outputFileName);
 % outputStruct = jsonencode(new_data);
