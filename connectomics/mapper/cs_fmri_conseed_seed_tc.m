@@ -269,7 +269,7 @@ end
 
 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     % export mean
-    M=ea_nanmean(fX{s}',1);
+    M=ea_nanmean(fX{s}');
     mmap=dataset.vol.space;
     mmap.dt(1) = 16;
     mmap.img(:)=0;
@@ -295,7 +295,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     % export variance
-    M=ea_nanvar(fX{s}');
+    M=ea_nanvar(fX{s}',1);
     mmap=dataset.vol.space;
     mmap.dt(1) = 16;
     mmap.img(:)=0;
@@ -378,7 +378,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     % export fz-mean
-    M=nanmean(fX{s}');
+    M=ea_nanmean(fX{s}');
     mmap=dataset.vol.space;
     mmap.dt(1) = 16;
     mmap.img(:)=0;
@@ -404,7 +404,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
 
     if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
         % lh surf
-        lM=nanmean(lhfX{s}');
+        lM=ea_nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
         lmmap.dt(1) = 16;
         lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
@@ -428,7 +428,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         % rh surf
-        rM=nanmean(rhfX{s}');
+        rM=ea_nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
         rmmap.dt(1) = 16;
         rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
@@ -454,7 +454,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
 
     % export T
     try
-        [~,~,~,tstat]=ttest(fX{s}');
+        [~,~,~,tstat]=ttest(fX{s}', 0 , 'dim', 1);
         tmap=dataset.vol.space;
         tmap.img(:)=0;
         tmap.dt(1) = 16;
