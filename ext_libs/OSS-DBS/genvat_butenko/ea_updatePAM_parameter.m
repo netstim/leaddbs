@@ -11,14 +11,22 @@ arguments
     sample_i  {mustBeNumeric} % sample index
 end
 
-% hardcoded for now
-parameter_limits = [2.0,4.0];
-parameter_step = (parameter_limits(2)-parameter_limits(1)) / (N_samples - 1);
-
-% alternatively, can be sampled randomly
+% initialize
 settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
-settings.fiberDiameter(:) = parameter_limits(1);
-settings.fiberDiameter(:) = settings.fiberDiameter(:) + (sample_i-1)*parameter_step;
+parameter_limits = [2.0,4.0];  % interval
+
+% hardcoded for now, equidistant sampling
+parameter_step = (parameter_limits(2)-parameter_limits(1)) / (N_samples - 1);
+settings.fiberDiameter(:) = parameter_limits(1) + (sample_i-1)*parameter_step;
+
+% % alternatively, it can be sampled randomly
+% settings.fiberDiameter(:) = parameter_limits(1) + rand * (parameter_limits(2)-parameter_limits(1));
+% 
+% % or from a normal distribution
+% mu = mean(parameter_limits);
+% sigma = (mean(parameter_limits) - parameter_limits(1)) / 3;
+% settings.fiberDiameter(:) = normrnd(mu,sigma);
+
 
 parameterFile = fullfile(outputPaths.outputDir, 'oss-dbs_parameters.mat');
 save(parameterFile, 'settings', '-v7.3');
