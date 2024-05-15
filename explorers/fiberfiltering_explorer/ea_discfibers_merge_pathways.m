@@ -39,7 +39,7 @@ for k = 1:length(myFiles)
     
     % check if mirrored
     if isfield(fiber_file,'mirrored')
-        if fiber_file.mirrored = 0;
+        if fiber_file.mirrored == 0
             assume_mirrored = 0;
         end
     else
