@@ -81,10 +81,24 @@ classdef (Abstract) ea_conda
             ea_cprintf('*Comments', 'miniforge installed...\n');
 
             % Set some conda configs
+            [~, cmdout] = ea_conda.run('conda config --get channels');
+            if isempty(cmdout)
+                ea_conda.run('conda config --prepend channels conda-forge');
+                ea_conda.run('conda config --append channels defaults');
+            else
+                if ~contains(cmdout, "channels 'conda-forge'")
+                    ea_conda.run('conda config --prepend channels conda-forge');
+                end
+                if ~contains(cmdout, "channels 'defaults'")
+                    ea_conda.run('conda config --append channels conda-forge');
+                end
+            end
+
             [~, cmdout] = ea_conda.run('conda config --get ssl_verify');
             if isempty(cmdout)
                 ea_conda.run('conda config --set ssl_verify false');
             end
+
             [~, cmdout] = ea_conda.run('conda config --get auto_activate_base');
             if isempty(cmdout)
                 ea_conda.run('conda config --set auto_activate_base false');
