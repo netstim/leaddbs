@@ -4,17 +4,17 @@ channels:
   - conda-forge
 
 dependencies:
-  - keras=2.13.1
+  - keras=2.10.0
   - nibabel=5.1.0
   - numpy=1.26.0
   - pip=23.3.1
   - python=3.10
   - scipy=1.11.3
-  - tensorflow=2.13.1
 
   - pip:
     - git+https://github.com/ningfei/synthsr-models.git
     - surfa==0.6.0
+    - tensorflow==2.10.0
 
 variables:
-  env_version: 20240130
+  env_version: 20240517

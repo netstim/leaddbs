@@ -81,7 +81,7 @@ ea_delete(outputFolder);
 
 % Prepare atlas
 if exist('atlasFolder', 'var')
-    fprintf('\Building DBSegment atlas...\n\n');
+    ea_cprintf('*Comments', 'Building DBSegment atlas...\n\n');
 
     % Load names
     names = readcell(fullfile(ea_getearoot, 'ext_libs', 'DBSegment', 'dbsegment_label.txt'));

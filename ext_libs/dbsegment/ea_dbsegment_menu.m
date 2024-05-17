@@ -15,12 +15,12 @@ else
     if isempty(preopModalities)
         ea_cprintf('CmdWinWarnings', 'Pre-op T1w image not found!\n');
         return;
-    elseif numel(preopModalities) == 1
+    elseif isscalar(preopModalities)
         modality = preopModalities{1};
     else
         modality = questdlg('Choose pre-op image to be segmented', '', preopModalities{:}, preopModalities{1});
     end
-    ea_cprintf('*Comments', 'Segment pre-op %s image...\n', regexprep(modality, '[^\W_]+_', ''));
+    ea_cprintf('*Comments', 'Segmenting pre-op %s image...\n', regexprep(modality, '[^\W_]+_', ''));
 
     % Run DBSegment segmentation
     ea_dbsegment(subj.coreg.anat.preop.(modality));
