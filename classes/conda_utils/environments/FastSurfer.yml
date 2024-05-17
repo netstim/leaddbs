@@ -4,7 +4,6 @@ channels:
   - conda-forge
 
 dependencies:
-  - bash=5.1.16
   - h5py=3.7.0
   - matplotlib=3.5.1
   - nibabel=3.2.2
