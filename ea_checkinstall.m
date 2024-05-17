@@ -50,10 +50,12 @@ if ismac
     downloadIDs = ['fixperm'; downloadIDs];
 end
 
-assetNames = menuItems(6:end);
-assetsIDs = downloadIDs(6:end);
+assetNames = menuItems(end-10:end);
+assetsIDs = downloadIDs(end-10:end);
 if ismember(cmd, assetsIDs)
     assetName = assetNames{ismember(assetsIDs, cmd)};
+else
+    assetName = cmd;
 end
 
 switch cmd
