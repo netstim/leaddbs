@@ -17,7 +17,10 @@ if settings.stimSetMode
 else
     stimProtocol = S;
 end
-coords_mm = ea_load_reconstruction(options);
+%coords_mm = ea_load_reconstruction(options);
+% load mni stimulation coordinates
+load(options.subj.recon.recon, 'reco');
+coords_mm_MNI = reco.('mni').coords_mm;
 
 % path to a json with axon model description 
 settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
@@ -26,23 +29,14 @@ preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 
 if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     fprintf('Loading connectome: %s ...\n', settings.connectome);
+    
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
-    if options.native
-        %originalFib = conn;
-        % Convert connectome fibers from MNI space to anchor space
-        fprintf('Convert connectome into native space...\n\n');
-        fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
-        conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-            [ea_space, options.primarytemplate, '.nii'], ...
-            [options.subj.subjDir, filesep, 'forwardTransform'], ...
-            preopAnchor)';
-    end
 
     % Filter fibers based on the spherical ROI
     if options.native
-	    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
+	    fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, preopAnchor);
     else
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
+        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
     end
 
     % Filter fibers based on the minimal length
@@ -52,6 +46,17 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     fibersFound = zeros(size(fiberFiltered));
     for i=1:length(fiberFiltered)
         if ~isempty(fiberFiltered{i}.fibers)
+
+            % Convert connectome fibers from MNI space to anchor space
+            if options.native
+                fprintf('Convert connectome into native space...\n\n');
+                fibersMNIVox = ea_mm2vox(fiberFiltered{i}.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
+                fiberFiltered{i}.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
+                    [ea_space, options.primarytemplate, '.nii'], ...
+                    [options.subj.subjDir, filesep, 'forwardTransform'], ...
+                    preopAnchor)';
+            end
+
             fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
             fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
             fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
@@ -91,22 +96,12 @@ else % Multi-Tract connectome
         settings.connectomeTractNames{t} = tractName;
         fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
         conn = load(tract);
-        if options.native
-            %originalFib = conn;
-            % Convert connectome fibers from MNI space to anchor space
-            fprintf('Convert connectome into native space...\n\n');
-            fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
-            conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-                [ea_space, options.primarytemplate, '.nii'], ...
-                [options.subj.subjDir, filesep, 'forwardTransform'], ...
-                preopAnchor)';
-        end
 
         % Filter fibers based on the spherical ROI
         if options.native
-	        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
+	        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, preopAnchor);
         else
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
         end
 
         % Filter fibers based on the minimal length
@@ -115,6 +110,17 @@ else % Multi-Tract connectome
         % Move original fiber id to the 5th column, the 4th column will be 1:N
         for i=1:length(fiberFiltered)
             if ~isempty(fiberFiltered{i}.fibers)
+
+                % Convert connectome fibers from MNI space to anchor space
+                if options.native
+                    fprintf('Convert connectome into native space...\n\n');
+                    fibersMNIVox = ea_mm2vox(fiberFiltered{i}.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
+                    fiberFiltered{i}.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
+                        [ea_space, options.primarytemplate, '.nii'], ...
+                        [options.subj.subjDir, filesep, 'forwardTransform'], ...
+                        preopAnchor)';
+                end
+
                 fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
                 fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
                 fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';

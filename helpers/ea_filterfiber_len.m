@@ -7,12 +7,6 @@ arguments
     minFibLen   {mustBeNumeric}  % minimal length in mm
 end
 
-% Load fiber connectome
-if ischar(ftr) && isfile(ftr)
-    disp('Loading fibers...');
-    ftr = load(ftr);
-end
-
 if ~iscell(ftr)
     ftr = {ftr};
 end
