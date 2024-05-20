@@ -1,6 +1,6 @@
 function ea_connectome_filter_downsample_flip(connectome_path, ROI_file, factor, fixed_N, N_threshold, flip)
 % This function allows to prepare large connnectomes for simulations:
-% 1) Filter OUT fibers that do NOT pass the ROI
+% 1) Optionally, filter OUT fibers that do NOT pass the ROI
 % 2) Optionally, downsample the connectome either by factor (integer,
 % default option) or to a fixed number. 
 % 3) Optionally, flip fibers to another hemisphere 
@@ -16,7 +16,6 @@ arguments
     flip   {mustBeNumericOrLogical} = false  % flip fibers to another hemisphere 
 end
 
-
 % check if the downsampling parameter was provided
 % and create an output folder
 if factor ~= 0
@@ -28,9 +27,10 @@ else
 end
 mkdir(new_connectome_path)
 
-
-% load ROI to filter fibers
-ROI = ea_load_nii(ROI_file);
+if ROI_file
+    % load ROI to filter fibers
+    ROI = ea_load_nii(ROI_file);
+end
 
 %gets all mat files in struct
 myFiles = dir(fullfile(connectome_path,'*.mat'));
@@ -45,32 +45,36 @@ for k = 1:length(myFiles)
 
     ftr_full = load(pathway_file);
 
-    % Trim connectome fibers by ROI
-    ROI_Ind = find(abs(ROI.img(:))>0.5);   % ROI is assumed to be binary
-
-    % Trim connectome fibers
-    [xvox, yvox, zvox] = ind2sub(size(ROI.img), ROI_Ind);
-    ROImm = ea_vox2mm([xvox, yvox, zvox], ROI.mat);
-    filter = all(ftr_full.fibers(:,1:3)>=min(ROImm),2) & all(ftr_full.fibers(:,1:3)<=max(ROImm), 2);
-
-    % discard the pathway if completely unconnected
-    if ~any(filter)
-        continue;
-    end
-
-    trimmedFiber = ftr_full.fibers(filter,:);
-
-    [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
-    fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, ROI)}, trimmedFiber(:,1:3), trimmedFiberID);
+    if ROI_file
+        % Trim connectome fibers by ROI
+        ROI_Ind = find(abs(ROI.img(:))>0.5);   % ROI is assumed to be binary
     
-
-    % Remove outliers
-    fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
-    trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
-  
-    trimmedIdx = ftr_full.idx(trimmedFiberInd,:);
-    % restore complete trimmed fibers
-    trimmedFiber = ftr_full.fibers(ismember(ftr_full.fibers(:,4), trimmedFiberInd), :);
+        % Trim connectome fibers
+        [xvox, yvox, zvox] = ind2sub(size(ROI.img), ROI_Ind);
+        ROImm = ea_vox2mm([xvox, yvox, zvox], ROI.mat);
+        filter = all(ftr_full.fibers(:,1:3)>=min(ROImm),2) & all(ftr_full.fibers(:,1:3)<=max(ROImm), 2);
+    
+        % discard the pathway if completely unconnected
+        if ~any(filter)
+            continue;
+        end
+    
+        trimmedFiber = ftr_full.fibers(filter,:);
+    
+        [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
+        fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, ROI)}, trimmedFiber(:,1:3), trimmedFiberID);
+        
+        % Remove outliers
+        fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
+        trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
+      
+        trimmedIdx = ftr_full.idx(trimmedFiberInd,:);
+        % restore complete trimmed fibers
+        trimmedFiber = ftr_full.fibers(ismember(ftr_full.fibers(:,4), trimmedFiberInd), :);
+    else
+        trimmedFiber = ftr_full.fibers;
+        trimmedIdx = ftr_full.idx;
+    end
 
 %     segm_counter = 1;
 %     for fib_i = 1:length(trimmedFiberInd)
@@ -113,7 +117,7 @@ for k = 1:length(myFiles)
         end
 
     else   % no downsampling, just copy the file, but adjust indexing after ROI filtering
-        ftr.fibers = zeros(sum(trimmedIdx(indices_picked)),4);
+        ftr.fibers = zeros(sum(trimmedIdx),4);
         ftr.idx = trimmedIdx;
 
         orig_indices = unique(trimmedFiber(:,4));
@@ -121,6 +125,9 @@ for k = 1:length(myFiles)
             inx_to_change = trimmedFiber(:,4) == orig_indices(inx);
             trimmedFiber(inx_to_change,4) = inx;
         end
+
+        ftr.fibers = trimmedFiber;
+
     end
 
     % save the result
