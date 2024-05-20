@@ -11,7 +11,11 @@ end
 
 % Segment MRI
 segmaskName = 'segmask.nii';
-anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+
+if options.native
+    anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+end 
+
 switch settings.butenko_segmAlg
     case 'SPM'
         if options.native

@@ -11,7 +11,10 @@ arguments
     outputPaths         % various paths to conform with lead-dbs BIDS structure 
 end
 
-anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+if options.native
+    anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+end 
+
 source_efield_side_source = [];  % full path to the e-field computed for source_use_index 
 source_vta_side_source = [];
 vatfv = [];
