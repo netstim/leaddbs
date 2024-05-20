@@ -118,12 +118,6 @@ for i=1:length(radius)
     radius{i} = radius{i} * factor;
 end
 
-% Load fiber connectome
-if ischar(ftr) && isfile(ftr)
-    fprintf('\nLoading fibers...\n');
-    ftr = load(ftr);
-end
-
 % Convert voxel coordinates to mm in case needed
 if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
     fprintf('\nConverting voxel coordinates to mm...\n')
