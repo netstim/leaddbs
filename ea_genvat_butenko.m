@@ -31,7 +31,6 @@ settings = ea_prepare_ossdbs(options);
 % some hardcoded parameters, can be added to GUI later
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
-prob_PAM = 0; % set to 1 to compute PAM over an uncertain parameter (e.g. fiber diameter)
 settings.outOfCore = 0;  % set to 1 if RAM capacity is exceeded during PAM
 
 if settings.stimSetMode
@@ -169,21 +168,13 @@ for source_index = 1:4
         end
     
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
-    
-        N_samples = 1;  % by default, run one instance
-        if settings.calcAxonActivation && prob_PAM
-            % "probabilistic" run
-            % here we iterate over different fiber diameters 2.0 - 4.0 um
-            N_samples = 5;  % hardcoded for now
-            % one can swap it to probabilistic values
-        end
-    
+        
         %% OSS-DBS part (using the corresponding conda environment)
-        for i = 1:N_samples
+        for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
             if settings.calcAxonActivation
-                if prob_PAM 
-                    settings = ea_updatePAM_parameter(options,settings,N_samples,outputPaths,i);
+                if settings.prob_PAM
+                    settings = ea_updatePAM_parameter(options,settings,outputPaths,i);
                 end
         
                 % clean-up
@@ -214,7 +205,7 @@ for source_index = 1:4
                     return
                 end
 
-                if prob_PAM
+                if settings.prob_PAM
                     %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
                     system(['run_pathway_activation ', parameterFile_json, ' --scaling_index ', num2str(i)]);
                 else
@@ -232,7 +223,7 @@ for source_index = 1:4
             continue;
         end
 
-        if prob_PAM
+        if settings.prob_PAM
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
             ea_get_probab_axon_state(folder2save,1,strcmp(settings.butenko_intersectStatus,'activated'));
         end
@@ -253,7 +244,7 @@ for source_index = 1:4
 
             % prepare Lead-DBS BIDS format fiber activations
             if settings.calcAxonActivation
-                ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
+                ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths)
             end
 
         elseif isfile([outputPaths.outputDir, filesep, 'fail_', sideCode, '.txt'])
