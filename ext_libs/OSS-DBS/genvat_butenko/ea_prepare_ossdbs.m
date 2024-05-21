@@ -38,6 +38,15 @@ settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsula
 settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive_ethresh;
 % check what we simulate
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
+try 
+    % compute PAM over an uncertain parameter (set in the GUI)
+    settings.prob_PAM = options.prefs.machine.vatsettings.butenko_prob_PAM;
+    settings.N_samples = options.prefs.machine.vatsettings.butenko_N_samples;
+catch
+    settings.prob_PAM = 0;
+    settings.N_samples = 1;
+end
+
 settings.exportVAT = options.prefs.machine.vatsettings.butenko_calcVAT;
 % Set native/MNI flag
 settings.Estimate_In_Template = ~options.native;
