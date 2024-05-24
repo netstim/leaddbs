@@ -12,7 +12,7 @@ if ischar(options) || isstring(options) % Electrode name provided
     elmodel = char(options);
     load(fullfile(ea_getearoot, 'templates', 'electrode_models' ,matfname{string(elName) == elmodel}));
 else % options struct provided
-    elmode = options.elmodel;
+    elmodel = options.elmodel;
     load(fullfile(ea_getearoot, 'templates', 'electrode_models', options.elspec.matfname));
 end
 
