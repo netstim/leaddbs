@@ -184,16 +184,16 @@ for source_index = 1:4
     
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
-                system(['prepareaxonmodel ',outputPaths.outputDir,' --hemi_side ',num2str(side),' --description_file ', parameterFile]);
+                system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
-            system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', parameterFile, ...
-                ' --output_path ', outputPaths.outputDir]);
+            system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
+                ' --output_path ', ea_path_helper(outputPaths.outputDir)]);
             parameterFile_json = [parameterFile(1:end-3), 'json'];
     
             % run OSS-DBS
-            system(['ossdbs ', parameterFile_json]);
+            system(['ossdbs ', ea_path_helper(parameterFile_json)]);
         
             % prepare NEURON simulation
             if settings.calcAxonActivation
@@ -207,10 +207,10 @@ for source_index = 1:4
 
                 if settings.prob_PAM
                     %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
-                    system(['run_pathway_activation ', parameterFile_json, ' --scaling_index ', num2str(i)]);
+                    system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i)]);
                 else
                     %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
-                    system(['run_pathway_activation ', parameterFile_json]);
+                    system(['run_pathway_activation ', ea_path_helper(parameterFile_json)]);
                 end
             end
         end

@@ -27,7 +27,12 @@ if ~settings.stimSetMode
             if settings.adaptive_threshold
                 settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;ea_get_adaptiveEthreshold(settings.pulseWidth(side))];
             else
-                settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh];
+                if options.prefs.machine.vatsettings.butenko_ethresh < 1.0
+                    ea_warndlg("The E-threshold is too low (see OSS-DBS settings), likely wrong units are used, upscaling to V/m!")
+                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh*1000.0];
+                else
+                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh];
+                end
             end
 
             stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
