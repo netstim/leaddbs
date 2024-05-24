@@ -7,22 +7,30 @@ function [coords,trajectory,markers]=ea_resolvecoords(varargin)
 markers=varargin{1};
 options=varargin{2};
 
+if ischar(options) || isstring(options) % Electrode name provided
+    [elName, matfname] = ea_resolve_elspec;
+    elmodel = char(options);
+    load(fullfile(ea_getearoot, 'templates', 'electrode_models' ,matfname{string(elName) == elmodel}));
+else % options struct provided
+    elmode = options.elmodel;
+    load(fullfile(ea_getearoot, 'templates', 'electrode_models', options.elspec.matfname));
+end
+
 if nargin>2
     resize=varargin{3};
 else
     resize=0;
 end
-if nargin==4
+if nargin>3
     rszfactor=varargin{4};
 end
 
-load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
 for side=1:length(markers) %valid for unilateral support
     if resize
         can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
         %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
         %A=squareform(pdist(electrode.coords_mm));
-        switch options.elmodel
+        switch elmodel
             case {'Medtronic B33005'
                   'Medtronic B33015'
                   'Boston Scientific Vercise Directed'
@@ -46,7 +54,7 @@ for side=1:length(markers) %valid for unilateral support
                 clear coords_temp
             otherwise
                 A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
-                can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
+                can_eldist=sum(sum(tril(triu(A,1),1)))/(electrode.numel-1);
         end
         vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
         if nargin>3
