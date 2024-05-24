@@ -273,7 +273,7 @@ if length(uipatdir) == 1 && isfield(handles, 'side1')
             end
 
             if ~isempty(recoType)
-                for el=1:length(reco.(recoType).coords_mm)
+                for el=1:length(reco.(recoType).markers)
                     if ~isempty(reco.(recoType).markers(el).head)
                         set(handles.(['side',num2str(el)]), 'Value', 1);
                     end
