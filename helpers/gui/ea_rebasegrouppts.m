@@ -1,20 +1,16 @@
-function ea_rebasegrouppts(~,~,handles)
+function ea_rebasegrouppts(handles)
+% Adapt patient base folder ('dataset/derivatives/leaddbs' folder)
 
-newtarget=uigetdir('','Please select new base folder...');
+newBaseFolder = uigetdir('', 'Please select new base folder...');
 
-Mfilebase=handles.groupdir_choosebox.String;
-close(handles.leadfigure);
-
-[~,mid]=fileparts(fileparts(Mfilebase));
-gfi=dir([Mfilebase,'dataset-*_analysis-*',mid,'.mat']);
-
-load([Mfilebase,gfi(1).name]);
-
-for pt=1:length(M.patient.list)
-    [pth,fn,ext]=fileparts(M.patient.list{pt});
-    M.patient.list{pt}=fullfile(newtarget,fn);
+M = getappdata(handles.leadfigure, 'M');
+for i=1:length(M.patient.list)
+    [~, ptsName] = fileparts(M.patient.list{i});
+    M.patient.list{i} = fullfile(newBaseFolder, ptsName);
 end
+setappdata(handles.leadfigure, 'M', M);
 
-save([Mfilebase,gfi(1).name],'M','-v7.3');
+ea_refresh_lg(handles);
 
-lead group
+analysisFile = ea_regexpdir(M.root, ['^dataset-[^\W_]+_analysis-', M.guid, '\.mat$'], 0);
+save(analysisFile{1}, 'M', '-v7.3');
