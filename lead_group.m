@@ -147,8 +147,8 @@ if ~isempty(varargin) && isfile(GetFullPath(varargin{1})) % Path to group analys
     groupFilePath = GetFullPath(varargin{1});
     load(groupFilePath, 'M');
     M.root = [fileparts(groupFilePath), filesep];
-    set(handles.groupdir_choosebox,'String',M.root);
-    set(handles.groupdir_choosebox,'TooltipString', M.root);
+    set(handles.groupdir_choosebox, 'String', fileparts(groupFilePath));
+    set(handles.groupdir_choosebox, 'TooltipString', fileparts(groupFilePath));
     setappdata(handles.leadfigure, 'M', M);
     try
         setappdata(handles.leadfigure, 'S', M.S);
@@ -220,7 +220,7 @@ if strcmp(target, 'groupDir')
             if ~isfolder(handles.groupdir_choosebox.String)
                 ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
             else
-                [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(handles.groupdir_choosebox.String, filesep + lineBoundary("end"))))));
+                datasetName = regexp(handles.groupdir_choosebox.String, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
                 if ~isempty(regexp(datasetName, '[\W_]', 'once'))
                     ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
                 else
@@ -239,12 +239,12 @@ if strcmp(target, 'groupDir')
 
     if isfile(folders{1}) % Group analysis file dragged
         if ~isempty(regexp(folders{1}, ['derivatives\', filesep, 'leadgroup\', filesep, '[^\W_]+\', filesep, 'dataset-[^\W_]+_analysis-[^\W_]+\.mat$'], 'match', 'once'))
-            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(fileparts(folders{1})))));
+            datasetName = regexp(folders{1}, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
             if ~isempty(regexp(datasetName, '[\W_]', 'once'))
                 ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
             end
             % Group analysis file within dataset folder
-            groupdir = [fileparts(folders{1}), filesep];
+            groupdir = fileparts(folders{1});
             load(folders{1}, 'M');
 
             datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
@@ -253,7 +253,7 @@ if strcmp(target, 'groupDir')
                     [~, patient_tag] = fileparts(M.patient.list{p});
                     M.patient.list{p} = fullfile(datasetFolder, 'derivatives', 'leaddbs', patient_tag);
                 end
-                M.root = groupdir;
+                M.root = fullfile(groupdir, filesep);
                 save(folders{1}, 'M')
             end
         elseif ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-[^\W_]+_analysis-[^\W_]+\.mat$'], 'match', 'once'))
@@ -278,7 +278,7 @@ if strcmp(target, 'groupDir')
             [~, datasetName] = fileparts(folders{1});
         elseif contains(folders{1}, [filesep, 'derivatives', filesep, 'leadgroup', filesep])
             % Group analysis folder
-            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(folders{1}, filesep + lineBoundary("end"))))));
+            datasetName = regexp(folders{1}, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
         else
             % Empty folder dragged
             [~, datasetName] = fileparts(folders{1});
@@ -295,7 +295,7 @@ if strcmp(target, 'groupDir')
         if isempty(analysisFile) % Create new analysis file in case not found
             analysisFile = ea_genGroupAnalysisFile(folders{1});
         end
-        groupdir = [fileparts(analysisFile), filesep];
+        groupdir = fileparts(analysisFile);
         load(analysisFile, 'M');
 
         datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
@@ -304,7 +304,7 @@ if strcmp(target, 'groupDir')
                 [~, patient_tag] = fileparts(M.patient.list{p});
                 M.patient.list{p} = fullfile(datasetFolder, 'derivatives', 'leaddbs', patient_tag);
             end
-            M.root = groupdir;
+            M.root = fullfile(groupdir, filesep);
             save(analysisFile, 'M')
         end
 
@@ -392,7 +392,7 @@ if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory')
         if ~isfolder(handles.groupdir_choosebox.String)
             ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
         else
-            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(handles.groupdir_choosebox.String, filesep + lineBoundary("end"))))));
+            datasetName = regexp(handles.groupdir_choosebox.String, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
             if ~isempty(regexp(datasetName, '[\W_]', 'once'))
                 ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
             else
@@ -443,7 +443,7 @@ else
             [~, datasetName] = fileparts(groupdir);
         elseif contains(groupdir, [filesep, 'derivatives', filesep, 'leadgroup', filesep])
             % Group analysis folder
-            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(groupdir, filesep + lineBoundary("end"))))));
+            datasetName = regexp(groupdir, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
         else
             [~, datasetName] = fileparts(groupdir);
         end
@@ -453,15 +453,15 @@ else
         analysisFile = ea_genGroupAnalysisFile(groupdir);
     else
         % Double check the dataset folder name
-        [~, datasetName] = fileparts(fileparts(fileparts(fileparts(fileparts(analysisFile)))));
+        datasetName = regexp(analysisFile, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
         if ~isempty(regexp(datasetName, '[\W_]', 'once'))
             ea_error(sprintf('Should only contain alphanumeric characters but "%s" provided!\n', datasetName), title = 'Please adapt dataset folder name', simpleStack = 1);
         end
     end
-    groupdir = fullfile(fileparts(analysisFile), filesep);
+    groupdir = fileparts(analysisFile);
 end
 
-ea_load_group(handles,groupdir);
+ea_load_group(handles, groupdir);
 
 
 % --- Executes on selection change in patientlist.
@@ -1570,7 +1570,7 @@ if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group
         if ~isfolder(handles.groupdir_choosebox.String)
             ea_cprintf('CmdWinErrors', 'Failed to save the group analysis file. Analysis folder is missing:\n%s\n', handles.groupdir_choosebox.String);
         else
-            [~, datasetName] = fileparts(fileparts(fileparts(fileparts(erase(handles.groupdir_choosebox.String, filesep + lineBoundary("end"))))));
+            datasetName = regexp(handles.groupdir_choosebox.String, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
             if ~isempty(regexp(datasetName, '[\W_]', 'once'))
                 ea_cprintf('CmdWinErrors', 'Could not get the group analysis file. Dataset folder name should only contain alphanumeric characters!\n');
             else

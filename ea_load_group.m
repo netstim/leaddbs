@@ -2,6 +2,7 @@ function ea_load_group(handles, groupdir)
 
 ea_busyaction('on', handles.leadfigure, 'group');
 
+groupdir = erase(groupdir, filesep + textBoundary("end"));
 set(handles.groupdir_choosebox, 'String', groupdir);
 set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 

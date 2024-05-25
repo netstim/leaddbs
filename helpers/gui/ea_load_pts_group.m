@@ -26,8 +26,6 @@ if ~projectexists
     if ~nudir % user pressed cancel
         return
     end
-    
-    nudir=[nudir,filesep];
 
     if ~isempty(ea_getGroupAnalysisFile(nudir))
         answ=questdlg('In the folder you selected, an old Lead-Group project was already found. Continuing will OVERWRITE the old project. Please press cancel to abort.','Existing Lead-Group project','Overwrite','Cancel','Cancel');
