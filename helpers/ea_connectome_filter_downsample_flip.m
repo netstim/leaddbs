@@ -34,8 +34,9 @@ end
 
 %gets all mat files in struct
 myFiles = dir(fullfile(connectome_path,'*.mat'));
-% remove adjacency matrix if present
+% remove adjacency matrix and dataset_info if present
 myFiles = myFiles(~endsWith({myFiles.name}, '_ADJ.mat'));
+myFiles = myFiles(~endsWith({myFiles.name}, '_info.mat'));
 
 for k = 1:length(myFiles)
     baseFileName = myFiles(k).name;
