@@ -41,7 +41,6 @@ ptdir=obj.allpatients{sub};
 guid=['gs_',obj.M.guid];
 
 options = getoptslocal;
-options.prefs.lcm.vatseed = 'efield';
 options.lcm.seeds = guid;
 options.lcm.seeddef = 'vats';
 options.lcm.odir = [];
