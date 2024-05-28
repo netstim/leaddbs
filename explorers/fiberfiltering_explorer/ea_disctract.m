@@ -313,6 +313,65 @@ classdef ea_disctract < handle
 
         end
 
+        function calculate_on_fibers(obj)
+
+            % disable adjacency metrics
+            obj.ADJ = false;
+            obj.use_adjacency = false;
+
+            % OSS-DBS E-field should be computed (not just warped!) in this space
+            space = 'native';   
+
+            % get VAT list
+            if isfield(obj.M,'pseudoM')
+                ea_warndlg("The option is not supported for pseudoM");
+                return
+            else
+                vatlist = ea_discfibers_getvats(obj);
+            end
+            
+            if obj.multi_pathways == 1
+                %[filepath,~,~] = fileparts(obj.leadgroup);
+                %cfile = [filepath,filesep,obj.connectome,filesep,'merged_pathways.mat'];
+                [cfile, obj.map_list, obj.pathway_list] = ea_discfibers_merge_pathways(obj);
+            else
+                cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
+            end
+
+            % warp connectome to native space and compute E-field metrics
+            ea_get_Eproj(obj,NaN,space)
+
+            % load e-field projection metrics 
+            [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, obj);
+
+            obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
+            obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_sum').fibsval = fibsvalSum_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_mean').fibsval = fibsvalMean_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_peak').fibsval = fibsvalPeak_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_5peak').fibsval = fibsval5Peak_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_fibers').fibcell = fibcell_magn;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_fibers').connFiberInd_VAT = connFiberInd_magn; % old ff files do not have these data and will fail when using pathway atlases
+            
+            obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest_proj').fibsval = fibsvalBin_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_proj_sum').fibsval = fibsvalSum_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_proj_mean').fibsval = fibsvalMean_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_proj_peak').fibsval = fibsvalPeak_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_proj_5peak').fibsval = fibsval5Peak_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('plainconn_proj').fibsval = fibsvalBin_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_proj').fibcell = fibcell_proj;
+            obj.results.(ea_conn2connid(obj.connectome)).('efield_proj').connFiberInd_VAT = connFiberInd_proj; % old ff files do not have these data and will fail when using pathway atlases
+
+            if strcmp(obj.e_field_metric,'Magnitude')
+                obj.results.(ea_conn2connid(obj.connectome)).fibcell = obj.results.(ea_conn2connid(obj.connectome)).('efield_fibers').fibcell;
+                obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = obj.results.(ea_conn2connid(obj.connectome)).('efield_fibers').connFiberInd_VAT;
+            else
+                obj.results.(ea_conn2connid(obj.connectome)).fibcell = obj.results.(ea_conn2connid(obj.connectome)).('efield_proj').fibcell;
+                obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = obj.results.(ea_conn2connid(obj.connectome)).('efield_proj').connFiberInd_VAT;
+            end
+
+        end
 
         function calculate_cleartune(obj,Efields)
             if isequal(obj.cleartuneefields,Efields) % cleartuneresults already calculated with exact same input.

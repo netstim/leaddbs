@@ -3,14 +3,19 @@ function [fibsvalBin, fibsvalProb, fibsvalMean, fibsvalPeak, fibsval5Peak, fibce
 % use "probabilistic" PAM results
 
 disp('Load Connectome...');
-load(cfile, 'fibers', 'idx');
+load(cfile);
 
-PAM_mirror_enabled = 1;
-if PAM_mirror_enabled == 1
-    numPatient = length(obj.allpatients)*2; 
+% allow mirroring only for mirrored connectomes
+if exist('mirrored','var')
+    if mirrored && obj.multi_pathways
+        numPatient = length(obj.allpatients)*2; 
+    else
+        numPatient = length(obj.allpatients);  % no mirroring
+    end
 else
     numPatient = length(obj.allpatients);  % no mirroring
 end
+
 numSide = 2; % hardcoded for now (as in ...getvats.m)
 
 fibsvalBin = cell(1, numSide);
@@ -146,7 +151,7 @@ for side = 1:numSide
        
         % alternatively, you could also add fib_state == -1
         % probabilistic_PA
-        activated = find(fib_state >= 0.1);     % use low threshold when doing pPAM
+        activated = find(fib_state >= 0.05);     % use low threshold when doing pPAM
         %activated = find(fib_state >= 0.5);    % maybe use higher threshold when doing binary tests
 
         % needed

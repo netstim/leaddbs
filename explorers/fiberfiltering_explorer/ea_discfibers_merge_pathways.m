@@ -113,6 +113,13 @@ for sub=1:numPatient
 
             try
                 fib_state_raw = load(char(pam_file));
+
+                if isempty(fib_state_raw.fibers)
+                    C_fibState{k}(:,5) = 0;
+                    C_fibState_idx{k} = C_idx{k};
+                    continue
+                end
+
             catch  % if activation file for the pathway does not exist, assign 0 activation
                 C_fibState{k}(:,5) = 0;
                 C_fibState_idx{k} = C_idx{k};

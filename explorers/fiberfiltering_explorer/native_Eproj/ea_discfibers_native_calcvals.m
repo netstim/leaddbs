@@ -1,21 +1,26 @@
-function [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, thresh,obj)
+function [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, obj)
 % Calculate fiber connection values based on the VATs and the connectome
 
 %obj.connectome = 'PPU_rh_downsampled_by_4';
 
 disp('Load Connectome...');
-load(cfile, 'fibers', 'idx');
+load(cfile);
 
 prefs = ea_prefs;
-if ~exist('thresh','var')
+try
+    thresh = obj.calcthreshold;
+catch
     thresh = prefs.machine.vatsettings.horn_ethresh*1000;
 end
-[numPatient, numSide] = size(vatlist);
-% mirroring is not supported yet
+[~, numSide] = size(vatlist);
 
-Eproj_mirror_enabled = 1;
-if Eproj_mirror_enabled == 1
-    numPatient = length(obj.allpatients)*2; 
+% allow mirroring only for mirrored connectomes
+if exist('mirrored','var')
+    if mirrored && obj.multi_pathways
+        numPatient = length(obj.allpatients)*2; 
+    else
+        numPatient = length(obj.allpatients);  % no mirroring
+    end
 else
     numPatient = length(obj.allpatients);  % no mirroring
 end

@@ -58,7 +58,7 @@ end
 
 %% Get fibervectors and corresponding coordinates (mid), exclude points outside efield window
 
-disp("Computing E-Field projection along the fibers")
+%disp("Computing E-Field projection along the fibers")
 
 % exclude fiber coordinates which are outside of efield sample
 bounds(:,1) = efmat*[1;1;1;1];

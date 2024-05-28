@@ -8,7 +8,7 @@ arguments
     outputBasePath   % folder to store the 4D nifti
 end
 
-ea_dispt('Creating nifti header for export...');
+%ea_dispt('Creating nifti header for export...');
 % create nifti
 [~, ~, endian] = computer;
 switch endian
@@ -26,7 +26,7 @@ Field_vals = zeros(n_points,n_points,n_points,3);
 
 % resample the field to a regular grid
 for d=1:3  % iterate over field components
-    ea_dispt('Converting to equispaced image data...');
+    %ea_dispt('Converting to equispaced image data...');
     F = scatteredInterpolant(Field_coords(:,1),Field_coords(:,2),Field_coords(:,3),Field_array(:,4+d),'linear','none');
     gv=cell(3,1); spacing=zeros(3,1);
     
