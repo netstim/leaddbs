@@ -14,7 +14,8 @@ elseif nargin==6
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    lgfigure=varargin{6};
+    resultfig=varargin{6};
+%     lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}= 'Fastfield (Baniasadi 2020)';
@@ -40,7 +41,7 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-resultfig=getappdata(lgfigure,'resultfig');
+% resultfig=getappdata(lgfigure,'resultfig');
 elstruct=getappdata(resultfig,'elstruct');
 options=getappdata(resultfig,'options');
 elspec=getappdata(resultfig,'elspec');

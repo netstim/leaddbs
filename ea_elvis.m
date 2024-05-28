@@ -592,58 +592,10 @@ function leadprogrammer(hobj, ev, elstruct, resultfig, options)
 % stimwin=ea_stimparams(elstruct,gcf,options);
 % setappdata(resultfig,'stimwin',stimwin);
 
-file_path = strcat(options.earoot, 'lead-dbs-programmer/data.json');
-input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
-fid = fopen(input_file_path, 'w');
-inputStruct = struct();
-dt = datetime('now');
-% Convert the datetime object to a string in the format 'yyyymmddHHMMSS'
-formattedDate = datestr(dt, 'yyyymmddHHMMSS');
-inputStruct.numElectrodes = length(elstruct.markers);
-inputStruct.electrodeModel = options.elmodel;
-inputStruct.label = formattedDate;
-inputStruct.patientname = options.patientname;
-programmerDir = strcat(options.earoot, 'lead-dbs-programmer');
-releaseDir = strcat(programmerDir, '/release/build');
-stimDir = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym');
-stimFileName = strcat(options.patientname, '_desc-stimparameters.mat');
-jsonFileName = strcat(options.patientname, '_desc-stimparameters.json');
-directoryList = dir(stimDir);
-% Initialize a cell array to store folder names
-indicesToRemove = [];
-for i = 1:numel(directoryList)
-    % Check if the item is a file or matches the name 'segmask.nii'
-    if ~directoryList(i).isdir || strcmp(directoryList(i).name, 'segmask.nii')
-        indicesToRemove(end+1) = i;
-    end
-end
-
-% Remove the items at the specified indices
-directoryList(indicesToRemove) = [];
-if exist(stimDir, 'Dir')
-    inputStruct.priorStims = {};
-    inputStruct.priorStims = directoryList;
-end
-fprintf(fid, '%s', jsonencode(inputStruct));
-fclose(fid);
-
-% for i = 1: size(directoryList, 1)
-%     if ~contains(directoryList(i).name, '.')
-%         jsonFilePath = fullfile(stimDir, directoryList(i).name, jsonFileName);
-%         currentMatFile = fullfile(stimDir, directoryList(i).name, stimFileName);
-%         if exist(currentMatFile)
-%             loadMatFile = load(currentMatFile);
-%             jsonFileData = jsonencode(loadMatFile);
-%             fkd = fopen(jsonFilePath, 'w');
-%             fprintf(fkd, '%s', jsonFileData);
-%             fclose(fkd);
-%         end
-%     end
-% end
-
+[file_path, releaseDir] = ea_input_programmer(options, elstruct);
 currentOS = computer;
 if exist(releaseDir, 'Dir')
-    % Test MAC - will need to test on windows
+%     % Test MAC - will need to test on windows
     mac64Dir = strcat(releaseDir, '/mac-arm64');
     macDir = strcat(releaseDir, '/mac');
 
@@ -657,49 +609,32 @@ if exist(releaseDir, 'Dir')
         system(appDir);
     end
 end
-new_data = fileread(file_path);
-importedS = jsondecode(new_data);
-S = importedS.S;
-% S.model = 'OSS-DBS (Butenko 2020)';
-numRows = size(S.activecontacts, 2);
-numCols = size(S.activecontacts, 2);
-
-% Initialize the cell array
-newVariable = cell(2, 4);
-
-% Fill the cell array
-for i = 1:2
-    for j = 1:4
-        newVariable{i, j} = S.activecontacts((i-1)*4+j, :);
-    end
-end
-S.activecontacts = newVariable;
-firstTerm=S.activecontacts{1,1} + S.activecontacts{1,2} + S.activecontacts{1,3} + S.activecontacts{1,4};
-secondTerm=S.activecontacts{2,1} + S.activecontacts{2,2} + S.activecontacts{2,3} + S.activecontacts{2,4};
-S.activecontacts={secondTerm, firstTerm};
-% Given data
-S.activecontacts = {secondTerm, firstTerm};  % Assuming these are arrays
-
-% Process each term in the cell array
-for i = 1:length(S.activecontacts)
-    term = S.activecontacts{i};  % Extract the term (either secondTerm or firstTerm)
-    
-    % Check if any element is greater than 1 and change it to 1
-    term(term > 1) = 1;
-    
-    % Save the modified term back to the cell array
-    S.activecontacts{i} = term;
-end
-
-% S.label = formattedDate;
-%             S.model = S_old.model;
-S.amplitude = {S.amplitude.rightAmplitude.', S.amplitude.leftAmplitude.'};
-S.monopolarmodel = 0;
+[S] = ea_process_programmer(file_path);
 % ea_genvat_butenko(S, options, resultfig);
-if isequal(S.model, 'SimBio/FieldTrip (see Horn 2017)')
+funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*\.m$', 0);
+funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
+names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
+
+setappdata(resultfig,'genvatfunctions',funcs);
+setappdata(resultfig,'vatfunctionnames',names);
+vfnames=getappdata(resultfig,'vatfunctionnames');
+
+[~,ix]=ismember(S.model,vfnames);
+vfs=getappdata(resultfig,'genvatfunctions');
+try
+    ea_genvat=eval(['@',vfs{ix}]);
+catch
+    keyboard
+end
+if isequal(S.model, 'OSS-DBS (Butenko 2020)') 
+        [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
+        flix = 1; 
+else
     for side=1:2
         try 
-            [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
+%             [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
+%             [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
+            [vtafv,vtavolume] = feval(ea_genvat,elstruct.coords_mm,S,side,options,S.label,resultfig);
             vtaCalcPassed(side) = 1;
         catch 
             vtafv=[];
@@ -709,9 +644,6 @@ if isequal(S.model, 'SimBio/FieldTrip (see Horn 2017)')
         stimparams(1,side).VAT(1).VAT = vtafv;
         stimparams(1,side).volume = vtavolume;
     end
-    elseif isequal(S.model, 'OSS-DBS (Butenko 2020)') 
-        [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
-        flix = 1; 
 end
 
 % if (S.model == 'Butenko')
@@ -727,12 +659,11 @@ end
 %             [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
 %             flix = 1;
 %  end
-% stimparams=getappdata(resultfig,'stimparams');
 setappdata(resultfig,'stimparams',stimparams);
 setappdata(resultfig,'curS',S);
 hmchanged = 1;
-% ea_calc_vatstats(resultfig,options,hmchanged);
-ea_calc_vatstats(resultfig,options);
+ea_calc_vatstats(resultfig,options,hmchanged);
+% ea_calc_vatstats(resultfig,options);
 outputFileName = strcat(options.patientname, '-program.json');
 outputFilePath = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym/', S.label, '/', outputFileName);
 % outputStruct = jsonencode(new_data);
