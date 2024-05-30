@@ -72,6 +72,12 @@ if any(nActiveSources > 1)
     end
 end
 
+if options.prefs.machine.vatsettings.butenko_calcPAM
+    % for now, force clean up of previous fiberActivation results
+    ea_delete([outputPaths.outputBasePath,'fiberActivation_*'])
+    ea_delete([outputPaths.templateOutputBasePath,'fiberActivation_*'])
+end
+
 % if single source, we will run only one iteration
 for source_index = 1:4
 
