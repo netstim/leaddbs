@@ -25,7 +25,12 @@ coords_mm_MNI = reco.('mni').coords_mm;
 % path to a json with axon model description 
 settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
 
-preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+if isfield(options.subj, 'preopAnat')
+    preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+elseif native == 1 && ~isfield(options.subj, 'preopAnat')
+    ea_warndlg('Native space info is missing, use template space instead')
+    return
+end
 
 if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     fprintf('Loading connectome: %s ...\n', settings.connectome);
