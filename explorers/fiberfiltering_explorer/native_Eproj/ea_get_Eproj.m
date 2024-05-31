@@ -10,6 +10,11 @@ arguments
     space          % space where to compute E-proj, 'MNI' or 'native'
 end
 
+if isempty(tractset.analysispath)
+    pth = fileparts(tractset.leadgroup);
+    tractset.analysispath=[pth,filesep,'fiberfiltering',filesep,tractset.ID,'.fibfilt'];
+end
+
 % use connectome with all pathways combined
 if tractset.multi_pathways == 1
     % check if merged_pathways is in fibfiltering folder
