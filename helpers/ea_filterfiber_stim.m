@@ -144,7 +144,7 @@ for i=1:length(radius)
         disp('No stimulation found, skipping...');
     else
         fprintf('\nConstructing spherical ROI...\n');
-        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0, ref);
+        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0, [ea_space, primarytemplate, '.nii']);
 
         % Find indices within sphere ROI region
         sphereROIInd = find(sphereROI.img(:));
