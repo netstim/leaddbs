@@ -27,7 +27,7 @@ settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons
 
 if isfield(options.subj, 'preopAnat')
     preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
-elseif native == 1 && ~isfield(options.subj, 'preopAnat')
+elseif options.native == 1 && ~isfield(options.subj, 'preopAnat')
     ea_warndlg('Native space info is missing, use template space instead')
     return
 end
