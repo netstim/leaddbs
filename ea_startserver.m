@@ -1,12 +1,13 @@
 function ea_startserver(handles, bids)
-    ea_getTutorData(handles, bids);
+    [jsonData] = ea_getTutorData(handles, bids); 
     [mac_address] = ea_getMac();
 %     data = struct('key1', 'value1', 'key2', 123, 'key3', [1, 2, 3]);
 %     jsonData = jsonencode(data); % Will need to replace this with the actual user data
-    baseUrl = 'http://localhost:3000/?userid=';
-    url = 'http://localhost:8000/my-endpoint';  % URL of your FastAPI endpoint
+%     baseUrl = 'http://localhost:3000/?userid=';
+    baseUrl = 'http://87.106.232.66/?userid=';
+    url = 'http://87.106.232.66:8000/my-endpoint';  % URL of your FastAPI endpoint
     options = weboptions('RequestMethod', 'post', 'MediaType', 'application/json', 'HeaderFields', {'User-ID', mac_address});
-%     response = webwrite(url, jsonData, options);
+    response = webwrite(url, jsonData, options);
 %     disp(response)
     userUrl = strcat(baseUrl, mac_address);
     web(userUrl, '-browser');
