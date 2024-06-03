@@ -112,6 +112,46 @@ for group=groups
             end
         case 'Database Lookup'
            vals{group}=AllX(gpatsel,:);
+        case 'Weighted R2-Map'
+
+
+
+                regressor=I(gpatsel);
+                weights=ea_minmax(obj.certainvar(gpatsel));
+                X=(AllX(gpatsel,:));
+
+
+                X(~isfinite(X)) = 0;
+                X=X';
+                nz=sum(logical(X),2)>0.2*size(X,2); % at least 20% of images covered by values.
+                nnz=sum(nz);
+                [mdls]=cellfun(@fitlm,cellfun(@transpose,mat2cell(X(nz,:),ones(1,nnz)),'un',0),repmat({regressor},1,nnz)',...
+                    repmat({'Weights'},1,nnz)',...
+                    repmat({weights},1,nnz)','Uniformoutput',0);
+                clear X
+
+                % maybe replace loop if can be done more easily:
+                R2=zeros(nnz,1);
+                if obj.showsignificantonly
+                    ps=nan(Nvox,1);
+                end
+                ea_dispercent(0,'Iterating voxels');
+                for voxel=1:nnz
+                    R2(voxel)=mdls{voxel}.Rsquared.Ordinary;
+                    if obj.showsignificantonly
+                        ps(voxel)=coefTest(mdls{voxel});
+                    end
+                    ea_dispercent(voxel/Nvox);
+                end
+                ea_dispercent(1,'end');
+
+                vals{group}=nan(size(AllX,2),1);
+
+            if obj.showsignificantonly
+                vals{group}(nz)=ea_corrsignan(R2,ps',obj);
+            else
+                vals{group}(nz)=R2;
+            end
     end
 
     obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
