@@ -663,14 +663,17 @@ setappdata(resultfig,'stimparams',stimparams);
 setappdata(resultfig,'curS',S);
 hmchanged = 1;
 ea_calc_vatstats(resultfig,options,hmchanged);
+input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
+fid = fopen(input_file_path, 'w');
+fclose(fid);
 % ea_calc_vatstats(resultfig,options);
-outputFileName = strcat(options.patientname, '-program.json');
-outputFilePath = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym/', S.label, '/', outputFileName);
+% outputFileName = strcat(options.patientname, '-program.json');
+% outputFilePath = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym/', S.label, '/', outputFileName);
 % outputStruct = jsonencode(new_data);
 % fid = fopen(outputFilePath, 'w');
 % fprintf(fid, '%s', importedS);
 % fclose(fid);
-fopen(outputFilePath, 'w');
+% fopen(outputFilePath, 'w');
 % fwrite(outputFilePath, new_data);
 
 

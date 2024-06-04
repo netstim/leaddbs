@@ -1,5 +1,7 @@
 function [S] = ea_process_programmer(file_path)
     new_data = fileread(file_path);
+    fid = fopen(file_path, 'w');
+    fclose(fid);
     importedS = jsondecode(new_data);
     S = importedS.S;
     % S.model = 'OSS-DBS (Butenko 2020)';
