@@ -593,13 +593,13 @@ function leadprogrammer(hobj, ev, elstruct, resultfig, options)
 % setappdata(resultfig,'stimwin',stimwin);
 
 [file_path, releaseDir] = ea_input_programmer(options, elstruct);
-currentOS = computer;
+currentOS = ea_getarch;
 if exist(releaseDir, 'Dir')
 %     % Test MAC - will need to test on windows
     mac64Dir = strcat(releaseDir, '/mac-arm64');
     macDir = strcat(releaseDir, '/mac');
-
-    if (currentOS == 'MACI64')
+    
+    if (currentOS == "maca64")
         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
         testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
@@ -646,19 +646,6 @@ else
     end
 end
 
-% if (S.model == 'Butenko')
-%     [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
-% 
-% end
-% if options.prefs.machine.vatsettings.butenko_calcPAM
-%             feval(ea_genvat_butenko,S,options,resultfig);
-%             ea_busyaction('off',resultfig,'stim');
-%             return;
-%         else
-% %             [~, stimparams] = feval(ea_genvat_butenko,S,options,resultfig);
-%             [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
-%             flix = 1;
-%  end
 setappdata(resultfig,'stimparams',stimparams);
 setappdata(resultfig,'curS',S);
 hmchanged = 1;
