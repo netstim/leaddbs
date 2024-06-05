@@ -137,16 +137,19 @@ for k = 1:length(myFiles)
     save(new_pathway, '-struct', 'ftr');
 
     if flip
-            % now flip and store (we assume that the flip is from the right)
+
+        ftr.mirrored = 1;  % this flag designates that the connectome is fiberwise mirrorred
+        save(new_pathway, '-struct', 'ftr');
+
+        % now flip and store (we assume that the flip is from the right)
         fibers_coords = ftr.fibers(:,1:3);
         fibers_coords_lr = ea_flip_lr_nonlinear(fibers_coords);
         ftr.fibers(:,1:3) = fibers_coords_lr;
         
-        ftr.mirrored = 1;  % this flag designates that the connectome is fiberwise mirrorred
-        
         % add left hemisphere suffix
         new_pathway = [new_connectome_path,filesep,myFiles(k).name(1:end-4), '_lh', '.mat'];
         save(new_pathway, '-struct', 'ftr');
+        
     end
 
 end
