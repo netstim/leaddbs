@@ -1,10 +1,14 @@
-function [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, obj)
+function [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, space, obj)
 % Calculate fiber connection values based on the VATs and the connectome
-
-%obj.connectome = 'PPU_rh_downsampled_by_4';
 
 disp('Load Connectome...');
 load(cfile);
+
+if strcmp(space,'native')
+    space = '';
+else
+    space = 'MNI/';
+end
 
 prefs = ea_prefs;
 try
@@ -70,9 +74,9 @@ for side = 1:numSide
         disp(['E-field projection ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
         if pt <= length(obj.allpatients)
             E_proj_folder = [obj.allpatients{pt},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,side_tag];
-            if isfile([E_proj_folder,filesep,'E_metrics.mat'])
+            if isfile([E_proj_folder,filesep,space,'E_metrics.mat'])
     
-                load([E_proj_folder,filesep,'E_metrics.mat']);
+                load([E_proj_folder,filesep,space,'E_metrics.mat']);
     
                 % no mirroring allowed atm
             else
@@ -87,8 +91,8 @@ for side = 1:numSide
                 E_proj_folder = [obj.allpatients{pt-size(obj.allpatients,1)},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,'_rh'];
             end
                 
-            if isfile([E_proj_folder,filesep,'E_metrics.mat'])
-                load([E_proj_folder,filesep,'E_metrics.mat']);
+            if isfile([E_proj_folder,filesep,space,'E_metrics.mat'])
+                load([E_proj_folder,filesep,space,'E_metrics.mat']);
             else
                 ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: E_metrics file does not exist!\n');
                 continue;
