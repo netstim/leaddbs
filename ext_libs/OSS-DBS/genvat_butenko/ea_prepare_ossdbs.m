@@ -41,7 +41,11 @@ settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
 try 
     % compute PAM over an uncertain parameter (set in the GUI)
     settings.prob_PAM = options.prefs.machine.vatsettings.butenko_prob_PAM;
-    settings.N_samples = options.prefs.machine.vatsettings.butenko_N_samples;
+    if settings.prob_PAM
+        settings.N_samples = options.prefs.machine.vatsettings.butenko_N_samples;
+    else
+        settings.N_samples = 1;
+    end
 catch
     settings.prob_PAM = 0;
     settings.N_samples = 1;
