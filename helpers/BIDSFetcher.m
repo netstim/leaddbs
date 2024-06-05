@@ -373,7 +373,12 @@ classdef BIDSFetcher
 
             % Get images and modalities
             preopRawDataDir = ea_regexpdir(rawDataDir, '^ses-preop$', 0, 'd');
-            images = fullfile(preopRawDataDir{1}, 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
+            if isempty(preopRawDataDir)
+                preopRawDataDir = fullfile(rawDataDir, 'ses-preop');
+            else
+                preopRawDataDir = preopRawDataDir{1};
+            end
+            images = fullfile(preopRawDataDir, 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
             modality = fieldnames(rawImages.preop.anat)';
 
             % Set pre-defined orders
@@ -429,6 +434,11 @@ classdef BIDSFetcher
 
             % Get images and modalities
             postopRawDataDir = ea_regexpdir(rawDataDir, '^ses-postop$', 0, 'd');
+            if isempty(postopRawDataDir)
+                postopRawDataDir = fullfile(rawDataDir, 'ses-postop');
+            else
+                postopRawDataDir = postopRawDataDir{1};
+            end
             images = fullfile(postopRawDataDir, 'anat', append(struct2cell(rawImages.postop.anat), obj.settings.niiFileExt));
             modality = fieldnames(rawImages.postop.anat);
 
