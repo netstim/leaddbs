@@ -103,7 +103,7 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 options.earoot=ea_getearoot;
 ea_addnormmethods(handles,options);
 
-ea_processguiargs(handles,varargin)
+ea_processguiargs(handles,varargin);
 
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);

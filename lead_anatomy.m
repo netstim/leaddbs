@@ -89,7 +89,7 @@ ea_init_coregmrpopup(handles);
 % add norm methods to menu
 ea_addnormmethods(handles,options,'normmethod');
 
-ea_processguiargs(handles,varargin)
+ea_processguiargs(handles,varargin);
 
 % add tools menu
 ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'},options.prefs);

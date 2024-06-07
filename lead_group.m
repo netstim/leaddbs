@@ -183,7 +183,7 @@ ea_firstrun(handles,options);
 
 ea_menu_initmenu(handles,{'prefs','transfer','group'},options.prefs);
 
-ea_processguiargs(handles,varargin)
+ea_processguiargs(handles,varargin);
 
 ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...

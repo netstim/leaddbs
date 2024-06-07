@@ -66,7 +66,7 @@ set(handles.leadfigure,'name','Lead Predict','color','w');
 % add recent patients...
 ea_initrecentpatients(handles, 'patients');
 
-ea_processguiargs(handles,varargin)
+ea_processguiargs(handles,varargin);
 
 ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'},ea_prefs);
 
