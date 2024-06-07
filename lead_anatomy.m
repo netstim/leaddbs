@@ -92,8 +92,7 @@ ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
 % Initialize norm methods popupmenu
 ea_init_normpopup(handles, options.prefs.normalize.default);
 
-ea_processguiargs(handles,varargin)
-
+ea_processguiargs(handles,varargin);
 % add tools menu
 ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'},options.prefs);
 

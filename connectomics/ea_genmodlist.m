@@ -45,8 +45,8 @@ if checkfmri
     fc=dir(ea_getconnectomebase('fmri'));
     for fdf=1:length(fc)
         if fc(fdf).isdir && ~strcmp(fc(fdf).name(1),'.') && ...
-           exist([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.json'], 'file')
-                dataset=loadjson([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.json']);
+           isfile([ea_getconnectomebase('fmri'), fc(fdf).name, filesep, 'dataset_info.json'])
+                dataset=loadjson([ea_getconnectomebase('fmri'), fc(fdf).name, filesep, 'dataset_info.json']);
                 [~,fn]=fileparts(fc(fdf).name);
                 for ds=1:length(dataset.subsets)
                     modlist{cnt}=[fn,' > ',dataset.subsets{ds}.name];
@@ -71,7 +71,7 @@ end
 if exist('directory','var') && ~isempty(directory)
     % check if pat-specific fibertracts are present:
     if checkdmri
-        if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file')
+        if isfile(fullfile(directory, 'connectomes', 'dMRI', options.prefs.FTR_normalized))
             modlist{cnt}='Patient''s fiber tracts';
             type(cnt)=1;
             cnt=cnt+1;
@@ -81,14 +81,14 @@ if exist('directory','var') && ~isempty(directory)
     % fMRI - parcellations:
     if checkfmri
         % check if rest_tc are present:
-        if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file')
+        if isfile(fullfile(directory, 'connectomics', selectedparc, 'rest_tc.mat'))
             modlist{cnt}='Patient''s fMRI time courses';
             type(cnt)=2;
             cnt=cnt+1;
         end
 
         % fMRI - raw files:
-        ffis=dir([directory, options.prefs.rest_searchstring]);
+        ffis=dir(fullfile(directory, options.prefs.rest_searchstring));
         for ff=1:length(ffis)
             [~, restfname] = fileparts(ffis(ff).name);
             modlist{cnt} = ['Patient''s fMRI - ', restfname];
@@ -96,9 +96,9 @@ if exist('directory','var') && ~isempty(directory)
             cnt=cnt+1;
         end
     end
-
+    
     if checkdmri_mt
-        if exist([directory,'connectomes',filesep,'dMRI_MultiTract',filesep,options.prefs.FTR_normalized],'file')
+        if isfile(fullfile(directory, 'connectomes', 'dMRI_MultiTract', options.prefs.FTR_normalized))
             modlist{cnt}='Patient''s fiber tracts';
             type(cnt)=3;
             cnt=cnt+1;
@@ -109,15 +109,15 @@ end
 % check for already processed maps in case of predict module
 if exist('options','var')
     if isfield(options,'predict')
-        stimdir=[directory,'stimulations',filesep,ea_nt(options),options.predict.stimulation,filesep];
+        stimdir = fullfile(directory, 'stimulations', ea_nt(options), options.predict.stimulation);
         dfo=dir(stimdir);
         for fo=1:length(dfo)
             if dfo(fo).isdir && ~strcmp(dfo(fo).name(1),'.')
-                if checkfmri && ~isempty(dir([stimdir,dfo(fo).name,filesep,'vat_seed_*func_seed_AvgR.nii']))
+                if checkfmri && ~isempty(dir(fullfile(stimdir, dfo(fo).name, 'vat_seed_*func_seed_AvgR.nii')))
                     type(cnt)=2; % fMRI result
                     modlist{cnt}=['Precomputed: ',dfo(fo).name];
                     cnt=cnt+1;
-                elseif checkdmri && ~isempty(dir([stimdir,dfo(fo).name,filesep,'vat_seed_*struc_seed.nii']))
+                elseif checkdmri && ~isempty(dir(fullfile(stimdir, dfo(fo).name, 'vat_seed_*struc_seed.nii')))
                     type(cnt)=1; % dMRI result
                     modlist{cnt}=['Precomputed: ',dfo(fo).name];
                     cnt=cnt+1;
