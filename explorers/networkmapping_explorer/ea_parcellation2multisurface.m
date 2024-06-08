@@ -38,6 +38,12 @@ end
 
 
 parcels=unique(res.img(:))';
+
+if exist('indices','var')
+idx=ismember(parcels,indices);
+parcels=parcels(idx);
+end
+
 while size(colormap,1)<length(parcels)
     colormap=[colormap;colormap];
 end
