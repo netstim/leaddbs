@@ -68,12 +68,17 @@ set(handles.leadfigure,'name','Lead Connectome Mapper','color','w');
 % add recentpatients patients...
 ea_initrecent(handles, 'patients');
 
-ea_processguiargs(handles,varargin)
+parsedInput = ea_processguiargs(handles,varargin);
 
 ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'},ea_prefs);
 
+if isempty(parsedInput) || length(parsedInput) > 1
+    [mdl, sf] = ea_genmodlist;
+else
+    options.prefs = ea_prefs;
+    [mdl, sf] = ea_genmodlist(parsedInput{1}, nan, options);
+end
 
-[mdl,sf]=ea_genmodlist;
 ea_updatemodpopups(mdl,sf,handles)
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
