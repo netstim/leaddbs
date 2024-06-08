@@ -1,32 +1,14 @@
-function h=ea_parcellation2surface(nii,surface,sides,colormap,opts)
+function h=ea_parcellation2surface(nii,surface,sides,colormap)
 
 % surface can be a char (smoothed/full) or a cell pointing to rh and lh
 % .mz3 surface files.
-if ~exist('opts','var')
-    opts.posvisible=1;
-    opts.negvisible=1;
-end
+
 
 if ~exist('surface','var')
-    surface='smoothed';
+    surface='auto';
 end
 if ~exist('sides','var')
     sides=1:2;
-end
-if ischar(surface)
-    % first draw correct surface
-    switch lower(surface)
-        case 'smoothed'
-            if ismember(1,sides); [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf_smoothed.rh.mz3']); end
-            if ismember(2,sides); [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf_smoothed.lh.mz3']); end
-        case 'full'
-            if ismember(1,sides); [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf.rh.mz3']); end
-            if ismember(2,sides); [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf.lh.mz3']); end
-    end
-elseif    iscell(surface) % assuming rh and lh
-    if ismember(1,sides); [rh.faces, rh.vertices] = ea_readMz3(surface{1}); end
-    if ismember(2,sides); [lh.faces, lh.vertices] = ea_readMz3(surface{2}); end
-    surface='custom';
 end
 
 if ~exist('colormap','var')
@@ -34,7 +16,7 @@ if ~exist('colormap','var')
 end
 %gradientLevel = length(colormap);
 
-expansionfactor=100; % extrapolate to reduce artifacts
+expansionfactor=1; % extrapolate to reduce artifacts
 expcolormap=zeros(size(colormap,1)*expansionfactor,3);
 count=1;
 for c=1:expansionfactor:length(expcolormap)
@@ -60,6 +42,48 @@ else
     res=nii;
 end
 
+
+if ischar(surface)
+    % first draw correct surface
+    switch lower(surface)
+        case 'smoothed'
+            if ismember(1,sides); [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf_smoothed.rh.mz3']); end
+            if ismember(2,sides); [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf_smoothed.lh.mz3']); end
+        case 'full'
+            if ismember(1,sides); [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf.rh.mz3']); end
+            if ismember(2,sides); [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf.lh.mz3']); end
+        case 'auto'
+
+            resp=permute(res.img,[2,1,3]);
+
+            resp=resp>0;
+            resp=smooth3(double(resp),'gaussian',[5,5,5]);
+            resp=resp>0.95;
+            [x,y,z,D] = subvolume(resp,[1,size(resp,2),1,round(size(resp,1)/2),1,size(resp,3)]);
+            lh=isosurface(x,y,z,D, 0.5);
+            [x,y,z,D] = subvolume(resp,[1,size(resp,2),round(size(resp,1)/2),size(resp,1),1,size(resp,3)]);
+            rh=isosurface(x,y,z,D, 0.5);
+          
+
+            lh.vertices=res.mat*[lh.vertices';ones(1,size(lh.vertices,1))];
+            lh.vertices=lh.vertices(1:3,:)';
+            lh=ea_smoothpatch(lh,1,3);
+            rh.vertices=res.mat*[rh.vertices';ones(1,size(rh.vertices,1))];
+            rh.vertices=rh.vertices(1:3,:)';
+            rh=ea_smoothpatch(rh,1,3);
+    end
+elseif    iscell(surface) % assuming rh and lh
+    if ismember(1,sides); [rh.faces, rh.vertices] = ea_readMz3(surface{1}); end
+    if ismember(2,sides); [lh.faces, lh.vertices] = ea_readMz3(surface{2}); end
+    surface='custom';
+end
+
+
+
+
+
+
+
 res.img=round(res.img).*expansionfactor;
 while max(res.img(:))>size(expcolormap,1)
     expcolormap=[expcolormap;expcolormap];
@@ -75,13 +99,6 @@ bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
     linspace(bb(2,1),bb(2,2),size(res.img,2)),...
     linspace(bb(3,1),bb(3,2),size(res.img,3)));
 
-if ~opts.posvisible
-    res.img(res.img>0)=0;
-end
-
-if ~opts.negvisible
-    res.img(res.img<0)=0;
-end
 
 [pth,niiname]=fileparts(res.fname);
 h = {};
