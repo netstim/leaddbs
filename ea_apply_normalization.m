@@ -10,4 +10,7 @@ if contains(json.method, {'ANTs', 'EasyReg', 'SPM'})
     ea_ants_apply_transforms(options);
 elseif contains(json.method, 'FNIRT')
     ea_fsl_apply_normalization(options);
+elseif contains(json.method, 'SPM')
+    ea_convert_spm_warps(options.subj);
+    ea_ants_apply_transforms(options);
 end
