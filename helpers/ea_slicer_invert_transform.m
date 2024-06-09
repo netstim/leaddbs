@@ -2,7 +2,7 @@ function [] = ea_slicer_invert_transform(input_transform, reference_volume, outp
 
 % Set-up Custom Slicer
 s4l = ea_slicer_for_lead;
-if ~s4l.is_installed_and_up_to_date()
+if ~s4l.is_up_to_date()
   s4l.install();
 end
 
