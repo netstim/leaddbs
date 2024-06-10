@@ -49,16 +49,7 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
 
     % Invert transform
     itk_inv_field = strrep(itk_fwd_field, '_fwd_', '_inv_');
-    python_script = fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'invert_transform.py');
-    slicer_cmd = {'--no-splash', '--no-main-window', '--ignore-slicerrc', '--python-script', ...
-        ea_path_helper(python_script), ...
-        ea_path_helper(itk_fwd_field), ...
-        ea_path_helper(source_image), ...
-        ea_path_helper(itk_inv_field)};
-    status = s4l.run(strjoin(slicer_cmd, ' '));
-    if status ~= 0
-        ea_error('Failed to invert the EasyReg transformation!', showdlg=false, simpleStack=true);
-    end
+    ea_slicer_invert_transform(itk_fwd_field, source_image, itk_inv_field)
 
     % .h5 to .nii.gz
     ea_conv_antswarps(itk_fwd_field, target_image, 1);

@@ -6,10 +6,12 @@ function ea_apply_normalization(options)
 
 json = loadjson(options.subj.norm.log.method);
 
-if contains(json.method, {'ANTs','EasyReg'})
+if contains(json.method, {'ANTs', 'EasyReg', 'SPM'})
     ea_ants_apply_transforms(options);
 elseif contains(json.method, 'FNIRT')
     ea_fsl_apply_normalization(options);
 elseif contains(json.method, 'SPM')
-    ea_spm_apply_normalization(options);
+    % Convert SPM deformation field to ITK format when necessary
+    ea_convert_spm_warps(options.subj);
+    ea_ants_apply_transforms(options);
 end

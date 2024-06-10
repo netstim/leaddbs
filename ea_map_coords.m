@@ -282,7 +282,12 @@ if ~isempty(transform)
         json = loadjson(options.subj.norm.log.method);
         normMethod = upper(json.method);
 
-        if contains(normMethod, {'ANTS', 'EASYREG'})
+        if contains(normMethod, {'ANTS', 'EASYREG', 'SPM'})
+            % Convert SPM deformation field to ITK format when necessary
+            if contains(normMethod, 'SPM')
+                ea_convert_spm_warps(options.subj);
+            end
+
             if endsWith(transform, 'inverseTransform')
                 useinverse = 1;
             else
@@ -327,24 +332,24 @@ if ~isempty(transform)
             %  make sure coors is in 4*N size (for further transformation)
             XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-            % Default use SPM to do the mapping
-        elseif contains(normMethod, 'SPM')
-            if endsWith(transform, 'inverseTransform')
-                transform = [options.subj.norm.transform.inverseBaseName, 'spm.nii'];
-            else
-                transform = [options.subj.norm.transform.forwardBaseName, 'spm.nii'];
-            end
-
-            XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
+        % % Default use SPM to do the mapping
+        % elseif contains(normMethod, 'SPM')
+        %     if endsWith(transform, 'inverseTransform')
+        %         transform = [options.subj.norm.transform.inverseBaseName, 'spm.nii'];
+        %     else
+        %         transform = [options.subj.norm.transform.forwardBaseName, 'spm.nii'];
+        %     end
+        % 
+        %     XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
         else
             error('Normalization method not recognizable!');
         end
 
     % 'y_*.nii' or 'iy_*.nii' from SPM supplied, NOLINEAR case
-    elseif ~isempty(regexp(transform, 'y_.*\.nii$', 'once'))
+    elseif ~isempty(regexp(transform, ['(?:\', filesep, '|^)(y|iy)_.+\.nii$'], 'once'))
         XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
 
-    % '*.nii', '*.nii.gz' or '*.h5' files (from ANTs or FSL) supplied, NOLINEAR case
+    % '*.nii', '*.nii.gz' or '*.h5' files from ANTs, FSL or SPM (saved in ITK format) supplied, NOLINEAR case
     elseif ~isempty(regexp(transform, '\.nii$', 'once')) || ... % ANTs or FSL naming
            ~isempty(regexp(transform, '\.nii.gz$', 'once')) || ... % ANTs or FSL naming
            ~isempty(regexp(transform, '\.h5$', 'once')) % ANTs naming
@@ -358,7 +363,7 @@ if ~isempty(transform)
 
         switch normMethod
 
-            case {'ANTS', 'EASYREG'} % ANTs used
+            case {'ANTS', 'EASYREG', 'SPM'} % ANTs or SPM used
                 if nargin >= 6
                     useinverse = varargin{6};
                 else

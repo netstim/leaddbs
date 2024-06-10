@@ -28,7 +28,13 @@ for i = 1:length(warpdrive_subs)
         if isfield(options, 'overwriteapproved')
             keep_pts(i) = keep_pts(i) || options.overwriteapproved;
         end
-        if ~contains(approved_load.method, {'ANTs', 'EasyReg'})
+
+        if contains(approved_load.method, 'SPM')
+            % Convert SPM deformation field to ITK format when necessary
+            ea_convert_spm_warps(warpdrive_subs(i));
+        end
+
+        if ~contains(approved_load.method, {'ANTs', 'EasyReg', 'SPM'})
             keep_pts(i) = 0;
             disp([warpdrive_subs(i).subjId ' was normalized using ' approved_load.method '. Use ANTs in order to run warpdrive.']);
         end

@@ -35,11 +35,12 @@ for pt = 1:length(uidir)
     options = ea_getptopts(uidir{pt});
     json = loadjson(options.subj.norm.log.method);
     if contains(json.method, 'SPM')
-        normTemplate = [ea_space, 'TPM.nii'];
-    else
-        spacedef = ea_getspacedef;
-        normTemplate = [ea_space, spacedef.templates{1}, '.nii'];
+        % Convert SPM deformation field to ITK format when necessary
+        ea_convert_spm_warps(options.subj);
     end
+
+    spacedef = ea_getspacedef;
+    normTemplate = [ea_space, spacedef.templates{1}, '.nii'];
 
     switch automan
 
