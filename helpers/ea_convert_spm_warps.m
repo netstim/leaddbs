@@ -8,6 +8,5 @@ if isfile([forwardBaseName, 'spm.nii'])
     ea_spm_fwd_displacement_field_to_ants([forwardBaseName, 'spm.nii'], [forwardBaseName, 'ants.nii.gz']);
     ea_slicer_invert_transform([forwardBaseName, 'ants.nii.gz'], subj.coreg.anat.preop.(subj.AnchorModality), [inverseBaseName, 'ants.nii.gz']);
 
-    delete([forwardBaseName, 'spm.nii']);
-    ea_delete([inverseBaseName, 'spm.nii']);
+    ea_delete({[forwardBaseName, 'spm.nii']; [inverseBaseName, 'spm.nii']});
 end
