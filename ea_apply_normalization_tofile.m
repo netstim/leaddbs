@@ -39,6 +39,7 @@ elseif contains(json.method, 'FNIRT')
     end
     ea_fsl_apply_normalization(options, from,to, useinverse, ref, '', interp);
 elseif contains(json.method, 'SPM')
+    % Convert SPM deformation field to ITK format when necessary
     ea_convert_spm_warps(options.subj);
     ea_ants_apply_transforms(options, from, to, useinverse, ref, '', interp);
 end
