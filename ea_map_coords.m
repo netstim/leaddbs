@@ -346,7 +346,7 @@ if ~isempty(transform)
         end
 
     % 'y_*.nii' or 'iy_*.nii' from SPM supplied, NOLINEAR case
-    elseif ~isempty(regexp(transform, 'y_.*\.nii$', 'once'))
+    elseif ~isempty(regexp(transform, ['(?:\', filesep, '|^)(y|iy)_.+\.nii$'], 'once'))
         XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
 
     % '*.nii', '*.nii.gz' or '*.h5' files from ANTs, FSL or SPM (saved in ITK format) supplied, NOLINEAR case
