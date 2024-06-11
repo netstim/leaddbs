@@ -755,11 +755,24 @@ classdef ea_disctract < handle
                     for voter=1:numVoters
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
-                                useI=obj.subscore.vars{voter}(patientsel);
+                                if ~exist('Iperm', 'var') || isempty(Iperm)
+                                    useI=obj.subscore.vars{voter}(patientsel);
+                                else 
+                                    % to be added by Nanditha
+                                end 
                             case 'Split & Color By PCA'
-                                useI=obj.subscore.pcavars{voter}(patientsel);
+                                if ~exist('Iperm', 'var') || isempty(Iperm)
+                                    useI=obj.subscore.pcavars{voter}(patientsel);
+                                else
+                                    PCscores = ea_nanzscore(Iperm(patientsel, : ))*obj.subscore.pcacoeff;
+                                    useI = PCscores(:, voter); 
+                                end
                             otherwise
-                                useI=obj.responsevar(patientsel);
+                                if ~exist('Iperm', 'var') || isempty(Iperm)
+                                    useI=obj.responsevar(patientsel);
+                                else 
+                                    useI=Iperm(patientsel); 
+                                end 
                         end
 
                         if size(useI,2)>1
