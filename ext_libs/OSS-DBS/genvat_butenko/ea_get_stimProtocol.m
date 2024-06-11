@@ -1,5 +1,5 @@
 function settings = ea_get_stimProtocol(options, S, settings, activeSources, source_index)
-% Get stimulation settings for particular source 
+% Get stimulation settings for particular source
 % By Butenko and Li, konstantinmgtu@gmail.com
 
 arguments
@@ -17,7 +17,13 @@ settings.stim_center = nan(2, 3);
 
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_get_OneSourceStimVector(S, 2, conNum, activeSources(:,source_index));
-    settings.pulseWidth = [double(S.(['Rs', num2str(source_index)]).pulseWidth);double(S.(['Ls', num2str(source_index)]).pulseWidth)];
+
+    try
+        settings.pulseWidth = [double(S.(['Rs', num2str(source_index)]).pulseWidth);double(S.(['Ls', num2str(source_index)]).pulseWidth)];
+    catch % Fallback to default pulseWith in case it's not updated in S
+        settings.pulseWidth = [options.prefs.machine.vatsettings.butenko_pulseWidth; options.prefs.machine.vatsettings.butenko_pulseWidth];
+    end
+
     for side = 1:2
 
         % estimate center of VAT grid
@@ -37,7 +43,7 @@ if ~settings.stimSetMode
 
             stimamp = sum(abs(settings.Phi_vector(side,:)),"all",'omitnan');
             settings.stim_center(side,:) = sum(settings.contactLocation{side}.*abs(settings.Phi_vector(side,:)')./stimamp,1,'omitnan');
-        
+
              % estimate extent of the stimulation along the lead
             phi_temp = settings.Phi_vector(side,:);
             phi_temp(isnan(phi_temp)) = 0;
