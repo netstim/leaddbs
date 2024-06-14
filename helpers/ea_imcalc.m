@@ -43,7 +43,7 @@ if opts.matchBBox
     ea_mkdir(tempFolder);
     [~, inputNames] = fileparts(input);
     croppedFile = strcat(tempFolder, filesep, inputNames, '.nii');
-    cellfun(@(x, y) ea_crop_nii_bb(x, bbox, y, opts.interp), input, croppedFile);
+    cellfun(@(x, y) ea_crop_nii_bb(x, bbox, y), input, croppedFile);
 
     % Reslice the first image to the finest resolution
     ea_resample_image_by_spacing(croppedFile{1}, min(abs(cell2mat(voxsize))), 0, 0, ~opts.interp, croppedFile{1});
