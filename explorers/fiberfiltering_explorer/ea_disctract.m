@@ -912,7 +912,7 @@ classdef ea_disctract < handle
                                 if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
                                     ea_corrplot(obj.subscore.pcavars{pcc}(patientsel),Ihat(:,pcc), 'noperm', ...
                                         {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
-                                        [], [], obj.subscore.pcacolors(pcc, :));
+                                        [], [], obj.subscore.pcacolors{1,2}(pcc, :)); %using positive colors only
                                     % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
                                 end
                             end
@@ -1506,8 +1506,8 @@ classdef ea_disctract < handle
                                 obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
                                 obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color
                             elseif strcmp(obj.multitractmode,'Split & Color By PCA')
-                                obj.poscolor = obj.subscore.pcacolors(group,:);
-                                obj.negcolor = [0.94,0.97,1.00];
+                                obj.poscolor = obj.subscore.pcacolors{1,2}(group,:);
+                                obj.negcolor = obj.subscore.pcacolors{1,1}(group,:);
                             end
                             if obj.subscore.special_case %operating the mixed fiber tract in the multitract mode. Essentially uses the same logic as you would have used if you were not doing multitract mode, but it incorporates the multitract analysis.
                                 %for split by groups options, you cannot have pos &
