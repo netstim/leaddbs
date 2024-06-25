@@ -26,8 +26,9 @@ if ~isdeployed
         ea_cprintf('CmdWinWarnings', 'Patched SPM cfg files for use in LeadDBS.\n')
     end
 
-    if ~any(ismember(ver(8:11),'.')) % old version format
-        if str2double(ver(8:11))<6906
+    ver = regexp(ver, '(?<=SPM12 \()(\d+)(?=\))', 'match', 'once');
+    if ~isempty(ver) % Will be empty when using dev version of SPM
+        if str2double(ver)<6906 % Old version of SPM detected
             msgbox('Some functions (such as SPM SHOOT and DARTEL) may not be available using your SPM version. Please upgrade SPM12 to at least revision 6906 (or simply update to newest release).');
         end
     end
