@@ -22,6 +22,12 @@ else
     return;
 end
 
+% Check if weights are outside the required range [0, 1]
+if any(valsin(:) < 0) || any(valsin(:) > 1)
+    valsin = normalize(valsin, 'range', [0, 1]);
+end
+
+
 % Actual test:
 outcomein = repmat(outcomein', size(valsin, 1), 1);
 group1 = outcomein;
