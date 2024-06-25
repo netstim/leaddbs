@@ -18,7 +18,7 @@ else
     varargout{1}.file = mfilename;
     varargout{1}.type = "2-Sample Tests";
     varargout{1}.outcometype = {'gradual'};
-    varargout{1}.compatibility = {'Electric Field', 'Sigmoid Field', 'VTA'};    
+    varargout{1}.compatibility = {'Electric Field', 'Sigmoid Field'};    
     return;
 end
 
