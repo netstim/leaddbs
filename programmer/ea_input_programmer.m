@@ -1,7 +1,7 @@
 function [file_path, releaseDir] = ea_input_programmer (options, elstruct)
 
-    file_path = strcat(options.earoot, 'lead-dbs-programmer/data.json');
-    input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
+    file_path = strcat(options.earoot, 'programmer/app/data.json');
+    input_file_path = strcat(options.earoot, 'programmer/app/inputData.json');
     fid = fopen(input_file_path, 'w');
     inputStruct = struct();
     dt = datetime('now');
@@ -11,7 +11,7 @@ function [file_path, releaseDir] = ea_input_programmer (options, elstruct)
     inputStruct.electrodeModel = options.elmodel;
     inputStruct.label = formattedDate;
     inputStruct.patientname = options.patientname;
-    programmerDir = strcat(options.earoot, 'lead-dbs-programmer');
+    programmerDir = strcat(options.earoot, 'programmer/app');
     releaseDir = strcat(programmerDir, '/release/build');
     stimDir = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym');
     stimFileName = strcat(options.patientname, '_desc-stimparameters.mat');
@@ -25,7 +25,7 @@ function [file_path, releaseDir] = ea_input_programmer (options, elstruct)
             indicesToRemove(end+1) = i;
         end
     end
-    
+
     % Remove the items at the specified indices
     directoryList(indicesToRemove) = [];
     if exist(stimDir, 'Dir')
