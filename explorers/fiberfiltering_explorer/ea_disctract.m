@@ -1252,7 +1252,7 @@ classdef ea_disctract < handle
                                     end
                             end
                         catch
-                            ea_warndlg("Connectivity indices were not stored. Please recalculate.");
+                            %ea_warndlg("Connectivity indices were not stored. Please recalculate.");
                             return
                         end
                     end
