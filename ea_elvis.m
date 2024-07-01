@@ -363,7 +363,7 @@ if ~strcmp(options.leadprod, 'group')
 end
 
 % Initialize Convis-Button
-if ~strcmp(options.leadprod,'group') 
+if ~strcmp(options.leadprod,'group')
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
@@ -598,7 +598,7 @@ if exist(releaseDir, 'Dir')
 %     % Test MAC - will need to test on windows
     mac64Dir = strcat(releaseDir, '/mac-arm64');
     macDir = strcat(releaseDir, '/mac');
-    
+
     if (currentOS == "maca64")
         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
@@ -626,17 +626,17 @@ try
 catch
     keyboard
 end
-if isequal(S.model, 'OSS-DBS (Butenko 2020)') 
+if isequal(S.model, 'OSS-DBS (Butenko 2020)')
         [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
-        flix = 1; 
+        flix = 1;
 else
     for side=1:2
-        try 
+        try
 %             [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
 %             [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
             [vtafv,vtavolume] = feval(ea_genvat,elstruct.coords_mm,S,side,options,S.label,resultfig);
             vtaCalcPassed(side) = 1;
-        catch 
+        catch
             vtafv=[];
             vtavolume=0;
             vatCalcPassed(side) = 0;
@@ -650,7 +650,7 @@ setappdata(resultfig,'stimparams',stimparams);
 setappdata(resultfig,'curS',S);
 hmchanged = 1;
 ea_calc_vatstats(resultfig,options,hmchanged);
-input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
+input_file_path = strcat(options.earoot, 'programmer/app/inputData.json');
 fid = fopen(input_file_path, 'w');
 fclose(fid);
 % ea_calc_vatstats(resultfig,options);
@@ -678,8 +678,8 @@ setappdata(resultfig,'stimwin',stimwin);
 % % Close the file
 % fclose(fileID);
 %%%%%
-% file_path = strcat(options.earoot, 'lead-dbs-programmer/data.json');
-% input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
+% file_path = strcat(options.earoot, 'programmer/app/data.json');
+% input_file_path = strcat(options.earoot, 'programmer/app/inputData.json');
 % fid = fopen(input_file_path, 'w');
 % inputStruct = struct();
 % inputStruct.numElectrodes = length(elstruct.markers);
@@ -688,9 +688,9 @@ setappdata(resultfig,'stimwin',stimwin);
 % % fprintf(fid, '%s', options.elmodel);
 % fclose(fid);
 % % disp(result);
-% % trialDirectory = '/Users/savirmadan/Development/lead-dbs-programmer';
+% % trialDirectory = '/Users/savirmadan/Development/programmer';
 % % cd(trialDirectory);
-% programmerDir = strcat(options.earoot, 'lead-dbs-programmer');
+% programmerDir = strcat(options.earoot, 'programmer/app');
 % releaseDir = strcat(programmerDir, '/release/build');
 % % if ~exist(releaseDir, 'Dir')
 % %     cd(programmerDir);
@@ -708,7 +708,7 @@ setappdata(resultfig,'stimwin',stimwin);
 % %     if exist(mac64Dir, 'Dir')
 % %         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
 % %         system(appDir);
-% %     else 
+% %     else
 % %         if exist(macDir, 'Dir')
 % %             appDir = strcat(macDir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
 % %             system(appDir);
@@ -722,10 +722,10 @@ setappdata(resultfig,'stimwin',stimwin);
 % % S.model = 'OSS-DBS (Butenko 2020)';
 % numRows = size(S.activecontacts, 2);
 % numCols = size(S.activecontacts, 2);
-% 
+%
 % % Initialize the cell array
 % newVariable = cell(numRows/4, 4);
-% 
+%
 % % Fill the cell array
 % for i = 1:numRows/4
 %     for j = 1:4
@@ -754,16 +754,16 @@ setappdata(resultfig,'stimwin',stimwin);
 % % reactData = webread('http://localhost:3001/api/data');
 % % disp(reactData);
 % %try WinOnTop(stimwin,true); end
-% 
+%
 % % Define the URL of the server to poll
 % % serverURL = 'http://localhost:3001/api/data'; % Replace with your server URL
-% % 
+% %
 % % % Define the polling interval in seconds (e.g., poll every 5 seconds)
 % % pollingInterval = 5;
-% % 
+% %
 % % % Define the number of times to poll (set to Inf for continuous polling)
 % % numPolls = Inf;
-% % 
+% %
 % % % Polling loop
 % % for i = 1:numPolls
 % %     % Send HTTP GET request to the server
@@ -772,7 +772,7 @@ setappdata(resultfig,'stimwin',stimwin);
 % %     dataFromElectron = response;
 % %     % Process the response data as needed
 % %     disp(['Received data from server: ' response]); % Display received data
-% %     
+% %
 % %     % Pause for the polling interval before the next poll
 % %     pause(pollingInterval);
 % % end
@@ -782,17 +782,17 @@ setappdata(resultfig,'stimwin',stimwin);
 % elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
 % fname = [volcur, '_', num2str(round(options.prefs.machine.vatsettings.horn_cgm*100),'%02d'), '_', num2str(round(options.prefs.machine.vatsettings.horn_cwm*100),'%02d')];
 % % Vvate=ea_genvat_cleartune_fastfield(S,side,options,fname,resultfig,t.electrode,elt);
-% 
+%
 % % url = 'http://localhost:3001/api/data'; % Replace 'http://example.com/data.json' with the URL where your data is hosted
-% % 
+% %
 % % previous_data = []; % Initialize previous data to empty
-% % 
-% % 
+% %
+% %
 % % while true
 % %     % Make an HTTP GET request to the server
 % %     try
 % %         new_data = webread(url);
-% %         
+% %
 % %         % Check if the data has changed
 % %         if ~isequal(new_data, previous_data)
 % %             % Display the new data
@@ -801,7 +801,7 @@ setappdata(resultfig,'stimwin',stimwin);
 % %             S = new_data.outputData.S;
 % %             % Run your script with the new data
 % %             ea_genvat_horn(S); % Replace 'your_script' with the name of your script/function
-% %             
+% %
 % %             % Update previous data
 % %             previous_data = new_data;
 % %         end
@@ -809,20 +809,20 @@ setappdata(resultfig,'stimwin',stimwin);
 % % %         % Handle connection errors or other exceptions
 % % %         disp('Error: Unable to connect to the server.');
 % %     end
-% %     
+% %
 % %     % Pause for a specified time before checking again
 % %     pause(5); % Change the value (in seconds) as needed
 % % end
 % file_path = '/Users/savirmadan/Downloads/exportedData.json'; % Specify the path to your file
 % previous_data = ''; % Initialize previous data to empty string
 % % system('/Users/savirmadan/Documents/GitHub/leaddbs/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
-% 
+%
 % while true
 %     % Check if the file exists and is not empty
 %     if exist(file_path, 'file') == 2 && ~isempty(fileread(file_path))
 %         % Read the data from the file
 %         new_data = fileread(file_path);
-%         
+%
 %         % Check if the data has changed
 %         if ~isequal(new_data, previous_data)
 %             % Display the new data
@@ -837,7 +837,7 @@ setappdata(resultfig,'stimwin',stimwin);
 %             previous_data = new_data;
 %         end
 %     end
-%     
+%
 %     % Pause for a specified time before checking again
 %     pause(5); % Change the value (in seconds) as needed
 % end

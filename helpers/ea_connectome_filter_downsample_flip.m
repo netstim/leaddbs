@@ -3,7 +3,7 @@ function ea_connectome_filter_downsample_flip(connectome_path, ROI_file, factor,
 % 1) Optionally, filter OUT fibers that do NOT pass the ROI
 % 2) Optionally, downsample the connectome either by factor (integer,
 % default option) or to a fixed number. 
-% 3) Optionally, flip fibers to another hemisphere 
+% 3) Optionally, flip fibers to another hemisphere (then stored in dMRI_MultiTract)
 
 % By K.Butenko
 
@@ -18,12 +18,20 @@ end
 
 % check if the downsampling parameter was provided
 % and create an output folder
+
+% if flip is active, then save to dMRI_MultiTract
+C = strsplit(connectome_path,filesep);
+connectome_type = C{end-1};
+if flip && strcmp(connectome_type,'dMRI')
+    new_connectome_path = strrep(connectome_path,'dMRI','dMRI_MultiTract');
+end
+
 if factor ~= 0
-    new_connectome_path = [connectome_path,'FilteredByROIDownsampledBy',char(string(factor))];
+    new_connectome_path = [new_connectome_path,'FilteredByROIDownsampledBy',char(string(factor))];
 elseif fixed_N ~= 0
-    new_connectome_path = [connectome_path,'FilteredByROIDownsampledTo',char(string(fixed_N))];
+    new_connectome_path = [new_connectome_path,'FilteredByROIDownsampledTo',char(string(fixed_N))];
 else
-    new_connectome_path = [connectome_path,'FilteredByROI'];
+    new_connectome_path = [new_connectome_path,'FilteredByROI'];
 end
 mkdir(new_connectome_path)
 
@@ -41,6 +49,7 @@ myFiles = myFiles(~endsWith({myFiles.name}, '_info.mat'));
 for k = 1:length(myFiles)
     baseFileName = myFiles(k).name;
     pathway_file = fullfile(myFiles(k).folder, baseFileName);
+
     new_pathway = [new_connectome_path,filesep,myFiles(k).name];
     %fprintf(1, 'Now reading %s\n', fullFileName);
 
@@ -147,7 +156,7 @@ for k = 1:length(myFiles)
         ftr.fibers(:,1:3) = fibers_coords_lr;
         
         % add left hemisphere suffix
-        new_pathway = [new_connectome_path,filesep,myFiles(k).name(1:end-4), '_lh', '.mat'];
+        new_pathway = [new_connectome_path,filesep,myFiles(k).name(1:end-4), '_flipped', '.mat'];
         save(new_pathway, '-struct', 'ftr');
         
     end

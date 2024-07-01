@@ -8,6 +8,7 @@ if nargin
     if iscell(outcomein)
         outcomein=outcomein{1};
     end
+    outcomein(isnan(outcomein)) = 0; %convert NaN in your outcomes to 0 because logical cannot handle NaN values
     isbinary=ea_isbinary(outcomein);
 else
     isbinary=nan;

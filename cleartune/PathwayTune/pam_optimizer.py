@@ -6,6 +6,7 @@ import json
 import subprocess
 from scipy.optimize import dual_annealing
 from Improvement4Protocol import ResultPAM
+from ossdbs.api import run_PAM
 
 
 
@@ -20,22 +21,14 @@ class PamOptimizer:
     stim_folder : str
         path to the stimulation folder
     optim_settings_file : str
-        path to Activation Profile Dictionary from Fiber Filtering
-    neuron_folder: str
-        path to the folder containing NEURON models
-    PAM_caller_script: str
-        path to the high-level script for NEURON
+        path to json with optimization settings
     """
 
-    def __init__(self, side, stim_folder, optim_settings_file, neuron_folder, PAM_caller_script):
+    def __init__(self, side, stim_folder, optim_settings_file, input_dict):
 
         self.side = side
         self.stim_folder = stim_folder
-        self.neuron_folder = neuron_folder
-        self.PAM_caller_script = PAM_caller_script
-
-        # import external function
-        sys.path.insert(1, os.path.dirname(self.PAM_caller_script))
+        self.input_dict = input_dict
 
         if self.side == 0:
             self.side_suffix = '_rh'
@@ -155,8 +148,17 @@ class PamOptimizer:
         """
 
         # we use scaling, but later we will switch to scaling_vector
-        from PAM_caller import launch_PAM
-        launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 100)
+        #from PAM_caller import launch_PAM
+        #launch_PAM(self.neuron_folder, self.results_folder, self.timeDomainSolution, self.pathwayParameterFile, S_vector[0] * 100)
+
+        with open(self.input_dict) as json_file:
+            input_settings = json.load(json_file)
+        input_settings["Scaling"] = 1.0
+        input_settings["ScalingIndex"] = None
+        input_settings["StimSets"]["StimSetsFile"] = None  # won't be used here
+        input_settings["CurrentVector"] = S_vector * 1000  # S_vector already in mA, but scaling to A is done later
+        run_PAM(input_settings)
+
         # the original solution for 10 mA
         # so scale by 100
 
@@ -218,14 +220,13 @@ class PamOptimizer:
 if __name__ == '__main__':
 
     # called from MATLAB
-    PAM_caller_script = sys.argv[1]
-    neuron_folder = sys.argv[2]
-    optim_settings_file = sys.argv[3]
-    stim_folder = sys.argv[4]
-    side = int(sys.argv[5])
+    optim_settings_file = sys.argv[1]
+    stim_folder = sys.argv[2]
+    side = int(sys.argv[3])
+    input_dict = sys.argv[4]
     #proper_python = sys.argv[5]
 
     # side and stim_folder - from ea_optimizePAM_butenko
-    optimization = PamOptimizer(side, stim_folder, optim_settings_file, neuron_folder, PAM_caller_script)
+    optimization = PamOptimizer(side, stim_folder, optim_settings_file, input_dict)
 
 

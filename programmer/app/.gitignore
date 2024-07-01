@@ -128,3 +128,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+.editorconfig
+.eslintignore
+.eslintrc.js
+.erb/
