@@ -15,14 +15,14 @@ settings.Activation_threshold_VTA = []; % initialize
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
 settings.stim_center = nan(2, 3);
 
+try
+    settings.pulseWidth = [double(S.(['Rs', num2str(source_index)]).pulseWidth);double(S.(['Ls', num2str(source_index)]).pulseWidth)];
+catch % Fallback to default pulseWith in case it's not updated in S
+    settings.pulseWidth = [options.prefs.machine.vatsettings.butenko_pulseWidth; options.prefs.machine.vatsettings.butenko_pulseWidth];
+end
+
 if ~settings.stimSetMode
     [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_get_OneSourceStimVector(S, 2, conNum, activeSources(:,source_index));
-
-    try
-        settings.pulseWidth = [double(S.(['Rs', num2str(source_index)]).pulseWidth);double(S.(['Ls', num2str(source_index)]).pulseWidth)];
-    catch % Fallback to default pulseWith in case it's not updated in S
-        settings.pulseWidth = [options.prefs.machine.vatsettings.butenko_pulseWidth; options.prefs.machine.vatsettings.butenko_pulseWidth];
-    end
 
     for side = 1:2
 
@@ -66,13 +66,16 @@ if ~settings.stimSetMode
         end
 
     end
+else
+    % StimSets
+    settings.stim_center(1,:) = mean(settings.contactLocation{1});
+    settings.stim_center(2,:) = mean(settings.contactLocation{2});
+    settings.Phi_vector = 1000./conNum*ones(2, conNum);
+    settings.Case_grounding = 1;
+    settings.Activation_threshold_VTA = -42;
 end
-%else
-%    settings.stim_center = [NaN;NaN];
-%end
 
 if settings.calcAxonActivation
-    %settings.pulseWidth = [S.Rs1.pulseWidth;S.Ls1.pulseWidth];
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;

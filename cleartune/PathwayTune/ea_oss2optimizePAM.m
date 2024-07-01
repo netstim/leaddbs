@@ -1,4 +1,4 @@
-function varargout = ea_genvat_butenko(varargin)
+function varargout = ea_oss2optimizePAM(varargin)
 % Wrapper for OSS-DBS simulations.
 % By Butenko and Li, konstantinmgtu@gmail.com
 
@@ -31,13 +31,8 @@ settings = ea_prepare_ossdbs(options);
 % some hardcoded parameters, can be added to GUI later
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
-prob_PAM = 0; % set to 1 to compute PAM over an uncertain parameter (e.g. fiber diameter)
 settings.outOfCore = 0;  % set to 1 if RAM capacity is exceeded during PAM
-
-if settings.stimSetMode
-    ea_warndlg("Not yet supported in V2")
-    return
-end
+settings.stimSetMode = 1;
 
 % set outputs
 outputPaths = ea_get_oss_outputPaths(options,S);
@@ -73,16 +68,19 @@ if any(nActiveSources > 1)
     end
 end
 
+if options.prefs.machine.vatsettings.butenko_calcPAM
+    % for now, force clean up of previous fiberActivation results
+    ea_delete([outputPaths.outputBasePath,'fiberActivation_*'])
+    if options.native
+        ea_delete([outputPaths.templateOutputBasePath,'fiberActivation_*'])
+    end
+end
+
 % if single source, we will run only one iteration
 for source_index = 1:4
 
     % get stim settings for particular source    
     settings = ea_get_stimProtocol(options,S,settings,activeSources,source_index);
-
-    % to optimize monopolar
-    % solve for 10 mA (anodic to avoid sign confusion later)
-    settings.Phi_vector(:,1) = 10;
-    settings.Phi_vector(:,2:end) = 0;
     
     if settings.calcAxonActivation
         % will exit after the first source
@@ -174,22 +172,13 @@ for source_index = 1:4
         end
     
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
-    
-        N_samples = 1;  % by default, run one instance
-        if settings.calcAxonActivation && prob_PAM
-            % "probabilistic" run
-            % here we iterate over different fiber diameters 2.0 - 4.0 um
-            N_samples = 5;  % hardcoded for now
-            % one can swap it to probabilistic values
-        end
-    
+        
         %% OSS-DBS part (using the corresponding conda environment)
-        for i = 1:N_samples
+        for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
             if settings.calcAxonActivation
-                if prob_PAM 
-                    settings = ea_updatePAM_parameter(options,settings,N_samples,outputPaths,i);
-                    scaling = 1.0; % same current scaling across the parameter sweep
+                if settings.prob_PAM
+                    settings = ea_updatePAM_parameter(options,settings,outputPaths,i);
                 end
         
                 % clean-up
@@ -198,43 +187,40 @@ for source_index = 1:4
                 ea_delete([folder2save,filesep,'oss_time_result.h5'])
     
                 % allocate computational axons on fibers
-                system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
+                %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
+                system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
-            system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', parameterFile, ...
-                ' --output_path ', outputPaths.outputDir]);
+            system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
+                ' --output_path ', ea_path_helper(outputPaths.outputDir)]);
             parameterFile_json = [parameterFile(1:end-3), 'json'];
     
             % run OSS-DBS
-            system(['ossdbs ', parameterFile_json]);
+            system(['ossdbs ', ea_path_helper(parameterFile_json)]);
         
             % prepare NEURON simulation
             if settings.calcAxonActivation
-                % copy NEURON folder to the stimulation folder 
-                leaddbs_neuron = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/Axon_files'];
-                neuron_folder = fullfile(outputPaths.outputDir,'Axon_files');
-                copyfile(leaddbs_neuron, neuron_folder)
-        
-                % call the NEURON module
-                timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
-                pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
     
                 % check if the time domain results is available
+                timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
                 if ~isfile(timeDomainSolution)
                     ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, set settings.outOfCore to 1')
                     return
                 end
 
-                if prob_PAM
-                    system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
+                if settings.prob_PAM
+                    %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
+                    system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i)]);
                 else
-                    % instead of PAM_caller, we call optimization algorithm here
+
+                    % call optimization algorithm here
                     PAM_caller_script = [ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py'];
                     optim_settings_dict = [outputPaths.outputDir,filesep,'netblend_dict.json'];
                     system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', PAM_caller_script, ' ', neuron_folder, ' ', optim_settings_dict, ' ', outputPaths.outputDir, ' ', num2str(side)])
 
                     %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
+                    system(['run_pathway_activation ', ea_path_helper(parameterFile_json)]);
                 end
             end
         end
@@ -247,7 +233,7 @@ for source_index = 1:4
             continue;
         end
 
-        if prob_PAM
+        if settings.prob_PAM
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
             ea_get_probab_axon_state(folder2save,1,strcmp(settings.butenko_intersectStatus,'activated'));
         end
@@ -268,7 +254,7 @@ for source_index = 1:4
 
             % prepare Lead-DBS BIDS format fiber activations
             if settings.calcAxonActivation
-                ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
+                ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths)
             end
 
         elseif isfile([outputPaths.outputDir, filesep, 'fail_', sideCode, '.txt'])

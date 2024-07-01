@@ -4,8 +4,6 @@
     IMPORTANT: Based on tensorflow with a hard sigmoid swapped to abs(LeakyReLU) with alpha 1.25 (steeper slope for cathode)
 '''
 
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -15,12 +13,12 @@ sns.set()
 import sys
 import json
 
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 import tensorflow as tf
-from sklearn import preprocessing
+#from sklearn import preprocessing
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Lambda
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve, auc
+#from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve, auc
 from tensorflow.keras import optimizers
 from keras.layers import LeakyReLU
 
@@ -28,18 +26,20 @@ from keras.layers import LeakyReLU
 
 # some ANN parameters
 learn_rate = 0.0025
-N_epochs = 5000
+N_epochs = 500
 min_activ_threshold = 0.05   # if less than 5% of fibers in the pathway were activated over all StimSets, ANN will not train on it
 
-def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial, VAT_recruit = False):
+def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial, VAT_recruit = False):
 
     import os
 
-    # load currents
-    Currents = np.genfromtxt(TrainTest_currents_file, delimiter=',', skip_header=True)
+    if side == 0:
+        side_suffix = '_rh'
+    else:
+        side_suffix = '_lh'
 
-    # load activation results
-    ActivationResults = np.genfromtxt(TrainTest_activation_file, delimiter=' ')
+    # load currents for training and test protocols
+    Currents = np.genfromtxt(TrainTest_currents_file, delimiter=',', skip_header=True)
 
     # we can also estimate errors for some simple pre-defined protocols
     check_trivial = False  # disable for now
@@ -61,13 +61,29 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         # the function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
         # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
         from Pathways_Stats import get_simulated_pathways
-        Pathways, axons_in_path = get_simulated_pathways(side)
+        Pathways, axons_in_path = get_simulated_pathways(side,stim_dir)
+
+    # load activation results for each pathway
+    ActivationResults = np.zeros((Currents.shape[0], len(Pathways)),float)
+
+    for path_i in range(len(Pathways)):
+        if Pathways[path_i] == 'M1_cf_upperex_right':
+            for prot_i in range(Currents.shape[0]):
+                if os.path.isfile(stim_dir + '/' + res_folder + 'Pathway_status_' + Pathways[path_i] + '_' + str(prot_i) + '.json'):
+                    with open(stim_dir + '/' + res_folder + 'Pathway_status_' + Pathways[path_i] + '_' + str(prot_i) + '.json',
+                              'r') as fp:
+                        PAM_res_dict = json.load(fp)
+                        ActivationResults[prot_i,path_i] = 0.01 * PAM_res_dict['percent_activated']
+                    fp.close()
+                else:
+                    ActivationResults[prot_i, path_i] = 0.0
 
     #=============================================== Prepare the data =================================================#
+
     X_train = Currents[:trainSize,:] * 0.001  # convert to A
     X_test = Currents[trainSize:,:] * 0.001
-    y_train_prelim = ActivationResults[:trainSize,1:] / axons_in_path  # from 1, because 0 is the index of the protocol
-    y_test_prelim = ActivationResults[trainSize:,1:] / axons_in_path
+    y_train_prelim = ActivationResults[:trainSize,:]
+    y_test_prelim = ActivationResults[trainSize:,:]
 
     y_train = -100 * np.ones((y_train_prelim.shape), float)  # initialize with -100 to remove non-filled value later
     y_test = -100 * np.ones((y_test_prelim.shape), float)
@@ -78,8 +94,8 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         X_bipolar = Currents_Bipolar1 * 0.001
         X_monopolar = Currents_Monopolar21 * 0.001
 
-        y_bipolar_prelim = ActivationResults_Bipolar1[:,1:] / axons_in_path
-        y_monopolar_prelim = ActivationResults_Monopolar21[:,1:] / axons_in_path
+        y_bipolar_prelim = ActivationResults_Bipolar1[:,:] / axons_in_path
+        y_monopolar_prelim = ActivationResults_Monopolar21[:,:] / axons_in_path
         y_bipolar = -100 * np.ones((y_bipolar_prelim.shape), float)
         y_monopolar = -100 * np.ones((y_monopolar_prelim.shape), float)
 
@@ -114,17 +130,24 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
     y_train = y_train_exp       # already from 0 to 1
     X_train = X_train_exp       # normalization seems to be not necessary here
 
+    if y_train.shape[1] > 1:
+        print("wrong dimensions")
+        raise SystemExit
+
+    print(np.max(y_train))
+
     #================================================== Train ANN =====================================================#
 
     model = Sequential(layers=None, name=None)
     model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
     model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
+    model.add(Dropout(0.2))
     model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))  # following the percent activation curves
     #model.add(Dense(y_train.shape[1], activation='tanh'))
     model.add(Dense(y_train.shape[1], activation='sigmoid'))
 
     adam = optimizers.Adamax(lr=learn_rate)
-    model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
+    model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy', 'mse'])
     model.fit(X_train, y_train, epochs=N_epochs, verbose=1)
     results = model.evaluate(X_test, y_test)
 
@@ -169,15 +192,14 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         if np.max(abs(error_ANN[:, i])) > 0.05:
             sns.kdeplot(error_ANN[:,i], bw_adjust=0.5, label=pathway_filtered[i])
 
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors.json', 'w') as save_as_dict:
+    with open(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors.json', 'w') as save_as_dict:
         json.dump(pathways_max_errors, save_as_dict)
 
     plt.legend()
     plt.title('Abs errors for ANN on Test')
     plt.xlim([-0.25,0.25])
-    plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors_on_Test_' + str(side) + '.png', format='png',
+    plt.savefig(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors_on_Test' + side_suffix + '.png', format='png',
                 dpi=1000)
-
 
     if check_trivial == True:
         plt.figure()
@@ -189,10 +211,9 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         plt.legend()
         plt.title('Abs errors for ANN on Bipolar')
         #plt.xlim([-0.15,0.15])
-        plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors_on_Bipolar_' + str(side) + '.png',
+        plt.savefig(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors_on_Bipolar' + side_suffix + '.png',
                     format='png',
                     dpi=1000)
-
 
         plt.figure()
         for i in range(len(pathway_filtered)):
@@ -203,22 +224,24 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
         plt.legend()
         plt.title('Abs errors for ANN on Bipolar')
         # plt.xlim([-0.15,0.15])
-        plt.savefig(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors_on_Monopolar_' + str(side) + '.png',
+        plt.savefig(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors_on_Monopolar' + side_suffix + '.png',
                     format='png',
                     dpi=1000)
 
     # ====================================== Check if errors acceptable ===============================================#
 
+    return pathway_filtered
+
     # iterate over each previously approved profile
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
+    with open(stim_dir + '/NB' + side_suffix + '/profile_dict.json', 'r') as fp:
         profile_dict = json.load(fp)
     fp.close()
 
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Soft_SE_dict.json', 'r') as fp:
+    with open(stim_dir + '/NB' + side_suffix + '/Soft_SE_dict.json', 'r') as fp:
         Soft_SE_dict = json.load(fp)
     fp.close()
 
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'r') as fp:
+    with open(stim_dir + '/NB' + side_suffix + '/SE_dict.json', 'r') as fp:
         SE_dict = json.load(fp)
     fp.close()
 
@@ -300,7 +323,7 @@ def train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize
                             'Error threshold for ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
                         return False
 
-    model.save(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_approved_model')
+    model.save(stim_dir + '/NB' + side_suffix + '/ANN_approved_model')
     return pathway_filtered
 
 if __name__ == '__main__':
@@ -309,28 +332,26 @@ if __name__ == '__main__':
     # sys.argv[1] - stim folder
     # sys.argv[2] - side (0 - right hemisphere)
 
-    os.environ['STIMDIR'] = sys.argv[1]
+    stim_dir = sys.argv[1]
     side = int(sys.argv[2])
 
     if side == 0:
         res_folder = 'Results_rh/'
+        side_suffix = '_rh'
     else:
         res_folder = 'Results_lh/'
+        side_suffix = '_lh'
+    TrainTest_currents_file = stim_dir + '/Current_protocols_' + str(side) + '.csv'  # current protocols
 
-    TrainTest_currents_file = os.environ['STIMDIR'] + '/Current_protocols_' + str(side) + '.csv'  # current protocols
-    if side == 0:
-        TrainTest_activation_file = os.environ['STIMDIR'] + '/' + res_folder + 'Activations_over_StimSets_rh.csv'
-    else:
-        TrainTest_activation_file = os.environ['STIMDIR'] + '/' + res_folder + 'Activations_over_StimSets_lh.csv'
-
-    # load parameters from .json folder generated in previous steps
-    with open(os.environ['STIMDIR'] + '/netblend_dict_file.json', 'r') as fp:
-        netblend_dict = json.load(fp)
-    fp.close()
-    netblend_dict = netblend_dict['netblendict']
+    # # load parameters from .json folder generated in previous steps
+    # with open(stim_dir + '/netblend_dict_file.json', 'r') as fp:
+    #     netblend_dict = json.load(fp)
+    # fp.close()
+    # netblend_dict = netblend_dict['netblendict']
+    netblend_dict = {'Err_threshold': 0.05, 'SE_err_threshold': 0.025}
 
     # load StimSets_parameters (were created by Train_Test_Generator.py)
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/StimSets_info.json', 'r') as fp:
+    with open(stim_dir + '/NB' + side_suffix + '/StimSets_info.json', 'r') as fp:
         StimSets_info = json.load(fp)
     fp.close()
 
@@ -338,6 +359,6 @@ if __name__ == '__main__':
     # from Improvement4Protocol import create_NB_dictionaries
     # profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary)
 
-    approx_pathways = train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, StimSets_info['trainSize_actual'],
+    approx_pathways = train_test_ANN(stim_dir,res_folder,TrainTest_currents_file, StimSets_info['trainSize_actual'],
                    netblend_dict['Err_threshold'], netblend_dict['SE_err_threshold'], side, check_trivial=False)
 
