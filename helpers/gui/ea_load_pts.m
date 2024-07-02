@@ -157,7 +157,7 @@ if strcmp(handles.prod, 'dbs')
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
     if isempty(bids.subjId)
-        handles.patientlist.Data = [];
+        handles.patientlist.Data = table("", 'VariableNames', {'subjId'});
         ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
         return;
     else
