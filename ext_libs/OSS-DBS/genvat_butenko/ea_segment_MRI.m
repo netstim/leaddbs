@@ -78,6 +78,7 @@ switch settings.butenko_segmAlg
 
         if options.native
             segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
+            ea_ptspecific_atl(options);
             atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
             copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
