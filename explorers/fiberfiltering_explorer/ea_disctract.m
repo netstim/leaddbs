@@ -341,7 +341,7 @@ classdef ea_disctract < handle
                     % method:
 
                     switch obj.M.vatmodel
-                        case 'OSS-DBS (Butenko)'
+                        case 'OSS-DBS (Butenko 2020)'
                             if ~isfield(obj.M,'pseudoM')
                                 calculate_on_fibers(obj)
                                 return
