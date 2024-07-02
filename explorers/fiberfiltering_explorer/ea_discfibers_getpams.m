@@ -1,11 +1,10 @@
-function pamlist = ea_discfibers_getpams_mirrored(obj)
+function [pamlist,FilesExist] = ea_discfibers_getpams_mirrored(obj)
 % Return list of VATs
 
 % this is a special version where the connectome is mirrored
 % and we can just flip PAM results
 
 PAM_mirror_enabled = 1;
-
 if PAM_mirror_enabled == 1
     ea_warndlg("PAM mirroring is used, make sure the connecome is index-symmetric!")
 
@@ -35,8 +34,10 @@ for sub=1:numPatient % Original VAT E-field
         ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
     pamlist{sub,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
-
-
+    
+    FilesExist(sub,1)=exist(pamlist{sub,1},'file');
+    FilesExist(sub,2)=exist(pamlist{sub,2},'file');
+   
     % Mirrored PAM, here we just initialize with a counterpart
     % actual mirroring later in calcvals
     pamlist{sub+numPatient,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...

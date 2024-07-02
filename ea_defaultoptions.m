@@ -162,7 +162,7 @@ end
 
 if ~isfield(options,'atlasset')
     
-    options.atlasset='STN_GPi';
+    options.atlasset='DISTAL Minimal (Ewert 2017)';
 end
 
 if ~isfield(options,'writeoutpm')

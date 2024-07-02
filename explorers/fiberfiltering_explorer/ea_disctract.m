@@ -24,7 +24,8 @@ classdef ea_disctract < handle
         threshstrategy = 'Percentage Relative to Peak'; % can be 'Relative to Amount' or 'Fixed Amount'
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1)
-        pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
+        native=1 % calculate in native or template space (0/1)
+        pathway_list % list that contains names of pathways (relevant when multi_pathways = 1)
         connFiberInd % legacy
         connectivity_type = 1 % 1 - VAT, 2 - PAM
         switch_connectivity = 0 % flag if connectivity type was changed in the GUI
@@ -239,6 +240,7 @@ classdef ea_disctract < handle
                 end
             end
 
+           
             % if multi_pathways = 1, assemble cfile from multiple
             % pathway.dat files in dMRI_MultiTract/Connectome_name/
             % stores the result in the LeadGroup folder
@@ -276,7 +278,27 @@ classdef ea_disctract < handle
 
             switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
-                    pamlist = ea_discfibers_getpams(obj);
+                    [pamlist,FilesExist] = ea_discfibers_getpams(obj);
+
+                    if ~all(FilesExist)
+                        answ=questdlg('It seems like PAM has not been (completely) run. We can initiate the process now, but this will take some time. Proceed?','PAM not run','yes','no','yes');
+                        switch answ
+                            case 'yes'
+                                options=ea_defaultoptions;
+                                options.prefs.machine.vatsettings.butenko_calcPAM=1; options.prefs.machine.vatsettings.butenko_calcVAT=0;
+                                options.prefs.machine.vatsettings.butenko_connectome=obj.connectome;
+                                options.groupdir=fileparts(fileparts(obj.analysispath));
+                                if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
+                                    options.stimSetMode = 1;
+                                else
+                                    options.stimSetMode = 0;
+                                end
+                                ea_calc_biophysical_lg(obj.M,options,find(sum(FilesExist,2)<2)','');
+                            case 'no'
+                                return
+                        end
+                    end
+
                     %[fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
                     [fibsvalBin, fibsvalprob,~, ~, ~, fibcell_pam, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam_prob(pamlist, obj, cfile);
                     obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval = fibsvalprob;
@@ -291,10 +313,48 @@ classdef ea_disctract < handle
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
                     else
-                        vatlist = ea_discfibers_getvats(obj);
-                    end
-                    %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
+                        [vatlist,FilesExist] = ea_discfibers_getvats(obj);
 
+                        while ~all(FilesExist)
+                            answ=questdlg('It seems like not all stimulation volumes have been calculated. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
+                            switch answ
+                                case 'yes'
+                                    options=ea_defaultoptions;
+                                    options.prefs.machine.vatsettings.butenko_calcPAM=0; options.prefs.machine.vatsettings.butenko_calcVAT=1;
+                                    options.groupdir=fileparts(fileparts(obj.analysispath));
+                                    if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
+                                        options.stimSetMode = 1;
+                                    else
+                                        options.stimSetMode = 0;
+                                    end
+                                    ea_calc_biophysical_lg(obj.M,options,find(sum(FilesExist(1:length(obj.M.patient.list),:),2)<2)','');
+                                case 'no'
+                                    return
+                            end
+                           % recheck files
+                            [vatlist,FilesExist] = ea_discfibers_getvats(obj);
+                        end
+                    end
+
+                    % all necessary files should be present at this point.
+                    % check whether to use new (calc_on_fibers) or old
+                    % method:
+
+                    switch obj.M.vatmodel
+                        case 'OSS-DBS (Butenko)'
+                            if ~isfield(obj.M,'pseudoM')
+                                calculate_on_fibers(obj)
+                                return
+                            end
+
+                        otherwise
+                            % for now proceed with old method
+
+                    end
+
+
+                    %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
+                    
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
@@ -320,15 +380,14 @@ classdef ea_disctract < handle
             obj.use_adjacency = false;
 
             % OSS-DBS E-field should be computed (not just warped!) in this space
-            space = 'native';   
-
-            % get VAT list
-            if isfield(obj.M,'pseudoM')
-                ea_warndlg("The option is not supported for pseudoM");
-                return
-            else
-                vatlist = ea_discfibers_getvats(obj);
+            switch obj.native
+                case 1
+                    space = 'native';
+                case 0
+                    space = 'MNI';
             end
+            % get VAT list
+            vatlist = ea_discfibers_getvats(obj);
             
             if obj.multi_pathways == 1
                 %[filepath,~,~] = fileparts(obj.leadgroup);
