@@ -78,7 +78,7 @@ for pt_i = 1:size(tractset.M.patient.list,1)
                 ea_get_4Dfield_from_csv(mycsv(field_i).folder, mycsv(field_i).name, result_folder)
             end
     
-            myFields = dir(fullfile(result_folder,'/4D_E_field_Lattice*')); % gets all mat files in struct
+            myFields = dir(fullfile(result_folder,'/4D_E_field_Lattice*.nii')); % gets all mat files in struct
             % compute projection of the E-fields onto the fibers
             for field_i = 1:length(myFields)
                 e_field_file = fullfile(myFields(field_i).folder, myFields(field_i).name);
