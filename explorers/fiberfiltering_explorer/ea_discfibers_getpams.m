@@ -1,4 +1,4 @@
-function [pamlist,FilesExist] = ea_discfibers_getpams_mirrored(obj)
+function [pamlist,FilesExist] = ea_discfibers_getpams(obj)
 % Return list of VATs
 
 % this is a special version where the connectome is mirrored
