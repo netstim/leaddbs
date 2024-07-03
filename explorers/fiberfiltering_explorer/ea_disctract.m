@@ -233,9 +233,12 @@ classdef ea_disctract < handle
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
-                    answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                    if ~strcmp(answ,'Yes')
-                        return
+                    if (isfield(obj.results.(ea_conn2connid(obj.connectome)),'PAM_Ttest') && obj.connectivity_type==2) || ...
+                            (isfield(obj.results.(ea_conn2connid(obj.connectome)),'efield_mean') && obj.connectivity_type==1)
+                        answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
+                        if ~strcmp(answ,'Yes')
+                            return
+                        end
                     end
                 end
             end
@@ -311,6 +314,23 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).fibcell = obj.results.(ea_conn2connid(obj.connectome)).('pam_fibers').fibcell;
 
                 otherwise     % check fiber recruitment via intersection with VTA
+
+                    % check whether to use new (calc_on_fibers) or old
+                    % method:
+
+                    switch obj.M.vatmodel
+                        case 'OSS-DBS (Butenko 2020)'
+                            if ~isfield(obj.M,'pseudoM')
+                                calculate_on_fibers(obj)
+                                return
+                            end
+
+                        otherwise
+                            % for now proceed with old method
+
+                    end
+
+
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
                     else
@@ -338,20 +358,7 @@ classdef ea_disctract < handle
                     end
 
                     % all necessary files should be present at this point.
-                    % check whether to use new (calc_on_fibers) or old
-                    % method:
-
-                    switch obj.M.vatmodel
-                        case 'OSS-DBS (Butenko 2020)'
-                            if ~isfield(obj.M,'pseudoM')
-                                calculate_on_fibers(obj)
-                                return
-                            end
-
-                        otherwise
-                            % for now proceed with old method
-
-                    end
+                    
 
 
                     %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
