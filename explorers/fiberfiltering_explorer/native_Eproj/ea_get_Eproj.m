@@ -1,7 +1,7 @@
 function ea_get_Eproj(tractset,stim_ID,space)
 % Comptute E-field metrics directly on fibers (optionally in native space).
 % The results are stored as
-% patient_folder/miscellaneous/connnectomeName/stim_ID/E_metrics.mat (values for all fibers in the connectome!)
+% patient_folder/connectomes/connnectomeName/stim_ID/E_metrics.mat (values for all fibers in the connectome!)
 % By Butenko and Roediger, konstantinmgtu@gmail.com
 
 arguments

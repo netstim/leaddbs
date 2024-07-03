@@ -44,8 +44,6 @@ function ftr = ea_warp_fibers_MNI2native(pt_folder, MNI_connectome, transform, a
     end
      
     % create miscellaneous if in patient folder
-    if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName])
-        mkdir([pt_folder, filesep,'miscellaneous', filesep, connectomeName])
-    end
-    save(strcat(pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension),'-struct','ftr');
+        mkdir([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName])
+    save(strcat(pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension),'-struct','ftr');
 end

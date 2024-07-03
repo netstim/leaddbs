@@ -30,13 +30,13 @@ end
 pt_folder = char(pt_folder);
 % warp the connectome to native if necessary
 if strcmp(space,'native')
-    connectomeFile_in_native = strcat([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension]);
+    connectomeFile_in_native = strcat([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, connectomeFileName, connectomeExtension]);
     % check if the connectome was already warped in native
     if isfile(connectomeFile_in_native)
         disp("The connectome was already warped, loading...")
         ftr = load(connectomeFile_in_native);
     else
-        % otherwise warp the connectome to native space (and store in patient folder / miscellaneous)
+        % otherwise warp the connectome to native space (and store in patient folder / connectomes)
         transform = ea_regexpdir([pt_folder, '/normalization/transformations'],'.*from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz',0,'f',0);
         anchor_img = ea_regexpdir([pt_folder,'/coregistration/anat'], '.*ses-preop_space-anchorNative.*',0,'f',0);
         ftr = ea_warp_fibers_MNI2native(pt_folder, MNI_connectome_file, transform{1}, anchor_img{1});
@@ -197,18 +197,16 @@ for fib_idx = 1:size(ftr.idx,1)
     end
 end
 
-%% Store the projections in patient_folder/miscellaneous/connectome_name/stim_folder_side
+%% Store the projections in patient_folder/connectomes/dMRI/connectome_name/stim_folder_side
 stim_folder_name = [stim_folder_name, side_suffix];
 
-if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name])
-    mkdir([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name])
+if ~isfolder([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, stim_folder_name])
+    mkdir([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, stim_folder_name])
 end
 
 if strcmp(space,'native')
-    save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_metrics.mat'], 'E_metrics')
+    save([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, stim_folder_name, filesep, 'E_metrics.mat'], 'E_metrics')
 else
-    if ~isfolder([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'MNI'])
-        mkdir([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep, 'MNI'])
-    end
-    save([pt_folder, filesep,'miscellaneous', filesep, connectomeName, filesep, stim_folder_name, filesep,'MNI',filesep,'E_metrics.mat'], 'E_metrics')
+    ea_mkdir([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, stim_folder_name, filesep, 'MNI'])
+    save([pt_folder, filesep,'connectomes',filesep,'dMRI', filesep, connectomeName, filesep, stim_folder_name, filesep,'MNI',filesep,'E_metrics.mat'], 'E_metrics')
 end

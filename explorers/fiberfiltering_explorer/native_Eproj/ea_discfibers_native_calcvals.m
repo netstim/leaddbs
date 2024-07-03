@@ -73,7 +73,7 @@ for side = 1:numSide
 
         disp(['E-field projection ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
         if pt <= length(obj.allpatients)
-            E_proj_folder = [obj.allpatients{pt},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,side_tag];
+            E_proj_folder = [obj.allpatients{pt},filesep,'connectomes',filesep,'dMRI',filesep,obj.connectome,filesep,'gs_', obj.M.guid,side_tag];
             if isfile([E_proj_folder,filesep,space,'E_metrics.mat'])
     
                 load([E_proj_folder,filesep,space,'E_metrics.mat']);
@@ -86,9 +86,9 @@ for side = 1:numSide
         else
             % mirrored patient, load from the other side
             if side == 1
-                E_proj_folder = [obj.allpatients{pt-size(obj.allpatients,1)},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,'_lh'];
+                E_proj_folder = [obj.allpatients{pt-size(obj.allpatients,1)},filesep,'connectomes',filesep,'dMRI',filesep,obj.connectome,filesep,'gs_', obj.M.guid,'_lh'];
             else
-                E_proj_folder = [obj.allpatients{pt-size(obj.allpatients,1)},filesep,'miscellaneous',filesep,obj.connectome,filesep,'gs_', obj.M.guid,'_rh'];
+                E_proj_folder = [obj.allpatients{pt-size(obj.allpatients,1)},filesep,'connectomes',filesep,'dMRI',filesep,obj.connectome,filesep,'gs_', obj.M.guid,'_rh'];
             end
                 
             if isfile([E_proj_folder,filesep,space,'E_metrics.mat'])
