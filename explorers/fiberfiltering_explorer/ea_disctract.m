@@ -288,6 +288,7 @@ classdef ea_disctract < handle
                                 options.prefs.machine.vatsettings.butenko_calcPAM=1; options.prefs.machine.vatsettings.butenko_calcVAT=0;
                                 options.prefs.machine.vatsettings.butenko_connectome=obj.connectome;
                                 options.groupdir=fileparts(fileparts(obj.analysispath));
+                                obj.M.vatmodel='OSS-DBS (Butenko 2020)';
                                 if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
                                     options.stimSetMode = 1;
                                 else
@@ -315,7 +316,7 @@ classdef ea_disctract < handle
                     else
                         [vatlist,FilesExist] = ea_discfibers_getvats(obj);
 
-                        while ~all(FilesExist)
+                        while ~all(FilesExist(:))
                             answ=questdlg('It seems like not all stimulation volumes have been calculated. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
                             switch answ
                                 case 'yes'
@@ -387,7 +388,29 @@ classdef ea_disctract < handle
                     space = 'MNI';
             end
             % get VAT list
-            vatlist = ea_discfibers_getvats(obj);
+            [vatlist,FilesExist] = ea_discfibers_getlattice(obj);
+            while ~all(FilesExist(:))
+                answ=questdlg('It seems like not all stimulation volumes have been calculated the correct way. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
+                switch answ
+                    case 'yes'
+                        options=ea_defaultoptions;
+                        options.prefs.machine.vatsettings.butenko_calcPAM=0; options.prefs.machine.vatsettings.butenko_calcVAT=1;
+                        options.groupdir=fileparts(fileparts(obj.analysispath));
+                        options.prefs.machine.vatsettings.estimateInTemplate=~obj.native; % here key to estimate in the correct space.
+                        
+                        obj.M.vatmodel='OSS-DBS (Butenko 2020)';
+                        if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
+                            options.stimSetMode = 1;
+                        else
+                            options.stimSetMode = 0;
+                        end
+                        ea_calc_biophysical_lg(obj.M,options,find(sum(FilesExist(1:length(obj.M.patient.list),:),2)<2)','');
+                    case 'no'
+                        return
+                end
+                % recheck files
+                [vatlist,FilesExist] = ea_discfibers_getlattice(obj);
+            end
             
             if obj.multi_pathways == 1
                 %[filepath,~,~] = fileparts(obj.leadgroup);
