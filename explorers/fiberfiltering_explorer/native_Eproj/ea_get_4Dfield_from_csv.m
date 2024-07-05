@@ -1,11 +1,10 @@
-function ea_get_4Dfield_from_csv(file_folder, file_name, outputBasePath)
+function ea_get_4Dfield_from_csv(field_in_csv, file2save)
 % Get nifti file with X,Y,Z vector components of the electric field.
 % By Butenko, konstantinmgtu@gmail.com
 
 arguments
-    file_folder      % where the csv file is stored
-    file_name        % name of the csv
-    outputBasePath   % folder to store the 4D nifti
+    field_in_csv     % where the csv file with field components is stored
+    file2save        % 4D nifti filename
 end
 
 %ea_dispt('Creating nifti header for export...');
@@ -19,7 +18,7 @@ switch endian
 end
 
 % split to corrdinates and field
-Field_array = table2array(readtable(fullfile(file_folder, file_name)));
+Field_array = table2array(readtable(field_in_csv));
 Field_coords = Field_array(:,2:4);
 n_points = 71;
 Field_vals = zeros(n_points,n_points,n_points,3);
@@ -51,5 +50,5 @@ Field_interp.dim=[n_points,n_points,n_points];
 Field_interp.dt = [4, endian];
 Field_interp.n=[1 1];
 Field_interp.descrip='oss-dbs-v2 - Field_ref';
-Field_interp.fname = char(fullfile(outputBasePath, ['4D_',file_name(1:end-4), '.nii']));
+Field_interp.fname = file2save;
 till_save_nii([Field_interp,Field_interp,Field_interp],Field_interp.img);

@@ -62,28 +62,17 @@ for pt_i = 1:size(tractset.M.patient.list,1)
         switch side
             case 1
                 side_suffix = '_rh';
+                sideLabel = 'R'; 
             case 2
                 side_suffix = '_lh';
+                sideLabel = 'L'; 
         end
 
         % OSS-DBS format (for Simbio, the function is not available)
-        result_folder = strcat(stim_folder,filesep,'Results',side_suffix);
-       
-        if isfolder(result_folder)
-            % get the solution(s)
-            mycsv = dir(fullfile(result_folder,'E_field_Lattice*'));
-    
-            % create 4D nii (4-th dimension is for E-field components and magnitude)
-            for field_i = 1:length(mycsv)
-                ea_get_4Dfield_from_csv(mycsv(field_i).folder, mycsv(field_i).name, result_folder)
-            end
-    
-            myFields = dir(fullfile(result_folder,'/4D_E_field_Lattice*.nii')); % gets all mat files in struct
-            % compute projection of the E-fields onto the fibers
-            for field_i = 1:length(myFields)
-                e_field_file = fullfile(myFields(field_i).folder, myFields(field_i).name);
-                ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i}, stim_space, e_field_file, merged_connectome, side_suffix, tractset.calcthreshold)
-            end
+        Field4D = [stim_folder, filesep, '4D_efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+        if isfile(Field4D)
+            % compute projection of the E-field onto the fibers
+            ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i}, stim_space, Field4D, merged_connectome, side_suffix, tractset.calcthreshold)
         else
             [~,pt_label,~] = fileparts(tractset.M.patient.list{pt_i});
             fprintf("Missing stimulation for %s, %s side \n",pt_label,side_suffix)
