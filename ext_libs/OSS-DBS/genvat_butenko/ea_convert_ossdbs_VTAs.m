@@ -73,3 +73,7 @@ else
     source_efield_side_source = fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']);
     source_vta_side_source = fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']);
 end
+
+% also create 4D nii (4-th dimension is for E-field components and magnitude)
+file2save = [outputPaths.outputBasePath, '4D_efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+ea_get_4Dfield_from_csv([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], file2save)
