@@ -116,6 +116,9 @@ class ResultPAM:
         # we can just check the distance for one activation profile across all simulated fibers
         self.activation_profile, self.sim_pathways = self.load_AP_from_OSSDBS(inters_as_stim)
 
+        for path_i in range(len(self.sim_pathways)):
+            print(self.sim_pathways[path_i],self.activation_profile[path_i])
+
         # activation_profile: Nx1 numpy.ndarray, percent activation for simulated pathways
         # sim_pathways: list, pathways simulated in OSS-DBS for this patient
 
@@ -485,9 +488,12 @@ class ResultPAM:
                                                                        score_symptom_metric)
 
         # also get symptom distances for 100% activation to estimate worst case scenario for soft-side effects
-        max_activation_profile = 100.0 * np.ones(self.activation_profile.shape[0])
+        max_activation_profile = np.ones(self.activation_profile.shape[0])
         [max_symp_dist, __, __] = self.get_symptom_distances(max_activation_profile, [],
                                                                       score_symptom_metric)
+
+        print("Distances ", symp_dist)
+        print("Max Distances", max_symp_dist)
 
         I_hat, estim_symp_improv_dict, symptom_labels_marked = self.get_improvement_from_distance(symp_dist,
                                                                                                  max_symp_dist,

@@ -39,6 +39,13 @@ class PamOptimizer:
         self.timeDomainSolution = self.results_folder + '/oss_time_result_PAM.h5'
         self.pathwayParameterFile = self.stim_folder + "/Allocated_axons_parameters.json"
 
+        # clean-up
+        try:
+            os.remove(self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations_CSE.csv')
+            os.remove(self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations.csv')
+        except OSError:
+            pass
+
         with open(optim_settings_file, 'r') as fp:
             optim_settings = json.load(fp)
         fp.close()
@@ -83,7 +90,7 @@ class PamOptimizer:
         """
 
         # store info about the iteration
-        print(global_score)
+        print("global score:", global_score)
         df = pd.DataFrame(
             {
                 "weighted_total_score": [global_score],
