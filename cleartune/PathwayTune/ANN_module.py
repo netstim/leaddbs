@@ -168,11 +168,11 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
     #X_null = np.array([[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[-0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0]])
     #y_null_predict = model.predict(X_null) * 100.0
 
-    MSEs = np.zeros(error_ANN.shape[1], float)
-
-    from sklearn.metrics import mean_squared_error
-    for i in range(error_ANN.shape[1]):
-        MSEs[i] = mean_squared_error(y_test[:,i], y_predicted[:,i])
+    # MSEs = np.zeros(error_ANN.shape[1], float)
+    #
+    # from sklearn.metrics import mean_squared_error
+    # for i in range(error_ANN.shape[1]):
+    #     MSEs[i] = mean_squared_error(y_test[:,i], y_predicted[:,i])
         #print(Pathways[i], ": ", MSEs[i])
 
     # from sklearn.metrics import mean_squared_error

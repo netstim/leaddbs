@@ -308,6 +308,7 @@ class ResultPAM:
         SE_threshold_profile = copy.deepcopy(self.target_profiles['SE_dict'])
         SE_threshold_profile_side = {}
         for key in SE_threshold_profile:
+
             if self.side == 0 and not ("_rh" in key):
                 continue
             elif self.side == 1 and not ("_lh" in key):
@@ -334,7 +335,7 @@ class ResultPAM:
                     # print("Percent activation was not found for pathway ", activ_target_profile[i], "assigning null distance")
 
                 # check if above the threshold
-                if predicted_rates[-1] >= target_rates[-1]:
+                if predicted_rates[-1] > target_rates[-1]:
                     SE_threshold_profile_side[key]["predicted"] = 1
                     break
                 else:
@@ -665,7 +666,6 @@ class ResultPAM:
         # check critical side-effects if available
         if 'SE_dict' in self.target_profiles:
             self.SE_dict = self.check_for_side_effects(self.activation_profile)
-
 
 if __name__ == '__main__':
 

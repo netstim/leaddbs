@@ -32,11 +32,6 @@ settings = ea_prepare_ossdbs(options);
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
 settings.outOfCore = 0; % set to 1 if RAM capacity is exceeded during PAM
-settings.stimSetMode = 0;
-settings.optimizer = 0;
-if settings.optimizer
-    settings.stimSetMode = 1; % OSS-DBS will solve a "unit" problem
-end
 
 if settings.stimSetMode
     settings.current_control = [1;1];
@@ -63,11 +58,6 @@ runStatusMultiSource = zeros(4,2);  % check status for each source
 source_efields = cell(2,4);  % temp files to store results for each source
 source_vtas = cell(2,4);
 stimparams = struct();
-
-% if optimizer is used set bounds and filter ROI
-if settings.optimizer
-    settings = ea_set_optimizer(options, settings);
-end
 
 % multiple sources are not supported for PAM
 if any(nActiveSources > 1)
@@ -223,7 +213,7 @@ for source_index = 1:4
                 end
 
                 if settings.optimizer
-                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', netblend_settings_file, ' ', outputPaths.outputDir, ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
+                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', outputPaths.outputDir, ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
                 else
                     if settings.prob_PAM
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);

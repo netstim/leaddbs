@@ -198,8 +198,6 @@ class PamOptimizer:
         else:
             rem_weight = 0.0
 
-        print(stim_result.symptom_list)
-
         # for now, the global score is a simple summation (exactly like in Optim_strategies.py)
         global_score = 0.0
         for key in stim_result.symptom_list:

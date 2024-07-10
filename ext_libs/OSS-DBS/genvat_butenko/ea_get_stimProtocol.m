@@ -70,7 +70,7 @@ else
     % StimSets
     settings.stim_center(1,:) = mean(settings.contactLocation{1});
     settings.stim_center(2,:) = mean(settings.contactLocation{2});
-    settings.Phi_vector = 1000./conNum*ones(2, conNum);
+    settings.Phi_vector = 1000./conNum * ones(2, conNum);
     settings.Case_grounding = 1;
     settings.Activation_threshold_VTA = -42;
 end
