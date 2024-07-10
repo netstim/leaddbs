@@ -13,11 +13,11 @@ function options = ea_get_OSS_DBS_options(patientPath, N_tracts, ConnectomeName)
     options.orignative = 1;
     options.prefs.machine.vatsettings.butenko_interactive = 0;
     options.prefs.machine.vatsettings.butenko_calcAxonActivation = 1;
-    options.prefs.machine.vatsettings.butenko_connectome = ['Multi-Tract: ', ConnectomeName];
+    %options.prefs.machine.vatsettings.butenko_connectome = ['Multi-Tract: ', ConnectomeName];
 
     % default settings for axons 
-    options.prefs.machine.vatsettings.butenko_axonLength = 15.0 * ones(N_tracts,1);   % 15 mm, smaller axons will not be seeded!
-    options.prefs.machine.vatsettings.butenko_fiberDiameter = 3.0 * ones(N_tracts,1);   % 3 micro m 
+    %options.prefs.machine.vatsettings.butenko_axonLength = 15.0 * ones(N_tracts,1);   % 15 mm, smaller axons will not be seeded!
+    %options.prefs.machine.vatsettings.butenko_fiberDiameter = 3.0 * ones(N_tracts,1);   % 3 micro m 
 
     options.earoot=ea_getearoot;
     options.verbose=3;

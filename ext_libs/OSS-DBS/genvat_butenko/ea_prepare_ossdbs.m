@@ -57,6 +57,26 @@ settings.Estimate_In_Template = ~options.native;
 % Set stimSetMode flag
 settings.stimSetMode = options.stimSetMode;
 
+% advance options
+try 
+    % check if OSS-DBS is called via ea_OSS_optimizer
+    settings.optimizer = options.optimizer;
+    settings.netblend_settings_file = options.netblend_settings_file;
+catch
+    settings.optimizer = 0;
+end
+
+try 
+    % check if OSS-DBS is called for ANN training (StimSet case)
+    settings.trainANN = options.trainANN;
+catch
+    settings.trainANN = 0;
+end
+
+if settings.optimizer || settings.trainANN
+    settings.stimSetMode = 1; % OSS-DBS will solve a "unit" problem
+end
+
 %% Lead-DBS hardwired parameters
 
 % Set patient folder
