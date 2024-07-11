@@ -1373,7 +1373,7 @@ switch elmodel
         elspec.numel=14;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)',...
-            'K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (R)','K27 (R)'};
+            'K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
