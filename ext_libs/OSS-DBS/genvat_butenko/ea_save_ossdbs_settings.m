@@ -24,19 +24,12 @@ if options.native
     ea_delete([outputPaths.templateOutputDir, filesep, 'Result_StimProt_*']);
 end
 
-% full clean-up for V2
-ea_delete([outputPaths.outputDir, filesep, 'Results_*']);
-ea_delete([outputPaths.outputDir, filesep, 'oss-dbs_parameters.json']);
-ea_delete([outputPaths.outputDir, filesep, 'Allocated_axons.h5'])
+% full clean-up for V2 (Lead-DBS outputs are still kept!)
+ea_delete([outputPaths.outputDir, filesep, 'OSS_sim_files*']);
+ea_delete([outputPaths.outputDir, filesep, 'skip_rh.txt']);
+ea_delete([outputPaths.outputDir, filesep, 'skip_lh.txt']);
 
 %% Run OSS-DBS
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
-% Delete flag files before running
-ea_delete([outputPaths.outputDir, filesep, 'success_rh.txt']);
-ea_delete([outputPaths.outputDir, filesep, 'fail_rh.txt']);
-ea_delete([outputPaths.outputDir, filesep, 'skip_rh.txt']);
-ea_delete([outputPaths.outputDir, filesep, 'success_lh.txt']);
-ea_delete([outputPaths.outputDir, filesep, 'fail_lh.txt']);
-ea_delete([outputPaths.outputDir, filesep, 'skip_lh.txt']);
 %end

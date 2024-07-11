@@ -34,18 +34,18 @@ end
 if settings.removeElectrode
     % create nii for distorted grid
     if options.native
-        ea_get_field_from_csv(anchorImage, [outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.outputBasePath, source_use_index)
+        ea_get_field_from_csv(anchorImage, [outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.outputBasePath, source_use_index)
     else
-        ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.outputBasePath, source_use_index)
+        ea_get_field_from_csv([ea_space, options.primarytemplate, '.nii'], [outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.outputBasePath, source_use_index)
     end
 else
     % convert original OSS-DBS VTAs to BIDS in the corresponding space
     if ~multiSourceMode(side+1)
-        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
-        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
     else
-        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
-        copyfile(fullfile([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
     end
     %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
     %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
@@ -53,7 +53,7 @@ end
 
 % always transform to MNI space
 if options.native
-    ea_get_MNI_field_from_csv(options, [outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.templateOutputBasePath, source_use_index)
+    ea_get_MNI_field_from_csv(options, [outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_Lattice.csv'], settings.Activation_threshold_VTA(side+1), sideLabel, outputPaths.templateOutputBasePath, source_use_index)
 end
 
 if options.native && ~options.orignative &&  ~multiSourceMode(side+1)
@@ -76,4 +76,4 @@ end
 
 % also create 4D nii (4-th dimension is for E-field components and magnitude)
 file2save = [outputPaths.outputBasePath, '4D_efield_model-ossdbs_hemi-', sideLabel, '.nii'];
-ea_get_4Dfield_from_csv([outputPaths.outputDir, filesep, 'Results_', sideCode, filesep,'E_field_Lattice.csv'], file2save)
+ea_get_4Dfield_from_csv([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_Lattice.csv'], file2save)

@@ -23,7 +23,7 @@ load(options.subj.recon.recon, 'reco');
 coords_mm_MNI = reco.('mni').coords_mm;
 
 % path to a json with axon model description 
-settings.pathwayParameterFile = [outputPaths.outputDir,filesep, 'Allocated_axons_parameters.json'];
+settings.pathwayParameterFile = 'Allocated_axons_parameters.json';
 
 if isfield(options.subj, 'preopAnat')
     preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
@@ -72,6 +72,24 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
 
     settings.connectomePath = [outputPaths.outputDir, filesep, settings.connectome];
     ea_mkdir(settings.connectomePath);
+
+    % also create a folder for PAM results
+    settings.connectomeActivations = [settings.connectomePath,filesep,'Results_PAM'];
+    if exist(settings.connectomeActivations,'dir')
+        ea_delete(settings.connectomeActivations);
+    end
+    ea_mkdir(settings.connectomeActivations);
+
+    if options.native
+        settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, settings.connectome];
+        if exist(settings.connectomePathMNI,'dir')
+            ea_delete(settings.connectomePathMNI);
+        end
+        ea_mkdir(settings.connectomePathMNI);
+        settings.connectomeActivationsMNI = [settings.connectomePathMNI,filesep,'Results_PAM'];
+        ea_mkdir(settings.connectomeActivationsMNI);
+    end
+
     for i=1:length(fiberFiltered)
         % store the original number of fibers
         % to compute percent activation
@@ -86,6 +104,22 @@ else % Multi-Tract connectome
     % Create output folder
     settings.connectomePath = [outputPaths.outputDir, filesep, connName];
     ea_mkdir(settings.connectomePath);
+
+    % also create a folder for PAM results
+    settings.connectomeActivations = [settings.connectomePath,filesep,'PAM'];
+    if exist(settings.connectomeActivations,'dir')
+        ea_delete(settings.connectomeActivations);
+    end
+    ea_mkdir(settings.connectomeActivations);
+    if options.native
+        settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, connName];
+        if exist(settings.connectomePathMNI,'dir')
+            ea_delete(settings.connectomePathMNI);
+        end
+        ea_mkdir(settings.connectomePathMNI);
+        settings.connectomeActivationsMNI = [settings.connectomePathMNI,filesep,'PAM'];
+        ea_mkdir(settings.connectomeActivationsMNI);
+    end
 
     % Get paths of tracts
     connFolder = [ea_getconnectomebase, 'dMRI_MultiTract', filesep, connName];

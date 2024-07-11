@@ -109,7 +109,7 @@ for sub=1:numPatient
             fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
 
             pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-                ea_nt(0), 'gs_',obj.M.guid,filesep, fiberActivation_file];
+                ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, fiberActivation_file];
 
             try
                 fib_state_raw = load(char(pam_file));
