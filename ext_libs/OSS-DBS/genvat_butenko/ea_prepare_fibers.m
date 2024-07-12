@@ -13,7 +13,12 @@ end
 
 % check if classic S or stimSets are used
 if settings.stimSetMode
-    stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+    if settings.optimizer || settings.trainANN
+        stimProtocol{1,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_rh'], '^Current_protocols_\d\.csv$', 0));
+        stimProtocol{2,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_lh'], '^Current_protocols_\d\.csv$', 0));
+    else
+        stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+    end
 else
     stimProtocol = S;
 end

@@ -129,7 +129,15 @@ for source_index = 1:4
         else
             source_use_index = source_index; 
         end
-    
+
+        % copy Current_protocols if generated externally
+        if settings.optimizer || settings.trainANN
+            if ~exist(outputPaths.HemiSimFolder,'dir')
+                mkdir(outputPaths.HemiSimFolder)
+            end
+            copyfile([outputPaths.outputDir,filesep,'NB_',sideCode,filesep,'Current_protocols_',num2str(side),'.csv'],[outputPaths.HemiSimFolder,filesep,'Current_protocols_',num2str(side),'.csv'])
+        end
+
         % skip non-active sources when using single source
         if ~multiSourceMode(side+1) && isnan(activeSources(side+1,source_index))
             runStatusMultiSource(source_index,side+1) = 1;
@@ -170,11 +178,11 @@ for source_index = 1:4
         end
     
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
-
+        
         if ~exist(outputPaths.HemiSimFolder,'dir')
             mkdir(outputPaths.HemiSimFolder)
         end
-        
+
         %% OSS-DBS part (using the corresponding conda environment)
         for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
@@ -197,7 +205,7 @@ for source_index = 1:4
                 ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
             [~,input_name,~] = fileparts(parameterFile);
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
-    
+
             % run OSS-DBS
             system(['ossdbs ', ea_path_helper(parameterFile_json)]);
         

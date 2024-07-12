@@ -146,7 +146,7 @@ class ResultPAM:
             self.target_profiles = get_disease_profiles(disease)
 
         # copy to NB/ in stim folder for the reference
-        shutil.copyfile(ActivProfileDict,self.stim_dir + '/NB' + self.side_suffix + '/target_profiles.json')
+        shutil.copyfile(ActivProfileDict,os.path.join(self.stim_dir,'NB' + self.side_suffix,'target_profiles.json'))
 
 
     def load_AP_from_OSSDBS(self,inters_as_stim=False):
@@ -169,13 +169,13 @@ class ResultPAM:
         from Pathways_Stats import get_simulated_pathways
         pathways, axons_in_path = get_simulated_pathways(self.side, self.stim_dir)
 
-        res_folder = self.stim_dir + '/' + 'Results' + self.side_suffix
+        res_folder = os.path.join(self.stim_dir, 'OSS_sim_files' + self.side_suffix, 'Results')
 
         perc_activation = np.zeros(len(pathways), float)
         pathway_index = 0
         for pathway in pathways:
 
-            with open(res_folder + '/Pathway_status_' + pathway + '.json', 'r') as fp:
+            with open(os.path.join(res_folder, 'Pathway_status_' + pathway + '.json'), 'r') as fp:
                 pathway_results = json.load(fp)
             fp.close()
 
@@ -353,7 +353,7 @@ class ResultPAM:
 
         """
 
-        file = h5py.File(self.stim_dir + '/oss-dbs_parameters.mat', mode='r')
+        file = h5py.File(os.path.join(self.stim_dir, 'oss-dbs_parameters.mat'), mode='r')
 
         # if file['settings']['current_control'][0][index_side] != 1:
         #    print('The imported protocol is not current-controlled!')
@@ -418,7 +418,6 @@ class ResultPAM:
                 continue
             elif self.side == 1 and not ("_lh" in symptom):
                 continue
-
 
             if 'Soft_SE_dict' in self.target_profiles and symptom in self.target_profiles[
                 'Soft_SE_dict']:  # we assume there are no soft side-effects at null protocol
@@ -503,7 +502,7 @@ class ResultPAM:
                                                                                                  fixed_symptom_weights)
 
         # save json
-        with open(self.stim_dir + '/NB' + self.side_suffix + '/Estim_symp_improv' + self.side_suffix + '.json', 'w') as save_as_dict:
+        with open(os.path.join(self.stim_dir,'NB' + self.side_suffix,'Estim_symp_improv' + self.side_suffix + '.json'), 'w') as save_as_dict:
             json.dump(estim_symp_improv_dict, save_as_dict)
 
         if plot_results == True:
@@ -564,7 +563,7 @@ class ResultPAM:
         ax.set_xticks(pos_adjusted)
         ax.set_xticklabels(symptom_labels_marked, rotation=45)
         fig.tight_layout()
-        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Symptom_profiles' + self.side_suffix + '.png',
+        plt.savefig(os.path.join(self.stim_dir,'NB' + self.side_suffix,'Symptom_profiles' + self.side_suffix + '.png'),
                     format='png',
                     dpi=500)
 
@@ -626,7 +625,7 @@ class ResultPAM:
         ax.set_xticks(pos)
         plt.xticks(rotation=45)
         fig.tight_layout()
-        plt.savefig(self.stim_dir + '/NB' + self.side_suffix + '/Activation_profile' + self.side_suffix + '.png',
+        plt.savefig(os.path.join(self.stim_dir, 'NB' + self.side_suffix, 'Activation_profile' + self.side_suffix + '.png'),
                     format='png',
                     dpi=500)
 
