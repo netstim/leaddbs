@@ -103,13 +103,25 @@ for sub=1:numPatient
                 BIDS_side_merged = '_model-ossdbs_hemi-L';
             end
 
-            %BIDS notation
+            % BIDS notation
             [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
             subSimPrefix = [subj_tag, '_sim-'];
             fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
+            pam_result_folder = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+                ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM'];
+            pam_file = [pam_result_folder, filesep, fiberActivation_file];
 
-            pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-                ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, fiberActivation_file];
+            % temp crutch to look in the old location
+            if ~exist(pam_file,'file')
+                pam_file_old = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+                ea_nt(0), 'gs_',obj.M.guid, filesep, fiberActivation_file];
+                if exist(pam_file_old,'file')
+                    if ~exist(pam_result_folder, 'dir')
+                        mkdir(pam_result_folder)
+                    end
+                    copyfile(pam_file_old,pam_file);
+                end
+            end
 
             try
                 fib_state_raw = load(char(pam_file));
