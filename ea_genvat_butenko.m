@@ -71,14 +71,6 @@ if any(nActiveSources > 1)
     end
 end
 
-if options.prefs.machine.vatsettings.butenko_calcPAM
-    % for now, force clean up of previous fiberActivation results
-    ea_delete([outputPaths.outputBasePath,'fiberActivation_*'])
-    if options.native
-        ea_delete([outputPaths.templateOutputBasePath,'fiberActivation_*'])
-    end
-end
-
 % if single source, we will run only one iteration
 for source_index = 1:4
 
@@ -128,13 +120,24 @@ for source_index = 1:4
                 sideStr = 'left';
         end
 
+        % hemisphere specific data is stored in this subfolder
+        outputPaths.HemiSimFolder = [outputPaths.outputDir, filesep, 'OSS_sim_files_', sideCode];
+
         if ~multiSourceMode(side+1)
             % not relevant in this case, terminate after one iteration;
             source_use_index = 5;  
         else
             source_use_index = source_index; 
         end
-    
+
+        % copy Current_protocols if generated externally
+        if settings.optimizer || settings.trainANN
+            if ~exist(outputPaths.HemiSimFolder,'dir')
+                mkdir(outputPaths.HemiSimFolder)
+            end
+            copyfile([outputPaths.outputDir,filesep,'NB_',sideCode,filesep,'Current_protocols_',num2str(side),'.csv'],[outputPaths.HemiSimFolder,filesep,'Current_protocols_',num2str(side),'.csv'])
+        end
+
         % skip non-active sources when using single source
         if ~multiSourceMode(side+1) && isnan(activeSources(side+1,source_index))
             runStatusMultiSource(source_index,side+1) = 1;
@@ -155,7 +158,7 @@ for source_index = 1:4
         end
 
         % skip stimSets if not provided for this side
-        if settings.stimSetMode && ~isfile(strcat(outputPaths.outputDir, filesep, 'Current_protocols_',string(side),'.csv'))
+        if settings.stimSetMode && ~isfile(strcat(outputPaths.HemiSimFolder,  filesep, 'Current_protocols_',string(side),'.csv'))
             warning('off', 'backtrace');
             warning('No stimulation set for %s side! Skipping...\n', sideStr);
             warning('on', 'backtrace');
@@ -176,6 +179,10 @@ for source_index = 1:4
     
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
         
+        if ~exist(outputPaths.HemiSimFolder,'dir')
+            mkdir(outputPaths.HemiSimFolder)
+        end
+
         %% OSS-DBS part (using the corresponding conda environment)
         for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
@@ -185,9 +192,8 @@ for source_index = 1:4
                 end
         
                 % clean-up
-                folder2save = [outputPaths.outputDir,filesep,'Results_', sideCode];
-                ea_delete([outputPaths.outputDir, filesep, 'Allocated_axons.h5']);
-                ea_delete([folder2save,filesep,'oss_time_result.h5'])
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'Allocated_axons.h5']);
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result.h5'])
     
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
@@ -196,9 +202,10 @@ for source_index = 1:4
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
             system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
-                ' --output_path ', ea_path_helper(outputPaths.outputDir)]);
-            parameterFile_json = [parameterFile(1:end-3), 'json'];
-    
+                ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
+            [~,input_name,~] = fileparts(parameterFile);
+            parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
+
             % run OSS-DBS
             system(['ossdbs ', ea_path_helper(parameterFile_json)]);
         
@@ -206,14 +213,14 @@ for source_index = 1:4
             if settings.calcAxonActivation
     
                 % check if the time domain results is available
-                timeDomainSolution = [outputPaths.outputDir,filesep,'Results_', sideCode, filesep, 'oss_time_result_PAM.h5'];
+                timeDomainSolution = [outputPaths.HemiSimFolder,filesep,'Results', filesep, 'oss_time_result_PAM.h5'];
                 if ~isfile(timeDomainSolution) && ~settings.stimSetMode
                     ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, set settings.outOfCore to 1')
                     return
                 end
 
                 if settings.optimizer
-                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', outputPaths.outputDir, ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
+                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.HemiSimFolder), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
                 else
                     if settings.prob_PAM
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
@@ -225,29 +232,29 @@ for source_index = 1:4
                 end
 
                 % remove the large file containing the time-domain solution (but not for StimSets!)
-                ea_delete([folder2save,filesep,'oss_time_result.h5'])
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result.h5'])
             end
         end
 
         %% Postprocessing in Lead-DBS
 
         % Check if OSS-DBS calculation is finished
-        while ~isfile([outputPaths.outputDir, filesep, 'success_', sideCode, '.txt']) ...
-                && ~isfile([outputPaths.outputDir, filesep, 'fail_', sideCode, '.txt'])
+        while ~isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt']) ...
+                && ~isfile([outputPaths.HemiSimFolder, filesep, 'fail_', sideCode, '.txt'])
             continue;
         end
 
         if settings.prob_PAM
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
-            ea_get_probab_axon_state(folder2save,1,strcmp(settings.butenko_intersectStatus,'activated'));
+            ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,strcmp(settings.butenko_intersectStatus,'activated'));
         end
 
         % clean-up time domain solution if outOfCore was used
         if settings.outOfCore == 1
-            ea_delete([outputPaths.outputDir, filesep, 'Results_',sideCode,filesep,'oss_freq_domain_tmp_PAM.hdf5']);
+            ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep, 'oss_freq_domain_tmp_PAM.hdf5']);
         end
     
-        if isfile([outputPaths.outputDir, filesep, 'success_', sideCode, '.txt'])
+        if isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt'])
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
     
@@ -261,7 +268,7 @@ for source_index = 1:4
                 ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths)
             end
 
-        elseif isfile([outputPaths.outputDir, filesep, 'fail_', sideCode, '.txt'])
+        elseif isfile([outputPaths.HemiSimFolder, filesep, 'fail_', sideCode, '.txt'])
             fprintf('\n')
             warning('off', 'backtrace');
             warning('OSS-DBS calculation failed for %s side!\n', sideStr);

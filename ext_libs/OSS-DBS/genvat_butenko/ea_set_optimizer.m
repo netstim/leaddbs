@@ -7,6 +7,17 @@ arguments
     stim_folder % stimulation folder
 end
 
+% create NB folders
+if exist([stim_folder,filesep,'NB_rh'],"dir")
+    ea_delete([stim_folder,filesep,'NB_rh'])
+end
+mkdir([stim_folder,filesep,'NB_rh'])
+
+if exist([stim_folder,filesep,'NB_lh'],"dir")
+    ea_delete([stim_folder,filesep,'NB_lh'])
+end
+mkdir([stim_folder,filesep,'NB_lh'])
+
 % This is just to create a dummy file, actual optimization parameters are
 % in netblend_dict. 
 % Actually, these are used for pre-filtering
@@ -29,8 +40,8 @@ T = array2table(current_dif);
 for contact = 1:size(current_dif,2)
     T.Properties.VariableNames(contact) = {['Contact_',num2str(contact-1)]};
 end
-writetable(T,[stim_folder,filesep,'Current_protocols_0.csv'])
-writetable(T,[stim_folder,filesep,'Current_protocols_1.csv'])
+writetable(T,[stim_folder,filesep,'NB_rh',filesep,'Current_protocols_0.csv'])
+writetable(T,[stim_folder,filesep,'NB_lh',filesep,'Current_protocols_1.csv'])
 
 % weight the same for now
 jsonDict2.fixed_symptom_weights = [];

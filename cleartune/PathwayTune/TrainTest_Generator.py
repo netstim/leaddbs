@@ -97,8 +97,13 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
             if np.all(abs(samples[i, :]) < 0.5):
                 samples[i, :] = samples[i, :] * 2
 
-    # Create a .csv file native to OSS-DBS.
-    with open(stim_folder + '/Current_protocols_' + str(side) + '.csv', 'w') as fd:
+
+    if not os.path.exists(os.path.join(stim_folder,'NB' + side_suffix)):
+        os.mkdir(os.path.join(stim_folder,'NB' + side_suffix))
+
+    # in this case, store Current_protocols in NB folder
+    current_protocols_path = os.path.join(stim_folder, 'NB' + side_suffix, 'Current_protocols_' + str(side) + '.csv')
+    with open(current_protocols_path, 'w') as fd:
         writer = csv.writer(fd)
         if N_contacts == 8:
             writer.writerow(
@@ -118,7 +123,7 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
                 0) > -1*one_pol_current_threshold and np.where(samples[i,:] > 0, samples[i,:], 0).sum(0) < one_pol_current_threshold:
 
             stim_prot = samples[i].tolist()
-            with open(stim_folder + '/Current_protocols_' + str(side) + '.csv', 'a') as fd:
+            with open(current_protocols_path, 'a') as fd:
                 writer = csv.writer(fd)
                 writer.writerow(stim_prot)
 
@@ -136,10 +141,7 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
         'segm_threshold': segm_threshold,
         }
 
-    if not os.path.exists(stim_folder + '/NB' + side_suffix):
-        os.mkdir(stim_folder + '/NB' + side_suffix)
-
-    with open(stim_folder + '/NB' + side_suffix + '/StimSets_info.json', 'w') as save_as_dict:
+    with open(os.path.join(stim_folder,'NB' + side_suffix,'StimSets_info.json'), 'w') as save_as_dict:
         json.dump(StimSets_info, save_as_dict)
 
     return trainSize_actual, testSize_actual

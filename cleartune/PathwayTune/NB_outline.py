@@ -11,6 +11,8 @@ import csv
 import pandas
 import sys
 
+SIDE_SUFFIX = ['rh','lh']
+
 def determine_el_type(el_model):
 
     ''' Checks electrode configuration based on the model '''
@@ -28,51 +30,7 @@ def determine_el_type(el_model):
         print('The electrode model was not recognized')
         return 'Not classified electrode model'
 
-
-def load_AP_from_OSSDBS(side, inters_as_stim=False):
-
-    ''' Load activation profile and pathway labels from OSS-DBS results
-        if inters_as_stim == True, fibers inside encapsulation and/or outside of the domain will be treated as activated '''
-
-    # get all pathways that survived Kuncel(!) pre-filtering and original(!) number of fibers
-    # this function will work only for a proper Lead-DBS import (connectome folder, oss-dbs_parameters.mat)
-    from Pathways_Stats import get_simulated_pathways
-    Pathways, axons_in_path = get_simulated_pathways(side)
-
-    if side == 0:
-        res_folder = os.environ['STIMDIR'] + '/' + 'Results_rh/'
-    else:
-        res_folder = os.environ['STIMDIR'] + '/' + 'Results_lh/'
-
-    hf = h5py.File(res_folder + 'Summary_status.h5', 'r')
-    lst = list(hf.keys())
-    if len(lst) != len(Pathways):
-        print("Number of pathways passed to OSS-DBS and returned is not matching")
-        raise SystemExit
-
-    Perc_Activation = np.zeros(len(lst), float)
-
-    for pathway_index in range(len(lst)):
-        pathway_name = str(lst[pathway_index])
-        if Pathways[pathway_index] != pathway_name:
-            print("Mismatch in pathway ordering, check oss-dbs_parameters.mat and OSS-DBS log")
-            raise SystemExit
-        else:
-            Activation_in_pathway = hf.get(lst[pathway_index])
-            Activation_in_pathway = np.array(Activation_in_pathway)
-
-            if inters_as_stim == True:
-                Perc_Activation[pathway_index] = (Activation_in_pathway[0] + Activation_in_pathway[2] + Activation_in_pathway[4]) / axons_in_path[pathway_index]
-            else:
-                Perc_Activation[pathway_index] = Activation_in_pathway[0] / axons_in_path[pathway_index]
-
-    hf.close()
-
-    return Perc_Activation, Pathways
-
-
-
-def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_symptom_weights, side, approx_pathways):
+def launch_weight_optimizer(stim_folder, netblend_dict, fixed_symptom_weights, side, approx_pathways):
 
     ''' Launch ANN-based optimization that will find optimal current protocol I while adjusting weights(!):
         Global_score = W1 * DS1(I) + W2 * DS2(I) + ... , where
@@ -85,10 +43,6 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
     #netblend_dict['optim_alg'] = 'Dual Annealing'  # or PSO
     #netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
 
-    # better regenerate them
-    from Improvement4Protocol import create_NB_dictionaries
-    profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, activation_profile_dict,
-                                                                 disease='spontaneous human combustion')
 
     # # load previously approved symptom-specific profiles
     # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
@@ -103,6 +57,10 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
     #     SE_dict = json.load(fp)
     # fp.close()
 
+    # # iterate over each previously approved profile
+    # with open(os.path.join(stim_folder, netblend_dict['ActivProfileDict']), 'r') as fp:
+    #     target_profiles = json.load(fp)
+    # fp.close()
 
     if netblend_dict['optim_alg'] == 'Dual Annealing':
 
@@ -112,7 +70,7 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
 
         # ANN based
         from tensorflow.keras.models import load_model
-        approx_model = load_model(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_approved_model')
+        approx_model = load_model(os.path.join(stim_folder,'NB_' + str(SIDE_SUFFIX[side]), 'ANN_approved_model'))
 
         # this part is with ANN
         from scipy.optimize import dual_annealing
@@ -162,37 +120,32 @@ def launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_sympto
 if __name__ == '__main__':
 
     # called from MATLAB
-    # sys.argv[1] - stim folder
-    # sys.argv[2] - Activation profile dictionary
-    # sys.argv[3] - side (0 - right hemisphere)
-
-    os.environ['STIMDIR'] = sys.argv[1]
-    activation_profile_dict = sys.argv[2]
-    side = int(sys.argv[3])
+    stim_dir = sys.argv[1]
+    side = int(sys.argv[2])
 
     # load parameters from .json folder generated in previous steps
-    with open(os.environ['STIMDIR'] + '/netblend_dict_file.json', 'r') as fp:
+    with open(os.path.join(stim_dir,'netblend_dict.json'), 'r') as fp:
         netblend_dict = json.load(fp)
     fp.close()
     netblend_dict = netblend_dict['netblendict']
 
     # load Fixed_symptoms
-    with open(os.environ['STIMDIR'] + '/Fixed_symptoms.json', 'r') as fp:
+    with open(os.path.join(stim_dir,'Fixed_symptoms.json'), 'r') as fp:
         fixed_symptom_weights_dict = json.load(fp)
     fp.close()
     fixed_symptom_weights_dict = fixed_symptom_weights_dict['fixed_symptom_weights']
 
     # load ANN approximated pathways
-    with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/ANN_abs_errors.json', 'r') as fp:
+    with open(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'ANN_abs_errors.json'), 'r') as fp:
         pathways_errors_dict = json.load(fp)
     fp.close()
     # IMPORTANT: the pathways' order is preserved as they were processed in ANN!
     approx_pathways = list(pathways_errors_dict.keys())
 
     # clean-up
-    if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv'):
-        os.remove(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Estim_weights_and_total_score.csv')
-    if os.path.isfile(os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv'):
-        os.remove(os.environ['STIMDIR'] + '/NB_' + str(side) + '/All_iters_estim_weights_and_total_score.csv')
+    if os.path.isfile(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'Estim_weights_and_total_score.csv')):
+        os.remove(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'Estim_weights_and_total_score.csv'))
+    if os.path.isfile(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'All_iters_estim_weights_and_total_score.csv')):
+        os.remove(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'All_iters_estim_weights_and_total_score.csv'))
 
-    launch_weight_optimizer(activation_profile_dict, netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)
+    launch_weight_optimizer(stim_dir, netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)

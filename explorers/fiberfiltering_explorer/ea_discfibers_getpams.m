@@ -31,9 +31,9 @@ for sub=1:numPatient % Original VAT E-field
     subSimPrefix = [subj_tag, '_sim-'];
     
     pamlist{sub,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
+        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
     pamlist{sub,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
+        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
     
     FilesExist(sub,1)=exist(pamlist{sub,1},'file');
     FilesExist(sub,2)=exist(pamlist{sub,2},'file');
@@ -41,9 +41,9 @@ for sub=1:numPatient % Original VAT E-field
     % Mirrored PAM, here we just initialize with a counterpart
     % actual mirroring later in calcvals
     pamlist{sub+numPatient,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
+        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
     pamlist{sub+numPatient,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
+        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
 
 end
 
