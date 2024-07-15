@@ -1,25 +1,11 @@
 function [pamlist,FilesExist] = ea_discfibers_getpams(obj)
-% Return list of VATs
+% Return list of PAM results
 
-% this is a special version where the connectome is mirrored
-% and we can just flip PAM results
-
-PAM_mirror_enabled = 1;
-if PAM_mirror_enabled == 1
-    ea_warndlg("PAM mirroring is used, make sure the connecome is index-symmetric!")
-
-    numPatient = length(obj.allpatients);
-    pamlist = cell(numPatient*2,2);   % no mirroring
-
-else
-    % For multiple protocols, we should look for indexed files in the stim
-    % folder, but mark that they are from the same patient
-    numPatient = length(obj.allpatients);
-    pamlist = cell(numPatient,2);   % no mirroring
-end
-% here we will add the missing ones (you just need to know how much you have in total, iterate, set to zero for no match)
-
-% here we will add the missing ones (you just need to know how much you have in total, iterate, set to zero for no match)
+% always initialize with entries for mirrorred stims
+% mirror flag will be checked in ea_discfibers_calcvals_pam 
+numPatient = length(obj.allpatients);
+pamlist = cell(numPatient*2,2);
+FilesExist = zeros(numPatient,2);  % no sense to check for mirrored here
 
 disp('Construct PAM list...')
 
@@ -27,24 +13,45 @@ disp('Construct PAM list...')
 % in ea_discfibers_merge_pathways!
 for sub=1:numPatient % Original VAT E-field
 
-    [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
+    [~,subj_tag,~] = fileparts(obj.allpatients{sub});
     subSimPrefix = [subj_tag, '_sim-'];
+
+    % we load stim parameters and check for each side if there was a stimulation
+    stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(obj.native), 'gs_', obj.M.guid];
+    load([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'],'S');
     
-    pamlist{sub,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
-    pamlist{sub,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
+    for side = 1:2
     
-    FilesExist(sub,1)=exist(pamlist{sub,1},'file');
-    FilesExist(sub,2)=exist(pamlist{sub,2},'file');
+        % if no stimulation, we do not expect the file to exist
+        % so no re-simulation is needed
+        if all(S.amplitude{1,side} == 0)
+            FilesExist(sub,side) = 1;
+            pamlist{sub,side} = 'skip';
+
+            % also mark mirrored
+            if side == 1
+                pamlist{sub+numPatient,2} = 'skip';
+            else
+                pamlist{sub+numPatient,1} = 'skip';
+            end
+
+            continue
+        else
+            if side == 1
+                BIDS_side = 'R';
+                % mirrored
+                pamlist{sub+numPatient,1} = fullfile(stimFolder,[obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat']);
+            else
+                BIDS_side = 'L';
+                % mirrored
+                pamlist{sub+numPatient,2} = fullfile(stimFolder,[obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat']);
+            end
+            pamlist{sub,side} = fullfile(stimFolder,[obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-',BIDS_side,'.mat']);
+            FilesExist(sub,side)=exist(pamlist{sub,side},'file');
+        end
+
+    end
    
-    % Mirrored PAM, here we just initialize with a counterpart
-    % actual mirroring later in calcvals
-    pamlist{sub+numPatient,1} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
-    pamlist{sub+numPatient,2} = [obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM', filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
-
 end
 
-end
+FilesExist=double(logical(FilesExist)); % convert to zeros and ones.

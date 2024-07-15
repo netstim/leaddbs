@@ -1,4 +1,4 @@
-function ea_get_Eproj(tractset,stim_ID,space)
+function ea_get_Eproj(tractset,vatlist)
 % Comptute E-field metrics directly on fibers (optionally in native space).
 % The results are stored as
 % patient_folder/connectomes/connnectomeName/stim_ID/E_metrics.mat (values for all fibers in the connectome!)
@@ -6,8 +6,7 @@ function ea_get_Eproj(tractset,stim_ID,space)
 
 arguments
     tractset       % fiber filtering object
-    stim_ID        % when using PseudoM, provide stimulation folder full(!) name
-    space          % space where to compute E-proj, 'MNI' or 'native'
+    vatlist        % cell object {pt_N,2} with paths to 4D niftis
 end
 
 if isempty(tractset.analysispath)
@@ -35,44 +34,45 @@ else
     merged_connectome = [ea_getconnectomebase('dMRI'), tractset.connectome, filesep, 'data.mat'];
 end
 
-
-% find where VATs are
+% find which space and stim folder is used
 if ~isfield(tractset.M,'pseudoM')
-    if strcmp(space,'MNI')
-        stim_space = ['/MNI152NLin2009bAsym/gs_',tractset.M.guid]; 
-    else
-        stim_space = ['/native/gs_',tractset.M.guid]; 
-    end
-else
-    % custom case
-    if strcmp(space,'MNI')
-        stim_space = ['/MNI152NLin2009bAsym/',stim_ID]; 
-    else
-        stim_space = ['/native/',stim_ID];
-    end
+    stim_space = [ea_nt(tractset.native),'gs_',tractset.M.guid]; 
 end
 
 ea_dispercent(1/size(tractset.M.patient.list,1),'Computing E-field metrics on fibers')
 for pt_i = 1:size(tractset.M.patient.list,1)
+
+    %[~,subj_tag,~] = fileparts(tractset.M.patient.list{pt_i});
+    %subSimPrefix = [subj_tag, '_sim-'];
+
     fprintf('\nProcessing: %s\n',tractset.M.patient.list{pt_i});
-    stim_folder = strcat(tractset.M.patient.list{pt_i},filesep,'stimulations',stim_space);
 
     for side = 1:2
     
         switch side
             case 1
-                side_suffix = '_rh';
-                sideLabel = 'R'; 
+                side_suffix = '_rh'; 
             case 2
                 side_suffix = '_lh';
-                sideLabel = 'L'; 
         end
 
         % OSS-DBS format (for Simbio, the function is not available)
-        Field4D = [stim_folder, filesep, '4D_efield_model-ossdbs_hemi-', sideLabel, '.nii'];
-        if isfile(Field4D)
+        vatlist{pt_i,side};
+        if strcmp(vatlist{pt_i,side},"skip")
+            % no stimulation for this hemisphere
+            continue
+        elseif isfile(vatlist{pt_i,side})
+            % for pseudoM, always re-define stim_space
+            if isfield(tractset.M,'pseudoM')
+                if tractset.M.pseudoM
+                    [stim_folder_path,~,~] = fileparts(vatlist{pt_i,side});
+                    [~,stim_folder,~] = fileparts(stim_folder_path);
+                    stim_space = [ea_nt(tracetset.native),stim_folder];
+                end
+            end  
+
             % compute projection of the E-field onto the fibers
-            ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i}, stim_space, Field4D, merged_connectome, side_suffix, tractset.calcthreshold)
+            ea_get_E_field_along_fibers(tractset.M.patient.list{pt_i}, stim_space, vatlist{pt_i,side}, merged_connectome, side_suffix, tractset.calcthreshold)
         else
             [~,pt_label,~] = fileparts(tractset.M.patient.list{pt_i});
             fprintf("Missing stimulation for %s, %s side \n",pt_label,side_suffix)

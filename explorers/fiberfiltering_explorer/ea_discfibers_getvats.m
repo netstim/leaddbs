@@ -3,28 +3,62 @@ function [vatlist,FilesExist] = ea_discfibers_getvats(obj)
 
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,2);
+FilesExist = zeros(numPatient*2,2); % also check if mirrored fields exist
 
 modelLabel = ea_simModel2Label(obj.M.vatmodel);
 
 disp('Construct VAT list...')
 for sub=1:numPatient
+
+    [~,subj_tag,~] = fileparts(obj.allpatients{sub});
+    subSimPrefix = [subj_tag, '_sim-'];
+
     % Original VAT E-field
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
-    try
-        vatlist(sub,1) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-R\.nii$'], 0);
-        FilesExist(sub,1)=1;
-    catch
-        ea_cprintf('CmdWinWarnings', 'Right side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
-        vatlist(sub,1) = {''};
-        FilesExist(sub,1)=0;
-    end
-    try
-        vatlist(sub,2) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-L\.nii$'], 0);
-        FilesExist(sub,2)=1;
-    catch
-        ea_cprintf('CmdWinWarnings', 'Left side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
-        vatlist(sub,2) = {''};
-        FilesExist(sub,2)=0;
+    load([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'],'S');
+    
+    for side = 1:2
+    
+        % if no stimulation, we do not expect the file to exist
+        % so no re-simulation is needed
+        if all(S.amplitude{1,side} == 0)
+            FilesExist(sub,side) = 1;
+            vatlist{sub,side} = 'skip';
+
+            % also mark mirrored
+            if side == 1
+                vatlist{sub+numPatient,2} = 'skip';
+                FilesExist(sub+numPatient,2) = 1;
+            else
+                vatlist{sub+numPatient,1} = 'skip';
+                FilesExist(sub+numPatient,1) = 1;
+            end
+
+            disp(subj_tag)
+            disp(side)
+
+            continue
+        else
+            if side == 1
+                BIDS_side = 'R';
+            else
+                BIDS_side = 'L';
+            end
+
+            try
+                vatlist(sub,side) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-',BIDS_side,'.nii'], 0);
+                FilesExist(sub,side)=1;
+            catch
+                if side == 1
+                    ea_cprintf('CmdWinWarnings', 'Right side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
+                else
+                    ea_cprintf('CmdWinWarnings', 'Left side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
+                end
+                vatlist(sub,side) = {''};
+                FilesExist(sub,sude)=0;
+            end
+
+        end
     end
 
     % Mirrored VAT E-field
@@ -33,18 +67,23 @@ for sub=1:numPatient
         vatlist(numPatient+sub, 1) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-R_hemidesc-FlippedFromLeft\.nii$'], 0);
         FilesExist(numPatient+sub, 1)=1;
     catch
-        ea_cprintf('CmdWinWarnings', 'Right side VTA (flipped from left) doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
-        vatlist(numPatient+sub, 1) = {''};
-        FilesExist(numPatient+sub, 1)=0;
+        if ~strcmp(vatlist(numPatient+sub, 2), "skip")
+            ea_cprintf('CmdWinWarnings', 'Right side VTA (flipped from left) doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
+            vatlist(numPatient+sub, 1) = {''};
+        end
+        %FilesExist(numPatient+sub, 1)=0;
     end
     try
         vatlist(numPatient+sub, 2) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-L_hemidesc-FlippedFromRight\.nii$'], 0);
         FilesExist(numPatient+sub, 2)=1;
-
     catch
-        ea_cprintf('CmdWinWarnings', 'Left side VTA (flipped from right) doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
-        vatlist(numPatient+sub, 2) = {''};
-        FilesExist(numPatient+sub, 2)=0;
-
+        if ~strcmp(vatlist(numPatient+sub, 2), "skip")
+            ea_cprintf('CmdWinWarnings', 'Left side VTA (flipped from right) doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
+            vatlist(numPatient+sub, 2) = {''};
+        end
+        %FilesExist(numPatient+sub, 2)=0;
     end
+
+
 end
+FilesExist=double(logical(FilesExist)); % convert to zeros and ones.

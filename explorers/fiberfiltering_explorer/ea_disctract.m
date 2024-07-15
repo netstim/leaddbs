@@ -358,8 +358,6 @@ classdef ea_disctract < handle
                     end
 
                     % all necessary files should be present at this point.
-                    
-
 
                     %ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
                     
@@ -395,28 +393,33 @@ classdef ea_disctract < handle
                     space = 'MNI';
             end
             % get VAT list
-            [vatlist,FilesExist] = ea_discfibers_getlattice(obj);
-            while ~all(FilesExist(:))
-                answ=questdlg('It seems like not all stimulation volumes have been calculated the correct way. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
-                switch answ
-                    case 'yes'
-                        options=ea_defaultoptions;
-                        options.prefs.machine.vatsettings.butenko_calcPAM=0; options.prefs.machine.vatsettings.butenko_calcVAT=1;
-                        options.groupdir=fileparts(fileparts(obj.analysispath));
-                        options.prefs.machine.vatsettings.estimateInTemplate=~obj.native; % here key to estimate in the correct space.
-                        
-                        obj.M.vatmodel='OSS-DBS (Butenko 2020)';
-                        if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
-                            options.stimSetMode = 1;
-                        else
-                            options.stimSetMode = 0;
-                        end
-                        ea_calc_biophysical_lg(obj.M,options,find(sum(FilesExist(1:length(obj.M.patient.list),:),2)<2)','');
-                    case 'no'
-                        return
-                end
-                % recheck files
+
+            if isfield(obj.M,'pseudoM')
+                vatlist = obj.M.ROI.list;
+            else
                 [vatlist,FilesExist] = ea_discfibers_getlattice(obj);
+                while ~all(FilesExist(:))
+                    answ=questdlg('It seems like not all stimulation volumes have been calculated the correct way. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
+                    switch answ
+                        case 'yes'
+                            options=ea_defaultoptions;
+                            options.prefs.machine.vatsettings.butenko_calcPAM=0; options.prefs.machine.vatsettings.butenko_calcVAT=1;
+                            options.groupdir=fileparts(fileparts(obj.analysispath));
+                            options.prefs.machine.vatsettings.estimateInTemplate=~obj.native; % here key to estimate in the correct space.
+                            
+                            obj.M.vatmodel='OSS-DBS (Butenko 2020)';
+                            if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
+                                options.stimSetMode = 1;
+                            else
+                                options.stimSetMode = 0;
+                            end
+                            ea_calc_biophysical_lg(obj.M,options,find(sum(FilesExist(1:length(obj.M.patient.list),:),2)<2)','');
+                        case 'no'
+                            return
+                    end
+                    % recheck files
+                    [vatlist,FilesExist] = ea_discfibers_getlattice(obj);
+                end
             end
             
             if obj.multi_pathways == 1
@@ -428,7 +431,7 @@ classdef ea_disctract < handle
             end
 
             % warp connectome to native space and compute E-field metrics
-            ea_get_Eproj(obj,NaN,space)
+            ea_get_Eproj(obj,vatlist)
 
             % load e-field projection metrics 
             [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, space, obj);
@@ -1216,12 +1219,20 @@ classdef ea_disctract < handle
 
             %we do not need to store plainconn separately since it is a
             %duplicate of PAM or VAT connectivity
-            if ~isempty(fieldnames(obj.results))
-                if  isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
-                    connectomeName = ea_conn2connid(obj.connectome);
-                    obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
-                end
-            end
+%             if ~isempty(fieldnames(obj.results))
+%                 if  isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
+%                     connectomeName = ea_conn2connid(obj.connectome);
+%                     obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
+%                 end
+% 
+%                 if  isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn_proj')
+%                     connectomeName = ea_conn2connid(obj.connectome);
+%                     obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn_proj');
+%                 end
+% 
+%             end
+
+            % commented out for now
 
             tractset.useExternalModel = false;
             tractset.ExternalModelFile = 'None'; % do not store imported models

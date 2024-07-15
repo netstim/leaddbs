@@ -193,7 +193,7 @@ for source_index = 1:4
         
                 % clean-up
                 ea_delete([outputPaths.HemiSimFolder, filesep, 'Allocated_axons.h5']);
-                ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result.h5'])
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result*'])
     
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
@@ -232,7 +232,7 @@ for source_index = 1:4
                 end
 
                 % remove the large file containing the time-domain solution (but not for StimSets!)
-                ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result.h5'])
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result*'])
             end
         end
 

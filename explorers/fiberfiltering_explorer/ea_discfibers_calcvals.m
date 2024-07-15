@@ -34,7 +34,10 @@ for side = 1:numSide
         if isstruct(vatlist) % direct nifti structs supplied
             vat = vatlist(pt,side);
         elseif iscell(vatlist) % filenames
-            if isfile(vatlist{pt,side})
+            if strcmp(vatlist{pt,side},"skip")
+                % no stimulation for this hemisphere
+                continue
+            elseif isfile(vatlist{pt,side})
                 vat = ea_load_nii(vatlist{pt,side});
             else
                 ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: VTA doesn''t exist!\n');

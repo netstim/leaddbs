@@ -44,11 +44,16 @@ for side = 1:numSide
             % for mirrored patients, we will find a counterpart fibers in
             % another hemisphere
 
-            try
-                fib_state_raw = load(char(pamlist(pt,side)));
-            catch
-                warning("No merged fiberActivation file for this patient")
+            if strcmp(char(pamlist(pt,side)), 'skip')
+                % no stimulation for this hemisphere
                 continue
+            else
+                try
+                    fib_state_raw = load(char(pamlist(pt,side)));
+                catch
+                    warning("No merged fiberActivation file for this patient")
+                    continue
+                end
             end
 
             total_fibers = length(fib_state_raw.idx);

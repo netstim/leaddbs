@@ -96,9 +96,11 @@ for sub=1:numPatient
             C_fibState{k} = C{k};
 
             if side == 1
+                side_name = 'right';
                 BIDS_side = '_model-ossdbs_hemi-R_tract-'; % this block is only executed for OSS-DBS
                 BIDS_side_merged = '_model-ossdbs_hemi-R';
             else
+                side_name = 'left';
                 BIDS_side = '_model-ossdbs_hemi-L_tract-';
                 BIDS_side_merged = '_model-ossdbs_hemi-L';
             end
@@ -171,8 +173,7 @@ for sub=1:numPatient
         end
 
         if ~exist('fib_state_raw')
-            warning("No fiber activation files were found for")
-            warning(subj_tag)
+            ea_cprintf('CmdWinWarnings', "   No fiber activation files were found for %s on the %s side \n",subj_tag,side_name)
         else
             ftr2 = fib_state_raw; % just initialization
             % merge cell contents along axis 0
