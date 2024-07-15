@@ -167,7 +167,7 @@ for side=options.sides
         end
 
         eltext=getappdata(resultfig,'eltext');
-        [contactnames,directional]=ea_getelcontactnames(elspec,side);
+        [conName, isDirectional] = ea_getConName(options.elspec, side, showSideStr=1);
         for con=1:size(coords_mm{side},1)
             % add text:
             centroid=coords_mm{side}(con,:)+0.01;
@@ -190,12 +190,12 @@ for side=options.sides
             Spt = Ppt + dot(v,u)*u;
 
             normv=norm(centroid-Spt);
-            if directional(con)
+            if isDirectional(con)
                 pointfortext=centroid+0.9*((centroid-Spt)/normv);
             else
                 pointfortext=centroid+1.8*((centroid-Spt)/normv);
             end
-            eltext(side,con)=text(pointfortext(1),pointfortext(2),pointfortext(3),contactnames{con},'FontWeight','bold','FontSize',14,'Color',[0,0,0],'HorizontalAlignment','center','VerticalAlignment','middle');
+            eltext(side,con)=text(pointfortext(1),pointfortext(2),pointfortext(3),conName{con},'FontWeight','bold','FontSize',14,'Color',[0,0,0],'HorizontalAlignment','center','VerticalAlignment','middle');
             set(eltext(side,con), 'Visible','off');
         end
         setappdata(resultfig,'eltext',eltext);
