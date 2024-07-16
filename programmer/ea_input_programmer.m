@@ -1,10 +1,28 @@
 function [file_path, releaseDir, status_path] = ea_input_programmer (options, elstruct)
 
-%     file_path = strcat(options.earoot, 'lead-dbs-programmer/data.json');
-%     input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
+%   file_path = strcat(options.earoot, 'lead-dbs-programmer/data.json');
+%   input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
     file_path = strcat(options.earoot, 'programmer/data.json');
     status_path = strcat(options.earoot, 'programmer/status.json');
     input_file_path = strcat(options.earoot, 'programmer/inputData.json');
+
+    % Create a list of file paths
+    file_paths = {file_path, status_path, input_file_path};
+    
+    % Loop through each file path and create the file if it does not exist
+    for i = 1:length(file_paths)
+        if ~isfile(file_paths{i})
+            % Create an empty file
+            fid = fopen(file_paths{i}, 'w');
+            if fid == -1
+                error('Could not create file: %s', file_paths{i});
+            end
+            fclose(fid);
+        end
+    end
+
+
+    
     fid = fopen(input_file_path, 'w');
     inputStruct = struct();
     dt = datetime('now');
