@@ -79,7 +79,7 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     ea_mkdir(settings.connectomePath);
 
     % also create a folder for PAM results
-    settings.connectomeActivations = [settings.connectomePath,filesep,'Results_PAM'];
+    settings.connectomeActivations = [settings.connectomePath,filesep,'PAM'];
     if exist(settings.connectomeActivations,'dir')
         ea_delete(settings.connectomeActivations);
     end
