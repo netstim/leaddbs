@@ -26,6 +26,6 @@ function graphicsHandle = ea_plotsphere(point, diameter, color, edgecolor, alpha
     
     graphicsHandle = surf(x,y,z, 'FaceColor', color, 'EdgeColor', edgecolor, 'FaceAlpha', alpha);
     daspect([1 1 1]);
-    lighting gouraud;
+    %lighting gouraud;
     material shiny;
 end
