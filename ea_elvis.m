@@ -621,49 +621,68 @@ if exist(releaseDir, 'Dir')
 %     % Test MAC - will need to test on windows
     mac64Dir = strcat(releaseDir, '/mac-arm64');
     macDir = strcat(releaseDir, '/mac');
-    
+
     if (currentOS == "maca64")
         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
         testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
-    if ~exist(testDir)
-        unzip(zipDir, mac64Dir);
+        if ~exist(testDir)
+            unzip(zipDir, mac64Dir);
+        end
     end
-%         system(appDir);
+
+    if (currentOS =="maci64")
+        zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-mac.zip');
+        appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
+        testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
+        if ~exist(testDir)
+            unzip(zipDir, macDir);
+        end
+    end
+    
+%     if (currentOS == "maca64")
+%         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
+%         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
+%         testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
+%     if ~exist(testDir)
+%         unzip(zipDir, mac64Dir);
+%     end
+        system(appDir);
+        [S] = ea_process_programmer(file_path);
+        ea_visprogrammer(resultfig, options, S, elstruct);
 %     system([appDir, ' &']);
-    [status, cmdout] = system([appDir, ' &']);
+%     [status, cmdout] = system([appDir, ' &']);
     % [status, cmdout] = system([appDir, ' & echo $!']);
 %     pid = str2double(cmdout);
-
+    
 %         f = parfeval(backgroundPool, @runApp, 0, appDir);
         
         % Continue with other code here
         % For example:
-        disp('Programmer is running in the background.');
-    end
+%         disp('Programmer is running in the background.');
 end
-
-while true
-    % Check if the file_path is empty
-    pause(5);
-    data = fileread(file_path);
-    status_data = fileread(status_path);
-%     [status, cmdout] = system(['ps -p ', num2str(pid)]);
-%     if contains(cmdout, 'defunct')
-%         disp('Application has terminated. Exiting loop.');
+% 
+% while true
+%     % Check if the file_path is empty
+%     pause(5);
+%     data = fileread(file_path);
+%     status_data = fileread(status_path);
+% %     [status, cmdout] = system(['ps -p ', num2str(pid)]);
+% %     if contains(cmdout, 'defunct')
+% %         disp('Application has terminated. Exiting loop.');
+% %         break;
+% %     end
+%     if status_data == '0'
 %         break;
 %     end
-    if status_data == '0'
-        break;
-    end
-    if ~isempty(data)
-        % If file_path is not empty, run the following code
-        [S] = ea_process_programmer(file_path);
-        ea_visprogrammer(resultfig, options, S, elstruct);
-    end
-    
-    % Pause for 5 seconds before checking again
-end
+%     if ~isempty(data)
+%         % If file_path is not empty, run the following code
+%         [S] = ea_process_programmer(file_path);
+%         ea_visprogrammer(resultfig, options, S, elstruct);
+%     end
+%     
+%     % Pause for 5 seconds before checking again
+% end
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)

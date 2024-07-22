@@ -1250,35 +1250,122 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
+% % --- Executes on button press in setstimparamsbutton.
+% function setstimparamsbutton_Callback(hObject, eventdata, handles)
+% % hObject    handle to setstimparamsbutton (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% M=getappdata(gcf,'M');
+% 
+% % try
+% %     uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
+% %     uidata.U=evalin('base',uicell{1});
+% % catch
+% %     warning('Stim-Params could not be evaluated. Please Try again.');
+% %     return
+% % end
+% % try
+% %     uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
+% %     uidata.Im=evalin('base',uicell{1});
+% % catch
+% %     warning('Stim-Params could not be evaluated. Please Try again.');
+% %     return
+% % end
+% 
+% options = ea_setopts_local(handles);
+% options.leadprod = 'group';
+% options.groupid = M.guid;
+% options.native = 0;
+% ea_refresh_lg(handles);
+% 
+% ea_stimparams(M.elstruct, handles.leadfigure, options);
+
 % --- Executes on button press in setstimparamsbutton.
 function setstimparamsbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to setstimparamsbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
 
-% try
-%     uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
-%     uidata.U=evalin('base',uicell{1});
-% catch
-%     warning('Stim-Params could not be evaluated. Please Try again.');
-%     return
-% end
-% try
-%     uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
-%     uidata.Im=evalin('base',uicell{1});
-% catch
-%     warning('Stim-Params could not be evaluated. Please Try again.');
-%     return
-% end
+% Get handle to the current figure
+figHandle = gcf;
 
-options = ea_setopts_local(handles);
-options.leadprod = 'group';
-options.groupid = M.guid;
-options.native = 0;
-ea_refresh_lg(handles);
+% Display a dialog box with options
+choice = questdlg('Select a programmer:', ...
+                  '', ...
+                  'Old Programmer', 'New Programmer', 'Old Programmer');
 
-ea_stimparams(M.elstruct, handles.leadfigure, options);
+% Handle user's response
+switch choice
+    case 'Old Programmer'
+        % Execute Option 1: Your existing code or modifications
+        M = getappdata(figHandle, 'M');
+        
+        options = ea_setopts_local(handles);
+        options.leadprod = 'group';
+        options.groupid = M.guid;
+        options.native = 0;
+        ea_refresh_lg(handles);
+        
+        ea_stimparams(M.elstruct, handles.leadfigure, options);
+        
+    case 'New Programmer'
+        % Execute Option 2: Another action or modifications
+        % Add your code for Option 2 here
+        M = getappdata(figHandle, 'M');
+        options = ea_setopts_local(handles);
+        options.leadprod = 'group';
+        options.groupid = M.guid;
+        options.native = 0;
+        ea_refresh_lg(handles);
+        [file_path, releaseDir, status_path] = ea_input_programmer_group(options, M);
+        disp('Option 2 selected. Performing alternative action.');
+        currentOS = ea_getarch;
+        if exist(releaseDir, 'Dir')
+        %     % Test MAC - will need to test on windows
+            mac64Dir = strcat(releaseDir, '/mac-arm64');
+            macDir = strcat(releaseDir, '/mac');
+        
+            if (currentOS == "maca64")
+                zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
+                appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
+                testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
+                if ~exist(testDir)
+                    unzip(zipDir, mac64Dir);
+                end
+            end
+        
+            if (currentOS =="maci64")
+                zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-mac.zip');
+                appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
+                testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
+                if ~exist(testDir)
+                    unzip(zipDir, macDir);
+                end
+            end
+                system(appDir);
+                new_data = fileread(file_path);
+                fid = fopen(file_path, 'w');
+                fclose(fid);
+                importedS = jsondecode(new_data);
+                fields = fieldnames(importedS);
+                tmpM = struct();
+                % Loop through each field
+                for i = 1:length(fields)
+                    fieldName = fields{i};
+                    fieldData = importedS.(fieldName);
+                    [S] = ea_process_programmer_group(fieldData);
+                    tmpM.S(i) = S;
+                    % Now you can work with fieldData
+                    disp(['Processing data for field: ' fieldName]);
+                end
+                M.S = tmpM.S;
+        end
+        
+    otherwise
+        % User canceled the dialog or closed it
+        disp('Dialog canceled or closed.');
+end
+
 
 
 % --- Executes on button press in highlightactivecontcheck.
