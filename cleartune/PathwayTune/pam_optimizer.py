@@ -35,14 +35,14 @@ class PamOptimizer:
         else:
             self.side_suffix = '_lh'
 
-        self.results_folder = os.path.join(stim_folder, 'Results' + self.side_suffix)
-        self.timeDomainSolution = self.results_folder + '/oss_time_result_PAM.h5'
-        self.pathwayParameterFile = self.stim_folder + "/Allocated_axons_parameters.json"
+        self.results_folder = os.path.join(stim_folder, 'Results')
+        self.timeDomainSolution = os.path.join(self.results_folder, 'oss_time_result_PAM.h5')
+        self.pathwayParameterFile = os.path.join(self.stim_folder,'Allocated_axons_parameters.json')
 
         # clean-up
         try:
-            os.remove(self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations_CSE.csv')
-            os.remove(self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations.csv')
+            os.remove(os.join.path(self.stim_folder,'NB' + self.side_suffix,'optim_iterations_CSE.csv'))
+            os.remove(os.join.path(self.stim_folder,'NB' + self.side_suffix,'optim_iterations.csv'))
         except OSError:
             pass
 
@@ -110,7 +110,7 @@ class PamOptimizer:
         for i in range(len(S_vector)):
             df['Contact_' + str(i)] = S_vector[i]  # Lead-DBS notation!
 
-        iter_file = self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations.csv'
+        iter_file = os.join.path(self.stim_folder,'NB' + self.side_suffix,'optim_iterations.csv')
         df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
 
         # critical side-effect status if provided
@@ -118,7 +118,7 @@ class PamOptimizer:
             for key in SE_dict:
                 df[key] = SE_dict[key]["predicted"]
 
-        iter_file = self.stim_folder + '/NB' + self.side_suffix + '/optim_iterations_CSE.csv'
+        iter_file = os.join.path(self.stim_folder,'NB' + self.side_suffix,'optim_iterations_CSE.csv')
         df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
 
     def prepare_swarm(self, x, args_to_pass=[]):
@@ -175,7 +175,7 @@ class PamOptimizer:
 
         # put this in a separate function
         # load predicted symptom improvement and weights
-        estim_Ihat_json = self.stim_folder + '/NB' + self.side_suffix + '/Estim_symp_improv' + self.side_suffix + '.json'
+        estim_Ihat_json = os.join.path(self.stim_folder, 'NB' + self.side_suffix, 'Estim_symp_improv' + self.side_suffix + '.json')
 
         with open(estim_Ihat_json, 'r') as fp:
             estim_Ihat = json.load(fp)

@@ -8,10 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import h5py
-import seaborn as sns
-sns.set()
 import sys
 import json
+import copy
+
+import seaborn as sns
+sns.set()
 
 #from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -29,14 +31,10 @@ learn_rate = 0.0025
 N_epochs = 500
 min_activ_threshold = 0.05   # if less than 5% of fibers in the pathway were activated over all StimSets, ANN will not train on it
 
+SIDE_SUFFIX = ['_rh','_lh']
 def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial, VAT_recruit = False):
 
     import os
-
-    if side == 0:
-        side_suffix = '_rh'
-    else:
-        side_suffix = '_lh'
 
     # load currents for training and test protocols
     Currents = np.genfromtxt(TrainTest_currents_file, delimiter=',', skip_header=True)
@@ -66,12 +64,16 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
     # load activation results for each pathway
     ActivationResults = np.zeros((Currents.shape[0], len(Pathways)),float)
 
+    # I need to check thoroughly whether training for one pathway is way better
+    # if yes, then just train ANN in this loop
+    pathway = 'M1_cf_lowerex_right'
+
     for path_i in range(len(Pathways)):
-        if Pathways[path_i] == 'M1_cf_upperex_right':
+        if Pathways[path_i] == pathway:
             for prot_i in range(Currents.shape[0]):
-                if os.path.isfile(stim_dir + '/' + res_folder + 'Pathway_status_' + Pathways[path_i] + '_' + str(prot_i) + '.json'):
-                    with open(stim_dir + '/' + res_folder + 'Pathway_status_' + Pathways[path_i] + '_' + str(prot_i) + '.json',
-                              'r') as fp:
+                pathway_file = os.path.join(stim_dir, res_folder, 'Pathway_status_' + Pathways[path_i] + '_' + str(prot_i) + '.json')
+                if os.path.isfile(pathway_file):
+                    with open(pathway_file, 'r') as fp:
                         PAM_res_dict = json.load(fp)
                         ActivationResults[prot_i,path_i] = 0.01 * PAM_res_dict['percent_activated']
                     fp.close()
@@ -105,6 +107,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
     for i in range(y_train_prelim.shape[1]):
         # only compute for pathways with some percent activation and minimal number of fibers (10)
         if axons_in_path[i] > 9 and np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
+
             y_train[:,i] = y_train_prelim[:,i]
             y_test[:,i] = y_test_prelim[:,i]
             pathway_filtered.append(Pathways[i])
@@ -141,7 +144,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
     model = Sequential(layers=None, name=None)
     model.add(Dense(128, input_shape=(X_train.shape[1],), activation='linear'))
     model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
-    model.add(Dropout(0.2))
+    #model.add(Dropout(0.2))
     model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))  # following the percent activation curves
     #model.add(Dense(y_train.shape[1], activation='tanh'))
     model.add(Dense(y_train.shape[1], activation='sigmoid'))
@@ -192,13 +195,13 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
         if np.max(abs(error_ANN[:, i])) > 0.05:
             sns.kdeplot(error_ANN[:,i], bw_adjust=0.5, label=pathway_filtered[i])
 
-    with open(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors.json', 'w') as save_as_dict:
+    with open(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],'ANN_abs_errors.json'), 'w') as save_as_dict:
         json.dump(pathways_max_errors, save_as_dict)
 
     plt.legend()
     plt.title('Abs errors for ANN on Test')
     plt.xlim([-0.25,0.25])
-    plt.savefig(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors_on_Test' + side_suffix + '.png', format='png',
+    plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],'ANN_abs_errors_on_Test' + SIDE_SUFFIX[side] + '.png'), format='png',
                 dpi=1000)
 
     if check_trivial == True:
@@ -211,7 +214,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
         plt.legend()
         plt.title('Abs errors for ANN on Bipolar')
         #plt.xlim([-0.15,0.15])
-        plt.savefig(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors_on_Bipolar' + side_suffix + '.png',
+        plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],'ANN_abs_errors_on_Bipolar' + SIDE_SUFFIX[side] + '.png'),
                     format='png',
                     dpi=1000)
 
@@ -224,79 +227,75 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
         plt.legend()
         plt.title('Abs errors for ANN on Bipolar')
         # plt.xlim([-0.15,0.15])
-        plt.savefig(stim_dir + '/NB' + side_suffix + '/ANN_abs_errors_on_Monopolar' + side_suffix + '.png',
+        plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],'ANN_abs_errors_on_Monopolar' + SIDE_SUFFIX[side] + '.png'),
                     format='png',
                     dpi=1000)
 
     # ====================================== Check if errors acceptable ===============================================#
 
-    return pathway_filtered
+    #return pathway_filtered
 
     # iterate over each previously approved profile
-    with open(stim_dir + '/NB' + side_suffix + '/profile_dict.json', 'r') as fp:
-        profile_dict = json.load(fp)
-    fp.close()
-
-    with open(stim_dir + '/NB' + side_suffix + '/Soft_SE_dict.json', 'r') as fp:
-        Soft_SE_dict = json.load(fp)
-    fp.close()
-
-    with open(stim_dir + '/NB' + side_suffix + '/SE_dict.json', 'r') as fp:
-        SE_dict = json.load(fp)
+    with open(os.path.join(stim_dir, 'target_profiles.json'), 'r') as fp:
+        target_profiles = json.load(fp)
     fp.close()
 
     # we can discard the error sign here
     error_ANN = abs(error_ANN)
 
-    # first check side-effects
-    for key in SE_dict:
-        if side == 0 and not("_rh" in key):
-            continue
-        elif side == 1 and not("_lh" in key):
-            continue
+    # first check critical side-effects
+    if 'SE_dict' in target_profiles:
 
-        activ_threshold_profile = list(SE_dict[key].keys())
-        for i in range(len(activ_threshold_profile)):
+        for key in target_profiles['SE_dict']:
+            if side == 0 and not("_rh" in key):
+                continue
+            elif side == 1 and not("_lh" in key):
+                continue
 
-            if activ_threshold_profile[i] in Pathways and not(activ_threshold_profile[i] in pathway_filtered):
-                print(activ_threshold_profile[i], " had a low activation for training set, and was not added to ANN")
-            elif not(activ_threshold_profile[i] in Pathways):
-                print(activ_threshold_profile[i],
-                      " was not in the training set. Perhaps, it is too far from the electrode")
-            else:
-                inx = pathway_filtered.index(activ_threshold_profile[i])
-                if np.any(error_ANN[:, inx] > SE_err_threshold):
-                    print('Error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
-                    print(activ_threshold_profile[i])
-                    return False
+            activ_threshold_profile = list(target_profiles['SE_dict'][key].keys())
+            for i in range(len(activ_threshold_profile)):
+
+                if activ_threshold_profile[i] in Pathways and not(activ_threshold_profile[i] in pathway_filtered):
+                    print(activ_threshold_profile[i], " had a low activation for training set, and was not added to ANN")
+                elif not(activ_threshold_profile[i] in Pathways):
+                    print(activ_threshold_profile[i],
+                          " was not in the training set. Perhaps, it is too far from the electrode")
                 else:
-                    # check number of errors > half of the threshold
-                    N_half_errors = (error_ANN[:, inx] > SE_err_threshold / 2.0).sum()
-                    # refuse if > 1%
-                    if N_half_errors > 0.01 * error_ANN.shape[0]:
-                        print(
-                            '0.5 * error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded for more than 1% of tests, the approximation model has to be revised')
+                    inx = pathway_filtered.index(activ_threshold_profile[i])
+                    if np.any(error_ANN[:, inx] > SE_err_threshold):
+                        print('Error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
                         print(activ_threshold_profile[i])
-                        print(max(error_ANN[:, inx]),SE_err_threshold)
                         return False
+                    else:
+                        # check number of errors > half of the threshold
+                        N_half_errors = (error_ANN[:, inx] > SE_err_threshold / 2.0).sum()
+                        # refuse if > 1%
+                        if N_half_errors > 0.01 * error_ANN.shape[0]:
+                            print(
+                                '0.5 * error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded for more than 1% of tests, the approximation model has to be revised')
+                            print(activ_threshold_profile[i])
+                            print(max(error_ANN[:, inx]),SE_err_threshold)
+                            return False
 
-                if check_trivial == True:
-                    if np.any(error_ANN_bi[:, inx] > SE_err_threshold) or np.any(error_ANN_mono[:, inx] > SE_err_threshold):
-                        print(
-                            'Error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
-                        return False
+                    if check_trivial == True:
+                        if np.any(error_ANN_bi[:, inx] > SE_err_threshold) or np.any(error_ANN_mono[:, inx] > SE_err_threshold):
+                            print(
+                                'Error threshold for the side-effect implicated ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
+                            return False
 
 
     # here we can merge target profiles for symptoms and threshold profiles for soft side-effects
-    profile_dict.update(Soft_SE_dict)
+    Target_profiles_and_SSE = copy.deepcopy(target_profiles['profile_dict'])
+    if 'Soft_SE_dict' in target_profiles:
+        Target_profiles_and_SSE.update(target_profiles['Soft_SE_dict'])
 
-    for key in profile_dict:
+    for key in Target_profiles_and_SSE:
         if side == 0 and not ("_rh" in key):
             continue
         elif side == 1 and not ("_lh" in key):
             continue
 
-        activ_threshold_profile = list(profile_dict[key].keys())
+        activ_threshold_profile = list(Target_profiles_and_SSE[key].keys())
         for i in range(len(activ_threshold_profile)):
 
             if activ_threshold_profile[i] in Pathways and not (activ_threshold_profile[i] in pathway_filtered):
@@ -323,7 +322,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
                             'Error threshold for ', activ_threshold_profile[i],' was exceeded, the approximation model has to be revised')
                         return False
 
-    model.save(stim_dir + '/NB' + side_suffix + '/ANN_approved_model')
+    model.save(os.path.join(stim_dir, 'NB' + SIDE_SUFFIX[side], 'ANN_approved_model_' + pathway))
     return pathway_filtered
 
 if __name__ == '__main__':
@@ -335,26 +334,22 @@ if __name__ == '__main__':
     stim_dir = sys.argv[1]
     side = int(sys.argv[2])
 
-    if side == 0:
-        res_folder = 'Results_rh/'
-        side_suffix = '_rh'
-    else:
-        res_folder = 'Results_lh/'
-        side_suffix = '_lh'
-    TrainTest_currents_file = stim_dir + '/Current_protocols_' + str(side) + '.csv'  # current protocols
+    res_folder = os.path.join('OSS_sim_files' + SIDE_SUFFIX[side], 'Results')
+    TrainTest_currents_file = os.path.join(stim_dir, 'OSS_sim_files' + SIDE_SUFFIX[side], 'Current_protocols_' + str(side) + '.csv')
 
-    # # load parameters from .json folder generated in previous steps
-    # with open(stim_dir + '/netblend_dict_file.json', 'r') as fp:
-    #     netblend_dict = json.load(fp)
-    # fp.close()
-    # netblend_dict = netblend_dict['netblendict']
-    netblend_dict = {'Err_threshold': 0.05, 'SE_err_threshold': 0.025}
+    # load parameters from .json folder generated in previous steps
+    with open(stim_dir + '/netblend_dict_file.json', 'r') as fp:
+        netblend_dict = json.load(fp)
+    fp.close()
+    netblend_dict = netblend_dict['netblendict']
 
     # load StimSets_parameters (were created by Train_Test_Generator.py)
-    with open(stim_dir + '/NB' + side_suffix + '/StimSets_info.json', 'r') as fp:
+    with open(stim_dir + '/NB' + SIDE_SUFFIX[side] + '/StimSets_info.json', 'r') as fp:
         StimSets_info = json.load(fp)
     fp.close()
 
+
+    print(StimSets_info['trainSize_actual'],netblend_dict['Err_threshold'])
     # #better regenerate them
     # from Improvement4Protocol import create_NB_dictionaries
     # profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary)

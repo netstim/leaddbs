@@ -72,7 +72,7 @@ else
     settings.stim_center(2,:) = mean(settings.contactLocation{2});
     settings.Phi_vector = 1000./conNum * ones(2, conNum);
     settings.Case_grounding = 1;
-    settings.Activation_threshold_VTA = -42;
+    settings.Activation_threshold_VTA = [-1;-1];
 end
 
 if settings.calcAxonActivation

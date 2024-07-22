@@ -96,6 +96,16 @@ settings.connectomePath = [outputPaths.outputDir, filesep, connName];
 ea_mkdir(settings.connectomePath);
 settings.connectome = ['Multi-Tract: ', connName];
 
+% json with axon model description 
+settings.pathwayParameterFile = 'Allocated_axons_parameters.json';
+
+% also create a folder for PAM results
+settings.connectomeActivations = [settings.connectomePath,filesep,'PAM'];
+if exist(settings.connectomeActivations,'dir')
+    ea_delete(settings.connectomeActivations);
+end
+ea_mkdir(settings.connectomeActivations);
+
 % Save filtered fibers
 save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
 save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
