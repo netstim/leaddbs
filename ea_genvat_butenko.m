@@ -207,7 +207,7 @@ for source_index = 1:4
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
 
             % run OSS-DBS
-            system(['ossdbs ', ea_path_helper(parameterFile_json)]);
+            system(['ossdbs ', ea_path_helper(parameterFile_json)])
         
             % prepare NEURON simulation
             if settings.calcAxonActivation
@@ -220,7 +220,7 @@ for source_index = 1:4
                 end
 
                 if settings.optimizer
-                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.HemiSimFolder), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
+                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
                 else
                     if settings.prob_PAM
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
