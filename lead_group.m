@@ -1334,7 +1334,7 @@ switch choice
                 end
             end
         
-            if (currentOS =="maci64")
+            if (currentOS == "maci64")
                 zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-mac.zip');
                 appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
                 testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
@@ -1359,6 +1359,7 @@ switch choice
                     disp(['Processing data for field: ' fieldName]);
                 end
                 M.S = tmpM.S;
+                setappdata(fighandle, 'M', M);
         end
         
     otherwise
