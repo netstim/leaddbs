@@ -45,6 +45,9 @@ dataset.connLabel = connLabel;
 dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
 dataset.type = dinfo.type;
 dataset.subsets = dinfo.subsets;
+if ~isfield(dataset,'formatversion')
+    dataset.formatversion=1.0;
+end
 
 if exist('outputmask','var')
     if ~isempty(outputmask)
@@ -172,12 +175,15 @@ for s=1:numseed
     lhfX{s}=nan(10242,numsub);
 end
 ea_dispercent(0,'Iterating through subjects');
+tic
 for sub=1:numsub % iterate across subjects
     howmanyruns=ea_cs_dethowmanyruns(dataset,usesubjects(sub));
     r=cell(howmanyruns,1);
     for run=1:howmanyruns % load data
         r{run}=load([dfoldvol,dataset.vol.subIDs{usesubjects(sub)}{run+1}],'gmtc');
-        r{run}.gmtc=single(r{run}.gmtc);
+        if dataset.formatversion==1
+            r{run}.gmtc=single(r{run}.gmtc);
+        end
         if isfield(dataset,'surf') && prefs.lcm.includesurf
             if ~exist('ls','var')
                 % include surface:
@@ -200,41 +206,18 @@ for sub=1:numsub % iterate across subjects
                 stc=mean([r{run}.ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(r{run}.ls.gmtc,2));...
                     r{run}.rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(r{run}.ls.gmtc,2))],1); % seed time course
             else % volume seed
-                stc=mean(r{run}.gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(r{run}.gmtc,2)),1); % seed time course
-            end
-
-            try %use different matric instead of correlations; manually entered by user
-                lcm_custommetric=evalin('base','lcm_custommetric');
-            end 
-            if exist('lcm_custommetric','var')
-                switch evalin('base','lcm_custommetric')
-                    case 'mutualinf' %use mutual information
-                        tic
-                        stc=double(stc);
-                        r{run}.gmtc=double(r{run}.gmtc);
-                        %ea_dispercent(0,'iterating brains')
-                        for vox=1:length(maskuseidx)
-%                             thiscorr(vox,run)=MutualInformation(stc',r{run}.gmtc(maskuseidx(vox),:)');
-%                             %my function
-                            thiscorr(vox,run)=mutualinfo(stc,r{run}.gmtc(maskuseidx(vox),:)); %someone else's function 
-                            %ea_dispercent(vox/length(maskuseidx));
-                        end
-                        toc
-                    case 'pdistance'
-                        try
-                            usemethod=evalin('base','usemethod');
-                        end
-                        if exist('usemethod','var')
-                            usemethod=usemethod; % specify the distances, such as euclidean, cosine, spearman.
-                        else
-                            usemethod='euclidean';
-                        end                                     
-                        thiscorr(:,run)=-pdist2(stc, r{run}.gmtc(maskuseidx,:),usemethod)';
-
+                if dataset.formatversion==1
+                    stc=mean(r{run}.gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(r{run}.gmtc,2)),1); % seed time course
+                elseif dataset.formatversion>1 % newer version
+                    stc=mean(r{run}.gmtc(:,sweightidx{s}).*repmat(sweightidxmx{s}',size(r{run}.gmtc,1),1),2); % seed time course
                 end
-            else
-                thiscorr(:,run)=corr(stc',r{run}.gmtc(maskuseidx,:)','type','Pearson');
             end
+                if dataset.formatversion==1
+                    thiscorr(:,run)=corr(stc',r{run}.gmtc(maskuseidx,:)','type','Pearson');
+                elseif dataset.formatversion>1 % newer version
+                    thiscorr(:,run)=corr(stc,r{run}.gmtc(:,maskuseidx),'type','Pearson');
+                end
+            
             if isfield(dataset,'surf') && prefs.lcm.includesurf
                 % include surface:
                 lsthiscorr(:,run)=corr(stc',r{run}.ls.gmtc','type','Pearson');
@@ -259,6 +242,7 @@ for sub=1:numsub % iterate across subjects
     ea_dispercent(sub/numsub);
 end
 ea_dispercent(1,'end');
+toc
 
 stack = dbstack;
 if ismember('ea_networkmapping_calcvals', {stack.name})
@@ -288,10 +272,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
 
     if ~isNetworkMappingRun
         ea_write_nii(mmap);
-        if usegzip
-            gzip(mmap.fname);
-            delete(mmap.fname);
-        end
     end
 
     % export variance
@@ -394,6 +374,11 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap', 'ext', '.nii');
         end
     end
+
+    % ensure to output .nii no matter what was supplied (if supplying .nii.gz
+    % this leads to an error).
+    [pth,fn]=fileparts(mmap.fname);
+    mmap.fname=fullfile(pth,[ea_stripext(fn),'.nii']);
 
     spm_write_vol(mmap,mmap.img);
 
@@ -617,6 +602,22 @@ end
 function X=addone(X)
 X=[ones(size(X,1),1),X];
 
+
+function argOut = quickLoad(pathToMatfile, myVarName)
+% Get the location of the variable in the file using hdf syntax
+% / by itself is the root of the file, then variables names come after
+% Note: also works very nicely for nested structures where a.b.c.d.e would
+% have varName as /a/b/c/d/e. 
+h5loc = ['/' myVarName]; % Always /, not like windows/linux filesep
+% Open the file using H5F. 
+fid = H5F.open(pathToMatfile); 
+% Open the file using H5D. 
+dsetid = H5D.open(fid,h5loc); 
+% Load in the dataset
+argOut = H5D.read(dsetid); % All done
+% Clean up
+H5D.close(dsetid);
+H5F.close(fid);
 
 function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
