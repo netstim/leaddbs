@@ -44,6 +44,12 @@ dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
 dataset.type = dinfo.type;
 dataset.subsets = dinfo.subsets;
 
+try
+    dataset.formatversion=dinfo.formatversion;
+catch
+    dataset.formatversion=1.0;
+end
+
 if isempty(outputfolder)
     warning('off', 'backtrace');
     warning('Custom output folder not specified! Will save result to current folder.');
@@ -179,7 +185,11 @@ for mcfi=usesubjects % iterate across subjects
                     rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
             else % volume seed
                 try
-                    stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
+                    if dataset.formatversion == 1
+                        stc(:,s) = mean(gmtc(sweightidx{s}, :) .* repmat(sweightidxmx{s}, 1, size(gmtc, 2)), 1);
+                    elseif dataset.formatversion > 1
+                        stc(:,s) = mean(gmtc(:, sweightidx{s}) .* repmat(sweightidxmx{s}', size(gmtc, 1), 1), 2);
+                    end
                 catch
                     stc(s,:)=nan;
                 end
@@ -194,9 +204,17 @@ for mcfi=usesubjects % iterate across subjects
 
         switch cmd
             case 'matrix'
-                X=corrcoef(stc');
+                if dataset.formatversion == 1
+                    X=corrcoef(stc');
+                elseif dataset.formatversion > 1
+                    X=corrcoef(stc);
+                end
             case 'pmatrix'
-                X=partialcorr(stc');
+                if dataset.formatversion == 1
+                    X=partialcorr(stc');
+                elseif dataset.formatversion > 1
+                    X=partialcorr(stc);
+                end
         end
         thiscorr(:,run)=X(:);
         clear stc
