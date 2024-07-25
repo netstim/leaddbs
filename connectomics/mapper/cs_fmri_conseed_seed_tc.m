@@ -45,7 +45,9 @@ dataset.connLabel = connLabel;
 dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
 dataset.type = dinfo.type;
 dataset.subsets = dinfo.subsets;
-if ~isfield(dataset,'formatversion')
+try
+    dataset.formatversion=dinfo.formatversion;
+catch
     dataset.formatversion=1.0;
 end
 
@@ -294,10 +296,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
 
     if ~isNetworkMappingRun
         ea_write_nii(mmap);
-        if usegzip
-            gzip(mmap.fname);
-            delete(mmap.fname);
-        end
     end
 
     if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
@@ -320,10 +318,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         ea_write_nii(lmmap);
-        if usegzip
-            gzip(lmmap.fname);
-            delete(lmmap.fname);
-        end
 
         % rh surf
         rM=ea_nanmean(rhfX{s}');
@@ -344,10 +338,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         ea_write_nii(rmmap);
-        if usegzip
-            gzip(rmmap.fname);
-            delete(rmmap.fname);
-        end
     end
 
     % fisher-transform:
@@ -407,10 +397,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         ea_write_nii(lmmap);
-        if usegzip
-            gzip(lmmap.fname);
-            delete(lmmap.fname);
-        end
 
         % rh surf
         rM=ea_nanmean(rhfX{s}');
@@ -431,10 +417,6 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         end
 
         ea_write_nii(rmmap);
-        if usegzip
-            gzip(rmmap.fname);
-            delete(rmmap.fname);
-        end
     end
 
     % export T
@@ -488,10 +470,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             end
 
             ea_write_nii(lmmap);
-            if usegzip
-                gzip(lmmap.fname);
-                delete(lmmap.fname);
-            end
+
         catch
             ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (lh surf) for seed:\n%s\n', sfile{s});
         end
@@ -516,10 +495,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             end
 
             ea_write_nii(rmmap);
-            if usegzip
-                gzip(rmmap.fname);
-                delete(rmmap.fname);
-            end
+
         catch
             ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (rh surf) for seed:\n%s\n', sfile{s});
         end
