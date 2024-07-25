@@ -411,8 +411,7 @@ function clearall_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/delete.png']);
+background = imread(fullfile(ea_getearoot, 'icons/delete.png'));
 set(hObject,'CData',background);
 
 
@@ -436,8 +435,7 @@ function setdefault_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/checkmark.png']);
+background = imread(fullfile(ea_getearoot, 'icons/checkmark.png'));
 set(hObject,'CData',background)
 
 
@@ -460,8 +458,7 @@ function undomarker_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/undo.png']);
+background = imread(fullfile(ea_getearoot, 'icons/undo.png'));
 set(hObject,'CData',background,'Value',0)
 
 
@@ -484,8 +481,7 @@ function redomarker_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/redo.png']);
+background = imread(fullfile(ea_getearoot, 'icons/redo.png'));
 set(hObject,'CData',background,'Value',0)
 
 
@@ -513,8 +509,7 @@ function togglemarkertags_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/text.png']);
+background = imread(fullfile(ea_getearoot, 'icons/text.png'));
 set(hObject,'CData',background,'Value',0)
 
 
@@ -537,8 +532,7 @@ function loadstate_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/import.png']);
+background = imread(fullfile(ea_getearoot, 'icons/import.png'));
 set(hObject,'CData',background,'Value',0)
 
 
@@ -559,8 +553,7 @@ function savestate_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-root = fileparts(which('ea_coregmr.m'));
-background = imread([root,'/icons/export.png']);
+background = imread(fullfile(ea_getearoot, 'icons/export.png'));
 set(hObject,'CData',background,'Value',0)
 
 
