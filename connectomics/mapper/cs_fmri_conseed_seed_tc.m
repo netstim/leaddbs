@@ -170,6 +170,26 @@ else
     numsub=length(usesubjects);
 end
 
+
+
+% check for automatic connectome migration:
+if dataset.formatversion==1
+    if numsub==length(dataset.vol.subIDs) % ensure no subset used
+        answ=questdlg('The selected connectome is of older format, but we can migrate it to the current format, which will speed up the process. Conversion takes some time and can potentially lead to slightly more disk space usage. Do you want to convert or keep the old format?','Migrate Connectome Format','Convert','Keep old version','Convert');
+        switch lower(answ)
+            case 'convert'
+                dataset.migrateConnectome=1; % temporary field to run migration
+            otherwise
+                dataset.migrateConnectome=0;
+        end
+    end
+end
+
+
+
+
+
+
 % init vars:
 for s=1:numseed
     fX{s}=nan(length(omaskidx),numsub);
@@ -187,6 +207,9 @@ tic
 
 % Check for Parallel Computing Toolbox
 hasParallelToolbox = license('test', 'Distrib_Computing_Toolbox');
+if dataset.migrateConnectome % migration does not work in parfor mode since cannot call save().
+    hasParallelToolbox=0;
+end
 
 if hasParallelToolbox
     % Preallocate temporary variables for results
@@ -224,12 +247,12 @@ if hasParallelToolbox
     end
 else
     for sub = 1:numsub
-        try
+        % try
             [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder, hasParallelToolbox);
-        catch ME
-            warning('Error processing subject %d: %s', sub, ME.message);
-            continue;
-        end
+        % catch ME
+        %     warning('Error processing subject %d: %s', sub, ME.message);
+        %     continue;
+        % end
 
         % Store results in final variables
         for s = 1:numseed
@@ -512,6 +535,11 @@ end
 
 toc
 
+if dataset.migrateConnectome
+    dinfo = loadjson([dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
+    dinfo.formatversion=1.1;
+    savejson('',dinfo,[dfold,'fMRI',filesep,cname,filesep,'dataset_info.json']);
+end
 
 
 
@@ -550,16 +578,16 @@ for s = 1:numel(sfile)
             stc = mean([temp_r{run}.ls.gmtc(sweightidx{s,1}, :) .* repmat(sweightidxmx{s,1}, 1, size(temp_r{run}.ls.gmtc, 2)); ...
                 temp_r{run}.rs.gmtc(sweightidx{s,2}, :) .* repmat(sweightidxmx{s,2}, 1, size(temp_r{run}.rs.gmtc, 2))], 1);
         else
-            if dataset.formatversion == 1
+            if dataset.formatversion == 1 && dataset.migrateConnectome==0
                 stc = mean(temp_r{run}.gmtc(sweightidx{s}, :) .* repmat(sweightidxmx{s}, 1, size(temp_r{run}.gmtc, 2)), 1);
-            elseif dataset.formatversion > 1
+            else
                 stc = mean(temp_r{run}.gmtc(:, sweightidx{s}) .* repmat(sweightidxmx{s}', size(temp_r{run}.gmtc, 1), 1), 2);
             end
         end
 
-        if dataset.formatversion == 1
+        if dataset.formatversion == 1 && dataset.migrateConnectome == 0
             thiscorr(:, run) = corr(stc', temp_r{run}.gmtc(maskuseidx, :)', 'type', 'Pearson');
-        elseif dataset.formatversion > 1
+        else
             thiscorr(:, run) = corr(stc, temp_r{run}.gmtc(:, maskuseidx), 'type', 'Pearson');
         end
 
@@ -608,9 +636,24 @@ if hasParallelToolbox
     end
 else
     for run = 1:howmanyruns
+        try
         temp_r{run} = load([dfoldvol, dataset.vol.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+        catch
+            keyboard
+        end
         if dataset.formatversion == 1
-            temp_r{run}.gmtc = single(temp_r{run}.gmtc);
+            if dataset.migrateConnectome
+                t=temp_r{run};
+                t.gmtc=single(t.gmtc);
+                if size(t.gmtc,1)==length(dataset.vol.outidx) % ensure transpose really needs to happen
+                    t.gmtc=t.gmtc';
+                end
+                save([dfoldvol, dataset.vol.subIDs{usesubjects(sub)}{run+1}],'-struct','t');
+                temp_r{run}=t;
+                clear t
+            else
+                temp_r{run}.gmtc = single(temp_r{run}.gmtc);
+            end
         end
         if isfield(dataset, 'surf') && prefs.lcm.includesurf
             temp_r{run}.ls = load([dfoldsurf, dataset.surf.l.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
