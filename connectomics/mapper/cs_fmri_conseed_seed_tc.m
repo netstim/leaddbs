@@ -196,7 +196,7 @@ if hasParallelToolbox
 
     parfor sub = 1:numsub
         try
-            [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder);
+            [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder, hasParallelToolbox);
         catch ME
             warning('Error processing subject %d: %s', sub, ME.message);
             continue;
@@ -225,7 +225,7 @@ if hasParallelToolbox
 else
     for sub = 1:numsub
         try
-            [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder);
+            [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder, hasParallelToolbox);
         catch ME
             warning('Error processing subject %d: %s', sub, ME.message);
             continue;
@@ -239,285 +239,286 @@ else
                 rhfX{s}(:, sub) = sub_rhfX{s};
             end
         end
-
         ea_dispercent(sub / numsub);
     end
 end
+
+
 
 
 toc
 
 
 
-    stack = dbstack;
-    if ismember('ea_networkmapping_calcvals', {stack.name})
-        isNetworkMappingRun = 1;
+stack = dbstack;
+if ismember('ea_networkmapping_calcvals', {stack.name})
+    isNetworkMappingRun = 1;
+else
+    isNetworkMappingRun = 0;
+end
+
+for s=1:size(seedfn,1) % subtract 1 in case of pmap command
+    % export mean
+    M=ea_nanmean(fX{s}');
+    mmap=dataset.vol.space;
+    mmap.dt(1) = 16;
+    mmap.img(:)=0;
+    mmap.img=single(mmap.img);
+    mmap.img(omaskidx)=M;
+
+    if ~isempty(outputfolder)
+        mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
     else
-        isNetworkMappingRun = 0;
+        if ~isBIDSFileName(sfile{s})
+            mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
+        else
+            mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap', 'ext', '.nii');
+        end
     end
 
-    for s=1:size(seedfn,1) % subtract 1 in case of pmap command
-        % export mean
-        M=ea_nanmean(fX{s}');
-        mmap=dataset.vol.space;
-        mmap.dt(1) = 16;
-        mmap.img(:)=0;
-        mmap.img=single(mmap.img);
-        mmap.img(omaskidx)=M;
+    if ~isNetworkMappingRun
+        ea_write_nii(mmap);
+    end
+
+    % export variance
+    M=ea_nanvar(fX{s}',1);
+    mmap=dataset.vol.space;
+    mmap.dt(1) = 16;
+    mmap.img(:)=0;
+    mmap.img=single(mmap.img);
+    mmap.img(omaskidx)=M;
+
+    if ~isempty(outputfolder)
+        mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-VarR_funcmap.nii']);
+    else
+        if ~isBIDSFileName(sfile{s})
+            mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-VarR_funcmap.nii']);
+        else
+            mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'VarR', 'suffix', 'funcmap', 'ext', '.nii');
+        end
+    end
+
+    if ~isNetworkMappingRun
+        ea_write_nii(mmap);
+    end
+
+    if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
+        % lh surf
+        lM=ea_nanmean(lhfX{s}');
+        lmmap=dataset.surf.l.space;
+        lmmap.dt(1) = 16;
+        lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+        lmmap.img=single(lmmap.img);
+        lmmap.img(:)=lM(:);
 
         if ~isempty(outputfolder)
-            mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
+            lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-AvgR_funcmapsurf.nii']);
         else
             if ~isBIDSFileName(sfile{s})
-                mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
+                lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-AvgR_funcmapsurf.nii']);
             else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap', 'ext', '.nii');
+                lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgR', 'suffix', 'funcmapsurf', 'ext', '.nii');
+            end
+        end
+
+        ea_write_nii(lmmap);
+
+        % rh surf
+        rM=ea_nanmean(rhfX{s}');
+        rmmap=dataset.surf.r.space;
+        rmmap.dt(1) = 16;
+        rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+        rmmap.img=single(rmmap.img);
+        rmmap.img(:)=rM(:);
+
+        if ~isempty(outputfolder)
+            rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-AvgR_funcmapsurf.nii']);
+        else
+            if ~isBIDSFileName(sfile{s})
+                rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-AvgR_funcmapsurf.nii']);
+            else
+                rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgR', 'suffix', 'funcmapsurf', 'ext', '.nii');
+            end
+        end
+
+        ea_write_nii(rmmap);
+    end
+
+    % fisher-transform:
+    fX{s}=atanh(fX{s});
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
+        lhfX{s}=atanh(lhfX{s});
+        rhfX{s}=atanh(rhfX{s});
+    end
+
+    % export fz-mean
+    M=ea_nanmean(fX{s}');
+    mmap=dataset.vol.space;
+    mmap.dt(1) = 16;
+    mmap.img(:)=0;
+    mmap.img=single(mmap.img);
+    mmap.img(omaskidx)=M;
+
+    if ~isempty(outputfolder)
+        mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
+    else
+        if ~isBIDSFileName(sfile{s})
+            mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
+        else
+            mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap', 'ext', '.nii');
+        end
+    end
+
+    % ensure to output .nii no matter what was supplied (if supplying .nii.gz
+    % this leads to an error).
+    [pth,fn]=fileparts(mmap.fname);
+    mmap.fname=fullfile(pth,[ea_stripext(fn),'.nii']);
+
+    spm_write_vol(mmap,mmap.img);
+
+    if usegzip
+        gzip(mmap.fname);
+        delete(mmap.fname);
+    end
+
+    if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
+        % lh surf
+        lM=ea_nanmean(lhfX{s}');
+        lmmap=dataset.surf.l.space;
+        lmmap.dt(1) = 16;
+        lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+        lmmap.img=single(lmmap.img);
+        lmmap.img(:)=lM(:);
+
+        if ~isempty(outputfolder)
+            lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-AvgRFz_funcmapsurf.nii']);
+        else
+            if ~isBIDSFileName(sfile{s})
+                lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-AvgRFz_funcmapsurf.nii']);
+            else
+                lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgRFz', 'suffix', 'funcmapsurf', 'ext', '.nii');
+            end
+        end
+
+        ea_write_nii(lmmap);
+
+        % rh surf
+        rM=ea_nanmean(rhfX{s}');
+        rmmap=dataset.surf.r.space;
+        rmmap.dt(1) = 16;
+        rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+        rmmap.img=single(rmmap.img);
+        rmmap.img(:)=rM(:);
+
+        if ~isempty(outputfolder)
+            rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-AvgRFz_funcmapsurf.nii']);
+        else
+            if ~isBIDSFileName(sfile{s})
+                rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-AvgRFz_funcmapsurf.nii']);
+            else
+                rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgRFz', 'suffix', 'funcmapsurf', 'ext', '.nii');
+            end
+        end
+
+        ea_write_nii(rmmap);
+    end
+
+    % export T
+    try
+        [~,~,~,tstat]=ttest(fX{s}', 0 , 'dim', 1);
+        tmap=dataset.vol.space;
+        tmap.img(:)=0;
+        tmap.dt(1) = 16;
+        tmap.img=single(tmap.img);
+        tmap.img(omaskidx)=tstat.tstat;
+
+        if ~isempty(outputfolder)
+            tmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-T_funcmap.nii']);
+        else
+            if ~isBIDSFileName(sfile{s})
+                tmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-T_funcmap.nii']);
+            else
+                tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcmap', 'ext', '.nii');
             end
         end
 
         if ~isNetworkMappingRun
-            ea_write_nii(mmap);
-        end
-
-        % export variance
-        M=ea_nanvar(fX{s}',1);
-        mmap=dataset.vol.space;
-        mmap.dt(1) = 16;
-        mmap.img(:)=0;
-        mmap.img=single(mmap.img);
-        mmap.img(omaskidx)=M;
-
-        if ~isempty(outputfolder)
-            mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-VarR_funcmap.nii']);
-        else
-            if ~isBIDSFileName(sfile{s})
-                mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-VarR_funcmap.nii']);
-            else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'VarR', 'suffix', 'funcmap', 'ext', '.nii');
+            % ensure to output .nii no matter what was supplied (if supplying .nii.gz
+            % this leads to an error).
+            [pth,fn]=fileparts(tmap.fname);
+            tmap.fname=fullfile(pth,[ea_stripext(fn),'.nii']);
+            spm_write_vol(tmap,tmap.img);
+            if usegzip
+                gzip(tmap.fname);
+                delete(tmap.fname);
             end
         end
+    catch
+        ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map for seed:\n%s\n', sfile{s});
+    end
 
-        if ~isNetworkMappingRun
-            ea_write_nii(mmap);
-        end
-
-        if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
-            % lh surf
-            lM=ea_nanmean(lhfX{s}');
-            lmmap=dataset.surf.l.space;
-            lmmap.dt(1) = 16;
-            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-            lmmap.img=single(lmmap.img);
-            lmmap.img(:)=lM(:);
-
-            if ~isempty(outputfolder)
-                lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-AvgR_funcmapsurf.nii']);
-            else
-                if ~isBIDSFileName(sfile{s})
-                    lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-AvgR_funcmapsurf.nii']);
-                else
-                    lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgR', 'suffix', 'funcmapsurf', 'ext', '.nii');
-                end
-            end
-
-            ea_write_nii(lmmap);
-
-            % rh surf
-            rM=ea_nanmean(rhfX{s}');
-            rmmap=dataset.surf.r.space;
-            rmmap.dt(1) = 16;
-            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-            rmmap.img=single(rmmap.img);
-            rmmap.img(:)=rM(:);
-
-            if ~isempty(outputfolder)
-                rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-AvgR_funcmapsurf.nii']);
-            else
-                if ~isBIDSFileName(sfile{s})
-                    rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-AvgR_funcmapsurf.nii']);
-                else
-                    rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgR', 'suffix', 'funcmapsurf', 'ext', '.nii');
-                end
-            end
-
-            ea_write_nii(rmmap);
-        end
-
-        % fisher-transform:
-        fX{s}=atanh(fX{s});
-        if isfield(dataset,'surf') && prefs.lcm.includesurf
-            lhfX{s}=atanh(lhfX{s});
-            rhfX{s}=atanh(rhfX{s});
-        end
-
-        % export fz-mean
-        M=ea_nanmean(fX{s}');
-        mmap=dataset.vol.space;
-        mmap.dt(1) = 16;
-        mmap.img(:)=0;
-        mmap.img=single(mmap.img);
-        mmap.img(omaskidx)=M;
-
-        if ~isempty(outputfolder)
-            mmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
-        else
-            if ~isBIDSFileName(sfile{s})
-                mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
-            else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap', 'ext', '.nii');
-            end
-        end
-
-        % ensure to output .nii no matter what was supplied (if supplying .nii.gz
-        % this leads to an error).
-        [pth,fn]=fileparts(mmap.fname);
-        mmap.fname=fullfile(pth,[ea_stripext(fn),'.nii']);
-
-        spm_write_vol(mmap,mmap.img);
-
-        if usegzip
-            gzip(mmap.fname);
-            delete(mmap.fname);
-        end
-
-        if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
-            % lh surf
-            lM=ea_nanmean(lhfX{s}');
-            lmmap=dataset.surf.l.space;
-            lmmap.dt(1) = 16;
-            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-            lmmap.img=single(lmmap.img);
-            lmmap.img(:)=lM(:);
-
-            if ~isempty(outputfolder)
-                lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-AvgRFz_funcmapsurf.nii']);
-            else
-                if ~isBIDSFileName(sfile{s})
-                    lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-AvgRFz_funcmapsurf.nii']);
-                else
-                    lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgRFz', 'suffix', 'funcmapsurf', 'ext', '.nii');
-                end
-            end
-
-            ea_write_nii(lmmap);
-
-            % rh surf
-            rM=ea_nanmean(rhfX{s}');
-            rmmap=dataset.surf.r.space;
-            rmmap.dt(1) = 16;
-            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-            rmmap.img=single(rmmap.img);
-            rmmap.img(:)=rM(:);
-
-            if ~isempty(outputfolder)
-                rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-AvgRFz_funcmapsurf.nii']);
-            else
-                if ~isBIDSFileName(sfile{s})
-                    rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-AvgRFz_funcmapsurf.nii']);
-                else
-                    rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgRFz', 'suffix', 'funcmapsurf', 'ext', '.nii');
-                end
-            end
-
-            ea_write_nii(rmmap);
-        end
-
-        % export T
+    if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
         try
-            [~,~,~,tstat]=ttest(fX{s}', 0 , 'dim', 1);
-            tmap=dataset.vol.space;
-            tmap.img(:)=0;
-            tmap.dt(1) = 16;
-            tmap.img=single(tmap.img);
-            tmap.img(omaskidx)=tstat.tstat;
+            % lh surf
+            [~,~,~,ltstat]=ttest(lhfX{s}');
+            lmmap=dataset.surf.l.space;
+            lmmap.dt(1) = 16;
+            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+            lmmap.img=single(lmmap.img);
+            lmmap.img(:)=ltstat.tstat(:);
 
             if ~isempty(outputfolder)
-                tmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-T_funcmap.nii']);
+                lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
             else
                 if ~isBIDSFileName(sfile{s})
-                    tmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-T_funcmap.nii']);
+                    lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
                 else
-                    tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcmap', 'ext', '.nii');
+                    lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'T', 'suffix', 'funcmapsurf', 'ext', '.nii');
                 end
             end
 
-            if ~isNetworkMappingRun
-                % ensure to output .nii no matter what was supplied (if supplying .nii.gz
-                % this leads to an error).
-                [pth,fn]=fileparts(tmap.fname);
-                tmap.fname=fullfile(pth,[ea_stripext(fn),'.nii']);
-                spm_write_vol(tmap,tmap.img);
-                if usegzip
-                    gzip(tmap.fname);
-                    delete(tmap.fname);
-                end
-            end
+            ea_write_nii(lmmap);
+
         catch
-            ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map for seed:\n%s\n', sfile{s});
+            ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (lh surf) for seed:\n%s\n', sfile{s});
         end
 
-        if isfield(dataset,'surf') && prefs.lcm.includesurf && ~isNetworkMappingRun
-            try
-                % lh surf
-                [~,~,~,ltstat]=ttest(lhfX{s}');
-                lmmap=dataset.surf.l.space;
-                lmmap.dt(1) = 16;
-                lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-                lmmap.img=single(lmmap.img);
-                lmmap.img(:)=ltstat.tstat(:);
+        try
+            % rh surf
+            [~,~,~,rtstat]=ttest(rhfX{s}');
+            rmmap=dataset.surf.r.space;
+            rmmap.dt(1) = 16;
+            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+            rmmap.img=single(rmmap.img);
+            rmmap.img(:)=rtstat.tstat(:);
 
-                if ~isempty(outputfolder)
-                    lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
+            if ~isempty(outputfolder)
+                rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
+            else
+                if ~isBIDSFileName(sfile{s})
+                    rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
                 else
-                    if ~isBIDSFileName(sfile{s})
-                        lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
-                    else
-                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'T', 'suffix', 'funcmapsurf', 'ext', '.nii');
-                    end
+                    rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'T', 'suffix', 'funcmapsurf', 'ext', '.nii');
                 end
-
-                ea_write_nii(lmmap);
-
-            catch
-                ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (lh surf) for seed:\n%s\n', sfile{s});
             end
 
-            try
-                % rh surf
-                [~,~,~,rtstat]=ttest(rhfX{s}');
-                rmmap=dataset.surf.r.space;
-                rmmap.dt(1) = 16;
-                rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-                rmmap.img=single(rmmap.img);
-                rmmap.img(:)=rtstat.tstat(:);
+            ea_write_nii(rmmap);
 
-                if ~isempty(outputfolder)
-                    rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
-                else
-                    if ~isBIDSFileName(sfile{s})
-                        rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
-                    else
-                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'T', 'suffix', 'funcmapsurf', 'ext', '.nii');
-                    end
-                end
-
-                ea_write_nii(rmmap);
-
-            catch
-                ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (rh surf) for seed:\n%s\n', sfile{s});
-            end
+        catch
+            ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (rh surf) for seed:\n%s\n', sfile{s});
         end
     end
+end
 
-    toc
-
-    
-
+toc
 
 
 
 
-function [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder)
+
+
+
+function [sub_fX, sub_lhfX, sub_rhfX] = process_subject(sub, usesubjects, dataset, prefs, dfoldvol, dfoldsurf, sfile, sweightidx, sweightidxmx, maskuseidx, omaskidx, writeoutsinglefiles, outputfolder, hasParallelToolbox)
 
 howmanyruns = ea_cs_dethowmanyruns(dataset, usesubjects(sub));
 
@@ -530,19 +531,7 @@ if isfield(dataset, 'surf') && prefs.lcm.includesurf
     rsthiscorr = zeros(10242, howmanyruns);
 end
 
-temp_r = cell(howmanyruns, 1);
-for run = 1:howmanyruns
-    temp_r{run} = load([dfoldvol, dataset.vol.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
-    if dataset.formatversion == 1
-        temp_r{run}.gmtc = single(temp_r{run}.gmtc);
-    end
-    if isfield(dataset, 'surf') && prefs.lcm.includesurf
-        temp_r{run}.ls = load([dfoldsurf, dataset.surf.l.subIDs{usesubjects(sub)}{run+1}]);
-        temp_r{run}.rs = load([dfoldsurf, dataset.surf.r.subIDs{usesubjects(sub)}{run+1}]);
-        temp_r{run}.ls.gmtc = single(temp_r{run}.ls.gmtc);
-        temp_r{run}.rs.gmtc = single(temp_r{run}.rs.gmtc);
-    end
-end
+temp_r = load_data(howmanyruns, dataset, usesubjects, sub, dfoldvol, dfoldsurf, prefs, hasParallelToolbox);
 
 sub_fX = cell(1, numel(sfile));
 sub_lhfX = cell(1, numel(sfile));
@@ -559,7 +548,7 @@ for s = 1:numel(sfile)
         stc = [];
         if size(sfile(s,:), 2) > 1
             stc = mean([temp_r{run}.ls.gmtc(sweightidx{s,1}, :) .* repmat(sweightidxmx{s,1}, 1, size(temp_r{run}.ls.gmtc, 2)); ...
-                temp_r{run}.rs.gmtc(sweightidx{s,2}, :) .* repmat(sweightidxmx{s,2}, 1, size(temp_r{run}.ls.gmtc, 2))], 1);
+                temp_r{run}.rs.gmtc(sweightidx{s,2}, :) .* repmat(sweightidxmx{s,2}, 1, size(temp_r{run}.rs.gmtc, 2))], 1);
         else
             if dataset.formatversion == 1
                 stc = mean(temp_r{run}.gmtc(sweightidx{s}, :) .* repmat(sweightidxmx{s}, 1, size(temp_r{run}.gmtc, 2)), 1);
@@ -594,6 +583,51 @@ for s = 1:numel(sfile)
         end
     end
 end
+
+
+
+
+
+
+
+
+function temp_r = load_data(howmanyruns, dataset, usesubjects, sub, dfoldvol, dfoldsurf, prefs, hasParallelToolbox)
+temp_r = cell(howmanyruns, 1);
+if hasParallelToolbox
+    parfor run = 1:howmanyruns
+        temp_r{run} = load([dfoldvol, dataset.vol.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+        if dataset.formatversion == 1
+            temp_r{run}.gmtc = single(temp_r{run}.gmtc);
+        end
+        if isfield(dataset, 'surf') && prefs.lcm.includesurf
+            temp_r{run}.ls = load([dfoldsurf, dataset.surf.l.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+            temp_r{run}.rs = load([dfoldsurf, dataset.surf.r.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+            temp_r{run}.ls.gmtc = single(temp_r{run}.ls.gmtc);
+            temp_r{run}.rs.gmtc = single(temp_r{run}.rs.gmtc);
+        end
+    end
+else
+    for run = 1:howmanyruns
+        temp_r{run} = load([dfoldvol, dataset.vol.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+        if dataset.formatversion == 1
+            temp_r{run}.gmtc = single(temp_r{run}.gmtc);
+        end
+        if isfield(dataset, 'surf') && prefs.lcm.includesurf
+            temp_r{run}.ls = load([dfoldsurf, dataset.surf.l.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+            temp_r{run}.rs = load([dfoldsurf, dataset.surf.r.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
+            temp_r{run}.ls.gmtc = single(temp_r{run}.ls.gmtc);
+            temp_r{run}.rs.gmtc = single(temp_r{run}.rs.gmtc);
+        end
+    end
+end
+
+
+
+
+
+
+
+
 
 
 
@@ -679,22 +713,6 @@ end
 function X=addone(X)
 X=[ones(size(X,1),1),X];
 
-
-function argOut = quickLoad(pathToMatfile, myVarName)
-% Get the location of the variable in the file using hdf syntax
-% / by itself is the root of the file, then variables names come after
-% Note: also works very nicely for nested structures where a.b.c.d.e would
-% have varName as /a/b/c/d/e.
-h5loc = ['/' myVarName]; % Always /, not like windows/linux filesep
-% Open the file using H5F.
-fid = H5F.open(pathToMatfile);
-% Open the file using H5D.
-dsetid = H5D.open(fid,h5loc);
-% Load in the dataset
-argOut = H5D.read(dsetid); % All done
-% Clean up
-H5D.close(dsetid);
-H5F.close(fid);
 
 function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
