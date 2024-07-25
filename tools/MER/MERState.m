@@ -426,17 +426,15 @@ classdef MERState < handle
             % reporting values accurately.
             if ~isfield(obj.Cache, 'prenii_mat')...
                     || isempty(obj.Cache.prenii_mat)
-                options = ea_assignpretra(obj.Config);
-                ptdir = fullfile(obj.Config.root, obj.Config.patientname);
-                prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
+                options = ea_getptopts(obj.Config.uipatdirs{1});
+                prenii_fname = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
                 nii = ea_load_nii(prenii_fname);
                 obj.Cache.prenii_mat = nii(1).mat;
             end
             if ~isfield(obj.Cache, 'native2mni_emp_mat')...
                     || isempty(obj.Cache.native2mni_emp_mat)
-                options = ea_assignpretra(obj.Config);
-                ptdir = fullfile(obj.Config.root, obj.Config.patientname);
-                prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
+                options = ea_getptopts(obj.Config.uipatdirs{1});
+                prenii_fname = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
                 vx_native = cell(1, length(obj.DBSImplants));
                 mm_mni = cell(1, length(obj.DBSImplants));
                 dbs_coords = arrayfun(@(x)x.coords, obj.DBSImplants, 'UniformOutput', false);
@@ -460,7 +458,7 @@ classdef MERState < handle
                     XYZ_nii_vx = obj.Cache.prenii_mat \ XYZ_nii_mm;
                     % Map to template space. Slow, but only once per side.
                     XYZ_mni_mm = ea_map_coords(XYZ_nii_vx(1:3,:), prenii_fname, ...
-                        fullfile(ptdir, 'inverseTransform'), '');
+                        [options.subj.subjDir, filesep, 'inverseTransform'], '');
                     % Save some values for later.
                     vx_native{sid} = XYZ_nii_vx;
                     mm_mni{sid} = XYZ_mni_mm;
@@ -487,9 +485,8 @@ classdef MERState < handle
         function coords_mni = native2mni_slow(obj, coords_native)
             % Use native2mni_fast for visualization, native2mni_slow for
             % reporting values accurately.
-            options = ea_assignpretra(obj.Config);
-            ptdir = fullfile(obj.Config.root, obj.Config.patientname);
-            prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
+            options = ea_getptopts(obj.Config.uipatdirs{1});
+            prenii_fname = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
             if ~isfield(obj.Cache, 'prenii_mat')...
                     || isempty(obj.Cache.prenii_mat)
                 nii = ea_load_nii(prenii_fname);
@@ -498,7 +495,7 @@ classdef MERState < handle
             cmm = [coords_native, ones(size(coords_native, 1), 1)]';
             cvx = obj.Cache.prenii_mat \ cmm;  % mm2vx
             coords_mni = ea_map_coords(cvx(1:3, :), prenii_fname, ...
-                fullfile(ptdir, 'inverseTransform'), '')';
+                [options.subj.subjDir, filesep, 'inverseTransform'], '')';
         end
     end
     methods(Static = true)
