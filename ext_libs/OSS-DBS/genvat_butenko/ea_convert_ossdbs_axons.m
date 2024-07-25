@@ -1,4 +1,4 @@
-function ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths)
+function ea_convert_ossdbs_axons(options,settings,side,prob_PAM,resultfig,outputPaths,source_i)
 % Prepare Lead-DBS BIDS format fiber activations.
 % By Butenko and Li, konstantinmgtu@gmail.com
 
@@ -9,17 +9,23 @@ arguments
     prob_PAM            {mustBeNumericOrLogical} % 1 if PAM is computed over an uncertain parameter (e.g. fiber diameter)
     resultfig           % figure handle
     outputPaths         % various paths to conform with lead-dbs BIDS structure 
+    source_i            {mustBeNumeric} = 5; % source index. Not used if 5
 end
 
 switch side
     case 0
         sideLabel = 'R';
-        sideCode = 'rh';
         sideStr = 'right';
     case 1
         sideLabel = 'L';
-        sideCode = 'lh';
         sideStr = 'left';
+end
+
+% create source suffix if necessary
+if source_i == 5
+    source_index = '';
+else
+    source_index = ['_',num2str(source_i)];
 end
 
 if prob_PAM 
@@ -117,9 +123,9 @@ if ~isempty(axonState)
         else
             % save to the connectome folder to avoid wrong imports by FF
             if startsWith(settings.connectome, 'Multi-Tract: ')
-                fiberActivation = [settings.connectomeActivations, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
+                fiberActivation = [settings.connectomeActivations, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, source_index, '.mat'];
             else
-                fiberActivation = [settings.connectomeActivations, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
+                fiberActivation = [settings.connectomeActivations, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, source_index, '.mat'];
             end
         end
 

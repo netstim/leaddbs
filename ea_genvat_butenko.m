@@ -62,10 +62,11 @@ stimparams = struct();
 % multiple sources are not supported for PAM
 if any(nActiveSources > 1)
     if options.prefs.machine.vatsettings.butenko_calcPAM
-        ea_warndlg('MultiSource Mode is not supported for PAM!')
-        % Restore working directory and environment variables
-        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
-        return
+        % ea_warndlg('MultiSource Mode is not supported for PAM!')
+        % % Restore working directory and environment variables
+        % [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
+        % return
+        ea_warndlg('MultiSource Mode is used! Disjunction of PAM results across sources will be stored!')
     else
         ea_warndlg('MultiSource Mode is used! Stimulation volumes will be computed separately and merged using max(||E||)')
     end
@@ -93,7 +94,7 @@ for source_index = 1:4
             end
         else
             % warp fibers, remove too short and too far away ones
-            [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths);
+            [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths,  source_index);
         end
     end
     
@@ -265,7 +266,7 @@ for source_index = 1:4
 
             % prepare Lead-DBS BIDS format fiber activations
             if settings.calcAxonActivation
-                ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths)
+                ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths,source_use_index)
             end
 
         elseif isfile([outputPaths.HemiSimFolder, filesep, 'fail_', sideCode, '.txt'])
@@ -279,7 +280,7 @@ for source_index = 1:4
     end
 
     % check only the first source for PAM
-    if settings.calcAxonActivation || all(~multiSourceMode)
+    if all(~multiSourceMode)
         runStatusMultiSource(2:end,:) = 1;
         break
     end
@@ -288,8 +289,11 @@ end
 
 % merge multisource VATs
 for side = 0:1
-    if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0
+    if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && ~settings.calcAxonActivation 
         stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
+    elseif multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && settings.calcAxonActivation 
+        ea_postprocess_multisource_pam(options,settings,side+1)
+        break  % both sides are processed at once (overkill)
     end
 end
 

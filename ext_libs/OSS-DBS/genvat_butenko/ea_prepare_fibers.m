@@ -1,4 +1,4 @@
-function [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths)
+function [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths, source_i)
 % Preprocess fibers: warp to native (if neccesary), remove those far away
 % from the stimulating contacts and too short to allocate axons.
 % By Butenko and Li, konstantinmgtu@gmail.com
@@ -8,10 +8,11 @@ arguments
     S           % Lead-DBS stimulation settings
     settings    % parameters for OSS-DBS simulation
     outputPaths % various paths to conform with lead-dbs BIDS structure
+    source_i            {mustBeNumeric} = 5; % source index. Not used if 5
 end
 
 
-% check if classic S or stimSets are used
+% check if stimSets are used
 if settings.stimSetMode
     if settings.optimizer || settings.trainANN
         stimProtocol{1,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_rh'], '^Current_protocols_\d\.csv$', 0));
@@ -20,7 +21,12 @@ if settings.stimSetMode
         stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
     end
 else
-    stimProtocol = S;
+    if source_i == 5
+        stimProtocol = settings.Phi_vector;  % stim vector for source 1 only
+    else
+
+        stimProtocol = settings.Phi_vector_max;  % max stim vector accross sources
+    end
 end
 %coords_mm = ea_load_reconstruction(options);
 % load mni stimulation coordinates
@@ -43,11 +49,7 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
 
     % Filter fibers based on the spherical ROI
-    if options.native
-	    fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, preopAnchor);
-    else
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
-    end
+    fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2);
 
     % Filter fibers based on the minimal length
     fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
@@ -80,10 +82,14 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
 
     % also create a folder for PAM results
     settings.connectomeActivations = [settings.connectomePath,filesep,'PAM'];
-    if exist(settings.connectomeActivations,'dir')
-        ea_delete(settings.connectomeActivations);
+
+    % clean up for the first source only
+    if source_i == 1
+        if exist(settings.connectomeActivations,'dir')
+            ea_delete(settings.connectomeActivations);
+        end
+        ea_mkdir(settings.connectomeActivations);
     end
-    ea_mkdir(settings.connectomeActivations);
 
     if options.native
         settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, settings.connectome];
@@ -112,19 +118,25 @@ else % Multi-Tract connectome
 
     % also create a folder for PAM results
     settings.connectomeActivations = [settings.connectomePath,filesep,'PAM'];
-    if exist(settings.connectomeActivations,'dir')
-        ea_delete(settings.connectomeActivations);
-    end
-    ea_mkdir(settings.connectomeActivations);
-    if options.native
-        settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, connName];
-        if exist(settings.connectomePathMNI,'dir')
-            ea_delete(settings.connectomePathMNI);
+    % clean up for the first source only
+    if source_i == 1
+        if exist(settings.connectomeActivations,'dir')
+            ea_delete(settings.connectomeActivations);
         end
-        ea_mkdir(settings.connectomePathMNI);
-        settings.connectomeActivationsMNI = [settings.connectomePathMNI,filesep,'PAM'];
-        ea_mkdir(settings.connectomeActivationsMNI);
+        ea_mkdir(settings.connectomeActivations);
+
+        if options.native
+            settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, connName];
+            if exist(settings.connectomePathMNI,'dir')
+                ea_delete(settings.connectomePathMNI);
+            end
+            ea_mkdir(settings.connectomePathMNI);
+            settings.connectomeActivationsMNI = [settings.connectomePathMNI,filesep,'PAM'];
+            ea_mkdir(settings.connectomeActivationsMNI);
+        end
+
     end
+
 
     % Get paths of tracts
     connFolder = [ea_getconnectomebase, 'dMRI_MultiTract', filesep, connName];
@@ -142,11 +154,7 @@ else % Multi-Tract connectome
         conn = load(tract);
 
         % Filter fibers based on the spherical ROI
-        if options.native
-	        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, preopAnchor);
-        else
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
-        end
+        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, preopAnchor);
 
         % Filter fibers based on the minimal length
         fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
