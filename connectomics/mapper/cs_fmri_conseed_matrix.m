@@ -160,78 +160,92 @@ else
     numsub=length(usesubjects);
 end
 
-% init vars:
-addp='';
-ea_dispercent(0,'Iterating through subjects');
-scnt=1;
-for mcfi=usesubjects % iterate across subjects
-    howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
 
-    clear stc
-    for run=1:howmanyruns
-        load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc')
-        gmtc=single(gmtc);
 
-        if size(sfile(s,:),2)>1
-            % include surface:
-            ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
-            rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
-            ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
-        end
+% Check for Parallel Computing Toolbox
+hasParallelToolbox = license('test', 'Distrib_Computing_Toolbox');
 
-        for s=1:numseed
-            if size(sfile(s,:),2)>1 % dealing with surface seed
-                stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
-                    rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
-            else % volume seed
-                try
-                    if dataset.formatversion == 1
-                        stc(:,s) = mean(gmtc(sweightidx{s}, :) .* repmat(sweightidxmx{s}, 1, size(gmtc, 2)), 1);
-                    elseif dataset.formatversion > 1
-                        stc(:,s) = mean(gmtc(:, sweightidx{s}) .* repmat(sweightidxmx{s}', size(gmtc, 1), 1), 2);
-                    end
-                catch
-                    stc(s,:)=nan;
-                end
+% Initialize vars
+addp = '';
+ea_dispercent(0, 'Iterating through subjects');
+scnt = 1;
+
+% Preallocate result arrays
+fX = zeros(sum(sum(triu(ones(numseed), 1))), numsub);
+
+% Temporary cell array for parfor loop
+temp_fX = cell(1, numsub);
+
+if hasParallelToolbox
+    parfor mcfi_idx = 1:numel(usesubjects)
+        mcfi = usesubjects(mcfi_idx);
+        howmanyruns = ea_cs_dethowmanyruns(dataset, mcfi);
+
+        thiscorr = zeros(sum(sum(triu(ones(numseed), 1))), howmanyruns);
+
+        for run = 1:howmanyruns
+            data = load_data(mcfi, dataset, dfoldvol, dfoldsurf, run, sfile);
+            stc = compute_stc(data, sfile, sweightidx, sweightidxmx, numseed, dataset);
+
+            if exportgmtc
+                save_gmtc(stc, outputfolder, connLabel, dataset, mcfi, run);
             end
+
+            thiscorr(:,run) = compute_correlation(stc, numseed, cmd, dataset);
         end
 
-        if exportgmtc
-            tmp.gmtc = stc;
-            save(fullfile(outputfolder, ['conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1}, '_run-', num2str(run,'%02d'), '_timeseries.mat']),'-struct', 'tmp', '-v7.3');
+        thiscorr = mean(thiscorr, 2);
+        temp_fX{mcfi_idx} = thiscorr;
 
+        if writeoutsinglefiles
+            X = zeros(numseed);
+            X(:) = thiscorr;
+            save_funcmatrix(X, outputfolder, connLabel, dataset, mcfi);
         end
 
-        switch cmd
-            case 'matrix'
-                if dataset.formatversion == 1
-                    X=corrcoef(stc');
-                elseif dataset.formatversion > 1
-                    X=corrcoef(stc);
-                end
-            case 'pmatrix'
-                if dataset.formatversion == 1
-                    X=partialcorr(stc');
-                elseif dataset.formatversion > 1
-                    X=partialcorr(stc);
-                end
-        end
-        thiscorr(:,run)=X(:);
-        clear stc
+        ea_dispercent(mcfi_idx / numel(usesubjects));
     end
-    
-    thiscorr=mean(thiscorr,2);
-    X(:)=thiscorr;
-    fX(:,scnt)=X(logical(triu(ones(numseed),1)));
+else
+    for mcfi_idx = 1:numel(usesubjects)
+        mcfi = usesubjects(mcfi_idx);
+        howmanyruns = ea_cs_dethowmanyruns(dataset, mcfi);
 
-    if writeoutsinglefiles
-        save(fullfile(outputfolder, ['conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1}, '_funcmatrix.mat']), 'X', '-v7.3');
+        thiscorr = zeros(sum(sum(triu(ones(numseed), 1))), howmanyruns);
+
+        for run = 1:howmanyruns
+            data = load_data(mcfi, dataset, dfoldvol, dfoldsurf, run, sfile);
+            stc = compute_stc(data, sfile, sweightidx, sweightidxmx, numseed, dataset);
+
+            if exportgmtc
+                save_gmtc(stc, outputfolder, connLabel, dataset, mcfi, run);
+            end
+
+            thiscorr(:,run) = compute_correlation(stc, numseed, cmd, dataset);
+        end
+
+        thiscorr = mean(thiscorr, 2);
+        fX(:, scnt) = thiscorr;
+
+        if writeoutsinglefiles
+            X = zeros(numseed);
+            X(:) = thiscorr;
+            save_funcmatrix(X, outputfolder, connLabel, dataset, mcfi);
+        end
+
+        ea_dispercent(scnt / numsub);
+        scnt = scnt + 1;
     end
-
-    ea_dispercent(scnt/numsub);
-    scnt=scnt+1;
 end
-ea_dispercent(1,'end');
+
+% Aggregate results from temporary cell array
+if hasParallelToolbox
+    for mcfi_idx = 1:numel(usesubjects)
+        fX(:, mcfi_idx) = temp_fX{mcfi_idx};
+    end
+end
+
+ea_dispercent(1, 'end');
+
 
 switch dataset.type
     case 'fMRI_matrix'
@@ -316,6 +330,74 @@ switch dataset.type
 end
 
 toc
+
+
+
+function data = load_data(mcfi, dataset, dfoldvol, dfoldsurf, run, sfile)
+data = struct();
+data.gmtc = load([dfoldvol, dataset.vol.subIDs{mcfi}{run+1}], 'gmtc').gmtc;
+data.gmtc = single(data.gmtc);
+
+if size(sfile, 2) > 1
+    data.ls = load([dfoldsurf, dataset.surf.l.subIDs{mcfi}{run+1}]);
+    data.rs = load([dfoldsurf, dataset.surf.r.subIDs{mcfi}{run+1}]);
+    data.ls.gmtc = single(data.ls.gmtc);
+    data.rs.gmtc = single(data.rs.gmtc);
+end
+
+
+
+
+
+function stc = compute_stc(data, sfile, sweightidx, sweightidxmx, numseed, dataset)
+if dataset.formatversion == 1
+    stc = nan(numseed, size(data.gmtc, 2));
+elseif dataset.formatversion > 1
+    stc = nan(size(data.gmtc, 1), numseed);
+end
+
+for s = 1:numseed
+    if size(sfile, 2) > 1
+        stc(s,:) = mean([data.ls.gmtc(sweightidx{s,1},:) .* repmat(sweightidxmx{s,1}, 1, size(data.ls.gmtc, 2)); ...
+            data.rs.gmtc(sweightidx{s,2},:) .* repmat(sweightidxmx{s,2}, 1, size(data.rs.gmtc, 2))], 1);
+    else
+        if dataset.formatversion == 1
+            stc(s,:) = mean(data.gmtc(sweightidx{s}, :) .* repmat(sweightidxmx{s}, 1, size(data.gmtc, 2)), 1);
+        elseif dataset.formatversion > 1
+            stc(:,s) = mean(data.gmtc(:, sweightidx{s}) .* repmat(sweightidxmx{s}', size(data.gmtc, 1), 1), 2)';
+        end
+    end
+end
+
+
+
+
+function thiscorr = compute_correlation(stc, numseed, cmd, dataset)
+if strcmp(cmd, 'matrix')
+    if dataset.formatversion == 1
+        X = corrcoef(stc');
+    elseif dataset.formatversion > 1
+        X = corrcoef(stc);
+    end
+elseif strcmp(cmd, 'pmatrix')
+    if dataset.formatversion == 1
+        X = partialcorr(stc');
+    elseif dataset.formatversion > 1
+        X = partialcorr(stc);
+    end
+end
+thiscorr = X(logical(triu(ones(numseed), 1)));
+
+
+
+
+function save_gmtc(stc, outputfolder, connLabel, dataset, mcfi, run)
+tmp.gmtc = stc;
+save(fullfile(outputfolder, ['conn-', connLabel, '_id-', dataset.vol.subIDs{mcfi}{1}, '_run-', num2str(run, '%02d'), '_timeseries.mat']), '-struct', 'tmp', '-v7.3');
+
+
+function save_funcmatrix(X, outputfolder, connLabel, dataset, mcfi)
+save(fullfile(outputfolder, ['conn-', connLabel, '_id-', dataset.vol.subIDs{mcfi}{1}, '_funcmatrix.mat']), 'X', '-v7.3');
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
