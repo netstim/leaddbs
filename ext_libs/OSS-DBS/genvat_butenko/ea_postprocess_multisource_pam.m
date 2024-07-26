@@ -21,9 +21,9 @@ fiberActivations = dir([settings.connectomeActivations,filesep,'sub-*']);
 
 if side == 1
     % remove left side fiberActivations
-    fiberActivations = fiberActivations(~ismember({fiberActivations.name}, {'-L.mat', '-L_'}));
+    fiberActivations = fiberActivations(~contains({fiberActivations.name}, {'-L_','-L.mat'}));
 else
-    fiberActivations = fiberActivations(~ismember({fiberActivations.name}, {'-R.mat', '-R_'}));
+    fiberActivations = fiberActivations(~contains({fiberActivations.name}, {'-R_','-R.mat'}));
 end
 
 already_merged_index = [];

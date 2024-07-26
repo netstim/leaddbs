@@ -13,6 +13,11 @@ end
 conNum = options.elspec.numel;
 settings.Activation_threshold_VTA = []; % initialize
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
+if any(nActiveSources > 1)
+    settings.multisource = 1;
+else
+    settings.multisource = 0;
+end
 settings.stim_center = nan(2, 3);
 
 try
@@ -84,7 +89,7 @@ end
 % for multisource PAM, filter fibers using settings.Phi_vector_max
 % this simplifies merging results over sources
 settings.Phi_vector_max = zeros(size(settings.Phi_vector));
-if any(nActiveSources > 1) && settings.calcAxonActivation
+if settings.multisource && settings.calcAxonActivation
     for inx = 1:4
         
         [Phi_vector, ~, ~] = ea_get_OneSourceStimVector(S, 2, conNum, activeSources(:,inx));

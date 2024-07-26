@@ -176,9 +176,9 @@ if ~isempty(axonState)
                 end
             else
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivationMNI = [settings.connectomeActivationsMNI, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
+                    fiberActivationMNI = [settings.connectomeActivationsMNI, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, source_index, '.mat'];
                 else
-                    fiberActivationMNI = [settings.connectomeActivationsMNI, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
+                    fiberActivationMNI = [settings.connectomeActivationsMNI, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, source_index, '.mat'];
                 end
             end
 

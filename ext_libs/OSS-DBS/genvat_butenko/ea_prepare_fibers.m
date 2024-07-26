@@ -21,10 +21,9 @@ if settings.stimSetMode
         stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
     end
 else
-    if source_i == 5
+    if ~settings.multisource
         stimProtocol = settings.Phi_vector;  % stim vector for source 1 only
     else
-
         stimProtocol = settings.Phi_vector_max;  % max stim vector accross sources
     end
 end
@@ -154,7 +153,7 @@ else % Multi-Tract connectome
         conn = load(tract);
 
         % Filter fibers based on the spherical ROI
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2, preopAnchor);
+        fiberFiltered = ea_filterfiber_stim(conn, coords_mm_MNI, stimProtocol, 'kuncel', 2);
 
         % Filter fibers based on the minimal length
         fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
@@ -184,9 +183,14 @@ else % Multi-Tract connectome
 
                 fibersFound(t,i) = 1;
             end
+
+            if i == 1
+                data1.(tractName) = fiberFiltered{1};
+            else
+                data2.(tractName) = fiberFiltered{2};
+            end
+            
         end
-        data1.(tractName) = fiberFiltered{1};
-        data2.(tractName) = fiberFiltered{2};
     end
 
     % Save filtered fibers

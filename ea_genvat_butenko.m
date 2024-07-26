@@ -94,6 +94,7 @@ for source_index = 1:4
             end
         else
             % warp fibers, remove too short and too far away ones
+            % TBD: skip inactive sources!
             [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths,  source_index);
         end
     end
@@ -293,7 +294,6 @@ for side = 0:1
         stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
     elseif multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && settings.calcAxonActivation 
         ea_postprocess_multisource_pam(options,settings,side+1)
-        break  % both sides are processed at once (overkill)
     end
 end
 
