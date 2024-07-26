@@ -636,11 +636,7 @@ if hasParallelToolbox
     end
 else
     for run = 1:howmanyruns
-        try
         temp_r{run} = load([dfoldvol, dataset.vol.subIDs{usesubjects(sub)}{run+1}], 'gmtc');
-        catch
-            keyboard
-        end
         if dataset.formatversion == 1
             if dataset.migrateConnectome
                 t=temp_r{run};
@@ -663,23 +659,6 @@ else
         end
     end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 function ea_writeoutsinglefiles(dataset,outputfolder,sfile,s,mcfi,thiscorr,omaskidx,lsthiscorr,rsthiscorr)
