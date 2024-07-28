@@ -171,7 +171,7 @@ else
 end
 
 
-
+dataset.migrateConnectome=0;
 % check for automatic connectome migration:
 if dataset.formatversion==1
     if numsub==length(dataset.vol.subIDs) % ensure no subset used
