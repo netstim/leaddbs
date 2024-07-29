@@ -60,7 +60,7 @@ for side = options.sides
 
     offset = options.elspec.tip_length*~options.elspec.tipiscontact+options.elspec.contact_length/2;
     reco.mni.trajvector{side}=(reco.mni.markers(side).tail-reco.mni.markers(side).head)/norm(reco.mni.markers(side).tail-reco.mni.markers(side).head);
-    reco.mni.trajectory{side}=[reco.mni.markers(side).head-reco.mni.trajvector{side}*offset;reco.mni.markers(side).head+reco.mni.trajvector{side}*50];
+    reco.mni.trajectory{side}=[reco.mni.markers(side).head-reco.mni.trajvector{side}*5;reco.mni.markers(side).head+reco.mni.trajvector{side}*25];
     reco.mni.trajectory{side}=[linspace(reco.mni.trajectory{side}(1,1),reco.mni.trajectory{side}(2,1),50)',...
         linspace(reco.mni.trajectory{side}(1,2),reco.mni.trajectory{side}(2,2),50)',...
         linspace(reco.mni.trajectory{side}(1,3),reco.mni.trajectory{side}(2,3),50)'];
