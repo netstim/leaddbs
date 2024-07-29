@@ -102,6 +102,7 @@ function setuptree(varargin)
 handles=varargin{1}{1};
 
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
+
 togglebuttons=varargin{1}{2};
 atlassurfs=varargin{1}{3};
 atlases=varargin{1}{4};
@@ -198,8 +199,6 @@ for subgroup=1:length(atlases.subgroups)
                 h.sgsubfi{subgroup}{node}=thisatlfname;
 
                 [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-                disp(thisatlfname)
-                disp(thistb)                
                 checked=onoff2bool(togglebuttons(thistb).State);
                 lrlabel = ['<HTML><BODY>' ...
                     '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
@@ -219,9 +218,7 @@ for subgroup=1:length(atlases.subgroups)
                 h.sgsubfi{subgroup}{node}=thisatlfname;
             case 2 % LH only
                 [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-                disp(thisatlfname)
-                disp(thistb)
-                checked=onoff2bool(togglebuttons(thistb).State);              
+                checked=onoff2bool(togglebuttons(thistb).State);
                 lrlabel = ['<HTML><BODY>' ...
                     '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
                     '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
