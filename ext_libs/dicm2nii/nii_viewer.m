@@ -183,92 +183,15 @@ function varargout = nii_viewer(fname, varargin)
 % History(yymmdd):
 % 151021 Almost ready to publish.
 % 151104 Include drag&drop by Maarten van der Seijs.
-% 151105 Bug fix for Show NIfTI hdr/ext.
-% 151106 Use p.interp to avoid unnecessary interp for overlay;
-%        Use check mark for colorbar/crosshair/background menu items.
-% 151111 Take care of slope/inter of img; mask applies to DTI lines.
-% 151114 Avoid see-thu for white background.
-% 151119 Make smooth faster by using only 3 slices; Allow flip L/R.
-% 151120 Implement key navigation and zoom in/out.
-% 151121 Implement erode for white background; Add 'Show NIfTI essentials'. 
-% 151122 Bug fix for background img with sform=0.
-% 151123 Show coordinate system in fig title; show masked/aligned in file list;
-%        Bug fix for alpha (0/1 only); Bug fix for background image R change.
-% 151125 Avoid recursion for white background (failed under Linux).
-% 151128 Change checkbox to radiobutton: looks better;
-%        Fix the bug in reorient dim(perm), introduced in last revision.
-% 151129 Correct Center crosshair (was off by 0.5); Use evt.Key & add A/C/X/F1. 
-% 151201 Keep fig location & pref when 'open' & dnd: more user friendly.
-% 151202 java robot trick allows to add overlay by Ctrl-dnd.
-% 151207 Implement 'Add modulation'.
-% 151208 Add xyz display for each view.
-% 151217 Callback uses subfunc directly, and include fh as input.
-% 151222 Show ROI labels (eg AAL) if .txt file with same name exists.
-% 151224 Implement more matlab LUTs and custom LUT.
-% 151230 Use listbox for files; Add stack buttons; file order reversed.
-% 160102 Store p.R0 if need interp; No coordinate change for background.
-% 160104 set_cdata: avoid indexing for single vol img: may be much faster!
-%        jscroll_handle from findjobj.m to set vertical scoll bar as needed.
-% 160107 Rename XYZ label to IJK, implement "Set crosshair at XYZ".
-% 160108 Fix the case of 2-form_code for background and addMask.
-% 160109 Allow to turn off mouse-over display from Preferences;
-%        Implement Help -> Check update for easy update;
-%        Use Matlab built-in pref method for all files in the package.
-% 160111 Use image ButtonDownFcn; Mouse down&move now is same as mouse move.
-% 160112 Change back to line for crosshair: quiver is slow;
-%        Bug fix for white backgrnd & saveas backgrnd due to list order reverse.
-% 160113 Implement time course for a cube.
-% 160114 Figure visible avoids weird hanging problem for some matlab versions.
-% 160119 Allow adding multiple overlays with cellstr as 2nd input.
-% 160131 set_file: bug fix for cb(j); dnd: restore mouse location.
-% 160208 Allow moving background image in stack.
-% 160209 RGBA data supported; Background image can use lut "lines".
-% 160218 "lines": Fix non-isovoxel display; Same-dim background not required.
-% 160402 nii_xform_mat: make up R for possible Analyze file.
 % 160506 phase LUT to map complex img: useful for retinotopy.
-% 160509 Have 3 phase LUTs; Implement 'Open in new window'.
-% 160512 KeyPressFcn bug fix: use the smallest axis dim when zoom in.
-% 160517 KeyPressFcn: avoid double-dlg by Ctrl-A; phase6: bug fix for blue b3.
-% 160531 use handle() for fh & others: allow dot convention for early matlab.
-% 160601 Add cog and to image center, re-organize 'Set crosshair at' menu.
-% 160602 bug fix for 'closeAll' files.String(ib); COG uses abs and excludes NaN.
-% 160605 Add 'RGB' LUT to force RGB display: DTI_V1 or fsl style RGB file.
-% 160608 javaDropFcn: 2 more method for ctlDn; bug fix for fh.xxx in Resize.
 % 160620 Use JIDE CheckBoxList; Simplify KeyFcn by not focusing on active items. 
-% 160627 javaDropFcn: robot-click drop loc to avoid problem with vnc display. 
-% 160701 Implement hist for current volume; hs.value show top overlay first.
-% 160703 bug fix for 'Add aligned' complex img: set p.phase after re-orient.
-% 160710 Implement 'Create ROI file'; Time coure is for sphere, not cube.
-% 160713 javaDropFnc for Linux: Robot key press replaces mouse click;
-%        Implement 'Set crosshair at' 'Smoothed maximum'.
-% 160715 lut2img: bug fix for custom LUT; custom LUT uses rg [0 255]; add gap=0.
-% 160721 Implement 'Set crosshair at' & 'a point with value of'.
-% 160730 Allow to load single volume for large dataset.
 % 161003 Add aligned overlay: accept FSL warp file as transformation.
-% 161010 Implement 'Save volume as'; xyzr2roi: use valid q/sform.
-% 161018 Take care of issue converting long file name to var name.
-% 161103 Fix qform-only overlay, too long fig title, overlay w/o valid formCode.
-% 161108 Implement "Crop below crosshair" to remove excessive neck tissue.
 % 161115 Use .mat file for early spm Analyze file.
-% 161216 Show more useful 4x4 R for both s/q form in nii essentials.
-% 170109 bug fix: add .phase for background nifti.
-% 170130 get_range: use nii as input, so always take care of slope/inter.
-% 170210 Use flip for flipdim if available (in multiple files).
-% 170212 Can open nifti-convertible files; Add Save NIfTI as -> a copy.
 % 170421 java_dnd() changed as func, ControlDown OS independent by ACTION_LINK.
 % 170515 Use area to normalize histogram.
-% 171031 Implement layout. axes replace subplot to avoid overlap problem.
-% 171129 bug fix save_nii_as(): undo img scale for no_save_nii.
 % 171214 Try to convert back to volume in case of CIfTI (need anatomical gii).
-% 171226 Store all info into sag img handle (fix it while it aint broke :)
 % 171228 Surface view for gii (include HCP gii template).
-% 171229 combine into one overlay for surface view.
 % 180103 Allow inflated surface while mapping to correct location in volume.
-% 180108 set_file back to nii_viewer_cb for cii_view_cb convenience.
-% 180128 Preference stays for current window, and applies to new window only.
-% 180228 'Add overlay' check nii struct in base workspace first.
-% 180309 Implement 'Standard deviation' like for 'time course'.
-% 180522 set_xyz: bug fix for display val >2^15.
 % Later update history can be found at github.
 %%
 if nargin==2 && ischar(fname) && strcmp(fname, 'func_handle')
@@ -335,7 +258,7 @@ end
 fh = figure(fn);
 if nargout, varargout{1} = fh; end
 hs.fig = handle(fh); % have to use numeric for uipanel for older matlab
-figNam = p.nii.hdr.file_name;
+figNam = char(p.nii.hdr.file_name);
 if numel(figNam)>40, figNam = [figNam(1:40) '...']; end
 figNam = ['nii_viewer - ' figNam ' (' formcode2str(hs.form_code(1)) ')'];
 set(fh, 'Toolbar', 'none', 'Menubar', 'none', ... % 'Renderer', 'opengl', ...
@@ -474,21 +397,13 @@ end
 
 % early matlab's colormap works only for axis, so ax(4) is needed.
 hs.ax(4) = axes('Position', axPos(4,:), 'Parent', hs.frame);
-try
-    hs.colorbar = colorbar(hs.ax(4), 'YTicks', [0 0.5 1], 'Color', [1 1 1], ...
-        'Location', 'West', 'PickableParts', 'none', 'Visible', 'off');
-catch % for early matlab
-    colorbar('peer', hs.ax(4), 'Location', 'West', 'Units', 'Normalized');
-    hs.colorbar = findobj(fh, 'Tag', 'Colorbar'); 
-    set(hs.colorbar, 'Visible', 'off', 'HitTest', 'off', 'EdgeColor', [1 1 1]);
-end
+hs.colorbar = colorbar(hs.ax(4), 'Color', [1 1 1], 'Location', 'West', ...
+    'PickableParts', 'none', 'Visible', 'off');
 
 % image() reverses YDir. Turn off ax and ticks
 set(hs.ax, 'YDir', 'normal', 'Visible', 'off');
 set([hs.ras hs.cross(:)' hs.xyz], 'Color', 'b', 'UIContextMenu', '');
-try set([hs.ras hs.cross(:)' hs.xyz], 'PickableParts', 'none'); % new matlab
-catch, set([hs.ras hs.cross(:)' hs.xyz], 'HitTest', 'off'); % old ones
-end
+set([hs.ras hs.cross(:)' hs.xyz], 'PickableParts', 'none');
 
 %% menus
 h = uimenu(fh, 'Label', '&File');
@@ -499,6 +414,7 @@ uimenu(h, 'Label', 'Apply modulation', 'Callback', @addMask);
 h_savefig = uimenu(h, 'Label', 'Save figure as');
 h_saveas = uimenu(h, 'Label', 'Save NIfTI as');
 uimenu(h, 'Label', 'Save volume as ...', 'Callback', cb('saveVolume'));
+uimenu(h, 'Label', 'Export as movie ...', 'Callback', cb('MP4'));
 uimenu(h, 'Label', 'Crop below crosshair', 'Callback', cb('cropNeck'));
 uimenu(h, 'Label', 'Create ROI file ...', 'Callback', cb('ROI'));
 uimenu(h, 'Label', 'Close window', 'Accelerator', 'W', 'Callback', 'close gcf');
@@ -527,6 +443,8 @@ end
 h_over = uimenu(fh, 'Label', '&Overlay');
 uimenu(h_over, 'Label', 'Add overlay', 'Accelerator', 'A', 'Callback', cb('add'));
 uimenu(h_over, 'Label', 'Add aligned overlay', 'Callback', cb('add'));
+hs.overlay(5) = uimenu(h_over, 'Label', 'Manual alignment', 'Callback', ...
+    @manual_align, 'Enable', 'off');
 
 h = uimenu(h_over, 'Label', 'Move selected image', 'Enable', 'off');
 uimenu(h, 'Label', 'to top',         'Callback', cb('stack'), 'Tag', 'top');
@@ -535,11 +453,12 @@ uimenu(h, 'Label', 'one level up',   'Callback', cb('stack'), 'Tag', 'up');
 uimenu(h, 'Label', 'one level down', 'Callback', cb('stack'), 'Tag', 'down');
 hs.overlay(3) = h;
 
-hs.overlay(5) = uimenu(h_over, 'Label', 'Remove overlay', 'Accelerator', 'R', ...
+hs.overlay(7) = uimenu(h_over, 'Label', 'Remove overlay', 'Accelerator', 'R', ...
     'Callback', cb('close'), 'Enable', 'off');
 hs.overlay(4) = uimenu(h_over, 'Label', 'Remove overlays', ...
     'Callback', cb('closeAll'), 'Enable', 'off');
-uimenu(h_over, 'Label', 'Load LUT for current overlay', 'Callback', cb('custom'));
+hs.overlay(6) = uimenu(h_over, 'Label', 'Load LUT for current overlay', ...
+    'Callback', cb('custom'), 'Enable', 'off');
 
 h_view = uimenu(fh, 'Label', '&View');
 h = uimenu(h_view, 'Label', 'Zoom in by');
@@ -592,19 +511,6 @@ uimenu(h, 'Label', 'Show help text', 'Callback', 'doc nii_viewer');
 checkUpdate = dicm2nii('', 'checkUpdate', 'func_handle');
 uimenu(h, 'Label', 'Check update', 'Callback', @(~,~)checkUpdate('nii_viewer'));
 uimenu(h, 'Label', 'About', 'Callback', cb('about'));
-
-%% finalize gui
-if isnumeric(fh) % for older matlab
-    fh = handle(fh);
-    schema.prop(fh, 'Number', 'mxArray'); fh.Number = fn;
-    hs.lut = handle(hs.lut);
-    hs.frame = handle(hs.frame);
-    hs.value = handle(hs.value);
-    hs.panel = handle(hs.panel);
-    hs.params = handle(hs.params);
-    hs.scroll = handle(hs.scroll);
-    hs.pref = handle(hs.pref);
-end
 guidata(fh, hs); % store handles and data
 
 %% java_dnd based on dndcontrol at matlabcentral/fileexchange/53511
@@ -615,7 +521,9 @@ catch
     warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
     jFrame = fh.JavaFrame.getAxisComponent; %#ok<*JAVFM>
 end
-try java_dnd(jFrame, cb('drop')); catch me, disp(me.message); end
+if usejava('awt')
+    try java_dnd(jFrame, cb('drop')); catch me, disp(me.message); end
+end
 
 % iconPNG = fullfile(fileparts(mfilename('fullpath')), 'nii_viewer.png'); 
 % fh.JavaFrame.setFigureIcon(javax.swing.ImageIcon(iconPNG)); % windows only
@@ -1242,8 +1150,8 @@ switch cmd
         
         off_on = {'off' 'on'};
         set(hs.interp, 'Enable', off_on{isfield(p, 'R0')+1});
-        set(hs.overlay(1:4), 'Enable', off_on{(hs.files.getModel.size>1)+1}); % stack & Close overlays
-        set(hs.overlay(5), 'Enable', off_on{(p.hsI(1) ~= hs.hsI(1))+1}); % Close overlay
+        set(hs.overlay(1:6), 'Enable', off_on{(hs.files.getModel.size>1)+1}); % stack & Close overlays
+        set(hs.overlay(7), 'Enable', off_on{(p.hsI(1) ~= hs.hsI(1))+1}); % Close overlay
         set(hs.lut, 'Enable', off_on{2-(p.lut==numel(hs.lutStr))});
     case 'drop'
         try
@@ -1254,6 +1162,31 @@ switch cmd
         catch me
             errordlg(me.message);
         end
+    case 'MP4' % save slices as movie
+        str = {'Which view to slide? 1:Sag; 2:Cor; 3:Tra'};
+        a = inputdlg(str, 'Export Movie', 1);
+        if isempty(a), return; end
+        d = str2double(strtrim(a));
+        if ~any(d==1:3), errordlg('Input must be 1, 2 or 3'); return; end
+        str = {'Slice range (default all)' 'Movie frames per second'};
+        a = inputdlg(str, 'Export Movie', 1, {['1:' num2str(hs.dim(d))] '4'});
+        if isempty(a), return; end
+        rg = eval(['[' a{1} ']']);
+        fps = str2double(a{2});
+        p = get_para(hs);
+        pName = fileparts(p.nii.hdr.file_name);
+        [fname, pName] = uiputfile([pName '/*.mp4'], ...
+            'Input file name to save the movie');
+        if ~ischar(fname), return; end
+        fname = fullfile(pName, fname);
+        
+        rect = [2 2 fh.Position(3:4)-[3 hs.params.Position(4)+1]];
+        vw = mp4_video(fname, fps, fix(rect/2)*2);
+        for i = rg
+            hs.ijk(d).Value = i;
+            vw.addFrame(fh);
+        end
+        vw.save();
     otherwise
         error('Unknown Callback: %s', cmd);
 end
@@ -1384,10 +1317,10 @@ for i = 1:hs.files.getModel.size
     end
     
     if isfield(p, 'mask')
-        img = bsxfun(@times, img, p.mask);
+        img = img .* p.mask;
     end
     if isfield(p, 'modulation')
-        img = bsxfun(@times, img, p.modulation);
+        img = img .* p.modulation;
     end
 
     if any(lut == 26:28) % interp/smooth both mag and phase
@@ -1658,7 +1591,7 @@ function [R, perm, flp] = reorient(R, dim, leftHand)
 % left-handed matrix, where R(1,1) will be negative. 
 % The second input is the img space dimension (1x3). 
 % The perm output, like [1 2 3] or a permutation of it, indicates if input R was
-% permuted for 3 axis. The third output, flip (1x3 logical), indicates an axis 
+% permuted for 3 axis. The third output, flp (1x3 logical), indicates an axis 
 % (AFTER perm) is flipped if true.
 a = abs(R(1:3,1:3));
 [~, ixyz] = max(a);
@@ -1666,7 +1599,7 @@ if ixyz(2) == ixyz(1), a(ixyz(2),2) = 0; [~, ixyz(2)] = max(a(:,2)); end
 if any(ixyz(3) == ixyz(1:2)), ixyz(3) = setdiff(1:3, ixyz(1:2)); end
 [~, perm] = sort(ixyz);
 R(:,1:3) = R(:,perm);
-flp = R([1 6 11]) < 0; % diag(R(1:3, 1:3))
+flp = diag(R(1:3, 1:3))' < 0;
 if nargin>2 && leftHand, flp(1) = ~flp(1); end
 rotM = diag([1-flp*2 1]);
 rotM(1:3, 4) = (dim(perm)-1) .* flp; % 0 or dim-1
@@ -1776,26 +1709,9 @@ else % numel(f) is 2, numel(ask_code) can be 1 or 2
     if isempty(frm), frm = f(1); end % no match to ask_code, use sform
 end
 
-if frm(1) == fs(1) % match sform_code or no match
-    R = [hdr.srow_x; hdr.srow_y; hdr.srow_z; 0 0 0 1];
-else % match qform_code
-    R = quat2R(hdr);
+if frm(1) == fs(1), R = [hdr.sform_mat; 0 0 0 1]; % match sform_code or no match
+else, R = [hdr.qform_mat; 0 0 0 1]; % match qform_code
 end
-
-%%
-function R = quat2R(hdr)
-% Return 4x4 qform transformation matrix from nii hdr.
-b = hdr.quatern_b;
-c = hdr.quatern_c;
-d = hdr.quatern_d;
-a = sqrt(1-b*b-c*c-d*d);
-if ~isreal(a), a = 0; end % avoid complex due to precision
-R = [1-2*(c*c+d*d)  2*(b*c-d*a)     2*(b*d+c*a);
-     2*(b*c+d*a)    1-2*(b*b+d*d)   2*(c*d-b*a);
-     2*(b*d-c*a )   2*(c*d+b*a)     1-2*(b*b+c*c)];
-if hdr.pixdim(1)<0, R(:,3) = -R(:,3); end % qfac
-R = R * diag(hdr.pixdim(2:4));
-R = [R [hdr.qoffset_x hdr.qoffset_y hdr.qoffset_z]'; 0 0 0 1];
 
 %% Create java SpinnerNumber
 function h = java_spinner(pos, val, parent, callback, fmt, helpTxt)
@@ -1835,6 +1751,8 @@ end
 mi = min(img); ma = max(img);
 if nii.hdr.intent_code > 1000 || (nargin>1 && isLabel)
     rg = [mi ma]; return;
+elseif nii.hdr.intent_code == 2 % correlation
+    rg = [0.3 1]; return;
 end
 
 ind = abs(img)>50;
@@ -1847,11 +1765,11 @@ if rg(1)<=0, rg(1) = sd/5; end
 if rg(1)<mi || isnan(rg(1)), rg(1) = mi; end
 if rg(2)>ma || isnan(rg(2)), rg(2) = ma; end
 if rg(1)==rg(2), rg(1) = mi; if rg(1)==rg(2), rg(1) = 0; end; end
-% rg = round(rg, 2, 'significant'); % since 2014b
-rg = str2num(sprintf('%.2g ', rg)); %#ok<*ST2NM>
+rg = round(rg, 2, 'significant'); % since 2014b
 if rg(1)==rg(2), rg(1) = mi; end
 if abs(rg(1))>10, rg(1) = floor(rg(1)/2)*2; end % even number
 if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
+if mi<0 && abs(mi)>ma/2, rg(1) = -rg(2); end % like phasediff
 
 %% Draw vector lines, called by set_cdata
 function vector_lines(hs, i, iaxis)
@@ -1887,7 +1805,7 @@ img = p.nii.img;
 % This is needed since vec is in image ref, at least for fsl
 img(:,:,:,p.flip) = -img(:,:,:,p.flip);
 if isfield(p, 'mask') % ignore modulation
-    img = bsxfun(@times, img, p.mask);
+    img = img .* p.mask;
 end
 if any(abs(diff(pixdim))>1e-4) % non isovoxel background
     pd = pixdim / min(pixdim);
@@ -1937,15 +1855,11 @@ end
 %% Bring cross and label to front
 function crossFront(hs)
 for i = 1:3
-    txt = allchild(hs.ax(i));
-    ind = strcmpi(get(txt, 'Type'), 'text');
-    txt = txt(ind); % a number, two letters, plus junk text with matlab 2010b
-    uistack([txt' hs.cross(i,:)], 'top');
+    uistack([findobj(hs.ax(i), 'Type', 'text')' hs.cross(i,:)], 'top');
 end
 
 %% Compute color map for LUT
 function map = lut2map(p, lutStr)
-persistent parula64;
 if isfield(p, 'map')
     if isfield(p.nii, 'NamedMap')
         try, map = p.nii.NamedMap{p.volume}.map; end
@@ -1972,12 +1886,6 @@ elseif lut == 10 % two-sided
     map_neg(:,1) = 0; map_neg(:,3) = flip(map_neg(:,3)); % blue_green
     map = [flip(map_neg,1); map];
 elseif lut == 11, map(:,2:3) = 0; % vector lines
-elseif lut == 12 % parula not in old matlab, otherwise this can be omitted
-    if isempty(parula64)
-        fname = fullfile(fileparts(mfilename('fullpath')), 'example_data.mat'); 
-        a = load(fname, 'parula'); parula64 = a.parula;
-    end
-    map = parula64;
 elseif lut < 26 % matlab LUT
     map = feval(lutStr, 64);
 elseif lut == 27 % phase3: red-yellow-green-yellow-red
@@ -2105,38 +2013,16 @@ end
 %% Simple version of interp3
 function V = interp3a(V, I, method)
 % V = interp3a(V, I, 'linear');
-% This is similar to interp3 from Matlab, but takes care of the Matlab version
-% issue, and the input is simplified for coordinate. The coordinate input are in
-% this way: I(1,:), I(2,:) and I(3,:) are for x, y and z. 
-persistent v;
-if isempty(v)
-    try 
-        griddedInterpolant(ones(3,3,3), 'nearest', 'none');
-        v = 2014;
-    catch
-        try
-            griddedInterpolant(ones(3,3,3), 'nearest');
-            v = 2013;
-        catch
-            v = 2011;
-        end
-    end
-end
+% This is similar to interp3 from Matlab, while the input is simplified for
+% coordinate. The coordinate input are in this way: I(1,:), I(2,:) and I(3,:)
+% are for x, y and z.
 
 if strcmp(method, 'nearest') || any(size(V)<2), I = round(I); end
 if size(V,1)<2, V(2,:,:) = nan; end
 if size(V,2)<2, V(:,2,:) = nan; end
 if size(V,3)<2, V(:,:,2) = nan; end
-if v > 2011
-    if  v > 2013
-        F = griddedInterpolant(V, method, 'none');
-    else
-        F = griddedInterpolant(V, method);
-    end
-    V = F(I(1,:), I(2,:), I(3,:)); % interpolate
-else % earlier matlab
-    V = interp3(V, I(2,:), I(1,:), I(3,:), method, nan);
-end
+F = griddedInterpolant(V, method, 'none');
+V = F(I(1,:), I(2,:), I(3,:)); % interpolate
 
 %% 2D/3D smooth wrapper: no input check for 2D
 function im = smooth23(im, varargin)
@@ -2207,14 +2093,13 @@ hs.value.String = str;
 
 %% nii essentials
 function s = nii_essential(hdr)
-% info = nii_essential(hdr);
-% Decode important NIfTI hdr into struct info, which is human readable.
+% Decode important NIfTI hdr into struct with human readable info.
 if isfield(hdr, 'nii') % input by nii_viewer
     s.FileName = hdr.nii.hdr.file_name;
     if isfield(hdr, 'mask_info'), s.MaskedBy = hdr.mask_info; end
-    if isfield(hdr, 'modulation_info'), s.ModulatdBy = hdr.modulation_info; end
+    if isfield(hdr, 'modulation_info'), s.ModulatedBy = hdr.modulation_info; end
     if isfield(hdr, 'alignMtx'), s.AlignMatrix = hdr.alignMtx; end
-    hdr = hdr.nii.hdr;
+    hdr = hdr.hdr0; % original nii header
 else
     s.FileName = hdr.file_name;
 end
@@ -2291,12 +2176,10 @@ end
 if ~isempty(hdr.descrip), s.Notes = hdr.descrip; end
 str = formcode2str(hdr.qform_code);
 if ~isempty(str), s.qform = str; end
-if hdr.qform_code>0, s.qform_mat = quat2R(hdr); end
+if hdr.qform_code>0, s.qform_mat = hdr.qform_mat; end
 str = formcode2str(hdr.sform_code);
 if ~isempty(str), s.sform = str; end
-if hdr.sform_code>0
-    s.sform_mat = [hdr.srow_x; hdr.srow_y; hdr.srow_z; 0 0 0 1];
-end
+if hdr.sform_code>0, s.sform_mat = hdr.sform_mat; end
 
 %% decode NIfTI form_code
 function str = formcode2str(code)
@@ -2310,113 +2193,109 @@ switch code
 end
 
 %% Get a mask based on image intensity, but with inside brain filled
-function r = img2mask(img)
-mn = mean(img(img(:)>0));
-r = smooth23(img, 'box', 5) > mn/8; % smooth, binarize
+function r = img2mask(img, thr)
+if nargin<2 || isempty(thr), thr = mean(img(img(:)>0)) / 8; end
+r = smooth23(img, 'box', 5) > thr; % smooth, binarize
 if sum(r(:))==0, return; end
+C = contourc(double(r), [1 1]);
+i = 1; c = {};
+while size(C,2)>2 % split C into contours
+    k = C(2,1) + 1;
+    c{i} = C(:, 2:k); C(:,1:k) = []; %#ok
+    i = i+1;
+end
 
-try
-    C = contourc(double(r), [1 1]);
-    i = 1; c = {};
-    while size(C,2)>2 % split C into contours
-        k = C(2,1) + 1;
-        c{i} = C(:, 2:k); C(:,1:k) = []; %#ok
-        i = i+1;
+nc = numel(c);
+rg = nan(nc, 4); % minX minY maxX maxY
+for i = 1:nc
+    rg(i,:) = [min(c{i},[],2)' max(c{i},[],2)'];
+end
+ind = false(nc,1);
+foo = min(rg(:,1)); ind = ind | foo==rg(:,1);
+foo = min(rg(:,2)); ind = ind | foo==rg(:,2);
+foo = max(rg(:,3)); ind = ind | foo==rg(:,3);
+foo = max(rg(:,4)); ind = ind | foo==rg(:,4);
+c = c(ind); % outmost contour(s)
+len = cellfun(@(x) size(x,2), c);
+[~, ind] = sort(len, 'descend');
+c = c(ind);
+C = c{1};
+if isequal(C(:,1), C(:,end)), c(2:end) = []; end % only 1st if closed
+nc = numel(c);
+for i = nc:-1:2 % remove closed contours except one with max len
+    if isequal(c{i}(:,1), c{i}(:,end)), c(i) = []; end
+end
+nc = numel(c);
+while nc>1 % +1 contours, put all into 1st
+    d2 = nan(nc-1, 2); % distance^2 from C(:,end) to other start/endpoint
+    for i = 2:nc
+        d2(i-1,:) = sum((C(:,end)*[1 1] - c{i}(:,[1 end])).^2);
+    end
+    [i, j] = find(d2 == min(d2(:)));
+    i = i + 1; % start with 2nd
+    if j == 1, C = [C c{i}]; %#ok C(:,1) connect to c{i}(:,1)
+    else C = [C c{i}(:,end:-1:1)]; %#ok C(:,end) to c{i}(:,end)
+    end
+    c(i) = []; nc = nc-1;
+end
+if ~isequal(C(:,1), C(:,end)), C(:,end+1) = C(:,1); end % close the contour
+x = C(1, :);
+y = C(2, :);
+[m, n] = size(r);
+
+% following is the method in Octave poly2mask
+xe = [x(1:numel(x)-1); x(1, 2:numel(x))]; % edge x
+ye = [y(1:numel(y)-1); y(1, 2:numel(y))]; % edge y
+ind = ye(1,:) == ye(2,:);
+xe(:,ind) = []; ye(:, ind) = []; % reomve horizontal edges
+minye = min(ye);
+maxye = max(ye);
+t = (ye == [minye; minye]);
+exminy = xe(:); exminy = exminy(t);
+exmaxy = xe(:); exmaxy = exmaxy(~t);
+maxye = maxye';
+minye = minye';
+m_inv = (exmaxy - exminy) ./ (maxye - minye);
+ge = [maxye minye exmaxy m_inv];
+ge = sortrows(ge, [1 3]);
+ge = [-Inf -Inf -Inf -Inf; ge];
+
+gei = size(ge, 1);
+sl = ge(gei, 1);
+ae = []; % active edge
+while (sl == ge(gei, 1))
+    ae = [ge(gei, 2:4); ae]; %#ok
+    gei = gei - 1;
+end
+
+miny = min(y);
+if miny < 1, miny = 1; end
+
+while (sl >= miny)
+    if (sl <= m) % check vert clipping
+        ie = round(reshape(ae(:, 2), 2, size(ae, 1)/2));
+        ie(1, :) = ie(1, :) + (ie(1, :) ~= ie(2, :));
+        ie(1, (ie(1, :) < 1)) = 1;
+        ie(2, (ie(2, :) > n)) = n;
+        ie = ie(:, (ie(1, :) <= n));
+        ie = ie(:, (ie(2, :) >= 1));
+        for i = 1:size(ie,2)
+            r(sl, ie(1, i):ie(2, i)) = true;
+        end
     end
     
-    nc = numel(c);
-    rg = nan(nc, 4); % minX minY maxX maxY
-    for i = 1:nc
-        rg(i,:) = [min(c{i},[],2)' max(c{i},[],2)'];
-    end
-    ind = false(nc,1);
-    foo = min(rg(:,1)); ind = ind | foo==rg(:,1);
-    foo = min(rg(:,2)); ind = ind | foo==rg(:,2);
-    foo = max(rg(:,3)); ind = ind | foo==rg(:,3);
-    foo = max(rg(:,4)); ind = ind | foo==rg(:,4);
-    c = c(ind); % outmost contour(s) 
-    len = cellfun(@(x) size(x,2), c);
-    [~, ind] = sort(len, 'descend');
-    c = c(ind);
-    C = c{1};
-    if isequal(C(:,1), C(:,end)), c(2:end) = []; end % only 1st if closed
-    nc = numel(c);
-    for i = nc:-1:2 % remove closed contours except one with max len
-        if isequal(c{i}(:,1), c{i}(:,end)), c(i) = []; end
-    end
-    nc = numel(c);
-    while nc>1 % +1 contours, put all into 1st
-        d2 = nan(nc-1, 2); % distance^2 from C(:,end) to other start/endpoint
-        for i = 2:nc
-            d2(i-1,:) = sum((C(:,end)*[1 1] - c{i}(:,[1 end])).^2);
-        end
-        [i, j] = find(d2 == min(d2(:)));
-        i = i + 1; % start with 2nd
-        if j == 1, C = [C c{i}]; %#ok C(:,1) connect to c{i}(:,1)
-        else C = [C c{i}(:,end:-1:1)]; %#ok C(:,end) to c{i}(:,end)
-        end
-        c(i) = []; nc = nc-1;
-    end
-    if ~isequal(C(:,1), C(:,end)), C(:,end+1) = C(:,1); end % close the contour
-    x = C(1, :);
-    y = C(2, :);
-    [m, n] = size(r);
-
-    % following is the method in Octave poly2mask
-    xe = [x(1:numel(x)-1); x(1, 2:numel(x))]; % edge x
-    ye = [y(1:numel(y)-1); y(1, 2:numel(y))]; % edge y
-    ind = ye(1,:) == ye(2,:);
-    xe(:,ind) = []; ye(:, ind) = []; % reomve horizontal edges
-    minye = min(ye);
-    maxye = max(ye);
-    t = (ye == [minye; minye]);
-    exminy = xe(:); exminy = exminy(t);
-    exmaxy = xe(:); exmaxy = exmaxy(~t);
-    maxye = maxye';
-    minye = minye';
-    m_inv = (exmaxy - exminy) ./ (maxye - minye);
-    ge = [maxye minye exmaxy m_inv];
-    ge = sortrows(ge, [1 3]);
-    ge = [-Inf -Inf -Inf -Inf; ge];
-
-    gei = size(ge, 1);
-    sl = ge(gei, 1);
-    ae = []; % active edge
+    sl = sl - 1;
+    ae = ae((ae(:, 1) ~= sl), :);
+    ae(:, 2) = ae(:, 2) - ae(:, 3);
+    
     while (sl == ge(gei, 1))
-        ae = [ge(gei, 2:4); ae]; %#ok
+        ae = [ae; ge(gei, 2:4)]; %#ok
         gei = gei - 1;
     end
-
-    miny = min(y);
-    if miny < 1, miny = 1; end
-
-    while (sl >= miny)
-        if (sl <= m) % check vert clipping
-            ie = round(reshape(ae(:, 2), 2, size(ae, 1)/2));
-            ie(1, :) = ie(1, :) + (ie(1, :) ~= ie(2, :));
-            ie(1, (ie(1, :) < 1)) = 1;
-            ie(2, (ie(2, :) > n)) = n;
-            ie = ie(:, (ie(1, :) <= n));
-            ie = ie(:, (ie(2, :) >= 1));
-            for i = 1:size(ie,2)
-                r(sl, ie(1, i):ie(2, i)) = true;
-            end
-        end
-
-        sl = sl - 1;
-        ae = ae((ae(:, 1) ~= sl), :);
-        ae(:, 2) = ae(:, 2) - ae(:, 3);
-
-        while (sl == ge(gei, 1))
-            ae = [ae; ge(gei, 2:4)]; %#ok
-            gei = gei - 1;
-        end
-
-        if size(ae,1) > 0
-            ae = sortrows(ae, 2);
-        end
+    
+    if size(ae,1) > 0
+        ae = sortrows(ae, 2);
     end
-catch %me, fprintf(2, '%s\n', me.message); assignin('base', 'me', me);
 end
 
 %% update colorbar label
@@ -2430,7 +2309,7 @@ if any(p.lut == 26:28)
     labls = [0 180 360];
 elseif p.lut==10
     rg = sort(abs(rg));
-    labls = {num2str(-rg(2),'%.2g') num2str(rg(1),'+/-%.2g') num2str(rg(2),'%.2g')};
+    labls = {num2str(-rg(2),'%.3g') num2str(rg(1),'+/-%.3g') num2str(rg(2),'%.3g')};
 elseif p.lut==numel(hs.lutStr) % custom
     im = p.nii.img(:,:,:,p.volume);
     im(isnan(im) | im==0) = [];
@@ -2438,26 +2317,21 @@ elseif p.lut==numel(hs.lutStr) % custom
     if max(im)<=size(map,1) && isequal(im, round(im)) % integer
         try, map = map(im+1, :); rg = [im(1) im(end)]; end
     end
-    labls = [rg(1) rg(2)];
+    labls = {num2str(rg(1),'%.2g') num2str(rg(2),'%.3g')};
     tickLoc = [0 1];
 else
     if rg(2)<0, rg = rg([2 1]); end
-    mn = str2double(num2str(mean(rg), '%.4g'));
-    labls = [rg(1) mn rg(2)];
+    mn = str2double(num2str(mean(rg), '%.3g'));
+    labls = {num2str(rg(1),'%.2g') num2str(mn,'%.3g') num2str(rg(2),'%.3g')};
 end
-% colormap in earlier matlab version changes values in colorbar.
-% So we have to set those values each time.
 colormap(hs.ax(end), map); % map must be double for old matlab
-% set(hs.colorbar, 'YTickLabel', labls); % new matlab
-set(get(hs.colorbar, 'Children'), 'YData', [0 1]); % Trick for old matlab
-set(hs.colorbar, 'YTickLabel', labls, 'YTick', tickLoc, 'Ylim', [0 1]);
+set(hs.colorbar, 'YTickLabel', labls, 'YTick', tickLoc);
 
 fh = hs.fig.UserData;
 if isempty(fh) || ~ishandle(fh) || ~isfield(p.nii, 'cii'), return; end
 hs = guidata(fh);
 colormap(hs.ax(end), map);
-set(get(hs.colorbar, 'Children'), 'YData', [0 1]);
-set(hs.colorbar, 'YTickLabel', labls, 'YTick', tickLoc, 'Ylim', [0 1]);
+set(hs.colorbar, 'YTickLabel', labls, 'YTick', tickLoc);
 
 %% return screen size in pixels
 function res = screen_pixels(id)
@@ -2602,9 +2476,7 @@ pName = fileparts(nam);
 if isempty(pName), pName = pwd; end
 try nii = nii_tool('load', nam); % re-load to be safe
 catch % restore reoriented img
-    nii = p.nii;
-    for k = 1:3, if p.flip(k), nii.img = flip(nii.img, k); end; end
-    nii.img = permute(nii.img, [p.perm 4:8]); % all vol in dim(4)
+    nii = p.nii; % just save reoriented version if no original img
     slope = nii.hdr.scl_slope; if slope==0, slope = 1; end
     nii.img = (single(nii.img) - nii.hdr.scl_inter) / slope; % undo scale
     if nii.hdr.datatype == 4 % leave others as it is or single
@@ -2674,7 +2546,7 @@ elseif ~isempty(strfind(c, 'new resolution'))
         errordlg('Invalid spatial resolution');
         return;
     end
-    if isequal(res, p.nii.hdr.pixdim(2:4))
+    if isequal(res, nii.hdr.pixdim(2:4))
         warndlg('The input resolution is the same as current one');
         return;
     end
@@ -2830,12 +2702,7 @@ switch p.lut
         if isfield(p, 'map') % custom
             map = p.map;            
         else
-            try, map = feval(lutStr, 256);
-            catch me
-                if p.lut == 12, map = lut2map(p); % parula for old matlab
-                else, rethrow(me);
-                end
-            end
+            map = feval(lutStr, 256);
         end
         if p.lut ~= 30 % normalized previously
             a = floor(im(:,:,1) * (size(map,1)-1)) + 1; % 1st for bkgrnd
@@ -2864,7 +2731,7 @@ function b = xyzr2roi(c, r, hdr)
 d = single(hdr.dim(2:4));
 I = nii_xform_mat(hdr) * grid3(d); % xyz in 4 by nVox
 
-b = bsxfun(@minus, I(1:3,:), c(:)); % dist in x y z direction from center
+b = I(1:3,:) - c(:); % dist in x y z direction from center
 b = sum(b .* b); % dist to center squared, 1 by nVox
 
 b = b <= r*r; % within sphere
@@ -2919,9 +2786,7 @@ p.volume = 1; % first volume
 
 %% estimate StepSize for java spinner
 function d = stepSize(val)
-d = abs(val/10);
-% d = round(d, 1, 'significant');
-d = str2double(sprintf('%.1g', d));
+d = round(abs(val/10), 1, 'significant');
 d = max(d, 0.01);
 if d>4, d = round(d/2)*2; end
 
@@ -3009,9 +2874,7 @@ else
     mat(1:3,:) = mat(1:3,:) / 10^(3+pow);
 end
 nii.hdr.sform_code = gii.DataSpace;
-nii.hdr.srow_x = mat(1,:);
-nii.hdr.srow_y = mat(2,:);
-nii.hdr.srow_z = mat(3,:);
+nii.hdr.sform_mat = mat(1:3,:);
 nii.hdr.pixdim(2:4) = sqrt(sum(mat(1:3,1:3).^2));
 
 nVol = size(nii.img, 5);
@@ -3116,9 +2979,9 @@ for i = regexp(xml, '<DataArray[\s>]') % often 2 of them
 
     Encoding = gii_attr(c, 'Encoding');
     if any(strcmp(Encoding, {'Base64Binary' 'GZipBase64Binary'}))
-        % Data = matlab.net.base64decode(Data); % since 2016b
-        Data = javax.xml.bind.DatatypeConverter.parseBase64Binary(Data);
-        Data = typecast(Data, 'uint8');
+        Data = matlab.net.base64decode(Data); % since 2016b
+%         Data = javax.xml.bind.DatatypeConverter.parseBase64Binary(Data);
+%         Data = typecast(Data, 'uint8');
         if strcmp(Encoding, 'GZipBase64Binary') % HCP uses this
             Data = nii_tool('LocalFunc', 'gunzip_mem', Data);
         end
@@ -3227,12 +3090,7 @@ if isempty(fh) || ~ishandle(fh) % create surface figure
     set(hs.patch, 'ButtonDownFcn', {@cii_view_cb 'buttonDownPatch'}, 'UIContextMenu', cMenu);
     
     hs.ax(5) = axes('Position', [r 0.1 1-r 0.8], 'Visible', 'off', 'Parent', hs.frame);
-    try
-        hs.colorbar = colorbar(hs.ax(5), 'PickableParts', 'none');
-    catch % for early matlab
-        colorbar('peer', hs.ax(5), 'Units', 'Normalized', 'HitTest', 'off');
-        hs.colorbar = findobj(fh, 'Tag', 'Colorbar'); 
-    end
+    hs.colorbar = colorbar(hs.ax(5), 'PickableParts', 'none');
     set(hs.colorbar, 'Location', 'East', 'Visible', get(hsN.colorbar, 'Visible'));
             
     fh.Position(3:4) = [1/r diff(lim(3,:))/diff(lim(2,:))] * 600 + 4;
@@ -3252,10 +3110,8 @@ if isempty(fh) || ~ishandle(fh) % create surface figure
     hs.hsN = hsN;
     guidata(fh, hs);
     set_cii_view(hs, [-90 0]);
-    try % drawnow then set manual, not exist for earlier Matlab
-        set(hs.patch, 'VertexNormalsMode', 'auto');
-        drawnow; set(hs.patch, 'VertexNormalsMode', 'manual'); % faster update
-    end
+    set(hs.patch, 'VertexNormalsMode', 'auto');
+    drawnow; set(hs.patch, 'VertexNormalsMode', 'manual'); % faster update
 end
 
 set_colorbar(hsN);
@@ -3278,9 +3134,7 @@ switch cmd
             hs.fig.UserData.xyz = []; return; 
         end
         hs.fig.UserData.hemi = 1 + any(get(h, 'Parent') == hs.ax(3:4));
-        try,   hs.fig.UserData.xyz = ev.IntersectionPoint;
-        catch, hs.fig.UserData.xyz = get(gca, 'CurrentPoint'); % old Matlab
-        end
+        hs.fig.UserData.xyz = ev.IntersectionPoint;
     case 'buttonDown' % figure button down: prepare for rotation
         if ~strcmpi(hs.fig.SelectionType, 'normal'), return; end % not button 1
         hs.fig.UserData.xy = get(hs.fig, 'CurrentPoint');
@@ -3298,7 +3152,7 @@ switch cmd
                   linspace(xyz(1,2), xyz(2,2), 200);
                   linspace(xyz(1,3), xyz(2,3), 200)]; % line between box edges
             ln = permute(ln, [3 1 2]);
-            d = sum(bsxfun(@minus, v, ln) .^ 2, 2); % distance squared
+            d = sum((v - ln) .^ 2, 2); % distance squared
             a = permute(min(d), [3 1 2]); % min along the line
             a = sum([a a([2:end end]) a([1 1:end-1])], 2) / 3; % smooth
             i = find((diff(a)>0) & (a(1:end-1)<8), 1); % find 1st valley
@@ -3310,7 +3164,7 @@ switch cmd
             % disp(xyz-hs.fig.UserData.xyz);
             if ~isequal(v, hs.gii{ig}), xyz = hs.gii{ig}(iv,:); end        
         elseif ~isequal(v, hs.gii{ig})
-            v = bsxfun(@minus, v, xyz);
+            v = v - xyz;
             [~, iv] = min(sum(v.^2, 2));
             xyz = hs.gii{ig}(iv,:);
         end
@@ -3402,8 +3256,8 @@ for j = hs.hsN.files.getModel.size:-1:1
         [im, alfa] = lut2img(p.nii.cii{i}(:, p.volume), p, hs.hsN.lutStr{p.lut});
         alfa = p.alpha * single(alfa>0);
         im = permute(im, [1 3 2]); % nVertices x 3
-        im = bsxfun(@times, im, alfa);
-        imP{i} = bsxfun(@times, imP{i}, 1-alfa) + im;
+        im = im .* alfa;
+        imP{i} = imP{i} .* (1-alfa) + im;
     end
 end
 set(hs.patch(1:2), 'FaceVertexCData', imP{1});
@@ -3418,19 +3272,9 @@ for i = 1:4
     camlight(hs.light(i), 'headlight');
 end
 
-%% this can be removed for matlab 2013b+
-function y = flip(varargin)
-if exist('flip', 'builtin')
-    y = builtin('flip', varargin{:});
-else
-    if nargin<2, varargin{2} = find(size(varargin{1})>1, 1); end
-    y = flipdim(varargin{:}); %#ok
-end
-
 %% normalize columns
 function v = normc(M)
-v = bsxfun(@rdivide, M, sqrt(sum(M .* M)));
-% v = M ./ sqrt(sum(M .* M)); % since 2016b
+v = M ./ sqrt(sum(M .* M));
 
 %% reorient nii to diagnal major
 function [nii, perm, flp] = nii_reorient(nii, leftHand, ask_code)
@@ -3452,20 +3296,15 @@ if sc>0 && flp(fps==3)
 end
 if isequal(perm, 1:3) && ~any(flp), return; end
 if frm(1) == nii.hdr.sform_code % only update matching form
-    nii.hdr.srow_x = R(1,:);
-    nii.hdr.srow_y = R(2,:);
-    nii.hdr.srow_z = R(3,:);
+    nii.hdr.sform_mat = R(1:3,:);
 end
 if frm(1) == nii.hdr.qform_code
-    nii.hdr.qoffset_x = R(1,4);
-    nii.hdr.qoffset_y = R(2,4);
-    nii.hdr.qoffset_z = R(3,4);
+    nii.hdr.qform_mat = R(1:3,:);
+    nii.hdr.qoffset_xyz = R(1:3,4);
     R0 = normc(R(1:3, 1:3));
     dcm2quat = dicm2nii('', 'dcm2quat', 'func_handle');
     [q, nii.hdr.pixdim(1)] = dcm2quat(R0);
-    nii.hdr.quatern_b = q(2);
-    nii.hdr.quatern_c = q(3);
-    nii.hdr.quatern_d = q(4);
+    nii.hdr.quatern_bcd = q(2:4);
 end
 for i = find(flp), nii.img = flip(nii.img, i); end
 
@@ -3475,23 +3314,80 @@ tf = builtin('ischar', A);
 if tf, return; end
 if exist('strings', 'builtin'), tf = isstring(A) && numel(A)==1; end
 
-%% flip slice dir for nii hdr
-% function hdr = flip_slices(hdr)
-% if hdr.sform_code<1 && hdr.sform_code<1, error('No valid form_code'); end
-% R = nii_xform_mat(hdr);
-% [~, iSL] = max(abs(R(1:3,1:3))); iSL = find(iSL==3);
-% if hdr.sform_code
-%     hdr.srow_x(iSL) = -hdr.srow_x(iSL);
-%     hdr.srow_y(iSL) = -hdr.srow_y(iSL);
-%     hdr.srow_z(iSL) = -hdr.srow_z(iSL);
-% end
-% if hdr.qform_code<1, return; end
-% R = quat2R(hdr);
-% R(:, iSL) = -R(:,iSL);
-% R = normc(R(1:3, 1:3));
-% dcm2quat = dicm2nii('', 'dcm2quat', 'func_handle');
-% [q, hdr.pixdim(1)] = dcm2quat(R);
-% hdr.quatern_b = q(2);
-% hdr.quatern_c = q(3);
-% hdr.quatern_d = q(4);
+%% manual alignment GUI
+function d = manual_align(h, ~)
+fh = ancestor(h, 'figure');
+pos = getpixelposition(fh);
+d = dialog('Name', 'Manual alignment', 'WindowStyle', 'normal', ...
+    'Position', [pos(1)+pos(3) pos(2) 310 210]);
+uitxt = @(p3,str)uicontrol(d, 'Style', 'text', 'String', str, ...
+    'BackgroundColor', d.Color, 'Position', [p3-[0 4 0] 22], ...
+    'TooltipString', str, 'HorizontalAlign', 'right');
+spinner = @(x,y,df,f)java_spinner([x y 48 24], df, d, {@align_cb d fh}, f, '');
+
+x = [0 60 120] + 120;
+y = (0:30:120) + 60;
+uitxt([x(1) y(5) 28], 'X'); uitxt([x(2) y(5) 28], 'Y'); uitxt([x(3) y(5) 28], 'Z');
+uitxt([12 y(4) 98], 'Translation (mm)');
+for i = 1:3, hs.p(i) = spinner(x(i), y(4), [0 -99 99 1],'#.#'); end
+uitxt([12 y(3) 98], 'Rotation (deg)');
+for i = 4:6, hs.p(i) = spinner(x(i-3), y(3), [0 -45 45 0.5],'#.#'); end
+uitxt([12 y(2) 98], 'Scaling');
+for i = 7:9, hs.p(i) = spinner(x(i-6), y(2), [1 0.5 2 0.01],'#.##'); end
+uitxt([12 y(1) 98], 'Shearing');
+for i = 10:12, hs.p(i) = spinner(x(i-9), y(1), [0 -1 1 0.01],'#.##'); end
+
+uibtn = @(x,w,str)uicontrol(d, 'String', str, 'Position', [x 18 w 24], ...
+    'Callback', {@align_cb str fh});
+uibtn(18, 52, 'Reset'); uibtn(90, 90, 'vector 1x12'); uibtn(200, 90, 'matrix 4x4');
+guidata(d, hs.p);
+
+%% manual alignment callback
+function align_cb(h, ~, d, fh)
+if isequal(d, 'Reset')
+    p = guidata(h);
+    v12 = [0 0 0  0 0 0  1 1 1  0 0 0];
+    for i = 1:12, p(i).setValue(v12(i)); end
+elseif isequal(d, 'vector 1x12')
+    p = guidata(h);
+    v12 = cell2mat(get(p, 'Value'));
+    fprintf('v12 = ['); fprintf('%.3g ', v12); fprintf('\b];\n');
+    return;
+elseif isequal(d, 'matrix 4x4')
+    p = guidata(h);
+    M = affine_mat(cell2mat(get(p, 'Value')));
+    global MANUAL_ALIGN; MANUAL_ALIGN = M; %#ok
+    fprintf('m44 = [\n'); fprintf('%9.3g%9.3g%9.3g%9.3g\n', M'); fprintf('];\n');
+    return;
+else % spinner cb
+    p = guidata(d);
+    v12 = cell2mat(get(p, 'Value'));
+end
+hs = guidata(fh);
+hsI = findobj(hs.ax(1), 'Type', 'image', '-or', 'Type', 'quiver');
+hsI(1).UserData.Ri = inv(affine_mat(v12) * hsI(1).UserData.R);
+set_cdata(hs);
+ 
+%% Return transformation matrix from a vector of 3, 6, 9 or 12
+function A = affine_mat(P)
+% Return 4x4 affine transformation matrix
+% P(1:3)   - xyz translation
+% P(4:6)   - xyz rotation about pitch, roll, yaw (degrees)
+% P(7)     - single scaling for xyz if numel(P)==7
+% P(7:9)   - xyz scaling if numel(P)>=9
+% P(10:12) - xyz shearing
+
+A = eye(4); A(1:3, 4) = P(1:3);
+if numel(P)==3, return; end
+ca = cosd(P(4:6)); sa = sind(P(4:6));
+A(1:3, 1:3) = [1 0 0; 0 ca(1) sa(1); 0 -sa(1) ca(1)] * ...
+              [ca(2) 0 sa(2); 0 1 0; -sa(2) 0 ca(2)] * ...
+              [ca(3) sa(3) 0; -sa(3) ca(3) 0; 0 0 1];
+if numel(P)==6, return; end
+if numel(P)==7, A(1:3, 1:3) = A(1:3, 1:3) * P(7); return; end
+A(1:3, 1:3) = A(1:3, 1:3) * diag(P(7:9));
+if numel(P)==9, return; end
+S = eye(4); S([5 9 10]) = P(10:12);
+A = A * S;
+
 %%
