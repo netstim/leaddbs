@@ -291,7 +291,10 @@ end
 % merge multisource VATs
 for side = 0:1
     if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && ~settings.calcAxonActivation 
-        stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
+        %stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
+        [vatfv,vatvolume] = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
+        stimparams(side+1).VAT.VAT = vatfv;
+        stimparams(side+1).volume = vatvolume;
     elseif multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && settings.calcAxonActivation 
         ea_postprocess_multisource_pam(options,settings,side+1)
     end

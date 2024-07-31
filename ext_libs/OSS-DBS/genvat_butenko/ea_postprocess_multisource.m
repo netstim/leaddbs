@@ -1,4 +1,4 @@
-function stimparams = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas,outputPaths)
+function [vatfv,vatvolume] = ea_postprocess_multisource(options,settings,side,source_efields,source_vtas,outputPaths)
 % Merge multisource VATs.
 % By Butenko and Li, konstantinmgtu@gmail.com
 
@@ -62,5 +62,5 @@ vat = ea_load_nii(vatToViz);
 vatfv = ea_niiVAT2fvVAT(vat,1,3);
 vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
 save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
-stimparams(side).VAT.VAT = vatfv;
-stimparams(side).volume = vatvolume;
+%stimparams(side).VAT.VAT = vatfv;
+%stimparams(side).volume = vatvolume;
