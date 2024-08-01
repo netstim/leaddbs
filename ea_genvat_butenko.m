@@ -209,8 +209,19 @@ for source_index = 1:4
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
 
             % run OSS-DBS
-            system(['ossdbs ', ea_path_helper(parameterFile_json)])
-        
+            [~, cmdout] = system(['ossdbs ', ea_path_helper(parameterFile_json)])
+            
+            % detec error related to Bnd_Box
+            if contains(cmdout, 'Bnd_Box is void')
+                disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
+                
+                % increase the Bnd_Box dimensions
+                system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
+
+                % run OSS-DBS
+                system(['ossdbs ', ea_path_helper(parameterFile_json)])
+            end
+
             % prepare NEURON simulation
             if settings.calcAxonActivation
     
