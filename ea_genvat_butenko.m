@@ -70,10 +70,12 @@ if any(nActiveSources > 1)
     else
         ea_warndlg('MultiSource Mode is used! Stimulation volumes will be computed separately and merged using max(||E||)')
     end
+else
+    first_active_source = find(~isnan(activeSources(1,:)),1,'first');
 end
 
 % if single source, we will run only one iteration
-for source_index = 1:4
+for source_index = first_active_source:4
 
     % get stim settings for particular source    
     settings = ea_get_stimProtocol(options,S,settings,activeSources,source_index);

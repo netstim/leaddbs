@@ -5,7 +5,7 @@ function [vatfv,vatvolume] = ea_postprocess_multisource(options,settings,side,so
 arguments
     options             % Lead-DBS options for electrode reconstruction and stimulation
     settings            % parameters for OSS-DBS simulation
-    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+    side                {mustBeNumeric} % hemisphere index (1 - rh, 2 - lh)
     source_efields      % cell array, full paths to the e-field computed for source_use_index 
     source_vtas         % cell array, full paths to the VATs computed for source_use_index 
     outputPaths         % various paths to conform with lead-dbs BIDS structure 
@@ -62,5 +62,3 @@ vat = ea_load_nii(vatToViz);
 vatfv = ea_niiVAT2fvVAT(vat,1,3);
 vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
 save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
-%stimparams(side).VAT.VAT = vatfv;
-%stimparams(side).volume = vatvolume;
