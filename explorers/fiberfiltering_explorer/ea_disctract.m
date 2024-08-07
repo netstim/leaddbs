@@ -288,9 +288,10 @@ classdef ea_disctract < handle
                         switch answ
                             case 'yes'
                                 options=ea_defaultoptions;
-                                options.prefs.machine.vatsettings.butenko_calcPAM=1; options.prefs.machine.vatsettings.butenko_calcVAT=0;
+                                options.prefs.machine.vatsettings.butenko_calcPAM=1;
+                                options.prefs.machine.vatsettings.butenko_calcVAT=0;
                                 options.prefs.machine.vatsettings.butenko_connectome=obj.connectome;
-                                options.groupdir=fileparts(fileparts(obj.analysispath));
+                                options.groupdir=fileparts(obj.leadgroup);
                                 obj.M.vatmodel='OSS-DBS (Butenko 2020)';
                                 if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
                                     options.stimSetMode = 1;
@@ -341,8 +342,9 @@ classdef ea_disctract < handle
                             switch answ
                                 case 'yes'
                                     options=ea_defaultoptions;
-                                    options.prefs.machine.vatsettings.butenko_calcPAM=0; options.prefs.machine.vatsettings.butenko_calcVAT=1;
-                                    options.groupdir=fileparts(fileparts(obj.analysispath));
+                                    options.prefs.machine.vatsettings.butenko_calcPAM=0;
+                                    options.prefs.machine.vatsettings.butenko_calcVAT=1;
+                                    options.groupdir=fileparts(obj.leadgroup);
                                     if isfield(obj.M.ui, 'stimSetMode') && obj.M.ui.stimSetMode
                                         options.stimSetMode = 1;
                                     else
@@ -403,8 +405,9 @@ classdef ea_disctract < handle
                     switch answ
                         case 'yes'
                             options=ea_defaultoptions;
-                            options.prefs.machine.vatsettings.butenko_calcPAM=0; options.prefs.machine.vatsettings.butenko_calcVAT=1;
-                            options.groupdir=fileparts(fileparts(obj.analysispath));
+                            options.prefs.machine.vatsettings.butenko_calcPAM=0;
+                            options.prefs.machine.vatsettings.butenko_calcVAT=1;
+                            options.groupdir=fileparts(obj.leadgroup);
                             options.prefs.machine.vatsettings.estimateInTemplate=~obj.native; % here key to estimate in the correct space.
                             
                             obj.M.vatmodel='OSS-DBS (Butenko 2020)';
