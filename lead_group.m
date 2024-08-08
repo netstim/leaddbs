@@ -1359,7 +1359,7 @@ switch choice
                     disp(['Processing data for field: ' fieldName]);
                 end
                 M.S = tmpM.S;
-                setappdata(fighandle, 'M', M);
+                setappdata(handles.leadfigure, 'M', M)
         end
         
     otherwise

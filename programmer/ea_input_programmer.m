@@ -49,8 +49,8 @@ function [file_path, releaseDir, status_path] = ea_input_programmer (options, el
     
     % Remove the items at the specified indices
     directoryList(indicesToRemove) = [];
+    inputStruct.priorStims = {};
     if exist(stimDir, 'Dir')
-        inputStruct.priorStims = {};
         inputStruct.priorStims = directoryList;
     end
     fprintf(fid, '%s', jsonencode(inputStruct));

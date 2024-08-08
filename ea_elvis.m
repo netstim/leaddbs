@@ -621,6 +621,7 @@ if exist(releaseDir, 'Dir')
 %     % Test MAC - will need to test on windows
     mac64Dir = strcat(releaseDir, '/mac-arm64');
     macDir = strcat(releaseDir, '/mac');
+    linuxDir = strcat(releaseDir, 'linux');
 
     if (currentOS == "maca64")
         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
@@ -629,6 +630,7 @@ if exist(releaseDir, 'Dir')
         if ~exist(testDir)
             unzip(zipDir, mac64Dir);
         end
+        system(appDir);
     end
 
     if (currentOS == "maci64")
@@ -638,8 +640,17 @@ if exist(releaseDir, 'Dir')
         if ~exist(testDir)
             unzip(zipDir, macDir);
         end
+        system(appDir);
     end
-    
+
+    if (currentOS == "glnxa64")
+        linuxTarFile = strcat(linuxDir, '/electron-react-boilerplate-4.6.0.tar.gz');
+        extractDir = linuxDir;
+        system(['tar -xzf ', linuxTarFile, ' -C ', extractDir]);
+        executablePath = strcat(extractDir, '/electron-react-boilerplate-4.6.0/electron-react-boilerplate');
+        system(executablePath);
+    end
+
 %     if (currentOS == "maca64")
 %         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
 %         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
@@ -647,7 +658,6 @@ if exist(releaseDir, 'Dir')
 %     if ~exist(testDir)
 %         unzip(zipDir, mac64Dir);
 %     end
-        system(appDir);
         [S] = ea_process_programmer(file_path);
         ea_visprogrammer(resultfig, options, S, elstruct);
 %     system([appDir, ' &']);
