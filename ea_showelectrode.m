@@ -1,5 +1,5 @@
 function [elrender,ellabel,eltype,eltext]=ea_showelectrode(obj,cmd,options)
-% This function renders the electrode as defined by options.elspec and coords_mm.
+% This function renders the electrode as defined by elspec and coords_mm.
 % _______________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -167,7 +167,7 @@ for side=options.sides
         end
 
         eltext=getappdata(resultfig,'eltext');
-        [conName, isDirectional] = ea_getConName(options.elspec, side, showSideStr=1);
+        [conName, isDirectional] = ea_getConName(elspec, side, showSideStr=1);
         for con=1:size(coords_mm{side},1)
             % add text:
             centroid=coords_mm{side}(con,:)+0.01;
@@ -244,7 +244,7 @@ for side=options.sides
                       'Abbott Directed 6172 (short)'
                       'Abbott Directed 6173 (long)'}
                     % Marker position relative to head position along z axis
-                    markerposRel = options.elspec.markerpos-electrode.head_position(3);
+                    markerposRel = elspec.markerpos-electrode.head_position(3);
                     dothearrows = 1;
                 otherwise
                     dothearrows = 0;
