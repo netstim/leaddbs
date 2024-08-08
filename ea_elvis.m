@@ -622,6 +622,7 @@ if exist(releaseDir, 'Dir')
     mac64Dir = strcat(releaseDir, '/mac-arm64');
     macDir = strcat(releaseDir, '/mac');
     linuxDir = strcat(releaseDir, 'linux');
+    windowsDir = strcat(releaseDir, 'win');
 
     if (currentOS == "maca64")
         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
@@ -649,6 +650,11 @@ if exist(releaseDir, 'Dir')
         system(['tar -xzf ', linuxTarFile, ' -C ', extractDir]);
         executablePath = strcat(extractDir, '/electron-react-boilerplate-4.6.0/electron-react-boilerplate');
         system(executablePath);
+    end
+
+    if (currentOS == "win64")
+        appDir = strcat(windowsDir, '/LeadDBSProgrammer Setup 4.6.0.exe');
+        system(appDir);
     end
 
 %     if (currentOS == "maca64")
