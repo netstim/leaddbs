@@ -13,6 +13,11 @@ end
 conNum = options.elspec.numel;
 settings.Activation_threshold_VTA = []; % initialize
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
+if any(nActiveSources > 1)
+    settings.multisource = 1;
+else
+    settings.multisource = 0;
+end
 settings.stim_center = nan(2, 3);
 
 try
@@ -79,4 +84,25 @@ if settings.calcAxonActivation
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
+end
+
+% for multisource PAM, filter fibers using settings.Phi_vector_max
+% this simplifies merging results over sources
+settings.Phi_vector_max = zeros(size(settings.Phi_vector));
+if settings.multisource && settings.calcAxonActivation
+    for inx = 1:4
+        
+        [Phi_vector, ~, ~] = ea_get_OneSourceStimVector(S, 2, conNum, activeSources(:,inx));
+        Phi_vector(isnan(Phi_vector)) = 0;
+
+        for side = 1:size(settings.Phi_vector_max,1)
+            if ~isnan(activeSources(side,inx))
+                for cnt = 1:size(settings.Phi_vector_max,2)
+                    if abs(Phi_vector(side,cnt)) > settings.Phi_vector_max(side,cnt)
+                        settings.Phi_vector_max(side,cnt) = abs(Phi_vector(side,cnt));
+                    end
+                end
+            end
+        end
+    end
 end

@@ -1,4 +1,4 @@
-function options = ea_get_OSS_DBS_options(patientPath, N_tracts, ConnectomeName)
+function options = ea_get_OSS_DBS_options(patientPath, N_tracts, ConnectomeName, native)
 
     % update options for OSS-DBS launch without GUI
     % unupdated parameters are the same as during the last GUI settings session
@@ -6,7 +6,7 @@ function options = ea_get_OSS_DBS_options(patientPath, N_tracts, ConnectomeName)
     options = ea_prefs('');
     options = ea_getptopts(patientPath, options);
    
-    options.native = 1;
+    options.native = native;
     options.groupmode = 1;
     options.groupid = 'currentune';
     options.stimSetMode = 0;  % we do not use it for current-optimization

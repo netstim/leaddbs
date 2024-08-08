@@ -24,6 +24,8 @@ C = strsplit(connectome_path,filesep);
 connectome_type = C{end-1};
 if flip && strcmp(connectome_type,'dMRI')
     new_connectome_path = strrep(connectome_path,'dMRI','dMRI_MultiTract');
+else
+    new_connectome_path = connectome_path;
 end
 
 if factor ~= 0

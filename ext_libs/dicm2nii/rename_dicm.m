@@ -100,7 +100,7 @@ for i = 1:nFile
         aN = tryGetField(s, 'AcquisitionNumber', 1);
         iN = s.InstanceNumber;
         if fmt ~= 2
-            if strncmp(vendor, 'SIEMENS', 7)
+            if strncmp(vendor, 'SIEMENS', 7) && isfield(s, 'ProtocolName')
                 pName = strtrim(s.ProtocolName);
             else
                 pName = strtrim(s.SeriesDescription);

@@ -227,6 +227,11 @@ if strcmp(handles.prod, 'dbs')
     end
 end
 
+% Set up MR/CT popupmenu and status text
+if isfield(handles, 'MRCT')
+    ea_switchctmr(handles);
+end
+
 % Update ui from patient
 if ~ismember(handles.prod, {'mapper'})
     ea_getui(handles);
@@ -238,11 +243,6 @@ else
         handles.patdir_choosebox.String = uipatdir{1};
         handles.patdir_choosebox.TooltipString = uipatdir{1};
     end
-end
-
-% Set up MR/CT popupmenu and status text
-if isfield(handles, 'MRCT')
-    ea_switchctmr(handles);
 end
 
 ea_storeui(handles); % save in pt folder

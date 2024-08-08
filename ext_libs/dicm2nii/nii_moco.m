@@ -141,38 +141,21 @@ I = I(:, ind);
 F.GridVectors = {0:d(1)-1, 0:d(2)-1, 0:d(3)-1};
 p.R = repmat(inv(Rm), [1 1 nVol]); % inv(R_rst)
 for i = 1:nVol
-%     R = p.R(:,:,i);
     if i>1, R = p.R(:,:,i-1); else, R = p.R(:,:,i); end % start w/ previous vol
     F.Values = smooth_mc(nii.img(:,:,:,i), sz); 
-    mss0 = inf;
     for iter = 1:64
         J = R * I; % R_rst*J -> R0*ijk
         V = F(J(1,:), J(2,:), J(3,:));
         ind = ~isnan(V); % NaN means out of range
-        V = V(ind);
-        dV = V0(ind); % ref
-        dV = dV - V * (sum(dV)/sum(V)); % diff now, sign affects p6 sign
-        mss = dV*dV' / numel(dV); % mean(dV.^2)
-        
-%         % watch mss change over iterations
-%         if iter==1
-%             figure(33); pause(1*(i>1));
-%             hPlot = plot(nan(1,64), 'o-', 'MarkerFaceColor', 'r');
-%             title(['Volume ' num2str(i)]); set(gca, 'xtick', 1:64);
-%             xlabel('Iterations'); ylabel('mss');
-%         end
-%         try hPlot.YData(iter) = mss; drawnow; end %#ok
-    
-        if mss > mss0, break; end % give up and use previous R        
-        p.R(:,:,i) = R; % accecpt only if improving
-        p.mss(i) = mss;
-        if 1-mss/mss0 < 1e-6, break; end % little effect, stop
-
+        dV = V0(ind) - V(ind);
         a = dG(:, ind);
-        p6 = (a * a') \ (a * dV'); % dG(:,ind)'\dV' estimate p6 from current R
-        R = R * rigid_mat(p6); % inv(inv(rigid_mat(p6)) * inv(R_rst))
-        mss0 = mss;
+        b = (a * a') \ (a * dV');
+        R = R * rigid_mat(b);
+        if b'*b < 1e-4, break; end
     end
+    p.R(:,:,i) = R; % accecpt only if improving
+    p.mss(i) = dV*dV' / numel(dV) / mean(V0);
+    % fprintf('vol=%-4i iter=%i mss=%.2g\n', i, iter, p.mss(i));
     if iter==64
         warning('Max iterations reached: %s, vol %g', nii.hdr.file_name, i);
     end
@@ -204,7 +187,7 @@ for i = 1:nVol
     end
     R = Rm * p.R(:,:,i); % inv(R_rst / Rref)
     p.trans(i,:) = -R(1:3, 4);
-    R = bsxfun(@rdivide, R, sqrt(sum(R.^2))); % to be safe
+    R = R ./ sqrt(sum(R.^2)); % to be safe
     p.rot(i,:) = -[atan2(R(2,3), R(3,3)) asin(R(1,3)) atan2(R(1,2), R(1,1))];
     p.R(:,:,i) = inv(p.R(:,:,i));
 end

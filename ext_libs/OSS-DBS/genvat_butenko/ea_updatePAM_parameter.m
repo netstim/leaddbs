@@ -41,5 +41,14 @@ elseif strcmp(pparam,'Encapsulation Thickness')
     ea_warndlg("TBA!")
 end
 
+% save probabilistic samples
+if exist([outputPaths.HemiSimFolder, filesep, pparam,'_samples.mat'], 'file')
+    load([outputPaths.HemiSimFolder, filesep, pparam,'_samples.mat'], 'prob_samples')
+    prob_samples = [prob_samples;param_to_change];
+else
+    prob_samples = param_to_change;
+end
+save([outputPaths.HemiSimFolder, filesep, pparam,'_samples.mat'], 'prob_samples')
+
 parameterFile = fullfile(outputPaths.outputDir, 'oss-dbs_parameters.mat');
 save(parameterFile, 'settings', '-v7.3');

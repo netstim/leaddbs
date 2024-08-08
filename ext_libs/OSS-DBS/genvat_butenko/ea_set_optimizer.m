@@ -43,15 +43,15 @@ end
 writetable(T,[stim_folder,filesep,'NB_rh',filesep,'Current_protocols_0.csv'])
 writetable(T,[stim_folder,filesep,'NB_lh',filesep,'Current_protocols_1.csv'])
 
-% weight the same for now
-jsonDict2.fixed_symptom_weights = [];
-jsonText = jsonencode(jsonDict2);
-jsonText(end-2:end-1) = '{}';
-
-json_file = [stim_folder,filesep,'Fixed_symptoms.json'];
-fid = fopen(json_file, 'w');
-fprintf(fid, '%s', jsonText)
-fclose(fid);
+% % weight the same for now
+% jsonDict2.fixed_symptom_weights = [];
+% jsonText = jsonencode(jsonDict2);
+% jsonText(end-2:end-1) = '{}';
+% 
+% json_file = [stim_folder,filesep,'Fixed_symptoms.json'];
+% fid = fopen(json_file, 'w');
+% fprintf(fid, '%s', jsonText)
+% fclose(fid);
 
 
 end

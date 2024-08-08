@@ -1,6 +1,8 @@
 function S = ea_cleartune_generateSfile(rightsets,leftsets,S,volcur)
 
-% rightsets - [amplitude,I1, I2, I3,...] in mA
+% rightsets - [amplitude;k1, k2, k3,...], e.g. [2.0; 0.0,-100.0,0.0,0.0]
+% -cathodic 2 mA stimulation via the second contact
+% 
 % volcur - 1 for voltage-controlled, 2 for current-controlled
 
 rightsets(isnan(rightsets)) = 0;

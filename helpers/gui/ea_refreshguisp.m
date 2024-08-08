@@ -114,15 +114,15 @@ else
 end
 
 vatsettings.butenko_calcPAM = ea_getprefs('vatsettings.butenko_calcPAM');
-if contains(model, 'OSS-DBS') && vatsettings.butenko_calcPAM
-    handles.Rs2am.Value = 0;
-    handles.Rs3am.Value = 0;
-    handles.Rs4am.Value = 0;
-    handles.Ls2am.Value = 0;
-    handles.Ls3am.Value = 0;
-    handles.Ls4am.Value = 0;
-    S.active = [1 1];
-end
+% if contains(model, 'OSS-DBS') && vatsettings.butenko_calcPAM
+%     handles.Rs2am.Value = 0;
+%     handles.Rs3am.Value = 0;
+%     handles.Rs4am.Value = 0;
+%     handles.Ls2am.Value = 0;
+%     handles.Ls3am.Value = 0;
+%     handles.Ls4am.Value = 0;
+%     S.active = [1 1];
+% end
 
 Ractive=S.active(1);
 Lactive=S.active(2);
@@ -422,21 +422,21 @@ else
     set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
 end
 
-if contains(model, 'OSS-DBS') && vatsettings.butenko_calcPAM
-    handles.Rs2am.Enable = "off";
-    handles.Rs3am.Enable = "off";
-    handles.Rs4am.Enable = "off";
-    handles.Ls2am.Enable = "off";
-    handles.Ls3am.Enable = "off";
-    handles.Ls4am.Enable = "off";
-else
-    handles.Rs2am.Enable = "on";
-    handles.Rs3am.Enable = "on";
-    handles.Rs4am.Enable = "on";
-    handles.Ls2am.Enable = "on";
-    handles.Ls3am.Enable = "on";
-    handles.Ls4am.Enable = "on";
-end
+% if contains(model, 'OSS-DBS') && vatsettings.butenko_calcPAM
+%     handles.Rs2am.Enable = "off";
+%     handles.Rs3am.Enable = "off";
+%     handles.Rs4am.Enable = "off";
+%     handles.Ls2am.Enable = "off";
+%     handles.Ls3am.Enable = "off";
+%     handles.Ls4am.Enable = "off";
+% else
+%     handles.Rs2am.Enable = "on";
+%     handles.Rs3am.Enable = "on";
+%     handles.Rs4am.Enable = "on";
+%     handles.Ls2am.Enable = "on";
+%     handles.Ls3am.Enable = "on";
+%     handles.Ls4am.Enable = "on";
+% end
 
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
@@ -492,19 +492,10 @@ switch model
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','on');
         S.monopolarmodel=0;
-        if vatsettings.butenko_calcPAM
-            Rs1va = handles.Rs1va.Value;
-            Ls1va = handles.Ls1va.Value;
-            ea_disable_vas(handles,options);
-            handles.Rs1va.Enable = "on";
-            handles.Rs1va.Value = Rs1va;
-            handles.Ls1va.Enable = "on";
-            handles.Ls1va.Value = Ls1va;
-            ea_toggle_pulsewidth(handles, 'on');
-        else
-            ea_enable_vas(handles,options);
-            ea_toggle_pulsewidth(handles, 'on');
-        end
+
+        ea_enable_vas(handles,options);
+        ea_toggle_pulsewidth(handles, 'on');
+
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');

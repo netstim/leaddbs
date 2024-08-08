@@ -17,9 +17,21 @@ else
 
 end
 
-if ~exist('outfn','var')
-    outfn=[ea_space,'atlas.nii'];
-end
-copyfile([ea_space([],'atlases'),atlassetname,filesep,'gm_mask.nii'],outfn);
 
-ea_conformspaceto([ea_space,spacedef.templates{1},'.nii'],outfn,1);
+
+if ~exist('outfn','var')
+    outfn=[ea_space,'atlas'];
+end
+
+[pth,fn,ext]=fileparts(outfn);
+outfn=fullfile(pth,ea_stripext(fn));
+
+[infn,ext]=ea_niigz([ea_space([],'atlases'),atlassetname,filesep,'gm_mask.nii']);
+copyfile(infn,[outfn,ext]);
+switch ext
+    case '.nii.gz'
+        gunzip([outfn,ext]);
+        ea_delete([outfn,ext]);
+end
+
+ea_conformspaceto([ea_space,spacedef.templates{1},'.nii'],[outfn,'.nii'],1);

@@ -16,7 +16,7 @@ function anonymize_dicm(src, rst, subID)
 % into the source folder to indicate the correspondence between the original
 % PatientName and assigned subject IDs.
 % 
-% See also DICM_HDR, SORT_DICM, RENAME_DICM, DICM2NII, DICM_SAVE
+% See also DICM_VAL_REP, DICM_HDR, SORT_DICM, RENAME_DICM, DICM2NII, DICM_SAVE
 
 % 161226 Wrote it (xiangrui.li@gmail.com)
 % 170103 Take care of confusion of multi-subjects; safer by using dicm tag.
