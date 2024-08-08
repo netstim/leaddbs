@@ -96,7 +96,7 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
             ea_delete(settings.connectomePathMNI);
         end
         ea_mkdir(settings.connectomePathMNI);
-        settings.connectomeActivationsMNI = [settings.connectomePathMNI,filesep,'Results_PAM'];
+        settings.connectomeActivationsMNI = [settings.connectomePathMNI,filesep,'PAM'];
         ea_mkdir(settings.connectomeActivationsMNI);
     end
 
@@ -135,7 +135,6 @@ else % Multi-Tract connectome
         end
 
     end
-
 
     % Get paths of tracts
     connFolder = [ea_getconnectomebase, 'dMRI_MultiTract', filesep, connName];

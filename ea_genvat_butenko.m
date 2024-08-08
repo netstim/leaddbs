@@ -70,6 +70,7 @@ if any(nActiveSources > 1)
     else
         ea_warndlg('MultiSource Mode is used! Stimulation volumes will be computed separately and merged using max(||E||)')
     end
+    first_active_source = 1;  % check all sources
 else
     first_active_source = find(~isnan(activeSources(1,:)),1,'first');
 end

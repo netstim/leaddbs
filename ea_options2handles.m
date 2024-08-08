@@ -47,7 +47,7 @@ if isfield(options, 'normalize')
         set(handles.normmethod,'Value',1);
     end
 
-    ea_normsettings(handles, 'normmethod')
+    ea_normsettings(handles, 'normmethod');
 end
 
 if isfield(options, 'modality')

@@ -75,43 +75,39 @@ tmp = ea_getleadtempdir;
 uuid = ea_generate_uuid;
 
 [pth,fn,ext]=ea_niifileparts(options.lcm.seeds{1});
-options.lcm.parcSeedFolder = [pth, filesep];
+options.lcm.parcSeedFolder = fullfile(fileparts(pth), filesep);
 options.lcm.parcSeedName = regexprep(strrep(fn, ' ', '_'), '\W', '');
 
 switch modality
     case 'fMRI'
-        copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
+        copyfile(options.lcm.seeds{1}, fullfile(tmp,[uuid,ext]));
         if strcmp(ext,'.nii.gz')
             gunzip(fullfile(tmp,[uuid,ext]));
             delete(fullfile(tmp,[uuid,ext]));
         end
+
         [~,~,ext]=ea_niifileparts(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']));
         copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']),[tmp,'222',ext]);
         if strcmp(ext,'.nii.gz')
             gunzip([tmp,'222',ext]);
             delete([tmp,'222',ext]);
         end
+
         ea_conformspaceto([tmp,'222','.nii'],ea_niigz(fullfile(tmp,uuid)),...
             0,[],fullfile(tmp,[uuid,'.nii']),0);
         options.lcm.seeds={fullfile(tmp,[uuid,'.nii'])};
     case 'dMRI'
-        switch ext
-            case {'.nii','.gz'}
-                parctxt=fullfile(pth,[ea_stripext(fn),'.txt']);
-            case '.txt'
-                options.lcm.seeds{1}=fullfile(pth,[fn,'.nii']);
-                parctxt=fullfile(pth,[fn,'.txt']);
-        end
-        fid=fopen(parctxt);
-        A=textscan(fid,'%f %s');
-        fclose(fid);
-        parcels=A{1};
-        [~,~,ext]=ea_niifileparts(options.lcm.seeds{1});
-        copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
+        copyfile(options.lcm.seeds{1}, fullfile(tmp,[uuid,ext]));
         if strcmp(ext,'.nii.gz')
             gunzip(fullfile(tmp,[uuid,ext]));
             delete(fullfile(tmp,[uuid,ext]));
         end
+
+        parctxt=[pth, '.txt'];
+        fid=fopen(parctxt);
+        A=textscan(fid,'%f %s');
+        fclose(fid);
+        parcels=A{1};
 
         parc=ea_load_nii(fullfile(tmp,[uuid,'.nii']));
         parc.img=round(parc.img);
@@ -126,11 +122,6 @@ switch modality
             cnt=cnt+1;
         end
 end
-
-% % load in txt
-% fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripext(ea_stripext(options.lcm.seeds{1})),'.txt']),'r');
-% A=textscan(fid,'%f %s\n');
-% idx=A{1};
 
 
 function seeds=ea_resolvevatseeds(options,modality)

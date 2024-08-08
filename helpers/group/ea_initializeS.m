@@ -20,13 +20,19 @@ elseif nargin > 1
     if isempty(label)
         [label, preexist] = ea_detstimname(options);
         if exist('handles', 'var') && isfield(handles, 'stimlabel')
-            set(handles.stimlabel, 'String', label);
+            handles.stimlabel.String = label;
+            if isempty(handles.stimlabel.Value)
+                handles.stimlabel.Value = 1;
+            end
         end
     elseif isfield(options, 'gen_newstim') && options.gen_newstim==1
         label = ea_detstimname(options);
         options.gen_newstim = 0;
         if exist('handles', 'var') && isfield(handles, 'stimlabel')
-            set(handles.stimlabel, 'String', label);
+            handles.stimlabel.String = label;
+            if isempty(handles.stimlabel.Value)
+                handles.stimlabel.Value = 1;
+            end
         end
     end
 end
@@ -40,7 +46,7 @@ if ~iscell(label)
 end
 
 if exist('handles', 'var') && isfield(handles, 'stimlabel')
-    S.label = label{get(handles.stimlabel,'Value')};
+    S.label = label{handles.stimlabel.Value};
 else
     S.label = label{1};
 end
