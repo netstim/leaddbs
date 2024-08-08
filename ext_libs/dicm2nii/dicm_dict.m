@@ -184,6 +184,7 @@ C = {
     '0018' '1315' 'CS' 'VariableFlipAngleFlag'
     '0018' '1316' 'DS' 'SAR'
     '0018' '1318' 'DS' 'dBdt'
+    '0018' '1320' 'FL' 'B1rms'
     '0018' '1081' 'IS' 'LowRRValue'
     '0018' '1082' 'IS' 'HighRRValue'
     '0018' '1083' 'IS' 'IntervalsAcquired'
@@ -308,6 +309,7 @@ C = {
     '0018' '9240' 'US' 'RFEchoTrainLength'
     '0018' '9241' 'US' 'GradientEchoTrainLength'
     '0018' '9302' 'CS' 'AcquisitionType'
+    '0018' '9344' 'CS' 'ContrastBolusAgentPhase'	
     '0018' '9601' 'SQ' 'DiffusionB_MatrixSequence'
     '0018' '9602' 'FD' 'DiffusionB_ValueXX'
     '0018' '9603' 'FD' 'DiffusionB_ValueXY'
@@ -315,6 +317,7 @@ C = {
     '0018' '9605' 'FD' 'DiffusionB_ValueYY'
     '0018' '9606' 'FD' 'DiffusionB_ValueYZ'
     '0018' '9607' 'FD' 'DiffusionB_ValueZZ'
+    '0018' '9808' 'CS' 'DataType'
     '0020' '000D' 'UI' 'StudyInstanceUID'
     '0020' '000E' 'UI' 'SeriesInstanceUID'
     '0020' '0010' 'SH' 'StudyID'
@@ -359,6 +362,8 @@ C = {
     '0020' '9251' 'FD' 'RRIntervalTimeMeasured'
     '0020' '9254' 'FD' 'RespiratoryIntervalTime'
     '0020' '9255' 'FD' 'RespiratoryTriggerDelayTime'
+    '0020' '9301' 'FD' 'ImagePositionVolume'
+    '0020' '930D' 'FD' 'TemporalPositionTimeOffset'
     '0020' '9421' 'LO' 'DimensionDescriptionLabel'
     '0028' '0002' 'US' 'SamplesPerPixel'
     '0028' '0004' 'CS' 'PhotometricInterpretation'
@@ -377,9 +382,9 @@ C = {
     '0028' '0103' 'US' 'PixelRepresentation'
     '0028' '0104' 'US' 'SmallestValidPixelValue'
     '0028' '0105' 'US' 'LargestValidPixelValue'
-    '0028' '0106' 'US' 'SmallestImagePixelValue'
-    '0028' '0107' 'US' 'LargestImagePixelValue'
-    '0028' '0120' 'SS' 'PixelPaddingValue'
+    '0028' '0106' 'SS' 'SmallestImagePixelValue' % can be US
+    '0028' '0107' 'US' 'LargestImagePixelValue' % can be SS
+    '0028' '0120' 'SS' 'PixelPaddingValue' % can be US
     '0028' '0301' 'CS' 'BurnedInAnnotation'
     '0028' '1050' 'DS' 'WindowCenter'
     '0028' '1051' 'DS' 'WindowWidth'
@@ -388,9 +393,9 @@ C = {
     '0028' '1054' 'LO' 'RescaleType'
     '0028' '1055' 'LO' 'WindowCenterWidthExplanation'
     '0028' '1080' 'LT' 'GrayScale'
-    '0028' '1101' 'US' 'RedPaletteColorLookupTableDescriptor'
-    '0028' '1102' 'US' 'GreenPaletteColorLookupTableDescriptor'
-    '0028' '1103' 'US' 'BluePaletteColorLookupTableDescriptor'
+    '0028' '1101' 'US' 'RedPaletteColorLookupTableDescriptor' % can be SS
+    '0028' '1102' 'US' 'GreenPaletteColorLookupTableDescriptor' % can be SS
+    '0028' '1103' 'US' 'BluePaletteColorLookupTableDescriptor' % can be SS
     '0028' '1201' 'OW' 'RedPaletteColorLookupTableData'
     '0028' '1202' 'OW' 'GreenPaletteColorLookupTableData'
     '0028' '1203' 'OW' 'BluePaletteColorLookupTableData'
@@ -443,8 +448,8 @@ C = {
     '0040' '2400' 'LT' 'ImagingServiceRequestComments'
     '0040' '9096' 'SQ' 'RealWorldValueMappingSequence'
     '0040' '9210' 'SH' 'LUTLabel'
-    '0040' '9211' 'SS' 'RealWorldValueLastValueMapped'
-    '0040' '9216' 'SS' 'RealWorldValueFirstValueMapped'
+    '0040' '9211' 'SS' 'RealWorldValueLastValueMapped' % can be US
+    '0040' '9216' 'SS' 'RealWorldValueFirstValueMapped' % can be US
     '0040' '9224' 'FD' 'RealWorldValueIntercept'
     '0040' '9225' 'FD' 'RealWorldValueSlope'
     '0040' 'A168' 'SQ' 'ConceptCodeSequence'
@@ -504,7 +509,7 @@ C = {
     '5200' '9229' 'SQ' 'SharedFunctionalGroupsSequence'
     '5200' '9230' 'SQ' 'PerFrameFunctionalGroupsSequence'
     '5600' '0020' 'OF' 'PixelData' % SpectroscopyData
-    '7FE0' '0010' 'OW' 'PixelData' };
+    '7FE0' '0010' 'OW' 'PixelData' }; % can be OB
 
 % Following add vendor specific tags
 if strncmpi(vendor, 'SIEMENS', 7)
@@ -530,95 +535,105 @@ if strncmpi(vendor, 'SIEMENS', 7)
     '0019' '1027' 'FD' 'B_matrix'
     '0019' '1028' 'FD' 'BandwidthPerPixelPhaseEncode'
     '0019' '1029' 'FD' 'MosaicRefAcqTimes'
-% group 0021 from here by guess
-	'0021' '1001' 'IS' 'UsedPatientWeight' % 76 
-	'0021' '1004' 'DS' 'NumberOfPrescans' % 1 ??
-	'0021' '1005' 'IS' 'RelTablePosition' % 0 0 0 ?
-	'0021' '1006' 'LO' 'CoilForGradient' % void ? VR not right
-	'0021' '1008' 'SH' 'GradientMode' % Fast/Normal ?
-	'0021' '1009' 'LO' 'PATModeText' % p2
-% 	'0021' '100A' 'DS' 'Private_0021_100a' % 1 
-% 	'0021' '100D' 'US' 'Private_0021_100d' % 0 
-	'0021' '100F' 'DS' 'Stim_lim' % 30.312 28.138 29.305 ?
-	'0021' '1010' 'IS' 'MrProtocolVersion' % 61010002 ?
-% 	'0021' '1011' 'DS' 'Private_0021_1011' % 0 
-	'0021' '1012' 'FD' 'ReadoutOS' % 2 ?
-% 	'0021' '1013' 'DS' 'Private_0021_1013' % 0 
-% 	'0021' '1014' 'IS' 'Private_0021_1014' % 0 
-% 	'0021' '1016' 'DS' 'Private_0021_1016' % 0 
-% 	'0021' '1017' 'DS' 'Private_0021_1017' % 0 
-	'0021' '1018' 'SH' 'RFSWDMostCriticalAspect' % Head ?
-	'0021' '1019' 'UT' 'MrPhoenixProtocol' % OB changed to UT to force char
-% 	'0021' '101B' 'DS' 'Private_0021_101b' % 1 
-	'0021' '101C' 'DS' 'Stim_max_online' % 17.0793 2.73105 1.00829 ?
-% 	'0021' '101D' 'IS' 'Private_0021_101d' % 0 
-	'0021' '1022' 'SH' 'SequenceFileOwner' % SIEMENS
-% 	'0021' '1023' 'IS' 'Private_0021_1023' % 0 
+	'0021' '1001' 'IS' 'UsedPatientWeight'
+	'0021' '1004' 'DS' 'SliceArrayConcatenations'
+	'0021' '1005' 'IS' 'RelTablePosition'
+	'0021' '1006' 'LO' 'CoilForGradient'
+	'0021' '1008' 'SH' 'GradientMode'
+	'0021' '1009' 'LO' 'PATModeText'
+ 	'0021' '100A' 'DS' 'SW_korr_faktor'
+	'0021' '100C' 'SH' 'PositivePCSDirections'
+ 	'0021' '100D' 'US' 'ProtocolChangeHistory' 
+	'0021' '100F' 'DS' 'Stim_lim'
+	'0021' '1010' 'IS' 'MrProtocolVersion'
+	'0021' '1011' 'DS' 'PhaseGradientAmplitude' 
+	'0021' '1012' 'FD' 'ReadoutOS'
+ 	'0021' '1013' 'DS' 't_puls_max'
+ 	'0021' '1014' 'IS' 'NumberOfPrescans'
+ 	'0021' '1016' 'DS' 'dBdt_thresh'
+	'0021' '1017' 'DS' 'SelectionGradientAmplitude'
+	'0021' '1018' 'SH' 'RFSWDMostCriticalAspect'
+	'0021' '1019' 'UT' 'MrPhoenixProtocol' % change OB to UT to force char
+	'0021' '101B' 'DS' 'SliceResolution'
+	'0021' '101C' 'DS' 'Stim_max_online'
+	'0021' '101D' 'IS' 'Operation_mode_flag'
+	'0021' '1022' 'SH' 'SequenceFileOwner'
+	'0021' '1023' 'IS' 'RfWatchdogMask'
 	'0021' '1025' 'SL' 'TablePositionOrigin' 
 	'0021' '1026' 'IS' 'MiscSequenceParam'
-% 	'0021' '1027' 'US' 'Private_0021_1027' % 1 
+ 	'0021' '1027' 'US' 'Isocentered'
 	'0021' '102A' 'IS' 'CoilId' 
 	'0021' '102B' 'ST' 'PatReinPattern'
-	'0021' '102C' 'DS' 'Sed' % 14400 367.175 365.369 ?
-	'0021' '102D' 'DS' 'SARMostCriticalAspect' % 3.2 0.618899 0.38146 ?
-	'0021' '102E' 'IS' 'Stim_mon_mode' % 2 ? or Operation_mode_flag
-	'0021' '102F' 'DS' 'GradientDelayTime' % 35 33 29 ??
-% 	'0021' '1030' 'DS' 'Private_0021_1030' % 0 
-	'0021' '1031' 'IS' 'AbsTablePosition' % -1129 
-% 	'0021' '1032' 'SS' 'Private_0021_1032' % 0 
-	'0021' '1033' 'SH' 'CoilForGradient2' % GC25 / GC99?
-% 	'0021' '1034' 'DS' 'Private_0021_1034' % 1 
-	'0021' '1035' 'DS' 'Stim_max_ges_norm_online' % 0.572783 ?
-% 	'0021' '1036' 'DS' 'Private_0021_1036' % 0 
-	'0021' '1037' 'SH' 'FlowCompensation' % No ?
-	'0021' '1038' 'DS' 'TransmitterCalibration' % 378.488 ?
-% 	'0021' '103B' 'DS' 'Private_0021_103b' % 0 
-	'0021' '103D' 'CS' 'PhaseSliceOversampling' % NONE / 3D ?
-	'0021' '1044' 'DS' 'B1rms' % 100 1.09702 ?
-	'0021' '1045' 'CS' 'B1rmsSupervision' % YES ?
-	'0021' '1046' 'DS' 'TalesReferencePower' % 2333.36 ?
-	'0021' '1049' 'CS' 'AcquisitionContrast' % DIFFUSION ?
-	'0021' '1050' 'US' 'RFEchoTrainLength' % 1 
-	'0021' '1051' 'US' 'EchoTrainLength' % 71 ?
-	'0021' '1053' 'CS' 'Laterality4MF' % U ?
-	'0021' '105A' 'CS' 'ScanningSequence' % EP
-	'0021' '105B' 'CS' 'SequenceVariant' % SK\SP
-	'0021' '105C' 'CS' 'ScanOptions' % PFP\FS
-% 	'0021' '105D' 'SL' 'Private_0021_105d' % -31 / -63
-	'0021' '10FE' 'SQ' 'CSASeriesHeaderInfo'
-	'0021' '1103' 'DS' 'SliceMeasurementDuration' % 90000 ? 
+	'0021' '102C' 'DS' 'Sed'
+	'0021' '102D' 'DS' 'SARMostCriticalAspect'
+	'0021' '102E' 'IS' 'Stim_mon_mode'
+	'0021' '102F' 'DS' 'GradientDelayTime'
+	'0021' '1030' 'DS' 'ReadoutGradientAmplitude' 
+	'0021' '1031' 'IS' 'AbsTablePosition'
+	'0021' '1032' 'SS' 'RFSWDOperationMode'
+	'0021' '1033' 'SH' 'CoilForGradient2'
+	'0021' '1034' 'DS' 'Stim_faktor'
+	'0021' '1035' 'DS' 'Stim_max_ges_norm_online'
+	'0021' '1036' 'DS' 'dBdt_max'
+	'0021' '1037' 'SH' 'FlowCompensation'
+	'0021' '1038' 'DS' 'TransmitterCalibration'
+	'0021' '103B' 'DS' 'dBdt_limit'
+	'0021' '103D' 'CS' 'PhaseSliceOversampling'
+    '0021' '103F' 'UT' 'AutoAlignData'
+	'0021' '1043' 'UT' 'FmriExternalInfo'
+	'0021' '1044' 'DS' 'B1rms'
+	'0021' '1045' 'CS' 'B1rmsSupervision'
+	'0021' '1046' 'DS' 'TalesReferencePower'
+	'0021' '1047' 'CS' 'SafetyStandard'
+	'0021' '1048' 'CS' 'DICOMImageFlavor'
+	'0021' '1049' 'CS' 'DICOMAcquisitionContrast'
+	'0021' '1050' 'US' 'RfEchoTrainLength4MF'
+	'0021' '1051' 'US' 'GradientEchoTrainLength4MF'
+	'0021' '1053' 'CS' 'Laterality4MF'
+	'0021' '105A' 'CS' 'ScanningSequence'
+	'0021' '105B' 'CS' 'SequenceVariant'
+	'0021' '105C' 'CS' 'MeasurementOptions'
+	'0021' '105D' 'SL' 'ScanRegionPositionIso'
+	'0021' '105E' 'LO' 'FieldOfViewText'
+	'0021' '105F' 'SH' 'RelativeTablePositionText'
+	'0021' '1060' 'DT' 'MeasurementStartDateTime'
+	'0021' '1061' 'SH' 'ExtendedPositionInfo'
+ 	'0021' '1062' 'FL' 'RFPulseAmplitude'
+	'0021' '10FE' 'SQ' 'CSASeriesHeaderInfo' % Siemens MR SDS Sequence
+	'0021' '1103' 'DS' 'SliceMeasurementDuration'
 	'0021' '1104' 'DS' 'TimeAfterStart'
 	'0021' '1106' 'LO' 'ICE_Dims'
-	'0021' '111A' 'SH' 'RFSWDDataType' % measured/predicted
-	'0021' '111C' 'IS' 'PhaseEncodingDirectionPositive' % 1/0
-	'0021' '1124' 'IS' 'ProtocolSliceNumber' % 0 ?
-	'0021' '1133' 'IS' 'EchoLinePosition' % 96 ?
-	'0021' '1141' 'SH' 'GSWDDataType' % measured/predicted
-	'0021' '1142' 'IS' 'RealDwellTime' % 2400 ?
-	'0021' '1145' 'SL' 'AbsTablePosition' % 0 0 -1129 
-	'0021' '1148' 'IS' 'EchoPartitionPosition' % 32?
-	'0021' '1149' 'IS' 'EchoColumnPosition' % 96 ?
-	'0021' '114E' 'IS' 'Actual3DImaPartNumber' % 0 ?
-	'0021' '114F' 'LO' 'CoilString' % HE1-4
-	'0021' '1151' 'UL' 'SequenceMask' % 134217734
+	'0021' '111A' 'SH' 'RFSWDDataType'
+	'0021' '111C' 'IS' 'PhaseEncodingDirectionPositive'
+	'0021' '1124' 'IS' 'MultistepIndex'
+	'0021' '1133' 'IS' 'EchoColumnPosition'
+	'0021' '1141' 'SH' 'GSWDDataType'
+	'0021' '1142' 'IS' 'RealDwellTime'
+	'0021' '1145' 'SL' 'ImaAbsTablePosition'
+	'0021' '1148' 'IS' 'EchoPartitionPosition'
+	'0021' '1149' 'IS' 'EchoLinePosition'
+	'0021' '114E' 'IS' 'Actual3DImaPartNumber'
+	'0021' '114F' 'LO' 'ImaCoilString'
+	'0021' '1151' 'UL' 'SequenceMask'
 	'0021' '1153' 'FD' 'BandwidthPerPixelPhaseEncode'
-	'0021' '1156' 'LO' 'PATModeText' % p2
-	'0021' '1158' 'SH' 'AcquisitionMatrixText' % 384p*384 I
-	'0021' '1159' 'IS' 'RelTablePosition' % 0 0 0 ?
+	'0021' '1156' 'LO' 'ImaPATModeText'
+	'0021' '1158' 'SH' 'AcquisitionMatrixText'
+	'0021' '1159' 'IS' 'ImaRelTablePosition'
 	'0021' '115B' 'FD' 'SlicePosition_PCS'
-% 	'0021' '115E' 'IS' 'MeasuredFourierLines' % 0 or MultistepIndex?
+% 	'0021' '115D' 'IS' 'MeasuredFourierLines' % 17
+	'0021' '115E' 'IS' 'ProtocolSliceNumber'
 	'0021' '1171' 'UT' 'UsedChannelString'
-	'0021' '1175' 'CS' 'ImageTypeText'
+	'0021' '1175' 'CS' 'ImageType4MF'
 	'0021' '1176' 'LO' 'ImageHistory'
-	'0021' '1177' 'LO' 'SequenceName' % *ep_b1000#12
-% 	'0021' '1178' 'CS' 'Private_0021_1178' % ND / DIS2D
-% 	'0021' '1179' 'CS' 'Private_0021_1179' % ND / DIS2D
-	'0021' '1188' 'DS' 'SliceLocation'
-	'0021' '1189' 'FD' 'InversionTimes' % 900 ?
-	'0021' '118A' 'IS' 'FrameNumberInSeries' % ? xiangrui names it
-	'0021' '11FE' 'SQ' 'CSAImageHeaderInfo'
-% 	'0021' '1201' 'LO' 'Private_0021_1201' % ACQUISITION
-% 	'0021' '1202' 'LO' 'Private_0021_1202' % ACQUISITION
+	'0021' '1177' 'LO' 'SequenceInfo'
+	'0021' '1178' 'CS' 'ImageTypeVisible'
+ 	'0021' '1179' 'CS' 'DistortionCorrectionType'
+	'0021' '1188' 'DS' 'SliceCenterDistancefromIsoCenter'
+	'0021' '1189' 'FD' 'FrameInversionTime'
+	'0021' '118A' 'IS' 'FrameNumberInSeries'
+    '0021' '118B' 'SH' 'SlicePositionText'
+    '0021' '118E' 'ST' 'DICOM_Dims'
+	'0021' '11FE' 'SQ' 'CSAImageHeaderInfo' % Siemens MR SDI Sequence
     '0029' '1008' 'CS' 'CSAImageHeaderType'
     '0029' '1009' 'LO' 'CSAImageHeaderVersion'
     '0029' '1010' 'OB' 'CSAImageHeaderInfo'
@@ -637,7 +652,7 @@ if strncmpi(vendor, 'SIEMENS', 7)
     '0051' '1009' 'LO' 'Private_0051_10xx_Version'
     '0051' '100A' 'LO' 'TimeOfAcquisition'
     '0051' '100B' 'LO' 'AcquisitionMatrixText'
-    '0051' '100C' 'LO' 'FieldOfView'
+    '0051' '100C' 'LO' 'FieldOfViewText'
     '0051' '100D' 'SH' 'SlicePositionText'
     '0051' '100E' 'LO' 'ImageOrientationText'
     '0051' '100F' 'LO' 'CoilString'
@@ -660,6 +675,7 @@ elseif strncmpi(vendor, 'GE', 2)
     '0009' '10E3' 'UI' 'EquipmentUID'
     '0009' '10E7' 'UL' 'ExamRecordChecksum'
     '0009' '10E9' 'SL' 'ActualSeriesDataTimeStamp'
+    '0011' '1030' 'DS' 'PatientWeightAtScan'
     '0019' '100F' 'DS' 'HorizFrameOfRef'
     '0019' '1011' 'SS' 'SeriesContrast'
     '0019' '1012' 'SS' 'LastPseq'
@@ -892,11 +908,12 @@ elseif strncmpi(vendor, 'GE', 2)
     '0043' '10C0' 'DS' 'RxDualDrive'
     '0043' '10C1' 'LO' 'FullCoilModeREGs'
     '0043' '10C2' 'LO' 'LocalCoilModeREGs'
-%     '0043' '10C5' 'LO' ''
-%     '0043' '10C6' 'DS' ''
-%     '0043' '10C7' 'DS' ''
-%     '0043' '10C8' 'UL' ''
-%     '0043' '10C9' 'IS' '' 
+    '0043' '10C5' 'LO' 'AGRxMarkerAndPlane'
+    '0043' '10C6' 'DS' 'AGRxComputedVolume'
+    '0043' '10C7' 'DS' 'ScannedVolume'
+    '0043' '10C8' 'UL' 'AGRxLocalizerSeriesNumber'
+    '0043' '10C9' 'IS' 'NumberOfBins' 
+    '0043' '10CA' 'LO' 'ReconDLStrength' 
     }];
 
     % SlopInt:
@@ -1200,6 +1217,7 @@ elseif strncmpi(vendor, 'Philips', 7)
     '2005' '141D' 'IS' 'MRVersionNumberDeletedBlobsets'
     '2005' '1426' 'CS' 'ViewingHardcopyOnly'
     '2005' '1428' 'SL' 'MRSeriesNrOfLabelTypes'
+    '2005' '1429' 'CS' 'MRImageLabelType'
     '2005' '142A' 'CS' 'ExamPrintStatus'
     '2005' '142B' 'CS' 'ExamExportStatus'
     '2005' '142C' 'CS' 'ExamStorageCommitStatus'

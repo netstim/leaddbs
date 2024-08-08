@@ -22,6 +22,7 @@ end
 varargin(1:2:end) = cellfun(@genvarname,varargin(1:2:end),'uni',0);
 varargin(cellfun(@isempty,varargin)) = {'N/A'};
 if exist(tsvfile,'file') && ~isempty(T) % append to already existing tsvfile
+    warning('OFF', 'MATLAB:table:RowsAddedExistingVars');
     ind = find(strcmp(table2cell(T(:,1)),id),1);
     if isempty(ind)
         ind = size(T,1)+1;
@@ -54,5 +55,6 @@ else % write new tsvfile
         idName = inputname(1);
     end
     T.Properties.VariableNames = {idName varargin{1:2:end}};
+    warning('ON', 'MATLAB:table:RowsAddedExistingVars');
 end
 writetable(T,tsvfile,'Delimiter','\t','FileType','text')

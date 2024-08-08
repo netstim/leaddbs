@@ -4,7 +4,7 @@ function ea_get_E_field_along_fibers(pt_folder,stim_space,e_field_file, MNI_conn
 
 arguments
     pt_folder               % full path to the patient folder in the Lead-DBS dataset
-    stim_space              % identifier for the stimulation ID and space, e.g. '/native/gs_111'
+    stim_space              % identifier for the stimulation ID and space, e.g. 'native/gs_111'
     e_field_file            % full path to the 4-D nifti (see ea_get_4Dfield_from_csv)
     MNI_connectome_file     % full path to the connectome, use merged_pathways.mat for pathway atlases
     side_suffix             % _rh - right hemisphere
@@ -16,7 +16,6 @@ interpolation_method = 'linear';
 
 % check which space is used
 [space, stim_folder_name,~] = fileparts(stim_space);
-space = space(2:end);
 
 % check the folder name if stored in data or merged_pathways.mat
 [connectomePath,connectomeFileName,connectomeExtension] = fileparts(MNI_connectome_file);
