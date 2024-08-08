@@ -32,7 +32,16 @@ if ispc
             ea_error(['Failed to download NEURON installer for Windows:\n', ME.message], simpleStack=true);
         end
         installFolder = fullfile(ea_prefsdir, 'neuron');
-        ea_delete(installFolder);
+
+        % Clean up previous installation
+        uninstaller = fullfile(installFolder, 'uninstall.exe');
+        if isfile(uninstaller)
+            system([uninstaller ' /S']);
+        else
+            ea_delete(installFolder);
+            [~, ~] = system('reg delete "HKCU\Software\NEURON_Simulator\nrn" /v Install_Dir /f');
+        end
+
         try
             system(['start /b /wait "Install NEURON" ', path_helper(installer), ' /S /D=', path_helper(installFolder)]);
         catch ME
