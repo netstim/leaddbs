@@ -588,84 +588,57 @@ function openconnectomeviewer(hobj,ev,resultfig,options)
 conwin=ea_convis(gcf,options);
 setappdata(resultfig,'conwin',conwin);
 
+
 function backgroundTask(file_path, status_path, resultfig, options, elstruct)
-    while true
-        % Check if the file_path is empty
-        data = fileread(file_path);
-        status_data = fileread(status_path);
+while true
+    % Check if the file_path is empty
+    data = fileread(file_path);
+    status_data = fileread(status_path);
 
-        % Uncomment this if you want to break based on status_data
-        % if strcmp(status_data, '1')
-        %     break;
-        % end
+    % Uncomment this if you want to break based on status_data
+    % if strcmp(status_data, '1')
+    %     break;
+    % end
 
-        if ~isempty(data)
-            % If file_path is not empty, run the following code
-            [S] = ea_process_programmer(file_path);
-            ea_visprogrammer(resultfig, options, S, elstruct);
-        end
-
-        % Pause for 5 seconds before checking again
-        pause(5);
-    end
-% % 
-function leadprogrammer(hobj, ev, elstruct, resultfig, options)
-% stimwin=ea_stimparams(elstruct,gcf,options);
-% setappdata(resultfig,'stimwin',stimwin);
-
-% Tester code
-
-[file_path, releaseDir, status_path] = ea_input_programmer(options, elstruct);
-currentOS = ea_getarch;
-if exist(releaseDir, 'Dir')
-%     % Test MAC - will need to test on windows
-    mac64Dir = strcat(releaseDir, '/mac-arm64');
-    macDir = strcat(releaseDir, '/mac');
-    linuxDir = strcat(releaseDir, 'linux');
-    windowsDir = strcat(releaseDir, 'win');
-
-    if (currentOS == "maca64")
-        zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
-        appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
-        testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
-        if ~exist(testDir)
-            unzip(zipDir, mac64Dir);
-        end
-        system(appDir);
-    end
-
-    if (currentOS == "maci64")
-        zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-mac.zip');
-        appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
-        testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
-        if ~exist(testDir)
-            unzip(zipDir, macDir);
-        end
-        system(appDir);
-    end
-
-    if (currentOS == "glnxa64")
-        linuxTarFile = strcat(linuxDir, '/electron-react-boilerplate-4.6.0.tar.gz');
-        extractDir = linuxDir;
-        system(['tar -xzf ', linuxTarFile, ' -C ', extractDir]);
-        executablePath = strcat(extractDir, '/electron-react-boilerplate-4.6.0/electron-react-boilerplate');
-        system(executablePath);
-    end
-
-    if (currentOS == "win64")
-        appDir = strcat(windowsDir, '/LeadDBSProgrammer Setup 4.6.0.exe');
-        system(appDir);
-    end
-
-%     if (currentOS == "maca64")
-%         zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
-%         appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
-%         testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
-%     if ~exist(testDir)
-%         unzip(zipDir, mac64Dir);
-%     end
+    if ~isempty(data)
+        % If file_path is not empty, run the following code
         [S] = ea_process_programmer(file_path);
         ea_visprogrammer(resultfig, options, S, elstruct);
+    end
+
+    % Pause for 5 seconds before checking again
+    pause(5);
+end
+
+
+function leadprogrammer(hobj, ev, elstruct, resultfig, options)
+[file_path, status_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
+currentOS = ea_getarch;
+if isfolder(releaseDir)
+    zipFile = fullfile(releaseDir, ['LeadDbsProgrammer_', currentOS, '.zip']);
+    if ismac
+        appFile = fullfile(ea_prefsdir, 'LeadDbsProgrammer.app', 'Contents', 'MacOS', 'LeadDbsProgrammer');
+        if ~isfile(appFile)
+            unzip(zipFile, ea_prefsdir);
+            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'LeadDbsProgrammer.app'))]);
+        end
+        system(appFile);
+    elseif isunix
+        appFile = fullfile(ea_prefsdir, 'LeadDbsProgrammer', 'LeadDbsProgrammer');
+        if ~isfile(appFile)
+            unzip(zipFile, fullfile(ea_prefsdir, 'LeadDbsProgrammer'));
+        end
+        system(appFile);
+    else
+        appFile = fullfile(ea_prefsdir, 'LeadDbsProgrammer', 'LeadDbsProgrammer.exe');
+        if ~isfile(appFile)
+            unzip(zipFile, fullfile(ea_prefsdir, 'LeadDbsProgrammer'));
+        end
+        system(appFile);
+    end
+
+    [S] = ea_process_programmer(file_path);
+    ea_visprogrammer(resultfig, options, S, elstruct);
 %     system([appDir, ' &']);
 %     [status, cmdout] = system([appDir, ' &']);
     % [status, cmdout] = system([appDir, ' & echo $!']);

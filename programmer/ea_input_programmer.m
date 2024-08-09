@@ -1,15 +1,13 @@
-function [file_path, releaseDir, status_path] = ea_input_programmer (options, elstruct)
+function [file_path, status_path, releaseDir] = ea_input_programmer(options, numElectrodes)
 
-%   file_path = strcat(options.earoot, 'lead-dbs-programmer/data.json');
-%   input_file_path = strcat(options.earoot, 'lead-dbs-programmer/inputData.json');
-    file_path = strcat(options.earoot, 'programmer/data.json');
-    status_path = strcat(options.earoot, 'programmer/status.json');
-    input_file_path = strcat(options.earoot, 'programmer/inputData.json');
+    programmerDir = fullfile(options.earoot, 'programmer');
 
-    % Create a list of file paths
-    file_paths = {file_path, status_path, input_file_path};
-    
+    file_path = fullfile(programmerDir, 'data.json');
+    status_path = fullfile(programmerDir, 'status.json');
+    input_file_path = fullfile(programmerDir, 'inputData.json');
+
     % Loop through each file path and create the file if it does not exist
+    file_paths = {file_path, status_path, input_file_path};
     for i = 1:length(file_paths)
         if ~isfile(file_paths{i})
             % Create an empty file
@@ -21,64 +19,28 @@ function [file_path, releaseDir, status_path] = ea_input_programmer (options, el
         end
     end
 
+    releaseDir = fullfile(programmerDir, 'app', 'release', 'build');
+    
+    stimDir = fullfile(options.subj.stimDir, ea_getspace);
+    stimFileName = [options.patientname, '_desc-stimparameters'];
 
-    
-    fid = fopen(input_file_path, 'w');
-    inputStruct = struct();
-    dt = datetime('now');
-    % Convert the datetime object to a string in the format 'yyyymmddHHMMSS'
-    formattedDate = datestr(dt, 'yyyymmddHHMMSS');
-    inputStruct.numElectrodes = length(elstruct.markers);
+    stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
+    for i=1:numel(stimMatFile)
+        stimJsonFile = strrep(stimMatFile{i}, '.mat', '.json');
+        savejson('', load(stimMatFile{i}), stimJsonFile);
+        fprintf('Converted and saved stimparameters.mat to %s\n', stimJsonFile);
+    end
+
+    inputStruct = struct;
+    inputStruct.numElectrodes = numElectrodes;
     inputStruct.electrodeModel = options.elmodel;
-    inputStruct.label = formattedDate;
+    inputStruct.label = char(datetime('now', 'Format', 'yyyyMMddHHmmSS'));
     inputStruct.patientname = options.patientname;
-    programmerDir = strcat(options.earoot, 'programmer');
-    releaseDir = strcat(programmerDir, '/app/release/build');
-    stimDir = strcat(options.subj.stimDir, '/MNI152NLin2009bAsym');
-    stimFileName = strcat(options.patientname, '_desc-stimparameters.mat');
-    jsonFileName = strcat(options.patientname, '_desc-stimparameters.json');
-    directoryList = dir(stimDir);
-    % Initialize a cell array to store folder names
-    indicesToRemove = [];
-    for i = 1:numel(directoryList)
-        % Check if the item is a file, matches the name 'segmask.nii', or has the title 'Results_Rh'
-        if ~directoryList(i).isdir || strcmp(directoryList(i).name, 'segmask.nii') || strcmp(directoryList(i).name, 'Results_rh')
-            indicesToRemove(end+1) = i;
-        end
-    end
-    
-    % Remove the items at the specified indices
-    directoryList(indicesToRemove) = [];
     inputStruct.priorStims = {};
-    if exist(stimDir, 'Dir')
-        inputStruct.priorStims = directoryList;
+    if ~isempty(stimMatFile)
+        inputStruct.priorStims = unique(fileparts(stimMatFile));
     end
-    fprintf(fid, '%s', jsonencode(inputStruct));
-    fclose(fid);
-    for i=3:size(directoryList, 1)
-        stimLabel = directoryList(i).name;
-        currentStimDir = fullfile(stimDir, stimLabel);
-        matFileDir = fullfile(currentStimDir, stimFileName);
-        saveFileDir = fullfile(currentStimDir, jsonFileName);
-        % Load the MAT file
-        if exist(matFileDir, 'file')
-            matData = load(matFileDir);
-            
-            % Convert the MAT data to a JSON string
-            jsonData = jsonencode(matData);
-            
-            % Save the JSON string to a file
-            fid = fopen(saveFileDir, 'w');
-            if fid == -1
-                error('Cannot open file for writing: %s', saveFileDir);
-            end
-            fprintf(fid, '%s', jsonData);
-            fclose(fid);
-            
-            fprintf('Converted and saved %s to %s\n', matFileDir, saveFileDir);
-        else
-            fprintf('MAT file does not exist: %s\n', matFileDir);
-        end
-    end
+
+    savejson('', inputStruct, input_file_path);
 
 end
