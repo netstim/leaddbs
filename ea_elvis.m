@@ -617,22 +617,22 @@ currentOS = ea_getarch;
 if isfolder(releaseDir)
     zipFile = fullfile(releaseDir, ['LeadDbsProgrammer_', currentOS, '.zip']);
     if ismac
-        appFile = fullfile(ea_prefsdir, 'LeadDbsProgrammer.app', 'Contents', 'MacOS', 'LeadDbsProgrammer');
+        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer.app', 'Contents', 'MacOS', 'LeadDbsProgrammer');
         if ~isfile(appFile)
-            unzip(zipFile, ea_prefsdir);
-            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'LeadDbsProgrammer.app'))]);
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer.app'))]);
         end
         system(appFile);
     elseif isunix
-        appFile = fullfile(ea_prefsdir, 'LeadDbsProgrammer', 'LeadDbsProgrammer');
+        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer');
         if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'LeadDbsProgrammer'));
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
         end
         system(appFile);
     else
-        appFile = fullfile(ea_prefsdir, 'LeadDbsProgrammer', 'LeadDbsProgrammer.exe');
+        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer.exe');
         if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'LeadDbsProgrammer'));
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
         end
         system(appFile);
     end
