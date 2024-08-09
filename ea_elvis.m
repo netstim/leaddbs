@@ -621,18 +621,21 @@ if isfolder(releaseDir)
         if ~isfile(appFile)
             unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
             system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer.app'))]);
+            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
         system(appFile);
     elseif isunix
         appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer');
         if ~isfile(appFile)
             unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
         system(appFile);
     else
         appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer.exe');
         if ~isfile(appFile)
             unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
         system(appFile);
     end
