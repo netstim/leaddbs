@@ -5,8 +5,10 @@
 			"T2w": ["t2", "tse"],
 			"FGATIR": ["FGATIR"],
 			"PDw": ["pd"],
+			"SWI": ["swi"],
 			"T2starw": ["t2star"],
-			"FLAIR": ["flair"]
+			"FLAIR": ["flair"],
+			"FrameCT": ["FrameCT"]
 		},
 		"postop": {
 			"CT": ["Navigation", "CT"],
