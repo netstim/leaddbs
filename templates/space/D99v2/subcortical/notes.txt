@@ -1,0 +1,2 @@
+secondstepmask is subcortical;
+thirdstepmask is thulamus+periSTN

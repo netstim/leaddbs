@@ -36,6 +36,7 @@ function [hdr, filetype, fileprefix, machine] = load_nii_hdr(fileprefix)
 
       if ~exist(fn)
          msg = sprintf('Cannot find file "%s.hdr".', fileprefix);
+
          error(msg);
       end
    end
