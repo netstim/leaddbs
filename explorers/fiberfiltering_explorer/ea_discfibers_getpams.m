@@ -17,7 +17,8 @@ for sub=1:numPatient % Original VAT E-field
     subSimPrefix = [subj_tag, '_sim-'];
 
     % we load stim parameters and check for each side if there was a stimulation
-    stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(obj.native), 'gs_', obj.M.guid];
+    % merged fiberActivations always stored in MNI
+    stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
     load([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'],'S');
     
     for side = 1:2
