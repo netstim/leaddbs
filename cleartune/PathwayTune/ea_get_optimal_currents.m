@@ -24,8 +24,8 @@ for contact_i = 0:N_contacts-1
     % convert to mA
     contact_currents = [contact_currents,optim_result.(['Contact_',num2str(contact_i)])(max_ind)*1000.0];
 
-    % just for now because we do monopolar
-    contact_currents(2:end) = 0.0; 
+    % % just for now because we do monopolar
+    %contact_currents(2:end) = 0.0; 
 end
 
 if any(contact_currents > 0.0) && any(contact_currents < 0.0)

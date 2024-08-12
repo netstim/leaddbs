@@ -12,6 +12,8 @@ function ea_save_fixed_weights(stimfolder, opt_weights, fixed_weights_values, sl
 
 for side = 1:2
 
+    continue
+
     % if the connectome does not specify hemisphere, assume the tract needs
     % to be targeted / avoided by both leads
 
