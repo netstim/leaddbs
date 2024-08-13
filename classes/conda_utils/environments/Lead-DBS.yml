@@ -4,9 +4,11 @@ channels:
   - conda-forge
 
 dependencies:
-  - heudiconv
-  - dcm2niix
-  - python=3.10
+  - pip=24.0
+  - python=3.12
+
+  - pip:
+    - antspyx>=0.5.3
 
 variables:
-  env_version: 20231108
+  env_version: 20240812
