@@ -8,6 +8,7 @@ dependencies:
   - python=3.12
 
   - pip:
+    - git+https://github.com/MIC-DKFZ/nnUNet.git@v1.7.1
     - git+https://github.com/ningfei/DBSegment.git
 
 variables:

@@ -115,7 +115,7 @@ classdef ea_conda_env
 
             pathEnv = getenv('PATH');
 
-            if unix
+            if isunix
                 setenv('PATH', [fullfile(obj.path, 'bin') ':' getenv('PATH')]);
             else
                 setenv('PATH', [fullfile(obj.path, 'Scripts') ';' getenv('PATH')]);
