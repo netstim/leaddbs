@@ -612,7 +612,7 @@ end
 
 
 function leadprogrammer(hobj, ev, elstruct, resultfig, options)
-[file_path, status_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
+[file_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
 currentOS = ea_getarch;
 if isfolder(releaseDir)
     zipFile = fullfile(releaseDir, ['LeadDbsProgrammer_', currentOS, '.zip']);

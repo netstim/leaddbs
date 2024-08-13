@@ -1,13 +1,13 @@
-function [file_path, status_path, releaseDir] = ea_input_programmer(options, numElectrodes)
+function [file_path, releaseDir] = ea_input_programmer(options, numElectrodes)
 
     programmerDir = fullfile(options.earoot, 'programmer');
 
     file_path = fullfile(programmerDir, 'data.json');
-    status_path = fullfile(programmerDir, 'status.json');
+%     status_path = fullfile(programmerDir, 'status.json');
     input_file_path = fullfile(programmerDir, 'inputData.json');
 
     % Loop through each file path and create the file if it does not exist
-    file_paths = {file_path, status_path, input_file_path};
+    file_paths = {file_path, input_file_path};
     for i = 1:length(file_paths)
         if ~isfile(file_paths{i})
             % Create an empty file
@@ -36,6 +36,7 @@ function [file_path, status_path, releaseDir] = ea_input_programmer(options, num
     inputStruct.electrodeModel = options.elmodel;
     inputStruct.label = char(datetime('now', 'Format', 'yyyyMMddHHmmSS'));
     inputStruct.patientname = options.patientname;
+    inputStruct.stimDir = fullfile(options.subj.stimDir, 'MNI152NLin2009bAsym');
     inputStruct.priorStims = {};
     if ~isempty(stimMatFile)
         inputStruct.priorStims = unique(fileparts(stimMatFile));
