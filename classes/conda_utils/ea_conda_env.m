@@ -4,6 +4,7 @@ classdef ea_conda_env
         name;
         yml;
         path;
+        python;
     end
 
     properties (Dependent)
@@ -30,6 +31,11 @@ classdef ea_conda_env
             end
             obj.name = regexp(fgetl(fopen(obj.yml)), '(?<=name:\s+).*', 'match', 'once');
             obj.path = fullfile(ea_conda.install_path, 'envs', obj.name);
+            if isunix
+                obj.python = fullfile(obj.path, 'bin', 'python');
+            else
+                obj.python = fullfile(obj.path, 'python.exe');
+            end
         end
 
         function b = get.is_created(obj)
