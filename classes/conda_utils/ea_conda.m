@@ -109,12 +109,12 @@ classdef (Abstract) ea_conda
 
         % Run command (for example mamba or pip) in conda base environment
         function varargout = run(command)
-            if ispc
-                bin_folder = fullfile(ea_conda.install_path, 'Scripts');
-                setenv('PATH', [bin_folder ';' getenv('PATH')]);
+            pathEnv = getenv('PATH');
+
+            if isunix
+                setenv('PATH', [fullfile(ea_conda.install_path, 'bin') ':' getenv('PATH')]);
             else
-                bin_folder = fullfile(ea_conda.install_path, 'bin');
-                setenv('PATH', [bin_folder ':' getenv('PATH')]);
+                setenv('PATH', [fullfile(ea_conda.install_path, 'Scripts') ';' getenv('PATH')]);
             end
 
             if nargout <= 1
@@ -123,6 +123,9 @@ classdef (Abstract) ea_conda
                 [varargout{1}, varargout{2}]  = system(command);
                 varargout{2} = strip(varargout{2});
             end
+
+            % Restore env after running conda command
+            setenv('PATH', pathEnv)
         end
 
         function update_base

@@ -112,31 +112,24 @@ classdef ea_conda_env
             if ~obj.is_created
                 error(['Create python environment ' obj.name ' from Lead-DBS menu to use this function']);
             end
-            if isunix
-                setup_command = ['export PATH=' fullfile(obj.path,'bin') ':$PATH;'];
+
+            pathEnv = getenv('PATH');
+
+            if unix
+                setenv('PATH', [fullfile(obj.path, 'bin') ':' getenv('PATH')]);
             else
-                setup_command = [fullfile(ea_conda.install_path, 'condabin', 'activate.bat') ' ' obj.name ' & '];
-                command = obj.inject_exe_to_command(command);
+                setenv('PATH', [fullfile(obj.path, 'Scripts') ';' getenv('PATH')]);
             end
 
             if nargout <= 1
-                varargout{1} = system([setup_command command]);
+                varargout{1} = system(command);
             else
-                [varargout{1}, varargout{2}] = system([setup_command command]);
+                [varargout{1}, varargout{2}] = system(command);
                 varargout{2} = strip(varargout{2});
             end
-        end
-    end
 
-    methods (Static, Access = private)
-
-        function command = inject_exe_to_command(command)
-            first_space = regexp(command,' ','once');
-            if isempty(first_space)
-                first_space = length(command)+1;
-            end
-            command = [command(1:first_space-1) '.exe' command(first_space:end)];
+            % Restore env after running conda command
+            setenv('PATH', pathEnv)
         end
     end
 end
-
