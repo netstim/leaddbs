@@ -14,14 +14,14 @@ function varargout = nii_xform(src, target, rst, intrp, missVal)
 % 
 % Input (first two mandatory):
 %  1. source file (nii, hdr/img or gz versions) or nii struct to be transformed.
-%  2. The second input determines how to transform the source file:
+%  2. The second input determines how to transform the source:
 %    (1) If it is numeric and length is 1 or 3, [2 2 2] for example, it will be
 %         treated as requested resolution in millimeter. The result will be in
-%         the same coordinate system as the source file.
+%         the same coordinate system as the source.
 %    (2) If it is a nii file name, a nii struct, or nii hdr struct, it will be
 %        used as the template. The result will have the same dimension and
-%        resolution as the template. The source file and the template must have
-%        at least one common coordinate system, otherwise the transformation
+%        resolution as the template. The source and the template must have at
+%        least one common coordinate system, otherwise the transformation
 %        doesn't make sense, and it will err out. With different coordinate
 %        systems, a transformation to align the two dataset is needed, which is
 %        the next case.
@@ -67,7 +67,6 @@ if nargin<3, rst = []; end
 if nargin<4 || isempty(intrp), intrp = 'linear'; end
 if nargin<5 || isempty(missVal), missVal = nan; else, missVal = missVal(1); end
 intrp = lower(intrp);
-quat2R = nii_viewer('func_handle', 'quat2R');
     
 if isstruct(src), nii = src;
 else, nii = nii_tool('load', src);
@@ -77,8 +76,8 @@ if isstruct(target) || ischar(target) || (iscell(target) && numel(target)==1)
     hdr = get_hdr(target);
 elseif iscell(target)
     hdr = get_hdr(target{1});
-    if hdr.sform_code>0, R0 = [hdr.srow_x; hdr.srow_y; hdr.srow_z; 0 0 0 1];
-    elseif hdr.qform_code>0, R0 = quat2R(hdr);
+    if hdr.sform_code>0, R0 = [hdr.sform_mat; 0 0 0 1];
+    elseif hdr.qform_code>0, R0 = [hdr.qform_mat; 0 0 0 1];
     end
 
     [~, ~, ext] = fileparts(target{2});
@@ -93,10 +92,8 @@ elseif iscell(target)
         R = eye(4);
     end
     
-    if nii.hdr.sform_code>0
-        R1 = [nii.hdr.srow_x; nii.hdr.srow_y; nii.hdr.srow_z; 0 0 0 1];
-    elseif nii.hdr.qform_code>0
-        R1 = quat2R(nii.hdr);
+    if nii.hdr.sform_code>0, R1 = [nii.hdr.sform_mat; 0 0 0 1];
+    elseif nii.hdr.qform_code>0, R1 = [nii.hdr.qform_mat; 0 0 0 1];
     end
 
     % I thought it is something like R = R0 \ R * R1; but it is way off. It
@@ -123,9 +120,7 @@ elseif isnumeric(target) && any(numel(target)==[1 3]) % new resolution in mm
     hdr.pixdim(2:4) = target;
     hdr.dim(2:4) = round(hdr.dim(2:4) ./ ratio);
     if hdr.sform_code>0
-        hdr.srow_x(1:3) = hdr.srow_x(1:3) .* ratio;
-        hdr.srow_y(1:3) = hdr.srow_y(1:3) .* ratio;
-        hdr.srow_z(1:3) = hdr.srow_z(1:3) .* ratio;
+        hdr.sform_mat(1:3,1:3) = hdr.sform_mat(1:3,1:3) .* ratio;
     end
 else
     error('Invalid template or resolution input.');
@@ -136,10 +131,10 @@ if ~iscell(target)
     q = hdr.qform_code;
     sq = [nii.hdr.sform_code nii.hdr.qform_code];
     if s>0 && (any(s == sq) || (s>2 && (any(sq==3) || any(sq==4))))
-        R0 = [hdr.srow_x; hdr.srow_y; hdr.srow_z; 0 0 0 1];
+        R0 = [hdr.sform_mat; 0 0 0 1];
         frm = s;
     elseif any(q == sq) || (q>2 && (any(sq==3) || any(sq==4)))
-        R0 = quat2R(hdr);
+        R0 = [hdr.qform_mat; 0 0 0 1];
         frm = q;
     else
         switch q
@@ -170,9 +165,9 @@ if ~iscell(target)
     end
 
     if sq(1) == frm || (sq(1)>2 && frm>2) || sq(2)<1
-        R = [nii.hdr.srow_x; nii.hdr.srow_y; nii.hdr.srow_z; 0 0 0 1];
+        R = [nii.hdr.sform_mat; 0 0 0 1];
     else
-        R = quat2R(nii.hdr);
+        R = [nii.hdr.qform_mat; 0 0 0 1];
     end
 end
 
@@ -227,9 +222,10 @@ if isbin, nii.img = logical(nii.img); end
     
 % copy xform info from template to rst nii
 nii.hdr.pixdim(1:4) = hdr.pixdim(1:4);
-flds = {'qform_code' 'sform_code' 'srow_x' 'srow_y' 'srow_z' ...
-    'quatern_b' 'quatern_c' 'quatern_d' 'qoffset_x' 'qoffset_y' 'qoffset_z'};
-for i = 1:numel(flds), nii.hdr.(flds{i}) = hdr.(flds{i}); end
+flds = {'qform_code' 'sform_code' 'sform_mat' 'qform_mat' 'quatern_bcd' 'qoffset_xyz'};
+for i = 1:numel(flds)
+    if isfield(hdr, flds{i}), nii.hdr.(flds{i}) = hdr.(flds{i}); end
+end
 
 if ~isempty(rst), nii_tool('save', nii, rst); end
 if nargout || isempty(rst), varargout{1} = nii_tool('update', nii); end

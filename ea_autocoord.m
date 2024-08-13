@@ -53,7 +53,7 @@ if strcmp(options.leadprod, 'dbs')
         unsortedFiles = ea_regexpdir(fullfile(options.subj.rawdataDir, 'unsorted'), '.*\.nii(\.gz)?');
         if ~isempty(unsortedFiles)
             [~, returnCode] = ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
-            if strcmp(returnCode, 'discard')
+            if ismember(returnCode, {'okay', 'discard', 'empty'})
                 ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
             end
         else

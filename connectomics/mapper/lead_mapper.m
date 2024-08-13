@@ -216,7 +216,7 @@ switch seeddef{get(handles.seeddefpopup,'Value')}
     case 'Manually choose seeds'
         [seeds,path] = uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
     case 'Manually choose parcellation'
-        [seeds,path] = uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
+        [seeds,path] = uigetfile({'*.nii', '*.nii.gz'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
 end
 
 if ischar(path) % path is 0 if the user clicks Cancel or close the window

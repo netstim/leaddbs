@@ -129,7 +129,7 @@ if nargin==3 && isstruct(fname) % wrapper
 end
 
 if nargin<3, iFrames = []; end
-p.iFrames = iFrames;
+p.iFrames = iFrames(:)';
 fid = fopen(fname, 'r', 'l');
 if fid<0, info = ['File not exists: ' fname]; return; end
 closeFile = onCleanup(@() fclose(fid)); % auto close when done or error
@@ -199,9 +199,9 @@ for nb = [0 2e6 fSize] % if not enough, read more till all read
         i = strfind(char(b8), tg); i = i(mod(i,2)==1);
     end
     for k = i(end:-1:1) % last is likely real PixelData
-        if p.expl, p.VR = char(b8(k+(4:5))); end
         p.iPixelData = k + p.expl*4 + 7; % s.PixelData.Start: 0-based
         if numel(b8)<p.iPixelData, b8 = [b8 fread(fid, 12, '*uint8')']; end %#ok
+        if p.expl, p.VR = char(b8(k+(4:5))); end
         p.bytes = ch2int32(b8(p.iPixelData+(-3:0)), p.be);
         if p.bytes==4294967295 && feof(fid), break; end % 2^32-1 compressed
         d = fSize - p.iPixelData - p.bytes; % d=0 most of time
@@ -302,12 +302,13 @@ while ~toSearch
     iPre = i; % back it up for PixelData
     [dat, name, info, i, tg] = read_item(b8, i, p);
     if ~isempty(info), break; end
+    if tg>=2621697 && ~isfield(p, 'nFrames') % BitsAllocated
+        p = get_nFrames(s, p, b8); % only make code here cleaner
+    end
     if isempty(dat) || isempty(name), continue; end
     s.(name) = dat;
     if strcmp(name, 'Manufacturer')
         [p, dict] = updateVendor(p, dat);
-    elseif tg>=2621697 && ~isfield(p, 'nFrames') % BitsAllocated
-        p = get_nFrames(s, p, b8); % only make code here cleaner
     end
     if ~p.fullHdr && tg>=p.dict.tag(end), break; end % done for partial hdr
 end
@@ -364,7 +365,7 @@ swap = p.be && group~=2;
 hasVR = p.expl || group==2;
 if hasVR, vr = char(b8(i+(0:1))); i = i+2; end % 2-byte VR
 
-[n, nvr] = val_len(vr, b8(i+(0:5)), hasVR, swap); i = i + nvr;
+[n, nvr] = val_len(vr, b8(i:min(end,i+5)), hasVR, swap); i = i + nvr;
 if n==0, return; end % empty val
 
 % Look up item name in dictionary
@@ -398,15 +399,6 @@ if strcmp(vr, 'SQ')
 else
     [dat, info] = read_val(b8(i+(0:n-1)), vr, swap); i=i+n;
 end
-% if group==33
-%     fprintf('\t''%04X'' ''%04X'' ''%s'' ''%s'' ', group, elmnt, vr, name);
-%     if numel(dat)>99, fprintf('''%s ...''', dat(1:9));
-%     elseif ischar(dat), fprintf('''%s''', dat);
-%     elseif isnumeric(dat), fprintf('%g ', dat);
-%     else, fprintf('''SQ''');
-%     end
-%     fprintf('\n');
-% end
 end
 
 %% Subfunction: decode SQ, called by read_item (recursively)
@@ -629,11 +621,11 @@ end
 %% subfunction: get fields for multiframe dicom
 function s1 = search_MF_val(s, s1, iFrame)
 % s1 = search_MF_val(s, s1, iFrame);
-%  Arg 1: the struct returned by dicm_hdr for a multiframe dicom
-%  Arg 2: a struct with fields to search, and with initial value, such as
+%  Arg1: the struct returned by dicm_hdr for a multiframe dicom
+%  Arg2: a struct with fields to search, and with initial value, such as
 %    zeros or nans. The number of rows indicates the number of values for the
 %    tag, and columns for frames indicated by iFrame, Arg 3.
-%  Arg 3: frame indice, length consistent with columns of s1 field values.
+%  Arg3: frame indice, length consistent with columns of s1 field values.
 % Example: 
 %  s = dicm_hdr('multiFrameFile.dcm'); % read only 1,2 and last frame by default
 %  s1 = struct('ImagePositionPatient', nan(3, s.NumberOfFrames)); % define size
@@ -641,9 +633,12 @@ function s1 = search_MF_val(s, s1, iFrame)
 % This is MUCH faster than asking all frames by dicm_hdr, and avoid to get into
 % annoying SQ levels under PerFrameFuntionalGroupSequence. In case a tag is not
 % found in PerFrameSQ, the code will search SharedSQ and common tags, and will
-% ignore the 3th arg and duplicate the same value for all frames.
+% ignore Arg3 and duplicate the same value for all frames.
 
-if ~isfield(s, 'PerFrameFunctionalGroupsSequence'), return; end
+if ~all(isfield(s, {'Manufacturer' 'PerFrameFunctionalGroupsSequence'}))
+    s = dicm_hdr(s.Filename, {'Manufacturer' 'PerFrameFunctionalGroupsSequence'});
+    if ~isfield(s, 'PerFrameFunctionalGroupsSequence'), return; end
+end
 expl = false;
 be = false;
 if isfield(s, 'TransferSyntaxUID')
@@ -667,17 +662,20 @@ chDat = 'AE AS CS DA DT LO LT PN SH ST TM UI UT';
 nf = numel(iFrame);
 
 for i = 1:numel(flds)
-    k = find(strcmp(dict.name, flds{i}), 1, 'last'); % GE has another ipp tag
-    if isempty(k), continue; end % likely private tag for another vendor
-    vr = dict.vr{k};
-    group = dict.group(k);
-    isBE = be && group~=2;
-    isEX = expl || group==2;
-    tg = char(typecast([group dict.element(k)], 'uint8'));
-    if isBE, tg = tg([2 1 4 3]); end
-    if isEX, tg = [tg vr]; end %#ok
-    ind = strfind(b, tg);
-    ind = ind(mod(ind,2)>0); % indice is odd
+    ks = find(strcmp(dict.name, flds{i}));
+    if isempty(ks), continue; end % likely private tag for another vendor
+    for k = flip(ks)'
+        vr = dict.vr{k};
+        group = dict.group(k);
+        isBE = be && group~=2;
+        isEX = expl || group==2;
+        tg = char(typecast([group dict.element(k)], 'uint8'));
+        if isBE, tg = tg([2 1 4 3]); end
+        if isEX, tg = [tg vr]; end %#ok
+        ind = strfind(b, tg);
+        ind = ind(mod(ind,2)>0); % indice is odd
+        if ~isempty(ind), break; end
+    end
     if isempty(ind) % no tag in PerFrameSQ, try tag before PerFrameSQ
         ind = strfind(b0, tg);
         ind = ind(mod(ind,2)>0);
@@ -690,7 +688,7 @@ for i = 1:numel(flds)
         end
         continue;
     end
-    
+
     len = 4; % bytes of tag value length (uint32)
     if ~isEX % implicit, length irrevalent to VR
         ind = ind + 4; % tg(4)
@@ -760,14 +758,14 @@ s.NumberOfEchoes = par_attr(ch, 'Max. number of echoes');
 a = par_attr(ch, 'Patient position', 0);
 if isempty(a), a = par_attr(ch, 'Patient Position', 0); end
 if ~isempty(a)
-    if numel(a)>4, s.PatientPosition = a(regexp(a, '\<.')); 
+    if numel(a)>4, s.PatientPosition = a(regexp(a, '\<.'));
     else, s.PatientPosition = a; 
     end
 end
 s.MRAcquisitionType = par_attr(ch, 'Scan mode', 0);
-s.ScanningSequence = par_attr(ch, 'Technique', 0); % ScanningTechnique
+s.SequenceName = par_attr(ch, 'Technique', 0); % ScanningTechnique
 typ = par_attr(ch, 'Series Type', 0); typ(isspace(typ)) = '';
-s.ImageType = ['PhilipsPAR\' typ '\' s.ScanningSequence];
+s.ImageType = ['PhilipsPAR\' typ '\' s.SequenceName];
 s.RepetitionTime = par_attr(ch, 'Repetition time');
 s.WaterFatShift = par_attr(ch, 'Water Fat shift');
 s.EPIFactor = par_attr(ch, 'EPI factor');
@@ -791,23 +789,21 @@ iColumn = cumsum([1 iColumn]); % col start ind for corresponding colLabel
 keyInLabel = @(key)strcmpi(colLabel, key);
 colIndex = @(key)iColumn(keyInLabel(key));
 
-i1 = regexp(str(i2:end), '\n\s*\d+', 'once') + i2;
-n = iColumn(end)-1; % number of items each row, 41 for V4
-para = sscanf(str(i1:end), '%g'); % read all numbers
-nFrame = floor(numel(para) / n); 
-para = reshape(para(1:n*nFrame), n, nFrame)'; % whole table now
+i1 = regexp(str(i2:end), '\n\s*\d+', 'once') + i2 + 1;
+i2 = regexp(str(i1:end), '\n\s*#', 'once') + i1 - 1;
+para = eval(['[' str(i1:i2) ']']); % read all numbers
+nFrame = size(para, 1); 
+if size(para,2) ~= iColumn(end)-1
+    warning('dicm_hdr:badPAR', 'Inconsistent table columns to the definition');
+end
 
 % SortFrames solves XYTZ, unusual slice order, incomplete volume etc
 keys = {'dynamic scan number' 'gradient orientation number' 'echo number' ...
     'cardiac phase number' 'image_type_mr' 'label type' 'scanning sequence'};
 ic = []; for i = 1:numel(keys), ic = [ic colIndex(keys{i})]; end %#ok
-sort_frames = dicm2nii('', 'sort_frames', 'func_handle');
-sl = [para(:, colIndex('slice number')) para(:, colIndex('diffusion_b_factor'))];
-[ind_sort, nSL] = sort_frames(sl, para(:, ic));
-a = par_val('index in REC file', 1:nFrame); % always 0:nFrame-1 ?
-a(a+1) = 1:nFrame; % [~, a] = sort(a);
-a = a(ind_sort)';
-if ~isequal(a, 1:nFrame), s.SortFrames = a; end % used only in dicm2nii
+sl = para(:, [colIndex('slice number') colIndex('diffusion_b_factor')]);
+[ind_sort, nSL] = sort_frames(sl, para(:, ic), par_val('index in REC file', 1:nFrame));
+if ~isequal(ind_sort, 1:nFrame), s.SortFrames = ind_sort; end % used only in dicm2nii
 para = para(ind_sort, :); % XYZT order
 
 s.LocationsInAcquisition = nSL;
@@ -1013,11 +1009,10 @@ hist = afni_key('HISTORY_NOTE');
 i = strfind(hist, 'Time:') + 6;
 if ~isempty(i)
     dat = sscanf(hist(i:end), '%11c', 1); % Mar  1 2010
-    dat = datenum(dat, 'mmm dd yyyy');
-    s.AcquisitionDateTime = datestr(dat, 'yyyymmdd');
+    s.AcquisitionDateTime = char(datetime(dat, 'InputFormat', 'MMM d y', 'Format', 'yMMdd'));
 end
 i = strfind(hist, 'Sequence:') + 9;
-if ~isempty(i), s.ScanningSequence = strtok(hist(i:end), ' '); end
+if ~isempty(i), s.SequenceName = strtok(hist(i:end), ' '); end
 i = strfind(hist, 'Studyid:') + 8;
 if ~isempty(i), s.StudyID = strtok(hist(i:end), ' '); end
 % i = strfind(hist, 'Dimensions:') + 11;
@@ -1050,7 +1045,7 @@ R = reshape(R, [4 3])';
 s.ImagePositionPatient = R(:,4); % afni_key('ORIGIN') can be wrong
 s.LastFile.ImagePositionPatient = R * [0 0 dim(3)-1 1]'; % last slice
 R = R(1:3, 1:3);
-R = bsxfun(@rdivide, R, sqrt(sum(R.^2)));
+R = R ./ sqrt(sum(R.^2));
 s.ImageOrientationPatient = R(1:6)';
 foo = afni_key('DELTA');
 s.PixelSpacing = abs(foo([2 1]));
@@ -1270,7 +1265,8 @@ s.ImagePositionPatient = pos(:,1);
 s.LastFile.ImagePositionPatient = pos(:,2);
 
 % Following make dicm2nii happy
-s.SeriesInstanceUID = sprintf('%s_%03x', datestr(now, 'yymmddHHMMSSfff'), randi(999));
+tim = char(datetime("now", 'Format', 'yyMMddHHmmssSSS'));
+s.SeriesInstanceUID = sprintf('%s_%03x', tim, randi(999));
 end
 
 %% subfunction: read Freesurfer mgh or mgz file, return dicm info dicm_hdr.
@@ -1381,9 +1377,9 @@ s.NumberOfEchoes = xml_attr(ch1, 'Max No Echoes', 1);
 s.LocationsInAcquisition = xml_attr(ch1, 'Max No Slices', 1);
 s.PatientPosition = xml_attr(ch1, 'Patient Position');
 s.MRAcquisitionType = xml_attr(ch1, 'Scan Mode');
-s.ScanningSequence = xml_attr(ch1, 'Technique'); % ScanningTechnique
+s.SequenceName = xml_attr(ch1, 'Technique'); % ScanningTechnique
 typ = xml_attr(ch1, 'Series Data Type'); typ(isspace(typ)) = '';
-s.ImageType = ['PhilipsXML\' typ '\' s.ScanningSequence];
+s.ImageType = ['PhilipsXML\' typ '\' s.SequenceName];
 s.RepetitionTime = xml_attr(ch1, 'Repetition Times?', 1);
 if numel(s.RepetitionTime)>1, s.RepetitionTime = s.RepetitionTime(1); end
 s.WaterFatShift = xml_attr(ch1, 'Water Fat Shift', 1);
@@ -1402,15 +1398,11 @@ for i = 1:numel(keys)
     [aa, ~, a] = unique(xml_raw(ch, keys{i}, i<5));
     if numel(aa)>1, id = [id a]; end %#ok
 end
-sort_frames = dicm2nii('', 'sort_frames', 'func_handle');
 sl = xml_raw(ch, 'Slice'); 
 if isDTI, sl(:,2) = xml_raw(ch, 'Diffusion B Factor'); end
-[ind_sort, nSL] = sort_frames(sl, id);
+[ind_sort, nSL] = sort_frames(sl, id, xml_raw(ch, 'Index'));
 nFrame = size(sl, 1);
-a = xml_raw(ch, 'Index'); % always 0:nFrame-1 ?
-a(a+1) = 1:nFrame; % [~, a] = sort(a);
-a = a(ind_sort)';
-if ~isequal(a, 1:nFrame), s.SortFrames = a; end % used only in dicm2nii
+if ~isequal(ind_sort, 1:nFrame), s.SortFrames = ind_sort; end % used only in dicm2nii
 
 s.NumberOfFrames = numel(ind_sort); % may be smaller than nFrame
 s.NumberOfTemporalPositions = s.NumberOfFrames/nSL;
@@ -1418,6 +1410,8 @@ s.NumberOfTemporalPositions = s.NumberOfFrames/nSL;
 iVol = ind_sort((0:s.NumberOfTemporalPositions-1)*nSL + 1); % already XYZT
 typ = {'MAGNITUDE' 'REAL' 'IMAGINARY' 'PHASE'};
 imgType = xml_val(ch, 'Type', 0, iVol); % 'M'
+a = cellfun(@(c) ~any(startsWith(typ, c)), imgType);
+if any(a), typ = [typ imgType(a)]; end
 for i = 1:numel(imgType), imgType{i} = find(strncmpi(typ, imgType{i}, 1), 1); end
 imgType = cell2mat(imgType);
 if numel(iVol) == 1
@@ -1545,4 +1539,29 @@ s.PixelData.Bytes = s.Rows * s.Columns * nFrame * s.BitsAllocated / 8;
         elseif nargin<4, val = val{1};
         end
     end
+end
+
+%% Get index from PAR/XML to sort frames in REC
+function [ind, nSL] = sort_frames(sl, ic, iR)
+% sl is for slice index, and has B_value as 2nd column for DTI.
+% ic contains other possible identifiers which will be converted into index. 
+% The ic column order is important. 
+% iR is likely 0..nFrame-1, but whoe knows.
+% The returned ind is to sort both para table and frames in REC
+nSL = max(sl(:, 1));
+nFrame = size(sl, 1);
+if nSL==nFrame, ind = 1:nSL; ind(sl(:,1)) = ind; return; end % single vol
+ic(isnan(ic)) = 0;
+id = zeros(size(ic));
+for i = 1:size(ic,2)
+    [~, ~, id(:,i)] = unique(ic(:,i)); % entries to index
+end
+n = max(id); id = id(:, n>1); n = n(n>1); % now only useful columns
+i = find(cumprod(n) > nFrame/nSL-prod(n(2:end)), 1); % not 100% safe
+[~, ind] = sortrows([sl(:,2:end) id(:,1:i) sl(:,1)]); % idea is from julienbesle
+if sum(id(:,1)==n(1)) < sum(id(:,1)==1) % last vol incomplete?
+    ind(id(ind,1)==n(1)) = [];
+end
+iR(iR+1) = 1:nFrame;
+ind = iR(ind)';
 end

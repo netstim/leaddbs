@@ -122,7 +122,7 @@ for s=1:length(sfile)
             ea_dispercent(1,'end');
 
             if isempty(find(fiberstrength, 1))
-                warning('No connected fibers found for seed:\n%s', sfile{s});
+                ea_cprintf('CmdWinWarnings', 'No connected fibers found for seed:\n%s\n\n', sfile{s});
                 continue;
             end
 

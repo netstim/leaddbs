@@ -82,7 +82,7 @@ if isempty(t)
         t = timing;
     end
 elseif nargin>2 && any(abs(diff(t(:)-timing(:)))>0.01) % timing provided
-    warning(['Provided timing is inconsistent with header timing.' char(10 )...
+    warning(['Provided timing is inconsistent with header timing.' newline ...
         'The provided timing will be used for ' nii.hdr.file_name]);
     t = timing; % warn but use the provided timing
 end
@@ -98,11 +98,11 @@ t = single(t);
 nii.img = single(nii.img); % avoid integer type
 for i = 1:nSL % slice by slice fft/ifft seems faster than all together
     y = nii.img(:,:,i,:); % [r c 1 nVol]
-    pad = bsxfun(@times, y(:,:,1,nVol)-y(:,:,1,1), ramp); % [r c 1 nRamp]
-    pad = bsxfun(@plus, pad, y(:,:,1,1)); % linear ramp from last to 1st point
+    pad = (y(:,:,1,nVol) - y(:,:,1,1)) .* ramp; % [r c 1 nRamp]
+    pad = pad + y(:,:,1,1); % linear ramp from last to 1st point
     y = cat(4, y, pad); %  [r c 1 nFFT]
     y = fft(y, [], 4);
-    y = bsxfun(@times, y, F.^t(i)); % shift phase
+    y = y .* (F.^t(i)); % shift phase
     y = real(ifft(y, [], 4));
     nii.img(:,:,i,:) = y(:,:,1,1:nVol); % update img while drop padding
 end

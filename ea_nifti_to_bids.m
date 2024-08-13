@@ -108,7 +108,7 @@ N_fnames = length(niiFiles);
 if N_fnames == 0
     ea_cprintf('CmdWinWarnings', 'No compatible nifti images could be found. Please check if the images are 3-D image files.\n');
     sortedFiles = [];
-    returnCode = 'cancel';
+    returnCode = 'empty';
     return;
 end
 

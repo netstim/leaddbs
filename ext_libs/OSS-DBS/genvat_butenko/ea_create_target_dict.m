@@ -1,4 +1,4 @@
-function ea_create_target_dict(targetType,targetActivation,stimfolder,connectome)
+function ea_create_target_dict(targetType,targetActivation,stimfolder,connectome,pathwayWeights)
 
 % create a dictionary with simple target / avoidance tracts
 if startsWith(connectome, 'Multi-Tract: ')
@@ -33,11 +33,11 @@ for side = 1:2
                 % check if side and suffix match
     
                 if strcmp(targetType(t),"SSE")
-                    jsonDict.Soft_SE_dict.(genvarname(['avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, 1];  % [target_rate, mean_val (not relevant), sum_val (can be used to emphasize an importance of the pathway)]
+                    jsonDict.Soft_SE_dict.(genvarname(['avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, pathwayWeights(t)];  % [target_rate, mean_val (not relevant), sum_val (can be used to emphasize an importance of the pathway)]
                 elseif strcmp(targetType(t),"CSE") == 1
-                    jsonDict.SE_dict.(genvarname(['complete_avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, 1];
+                    jsonDict.SE_dict.(genvarname(['complete_avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, pathwayWeights(t)];
                 else
-                    jsonDict.profile_dict.(genvarname(['target', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, 1];
+                    jsonDict.profile_dict.(genvarname(['target', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, pathwayWeights(t)];
                 end
             else
                 continue
@@ -45,11 +45,11 @@ for side = 1:2
         else
             % optimization for both sides will use the tract
             if strcmp(targetType(t),"SSE")
-                jsonDict.Soft_SE_dict.(genvarname(['avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, 1];  % [target_rate, mean_val (not relevant), sum_val (can be used to emphasize an importance of the pathway)]
+                jsonDict.Soft_SE_dict.(genvarname(['avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, pathwayWeights(t)];  % [target_rate, mean_val (not relevant), sum_val (can be used to emphasize an importance of the pathway)]
             elseif strcmp(targetType(t),"CSE") == 1
-                jsonDict.SE_dict.(genvarname(['complete_avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, 1];
+                jsonDict.SE_dict.(genvarname(['complete_avoidance', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, pathwayWeights(t)];
             else
-                jsonDict.profile_dict.(genvarname(['target', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, 1];
+                jsonDict.profile_dict.(genvarname(['target', side_suffix])).(genvarname(tractName)) = [targetActivation(t), 1.0, pathwayWeights(t)];
             end   
         end
     end

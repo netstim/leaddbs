@@ -418,17 +418,24 @@ elseif strcmpi(cmd, 'save')
     for i = 1:size(C0,1)
         if isfield(nii.hdr, C0{i,1})
             val = nii.hdr.(C0{i,1});
+%         elseif strcmp(C0{i,1}, 'sform_mat') % these 3 elseif can be removed
+%             val = [nii.hdr.srow_x; nii.hdr.srow_y; nii.hdr.srow_z];
+%         elseif strcmp(C0{i,1}, 'quatern_bcd')
+%             val = [nii.hdr.quatern_b nii.hdr.quatern_c nii.hdr.quatern_d];
+%         elseif strcmp(C0{i,1}, 'quatern_xyz')
+%             val = [nii.hdr.quatern_x nii.hdr.quatern_y nii.hdr.quatern_z];
         else % niiVer=2 omit some fields, also take care of other cases
             val = C0{i,4};
         end
         fmt0 = C0{i,3};
-        if strcmp(C0{i,3}, 'char')
+        if strcmp(C0{i,3}, 'char') && ~isempty(val)
             if ~ischar(val), val = char(val); end % avoid val=[] error etc
             val = unicode2native(val); % may have more bytes than numel(val)
             fmt0 = 'uint8';
         end
-        n = numel(val);
         len = C0{i,2};
+        if numel(len)>1, len = prod(len); val = val'; end % matrix
+        n = numel(val);
         if n>len
             val(len+1:n) = []; % remove extra, normally for char
         elseif n<len
@@ -444,7 +451,14 @@ elseif strcmpi(cmd, 'save')
         fwrite(fid, nii.ext(i).edata, 'uint8');
     end
     
-    if ~isNii
+    if isNii
+        n = nii.hdr.vox_offset - ftell(fid);
+        if n<0 % seen n=-1 for unknown reason
+            fseek(fid, n, 'cof');
+        elseif n>0
+            fwrite(fid, zeros(n,1), 'uint8');
+        end
+    else
         fclose(fid); % done with .hdr
         fid = fopen(strcat(fname, '.img'), 'W');
     end
@@ -596,9 +610,7 @@ elseif strcmpi(cmd, 'update') % old img2datatype subfunction
     if nargin>2 % set new sform mat
         R = varargin{2};
         if size(R,2)~=4, error('Invalid matrix dimension.'); end
-        nii.hdr.srow_x = R(1,:);
-        nii.hdr.srow_y = R(2,:);
-        nii.hdr.srow_z = R(3,:);
+        nii.hdr.sform_mat = R(1:3,:);
     end
     
     if ndim == 8 % RGB/RGBA data. Change img type to uint8/single if needed
@@ -681,93 +693,81 @@ if nargin<1 || isempty(niiVer), niiVer = pf.version; end
 
 if niiVer == 1
     C = {
-    % name              len  format     value           offset
-    'sizeof_hdr'        1   'int32'     348             0
-    'data_type'         10  'char'      ''              4
-    'db_name'           18  'char'      ''              14
-    'extents'           1   'int32'     16384           32
-    'session_error'     1   'int16'     0               36
-    'regular'           1   'char'      'r'             38
-    'dim_info'          1   'uint8'     0               39
-    'dim'               8   'int16'     ones(1,8)       40
-    'intent_p1'         1   'single'    0               56
-    'intent_p2'         1   'single'    0               60
-    'intent_p3'         1   'single'    0               64
-    'intent_code'       1   'int16'     0               68
-    'datatype'          1   'int16'     0               70
-    'bitpix'            1   'int16'     0               72
-    'slice_start'       1   'int16'     0               74
-    'pixdim'            8   'single'    zeros(1,8)      76
-    'vox_offset'        1   'single'    352             108
-    'scl_slope'         1   'single'    1               112
-    'scl_inter'         1   'single'    0               116
-    'slice_end'         1   'int16'     0               120
-    'slice_code'        1   'uint8'     0               122
-    'xyzt_units'        1   'uint8'     0               123
-    'cal_max'           1   'single'    0               124
-    'cal_min'           1   'single'    0               128
-    'slice_duration'    1   'single'    0               132
-    'toffset'           1   'single'    0               136
-    'glmax'             1   'int32'     0               140
-    'glmin'             1   'int32'     0               144
-    'descrip'           80  'char'      ''              148
-    'aux_file'          24  'char'      ''              228
-    'qform_code'        1   'int16'     0               252
-    'sform_code'        1   'int16'     0               254
-    'quatern_b'         1   'single'    0               256
-    'quatern_c'         1   'single'    0               260
-    'quatern_d'         1   'single'    0               264
-    'qoffset_x'         1   'single'    0               268
-    'qoffset_y'         1   'single'    0               272
-    'qoffset_z'         1   'single'    0               276
-    'srow_x'            4   'single'    [1 0 0 0]       280
-    'srow_y'            4   'single'    [0 1 0 0]       296
-    'srow_z'            4   'single'    [0 0 1 0]       312
-    'intent_name'       16  'char'      ''              328
-    'magic'             4   'char'      'n+1'           344
-    'extension'         4   'uint8'     [0 0 0 0]       348
+    % name              size    format     value           offset
+    'sizeof_hdr'        1       'int32'     348             0
+    'data_type'         10      'char'      ''              4
+    'db_name'           18      'char'      ''              14
+    'extents'           1       'int32'     16384           32
+    'session_error'     1       'int16'     0               36
+    'regular'           1       'char'      'r'             38
+    'dim_info'          1       'uint8'     0               39
+    'dim'               8       'int16'     ones(1,8)       40
+    'intent_p1'         1       'single'    0               56
+    'intent_p2'         1       'single'    0               60
+    'intent_p3'         1       'single'    0               64
+    'intent_code'       1       'int16'     0               68
+    'datatype'          1       'int16'     0               70
+    'bitpix'            1       'int16'     0               72
+    'slice_start'       1       'int16'     0               74
+    'pixdim'            8       'single'    zeros(1,8)      76
+    'vox_offset'        1       'single'    352             108
+    'scl_slope'         1       'single'    1               112
+    'scl_inter'         1       'single'    0               116
+    'slice_end'         1       'int16'     0               120
+    'slice_code'        1       'uint8'     0               122
+    'xyzt_units'        1       'uint8'     0               123
+    'cal_max'           1       'single'    0               124
+    'cal_min'           1       'single'    0               128
+    'slice_duration'    1       'single'    0               132
+    'toffset'           1       'single'    0               136
+    'glmax'             1       'int32'     0               140
+    'glmin'             1       'int32'     0               144
+    'descrip'           80      'char'      ''              148
+    'aux_file'          24      'char'      ''              228
+    'qform_code'        1       'int16'     0               252
+    'sform_code'        1       'int16'     0               254
+    'quatern_bcd'       3       'single'    [0 0 0]         256
+    'qoffset_xyz'       [3 1]   'single'    [0;0;0]         268
+    'sform_mat'         [3 4]   'single'    eye(3,4)        280
+    'intent_name'       16      'char'      ''              328
+    'magic'             4       'char'      'n+1'           344
+    'extension'         4       'uint8'     [0 0 0 0]       348
     };
 
 elseif niiVer == 2
     C = {
-    'sizeof_hdr'        1   'int32'     540             0
-    'magic'             8   'char'      'n+2'           4
-    'datatype'          1   'int16'     0               12
-    'bitpix'            1   'int16'     0               14
-    'dim'               8   'int64'     ones(1,8)       16
-    'intent_p1'         1   'double'    0               80
-    'intent_p2'         1   'double'    0               88
-    'intent_p3'         1   'double'    0               96
-    'pixdim'            8   'double'    zeros(1,8)      104
-    'vox_offset'        1   'int64'     544             168
-    'scl_slope'         1   'double'    1               176
-    'scl_inter'         1   'double'    0               184
-    'cal_max'           1   'double'    0               192
-    'cal_min'           1   'double'    0               200
-    'slice_duration'    1   'double'    0               208
-    'toffset'           1   'double'    0               216
-    'slice_start'       1   'int64'     0               224
-    'slice_end'         1   'int64'     0               232
-    'descrip'           80  'char'      ''              240
-    'aux_file'          24  'char'      ''              320
-    'qform_code'        1   'int32'     0               344
-    'sform_code'        1   'int32'     0               348
-    'quatern_b'         1   'double'    0               352
-    'quatern_c'         1   'double'    0               360
-    'quatern_d'         1   'double'    0               368
-    'qoffset_x'         1   'double'    0               376
-    'qoffset_y'         1   'double'    0               384
-    'qoffset_z'         1   'double'    0               392
-    'srow_x'            4   'double'    [1 0 0 0]       400
-    'srow_y'            4   'double'    [0 1 0 0]       432
-    'srow_z'            4   'double'    [0 0 1 0]       464
-    'slice_code'        1   'int32'     0               496
-    'xyzt_units'        1   'int32'     0               500
-    'intent_code'       1   'int32'     0               504
-    'intent_name'       16  'char'      ''              508
-    'dim_info'          1   'uint8'     0               524
-    'unused_str'        15  'char'      ''              525
-    'extension'         4   'uint8'     [0 0 0 0]       540
+    'sizeof_hdr'        1       'int32'     540             0
+    'magic'             8       'char'      'n+2'           4
+    'datatype'          1       'int16'     0               12
+    'bitpix'            1       'int16'     0               14
+    'dim'               8       'int64'     ones(1,8)       16
+    'intent_p1'         1       'double'    0               80
+    'intent_p2'         1       'double'    0               88
+    'intent_p3'         1       'double'    0               96
+    'pixdim'            8       'double'    zeros(1,8)      104
+    'vox_offset'        1       'int64'     544             168
+    'scl_slope'         1       'double'    1               176
+    'scl_inter'         1       'double'    0               184
+    'cal_max'           1       'double'    0               192
+    'cal_min'           1       'double'    0               200
+    'slice_duration'    1       'double'    0               208
+    'toffset'           1       'double'    0               216
+    'slice_start'       1       'int64'     0               224
+    'slice_end'         1       'int64'     0               232
+    'descrip'           80      'char'      ''              240
+    'aux_file'          24      'char'      ''              320
+    'qform_code'        1       'int32'     0               344
+    'sform_code'        1       'int32'     0               348
+    'quatern_bcd'       3       'double'    [0 0 0]         352
+    'qoffset_xyz'       [3 1]   'double'    [0;0;0]         376
+    'sform_mat'         [3 4]   'double'    eye(3,4)        400
+    'slice_code'        1       'int32'     0               496
+    'xyzt_units'        1       'int32'     0               500
+    'intent_code'       1       'int32'     0               504
+    'intent_name'       16      'char'      ''              508
+    'dim_info'          1       'uint8'     0               524
+    'unused_str'        15      'char'      ''              525
+    'extension'         4       'uint8'     [0 0 0 0]       540
     };
 else
     error('Nifti version %g is not supported', niiVer);
@@ -949,8 +949,8 @@ if swap, out = swapbytes(out); end
 out = double(out); % for convenience
 
 %% subfunction: read hdr
-function hdr = read_hdr(b, C, fname)
-n = typecast(b(1:4), 'int32');
+function hdr = read_hdr(bytes, C, fname)
+n = typecast(bytes(1:4), 'int32');
 if     n==348, niiVer = 1; swap = false;
 elseif n==540, niiVer = 2; swap = false;
 else
@@ -963,10 +963,10 @@ end
 
 if niiVer>1, C = niiHeader(niiVer); end % C defaults for version 1
 for i = 1:size(C,1)
-    try a = b(C{i,5}+1 : C{i+1,5}); 
+    try a = bytes(C{i,5}+1 : C{i+1,5}); 
     catch
-        if C{i,5}==numel(b), a = [];
-        else, a = b(C{i,5} + (1:C{i,2})); % last item extension is in bytes
+        if C{i,5}==numel(bytes), a = [];
+        else, a = bytes(C{i,5} + (1:C{i,2})); % last item extension is in bytes
         end
     end
     if strcmp(C{i,3}, 'char')
@@ -974,10 +974,28 @@ for i = 1:size(C,1)
     else
         a = cast_swap(a, C{i,3}, swap);
         a = double(a);
+        if numel(C{i,2})>1, a = reshape(a, C{i,2}([2 1]))'; end
     end
     hdr.(C{i,1}) = a;
 end
-  
+
+if hdr.qform_code
+    b = hdr.quatern_bcd(1);
+    c = hdr.quatern_bcd(2);
+    d = hdr.quatern_bcd(3);
+    a = sqrt(1-b*b-c*c-d*d);
+    if ~isreal(a), a = 0; end % avoid complex due to precision
+    R = [1-2*(c*c+d*d)  2*(b*c-d*a)     2*(b*d+c*a);
+         2*(b*c+d*a)    1-2*(b*b+d*d)   2*(c*d-b*a);
+         2*(b*d-c*a )   2*(c*d+b*a)     1-2*(b*b+c*c)];
+    if hdr.pixdim(1)<0, R(:,3) = -R(:,3); end % qfac
+    hdr.qform_mat = [R*diag(hdr.pixdim(2:4)) hdr.qoffset_xyz];
+end
+% if hdr.sform_code % for compatibility: remove in the future
+%     hdr.srow_x = hdr.sform_mat(1,:);
+%     hdr.srow_y = hdr.sform_mat(2,:);
+%     hdr.srow_z = hdr.sform_mat(3,:);
+% end
 hdr.version = niiVer; % for 'save', unless user asks to change
 hdr.swap_endian = swap;
 hdr.file_name = fname;
@@ -1005,7 +1023,7 @@ ext = decode_ext(ext, swap);
 function ext = decode_ext(ext, swap)
 % Decode edata if we know ecode
 for i = 1:numel(ext)
-    if isfield(ext(i), 'edata_decoded'), continue; end % done
+    try, if ~isempty(ext(i).edata_decoded'), continue; end; end % done
     if ext(i).ecode == 40 % Matlab: any kind of matlab variable
         nByte = cast_swap(ext(i).edata(1:4), 'int32', swap); % MAT data
         tmp = [tempname '.mat']; % temp MAT file to save edata

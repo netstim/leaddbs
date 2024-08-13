@@ -1286,9 +1286,6 @@ function setstimparamsbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Get handle to the current figure
-figHandle = gcf;
-
 % Display a dialog box with options
 choice = questdlg('Select a programmer:', ...
                   '', ...
@@ -1298,7 +1295,7 @@ choice = questdlg('Select a programmer:', ...
 switch choice
     case 'Old Programmer'
         % Execute Option 1: Your existing code or modifications
-        M = getappdata(figHandle, 'M');
+        M = getappdata(handles.leadfigure, 'M');
         
         options = ea_setopts_local(handles);
         options.leadprod = 'group';
@@ -1311,7 +1308,7 @@ switch choice
     case 'New Programmer'
         % Execute Option 2: Another action or modifications
         % Add your code for Option 2 here
-        M = getappdata(figHandle, 'M');
+        M = getappdata(handles.leadfigure, 'M');
         options = ea_setopts_local(handles);
         options.leadprod = 'group';
         options.groupid = M.guid;
@@ -1334,7 +1331,7 @@ switch choice
                 end
             end
         
-            if (currentOS =="maci64")
+            if (currentOS == "maci64")
                 zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-mac.zip');
                 appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
                 testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
@@ -1359,6 +1356,7 @@ switch choice
                     disp(['Processing data for field: ' fieldName]);
                 end
                 M.S = tmpM.S;
+                setappdata(handles.leadfigure, 'M', M);
         end
         
     otherwise
