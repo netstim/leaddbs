@@ -93,10 +93,14 @@ switch settings.butenko_segmAlg
                 % TBD: we can store atropos segmask_raw in coregistration
                 % instead of stim folder
                 if ~isfile([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw.nii'])
-                    env = ea_conda_env('OSS-DBSv2');
-                    env.system('pip3 install antspyx')
+                    env = ea_conda_env('Lead-DBS');
+                    if ~env.is_up_to_date
+                        env.force_create;
+                    end
+                    %env.system('pip3 install antspyx')
                     system(['python ', ea_getearoot, '/ext_libs/OSS-DBS/genvat_butenko/atropos_segm.py ', [anchorImageDir,anchorImageName], ' ', ea_path_helper(outputPaths.outputDir)])
                 end
+                env = ea_conda_env('OSS-DBSv2');
                 
                 % ea_atropos2segmask will save segmask.nii in the stim folder
                 ea_atropos2segmask([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw.nii'], options.subj.AnchorModality);
