@@ -1,13 +1,12 @@
 '''
     By K. Butenko
     This script trains and test an ANN model to approximate pathway activation for a given electrode position
-    IMPORTANT: Based on tensorflow with a hard sigmoid swapped to abs(LeakyReLU) with alpha 1.25 (steeper slope for cathode)
 '''
 
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import h5py
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'   # to avoid any CUDA issues
 import sys
 import json
 import copy
@@ -30,9 +29,10 @@ from keras.layers import LeakyReLU
 learn_rate = 0.0025
 N_epochs = 500
 min_activ_threshold = 0.05   # if less than 5% of fibers in the pathway were activated over all StimSets, ANN will not train on it
+min_axon_number = 10         # minimal number of axons in the pathway (binary outcomes require different architecture)
 
 SIDE_SUFFIX = ['_rh','_lh']
-def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_threshold, SE_err_threshold, side, check_trivial, VAT_recruit = False):
+def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_threshold, SE_err_threshold, side, pathway, check_trivial, VAT_recruit = False):
 
     import os
 
@@ -66,7 +66,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
 
     # I need to check thoroughly whether training for one pathway is way better
     # if yes, then just train ANN in this loop
-    pathway = 'M1_cf_lowerex_right'
+    #pathway = 'M1_cf_upperex_right'
 
     for path_i in range(len(Pathways)):
         if Pathways[path_i] == pathway:
@@ -106,7 +106,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
 
     for i in range(y_train_prelim.shape[1]):
         # only compute for pathways with some percent activation and minimal number of fibers (10)
-        if axons_in_path[i] > 9 and np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
+        if axons_in_path[i] >= min_axon_number and np.max(y_train_prelim[:, i]) >= min_activ_threshold and np.max(y_test_prelim[:, i]) >= min_activ_threshold:
 
             y_train[:,i] = y_train_prelim[:,i]
             y_test[:,i] = y_test_prelim[:,i]
@@ -136,8 +136,6 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
     if y_train.shape[1] > 1:
         print("wrong dimensions")
         raise SystemExit
-
-    print(np.max(y_train))
 
     #================================================== Train ANN =====================================================#
 
@@ -348,12 +346,14 @@ if __name__ == '__main__':
         StimSets_info = json.load(fp)
     fp.close()
 
-
-    print(StimSets_info['trainSize_actual'],netblend_dict['Err_threshold'])
     # #better regenerate them
     # from Improvement4Protocol import create_NB_dictionaries
     # profile_dict, Soft_SE_dict, SE_dict = create_NB_dictionaries(side, FF_dictionary)
 
-    approx_pathways = train_test_ANN(stim_dir,res_folder,TrainTest_currents_file, StimSets_info['trainSize_actual'],
-                   netblend_dict['Err_threshold'], netblend_dict['SE_err_threshold'], side, check_trivial=False)
+    from Pathways_Stats import get_simulated_pathways
+    pathways, axons_in_path = get_simulated_pathways(side, stim_dir)
+
+    for pathway in pathways:
+        approx_pathways = train_test_ANN(stim_dir,res_folder,TrainTest_currents_file, StimSets_info['trainSize_actual'],
+                       netblend_dict['Err_threshold'], netblend_dict['SE_err_threshold'], side, pathway, check_trivial=False)
 

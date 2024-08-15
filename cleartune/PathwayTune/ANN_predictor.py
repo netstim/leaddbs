@@ -1,4 +1,5 @@
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'   # to avoid any CUDA issues
 import sys
 import numpy as np
 
@@ -26,7 +27,7 @@ if __name__ == '__main__':
     stim_dir = sys.argv[1]
     pathway = sys.argv[2]
     side = int(sys.argv[3])
-    # the rest is assumed to be tested currents (should be in A!)
+    # the rest is assumed to be tested currents (should be in mA!)
     stim_vector = [float(i) * 0.001 for i in sys.argv[4:]]
 
-    call_ANN(stim_dir,stim_vector,pathway,side)
+    call_ANN(stim_dir, stim_vector, pathway, side)
