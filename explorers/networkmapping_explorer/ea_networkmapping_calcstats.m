@@ -73,8 +73,8 @@ for group=groups
         case 'Combined Map (Horn 2017)'
             disp(['Correlation type: ', obj.corrtype, '. Calculating C-map...'])
             if obj.showsignificantonly
-                [R,ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
-                R=ea_corrsignan(vals{group},ps',obj);
+                [Rvals{group},ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
+                R=ea_corrsignan(Rvals{group},ps',obj);
                 A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
                 bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
                 A(~bidir)=nan;
