@@ -118,7 +118,7 @@ classdef ea_conda_env
             if isunix
                 setenv('PATH', [fullfile(obj.path, 'bin') ':' getenv('PATH')]);
             else
-                setenv('PATH', [fullfile(obj.path, 'Scripts') ';' getenv('PATH')]);
+                setenv('PATH', [obj.path ';' fullfile(obj.path, 'Scripts') ';' getenv('PATH')]);
             end
 
             if nargout <= 1

@@ -114,7 +114,7 @@ classdef (Abstract) ea_conda
             if isunix
                 setenv('PATH', [fullfile(ea_conda.install_path, 'bin') ':' getenv('PATH')]);
             else
-                setenv('PATH', [fullfile(ea_conda.install_path, 'Scripts') ';' getenv('PATH')]);
+                setenv('PATH', [ea_conda.install_path ';' fullfile(ea_conda.install_path, 'Scripts') ';' getenv('PATH')]);
             end
 
             if nargout <= 1
