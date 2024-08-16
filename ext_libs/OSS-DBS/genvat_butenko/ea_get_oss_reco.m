@@ -58,6 +58,13 @@ for i=1:eleNum
             settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
         end
     end
+
+    % disable X-axis implantations for directional leads
+    if all(settings.Implantation_coordinate(i,2:3) == settings.Second_coordinate(i,2:3))  && (contains(options.elmodel, "Medtronic B33015") || contains(options.elmodel, "Medtronic B33005") || contains(options.elmodel, "Boston Scientific Vercise Cartesia X") || contains(options.elmodel, "Boston Scientific Vercise Cartesia HX") || contains(options.elmodel, "Boston Scientific Vercise Directed") || contains(options.elmodel, "Abbott Directed 6172 (short)") || contains(options.elmodel, "Abbott Directed 6173 (long)"))
+        ea_error("Implantations perfectly along X-axis are not supported for directional leads.")
+        settings = 0;
+        return
+    end
 end
 
 %% Helper function to get markers in bothe native and MNI space
