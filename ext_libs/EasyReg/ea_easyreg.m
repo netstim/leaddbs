@@ -5,9 +5,9 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
     % EasyReg
     %
 
-    target_seg = [target_image(1:end-4) '_synthseg.nii'];
-    source_seg = [source_image(1:end-4) '_synthseg.nii'];
-    fs_fwd_field = [source_image(1:end-4) '_fs_fwd_field.nii'];
+    target_seg = strrep(target_image, '.nii', '_synthseg.nii');
+    source_seg = strrep(source_image, '.nii', '_synthseg.nii');
+    fs_fwd_field = strrep(source_image, '.nii', '_fs_fwd_field.nii');
 
     % Check Conda environment
     condaenv = ea_conda_env('EasyReg');
@@ -87,6 +87,7 @@ h5create(warp_file_out,"/TransformGroup/0/TransformParameters", numel(out_column
 h5write(warp_file_out,"/TransformGroup/0/TransformParameters", out_column);
 
 end
+
 
 function mat = get_mat()
 
