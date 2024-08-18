@@ -72,7 +72,9 @@ if any(nActiveSources > 1)
     end
     first_active_source = 1;  % check all sources
 else
-    first_active_source = find(~isnan(activeSources(1,:)),1,'first');
+    first_active_source_rh = find(~isnan(activeSources(1,:)),1,'first');
+    first_active_source_lh = find(~isnan(activeSources(2,:)),1,'first');
+    first_active_source = min([first_active_source_rh,first_active_source_lh]);
 end
 
 % if single source, we will run only one iteration
