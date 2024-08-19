@@ -4,11 +4,12 @@ function [numDICOM, fileList, isCompressed] = ea_dcmquery(inputFolder, queryOpti
 % queryOption can be 'y' (only show number of DICOMs found) or 'l'(show
 % number of DICOMs found and list of DICOMs)
 
-inputFolder = GetFullPath(inputFolder);
-
-if ~exist('queryOption', 'var')
-    queryOption = 'y';
+arguments
+    inputFolder {mustBeFolder}
+    queryOption {mustBeMember(queryOption, {'y', 'l'})} = 'y'
 end
+
+inputFolder = GetFullPath(inputFolder);
 
 basedir = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', filesep);
 
