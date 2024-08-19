@@ -56,7 +56,7 @@ end
 
 % combine default prefs and user prefs
 prefs = combinestructs(dprefs, uprefs);
-
+prefs.d3.showdirarrows = 1;
 % add machine prefs only when lead task is not running on a cluster or with
 % exported job file. In both cases, machine prefs will be defined in
 % options.prefs.machine.
