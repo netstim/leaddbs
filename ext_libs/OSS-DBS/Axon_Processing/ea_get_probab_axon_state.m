@@ -91,9 +91,8 @@ for pt_counter = 1:length(pathways)
             % here we only count really activated ones
             fibers_state(fiber_i) = (fibers(idx_comp(1),5) == 1);
             % can also add damaged
-            if damaged_as_activated
-                fibers_state(fiber_i) = (fibers(idx_comp(1),5) == -1);
-                fibers_state(fiber_i) = (fibers(idx_comp(1),5) == -3);
+            if fibers_state(fiber_i) == 0 && damaged_as_activated
+                fibers_state(fiber_i) = (fibers(idx_comp(1),5) == -1 || fibers(idx_comp(1),5) == -3);
             end
 
             % key line. Probability is estimated as number of success
