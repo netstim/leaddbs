@@ -1045,7 +1045,7 @@ parcs=get(handles.labelpopup,'String');
 selectedparc=parcs{get(handles.labelpopup,'Value')};
 
 
-ea_calc_biophysical_lg(M,options,selection,mod,selectedparc,handles);
+ea_calc_biophysical_lg(M,options,selection,fibersfile,selectedparc,handles);
 
 
 %% processing done here.

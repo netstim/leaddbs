@@ -1,4 +1,4 @@
-function ea_calc_biophysical_lg(M,options,selection,mod,parcellation,handles)
+function ea_calc_biophysical_lg(M,options,selection,fibersfile,parcellation,handles)
 
 % handles not necessary for most cases (just for patient specific fMRI).
 
@@ -143,18 +143,18 @@ for pt=selection
     end
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
-    if all(vatCalcPassed) && ~strcmp(mod,'Do not calculate connectivity stats') && ~strcmp(mod,'')
+    if all(vatCalcPassed) && ~strcmp(fibersfile,'Do not calculate connectivity stats') && ~strcmp(fibersfile,'')
         % Convis part:
         directory=[options.root,options.patientname,filesep];
         if ischar(fibersfile)
-            switch mod
+            switch fibersfile
                 case 'Patient''s fMRI time courses'
                     ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
                     pV=spm_vol([ea_space(options,'labeling'),parcellation,'.nii']);
                     pX=spm_read_vols(pV);
-                    ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,parcellation,mod,options);
+                    ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,parcellation,fibersfile,options);
                 otherwise
-                    ea_cvshowvatdmri(resultfig,directory,{mod,'gs'},parcellation,options);
+                    ea_cvshowvatdmri(resultfig,directory,{fibersfile,'gs'},parcellation,options);
             end
         else
             ea_cvshowvatdmri(resultfig,directory,{fibersfile,'gs'},parcellation,options);
