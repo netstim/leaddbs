@@ -28,7 +28,7 @@ mkdir(tempFolder);
 
 if strcmp(mode, 'all')
     % Find all files under DICOM folder
-    dcm = ea_regexpdir(dicomdir, '.*', 1, 'file');
+    [~, dcm] = ea_dcmquery(dicomdir, 'y');
 
     matlabbatch{1}.spm.util.import.dicom.data = dcm;
     matlabbatch{1}.spm.util.import.dicom.root = 'series';
