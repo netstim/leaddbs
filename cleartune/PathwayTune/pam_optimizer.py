@@ -22,13 +22,19 @@ class PamOptimizer:
         path to the stimulation folder
     optim_settings_file : str
         path to json with optimization settings
+    input_dict: str
+        path to json with OSS-DBS settings
+    scaling: float
+        scalar scaling for the field solution
+
     """
 
-    def __init__(self, side, stim_folder, optim_settings_file, input_dict):
+    def __init__(self, side, stim_folder, optim_settings_file, input_dict, scaling):
 
         self.side = side
         self.stim_folder = stim_folder
         self.input_dict = input_dict
+        self.scaling = scaling
 
         if self.side == 0:
             self.side_suffix = '_rh'
@@ -161,7 +167,7 @@ class PamOptimizer:
 
         with open(self.input_dict) as json_file:
             input_settings = json.load(json_file)
-        input_settings["Scaling"] = 1.0
+        input_settings["Scaling"] = self.scaling
         input_settings["ScalingIndex"] = None
         input_settings["StimSets"]["StimSetsFile"] = None  # won't be used here
         input_settings["CurrentVector"] = S_vector * 1000  # S_vector already in mA, but scaling to A is done later
@@ -230,9 +236,9 @@ if __name__ == '__main__':
     stim_folder = sys.argv[2]
     side = int(sys.argv[3])
     input_dict = sys.argv[4]
-    #proper_python = sys.argv[5]
+    scaling = float(sys.argv[5])
 
     # side and stim_folder - from ea_optimizePAM_butenko
-    optimization = PamOptimizer(side, stim_folder, optim_settings_file, input_dict)
+    optimization = PamOptimizer(side, stim_folder, optim_settings_file, input_dict, scaling)
 
 

@@ -229,6 +229,14 @@ for source_index = first_active_source:4
 
             % prepare NEURON simulation
             if settings.calcAxonActivation
+
+                if strcmp(settings.butenko_intersectStatus,'activated')
+                    % we additionally correct for the tissue push and
+                    % downscale the solution (equivalent of pulling VTAs into the electrode volume)
+                    scaling = 0.80;  % estimate for our default comp. domain, see eq. for el. potential in co-axial cables
+                else
+                    scaling = 1.0;
+                end
     
                 % check if the time domain results is available
                 timeDomainSolution = [outputPaths.HemiSimFolder,filesep,'Results', filesep, 'oss_time_result_PAM.h5'];
@@ -238,14 +246,14 @@ for source_index = first_active_source:4
                 end
 
                 if settings.optimizer
-                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json)])
+                    system(['python ', ea_getearoot, 'cleartune/PathwayTune/pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
                 else
                     if settings.prob_PAM
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
-                        system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i)]);
+                        system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                     else
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
-                        system(['run_pathway_activation ', ea_path_helper(parameterFile_json)]);
+                        system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
                     end
                 end
 
