@@ -17,11 +17,11 @@ ea_write_nii(nii);
 
 allV = [[outdir, 'bb_nan.nii']; allV];
 
-% Export mean to get bounding box
+% Export sum to get bounding box
 matlabbatch{1}.spm.util.imcalc.input = allV;
 matlabbatch{1}.spm.util.imcalc.output = 'efield_bb.nii';
 matlabbatch{1}.spm.util.imcalc.outdir = {outdir};
-matlabbatch{1}.spm.util.imcalc.expression = 'ea_nanmean(X)';
+matlabbatch{1}.spm.util.imcalc.expression = 'ea_nansum(X)';
 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
