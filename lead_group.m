@@ -1027,25 +1027,18 @@ else
     options.stimSetMode = 0;
 end
 
-% determine if fMRI or dMRI
-mods=get(handles.fiberspopup,'String');
-mod=mods{get(handles.fiberspopup,'Value')};
-switch mod
-    case {'Patient''s fiber tracts', 'Patient''s fMRI time courses'}
-        fibersfile=mod;
-    case 'Do not calculate connectivity stats'
-    otherwise % load fibertracts once and for all subs here.
-        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getconnectomebase('dmri'),mod,filesep,'data.mat']);
+selection = ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
+
+% determine connectome chosen from the GUI
+selectedConn = handles.fiberspopup.String{handles.fiberspopup.Value};
+if ~ismember(selectedConn, {'Patient''s fiber tracts', 'Patient''s fMRI time courses', 'Do not calculate connectivity stats'})
+    % load fibertracts once and for all subs here.
+    [selectedConn.fibers, selectedConn.fibersidx] = ea_loadfibertracts([ea_getconnectomebase('dmri'), selectedConn, filesep, 'data.mat']);
 end
 
-[selection]=ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
+selectedParc = handles.labelpopup.String{handles.labelpopup.Value};
 
-
-parcs=get(handles.labelpopup,'String');
-selectedparc=parcs{get(handles.labelpopup,'Value')};
-
-
-ea_calc_biophysical_lg(M,options,selection,fibersfile,selectedparc,handles);
+ea_calc_biophysical_lg(M, options, selection, selectedConn, selectedParc, handles);
 
 
 %% processing done here.

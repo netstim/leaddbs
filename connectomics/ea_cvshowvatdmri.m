@@ -69,7 +69,8 @@ if isstruct(handles) && get(handles.savefibers,'Value')
     end
 
     if ~exist([savedir,'workspace.mat'],'file')
-        mode = 'vat'; save([savedir,'fiberstate.mat'],'fibersfile','seedfile','targetsfile','thresh','mode')
+        mode = 'vat';
+        save([savedir,'fiberstate.mat'],'fibersfile','seedfile','targetsfile','thresh','mode')
         options.savefibers.load=0;
     elseif exist([savedir,'workspace.mat'],'file') && exist([savedir,'fiberstate.mat'],'file')
         options.savefibers.load=1;
