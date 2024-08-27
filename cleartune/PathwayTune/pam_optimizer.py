@@ -97,7 +97,7 @@ class PamOptimizer:
         """
 
         # store info about the iteration
-        print("global score:", global_score)
+        print("Global Score (to maximize): ", global_score, "\n")
         df = pd.DataFrame(
             {
                 "weighted_total_score": [global_score],
@@ -225,7 +225,7 @@ class PamOptimizer:
         if stim_result.SE_dict:
             for key in stim_result.SE_dict:
                 if stim_result.SE_dict[key]["predicted"]:
-                    return 1e9
+                    return 10e9
 
         return -1 * global_score
 

@@ -49,7 +49,7 @@ if ~isempty(axonState)
         end
 
         % If stimSetMode, extract the index from tractName (but axonState is still checked on the indexed file)
-        if settings.stimSetMode
+        if settings.stimSetMode && ~settings.optimizer
             if startsWith(settings.connectome, 'Multi-Tract: ')
                 stimProt_index = regexp(tractName, '(?<=_)\d+$', 'match', 'once');
                 tractName = regexp(tractName, '.+(?=_\d+$)', 'match', 'once');

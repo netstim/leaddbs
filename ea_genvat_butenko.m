@@ -290,7 +290,7 @@ for source_index = first_active_source:4
             end
 
             % prepare Lead-DBS BIDS format fiber activations
-            if settings.calcAxonActivation
+            if settings.calcAxonActivation && ~settings.optimizer
                 ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths,source_use_index)
             end
 
