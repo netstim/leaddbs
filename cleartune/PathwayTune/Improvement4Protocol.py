@@ -12,6 +12,7 @@ import numpy as np
 import copy
 import h5py
 import shutil
+import pandas as pd
 
 # def create_netblend_dictionaries(side, ActivProfileDict, disease='spontaneous human combustion'):
 #
@@ -117,7 +118,7 @@ class ResultPAM:
         self.activation_profile, self.sim_pathways = self.load_AP_from_OSSDBS(inters_as_stim)
 
         for path_i in range(len(self.sim_pathways)):
-            print(self.sim_pathways[path_i],self.activation_profile[path_i])
+            print("Activation in ",self.sim_pathways[path_i],": ",self.activation_profile[path_i])
 
         # activation_profile: Nx1 numpy.ndarray, percent activation for simulated pathways
         # sim_pathways: list, pathways simulated in OSS-DBS for this patient
@@ -476,7 +477,7 @@ class ResultPAM:
         """
 
 
-        # # estimate the improvement: canberra distance at null activation vs the optimized
+        # # estimate the improvement: distance at null activation vs the optimized
         # null_protocol = len(min_bound_per_contact) * [0.0]
         # null_activation_profile = approx_model.predict(np.reshape(np.array(null_protocol), (-1, len(null_protocol))), verbose=0)
         # null_activation_profile = null_activation_profile[0]  # get the actual array
@@ -492,14 +493,15 @@ class ResultPAM:
         [max_symp_dist, __, __] = self.get_symptom_distances(max_activation_profile, [],
                                                                       score_symptom_metric)
 
-        print("Distances ", symp_dist)
-        print("Max Distances", max_symp_dist)
-
         I_hat, estim_symp_improv_dict, symptom_labels_marked = self.get_improvement_from_distance(symp_dist,
                                                                                                  max_symp_dist,
                                                                                                  null_symp_dist,
                                                                                                  estim_weights_and_total_score,
                                                                                                  fixed_symptom_weights)
+
+        results = np.vstack((symp_dist,null_symp_dist,max_symp_dist,I_hat[:,0])).T
+        metrics = ['Distances', 'Null Distances', 'Max Distances', 'I_hat']
+        print(pd.DataFrame(results,self.symptom_list,metrics))
 
         # save json
         with open(os.path.join(self.stim_dir,'NB' + self.side_suffix,'Estim_symp_improv' + self.side_suffix + '.json'), 'w') as save_as_dict:
