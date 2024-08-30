@@ -285,7 +285,11 @@ for source_index = first_active_source:4
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
     
             % prepare Lead-DBS BIDS format VATs
-            if settings.exportVAT
+            if settings.exportVAT && options.optimizer
+                % get 4-D unit niftis for the optimizer and exit
+                ea_convert_ossdbs_StimSets_VTAs(settings,side,outputPaths)
+                ea_exit_genvat_butenko;
+            elseif settings.exportVAT 
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 

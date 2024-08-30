@@ -62,6 +62,11 @@ try
     % check if OSS-DBS is called via ea_OSS_optimizer
     settings.optimizer = options.optimizer;
     settings.netblend_settings_file = options.netblend_settings_file;
+    if settings.optimizer && settings.exportVAT
+        % special case of VTA-based optimization
+        options.netblend_settings_file = [];
+        ea_set_optimizer(options,[options.subj.stimDir, filesep, ea_nt(options.native), S.label])
+    end
 catch
     settings.optimizer = 0;
 end
