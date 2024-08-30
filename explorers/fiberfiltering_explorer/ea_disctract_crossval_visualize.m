@@ -81,5 +81,7 @@ else
     else
         h=ea_corrbox(I,Ihat,'permutation',{title,empiricallabel,fibscorelabel},groupID,[],groupColors);
     end
+    assignin('base','Empirical',I);
+    assignin('base','Estimat',Ihat);
     try saveas(h,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.responsevarlabel,'_',cvs,groupsuffx,'.png']); end
 end
