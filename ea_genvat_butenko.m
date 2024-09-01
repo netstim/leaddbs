@@ -285,7 +285,7 @@ for source_index = first_active_source:4
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
     
             % prepare Lead-DBS BIDS format VATs
-            if settings.exportVAT && options.optimizer
+            if settings.exportVAT && settings.optimizer
                 % get 4-D unit niftis for the optimizer and exit
                 ea_convert_ossdbs_StimSets_VTAs(settings,side,outputPaths)
                 ea_exit_genvat_butenko;
