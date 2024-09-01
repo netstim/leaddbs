@@ -482,7 +482,9 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                             isequal(ptS.S.Ls3,M.S(pt).Ls3),...
                             isequal(ptS.S.Ls4,M.S(pt).Ls4),...
                             isequal(ptS.S.amplitude,M.S(pt).amplitude)])
-                        warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                        ea_cprintf('CmdWinWarnings', 'Local stimulation parameters for ''%s'' are inconsistent with that stored in the Lead Group analysis.\nOverride local stimulation parameters now.\n', options.patientname);
+                        ptS.S = M.S(pt);
+                        save(stimParamFile, '-struct', 'ptS');
                     end
                 end
             end
