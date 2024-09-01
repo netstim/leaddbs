@@ -299,6 +299,7 @@ for k=0:7
     set(0,'CurrentFigure',handles.stimfig);
     set(handles.stimfig,'CurrentAxes',eval(['handles.k',num2str(k),'ax']));
     h=image(im);
+    handles.(['k',num2str(k), 'ax']).Toolbar.Visible = 'off';
     set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,['k',num2str(k)]});
     axis off;
     axis equal;
@@ -315,6 +316,7 @@ for k=8:15
     set(0,'CurrentFigure',handles.stimfig);
     set(handles.stimfig,'CurrentAxes',eval(['handles.k',num2str(k),'ax']));
     h=image(im);
+    handles.(['k',num2str(k), 'ax']).Toolbar.Visible = 'off';
     set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,['k',num2str(k)]});
     axis off;
     axis equal;
@@ -332,6 +334,7 @@ set(0,'CurrentFigure',handles.stimfig);
 set(handles.stimfig,'CurrentAxes',handles.RCax);
 
 h=image(im);
+handles.RCax.Toolbar.Visible = 'off';
 set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,'Rcase'});
 axis off;
 axis equal;
@@ -348,6 +351,7 @@ set(0,'CurrentFigure',handles.stimfig);
 set(handles.stimfig,'CurrentAxes',handles.LCax);
 
 h=image(im);
+handles.LCax.Toolbar.Visible = 'off';
 set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,'Lcase'});
 axis off;
 axis equal;
