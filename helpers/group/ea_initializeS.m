@@ -45,7 +45,7 @@ if ~iscell(label)
     label = {label};
 end
 
-if exist('handles', 'var') && isfield(handles, 'stimlabel')
+if exist('handles', 'var') && isfield(handles, 'stimlabel') && ~isempty(handles.stimlabel.Value)
     S.label = label{handles.stimlabel.Value};
 else
     S.label = label{1};
