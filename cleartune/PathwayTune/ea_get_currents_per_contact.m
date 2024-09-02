@@ -29,7 +29,7 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     % electrode models, should be expanded
     concentric4 = ['PINS_Medical_L303','PINS_Medical_L302','PINS_Medical_L301', 'Medtronic_3389','Medtronic_3387','Medtronic_3391','St._Jude ActiveTip_(6142-6145)', 'St._Jude_ActiveTip_(6146-6149)','Abbott ActiveTip (6146-6149)','Abbott ActiveTip (6142-6145)'];
     concentric8 = ['Boston_Scientific_Vercise'];
-    segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed','Abbott Directed 6172 (short)','Abbott Directed 6173 (long)', 'Medtronic B33005', 'Medtronic B33015'];
+    segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed','Abbott Directed 6172 (short)','Abbott Directed 6173 (long)', 'Medtronic_B33005', 'Medtronic_B33015'];
     
     % add a sanity check for current limits
 

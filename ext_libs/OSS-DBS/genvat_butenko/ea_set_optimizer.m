@@ -1,4 +1,4 @@
-function ea_set_optimizer(options,stim_folder)
+function S = ea_set_optimizer(options,stim_folder)
 % Set optimization parameters for OSS (Should be moved to GUI)
 % By Butenko, konstantinmgtu@gmail.com
 
@@ -32,7 +32,7 @@ if isempty(el_model_right)
     side = 1;
 end   
 
-[min_bound_per_contact, max_bound_per_contact, ~] = ea_get_currents_per_contact(minCylindricCurrent,maxCylindricCurrent, minSegmentedCurrent, maxSegmentedCurrent, reconst, side, 1);
+[min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per_contact(minCylindricCurrent,maxCylindricCurrent, minSegmentedCurrent, maxSegmentedCurrent, reconst, side, 1);
 
 % 1-D current protocols are not processed correctly
 current_dif = [max_bound_per_contact - min_bound_per_contact;max_bound_per_contact - min_bound_per_contact];

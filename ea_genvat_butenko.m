@@ -26,7 +26,7 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
-settings = ea_prepare_ossdbs(options);
+[settings,S] = ea_prepare_ossdbs(options,S);
 
 % some hardcoded parameters, can be added to GUI later
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
@@ -59,7 +59,7 @@ source_efields = cell(2,4);  % temp files to store results for each source
 source_vtas = cell(2,4);
 stimparams = struct();
 
-% multiple sources are not supported for PAM
+% check if multisource mode
 if any(nActiveSources > 1)
     if options.prefs.machine.vatsettings.butenko_calcPAM
         % ea_warndlg('MultiSource Mode is not supported for PAM!')

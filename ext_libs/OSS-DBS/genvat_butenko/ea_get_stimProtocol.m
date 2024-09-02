@@ -77,7 +77,25 @@ else
     settings.stim_center(2,:) = mean(settings.contactLocation{2});
     settings.Phi_vector = 1000./conNum * ones(2, conNum);
     settings.Case_grounding = 1;
-    settings.Activation_threshold_VTA = [-1;-1];
+    if settings.exportVAT
+        for side = 1:2
+            % Threshold for Astrom VTA (V/m)
+            if settings.adaptive_threshold
+                settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;ea_get_adaptiveEthreshold(settings.pulseWidth(side))];
+            else
+                % potentially buggy for multisource
+                if options.prefs.machine.vatsettings.butenko_ethresh < 1.0
+                    ea_warndlg("The E-threshold is too low (see OSS-DBS settings), likely wrong units are used, upscaling to V/m!")
+                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh*1000.0];
+                else
+                    settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh];
+                end
+            end
+        end
+    else
+        % not needed for PAM
+        settings.Activation_threshold_VTA = [-1;-1];
+    end
 end
 
 if settings.calcAxonActivation
