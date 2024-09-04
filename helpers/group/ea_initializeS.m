@@ -59,33 +59,33 @@ end
 % right sources
 for source=1:4
     for k=0:7
-        eval(['S.Rs',num2str(source),'.k',num2str(k),'.perc=0;']);
-        eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol=0;']);
-        eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp=1;']);
+        S.(['Rs',num2str(source)]).(['k',num2str(k)]).perc=0;
+        S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
+        S.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
     end
-    eval(['S.Rs',num2str(source),'.amp=0;']);
-    eval(['S.Rs',num2str(source),'.va=1;']);
-    eval(['S.Rs',num2str(source),'.case.perc=100;']);
-    eval(['S.Rs',num2str(source),'.case.pol=2;']);
-    eval(['S.Rs',num2str(source),'.pulseWidth=60;']);
+    S.(['Rs',num2str(source)]).amp = 0;
+    S.(['Rs',num2str(source)]).va = 1;
+    S.(['Rs',num2str(source)]).case.perc = 100;
+    S.(['Rs',num2str(source)]).case.pol = 2;
+    S.(['Rs',num2str(source)]).pulseWidth = 60;
 end
 
 % left sources
 for source=1:4
     for k=8:15
-        eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc=0;']);
-        eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol=0;']);
-        eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp=1;']);
+        S.(['Ls',num2str(source)]).(['k',num2str(k)]).perc=0;
+        S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
+        S.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
     end
-    eval(['S.Ls',num2str(source),'.amp=0;']);
-    eval(['S.Ls',num2str(source),'.va=1;']);
-    eval(['S.Ls',num2str(source),'.case.perc=100;']);
-    eval(['S.Ls',num2str(source),'.case.pol=2;']);
-    eval(['S.Ls',num2str(source),'.pulseWidth=60;']);
+    S.(['Ls',num2str(source)]).amp = 0;
+    S.(['Ls',num2str(source)]).va = 1;
+    S.(['Ls',num2str(source)]).case.perc = 100;
+    S.(['Ls',num2str(source)]).case.pol = 2;
+    S.(['Ls',num2str(source)]).pulseWidth = 60;
 end
 
-S.active=[1,1];
-S.model='SimBio/FieldTrip (see Horn 2017)';
-S.monopolarmodel=0;
-S.amplitude={[0,0,0,0],[0,0,0,0]};
-S=ea_activecontacts(S);
+S.active = [1,1];
+S.model = 'SimBio/FieldTrip (see Horn 2017)';
+S.monopolarmodel = 0;
+S.amplitude = {[0,0,0,0],[0,0,0,0]};
+S = ea_activecontacts(S);
