@@ -612,7 +612,7 @@ end
 
 
 function leadprogrammer(hobj, ev, elstruct, resultfig, options)
-[file_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
+[file_path, releaseDir, input_file_path] = ea_input_programmer(options, length(elstruct.markers));
 currentOS = ea_getarch;
 if isfolder(releaseDir)
     zipFile = fullfile(releaseDir, ['LeadDbsProgrammer_', currentOS, '.zip']);
@@ -623,7 +623,7 @@ if isfolder(releaseDir)
             system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer.app'))]);
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
-        system(appFile);
+        system([appFile, ' ', input_file_path]);
     elseif isunix
         appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDbsProgrammer');
         if ~isfile(appFile)
@@ -640,7 +640,7 @@ if isfolder(releaseDir)
         system(appFile);
     end
 
-    [S] = ea_process_programmer(file_path);
+    [S] = ea_process_programmer(file_path, options);
     ea_visprogrammer(resultfig, options, S, elstruct);
 %     system([appDir, ' &']);
 %     [status, cmdout] = system([appDir, ' &']);
