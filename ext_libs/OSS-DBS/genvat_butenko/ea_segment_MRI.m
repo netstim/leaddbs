@@ -98,7 +98,7 @@ switch settings.butenko_segmAlg
                         env.force_create;
                     end
                     %env.system('pip3 install antspyx')
-                    system(['python ', ea_getearoot, '/ext_libs/OSS-DBS/genvat_butenko/atropos_segm.py ', [anchorImageDir,anchorImageName], ' ', ea_path_helper(outputPaths.outputDir)])
+                    env.system(['python ', ea_getearoot, '/ext_libs/OSS-DBS/genvat_butenko/atropos_segm.py ', [anchorImageDir,anchorImageName], ' ', ea_path_helper(outputPaths.outputDir)])
                 end
                 env = ea_conda_env('OSS-DBSv2');
                 
