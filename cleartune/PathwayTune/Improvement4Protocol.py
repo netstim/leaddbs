@@ -338,6 +338,7 @@ class ResultPAM:
                 # check if above the threshold
                 if predicted_rates[-1] > target_rates[-1]:
                     SE_threshold_profile_side[key]["predicted"] = 1
+                    SE_threshold_profile_side[key]["rate"] = predicted_rates[-1]
                     break
                 else:
                     SE_threshold_profile_side[key]["predicted"] = 0

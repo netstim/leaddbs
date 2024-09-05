@@ -63,14 +63,18 @@ settings.stimSetMode = options.stimSetMode;
 try 
     % check if OSS-DBS is called via ea_OSS_optimizer
     settings.optimizer = options.optimizer;
-    S_true_label = S.label;
-    S = ea_set_optimizer(options,[options.subj.stimDir, filesep, ea_nt(options.native), S.label]);
-    S.label = S_true_label;
-    if settings.optimizer && settings.exportVAT
-        % special case of VTA-based optimization
-        options.netblend_settings_file = [];
-    elseif settings.optimizer && settings.calcAxonActivation
-        settings.netblend_settings_file = options.netblend_settings_file;
+    if settings.optimizer
+        S_true_label = S.label;
+        S = ea_set_optimizer(options,[options.subj.stimDir, filesep, ea_nt(options.native), S.label]);
+        S.label = S_true_label;
+
+        if settings.exportVAT
+            % special case of VTA-based optimization
+            options.netblend_settings_file = [];
+        elseif settings.calcAxonActivation
+            settings.netblend_settings_file = options.netblend_settings_file;
+        end
+
     end
 catch
     settings.optimizer = 0;
