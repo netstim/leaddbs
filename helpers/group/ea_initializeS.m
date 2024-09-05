@@ -3,11 +3,12 @@ function S = ea_initializeS(varargin)
 preexist = 0;
 
 if nargin == 1
-    if isstruct(varargin{1})
+    if ischar(varargin{1})
+        label = varargin{1};
+        options = struct;
+    elseif isstruct(varargin{1})
         options = varargin{1};
         [label, preexist] = ea_detstimname(options);
-    elseif ischar(varargin{1})
-        label = varargin{1};
     end
 elseif nargin > 1
     label = varargin{1};
@@ -89,3 +90,5 @@ S.model = 'SimBio/FieldTrip (see Horn 2017)';
 S.monopolarmodel = 0;
 S.amplitude = {[0,0,0,0],[0,0,0,0]};
 S = ea_activecontacts(S);
+S.sources = 1:4;
+S.volume = [];
