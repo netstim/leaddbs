@@ -8,7 +8,16 @@ else
     side_suffix = '_lh';
 end
 
-if isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv'])
+if isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations_CSE.csv'])
+    optim_result = readtable([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations_CSE.csv']);
+    % remove iterations with predicted critical side-effects
+    if side == 0
+        toDelete = optim_result.complete_avoidance_rh == 1;
+    else
+        toDelete = optim_result.complete_avoidance_lh == 1;
+    end
+    optim_result(toDelete,:) = [];
+elseif isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv'])
     optim_result = readtable([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv']);
 else
     ea_warndlg("No optimization result found!")
