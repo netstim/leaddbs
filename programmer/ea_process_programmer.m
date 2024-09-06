@@ -1,7 +1,12 @@
-function [S] = ea_process_programmer(file_path)
+function [S] = ea_process_programmer(file_path, options)
+    stimDir = fullfile(options.subj.stimDir, ea_getspace);
+    file_path = fullfile(stimDir, 'data.json');
+    input_file_path = fullfile(stimDir, 'inputData.json');
     new_data = fileread(file_path);
-    fid = fopen(file_path, 'w');
-    fclose(fid);
+%     fid = fopen(file_path, 'w');
+%     fclose(fid);
+    delete(file_path);
+    delete(input_file_path);
     importedS = jsondecode(new_data);
     S = importedS.S;
     % S.model = 'OSS-DBS (Butenko 2020)';
