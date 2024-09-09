@@ -54,8 +54,6 @@ end
 
 [~, reco.(space).trajectory] = ea_resolvecoords(reco.(space).markers, elmodel);
 
-save('ea_reconstruction.mat', 'reco');
-
 bids = BIDSFetcher(dataset);
 subj = bids.getSubj(erase(subjID, textBoundary("start") + 'sub-'));
 
