@@ -43,7 +43,7 @@ for i = 1:eleNum
 
     if ~isnan(source_i(i))
 
-        % get stimulation mode (0 - Voltage Control; 1 - Current Control) and amplitude
+        % get stimulation mode (1 - Voltage Control; 2 - Current Control) and amplitude
         current_control(i) = uint8(S.([sideCode, 's', num2str(source_i(i))]).va==2);
         amp(i) = S.amplitude{i}(source_i(i));
         stimSource = S.([sideCode, 's', num2str(source_i(i))]);
@@ -91,6 +91,6 @@ for i = 1:eleNum
             if v_source.case.perc == 100
                 Case_grounding(i) = 1;
             end
-        end  
+        end
     end
 end

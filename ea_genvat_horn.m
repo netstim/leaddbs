@@ -263,7 +263,7 @@ end
 
 for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
-    constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
+    constvol=stimsource.va==1; % constvol is 1 for constant voltage and 2 for constant current.
 
     for cnt=1:length(cnts)
         if constvol
