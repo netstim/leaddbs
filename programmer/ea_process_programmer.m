@@ -8,8 +8,7 @@ function [S] = ea_process_programmer(file_path, options)
     importedS = loadjson(file_path);
 
     if isfield(importedS, 'message')
-        disp(['Message: ', importedS.message]);
-        % Exit the script
+        S = importedS;
         return;
     end
 

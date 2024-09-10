@@ -641,6 +641,10 @@ if isfolder(releaseDir)
     end
 
     [S] = ea_process_programmer(file_path, options);
+    if isfield(S, 'message')
+        disp([S.message]);
+        return;
+    end
     ea_visprogrammer(resultfig, options, S, elstruct);
 %     system([appDir, ' &']);
 %     [status, cmdout] = system([appDir, ' &']);
@@ -649,9 +653,6 @@ if isfolder(releaseDir)
     
 %         f = parfeval(backgroundPool, @runApp, 0, appDir);
         
-        % Continue with other code here
-        % For example:
-%         disp('Programmer is running in the background.');
 end
 % 
 % while true
