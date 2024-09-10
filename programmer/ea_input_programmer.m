@@ -1,46 +1,61 @@
-function [file_path, status_path, releaseDir] = ea_input_programmer(options, numElectrodes)
+function [file_path, releaseDir, input_file_path] = ea_input_programmer(options, numElectrodes)
+% Prepare input for programmer
 
-    programmerDir = fullfile(options.earoot, 'programmer');
+%% Handle output variables
+programmerDir = fullfile(options.earoot, 'programmer');
 
-    file_path = fullfile(programmerDir, 'data.json');
-    status_path = fullfile(programmerDir, 'status.json');
-    input_file_path = fullfile(programmerDir, 'inputData.json');
-
-    % Loop through each file path and create the file if it does not exist
-    file_paths = {file_path, status_path, input_file_path};
-    for i = 1:length(file_paths)
-        if ~isfile(file_paths{i})
-            % Create an empty file
-            fid = fopen(file_paths{i}, 'w');
-            if fid == -1
-                error('Could not create file: %s', file_paths{i});
-            end
-            fclose(fid);
-        end
+file_path = fullfile(programmerDir, 'data.json');
+if ~isfile(file_path)
+    try
+        savejson('', struct, file_path);
+    catch ME
+        error('Failed to create file: %s', file_path);
     end
+end
 
-    releaseDir = fullfile(programmerDir, 'app', 'release', 'build');
-    
-    stimDir = fullfile(options.subj.stimDir, ea_getspace);
-    stimFileName = [options.patientname, '_desc-stimparameters'];
+releaseDir = fullfile(programmerDir, 'app', 'release');
 
-    stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
+%% Convert stimparameters.mat to json, handle inputData.json
+inputStruct.patientname = options.patientname;
+inputStruct.numElectrodes = numElectrodes;
+inputStruct.electrodeModel = options.elmodel;
+inputStruct.stimDir = fullfile(options.subj.stimDir, 'MNI152NLin2009bAsym');
+
+stimDir = fullfile(options.subj.stimDir, ea_getspace);
+ea_mkdir(stimDir);
+
+stimFileName = [options.patientname, '_desc-stimparameters'];
+stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
+
+if isempty(stimMatFile)
+    % Create new stimulation label, set S to empty
+    inputStruct.labels = {[char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))]};
+    inputStruct.S = {};
+else
+    % Aggregate existing stimulations
     for i=1:numel(stimMatFile)
+        load(stimMatFile{i}, 'S');
+
+        if isempty(S.label)
+            S.label = [char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))];
+        end
+        inputStruct.labels{i} = S.label;
+
+        if ~isfield(S, 'sources')
+            S.sources = 1:4;
+        end
+
+        if ~isfield(S, 'volume')
+            S.volume = [];
+        end
+
+        inputStruct.S(i) = S;
+
         stimJsonFile = strrep(stimMatFile{i}, '.mat', '.json');
-        savejson('', load(stimMatFile{i}), stimJsonFile);
+        savejson('', S, stimJsonFile);
         fprintf('Converted and saved stimparameters.mat to %s\n', stimJsonFile);
     end
-
-    inputStruct = struct;
-    inputStruct.numElectrodes = numElectrodes;
-    inputStruct.electrodeModel = options.elmodel;
-    inputStruct.label = char(datetime('now', 'Format', 'yyyyMMddHHmmSS'));
-    inputStruct.patientname = options.patientname;
-    inputStruct.priorStims = {};
-    if ~isempty(stimMatFile)
-        inputStruct.priorStims = unique(fileparts(stimMatFile));
-    end
-
-    savejson('', inputStruct, input_file_path);
-
 end
+
+input_file_path = fullfile(stimDir, 'inputData.json');
+savejson('', inputStruct, input_file_path);
