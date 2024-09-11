@@ -71,15 +71,16 @@ class PamOptimizer:
                                      bounds=list(zip(self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])),
                                      maxfun=self.optim_settings['num_iterations'], seed=42, visit=2.62,
                                      no_local_search=True)
-
-        elif optim_settings['optim_alg'] == 'PSO':
+        elif self.optim_settings['optim_alg'] == 'PSO':
 
             from pyswarms.single.global_best import GlobalBestPSO
             bounds = (self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])
             options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
-            optimizer = GlobalBestPSO(n_particles=20, dimensions=len(self.optim_settings['min_bound_per_contact']), options=options, bounds=bounds)
+            nParticles = 10
+            optimizer = GlobalBestPSO(n_particles=nParticles, dimensions=len(self.optim_settings['min_bound_per_contact']), options=options, bounds=bounds)
 
-            cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=self.optim_settings['num_iterations_ANN'])
+            # int(self.optim_settings['num_iterations'] / n_particles) ?
+            cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=int(self.optim_settings['num_iterations'] / nParticles))
 
 
     def store_iteration_results(self, S_vector, global_score, symptoms_list, estim_Ihat, SE_dict={}):
@@ -145,7 +146,7 @@ class PamOptimizer:
         """
 
         n_particles = x.shape[0]
-        j = [self.compute_global_score(x[i], args_to_pass[:]) for i in range(n_particles)]
+        j = [self.compute_global_score(x[i]) for i in range(n_particles)]
         return np.array(j)
 
     def compute_global_score(self, S_vector):
@@ -225,8 +226,11 @@ class PamOptimizer:
         if stim_result.SE_dict:
             for key in stim_result.SE_dict:
                 if stim_result.SE_dict[key]["predicted"]:
-                    return 10e9
+                    # assign large penalty based on the activation rate of the side-effect pathway
+                    # this is a suboptimal approach if multiple side-effect pathways / symptoms are consdered
+                    return 1e9 * stim_result.SE_dict[key]["rate"]
 
+        print(-1 * global_score)
         return -1 * global_score
 
 if __name__ == '__main__':
@@ -240,5 +244,4 @@ if __name__ == '__main__':
 
     # side and stim_folder - from ea_optimizePAM_butenko
     optimization = PamOptimizer(side, stim_folder, optim_settings_file, input_dict, scaling)
-
 
