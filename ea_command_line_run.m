@@ -17,12 +17,13 @@ end
 
 h.leadfigure.Visible = 'off';
 drawnow;
-handles = guihandles(h.leadfigure);
+handles = guidata(h.leadfigure);
 
 % reset all checkboxes to 0
 handles_names = fieldnames(handles);
 for i = 1:length(handles_names)
-    if isa(handles.(handles_names{i}), 'matlab.ui.control.CheckBox')
+    if isa(handles.(handles_names{i}), 'appdesigner.appmigration.UIControlPropertiesConverter') ...
+            && strcmp(handles.(handles_names{i}).Style,'checkbox')
         handles.(handles_names{i}).Value = 0;
     end
 end
@@ -31,7 +32,7 @@ patdirs = {};
 
 for i = 2:nargin
     if isfolder(varargin{i})
-        patdirs{end+1} = patient_dir;
+        patdirs{end+1} = varargin{i};
     elseif startsWith(varargin{i}, '-')
         opt = varargin{i}(2:end);
         if strcmp(opt,'process')
@@ -55,9 +56,9 @@ for i = 2:nargin
     end
 end
 
-
 options = ea_handles2options(handles);
 options.leadprod = leadprod;
+setappdata(h.leadfigure, 'handles', handles);
 options.leadfigure = h.leadfigure;
 
 % Erase last filesep
