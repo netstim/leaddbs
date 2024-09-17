@@ -122,7 +122,10 @@ else
             % arrayfun(@(x) set(x, 'Value', 0), checkBoxes);
 
             % Refresh GUI after all process is done
-            if strcmp(options.leadprod, 'dbs') && ~isempty(options.uipatdirs) && ~(isfield(options, 'exportedJob') && options.exportedJob)
+            if strcmp(options.leadprod, 'dbs') ...
+                    && ~isempty(options.uipatdirs) ...
+                    && ~(isfield(options, 'exportedJob') && options.exportedJob) ...
+                    && ~(isfield(options, 'cmdlineCall') && options.cmdlineCall)
                 ea_load_pts(getappdata(options.leadfigure, 'handles'), getappdata(options.leadfigure, 'uipatdir'));
             end
     end

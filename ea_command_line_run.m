@@ -111,6 +111,7 @@ end
 
 options = ea_handles2options(handles);
 options.leadprod = leadprod;
+options.cmdlineCall = 1;
 setappdata(app.leadfigure, 'handles', handles);
 options.leadfigure = app.leadfigure;
 
