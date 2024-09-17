@@ -8,16 +8,15 @@ function [] = ea_command_line_run(varargin)
 
 switch varargin{1}
     case {'dbs', '-d', 'd'}
-        h = lead_dbs;
+        app = lead_dbs;
         leadprod = 'dbs';
     case {'connectome', 'conn', '-c', 'c'}
-        h = lead_connectome;
+        app = lead_connectome;
         leadprod = 'connectome';
 end
 
-h.leadfigure.Visible = 'off';
-drawnow;
-handles = guidata(h.leadfigure);
+app.leadfigure.Visible = 'off';
+handles = guidata(app.leadfigure);
 
 % reset all checkboxes to 0
 handles_names = fieldnames(handles);
@@ -37,29 +36,83 @@ for i = 2:nargin
         opt = varargin{i}(2:end);
         if strcmp(opt,'process')
             % run basic lead dbs pipeline with defaults
-            handles.coreg_checkbox.Value = 1;
-            handles.coregctmethod.Value = 1;
-            handles.coregmrmethod.Value = 1;
-            handles.normalize_checkbox.Value = 1;
-            handles.normmethod.Value = 1;
-            handles.scrf.Value = 1;
-            handles.scrfmask.Value = 2;
-            handles.doreconstruction.Value = 1;
-            handles.reconmethod.Value = 3;
+            handles.coreg_checkbox.Value = defaultOption('coreg_checkbox');
+            handles.coregctmethod.Value = defaultOption('coregctmethod');
+            handles.coregmrmethod.Value = defaultOption('coregmrmethod');
+            handles.normalize_checkbox.Value = defaultOption('normalize_checkbox');
+            handles.normmethod.Value = defaultOption('normmethod');
+            handles.scrf.Value = defaultOption('scrf');
+            handles.scrfmask.Value = defaultOption('scrfmask');
+            handles.doreconstruction.Value = defaultOption('doreconstruction');
+            handles.reconmethod.Value = defaultOption('reconmethod');
+            handles.electrode_model_popup.Value = defaultOption('electrode_model_popup');
+            handles.overwriteapproved.Value = defaultOption('overwriteapproved');
         elseif isfield(handles, opt)
-            set(handles.(opt), 'Value', 1); % set default option to 1   
+            handles.(opt).Value = defaultOption(opt); % Set default option first as const value 
         else
             error(['Unrecognized field: ' opt])
         end
-    else
-        set(handles.(opt), 'Value', str2double(varargin{i}));
+    else % When the option value is specified explicitly
+        if ismember(opt, {'coregctmethod', 'coregmrmethod', 'normmethod', 'scrfmask', 'reconmethod', 'electrode_model_popup'})
+             if ~isnan(str2double(varargin{i})) % Number specified
+                 handles.(opt).Value = str2double(varargin{i});
+             else % Text specified
+                Value = find(strcmp(handles.(opt).String, varargin{i}));
+                if ~isempty(Value) % Text is exactly the value in the popupmenu
+                    handles.(opt).Value = Value;
+                else % Otherwise, do fuzzy match for some options 
+                    switch opt
+                        case 'coregmrmethod'
+                            if contains(varargin{i}, 'ANTs', 'IgnoreCase', 1)
+                                handles.(opt).Value = 1;
+                            elseif contains(varargin{i}, 'SPM', 'IgnoreCase', 1)
+                                handles.(opt).Value = 8;
+                            end
+                        case 'normmethod'
+                            if contains(varargin{i}, 'ANTs', 'IgnoreCase', 1)
+                                handles.(opt).Value = 1;
+                            elseif contains(varargin{i}, 'EasyReg', 'IgnoreCase', 1)
+                                handles.(opt).Value = 3;
+                            elseif contains(varargin{i}, 'DARTEL', 'IgnoreCase', 1)
+                                handles.(opt).Value = 6;
+                            elseif contains(varargin{i}, 'Segment', 'IgnoreCase', 1)
+                                handles.(opt).Value = 7;
+                            elseif contains(varargin{i}, 'SHOOT', 'IgnoreCase', 1)
+                                handles.(opt).Value = 8;
+                            end
+                        case 'scrfmask'
+                            if contains(varargin{i}, 'No', 'IgnoreCase', 1)
+                                handles.(opt).Value = 1;
+                            elseif contains(varargin{i}, 'Coarse', 'IgnoreCase', 1)
+                                handles.(opt).Value = 2;
+                            elseif contains(varargin{i}, 'Fine', 'IgnoreCase', 1)
+                                handles.(opt).Value = 3;
+                            end
+                        case 'reconmethod'
+                            if contains(varargin{i}, 'Refined', 'IgnoreCase', 1)
+                                handles.(opt).Value = 1;
+                            elseif contains(varargin{i}, {'TRAC', 'CORE'}, 'IgnoreCase', 1)
+                                handles.(opt).Value = 2;
+                            elseif contains(varargin{i}, 'PaCER', 'IgnoreCase', 1)
+                                handles.(opt).Value = 3;
+                            elseif contains(varargin{i}, {'Manual', 'SPM'}, 'IgnoreCase', 1)
+                                handles.(opt).Value = 4;
+                            elseif contains(varargin{i}, 'Slicer', 'IgnoreCase', 1)
+                                handles.(opt).Value = 5;
+                            end
+                    end
+                end
+             end
+        else % For the CheckBox
+            handles.(opt).Value = str2double(varargin{i});
+        end
     end
 end
 
 options = ea_handles2options(handles);
 options.leadprod = leadprod;
-setappdata(h.leadfigure, 'handles', handles);
-options.leadfigure = h.leadfigure;
+setappdata(app.leadfigure, 'handles', handles);
+options.leadfigure = app.leadfigure;
 
 % Erase last filesep
 patdirs = erase(patdirs, filesep + textBoundary('end'));
@@ -85,6 +138,33 @@ ea_run('run',options);
 machine.methods_show = umachine.machine.methods_show;
 save(ea_prefspath('mat'), 'machine');
 
-h.leadfigure.Visible = 'on';
-drawnow; % make gui visible so that close request function is executed
-close(h)
+% Delete app
+delete(app);
+
+
+% Get default option values
+function value = defaultOption(opt)
+switch opt
+    case 'coreg_checkbox'
+        value = 1; % Do coregistration
+    case 'coregctmethod'
+        value = 1; % ANTs
+    case 'coregmrmethod'
+        value = 8; % SPM; value = 1 for ANTs
+    case 'normalize_checkbox'
+        value = 1; % Do normalization
+    case 'normmethod'
+        value = 1; % ANTs; 3 for EasyReg, 6 for SPM DARTEL, 7 for SPM Segment, 8 for SPM SHOOT
+    case 'scrf'
+        value = 1; % Do brainshift correction
+    case 'scrfmask'
+        value = 2; % Coarse mask; 1 for No mask, 3 for Coarse + Fine Mask
+    case 'doreconstruction'
+        value = 1; % Do reconstruction
+    case 'reconmethod'
+        value = 1; % Refined TRAC/CORE; 2 for TRAC/CORE, 3 for PaCER, 4 for Manual, 5 for Slicer
+    case 'electrode_model_popup'
+        value = 1; % Medtronic 3389
+    case 'overwriteapproved'
+        value = 0;
+end
