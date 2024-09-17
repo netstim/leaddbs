@@ -13,6 +13,34 @@ switch varargin{1}
     case {'connectome', 'conn', '-c', 'c'}
         app = lead_connectome;
         leadprod = 'connectome';
+    case {'import', '-i', 'i'}
+        leadprod = 'import';
+end
+
+% Import patient images to BIDS dataset
+if strcmp(leadprod, 'import')
+    images = varargin(isfile(varargin));
+
+    % Set parameters
+    varargin(isfile(varargin)) = [];
+    for i = 2:2:length(varargin)
+        switch lower(varargin{i}(2:end))
+            case {'dataset', 'bids'}
+                opt.dataset = varargin{i+1};
+            case {'patientid', 'patient', 'id'}
+                opt.patientid = varargin{i+1};
+            case {'electrodemodel', 'ele', 'lead', 'model'}
+                opt.electrodemodel = varargin{i+1};
+        end
+    end
+
+    % Set electrode model to empty in case not specified
+    if ~isfield(opt, 'electrodemodel')
+        opt.electrodemodel = '';
+    end
+
+    ea_import_patient(opt.dataset, opt.patientid, images, opt.electrodemodel)
+    return;
 end
 
 app.leadfigure.Visible = 'off';
