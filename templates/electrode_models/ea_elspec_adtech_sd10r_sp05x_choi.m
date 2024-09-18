@@ -315,6 +315,34 @@ electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
 
+%% build volumetric addition to it:
+ea_genvol_adtech(meshel,elspec,rescaleratio,vizz);
+
+%% Revert to real dimension
+electrode.head_position = electrode.head_position/rescaleratio;
+electrode.tail_position = electrode.tail_position/rescaleratio;
+electrode.x_position = electrode.x_position/rescaleratio;
+electrode.y_position = electrode.y_position/rescaleratio;
+electrode.coords_mm = electrode.coords_mm/rescaleratio;
+
+for i=1:length(electrode.insulation)
+    electrode.insulation(i).vertices = electrode.insulation(i).vertices/rescaleratio;
+end
+
+for i=1:length(electrode.contacts)
+    electrode.contacts(i).vertices = electrode.contacts(i).vertices/rescaleratio;
+end
+
+for i=1:length(meshel.ins)
+    meshel.ins{i}.vertices = meshel.ins{1}.vertices * rescaleratio;
+end
+
+for i=1:length(meshel.con)
+    meshel.con{i}.vertices = meshel.con{1}.vertices * rescaleratio;
+end
+
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
+
 if vizz
     % visualize
     cnt=1;
@@ -348,31 +376,3 @@ if vizz
     axis equal
     view(0,0);
 end
-
-%% build volumetric addition to it:
-ea_genvol_adtech(meshel,elspec,rescaleratio,vizz);
-
-%% Revert to real dimension
-electrode.head_position = electrode.head_position/rescaleratio;
-electrode.tail_position = electrode.tail_position/rescaleratio;
-electrode.x_position = electrode.x_position/rescaleratio;
-electrode.y_position = electrode.y_position/rescaleratio;
-electrode.coords_mm = electrode.coords_mm/rescaleratio;
-
-for i=1:length(electrode.insulation)
-    electrode.insulation(i).vertices = electrode.insulation(i).vertices/rescaleratio;
-end
-
-for i=1:length(electrode.contacts)
-    electrode.contacts(i).vertices = electrode.contacts(i).vertices/rescaleratio;
-end
-
-for i=1:length(meshel.ins)
-    meshel.ins{i}.vertices = meshel.ins{1}.vertices * rescaleratio;
-end
-
-for i=1:length(meshel.con)
-    meshel.con{i}.vertices = meshel.con{1}.vertices * rescaleratio;
-end
-
-save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
