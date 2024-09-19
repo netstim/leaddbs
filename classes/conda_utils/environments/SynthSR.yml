@@ -13,8 +13,11 @@ dependencies:
 
   - pip:
     - git+https://github.com/ningfei/synthsr-models.git
-    - surfa==0.6.0
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-macosx_10_9_x86_64.whl; platform_system == "Darwin" and platform_machine == "x86_64"
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-macosx_11_0_arm64.whl; platform_system == "Darwin" and platform_machine == "arm64"
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-linux_x86_64.whl; platform_system == "Linux"
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-win_amd64.whl; platform_system == "Windows"
     - tensorflow==2.15.0
 
 variables:
-  env_version: 20240801
+  env_version: 20240919
