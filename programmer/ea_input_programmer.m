@@ -1,19 +1,8 @@
-function [file_path, releaseDir, input_file_path] = ea_input_programmer(options, numElectrodes)
+function [input_file_path, releaseDir] = ea_input_programmer(options, numElectrodes)
 % Prepare input for programmer
 
 %% Handle output variables
-programmerDir = fullfile(options.earoot, 'programmer');
-
-file_path = fullfile(programmerDir, 'data.json');
-if ~isfile(file_path)
-    try
-        savejson('', struct, file_path);
-    catch ME
-        error('Failed to create file: %s', file_path);
-    end
-end
-
-releaseDir = fullfile(programmerDir, 'app', 'release');
+releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
 
 %% Convert stimparameters.mat to json, handle inputData.json
 inputStruct.patientname = options.patientname;

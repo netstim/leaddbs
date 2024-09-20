@@ -1,19 +1,17 @@
-function [S] = ea_process_programmer(file_path, options)
+function [S] = ea_process_programmer(options)
     %% Initialize Paths, Read in data from programmer through data.json, Delete helper files (inputData, data)
 
     stimDir = fullfile(options.subj.stimDir, ea_getspace);
-    file_path = fullfile(stimDir, 'data.json');
-    input_file_path = fullfile(stimDir, 'inputData.json');
 
-    importedS = loadjson(file_path);
+    importedS = loadjson(fullfile(stimDir, 'data.json'));
 
     if isfield(importedS, 'message')
         S = importedS;
         return;
     end
 
-    delete(file_path);
-    delete(input_file_path);
+    ea_delete(fullfile(stimDir, 'data.json'));
+    ea_delete(fullfile(stimDir, 'inputData.json'));
 
     %% Reorganize input for programmer to support lead-dbs convention
 
