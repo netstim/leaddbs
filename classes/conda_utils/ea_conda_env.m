@@ -29,7 +29,9 @@ classdef ea_conda_env
                 obj.yml = [];
                 return;
             end
-            obj.name = regexp(fgetl(fopen(obj.yml)), '(?<=name:\s+).*', 'match', 'once');
+            fileID = fopen(obj.yml);
+            obj.name = regexp(fgetl(fileID), '(?<=name:\s+).*', 'match', 'once');
+            fclose(fileID);
             obj.path = fullfile(ea_conda.install_path, 'envs', obj.name);
             if isunix
                 obj.python = fullfile(obj.path, 'bin', 'python');
