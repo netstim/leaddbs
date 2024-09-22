@@ -64,6 +64,8 @@ segcmd = {'DBSegment', ...
 status = condaenv.system(strjoin(segcmd, ' '));
 if status ~= 0
     ea_error('DBSegment failed!', showdlg=false, simpleStack=true);
+    ea_delete(inputFolder);
+    ea_delete(outputFolder);
 end
 
 % Sort results, clean up
