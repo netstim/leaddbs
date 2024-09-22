@@ -1,11 +1,14 @@
 name: dbsegment
 
 channels:
+  - pytorch
   - conda-forge
 
 dependencies:
+  - numpy<2.0
   - pip=24.0
-  - python=3.12
+  - python=3.10
+  - pytorch<2.0
 
   - pip:
     - git+https://github.com/MIC-DKFZ/nnUNet.git@v1.7.1
