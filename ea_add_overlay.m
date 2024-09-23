@@ -206,7 +206,7 @@ for atlas=showidx
                         if isfield(atlases,'label2d')
                             an=ea_underscore2space(atlases.labels{atlases.label2d}{atlas});
                         else
-                            an=ea_underscore2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
+                            an=ea_underscore2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.',1)-1));
                         end
                         try
                             set(0,'CurrentFigure',cuts)

@@ -163,7 +163,7 @@ if isfield(options.subj, 'brainshift') && strcmp(currvol, options.subj.brainshif
 end
 
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
-    handles.checkatl.Visible='on';
+    handles.checkatl.Visible='off';
     anchor = options.primarytemplate;
 
     ea_init_normpopup(handles, options.prefs.normalize.default, 'coregmrmethod');
