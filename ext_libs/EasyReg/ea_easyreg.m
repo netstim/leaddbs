@@ -28,6 +28,7 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
         '--flo', ea_path_helper(source_image), '--flo_seg', ea_path_helper(source_seg), ...
         '--fwd_field', ea_path_helper(fs_fwd_field), ...
         '--threads -1'};
+
     status = condaenv.system(strjoin(easyreg_cmd, ' '));
     if status ~= 0
         ea_error('Registration using EasyReg failed!', showdlg=false, simpleStack=true);
@@ -37,8 +38,8 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
     % Convert transform
     %
 
-    % Freesurfer to ITK transform
-    itk_fwd_field = [source_image(1:end-4) '_itk_fwd_field.h5'];
+    % Freesurfer to ITK transform (EasyReg uses disp_crs format)
+    itk_fwd_field = strrep(source_image, '.nii', '_itk_fwd_field.h5');
     freesurfer_nii_to_itk_h5(fs_fwd_field, itk_fwd_field);
 
     % Set-up Custom Slicer
@@ -71,7 +72,7 @@ n = load_nii(warp_file_in);
 s = n.hdr.dime.dim(2:4);
 index = 1:prod(s);
 [v1,v2,v3] = ind2sub(s,index);
-mm = ea_vox2mm([v1',v2',v3'], get_mat);
+mm = ea_vox2mm([v1',v2',v3'], get_mat); % Need to do vox2mm since EasyReg uses disp_crs format)
 mm = reshape(mm, [s,3]);
 out = n.img - mm;
 
