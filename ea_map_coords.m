@@ -282,7 +282,7 @@ if ~isempty(transform)
         json = loadjson(options.subj.norm.log.method);
         normMethod = upper(json.method);
 
-        if contains(normMethod, {'ANTS', 'EASYREG', 'SPM'})
+        if contains(normMethod, {'ANTS', 'EASYREG', 'SynthMorph', 'SPM'})
             % Convert SPM deformation field to ITK format when necessary
             if contains(normMethod, 'SPM')
                 ea_convert_spm_warps(options.subj);
@@ -339,7 +339,7 @@ if ~isempty(transform)
         %     else
         %         transform = [options.subj.norm.transform.forwardBaseName, 'spm.nii'];
         %     end
-        % 
+        %
         %     XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
         else
             error('Normalization method not recognizable!');
@@ -363,7 +363,7 @@ if ~isempty(transform)
 
         switch normMethod
 
-            case {'ANTS', 'EASYREG', 'SPM'} % ANTs or SPM used
+            case {'ANTS', 'EASYREG', 'SynthMorph', 'SPM'} % ANTs or SPM used
                 if nargin >= 6
                     useinverse = varargin{6};
                 else

@@ -34,7 +34,7 @@ for i = 1:length(warpdrive_subs)
             ea_convert_spm_warps(warpdrive_subs(i));
         end
 
-        if ~contains(approved_load.method, {'ANTs', 'EasyReg', 'SPM'})
+        if ~contains(approved_load.method, {'ANTs', 'EasyReg', 'SynthMorph', 'SPM'})
             keep_pts(i) = 0;
             disp([warpdrive_subs(i).subjId ' was normalized using ' approved_load.method '. Use ANTs in order to run warpdrive.']);
         end

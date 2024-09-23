@@ -5,7 +5,7 @@ function DTI_data_name = ea_prepare_DTI(options,outputPaths)
 
 arguments
     options     % Lead-DBS options for electrode reconstruction and stimulation
-    outputPaths % various paths to conform with lead-dbs BIDS structure 
+    outputPaths % various paths to conform with lead-dbs BIDS structure
 end
 
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
@@ -46,7 +46,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
             if ~isfile(nativeTensor) && isfile(templateTensor)
                 % Warp tensor data only when ANTs was used for normalization
                 json = loadjson(options.subj.norm.log.method);
-                if contains(json.method, {'ANTs','EasyReg'})
+                if contains(json.method, {'ANTs','EasyReg','SynthMorph','SPM'})
                     fprintf('Warping tensor data into patient space...\n\n')
                     ea_ants_apply_transforms(options,...
                         [ea_space, tensorName],... % From
@@ -75,7 +75,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
             fprintf('Scaling tensor data...\n\n')
 
             system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
-            
+
             if ~isfile([tensorDir, filesep, tensorPrefix, scaledTensorName])
                 disp('Parallel tensor scaling failed, trying a single thread...')
                 system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling_one_thread.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);

@@ -76,7 +76,7 @@ for i = 2:nargin
             handles.electrode_model_popup.Value = defaultOption('electrode_model_popup');
             handles.overwriteapproved.Value = defaultOption('overwriteapproved');
         elseif isfield(handles, opt)
-            handles.(opt).Value = defaultOption(opt); % Set default option first as const value 
+            handles.(opt).Value = defaultOption(opt); % Set default option first as const value
         else
             error(['Unrecognized field: ' opt])
         end
@@ -88,7 +88,7 @@ for i = 2:nargin
                 Value = find(strcmp(handles.(opt).String, varargin{i}));
                 if ~isempty(Value) % Text is exactly the value in the popupmenu
                     handles.(opt).Value = Value;
-                else % Otherwise, do fuzzy match for some options 
+                else % Otherwise, do fuzzy match for some options
                     switch opt
                         case 'coregmrmethod'
                             if contains(varargin{i}, 'ANTs', 'IgnoreCase', 1)
@@ -107,6 +107,8 @@ for i = 2:nargin
                                 handles.(opt).Value = 7;
                             elseif contains(varargin{i}, 'SHOOT', 'IgnoreCase', 1)
                                 handles.(opt).Value = 8;
+                            elseif contains(varargin{i}, 'SynthMorph', 'IgnoreCase', 1)
+                                handles.(opt).Value = 9;
                             end
                         case 'scrfmask'
                             if contains(varargin{i}, 'No', 'IgnoreCase', 1)
@@ -183,7 +185,7 @@ switch opt
     case 'normalize_checkbox'
         value = 1; % Do normalization
     case 'normmethod'
-        value = 1; % ANTs; 3 for EasyReg, 6 for SPM DARTEL, 7 for SPM Segment, 8 for SPM SHOOT
+        value = 1; % ANTs; 3 for EasyReg, 6 for SPM DARTEL, 7 for SPM Segment, 8 for SPM SHOOT, 9 for SynthMorph
     case 'scrf'
         value = 1; % Do brainshift correction
     case 'scrfmask'

@@ -23,11 +23,11 @@ json = loadjson(options.subj.norm.log.method);
 
 if ischar(interp)
     if strcmp(interp,'auto') % only works if one image supplied
-        interp=detinterp(from,contains(json.method, {'ANTs', 'EasyReg', 'SPM'}));
+        interp=detinterp(from,contains(json.method, {'ANTs', 'EasyReg', 'SynthMorph', 'SPM'}));
     end
 end
 
-if contains(json.method, {'ANTs', 'EasyReg', 'SPM'})
+if contains(json.method, {'ANTs', 'EasyReg', 'SynthMorph', 'SPM'})
     ea_ants_apply_transforms(options, from, to, useinverse, ref, '', interp);
 elseif contains(json.method, 'FNIRT')
     if useinverse
