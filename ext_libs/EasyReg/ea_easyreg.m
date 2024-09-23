@@ -72,7 +72,7 @@ n = load_nii(warp_file_in);
 s = n.hdr.dime.dim(2:4);
 index = 1:prod(s);
 [v1,v2,v3] = ind2sub(s,index);
-mm = ea_vox2mm([v1',v2',v3'], get_mat); % Need to do vox2mm since EasyReg uses disp_crs format)
+mm = ea_vox2mm([v1',v2',v3'], ea_get_affine(warp_file_in); % Need to do vox2mm since EasyReg uses disp_crs format)
 mm = reshape(mm, [s,3]);
 out = n.img - mm;
 
@@ -86,15 +86,5 @@ out_column = reshape(out_rows,[],1);
 copyfile(fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'itk_h5_template.h5'), warp_file_out);
 h5create(warp_file_out,"/TransformGroup/0/TransformParameters", numel(out_column));
 h5write(warp_file_out,"/TransformGroup/0/TransformParameters", out_column);
-
-end
-
-
-function mat = get_mat()
-
-mat = [ 0.5	0	0	 -98.5;...
-        0	0.5	0	-134.5;...
-        0	0	0.5	 -72.5;...
-        0	0	0	   1];
 
 end
