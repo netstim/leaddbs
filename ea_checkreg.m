@@ -380,6 +380,9 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     json.approval = 0;
     savejson('', json, options.subj.norm.log.method);
 
+    % Clean up segmask
+    ea_segmask_cleanup(options);
+
     if isfolder(options.subj.brainshiftDir)
         ea_cprintf('CmdWinWarnings', 'Normalization has been rerun. Please also rerun brain shift correction!\n');
     end
@@ -476,6 +479,7 @@ else % MR
         if strcmp(session, 'postop') && isfolder(options.subj.brainshiftDir)
             ea_cprintf('CmdWinWarnings', 'Postop MR coregistration has been rerun. Please also rerun brain shift correction!\n');
         elseif strcmp(session, 'preop')
+            ea_segmask_cleanup(options);
             ea_cprintf('CmdWinWarnings', 'Preop MR coregistration has been rerun. Please also rerun normalization!\n');
         end
     end
