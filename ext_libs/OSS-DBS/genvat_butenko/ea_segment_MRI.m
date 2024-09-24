@@ -92,23 +92,26 @@ switch settings.butenko_segmAlg
                 % check if atropos segmentation was already done 
                 % TBD: we can store atropos segmask_raw in coregistration
                 % instead of stim folder
-                if ~isfile([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw.nii'])
+                if ~isfile([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_atropos.nii'])
                     env = ea_conda_env('Lead-DBS');
                     if ~env.is_up_to_date
                         env.force_create;
                     end
                     %env.system('pip3 install antspyx')
-                    env.system(['python ', ea_getearoot, '/ext_libs/OSS-DBS/genvat_butenko/atropos_segm.py ', [anchorImageDir,anchorImageName], ' ', ea_path_helper(outputPaths.outputDir)])
+                    env.system(['python ', ea_getearoot, '/ext_libs/OSS-DBS/genvat_butenko/atropos_segm.py ', ea_path_helper([anchorImageDir,anchorImageName]), ' ', ea_path_helper(outputPaths.outputDir)])
                 end
                 env = ea_conda_env('OSS-DBSv2');
                 
                 % ea_atropos2segmask will save segmask.nii in the stim folder
-                ea_atropos2segmask([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw.nii'], options.subj.AnchorModality);
+                % always convert to make sure the chosen algorithm was used
+                ea_atropos2segmask([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_atropos.nii'], ea_path_helper(options.subj.AnchorModality));
             else
+                % always copy to make sure the chosen algorithm was used
                 copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
             end
         else
             % for MNI, copy without check
+            % always copy to make sure the chosen algorithm was used
             copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
         end
 
@@ -132,9 +135,31 @@ switch settings.butenko_segmAlg
             atlas_gm_mask_path = [ea_space,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
         end
-    case'SynthSeg'
-        ea_warndlg("SynthSeg segmentations are not supported yet")
-        return
-        %SynthSeg_segmask_image = ea_smart_BIDS_function_to_find_SynthSeg;
-        %ea_convert_synthSeg2segmask(SynthSeg_segmask_image, segmask_output);
+    case 'SynthSeg'
+        % IMPORTANT: SynthSeg is not properly trained for typical PD brain
+        % atrophies! This might lead to both segmentation and normalization
+        % errors!
+
+        if options.native
+            [anchorImageDir, anchorImageName] = fileparts(anchorImage);
+            ImageDir = [anchorImageDir, filesep];
+            ImageName = [anchorImageName, '.nii'];
+        else
+            normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
+            [normImageDir, normImageName] = fileparts(normImage);
+            ImageDir = [normImageDir, filesep];
+            ImageName = [normImageName, '.nii'];
+        end
+
+        if ~isfile([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_synthseg.nii'])
+            env = ea_conda_env('SynthSeg');
+            if ~env.is_up_to_date
+                env.force_create;
+            end
+            ea_synthseg(ea_path_helper([ImageDir,ImageName]), [ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_synthseg.nii'])
+        end
+
+        % always convert to make sure the chosen algorithm was used
+        ea_convert_synthSeg2segmask([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_synthseg.nii'], [outputPaths.outputDir, filesep, segmaskName]);
+        env = ea_conda_env('OSS-DBSv2');
 end
