@@ -13,6 +13,8 @@ modType = modType(ix);
 modStr = {'dMRI', 'fMRI'};
 modStr = modStr{modType};
 
+prefs = ea_prefs;
+
 disp('Construct VAT list...')
 for sub=1:numPatient
     [~, subPrefix] = fileparts([obj.allpatients{sub}, '_']);
@@ -21,14 +23,14 @@ for sub=1:numPatient
     stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
     load(stimParams{1}, 'S');
     modelLabel = ea_simModel2Label(S.model);
-    vatlist{sub,1} = fullfile(stimFolder, [subPrefix, 'sim-efield_model-', modelLabel, '_seed-', modStr, '.nii']);
+    vatlist{sub,1} = fullfile(stimFolder, [subPrefix, 'sim-', prefs.lcm.vatseed, '_model-', modelLabel, '_seed-', modStr, '.nii']);
 
     if 1 % for now always recreate compound VTA seed
         rungenlocalmapper(obj,sub)
     end
 
     % Mirrored VAT E-field
-    vatlist{numPatient+sub,1} = fullfile(stimFolder, [subPrefix, 'sim-efield_model-', modelLabel, '_seed-', modStr, '_hemidesc-flipped.nii']);
+    vatlist{numPatient+sub,1} = fullfile(stimFolder, [subPrefix, 'sim-', prefs.lcm.vatseed, '_model-', modelLabel, '_seed-', modStr, '_hemidesc-flipped.nii']);
     if ~isfile(vatlist{numPatient+sub,1})
         ea_flip_lr_nonlinear(vatlist{sub,1}, vatlist{numPatient+sub,1}, 1);
     end
