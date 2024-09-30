@@ -1287,7 +1287,6 @@ choice = questdlg('Select a programmer:', ...
 % Handle user's response
 switch choice
     case 'Old Programmer'
-        % Execute Option 1: Your existing code or modifications
         M = getappdata(handles.leadfigure, 'M');
         
         options = ea_setopts_local(handles);
@@ -1299,57 +1298,59 @@ switch choice
         ea_stimparams(M.elstruct, handles.leadfigure, options);
         
     case 'New Programmer'
-        % Execute Option 2: Another action or modifications
-        % Add your code for Option 2 here
         M = getappdata(handles.leadfigure, 'M');
         options = ea_setopts_local(handles);
         options.leadprod = 'group';
         options.groupid = M.guid;
         options.native = 0;
         ea_refresh_lg(handles);
-        [file_path, releaseDir, status_path] = ea_input_programmer_group(options, M);
-        disp('Option 2 selected. Performing alternative action.');
+
+        [file_path, releaseDir, input_file_path] = ea_input_programmer_group(options, M);
         currentOS = ea_getarch;
-        if exist(releaseDir, 'Dir')
-        %     % Test MAC - will need to test on windows
-            mac64Dir = strcat(releaseDir, '/mac-arm64');
-            macDir = strcat(releaseDir, '/mac');
-        
-            if (currentOS == "maca64")
-                zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-arm64-mac.zip');
-                appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
-                testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
-                if ~exist(testDir)
-                    unzip(zipDir, mac64Dir);
+
+        if isfolder(releaseDir)
+            zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
+            if ismac
+                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
+                if ~isfile(appFile)
+                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
+                    system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.app'))]);
+                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
+                end
+            elseif isunix
+                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'leaddbsprogrammer');
+                if ~isfile(appFile)
+                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
+                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
+                end
+            else
+                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.exe');
+                if ~isfile(appFile)
+                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
+                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
                 end
             end
-        
-            if (currentOS == "maci64")
-                zipDir = strcat(mac64Dir, '/LeadDbsProgrammer-4.6.0-mac.zip');
-                appDir = strcat(mac64Dir, '/LeadDbsProgrammer.app/Contents/MacOS/LeadDbsProgrammer');
-                testDir = strcat(mac64Dir, '/LeadDbsProgrammer.app');
-                if ~exist(testDir)
-                    unzip(zipDir, macDir);
-                end
+
+            system([appFile, ' ', ea_path_helper(input_file_path)]);
+
+            % Loading output from programmer
+            importedS = loadjson(file_path);
+            if isfield(importedS, 'message')
+                disp([importedS.message]);
+                return;
             end
-                system(appDir);
-                new_data = fileread(file_path);
-                fid = fopen(file_path, 'w');
-                fclose(fid);
-                importedS = jsondecode(new_data);
-                fields = fieldnames(importedS);
-                tmpM = struct();
-                % Loop through each field
-                for i = 1:length(fields)
-                    fieldName = fields{i};
-                    fieldData = importedS.(fieldName);
-                    [S] = ea_process_programmer_group(fieldData);
-                    tmpM.S(i) = S;
-                    % Now you can work with fieldData
-                    disp(['Processing data for field: ' fieldName]);
-                end
-                M.S = tmpM.S;
-                setappdata(handles.leadfigure, 'M', M);
+            
+            tmpM = struct();
+            for i = 1:length(importedS)
+                [S] = ea_process_programmer_group(cell2mat(importedS(i)));
+                tmpM.S(i) = S;
+            end
+            M.S = tmpM.S;
+            setappdata(handles.leadfigure, 'M', M);
+            
+            [~, folderName, ~] = fileparts(fileparts(M.root));
+            filePath = fullfile(M.root, ['dataset-', folderName, '_analysis-', M.guid, '.mat']);
+            save(filePath, 'M');
         end
         
     otherwise
