@@ -25,7 +25,11 @@ end
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
 
-el_o_orig=[0,0,15+(20*stretchfactor)];
+if elspec.contact_span < 15
+    el_o_orig=[0,0,15+(20*stretchfactor)];
+else
+    el_o_orig=[0,0,elspec.contact_span+(20*stretchfactor)];
+end
 el_o_etop=[0,0,-20*stretchfactor];
 
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
