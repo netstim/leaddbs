@@ -91,9 +91,9 @@ try
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
-    vatfv=nan;
-    vatvolume=nan;
-    radius=nan;
+    varargout{1} = nan; % vatfv
+    varargout{2} = nan; % vatvolume
+    varargout{3} = nan; % radius
     return
 end
 
