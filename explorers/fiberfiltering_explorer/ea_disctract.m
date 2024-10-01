@@ -316,21 +316,11 @@ classdef ea_disctract < handle
 
                 otherwise     % check fiber recruitment via intersection with VTA
 
-                    % check whether to use new (calc_on_fibers) or old
-                    % method:
-
-                    switch obj.M.vatmodel
-                        case 'OSS-DBS (Butenko 2020)'
-                            if ~isfield(obj.M,'pseudoM')
-                                calculate_on_fibers(obj)
-                                return
-                            end
-
-                        otherwise
-                            % for now proceed with old method
-
+                    % check whether to use new (calc_on_fibers) or old method:
+                    if ~isfield(obj.M,'pseudoM') && obj.M.vatmodel == "OSS-DBS (Butenko 2020)"
+                        calculate_on_fibers(obj)
+                        return
                     end
-
 
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
