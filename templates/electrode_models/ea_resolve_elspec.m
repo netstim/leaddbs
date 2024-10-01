@@ -1504,6 +1504,12 @@ elseif ~isfield(elspec,'eldist')
     elspec.eldist=elspec.contact_spacing+elspec.contact_length;
 end
 
+if numel(elspec.contact_spacing)>1
+    elspec.contact_span = elspec.contact_length*elspec.numel + sum(elspec.contact_spacing);
+else
+    elspec.contact_span = elspec.contact_length*elspec.numel + elspec.contact_spacing*(elspec.numel-1);
+end
+
 try
     options.elspec=elspec;
 catch
