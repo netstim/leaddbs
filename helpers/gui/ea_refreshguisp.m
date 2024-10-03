@@ -375,7 +375,7 @@ if ~isfield(options,'elspec')
 end
 
 if options.elspec.numel > 8
-    warning('Only electrode with less than 8 contacts are fully supported.');
+    ea_cprintf('CmdWinWarnings', 'Only electrode with less than 8 contacts are fully supported.\n');
 else
     ea_toggle_contacts(handles, options.elspec.numel);
 end
