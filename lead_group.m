@@ -1318,7 +1318,7 @@ switch choice
                     savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
                 end
             elseif isunix
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'leaddbsprogrammer');
+                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer');
                 if ~isfile(appFile)
                     unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
                     savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
