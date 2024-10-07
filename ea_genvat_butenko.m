@@ -194,8 +194,16 @@ for source_index = first_active_source:4
         for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
             if settings.calcAxonActivation
-                if settings.prob_PAM
+                if settings.prob_PAM && (source_use_index == 1 || source_use_index == 5)
                     settings = ea_updatePAM_parameter(options,settings,outputPaths,i);
+                    if any(multiSourceMode)
+                        vatsettings = options.prefs.machine.vatsettings;
+                        pparam = vatsettings.butenko_probabilistic_parameter;
+                        copyfile([outputPaths.HemiSimFolder, filesep, pparam,'_samples.mat'], [outputPaths.outputDir, filesep, pparam,'_samples_',sideCode,'.mat'])
+                    end
+                elseif settings.prob_PAM
+                    % for other sources, load already sampled parameters
+                    settings = ea_load_prob_parameter(options, settings, outputPaths, sideCode, i);
                 end
         
                 % clean-up
@@ -270,7 +278,7 @@ for source_index = first_active_source:4
             continue;
         end
 
-        if settings.prob_PAM
+        if settings.prob_PAM && all(~multiSourceMode)
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
             ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,strcmp(settings.butenko_intersectStatus,'activated'));
         end
@@ -293,9 +301,16 @@ for source_index = first_active_source:4
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
+            if settings.prob_PAM && any(multiSourceMode)
+                % for multisource, we will convert in the external loop
+                % we just need to add the source index to the Axon States
+                axonStateFolder = ea_sourceIndex4AxonStates(outputPaths, side, source_use_index);
+                continue
+            end
+
             % prepare Lead-DBS BIDS format fiber activations
             if settings.calcAxonActivation && ~settings.optimizer
-                ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths,source_use_index)
+                ea_convert_ossdbs_axons(options,settings,side,settings.prob_PAM,resultfig,outputPaths,source_use_index);
             end
 
         elseif isfile([outputPaths.HemiSimFolder, filesep, 'fail_', sideCode, '.txt'])
@@ -323,9 +338,14 @@ for side = 0:1
         [vatfv,vatvolume] = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
         stimparams(side+1).VAT.VAT = vatfv;
         stimparams(side+1).volume = vatvolume;
-    elseif multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && settings.calcAxonActivation 
+    elseif multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && settings.calcAxonActivation && ~settings.prob_PAM
         ea_postprocess_multisource_pam(options,settings,side+1)
     end
+end
+
+% special case for multisource probabilistic PAM
+if any(multiSourceMode) && settings.prob_PAM
+    ea_get_prob_fiber_states_for_multisource(options,settings,outputPaths,axonStateFolder,resultfig)
 end
 
 % unused sources are set to 1 above
