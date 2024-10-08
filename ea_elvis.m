@@ -644,15 +644,15 @@ if isfolder(releaseDir)
         return;
     end
     ea_visprogrammer(resultfig, options, S, elstruct);
-%     system([appDir, ' &']);
-%     [status, cmdout] = system([appDir, ' &']);
-    % [status, cmdout] = system([appDir, ' & echo $!']);
-%     pid = str2double(cmdout);
     
-%         f = parfeval(backgroundPool, @runApp, 0, appDir);
+    % system([appDir, ' &']);
+    % [status, cmdout] = system([appDir, ' &']);
+    % [status, cmdout] = system([appDir, ' & echo $!']);
+    % pid = str2double(cmdout);
+    % f = parfeval(backgroundPool, @runApp, 0, appDir);
         
 end
-% 
+
 % while true
 %     % Check if the file_path is empty
 %     pause(5);

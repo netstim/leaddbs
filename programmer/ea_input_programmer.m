@@ -8,10 +8,11 @@ releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
 inputStruct.patientname = options.patientname;
 inputStruct.numElectrodes = numElectrodes;
 inputStruct.electrodeModel = options.elmodel;
-inputStruct.stimDir = fullfile(options.subj.stimDir, 'MNI152NLin2009bAsym');
 
 stimDir = fullfile(options.subj.stimDir, ea_getspace);
 ea_mkdir(stimDir);
+
+inputStruct.stimDir = stimDir;
 
 stimFileName = [options.patientname, '_desc-stimparameters'];
 stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
