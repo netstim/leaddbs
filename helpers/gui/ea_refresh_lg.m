@@ -526,8 +526,13 @@ ea_busyaction('off',handles.leadfigure,'group');
 function S=ea_checkS(M,S,options,handles) % helper to check that S has equally many entries as M.patient.list
 if ~(length(S)==length(M.patient.list))
     if isempty(S)    % will init a blank S struct
-        S=ea_initializeS(['gs_',M.guid],options,handles);
-        S(1:length(M.patient.list))=S(1);
+        for i=1:length(M.patient.list)
+            [~, subjPrefix] = fileparts(M.patient.list{i});
+            load(fullfile(M.patient.list{i}, 'prefs', [subjPrefix '_desc-uiprefs.mat']), 'elmodel');
+            options.elmodel = elmodel;
+            options = ea_resolve_elspec(options);
+            S(i)=ea_initializeS(['gs_',M.guid],options,handles);
+        end
     else
         %ea_error('Stimulation parameter struct not matching patient list. Lead group file potentially corrupted.');
     end
