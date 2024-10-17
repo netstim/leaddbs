@@ -301,18 +301,20 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
             try
                 [~, patientname] = fileparts(M.patient.list{pt});
                 statsFile = [M.patient.list{pt}, filesep, patientname, '_desc-stats.mat'];
-                load(statsFile, 'ea_stats');
-                ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
-                M.stats(pt).ea_stats=ea_stats;
-                if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
-                    M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
-                    M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
-                    M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
-                    
-                    % also correct single subject file:
+                if isfile(statsFile)
                     load(statsFile, 'ea_stats');
-                    ea_stats.atlases=M.stats(pt).ea_stats.atlases;
-                    save(statsFile, 'ea_stats', '-v7.3');
+                    ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
+                    M.stats(pt).ea_stats=ea_stats;
+                    if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
+                        M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
+                        M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
+                        M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
+                        
+                        % also correct single subject file:
+                        load(statsFile, 'ea_stats');
+                        ea_stats.atlases=M.stats(pt).ea_stats.atlases;
+                        save(statsFile, 'ea_stats', '-v7.3');
+                    end
                 end
             catch ME
                 ea_cprintf('CmdWinWarnings', '%s\n', ME.message);
