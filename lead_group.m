@@ -357,10 +357,16 @@ else
         else
             try
                 M.S(end+1:end+length(folders)) = tS;
-            catch
-                [tS.volume] = deal([0,0]);
-                [tS.sources] = deal(1:4);
-                M.S(end+1:end+length(folders)) = tS;
+            catch ME
+                if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
+                    if ~isfield(M.S, 'sources')
+                        [M.S.sources] = deal(1:4);
+                    end
+                    if ~isfield(M.S, 'volume')
+                        [M.S.volume] = deal([]);
+                    end
+                    M.S(end+1:end+length(folders)) = tS;
+                end
             end
         end
         setappdata(handles.leadfigure, 'M', M);
@@ -536,10 +542,16 @@ if isempty(M.S)
 else
     try
         M.S(end+1:end+length(folders)) = tS;
-    catch
-        [tS.volume] = deal([0,0]);
-        [tS.sources] = deal(1:4);
-        M.S(end+1:end+length(folders)) = tS;
+    catch ME
+        if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
+            if ~isfield(M.S, 'sources')
+                [M.S.sources] = deal(1:4);
+            end
+            if ~isfield(M.S, 'volume')
+                [M.S.volume] = deal([]);
+            end
+            M.S(end+1:end+length(folders)) = tS;
+        end
     end
 end
 
