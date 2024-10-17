@@ -270,7 +270,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
             if length(M.elstruct(pt).coords_mm)>num_sides
-                num_sides=M.elstruct(pt).coords_mm;
+                num_sides=length(M.elstruct(pt).coords_mm);
             end
         end
         for pt=1:length(M.patient.list)
