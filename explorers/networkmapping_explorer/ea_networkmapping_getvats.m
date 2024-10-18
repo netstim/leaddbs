@@ -20,9 +20,15 @@ for sub=1:numPatient
     [~, subPrefix] = fileparts([obj.allpatients{sub}, '_']);
     % Original VAT E-field
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
-    stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
-    load(stimParams{1}, 'S');
-    modelLabel = ea_simModel2Label(S.model);
+    stimParams = [stimFolder, filesep, subPrefix, 'desc-stimparameters.mat'];
+    if ~isfile(stimParams)
+        load(stimParams{1}, 'S');
+        modelLabel = ea_simModel2Label(S.model);
+    else
+        modelLabel = 'simbio';
+        ea_cprintf('CmdWinWarnings', 'Stimulation parameters not found! Suppose ''SimBio'' used for VTA calculation.\n');
+    end
+
     vatlist{sub,1} = fullfile(stimFolder, [subPrefix, 'sim-', prefs.lcm.vatseed, '_model-', modelLabel, '_seed-', modStr, '.nii']);
 
     if 1 % for now always recreate compound VTA seed
