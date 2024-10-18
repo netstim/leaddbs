@@ -193,10 +193,10 @@ for side = 1:numSide
 
         % Generate binary fibsval for the T-test method
         fibsvalBin_proj{side}(connected_proj, pt)=1;
-        fibsvalPeak_proj{side}(connected_proj, pt) = E_metrics.magn_peak(connected_proj)*1000.0;
-        fibsval5Peak_proj{side}(connected_proj, pt) = E_metrics.magn_5perc_peak(connected_proj)*1000.0;
-        fibsvalSum_proj{side}(connected_proj, pt) = E_metrics.magn_sum(connected_proj)*1000.0;
-        fibsvalMean_proj{side}(connected_proj, pt) = E_metrics.magn_mean(connected_proj)*1000.0;
+        fibsvalPeak_proj{side}(connected_proj, pt) = E_metrics.proj_peak(connected_proj)*1000.0;
+        fibsval5Peak_proj{side}(connected_proj, pt) = E_metrics.proj_5perc_peak(connected_proj)*1000.0;
+        fibsvalSum_proj{side}(connected_proj, pt) = E_metrics.proj_sum(connected_proj)*1000.0;
+        fibsvalMean_proj{side}(connected_proj, pt) = E_metrics.proj_mean(connected_proj)*1000.0;
     end
 
     % Remove values for not connected fibers, convert to sparse matrix
