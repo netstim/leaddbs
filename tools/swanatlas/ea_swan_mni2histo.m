@@ -27,11 +27,10 @@ xfrom=850:6000;
 for slice=1:size(nii.img,3)
     thisslice=nii.img(:,:,slice);
     fullslice(:,xfrom)=thisslice;
-    fullslice=fullslice(end:-1:1,:);
+    %fullslice=fullslice(end:-1:1,:);
     clear thisslice
     imwrite(fullslice,fullfile(outfolder,[sprintf('%03.f',slice),'.png']));
     if any(fullslice(:)) % also export overlays
-
         h=figure('Visible','off');
         [c,cont] = contour(mean(fullslice,3),2);
         contP = get(cont,'Parent');
@@ -43,16 +42,19 @@ for slice=1:size(nii.img,3)
         c=single(c.cdata)./255;
                
         bf=imread(fullfile(swanpath,'histology','brightfield',[sprintf('%03.f',slice),'.png']));
+        bf=bf(end:-1:1,:,:);
         cs=imresize(c,[size(bf,1),size(bf,2)]);
         bf=uint8(single(bf).*cs);
         imwrite(bf,fullfile(outfolder,'brightfield',[sprintf('%03.f',slice),'.png']));
 
         df=imread(fullfile(swanpath,'histology','darkfield',[sprintf('%03.f',slice),'.png']));
+        df=df(end:-1:1,:,:);
         cs=imresize(c,[size(df,1),size(df,2)]);
         df=uint8(single(df).*cs);
         imwrite(df,fullfile(outfolder,'darkfield',[sprintf('%03.f',slice),'.png']));
 
         blf=imread(fullfile(swanpath,'histology','blockface',[sprintf('%03.f',slice),'.png']));
+        blf=blf(end:-1:1,:,:);
         cs=imresize(c,[size(blf,1),size(blf,2)]);
         blf=uint8(single(blf).*cs);
         imwrite(blf,fullfile(outfolder,'blockface',[sprintf('%03.f',slice),'.png']));
