@@ -343,12 +343,31 @@ else
         M.patient.group=[M.patient.group; ones(length(folders),1)];
         options=ea_setopts_local(handles);
 
-        tS=ea_initializeS(['gs_',M.guid],options,handles);
+        for i=1:length(folders)
+            [~, subjPrefix] = fileparts(folders{i});
+            load(fullfile(folders{i}, 'prefs', [subjPrefix '_desc-uiprefs.mat']), 'elmodel');
+            options.elmodel = elmodel;
+            options = ea_resolve_elspec(options);
+            tS(i) = ea_initializeS(['gs_',M.guid], options, handles);
+        end
+
         if isempty(M.S)
-            M=rmfield(M,'S');
-            M.S(1:length(folders))=tS;
+            M = rmfield(M,'S');
+            M.S = tS;
         else
-            M.S(end+1:end+length(folders))=tS;
+            try
+                M.S(end+1:end+length(folders)) = tS;
+            catch ME
+                if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
+                    if ~isfield(M.S, 'sources')
+                        [M.S.sources] = deal(1:4);
+                    end
+                    if ~isfield(M.S, 'volume')
+                        [M.S.volume] = deal([]);
+                    end
+                    M.S(end+1:end+length(folders)) = tS;
+                end
+            end
         end
         setappdata(handles.leadfigure, 'M', M);
         ea_refresh_lg(handles);
@@ -509,18 +528,30 @@ M.patient.list=[M.patient.list;folders'];
 M.patient.group=[M.patient.group;ones(length(folders),1)];
 options=ea_setopts_local(handles);
 
-tS=ea_initializeS(['gs_',M.guid],options,handles);
+for i=1:length(folders)
+    [~, subjPrefix] = fileparts(folders{i});
+    load(fullfile(folders{i}, 'prefs', [subjPrefix '_desc-uiprefs.mat']), 'elmodel');
+    options.elmodel = elmodel;
+    options = ea_resolve_elspec(options);
+    tS(i) = ea_initializeS(['gs_',M.guid], options, handles);
+end
 
 if isempty(M.S)
-    M=rmfield(M,'S');
-    M.S(1:length(folders))=tS;
+    M = rmfield(M,'S');
+    M.S = tS;
 else
     try
-        M.S(end+1:end+length(folders))=tS;
-    catch
-        tS.volume=[0,0];
-        tS.sources=[1:4];
-        M.S(end+1:end+length(folders))=tS;
+        M.S(end+1:end+length(folders)) = tS;
+    catch ME
+        if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
+            if ~isfield(M.S, 'sources')
+                [M.S.sources] = deal(1:4);
+            end
+            if ~isfield(M.S, 'volume')
+                [M.S.volume] = deal([]);
+            end
+            M.S(end+1:end+length(folders)) = tS;
+        end
     end
 end
 

@@ -270,7 +270,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
             if length(M.elstruct(pt).coords_mm)>num_sides
-                num_sides=M.elstruct(pt).coords_mm;
+                num_sides=length(M.elstruct(pt).coords_mm);
             end
         end
         for pt=1:length(M.patient.list)
@@ -301,18 +301,20 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
             try
                 [~, patientname] = fileparts(M.patient.list{pt});
                 statsFile = [M.patient.list{pt}, filesep, patientname, '_desc-stats.mat'];
-                load(statsFile, 'ea_stats');
-                ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
-                M.stats(pt).ea_stats=ea_stats;
-                if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
-                    M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
-                    M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
-                    M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
-                    
-                    % also correct single subject file:
+                if isfile(statsFile)
                     load(statsFile, 'ea_stats');
-                    ea_stats.atlases=M.stats(pt).ea_stats.atlases;
-                    save(statsFile, 'ea_stats', '-v7.3');
+                    ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
+                    M.stats(pt).ea_stats=ea_stats;
+                    if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
+                        M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
+                        M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
+                        M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
+                        
+                        % also correct single subject file:
+                        load(statsFile, 'ea_stats');
+                        ea_stats.atlases=M.stats(pt).ea_stats.atlases;
+                        save(statsFile, 'ea_stats', '-v7.3');
+                    end
                 end
             catch ME
                 ea_cprintf('CmdWinWarnings', '%s\n', ME.message);
@@ -526,8 +528,13 @@ ea_busyaction('off',handles.leadfigure,'group');
 function S=ea_checkS(M,S,options,handles) % helper to check that S has equally many entries as M.patient.list
 if ~(length(S)==length(M.patient.list))
     if isempty(S)    % will init a blank S struct
-        S=ea_initializeS(['gs_',M.guid],options,handles);
-        S(1:length(M.patient.list))=S(1);
+        for i=1:length(M.patient.list)
+            [~, subjPrefix] = fileparts(M.patient.list{i});
+            load(fullfile(M.patient.list{i}, 'prefs', [subjPrefix '_desc-uiprefs.mat']), 'elmodel');
+            options.elmodel = elmodel;
+            options = ea_resolve_elspec(options);
+            S(i)=ea_initializeS(['gs_',M.guid],options,handles);
+        end
     else
         %ea_error('Stimulation parameter struct not matching patient list. Lead group file potentially corrupted.');
     end
