@@ -1,17 +1,17 @@
-function ea_usp_mni2histo(uspath)
+function ea_swan_mni2histo(swanpath)
 
-[infile,inpath]=uigetfile('*.nii','Select file to be warped into Histology space...',fullfile(uspath,'histology','masks'));
+[infile,inpath]=uigetfile('*.nii','Select file to be warped into Histology space...',fullfile(swanpath,'histology','masks'));
 
-options=ea_getptopts(fullfile(uspath,'derivatives','leaddbs','sub-USPatlas'));
+options=ea_getptopts(fullfile(swanpath,'derivatives','leaddbs','sub-SWANatlas'));
 
-ea_mkdir(fullfile(uspath,'histology','masks',ea_stripext(infile)));
+ea_mkdir(fullfile(swanpath,'histology','masks',ea_stripext(infile)));
 
 ea_apply_normalization_tofile(options, fullfile(inpath,infile), ...
-    fullfile(uspath,'histology','masks',ea_stripext(infile),[ea_stripext(infile),'_histo.nii']), ...
+    fullfile(swanpath,'histology','masks',ea_stripext(infile),[ea_stripext(infile),'_histo.nii']), ...
     1, 1, ...
-    fullfile(uspath,'histology','histo_volume.nii.gz'));
+    fullfile(swanpath,'histology','histo_volume.nii.gz'));
 
-outfolder=fullfile(uspath,'histology','masks',ea_stripext(infile));
+outfolder=fullfile(swanpath,'histology','masks',ea_stripext(infile));
 nii=ea_load_nii(fullfile(outfolder,[ea_stripext(infile),'_histo.nii']));
 gzip(fullfile(outfolder,[ea_stripext(infile),'_histo.nii']));
 ea_delete(fullfile(outfolder,[ea_stripext(infile),'_histo.nii']));
@@ -42,17 +42,17 @@ for slice=1:size(nii.img,3)
         close(h);
         c=single(c.cdata)./255;
                
-        bf=imread(fullfile(uspath,'histology','brightfield',[sprintf('%03.f',slice),'.png']));
+        bf=imread(fullfile(swanpath,'histology','brightfield',[sprintf('%03.f',slice),'.png']));
         cs=imresize(c,[size(bf,1),size(bf,2)]);
         bf=uint8(single(bf).*cs);
         imwrite(bf,fullfile(outfolder,'brightfield',[sprintf('%03.f',slice),'.png']));
 
-        df=imread(fullfile(uspath,'histology','darkfield',[sprintf('%03.f',slice),'.png']));
+        df=imread(fullfile(swanpath,'histology','darkfield',[sprintf('%03.f',slice),'.png']));
         cs=imresize(c,[size(df,1),size(df,2)]);
         df=uint8(single(df).*cs);
         imwrite(df,fullfile(outfolder,'darkfield',[sprintf('%03.f',slice),'.png']));
 
-        blf=imread(fullfile(uspath,'histology','blockface',[sprintf('%03.f',slice),'.png']));
+        blf=imread(fullfile(swanpath,'histology','blockface',[sprintf('%03.f',slice),'.png']));
         cs=imresize(c,[size(blf,1),size(blf,2)]);
         blf=uint8(single(blf).*cs);
         imwrite(blf,fullfile(outfolder,'blockface',[sprintf('%03.f',slice),'.png']));

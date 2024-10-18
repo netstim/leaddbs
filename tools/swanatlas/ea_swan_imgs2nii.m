@@ -7,7 +7,7 @@
 %Example AllMasks2Nii ('/Users/eduardoalho/Desktop/Atlas/Atlas_test/',[0.3 0.3 0.3])
 
 
-function outfile=ea_usp_imgs2nii(indir, resolution)
+function outfile=ea_swan_imgs2nii(indir, resolution)
 
 %Get the directory name to name the nifti file
 [~, structure_name, ~] = fileparts(indir);
@@ -52,9 +52,9 @@ V.fname = outfile;
 V.dim = size(volume);
 V.dt = [2, 0];
 V.n = [1, 1];
-V.descrip = 'USPhisto';
+V.descrip = 'SWANhisto';
 V.pinfo = [1; 0; 352];
-V.mat = load(fullfile (ea_getearoot,'tools','uspatlas','header_correct.mat')).V.mat;
+V.mat = load(fullfile (ea_getearoot,'tools','swanatlas','header_correct.mat')).V.mat;
 
 % Create volume header
 V = spm_create_vol(V);
