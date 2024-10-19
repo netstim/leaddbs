@@ -9,7 +9,7 @@ if isfile(S)
     if ismember('M', var)
         load(stimFile, 'M');
         S = M.S;
-    elseif ismember('S', 'var')
+    elseif ismember('S', var)
         load(stimFile, 'S');
     end
 end
