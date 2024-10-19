@@ -116,12 +116,15 @@ end
 
 mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices']);
 orients={'axial','coronal','saggital'};
+sides={'R','L'}
 oricon=zeros(3,16); % matrix that shows which images are available
-for con=0:15
-    for or=1:length(orients)
-        if exist([options.root,options.patientname,filesep,'K',num2str(con),'_',orients{or},'.png'],'file')
-            copyfile([options.root,options.patientname,filesep,'K',num2str(con),'_',orients{or},'.png'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices',filesep,'K',num2str(con),'_',orients{or},'.png']);
-            oricon(or,con+1)=1;
+for s=1:length(sides)
+    for con=1:options.elspec.numel
+        for or=1:length(orients)
+            if exist([options.root,options.patientname,filesep,'K',num2str(con),sides{s},'_',orients{or},'.png'],'file')
+                copyfile([options.root,options.patientname,filesep,'K',num2str(con),sides{s},'_',orients{or},'.png'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices',filesep,'K',num2str(con),sides{s},'_',orients{or},'.png']);
+                oricon(or,con+1)=1;
+            end
         end
     end
 end
