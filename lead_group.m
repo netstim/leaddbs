@@ -145,7 +145,7 @@ end
 
 if ~isempty(varargin) && isfile(GetFullPath(varargin{1})) % Path to group analysis file provided as input
     groupFilePath = GetFullPath(varargin{1});
-    load(groupFilePath, 'M');
+    M = ea_checkStimParams(groupFilePath);
     M.root = [fileparts(groupFilePath), filesep];
     set(handles.groupdir_choosebox, 'String', fileparts(groupFilePath));
     set(handles.groupdir_choosebox, 'TooltipString', fileparts(groupFilePath));
@@ -244,7 +244,7 @@ if strcmp(target, 'groupDir')
             end
             % Group analysis file within dataset folder
             groupdir = fileparts(folders{1});
-            load(folders{1}, 'M');
+            M = ea_checkStimParams(folders{1});
 
             datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
             if isfile(fullfile(datasetFolder, 'miniset.json'))
@@ -258,7 +258,7 @@ if strcmp(target, 'groupDir')
         elseif ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-[^\W_]+_analysis-[^\W_]+\.mat$'], 'match', 'once'))
             % Orphan group analysis file, will create proper dataset folder
             [groupdir, analysisFile] = ea_genDatasetFromGroupAnalysis(folders{1});
-            load(analysisFile, 'M');
+            M = ea_checkStimParams(analysisFile);
         else
             ea_error('Not a Lead Group Analysis file!', simpleStack = 1);
         end
@@ -295,7 +295,7 @@ if strcmp(target, 'groupDir')
             analysisFile = ea_genGroupAnalysisFile(folders{1});
         end
         groupdir = fileparts(analysisFile);
-        load(analysisFile, 'M');
+        M = ea_checkStimParams(analysisFile);
 
         datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
         if isfile(fullfile(datasetFolder, 'miniset.json'))

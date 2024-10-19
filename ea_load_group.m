@@ -10,7 +10,7 @@ analysisFile = ea_getGroupAnalysisFile(groupdir);
 if isempty(analysisFile) % Create new analysis file in case not found
     analysisFile = ea_genGroupAnalysisFile(groupdir);
 end
-load(analysisFile, 'M');
+M = ea_checkStimParams(analysisFile);
 
 datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
 if isfile(fullfile(datasetFolder, 'miniset.json'))
