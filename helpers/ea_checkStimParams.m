@@ -24,11 +24,6 @@ if ~isfield(S, 'volume')
     updated = 1;
 end
 
-if ~isfield(S, 'ver')
-    [S.ver] = deal('2.0');
-    updated = 1;
-end
-
 if ~isfield(S, 'numel')
     if exist('M', 'var')
         numel = cell(1, length(M.elstruct));
@@ -59,11 +54,79 @@ if ~isfield(S, 'numel')
     updated = 1;
 end
 
+if ~isfield(S, 'ver')
+    % Further fix contact field
+    S = arrayfun(@adaptContactField, S);
+    [S.ver] = deal('2.0');
+    updated = 1;
+end
+
 if updated && exist('filePath', 'var')
     if exist('M', 'var')
         M.S = S;
         save(stimFile, 'M');
     else
         save(stimFile, 'S');
+    end
+end
+
+
+function newS = adaptContactField(S)
+%% Initialize new S first
+newS = S;
+% Right sources
+for source=1:4
+    newS.(['Rs',num2str(source)]) = struct;
+    for k=1:S.numel
+        newS.(['Rs',num2str(source)]).(['k',num2str(k)]).perc=0;
+        newS.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
+        newS.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
+    end
+    newS.(['Rs',num2str(source)]).case.perc = 100;
+    newS.(['Rs',num2str(source)]).case.pol = 2;
+    newS.(['Rs',num2str(source)]).amp = 0;
+    newS.(['Rs',num2str(source)]).va = 1;
+    newS.(['Rs',num2str(source)]).pulseWidth = 60;
+end
+
+% Left sources
+for source=1:4
+    newS.(['Ls',num2str(source)]) = struct;
+    for k=1:S.numel
+        newS.(['Ls',num2str(source)]).(['k',num2str(k)]).perc=0;
+        newS.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
+        newS.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
+    end
+    newS.(['Ls',num2str(source)]).case.perc = 100;
+    newS.(['Ls',num2str(source)]).case.pol = 2;
+    newS.(['Ls',num2str(source)]).amp = 0;
+    newS.(['Ls',num2str(source)]).va = 1;
+    newS.(['Ls',num2str(source)]).pulseWidth = 60;
+end
+
+%% Copy old stimulations
+% Right sources
+for source=1:4
+    for k=1:min(S.numel,8)
+        newS.(['Rs',num2str(source)]).(['k',num2str(k)]) = S.(['Rs',num2str(source)]).(['k',num2str(k-1)]);
+    end
+    newS.(['Rs',num2str(source)]).case = S.(['Rs',num2str(source)]).case;
+    newS.(['Rs',num2str(source)]).amp = S.(['Rs',num2str(source)]).amp;
+    newS.(['Rs',num2str(source)]).va = S.(['Rs',num2str(source)]).va;
+    if isfield(S.(['Rs',num2str(source)]), 'pulseWidth')
+        newS.(['Rs',num2str(source)]).pulseWidth = S.(['Rs',num2str(source)]).pulseWidth;
+    end
+end
+
+% Left sources
+for source=1:4
+    for k=1:min(S.numel,8)
+        newS.(['Ls',num2str(source)]).(['k',num2str(k)]) = S.(['Ls',num2str(source)]).(['k',num2str(k+7)]);
+    end
+    newS.(['Ls',num2str(source)]).case = S.(['Ls',num2str(source)]).case;
+    newS.(['Ls',num2str(source)]).amp = S.(['Ls',num2str(source)]).amp;
+    newS.(['Ls',num2str(source)]).va = S.(['Ls',num2str(source)]).va;
+    if isfield(S.(['Ls',num2str(source)]), 'pulseWidth')
+        newS.(['Ls',num2str(source)]).pulseWidth = S.(['Ls',num2str(source)]).pulseWidth;
     end
 end
