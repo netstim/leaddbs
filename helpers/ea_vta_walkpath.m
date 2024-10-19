@@ -61,7 +61,7 @@ switch pipeline
                 files_in_this_folder = dir_without_dots(fullfile(native_dir,this_folder_names{folder_names}));
                 native_files{file_indx} = {files_in_this_folder.name};
                 native_model_name = add_model(fullfile(source_patient,pipeline,'native',this_folder_names{folder_names}));
-                native_model_names{folder_names} = native_model_name; 
+                native_model_names{folder_names} = native_model_name;
                 for native_file = 1:length(native_files{1,file_indx})
                     derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'native',native_files{1,file_indx}{1,native_file});
                     native_files{1,file_indx}{1,native_file} = fullfile(native_dir,this_folder_names{folder_names},native_files{1,file_indx}{1,native_file});
@@ -73,21 +73,21 @@ switch pipeline
                 %can rename them.
             end
         end
-      
+
 end
 return
 end
 
 function model_name = add_model(stimFolder)
-  stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
-  if ~isempty(stimParams)
-    load(stimParams{1},'S')
-    model_name = ea_simModel2Label(S.model);
-  else
-      ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
-      model_name = 'simbio';
-  end
-  return
+    stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
+    if ~isempty(stimParams)
+        S = ea_loadstimulation(stimParams{1})
+        model_name = ea_simModel2Label(S.model);
+    else
+        ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
+        model_name = 'simbio';
+    end
+    return
 end
 
 function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,tag_struct)
@@ -97,7 +97,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
    %name)
    mapper_output_files = dir_without_dots(connectome_folder);
    mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
-   
+
    for mapper_file = 1:length(mapper_output_files)
        matching_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss)', '');
        matching_file = ['_' matching_file];
@@ -110,7 +110,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
                tag_struct.simtag = 'binary';
            end
            extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
-           
+
            indx = cellfun(@(x)strcmp(x,matching_file),lead_mapper{:,1});
            bids_name = lead_mapper{1,2}{indx};
            %replace hemidesc tag
@@ -128,12 +128,12 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
            movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
            fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
-           
+
        else
            evalin('base','WARNINGSILENT=1;');
            ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
        end
-       
+
    end
    evalin('base','WARNINGSILENT=1;');
    ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));

@@ -20,7 +20,7 @@ for pt=1:length(uipatdir)
     [~, subPrefix] = fileparts([uipatdir{pt}, '_']);
 
     stimParams = ea_regexpdir(fullfile(uipatdir{pt}, 'stimulations', ea_nt(0), stimLabel), 'stimparameters\.mat$', 0);
-    load(stimParams{1}, 'S');
+    S = ea_loadstimulation(stimParams{1});
     modelLabel = ea_simModel2Label(S.model);
     exportType = regexprep(exportType, 'sim-([a-z]+)', ['sim-$1_model-', modelLabel]);
 

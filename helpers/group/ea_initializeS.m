@@ -39,7 +39,7 @@ elseif nargin > 1
     end
 end
 
-% options.elspec could be missing when switching simulation model in LeadGroup 
+% options.elspec could be missing when switching simulation model in LeadGroup
 if ~isfield(options, 'elspec') && strcmp(options.leadprod, 'group')
     elstruct = getappdata(handles.stimfig, 'elstruct');
     actpt = getappdata(handles.stimfig, 'actpt');
@@ -62,7 +62,7 @@ else
 end
 
 if preexist
-    load([options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat'], 'S');
+    S = ea_loadstimulation([options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat']);
     return
 end
 
@@ -73,10 +73,10 @@ for source=1:4
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
     end
-    S.(['Rs',num2str(source)]).amp = 0;
-    S.(['Rs',num2str(source)]).va = 1;
     S.(['Rs',num2str(source)]).case.perc = 100;
     S.(['Rs',num2str(source)]).case.pol = 2;
+    S.(['Rs',num2str(source)]).amp = 0;
+    S.(['Rs',num2str(source)]).va = 1;
     S.(['Rs',num2str(source)]).pulseWidth = 60;
 end
 
@@ -87,10 +87,10 @@ for source=1:4
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
     end
-    S.(['Ls',num2str(source)]).amp = 0;
-    S.(['Ls',num2str(source)]).va = 1;
     S.(['Ls',num2str(source)]).case.perc = 100;
     S.(['Ls',num2str(source)]).case.pol = 2;
+    S.(['Ls',num2str(source)]).amp = 0;
+    S.(['Ls',num2str(source)]).va = 1;
     S.(['Ls',num2str(source)]).pulseWidth = 60;
 end
 

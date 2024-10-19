@@ -22,7 +22,7 @@ for sub=1:numPatient
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
     stimParams = [stimFolder, filesep, subPrefix, 'desc-stimparameters.mat'];
     if isfile(stimParams)
-        load(stimParams, 'S');
+        S = ea_loadstimulation(stimParams);
         modelLabel = ea_simModel2Label(S.model);
     else
         modelLabel = 'simbio';

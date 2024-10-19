@@ -2,7 +2,7 @@ function [pamlist,FilesExist] = ea_discfibers_getpams(obj)
 % Return list of PAM results
 
 % always initialize with entries for mirrorred stims
-% mirror flag will be checked in ea_discfibers_calcvals_pam 
+% mirror flag will be checked in ea_discfibers_calcvals_pam
 numPatient = length(obj.allpatients);
 pamlist = cell(numPatient*2,2);
 FilesExist = zeros(numPatient,2);  % no sense to check for mirrored here
@@ -19,10 +19,9 @@ for sub=1:numPatient % Original VAT E-field
     % we load stim parameters and check for each side if there was a stimulation
     % merged fiberActivations always stored in MNI
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
-    load([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'],'S');
-    
+    S = ea_loadstimulation([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat']);
+
     for side = 1:2
-    
         % if no stimulation, we do not expect the file to exist
         % so no re-simulation is needed
         if all(S.amplitude{1,side} == 0)
@@ -52,7 +51,7 @@ for sub=1:numPatient % Original VAT E-field
         end
 
     end
-   
+
 end
 
 FilesExist=double(logical(FilesExist)); % convert to zeros and ones.
