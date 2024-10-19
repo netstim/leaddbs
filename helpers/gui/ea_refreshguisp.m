@@ -559,12 +559,13 @@ end
 
 
 function ea_show_impedance(handles)
-for k=1:16
+options = getappdata(handles.stimfig, 'options');
+for k=1:options.elspec.numel
     set(handles.(['k', num2str(k), 'imR']), 'Visible', 'on');
     set(handles.(['k', num2str(k), 'imL']), 'Visible', 'on');
 end
 
-for ohm=1:4
+for ohm=1:ceil(options.elspec.numel/4)
     set(handles.(['kohmtext', num2str(ohm), 'R']), 'Visible', 'on');
     set(handles.(['kohmtext', num2str(ohm), 'L']), 'Visible', 'on');
 end
