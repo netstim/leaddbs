@@ -60,15 +60,15 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-
-
 M=varargin{1};
+
+setappdata(handles.editregressor, 'maxnumel', max(M.S.numel));
 
 [~,ptnames]=cellfun(@fileparts,M.patient.list,'UniformOutput',0);
 set(handles.datatable,'RowName',ptnames);
 
 try
-regressor=M.clinical.vars{M.ui.clinicallist};
+    regressor=M.clinical.vars{M.ui.clinicallist};
 catch % new variable
     regressor=nan(length(ptnames),1);
 end
@@ -90,11 +90,12 @@ elseif ispercontact(regressor)
 end
 
 try
-set(handles.varname,'String',M.clinical.labels{M.ui.clinicallist});
+    set(handles.varname,'String',M.clinical.labels{M.ui.clinicallist});
 end
 
 % UIWAIT makes ea_edit_regressor wait for user response (see UIRESUME)
 uiwait(hObject);
+
 
 function switchperpatient(handles)
 reg=get(handles.datatable,'Data');
@@ -128,7 +129,7 @@ end
 set(handles.variabletype, 'Value', 2);
 set(handles.datatable,'ColumnName',{'Right Hem.','Left Hem.'});
 try
-reg=reg(1:size(reg,1),1:2);
+    reg=reg(1:size(reg,1),1:2);
 catch
    reg=[reg(1:size(reg,1),1),nan(size(reg,1),1)];
 end
@@ -147,8 +148,12 @@ if ~isempty(reg)
    end
    end
 end
+
 set(handles.variabletype, 'Value', 3);
-set(handles.datatable,'ColumnName',{'K0','K1','K2','K3','K8','K9','K10','K11'});
+
+maxnumel = getappdata(handles.editregressor, 'maxnumel');
+conInd = arrayfun(@num2str, 1:maxnumel, 'Uni', 0);
+set(handles.datatable,'ColumnName',[strcat('k', conInd, 'R'), strcat('k', conInd, 'L')]);
 
 nreg=nan(size(reg,1),8);
 nreg(1:size(reg,1),1:size(reg,2))=reg;
@@ -169,14 +174,19 @@ if ~isempty(reg)
    end
    end
 end
+
 set(handles.variabletype, 'Value', 4);
-set(handles.datatable,'ColumnName',{'K1-2','K2-3','K3-4','K8-9','K9-10','K10-11'});
+
+maxnumel = getappdata(handles.editregressor, 'maxnumel');
+comb = nchoosek(1:maxnumel, 2);
+conComb = cellstr(strcat(string(comb(:,1)), '-', string(comb(:,2))))';
+set(handles.datatable,'ColumnName',[strcat('K',conComb,'R'),strcat('K',conComb,'L')]);
 
 nreg=nan(size(reg,1),6);
 try
-nreg(1:size(reg,1),1:size(nreg,2))=reg(1:size(reg,1),1:size(nreg,2));
+    nreg(1:size(reg,1),1:size(nreg,2))=reg(1:size(reg,1),1:size(nreg,2));
 catch
-nreg(1:size(reg,1),1:size(reg,2))=reg(1:size(reg,1),1:size(reg,2)); 
+    nreg(1:size(reg,1),1:size(reg,2))=reg(1:size(reg,1),1:size(reg,2)); 
 end
 reg=nreg; clear('nreg');
 set(handles.datatable,'Data',reg);
