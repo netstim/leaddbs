@@ -129,49 +129,31 @@ Lactive=S.active(2);
 
 if nargin==3
     if ischar(varargin{3})
-        switch varargin{3}
-            case {'Rcase'}
-                ks={'k0','k1','k2','k3','k4','k5','k6','k7'};
-                sidec='R'; side=1;
-                S=ea_redistribute_voltage(S,varargin{3});
-                if S.(['Rs',num2str(Ractive)]).case.pol==1
+        if endsWith(varargin{3}, 'R')
+            side = 1;
+        elseif endsWith(varargin{3}, 'L')
+            side = 2;
+        end
+        sidestr = varargin{3}(end);
 
-                    S.(['Rs',num2str(Ractive)]).case.pol=2;
-                    S=ea_redistribute_voltage(S,varargin{3});
-                    for k=0:7
-                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
-                            S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
-                            S=ea_redistribute_voltage(S,['k',num2str(k)]);
-                        end
+        if startsWith(varargin{3}, 'C', 'IgnoreCase', true) % CaseR or CaseL
+            S=ea_redistribute_voltage(S,varargin{3});
+            if S.([sidestr,'s',num2str(S.active(side))]).case.pol==1
+                S.([sidestr,'s',num2str(S.active(side))]).case.pol=2;
+                S=ea_redistribute_voltage(S,varargin{3});
+                for k=1:S.numel
+                    if S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
+                        S=ea_redistribute_voltage(S,['k',num2str(k),sidestr]);
                     end
                 end
-            case {'Lcase'}
-                ks={'k8','k9','k10','k11','k12','k13','k14','k15'};
-                sidec='L'; side=2;
-                S=ea_redistribute_voltage(S,varargin{3});
-                if S.(['Ls',num2str(Lactive)]).case.pol==1
-                    S.(['Ls',num2str(Lactive)]).case.pol=2;
-                    S=ea_redistribute_voltage(S,varargin{3});
-                    for k=8:15
-                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
-                            S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
-                            S=ea_redistribute_voltage(S,['k',num2str(k)]);
-                        end
-                    end
-                end
-            otherwise
-                S=ea_redistribute_voltage(S,varargin{3});
-
-                switch varargin{3}
-                    case {'k0','k1','k2','k3','k4','k5','k6','k7'}
-                        sidec='R'; side=1;
-                    case {'k8','k9','k10','k11','k12','k13','k14','k15'}
-                        sidec='L'; side=2;
-                end
-                if S.([sidec,'s',num2str(S.active(side))]).(varargin{3}).pol==2 && S.([sidec,'s',num2str(S.active(side))]).case.pol==2
-                    S.([sidec,'s',num2str(S.active(side))]).case.pol=0;
-                    S=ea_redistribute_voltage(S,[sidec,'case']);
-                end
+            end
+        elseif startsWith(varargin{3}, 'k') % k#R or K#L
+            S=ea_redistribute_voltage(S,varargin{3});
+            if S.([sidestr,'s',num2str(S.active(side))]).(varargin{3}(1:end-1)).pol==2 && S.([sidestr,'s',num2str(S.active(side))]).case.pol==2
+                S.([sidestr,'s',num2str(S.active(side))]).case.pol=0;
+                S=ea_redistribute_voltage(S,['Case',sidestr]);
+            end
         end
     else
         S=ea_redistribute_voltage(S,varargin{3});
@@ -210,7 +192,7 @@ for source=1:4
 
     %if S.(['Rs',num2str(source)]).amp % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
-    for k=0:7
+    for k=1:S.numel
         if S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol==1
             anycontactnegative=1;
         elseif S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol==2
@@ -219,8 +201,8 @@ for source=1:4
     end
 
     if ~anycontactnegative
-        S.(['Rs',num2str(source)]).k1.pol=1;
-        S.(['Rs',num2str(source)]).k1.perc=100;
+        S.(['Rs',num2str(source)]).k2.pol=1;
+        S.(['Rs',num2str(source)]).k2.perc=100;
     end
 
     if ~anycontactpositive
@@ -238,7 +220,7 @@ for source=1:4
 
     % if S.(['Ls',num2str(source)]).amp % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
-    for k=8:15
+    for k=1:S.numel
         if S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol==1
             anycontactnegative=1;
         elseif S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol==2
@@ -247,8 +229,8 @@ for source=1:4
     end
 
     if ~anycontactnegative
-        S.(['Ls',num2str(source)]).k9.pol=1;
-        S.(['Ls',num2str(source)]).k9.perc=100;
+        S.(['Ls',num2str(source)]).k2.pol=1;
+        S.(['Ls',num2str(source)]).k2.perc=100;
     end
     if ~anycontactpositive
         S.(['Ls',num2str(source)]).case.pol=2;
@@ -259,28 +241,28 @@ end
 
 %% model to handles: all GUI elements.
 source=Ractive;
-for k=0:7
+for k=1:S.numel
     val=S.(['Rs',num2str(source)]).(['k',num2str(k)]).perc;
-    set(handles.(['k',num2str(k),'u']),'String',num2str(val));
+    set(handles.(['k',num2str(k),'uR']),'String',num2str(val));
 
     val=S.(['Rs',num2str(source)]).(['k',num2str(k)]).imp;
-    set(handles.(['k',num2str(k),'im']),'String',num2str(val));
+    set(handles.(['k',num2str(k),'imR']),'String',num2str(val));
 end
 
 % set case
-set(handles.RCu,'String',num2str(S.(['Rs',num2str(source)]).case.perc));
+set(handles.CuR,'String',num2str(S.(['Rs',num2str(source)]).case.perc));
 
 source=Lactive;
-for k=8:15
+for k=1:S.numel
     val=S.(['Ls',num2str(source)]).(['k',num2str(k)]).perc;
-    set(handles.(['k',num2str(k),'u']),'String',num2str(val));
+    set(handles.(['k',num2str(k),'uL']),'String',num2str(val));
 
     val=S.(['Ls',num2str(source)]).(['k',num2str(k)]).imp;
-    set(handles.(['k',num2str(k),'im']),'String',num2str(val));
+    set(handles.(['k',num2str(k),'imL']),'String',num2str(val));
 end
 
 % set case
-set(handles.LCu,'String',num2str(S.(['Ls',num2str(source)]).case.perc));
+set(handles.CuL,'String',num2str(S.(['Ls',num2str(source)]).case.perc));
 
 if contains(model, 'OSS-DBS')
     handles.pulseWidthTextbox_R.String = num2str(S.(['Rs',num2str(S.active(1))]).pulseWidth);
@@ -288,80 +270,63 @@ if contains(model, 'OSS-DBS')
 end
 
 %% model to handles: Axes objects:
-for k=0:7
+for k=1:S.numel
     if S.(['Rs',num2str(Ractive)]).(['k',num2str(k)]).pol==0 % off
-        im=ea_get_icn(['empty',num2str(Ractive)]);
+        icon=fullfile(options.earoot, 'icons', ['empty',num2str(Ractive),'.png']);
     elseif S.(['Rs',num2str(Ractive)]).(['k',num2str(k)]).pol==1 % negative S1
-        im=ea_get_icn(['minus',num2str(Ractive)]);
+        icon=fullfile(options.earoot, 'icons', ['minus',num2str(Ractive),'.png']);
     elseif S.(['Rs',num2str(Ractive)]).(['k',num2str(k)]).pol==2 % positive S1
-        im=ea_get_icn(['plus',num2str(Ractive)]);
+        icon=fullfile(options.earoot, 'icons', ['plus',num2str(Ractive),'.png']);
     end
-    set(0,'CurrentFigure',handles.stimfig);
-    set(handles.stimfig,'CurrentAxes',handles.(['k',num2str(k),'ax']));
-    h=image(im);
-    handles.(['k',num2str(k), 'ax']).Toolbar.Visible = 'off';
-    set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,['k',num2str(k)]});
-    axis off;
-    axis equal;
+    handles.(['k',num2str(k),'polR']).ImageSource = icon;
+    handles.(['k',num2str(k),'polR']).ImageClickedFcn = {@ea_inc_polarity,handles,options,['k',num2str(k),'R']};
 end
 
-for k=8:15
+for k=1:S.numel
     if S.(['Ls',num2str(Lactive)]).(['k',num2str(k)]).pol==0 % off
-        im=ea_get_icn(['empty',num2str(Lactive)]);
+        icon=fullfile(options.earoot, 'icons', ['empty',num2str(Lactive),'.png']);
     elseif S.(['Ls',num2str(Lactive)]).(['k',num2str(k)]).pol==1 % negative S1
-        im=ea_get_icn(['minus',num2str(Lactive)]);
+        icon=fullfile(options.earoot, 'icons', ['minus',num2str(Lactive),'.png']);
     elseif S.(['Ls',num2str(Lactive)]).(['k',num2str(k)]).pol==2 % positive S1
-        im=ea_get_icn(['plus',num2str(Lactive)]);
+        icon=fullfile(options.earoot, 'icons', ['plus',num2str(Lactive),'.png']);
     end
-    set(0,'CurrentFigure',handles.stimfig);
-    set(handles.stimfig,'CurrentAxes',handles.(['k',num2str(k), 'ax']));
-    h=image(im);
-    handles.(['k',num2str(k), 'ax']).Toolbar.Visible = 'off';
-    set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,['k',num2str(k)]});
-    axis off;
-    axis equal;
+    handles.(['k',num2str(k),'polL']).ImageSource = icon;
+    handles.(['k',num2str(k),'polL']).ImageClickedFcn = {@ea_inc_polarity,handles,options,['k',num2str(k),'L']};
+end
+
+for k=S.numel+1:16
+    handles.(['k',num2str(k), 'polR']).Visible = 'off';
+    handles.(['k',num2str(k), 'polL']).Visible = 'off';
 end
 
 % right case:
 if S.(['Rs',num2str(Ractive)]).case.pol==0 % off
-    im=ea_get_icn(['empty',num2str(Ractive)]);
+    icon=fullfile(options.earoot, 'icons', ['empty',num2str(Ractive),'.png']);
 elseif S.(['Rs',num2str(Ractive)]).case.pol==1 % negative
-    im=ea_get_icn(['minus',num2str(Ractive)]);
+    icon=fullfile(options.earoot, 'icons', ['minus',num2str(Ractive),'.png']);
 elseif S.(['Rs',num2str(Ractive)]).case.pol==2 % positive
-    im=ea_get_icn(['plus',num2str(Ractive)]);
+    icon=fullfile(options.earoot, 'icons', ['plus',num2str(Ractive),'.png']);
 end
-set(0,'CurrentFigure',handles.stimfig);
-set(handles.stimfig,'CurrentAxes',handles.RCax);
-
-h=image(im);
-handles.RCax.Toolbar.Visible = 'off';
-set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,'Rcase'});
-axis off;
-axis equal;
+handles.CpolR.ImageSource = icon;
+handles.CpolR.ImageClickedFcn = {@ea_inc_polarity,handles,options,'CpolR'};
 
 % left case:
 if S.(['Ls',num2str(Lactive)]).case.pol==0 % off
-    im=ea_get_icn(['empty',num2str(Lactive)]);
+    icon=fullfile(options.earoot, 'icons', ['empty',num2str(Lactive),'.png']);
 elseif S.(['Ls',num2str(Lactive)]).case.pol==1 % negative
-    im=ea_get_icn(['minus',num2str(Lactive)]);
+    icon=fullfile(options.earoot, 'icons', ['minus',num2str(Lactive),'.png']);
 elseif S.(['Ls',num2str(Lactive)]).case.pol==2 % positive
-    im=ea_get_icn(['plus',num2str(Lactive)]);
+    icon=fullfile(options.earoot, 'icons', ['plus',num2str(Lactive),'.png']);
 end
-set(0,'CurrentFigure',handles.stimfig);
-set(handles.stimfig,'CurrentAxes',handles.LCax);
-
-h=image(im);
-handles.LCax.Toolbar.Visible = 'off';
-set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,'Lcase'});
-axis off;
-axis equal;
+handles.CpolL.ImageSource = icon;
+handles.CpolL.ImageClickedFcn = {@ea_inc_polarity,handles,options,'CpolL'};
 
 %% add label
 
-%set(handles.stimlabel,'String',S.label);
+% set(handles.stimlabel,'String',S.label);
 
-%% check consistency with chosen VAT model.
-%% check consistency with chosen electrode model.
+% check consistency with chosen VAT model.
+% check consistency with chosen electrode model.
 if ~isfield(options,'elspec')
     if isempty(elstruct(actpt).elmodel)
         error('Model is empty. Was the electrode segmentation fully executed in single patient mode?')
@@ -374,11 +339,7 @@ if ~isfield(options,'elspec')
     end
 end
 
-if options.elspec.numel > 8
-    ea_cprintf('CmdWinWarnings', 'Only electrode with less than 8 contacts are fully supported.\n');
-else
-    ea_toggle_contacts(handles, options.elspec.numel);
-end
+ea_toggle_contacts(handles, options.elspec.numel);
 
 %if strcmp(options.elspec.matfname,'boston_vercise_directed')
 %    ea_error('VTA modeling for directed leads is not yet supported.');
@@ -397,8 +358,9 @@ end
 
 %% enable/disable panel based on sides that are present
 is_side_present=arrayfun(@(xside) ~ea_arenopoints4side(elstruct(actpt).trajectory, xside), [1,2]);%First element is R, second is L
-if is_side_present(1)>0%check if R side is present
-    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'on')
+if is_side_present(1)>0 % check if R side is present
+    tab = findobj(handles.stimfig.Children, 'Type', 'uitab', 'Title', 'Right Hemisphere');
+    set(findall(tab, '-property', 'enable'), 'enable', 'on')
     %fix color (ensure they are reloaded correctly)
     handles.Rs1am.BackgroundColor=[1 1 1];%force redraw color
     handles.Rs1am.BackgroundColor=[0.953 0.871 0.733];%orange
@@ -411,8 +373,9 @@ if is_side_present(1)>0%check if R side is present
 else
     set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
 end
-if is_side_present(2)>0%check if L side is present
-    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'on')
+if is_side_present(2)>0 % check if L side is present
+    tab = findobj(handles.stimfig.Children, 'Type', 'uitab', 'Title', 'Left Hemisphere');
+    set(findall(tab, '-property', 'enable'), 'enable', 'on')
     %fix color (ensure they are reloaded correctly)
     handles.Ls1am.BackgroundColor=[1 1 1];%force redraw color
     handles.Ls1am.BackgroundColor=[0.953 0.871 0.733];%orange
@@ -512,62 +475,45 @@ setappdata(handles.stimfig,'S',S);
 
 
 function ea_show_percent(handles,options,side,onoff)
-
 switch side
     case 1
-        sel=0:7;
         sidestr='R';
-        ptval=1;
     case 2
-        sel=8:15;
         sidestr='L';
-        ptval=3;
 end
 
-% Only support up to 8 contacts for now
-if options.elspec.numel<=8
-    sel=sel(1:options.elspec.numel);
-else
-    sel=sel(1:8);
+for k=1:options.elspec.numel
+    set(handles.(['k',num2str(k),'u',sidestr]), 'visible', onoff);
 end
 
-for k=sel
-    set(handles.(['k',num2str(k),'u']),'visible',onoff);
-end
+set(handles.(['Cu', sidestr]),'visible',onoff);
 
-set(handles.([sidestr,'Cu']),'visible',onoff);
-
-set(handles.(['perctext',num2str(ptval)]),'visible',onoff);
-if options.elspec.numel>4
-    set(handles.(['perctext',num2str(ptval+1)]),'visible',onoff);
+for i = 1:ceil(options.elspec.numel/4)
+    set(handles.(['perctext', num2str(i), sidestr]), 'visible', onoff);
 end
 
 
 function ea_toggle_contacts(handles, numel)
-
-if numel == 8
-    status = 'on';
-else
-    status = 'off';
+for k=numel+1:16
+    set(handles.(['k',num2str(k),'uR']), 'visible', 'off');
+    set(handles.(['k',num2str(k),'uL']), 'visible', 'off');
+    set(handles.(['k',num2str(k),'imR']), 'visible', 'off');
+    set(handles.(['k',num2str(k),'imL']), 'visible', 'off');
+    set(handles.(['k',num2str(k),'txtR']),'visible', 'off');
+    set(handles.(['k',num2str(k),'txtL']),'visible', 'off');
+    set(handles.(['k',num2str(k),'polR']),'visible', 'off');
+    set(handles.(['k',num2str(k),'polL']),'visible', 'off');
 end
 
-
-for k=[numel:7,numel+8:15]
-    set(handles.(['k',num2str(k),'u']),'visible',status);
-    set(handles.(['k',num2str(k),'im']),'visible',status);
-    set(handles.(['k',num2str(k),'txt']),'visible',status);
-    handles2hide = [get(handles.(['k',num2str(k),'ax']),'Children')];
-    set(handles2hide,'visible',status)
+for i = ceil(numel/4)+1:4
+    set(handles.(['perctext', num2str(i), 'R']), 'visible', 'off');
+    set(handles.(['perctext', num2str(i), 'L']), 'visible', 'off');
+    set(handles.(['kohmtext', num2str(i), 'R']),'visible', 'off');
+    set(handles.(['kohmtext', num2str(i), 'L']),'visible', 'off');
 end
-
-set(handles.perctext2,'visible',status);
-set(handles.kohmtext2,'visible',status);
-set(handles.perctext4,'visible',status);
-set(handles.kohmtext4,'visible',status);
 
 
 function ea_disable_vas(handles,options)
-
 RL={'R','L'};
 for iside=1:length(options.sides)
     side=options.sides(iside);
@@ -580,7 +526,6 @@ end
 
 
 function ea_enable_vas(handles,options)
-
 RL={'R','L'};
 for iside=1:length(options.sides)
     side=options.sides(iside);
@@ -601,127 +546,113 @@ handles.usLabel_L.Visible = status;
 
 
 function ea_hide_impedance(handles)
-
-for k=0:15
-    set(handles.(['k',num2str(k),'im']), 'Visible', 'off');
+for k=1:16
+    set(handles.(['k', num2str(k), 'imR']), 'Visible', 'off');
+    set(handles.(['k', num2str(k), 'imL']), 'Visible', 'off');
 end
 
 for ohm=1:4
-    set(handles.(['kohmtext',num2str(ohm)]), 'Visible', 'off');
+    set(handles.(['kohmtext', num2str(ohm), 'R']), 'Visible', 'off');
+    set(handles.(['kohmtext', num2str(ohm), 'L']), 'Visible', 'off');
 end
 
 
 function ea_show_impedance(handles)
-
-for k=0:15
-    set(handles.(['k',num2str(k),'im']), 'Visible', 'on');
+for k=1:16
+    set(handles.(['k', num2str(k), 'imR']), 'Visible', 'on');
+    set(handles.(['k', num2str(k), 'imL']), 'Visible', 'on');
 end
 
 for ohm=1:4
-    set(handles.(['kohmtext',num2str(ohm)]), 'Visible', 'on');
+    set(handles.(['kohmtext', num2str(ohm), 'R']), 'Visible', 'on');
+    set(handles.(['kohmtext', num2str(ohm), 'L']), 'Visible', 'on');
 end
 
 
 function S=ea_redistribute_voltage(S,changedobj)
-Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
-Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
-LcontsCase=[Lconts,{'case'}];
-RcontsCase=[Rconts,{'case'}];
+conts = strcat('k', arrayfun(@num2str, 1:S.numel, 'Uni', 0));
+contsCase = [conts, 'case'];
 pulseWidthTextbox = {'pulseWidthTextbox_R', 'pulseWidthTextbox_L'};
+
 if ischar(changedobj) % different polarity on the block
-    switch changedobj
-        case Rconts
-            conts=Rconts;
-            contsCase=RcontsCase;
-            sidec='R';
-            side=1;
-        case Lconts
-            conts=Lconts;
-            contsCase=LcontsCase;
-            sidec='L';
-            side=2;
-        case 'Rcase'
-            conts=Rconts;
-            changedobj='case';
-            contsCase=RcontsCase;
+    if ismember(changedobj, pulseWidthTextbox)
+        return;
+    end
 
-            side=1;
-            sidec='R';
-        case 'Lcase'
-            conts=Lconts;
-            contsCase=LcontsCase;
+    if endsWith(changedobj, 'R')
+        side = 1;
+    elseif endsWith(changedobj, 'L')
+        side = 2;
+    end
+    sidestr = changedobj(end);
 
-            changedobj='case';
-            side=2;
-            sidec='L';
-        case pulseWidthTextbox
-            return;
+    if startsWith(changedobj, 'C', 'IgnoreCase', true)
+        changedobj = 'case';
+    elseif startsWith(changedobj, 'k')
+        changedobj = changedobj(1:end-1);
     end
 
     % check polarity of changed object:
-    polchanged=S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol;
+    polchanged=S.([sidestr,'s',num2str(S.active(side))]).(changedobj).pol;
 
     % check for monopolar models:
     if S.monopolarmodel % these allow only 1 active anode contact per model.
         for c=1:length(conts)
-            S.([sidec,'s',num2str(S.active(side))]).(conts{c}).pol=0;
-            S.([sidec,'s',num2str(S.active(side))]).(conts{c}).perc=0;
+            S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).pol=0;
+            S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).perc=0;
         end
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
-
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).pol=1;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).perc=100;
         return
-
     else
-        %         if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
-        %             for c=1:length(contsCase)
-        %
-        %                 if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
-        %                 else
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=0;
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=0;
-        %                 end
-        %             end
-        %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
-        %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
+        % if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
+        %     for c=1:length(contsCase)
+        %         if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
+        %             S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
+        %             S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
+        %         else
+        %             S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=0;
+        %             S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=0;
         %         end
+        %     end
+        %     S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
+        %     S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
+        % end
     end
 
     if polchanged==0
         % set changed contacts percentage to zero:
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=0;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).perc=0;
     else
         % determine how many other nodes with this polarity exist:
         divby=1;
         contacts={};
-        for con=1:length(conts)
-            if S.([sidec,'s',num2str(S.active(side))]).(conts{con}).pol==polchanged
-                if ~strcmp(conts{con},changedobj)
-                    %voltages{divby}=S.([sidec,'s',num2str(S.active(side))]).(Rconts{con}).perc;
-                    contacts{divby}=conts{con};
+        for c=1:length(conts)
+            if S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).pol==polchanged
+                if ~strcmp(conts{c},changedobj)
+                    %voltages{divby}=S.([sidec,'s',num2str(S.active(side))]).(conts{c}).perc;
+                    contacts{divby}=conts{c};
                     divby=divby+1;
                 end
             end
         end
 
-        if S.([sidec,'s',num2str(S.active(side))]).case.pol==polchanged
+        if S.([sidestr,'s',num2str(S.active(side))]).case.pol==polchanged
             if ~strcmp(changedobj,'case')
                 contacts{divby}='case';
                 divby=divby+1;
             end
         end
-        % add case to calculation.
+        % add case to caCuLlation.
 
         % set changed contacts percentage:
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100/divby;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).perc=100/divby;
 
         % reduce all other contacts percentages:
 
         try divby=divby/length(contacts); end
         for c=1:length(contacts)
-            S.([sidec,'s',num2str(S.active(side))]).(contacts{c}).perc=S.([sidec,'s',num2str(S.active(side))]).(contacts{c}).perc/divby;
+            S.([sidestr,'s',num2str(S.active(side))]).(contacts{c}).perc=S.([sidestr,'s',num2str(S.active(side))]).(contacts{c}).perc/divby;
         end
     end
 
@@ -733,83 +664,70 @@ if ischar(changedobj) % different polarity on the block
     if polchanged % polarization has changed from negative to positive. clean up negatives. or changed from positive to off. clean up positives.
         contacts={};
         cnt=0;
-        for con=1:length(conts)
-            if S.([sidec,'s',num2str(S.active(side))]).(conts{con}).pol==polchanged
-                if ~strcmp(conts{con},changedobj)
+        for c=1:length(conts)
+            if S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).pol==polchanged
+                if ~strcmp(conts{c},changedobj)
                     %voltages{divby}=S.([sidec,'s',num2str(S.active(side))]).(Rconts{con}).perc;
 
                     cnt=cnt+1;
-                    contacts{cnt}=conts{con};
-                    sumpercs=sumpercs+S.([sidec,'s',num2str(S.active(side))]).(conts{con}).perc;
+                    contacts{cnt}=conts{c};
+                    sumpercs=sumpercs+S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).perc;
                 end
             end
         end
-        % add case to calculation:
-        if S.([sidec,'s',num2str(S.active(side))]).case.pol==polchanged
+        % add case to caCuLlation:
+        if S.([sidestr,'s',num2str(S.active(side))]).case.pol==polchanged
             if ~strcmp(changedobj,'case')
                 cnt=cnt+1;
                 contacts{cnt}='case';
-                sumpercs=sumpercs+S.([sidec,'s',num2str(S.active(side))]).case.perc;
+                sumpercs=sumpercs+S.([sidestr,'s',num2str(S.active(side))]).case.perc;
             end
         end
 
         multby=(100/sumpercs);
         if cnt
             for c=1:length(contacts)
-                S.([sidec,'s',num2str(S.active(side))]).(contacts{c}).perc=S.([sidec,'s',num2str(S.active(side))]).(contacts{c}).perc*multby;
+                S.([sidestr,'s',num2str(S.active(side))]).(contacts{c}).perc=S.([sidestr,'s',num2str(S.active(side))]).(contacts{c}).perc*multby;
             end
         end
     end
 
 else % voltage percentage changed
-    changedobj=get(changedobj,'Tag');
-    if ismember(changedobj, {'pulseWidthTextbox_R', 'pulseWidthTextbox_L'})
+    changedobj=get(changedobj, 'Tag');
+    if ismember(changedobj, pulseWidthTextbox)
         return;
     end
-    changedobj=changedobj(1:end-1);
 
-    switch changedobj
-        case Rconts
-            conts=Rconts;
-            sidec='R';
-            side=1;
-        case Lconts
-            conts=Lconts;
-            sidec='L';
-            side=2;
-        case 'RC'
-            conts=Rconts;
-            changedobj='case';
-            side=1;
-            sidec='R';
-        case 'LC'
-            conts=Lconts;
-            changedobj='case';
-            side=2;
-            sidec='L';
+    if endsWith(changedobj, 'R')
+        side = 1;
+    elseif endsWith(changedobj, 'L')
+        side = 2;
     end
+    sidestr = changedobj(end);
+
+    changedobj=changedobj(1:end-1);
 
     % check for monopolar models:
     if S.monopolarmodel % these allow only 1 active anode contact per model.
         for c=1:length(conts)
-            S.([sidec,'s',num2str(S.active(side))]).(conts{c}).pol=0;
-            S.([sidec,'s',num2str(S.active(side))]).(conts{c}).perc=0;
+            S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).pol=0;
+            S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).perc=0;
         end
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).pol=1;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).perc=100;
 
         return
     end
 
     % check polarity of changed object:
     try
-        polchanged=S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol;
+        polchanged=S.([sidestr,'s',num2str(S.active(side))]).(changedobj).pol;
     catch
         keyboard
     end
 
     if polchanged==0 % set changed contacts polarity to negative
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).pol=1;
         polchanged=1;
     end
 
@@ -817,18 +735,18 @@ else % voltage percentage changed
     divby=1;
     contacts={};
     sumpercent=0;
-    for con=1:length(conts)
-        if S.([sidec,'s',num2str(S.active(side))]).(conts{con}).pol==polchanged
-            if ~strcmp(conts{con},changedobj)
-                sumpercent=sumpercent+S.([sidec,'s',num2str(S.active(side))]).(conts{con}).perc;
-                contacts{divby}=conts{con};
+    for c=1:length(conts)
+        if S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).pol==polchanged
+            if ~strcmp(conts{c},changedobj)
+                sumpercent=sumpercent+S.([sidestr,'s',num2str(S.active(side))]).(conts{c}).perc;
+                contacts{divby}=conts{c};
                 divby=divby+1;
             end
         end
     end
 
-    % add case to calculation.
-    if S.([sidec,'s',num2str(S.active(side))]).case.pol==polchanged
+    % add case to caCuLlation.
+    if S.([sidestr,'s',num2str(S.active(side))]).case.pol==polchanged
         if ~strcmp(changedobj,'case')
             contacts{divby}='case';
             divby=divby+1;
@@ -836,14 +754,14 @@ else % voltage percentage changed
     end
 
     if divby==1 % only one contact -> set to 100 percent.
-        S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
+        S.([sidestr,'s',num2str(S.active(side))]).(changedobj).perc=100;
     end
 
     % reduce all other contacts percentages:
-    divby=sumpercent/(100-S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc);
+    divby=sumpercent/(100-S.([sidestr,'s',num2str(S.active(side))]).(changedobj).perc);
 
     for c=1:length(contacts)
-        S.([sidec,'s',num2str(S.active(side))]).(contacts{c}).perc=S.([sidec,'s',num2str(S.active(side))]).(contacts{c}).perc/divby;
+        S.([sidestr,'s',num2str(S.active(side))]).(contacts{c}).perc=S.([sidestr,'s',num2str(S.active(side))]).(contacts{c}).perc/divby;
     end
 end
 
@@ -868,37 +786,27 @@ else
 end
 
 
-function ea_inc_polarity(h,h2,handles,options,ID)
+function ea_inc_polarity(~,~,handles,options,ID)
 
 S=getappdata(handles.stimfig,'S');
 
-switch ID
-    case {'k0','k1','k2','k3','k4','k5','k6','k7'}
-        side=1;
-        sidec='R';
-        gID=ID;
-        ks=0:7;
-    case {'k8','k9','k10','k11','k12','k13','k14','k15'}
-        side=2;
-        sidec='L';
-        gID=ID;
-        ks=8:15;
-    case 'Rcase'
-        gID='case';
-        side=1;
-        sidec='R';
-        ks=0:7;
-    case 'Lcase'
-        gID='case';
-        side=2;
-        sidec='L';
-        ks=8:15;
+if endsWith(ID, 'R')
+    side = 1;
+elseif endsWith(ID, 'L')
+    side = 2;
+end
+sidestr = ID(end);
+
+if startsWith(ID, 'C', 'IgnoreCase', true)
+    gID = 'case';
+elseif startsWith(ID, 'k')
+    gID = ID(1:end-1);
 end
 
 cycles=[0,1,2];
 
 try
-    oldval=S.([sidec,'s',num2str(S.active(side))]).(gID).pol;
+    oldval=S.([sidestr,'s',num2str(S.active(side))]).(gID).pol;
 catch
     keyboard
 end
@@ -910,23 +818,24 @@ end
 
 newval=cycles(newval);
 
-S.([sidec,'s',num2str(S.active(side))]).(gID).pol=newval;
+S.([sidestr,'s',num2str(S.active(side))]).(gID).pol=newval;
 
 % now check if any other contact is left with the old polarity
 
-anycontactpositive=0; anycontactnegative=0;
-for k=ks
-    if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==1
+anycontactpositive=0;
+anycontactnegative=0;
+for k=1:options.elspec.numel
+    if S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==1
         anycontactnegative=1;
-    elseif S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+    elseif S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
         anycontactpositive=1;
     end
 end
 
 % also check case
-if S.([sidec,'s',num2str(S.active(side))]).case.pol==1
+if S.([sidestr,'s',num2str(S.active(side))]).case.pol==1
     anycontactnegative=1;
-elseif S.([sidec,'s',num2str(S.active(side))]).case.pol==2
+elseif S.([sidestr,'s',num2str(S.active(side))]).case.pol==2
     anycontactpositive=1;
 end
 
