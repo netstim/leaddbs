@@ -13,7 +13,7 @@ if nargin>=5
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
-    stimname=varargin{5};    
+    stimname=varargin{5};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Dembek 2017';
@@ -29,10 +29,8 @@ pw = options.prefs.machine.vatsettings.dembek_pw;
 switch side
     case 1
         sidec='R';
-        cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
     case 2
         sidec='L';
-        cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
 [xx,yy,zz]=psphere(100);
@@ -50,10 +48,10 @@ if ~isfield(S, 'sources')
 end
 for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
-    
-    for cnt=1:length(cnts)
-        U(cnt)=stimsource.(cnts{cnt}).perc; 
-        Im(cnt)=stimsource.(cnts{cnt}).imp; 
+
+    for cnt=1:S.numel
+        U(cnt)=stimsource.(['k',num2str(cnt)]).perc;
+        Im(cnt)=stimsource.(['k',num2str(cnt)]).imp;
     end
     Acnt=find(U>0);
     if length(Acnt)>1
@@ -62,16 +60,16 @@ for source=S.sources
     Im=Im(U>0);
     Im=Im*1000; % kohm -> ohm
     U=stimsource.amp;
-    %  actual function call  
+    %  actual function call
     radius(source)=dembek17_radius(U,Im, ethresh, pw, ethresh_pw);
 
     volume(source)=(4/3)*pi*radius(source)^3;
-    
+
     VAT{source}=[xx*radius(source)+coords{side}(Acnt,1);...
         yy*radius(source)+coords{side}(Acnt,2);...
         zz*radius(source)+coords{side}(Acnt,3)]';
     K{source}=convhulln(VAT{source}+randn(size(VAT{source}))*0.000001); % create triangulation.
-    
+
     for dim=1:3
         ivx(source,dim,:)=[min(VAT{source}(:,dim)),max(VAT{source}(:,dim))];
     end
@@ -222,65 +220,65 @@ s = 1;
 warning off
 
 while not_done
-    
+
     for i = 1:n
-        
+
         %Calculate the i,j,k vectors for the direction of the repulsive forces.
         ii = x(i) - x;
         jj = y(i) - y;
         kk = z(i) - z;
-        
+
         rm_new(i,:) = sqrt(ii.^2 + jj.^2 + kk.^2);
-        
+
         ii = ii./rm_new(i,:);
         jj = jj./rm_new(i,:);
         kk = kk./rm_new(i,:);
-        
+
         %Take care of the self terms.
         ii(i) = 0;
         jj(i) = 0;
         kk(i) = 0;
-        
+
         %Use a 1/r^2 repulsive force, but add 0.01 to the denominator to
         %avoid a 0 * Inf below. The self term automatically disappears since
         %the ii,jj,kk vectors were set to zero for self terms.
         f = 1./(0.01 + rm_new(i,:).^2);
-        
+
         %Sum the forces.
         fi = sum(f.*ii);
         fj = sum(f.*jj);
         fk = sum(f.*kk);
-        
+
         %Find magnitude
         fn = sqrt(fi.^2 + fj.^2 + fk.^2);
-        
+
         %Find the unit direction of repulsion.
         fi = fi/fn;
         fj = fj/fn;
         fk = fk/fn;
-        
+
         %Step a distance s in the direciton of repulsion
         x(i) = x(i) + s.*fi;
         y(i) = y(i) + s.*fj;
         z(i) = z(i) + s.*fk;
-        
+
         %Scale the coordinates back down to the unit sphere.
         r = sqrt(x(i).^2 + y(i).^2 + z(i).^2);
-        
+
         x(i) = x(i)/r;
         y(i) = y(i)/r;
         z(i) = z(i)/r;
-        
+
     end
-    
-    
+
+
     %Check convergence
     diff = abs(rm_new - rm_old);
-    
+
     not_done = any(diff(:) > 0.01);
-    
+
     rm_old = rm_new;
-    
+
 end %while
 
 %Find the smallest distance between neighboring points. To do this
