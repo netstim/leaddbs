@@ -65,7 +65,7 @@ if (current_control(1) == 0 && current_control(2) == 0) || (isnan(current_contro
                     Case_grounding(i) = 1;
                 end
             end
-            
+
         end
     end
 else
@@ -82,10 +82,8 @@ for i = 1:eleNum
     switch i
         case 1
             sideCode = 'R';
-            cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
         case 2
             sideCode = 'L';
-            cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
     end
 
     if ~isnan(source(i))
@@ -104,21 +102,21 @@ for i = 1:eleNum
         for cnt = 1:conNum
             if current_control(i) == 1  % only one source for CC
                 if S.activecontacts{i}(cnt)
-                    switch stimSource.(cntlabel{cnt}).pol
+                    switch stimSource.(['k',num2str(cnt)]).pol
                         case 1 % Negative, cathode
-                            Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            Phi_vector(i, cnt) = -amp(i)*stimSource.(['k',num2str(cnt)]).perc/100;
                         case 2 % Postive, anode
-                            Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            Phi_vector(i, cnt) = amp(i)*stimSource.(['k',num2str(cnt)]).perc/100;
                     end
                 end
             else
                 for j=1:numSources  % go over sources
                     v_source = S.([sideCode, 's', num2str(j)]);
-                    if v_source.(cntlabel{cnt}).perc    % the contact is active for this source
+                    if v_source.(['k',num2str(cnt)]).perc    % the contact is active for this source
                         if isnan(Phi_vector(i, cnt))
                             Phi_vector(i, cnt) = 0.0;  % initialize
                         end
-                        switch v_source.(cntlabel{cnt}).pol  % sanity check needed: same polarity for a contact over all sources
+                        switch v_source.(['k',num2str(cnt)]).pol  % sanity check needed: same polarity for a contact over all sources
                             case 1
                                 Phi_vector(i, cnt) = Phi_vector(i, cnt) - amp(i,j);
                             case 2
