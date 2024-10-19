@@ -5,7 +5,8 @@ preexist = 0;
 if nargin == 1
     if ischar(varargin{1})
         label = varargin{1};
-        options = struct;
+        options.elspec.numel = 4;
+        ea_cprintf('CmdWinWarnings', 'Missing number of contacts (options.elspec.numel) when initializing S! Set to 4 by default.\n');
     elseif isstruct(varargin{1})
         options = varargin{1};
         [label, preexist] = ea_detstimname(options);
@@ -59,7 +60,7 @@ end
 
 % right sources
 for source=1:4
-    for k=0:7
+    for k=1:options.elspec.numel
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).perc=0;
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
@@ -73,7 +74,7 @@ end
 
 % left sources
 for source=1:4
-    for k=8:15
+    for k=1:options.elspec.numel
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).perc=0;
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
@@ -89,6 +90,8 @@ S.active = [1,1];
 S.model = 'SimBio/FieldTrip (see Horn 2017)';
 S.monopolarmodel = 0;
 S.amplitude = {[0,0,0,0],[0,0,0,0]};
+S.numel = options.elspec.numel;
 S = ea_activecontacts(S);
 S.sources = 1:4;
 S.volume = [];
+S.ver = '2.0'; % refined version of S

@@ -162,10 +162,8 @@ for hemi = 1:2
     % 1 - right hemisphere, 2 - left hemisphere
     if hemi == 1
         prefix = 'Rs';
-        contact_offset = -1;
     else
         prefix = 'Ls';
-        contact_offset = 7;
     end
 
     % set amplitudes (again)
@@ -185,8 +183,8 @@ for hemi = 1:2
 
     % set contacts
     for contactNr = 1:length(contact_stim_settings{1, hemi}.contact_polarity)
-        output.([prefix, num2str(1)]).(['k', num2str(contactNr + contact_offset)]).pol = contact_stim_settings{1, hemi}.contact_polarity{contactNr, 1};
-        output.([prefix, num2str(1)]).(['k', num2str(contactNr + contact_offset)]).perc = contact_stim_settings{1, hemi}.contact_percentage{contactNr, 1};
+        output.([prefix, num2str(1)]).(['k', num2str(contactNr)]).pol = contact_stim_settings{1, hemi}.contact_polarity{contactNr, 1};
+        output.([prefix, num2str(1)]).(['k', num2str(contactNr)]).perc = contact_stim_settings{1, hemi}.contact_percentage{contactNr, 1};
     end
 end
 
@@ -199,19 +197,17 @@ for hemi = 1:2
     % 1 - right hemisphere, 2 - left hemisphere
     if hemi == 1
         prefix = 'Rs';
-        contact_offset = -1;
     else
         prefix = 'Ls';
-        contact_offset = 7;
     end
 
     % find out how many contacts have positive and negative contacts ( 1- negative, 2 - positive)
     nr_pos_contacts = 0;
     nr_neg_contacts = 0;
-    for contactNr = 1:8
-        if S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 1
+    for contactNr = 1:S.numel
+        if S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 1
             nr_neg_contacts = nr_neg_contacts + 1;
-        elseif S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 2
+        elseif S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 2
             nr_pos_contacts = nr_pos_contacts + 1;
         end
     end
@@ -222,7 +218,7 @@ for hemi = 1:2
     elseif S.([prefix, '1']).case.pol == 2
         nr_pos_contacts = nr_pos_contacts + 1;
     end
-    
+
     % small sanity check if no positive/negative contacts have been found
     if nr_neg_contacts == 0
         fprintf('No negative contacts found, please assign negative contacts manually after import.')
@@ -233,11 +229,11 @@ for hemi = 1:2
     end
 
     % now go through them again and assign the correct percentage
-    for contactNr = 1:8
-        if S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 1
-            S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).perc = 100 / nr_neg_contacts;
-        elseif S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 2
-            S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).perc = 100 / nr_pos_contacts;
+    for contactNr = 1:S.numel
+        if S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 1
+            S.([prefix, '1']).(['k', num2str(contactNr)]).perc = 100 / nr_neg_contacts;
+        elseif S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 2
+            S.([prefix, '1']).(['k', num2str(contactNr)]).perc = 100 / nr_pos_contacts;
         end
     end
 
