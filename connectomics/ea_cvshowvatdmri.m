@@ -34,7 +34,7 @@ subPrefix = ['sub-', options.subj.subjId];
 hemiTag = regexprep(usevat, {'right', 'left'}, {'R', 'L'});
 
 try
-    load([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,subPrefix,'_desc-stimparameters.mat'], 'S');
+    S = ea_loadstimulation([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,subPrefix,'_desc-stimparameters.mat']);
 catch
     ea_error(['Could not find stimulation parameters for ',directory,ea_nt(options),vsname,'.']);
 end

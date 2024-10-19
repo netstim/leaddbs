@@ -19,7 +19,7 @@ for sub=1:numPatient
         FilesExist = ones(numPatient*2,2);
         ea_cprintf('CmdWinWarnings', 'Stimulation parameters not found! Skip checking stimulation/vta existence.\n');
     else
-        load(stimParams,'S');
+        S = ea_loadstimulation(stimParams);
 
         for side = 1:2
             % if no stimulation, we do not expect the file to exist
@@ -27,7 +27,7 @@ for sub=1:numPatient
             if all(S.amplitude{1,side} == 0)
                 FilesExist(sub,side) = 1;
                 vatlist{sub,side} = 'skip';
-    
+
                 % also mark mirrored
                 if side == 1
                     vatlist{sub+numPatient,2} = 'skip';
@@ -36,10 +36,10 @@ for sub=1:numPatient
                     vatlist{sub+numPatient,1} = 'skip';
                     FilesExist(sub+numPatient,1) = 1;
                 end
-    
+
                 disp(subj_tag)
                 disp(side)
-    
+
                 continue
             else
                 if side == 1
@@ -47,7 +47,7 @@ for sub=1:numPatient
                 else
                     BIDS_side = 'L';
                 end
-    
+
                 try
                     vatlist(sub,side) = ea_regexpdir(stimFolder, ['sim-efield_model-',modelLabel,'_hemi-',BIDS_side,'.nii'], 0);
                     FilesExist(sub,side)=1;
