@@ -3,11 +3,11 @@ function S = ea_initializeS(varargin)
 preexist = 0;
 
 if nargin == 1
-    if ischar(varargin{1})
+    if ischar(varargin{1}) % only label provided
         label = varargin{1};
         options.elspec.numel = 4;
-        ea_cprintf('CmdWinWarnings', 'Missing number of contacts (options.elspec.numel) when initializing S! Set to 4 by default.\n');
-    elseif isstruct(varargin{1})
+        ea_cprintf('CmdWinWarnings', 'Missing number of contacts (options.elspec.numel) when initializing "S"! Set to 4 by default.\n');
+    elseif isstruct(varargin{1}) % 'options' provided
         options = varargin{1};
         [label, preexist] = ea_detstimname(options);
     end
@@ -37,6 +37,14 @@ elseif nargin > 1
             end
         end
     end
+end
+
+% options.elspec could be missing when switching simulation model in LeadGroup 
+if ~isfield(options, 'elspec') && strcmp(options.leadprod, 'group')
+    elstruct = getappdata(handles.stimfig, 'elstruct');
+    actpt = getappdata(handles.stimfig, 'actpt');
+    options.elmodel = elstruct(actpt).elmodel;
+    options = ea_resolve_elspec(options);
 end
 
 if isfield(options, 'UsePreExistingStim')
