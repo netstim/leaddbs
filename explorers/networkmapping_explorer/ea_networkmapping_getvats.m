@@ -21,8 +21,8 @@ for sub=1:numPatient
     % Original VAT E-field
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
     stimParams = [stimFolder, filesep, subPrefix, 'desc-stimparameters.mat'];
-    if ~isfile(stimParams)
-        load(stimParams{1}, 'S');
+    if isfile(stimParams)
+        load(stimParams, 'S');
         modelLabel = ea_simModel2Label(S.model);
     else
         modelLabel = 'simbio';
