@@ -358,9 +358,9 @@ end
 
 %% enable/disable panel based on sides that are present
 is_side_present=arrayfun(@(xside) ~ea_arenopoints4side(elstruct(actpt).trajectory, xside), [1,2]);%First element is R, second is L
+tabSide1 = findobj(handles.stimfig.Children, 'Type', 'uitab', 'Title', 'Right Hemisphere');
 if is_side_present(1)>0 % check if R side is present
-    tab = findobj(handles.stimfig.Children, 'Type', 'uitab', 'Title', 'Right Hemisphere');
-    set(findall(tab, '-property', 'enable'), 'enable', 'on')
+    set(findall(tabSide1, '-property', 'enable'), 'enable', 'on')
     %fix color (ensure they are reloaded correctly)
     handles.Rs1am.BackgroundColor=[1 1 1];%force redraw color
     handles.Rs1am.BackgroundColor=[0.953 0.871 0.733];%orange
@@ -371,11 +371,12 @@ if is_side_present(1)>0 % check if R side is present
     handles.Rs4am.BackgroundColor=[1 1 1];%force redraw color
     handles.Rs4am.BackgroundColor=[0.757 0.867 0.776];%green
 else
-    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
+    set(findall(tabSide1, '-property', 'enable'), 'enable', 'off')
 end
+
+tabSide2 = findobj(handles.stimfig.Children, 'Type', 'uitab', 'Title', 'Left Hemisphere');
 if is_side_present(2)>0 % check if L side is present
-    tab = findobj(handles.stimfig.Children, 'Type', 'uitab', 'Title', 'Left Hemisphere');
-    set(findall(tab, '-property', 'enable'), 'enable', 'on')
+    set(findall(tabSide2, '-property', 'enable'), 'enable', 'on')
     %fix color (ensure they are reloaded correctly)
     handles.Ls1am.BackgroundColor=[1 1 1];%force redraw color
     handles.Ls1am.BackgroundColor=[0.953 0.871 0.733];%orange
@@ -386,7 +387,7 @@ if is_side_present(2)>0 % check if L side is present
     handles.Ls4am.BackgroundColor=[1 1 1];%force redraw color
     handles.Ls4am.BackgroundColor=[0.757 0.867 0.776];%green
 else
-    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
+    set(findall(tabSide2, '-property', 'enable'), 'enable', 'off')
 end
 
 % if contains(model, 'OSS-DBS') && vatsettings.butenko_calcPAM
