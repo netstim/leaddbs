@@ -1,17 +1,18 @@
-function S = ea_checkStimParams(S)
+function output = ea_checkStimParams(stimFile)
 % Check if "S" is compatible with the latest format. Fix when necessary.
+%
+% Input can be stimparameters file or group analysis file.
+% Output will be "S" or "M" (with "M.S" updated).
 
 updated = 0;
 
-if isfile(S)
-    stimFile = GetFullPath(S);
-    var = who('-file', stimFile);
-    if ismember('M', var)
-        load(stimFile, 'M');
-        S = M.S;
-    elseif ismember('S', var)
-        load(stimFile, 'S');
-    end
+stimFile = GetFullPath(stimFile);
+vars = who('-file', stimFile);
+if ismember('M', vars)
+    load(stimFile, 'M');
+    S = M.S;
+elseif ismember('S', vars)
+    load(stimFile, 'S');
 end
 
 if ~isfield(S, 'sources')
@@ -57,13 +58,20 @@ end
 if ~isfield(S, 'ver')
     % Further fix contact field
     S = arrayfun(@adaptContactField, S);
+
     [S.ver] = deal('2.0');
     updated = 1;
 end
 
-if updated && exist('filePath', 'var')
+if exist('M', 'var')
+    M.S = S;
+    output = M;
+else
+    output = S;
+end
+
+if updated
     if exist('M', 'var')
-        M.S = S;
         save(stimFile, 'M');
     else
         save(stimFile, 'S');
