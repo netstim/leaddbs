@@ -269,7 +269,7 @@ if contains(model, 'OSS-DBS')
     handles.pulseWidthTextbox_L.String = num2str(S.(['Ls',num2str(S.active(2))]).pulseWidth);
 end
 
-%% model to handles: Axes objects:
+%% model to handles: polarity toggles
 for k=1:S.numel
     if S.(['Rs',num2str(Ractive)]).(['k',num2str(k)]).pol==0 % off
         icon=fullfile(options.earoot, 'icons', ['empty',num2str(Ractive),'.png']);
@@ -339,21 +339,21 @@ if ~isfield(options,'elspec')
     end
 end
 
-ea_toggle_contacts(handles, options.elspec.numel);
+ea_toggle_contacts(handles, S.numel);
 
 %if strcmp(options.elspec.matfname,'boston_vercise_directed')
 %    ea_error('VTA modeling for directed leads is not yet supported.');
 %end
 
 if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
-    ea_show_percent(handles,options,1,'off'); % right hemisphere
+    ea_show_percent(handles,1,'off'); % right hemisphere
 else % Ampere
-    ea_show_percent(handles,options,1,'on'); % right hemisphere
+    ea_show_percent(handles,1,'on'); % right hemisphere
 end
 if get(handles.(['Ls',num2str(Ractive),'va']),'Value')==1 % Volt
-    ea_show_percent(handles,options,2,'off'); % left hemisphere
+    ea_show_percent(handles,2,'off'); % left hemisphere
 else % Ampere
-    ea_show_percent(handles,options,2,'on'); % left hemisphere
+    ea_show_percent(handles,2,'on'); % left hemisphere
 end
 
 %% enable/disable panel based on sides that are present
@@ -475,7 +475,8 @@ ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
 
 
-function ea_show_percent(handles,options,side,onoff)
+function ea_show_percent(handles,side,onoff)
+S = getappdata(handles.stimfig, 'S');
 switch side
     case 1
         sidestr='R';
@@ -483,18 +484,29 @@ switch side
         sidestr='L';
 end
 
-for k=1:options.elspec.numel
+for k=1:S.numel
     set(handles.(['k',num2str(k),'u',sidestr]), 'visible', onoff);
 end
 
 set(handles.(['Cu', sidestr]),'visible',onoff);
 
-for i = 1:ceil(options.elspec.numel/4)
+for i = 1:ceil(S.numel/4)
     set(handles.(['perctext', num2str(i), sidestr]), 'visible', onoff);
 end
 
 
 function ea_toggle_contacts(handles, numel)
+for k=1:numel
+    set(handles.(['k',num2str(k),'uR']), 'visible', 'on');
+    set(handles.(['k',num2str(k),'uL']), 'visible', 'on');
+    set(handles.(['k',num2str(k),'imR']), 'visible', 'on');
+    set(handles.(['k',num2str(k),'imL']), 'visible', 'on');
+    set(handles.(['k',num2str(k),'txtR']),'visible', 'on');
+    set(handles.(['k',num2str(k),'txtL']),'visible', 'on');
+    set(handles.(['k',num2str(k),'polR']),'visible', 'on');
+    set(handles.(['k',num2str(k),'polL']),'visible', 'on');
+end
+
 for k=numel+1:16
     set(handles.(['k',num2str(k),'uR']), 'visible', 'off');
     set(handles.(['k',num2str(k),'uL']), 'visible', 'off');
@@ -504,6 +516,13 @@ for k=numel+1:16
     set(handles.(['k',num2str(k),'txtL']),'visible', 'off');
     set(handles.(['k',num2str(k),'polR']),'visible', 'off');
     set(handles.(['k',num2str(k),'polL']),'visible', 'off');
+end
+
+for i = 1:ceil(numel/4)
+    set(handles.(['perctext', num2str(i), 'R']), 'visible', 'on');
+    set(handles.(['perctext', num2str(i), 'L']), 'visible', 'on');
+    set(handles.(['kohmtext', num2str(i), 'R']),'visible', 'on');
+    set(handles.(['kohmtext', num2str(i), 'L']),'visible', 'on');
 end
 
 for i = ceil(numel/4)+1:4
@@ -559,13 +578,13 @@ end
 
 
 function ea_show_impedance(handles)
-options = getappdata(handles.stimfig, 'options');
-for k=1:options.elspec.numel
+S = getappdata(handles.stimfig, 'S');
+for k=1:S.numel
     set(handles.(['k', num2str(k), 'imR']), 'Visible', 'on');
     set(handles.(['k', num2str(k), 'imL']), 'Visible', 'on');
 end
 
-for ohm=1:ceil(options.elspec.numel/4)
+for ohm=1:ceil(S.numel/4)
     set(handles.(['kohmtext', num2str(ohm), 'R']), 'Visible', 'on');
     set(handles.(['kohmtext', num2str(ohm), 'L']), 'Visible', 'on');
 end
@@ -826,7 +845,7 @@ S.([sidestr,'s',num2str(S.active(side))]).(gID).pol=newval;
 
 anycontactpositive=0;
 anycontactnegative=0;
-for k=1:options.elspec.numel
+for k=1:S.numel
     if S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==1
         anycontactnegative=1;
     elseif S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
