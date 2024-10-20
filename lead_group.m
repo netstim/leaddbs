@@ -359,13 +359,8 @@ else
                 M.S(end+1:end+length(folders)) = tS;
             catch ME
                 if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
-                    if ~isfield(M.S, 'sources')
-                        [M.S.sources] = deal(1:4);
-                    end
-                    if ~isfield(M.S, 'volume')
-                        [M.S.volume] = deal([]);
-                    end
-                    M.S(end+1:end+length(folders)) = tS;
+                    diffFields = strjoin(setdiff(fieldnames(M.S), fieldnames(tS))', ', ');
+                    ea_error(sprintf('Incompatibile S fields found: %s.\n', diffFields), showdlg=0, simpleStack=1);
                 end
             end
         end
@@ -544,13 +539,8 @@ else
         M.S(end+1:end+length(folders)) = tS;
     catch ME
         if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
-            if ~isfield(M.S, 'sources')
-                [M.S.sources] = deal(1:4);
-            end
-            if ~isfield(M.S, 'volume')
-                [M.S.volume] = deal([]);
-            end
-            M.S(end+1:end+length(folders)) = tS;
+            diffFields = strjoin(setdiff(fieldnames(M.S), fieldnames(tS))', ', ');
+            ea_error(sprintf('Incompatibile S fields found: %s.\n', diffFields), showdlg=0, simpleStack=1);
         end
     end
 end
