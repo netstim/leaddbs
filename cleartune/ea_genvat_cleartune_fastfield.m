@@ -11,10 +11,8 @@ setappdata(resultfig,'elstruct',elstruct);
 switch side
     case 1
         sidec='R';
-        cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
     case 2
         sidec='L';
-        cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
 if ~isfield(S, 'sources')
@@ -29,10 +27,10 @@ for source=S.sources
     amp1 = stimsource.amp;
     if amp1>0
         count1=1;
-        for cnt=1:length(cnts)
-            perc(cnt) = stimsource.(cnts{cnt}).perc;
+        for cnt=1:S.numel
+            perc(cnt) = stimsource.(['k',num2str(cnt)]).perc;
             if perc(cnt)>0
-                Im(count1)=stimsource.(cnts{cnt}).imp;
+                Im(count1)=stimsource.(['k',num2str(cnt)]).imp;
                 count1=count1+1;
             end
         end
@@ -87,4 +85,4 @@ switch side
 end
 
 Vvate.img = Efield; % permute(eeg,[2,1,3]);
-%ea_write_nii(Vvate); 
+%ea_write_nii(Vvate);

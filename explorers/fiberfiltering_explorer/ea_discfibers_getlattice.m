@@ -13,10 +13,9 @@ for sub=1:numPatient
 
     % we load stim parameters and check for each side if there was a stimulation
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(obj.native), 'gs_', obj.M.guid];
-    load([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'],'S');
-    
+    S = ea_loadstimulation([stimFolder, filesep, subj_tag, '_desc-stimparameters.mat']);
+
     for side = 1:2
-    
         % if no stimulation, we do not expect the file to exist
         % so no re-simulation is needed
         if all(S.amplitude{1,side} == 0)
