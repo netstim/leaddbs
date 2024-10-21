@@ -1,11 +1,11 @@
 function [numDICOM, fileList, isCompressed] = ea_dcmquery(input, queryOption)
-% Check the number of DICOM file(s) in the specified folder/zip
+% Check the number of DICOM file(s) in the specified folder
 %
 % queryOption can be 'y' (only show number of DICOMs found) or 'l'(show
 % number of DICOMs found and list of DICOMs)
 
 arguments
-    input {mustBeFolderOrZip}
+    input {mustBeFolder}
     queryOption {mustBeMember(queryOption, {'y', 'l'})} = 'y'
 end
 
@@ -33,13 +33,4 @@ else
     if contains(cmdout, 'Decompression', 'IgnoreCase', true)
         isCompressed = true;
     end
-end
-
-
-function mustBeFolderOrZip(input)
-input = GetFullPath(input);
-if ~isfolder(input) && ~(isfile(input) && endsWith(input, 'zip'))
-    eidType = 'mustBeFolderOrZip:notFolderOrZip';
-    msgType = 'Input must be a folder or a zip file.';
-    error(eidType,msgType)
 end
