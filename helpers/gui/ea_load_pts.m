@@ -446,6 +446,7 @@ if ea_dcmquery(inputFolder) > 0
     end
 end
 
+
 function subjId = validateSubjId(subjId)
 if ~isempty(regexp(subjId, '[\W_]', 'once'))
     subjId = regexprep(subjId, '[\W_]', '');
