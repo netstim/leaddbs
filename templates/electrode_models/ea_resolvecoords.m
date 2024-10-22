@@ -76,7 +76,7 @@ for side=1:length(markers) %valid for unilateral support
 
         offset = electrode.head_position(3);
         trajvector{side}=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
-        trajectory{side}=[markers(side).head-trajvector{side}*5;markers(side).head+trajvector{side}*25];
+        trajectory{side}=[markers(side).head-trajvector{side}*5;coords{side}(end,:)+trajvector{side}*5];
         trajectory{side}=[linspace(trajectory{side}(1,1),trajectory{side}(2,1),50)',...
             linspace(trajectory{side}(1,2),trajectory{side}(2,2),50)',...
             linspace(trajectory{side}(1,3),trajectory{side}(2,3),50)'];
