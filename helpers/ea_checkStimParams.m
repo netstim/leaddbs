@@ -15,6 +15,16 @@ elseif ismember('S', vars)
     load(stimFile, 'S');
 end
 
+% Return and do not patch fields when initialzing S
+if isempty(S)
+    if exist('M', 'var')
+        output = M;
+    else
+        output = S;
+    end
+    return;
+end
+
 if ~isfield(S, 'sources')
     [S.sources] = deal(1:4);
     updated = 1;
