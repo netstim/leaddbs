@@ -610,7 +610,7 @@ if ischar(changedobj) % different polarity on the block
     if startsWith(changedobj, 'C', 'IgnoreCase', true)
         changedobj = 'case';
     elseif startsWith(changedobj, 'k')
-        changedobj = changedobj(1:end-1);
+        changedobj = regexp(changedobj, '^k\d+', 'match', 'once');
     end
 
     % check polarity of changed object:
@@ -726,7 +726,11 @@ else % voltage percentage changed
     end
     sidestr = changedobj(end);
 
-    changedobj=changedobj(1:end-1);
+    if startsWith(changedobj, 'C', 'IgnoreCase', true)
+        changedobj = 'case';
+    elseif startsWith(changedobj, 'k')
+        changedobj = regexp(changedobj, '^k\d+', 'match', 'once');
+    end
 
     % check for monopolar models:
     if S.monopolarmodel % these allow only 1 active anode contact per model.
