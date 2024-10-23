@@ -76,7 +76,7 @@ for source=1:4
     S.(['Rs',num2str(source)]).case.perc = 100;
     S.(['Rs',num2str(source)]).case.pol = 2;
     S.(['Rs',num2str(source)]).amp = 0;
-    S.(['Rs',num2str(source)]).va = 1;
+    S.(['Rs',num2str(source)]).va = 2;
     S.(['Rs',num2str(source)]).pulseWidth = 60;
 end
 
@@ -90,7 +90,7 @@ for source=1:4
     S.(['Ls',num2str(source)]).case.perc = 100;
     S.(['Ls',num2str(source)]).case.pol = 2;
     S.(['Ls',num2str(source)]).amp = 0;
-    S.(['Ls',num2str(source)]).va = 1;
+    S.(['Ls',num2str(source)]).va = 2;
     S.(['Ls',num2str(source)]).pulseWidth = 60;
 end
 
