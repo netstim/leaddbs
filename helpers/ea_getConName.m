@@ -9,16 +9,16 @@ end
 if ischar(elmodel) % Lead model specified
     options.elmodel = elmodel;
     options = ea_resolve_elspec(options);
-    conNum = options.elspec.numel;
+    conNum = options.elspec.numContacts;
 elseif isstruct(elmodel)
     if isfield(elmodel, 'elspec') % 'options' specified
         options = elmodel;
-    elseif isfield(elmodel, 'numel') %  'elspec' specified
+    elseif isfield(elmodel, 'numContacts') %  'elspec' specified
         options.elmodel = elmodel.elmodel;
         options.elspec = elmodel;
     end
     elmodel = options.elspec.elmodel;
-    conNum = options.elspec.numel;
+    conNum = options.elspec.numContacts;
 end
 
 switch side

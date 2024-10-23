@@ -77,13 +77,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=0.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Medtronic 3387'
         elspec.matfname='medtronic_3387';
@@ -96,13 +96,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Medtronic 3391'
         elspec.matfname='medtronic_3391';
@@ -115,13 +115,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=4;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Medtronic B33005'
         elspec.matfname='medtronic_b33005';
@@ -134,7 +134,7 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=0.9;
         elspec.contact_spacing=0.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.markerpos = 14.4;
         elspec.markerlen = 2.3;
@@ -155,7 +155,7 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=0.9;
         elspec.contact_spacing=1.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.markerpos = 17.4;
         elspec.markerlen = 2.3;
@@ -176,13 +176,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.1;
         elspec.contact_spacing=0.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K16 (R)','K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Boston Scientific Vercise Directed'
         elspec.matfname='boston_vercise_directed';
@@ -195,7 +195,7 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=1.5;
         elspec.contact_spacing=0.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=1;
         elspec.markerpos = 11;
         elspec.markerlen = 3;
@@ -216,7 +216,7 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=1.1;
         elspec.contact_spacing=0.5;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=0;
         elspec.markerpos = 20;
         elspec.markerlen = 3;
@@ -238,7 +238,7 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=1.1;
         elspec.contact_spacing=0.5;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=0;
         elspec.markerpos = 16;
         elspec.markerlen = 3;
@@ -260,13 +260,13 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=3.0;
         elspec.contact_spacing=0.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=1;
         elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K1 (L)','K2 (L)','K3 (L)','K4 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Abbott ActiveTip (6142-6145)'
         elspec.matfname='abbott_activetip_3mm';
@@ -279,13 +279,13 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=3;
         elspec.contact_spacing=1.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=1;
         elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K1 (L)','K2 (L)','K3 (L)','K4 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Abbott Directed 6172 (short)'
         elspec.matfname='abbott_directed_05';
@@ -298,7 +298,7 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=1;
         elspec.contact_spacing=0.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.markerpos = 10.75;
         elspec.markerlen = 1.5;
@@ -319,7 +319,7 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=1;
         elspec.contact_spacing=1.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.markerpos = 13.75;
         elspec.markerlen = 1.5;
@@ -340,13 +340,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=0.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'SceneRay SR1210'
         elspec.matfname='sceneray_sr1210';
@@ -359,13 +359,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'SceneRay SR1211'
         elspec.matfname='sceneray_sr1211';
@@ -378,13 +378,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.0;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'SceneRay SR1242'
         elspec.matfname='sceneray_sr1242';
@@ -397,13 +397,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=[2.0,4.0,4.0];
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'PINS Medical L301'
         elspec.matfname='pins_l301';
@@ -416,13 +416,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=0.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'PINS Medical L302'
         elspec.matfname='pins_l302';
@@ -435,13 +435,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'PINS Medical L303'
         elspec.matfname='pins_l303';
@@ -454,13 +454,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=4;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'SDE-08 S8 Legacy'
         elspec.matfname='sde_08_s8_legacy';
@@ -473,14 +473,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S10 Legacy'
         elspec.matfname='sde_08_s10_legacy';
@@ -493,14 +493,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S12 Legacy'
         elspec.matfname='sde_08_s12_legacy';
@@ -513,14 +513,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=12;
+        elspec.numContacts=12;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)',...
             'K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S16 Legacy'
         elspec.matfname='sde_08_s16_legacy';
@@ -533,14 +533,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
         elspec.contact_spacing=1.5;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S8'
         elspec.matfname='sde_08_s8';
@@ -553,14 +553,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S10'
         elspec.matfname='sde_08_s10';
@@ -573,14 +573,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S12'
         elspec.matfname='sde_08_s12';
@@ -593,14 +593,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=12;
+        elspec.numContacts=12;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)',...
             'K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S14'
         elspec.matfname='sde_08_s14';
@@ -613,14 +613,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=14;
+        elspec.numContacts=14;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'SDE-08 S16'
         elspec.matfname='sde_08_s16';
@@ -633,14 +633,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-04-091'
         elspec.matfname='pmt_2102_04_091';
@@ -653,13 +653,13 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (L)','K5 (L)','K6 (L)','K7 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-06-091'
         elspec.matfname='pmt_2102_06_091';
@@ -672,14 +672,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=6;
+        elspec.numContacts=6;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)',...
             'K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-08-091'
         elspec.matfname='pmt_2102_08_091';
@@ -692,14 +692,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-10-091'
         elspec.matfname='pmt_2102_10_091';
@@ -712,14 +712,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-12-091'
         elspec.matfname='pmt_2102_12_091';
@@ -732,14 +732,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=12;
+        elspec.numContacts=12;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)',...
             'K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-14-091'
         elspec.matfname='pmt_2102_14_091';
@@ -752,14 +752,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=14;
+        elspec.numContacts=14;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)',...
             'K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-16-091'
         elspec.matfname='pmt_2102_16_091';
@@ -772,14 +772,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-16-092'
         elspec.matfname='pmt_2102_16_092';
@@ -792,14 +792,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.97;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-16-093'
         elspec.matfname='pmt_2102_16_093';
@@ -812,14 +812,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=2.43;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'PMT 2102-16-131'
         elspec.matfname='pmt_2102_16_131';
@@ -832,14 +832,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'PMT 2102-16-142'
         elspec.matfname='pmt_2102_16_142';
@@ -852,14 +852,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=3.53;
-        elspec.numel=16;
+        elspec.numContacts=16;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case '2069-EPC-05C-35'
         elspec.matfname='epc_05c';
@@ -872,14 +872,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=5;
+        elspec.numContacts=5;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case '2069-EPC-15C-35'
         elspec.matfname='epc_15c';
@@ -892,14 +892,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=15;
+        elspec.numContacts=15;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)',...
             'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'NeuroPace DL-344-3.5'
         elspec.matfname='neuropace_dl_344_35';
@@ -912,13 +912,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.1;
         elspec.contact_spacing=1.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'NeuroPace DL-344-10'
         elspec.matfname='neuropace_dl_344_10';
@@ -931,13 +931,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.1;
         elspec.contact_spacing=8;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'DIXI D08-05AM'
         elspec.matfname='dixi_d08_05am';
@@ -950,14 +950,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=5;
+        elspec.numContacts=5;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)',...
             'K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'DIXI D08-08AM'
         elspec.matfname='dixi_d08_08am';
@@ -970,14 +970,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'DIXI D08-10AM'
         elspec.matfname='dixi_d08_10am';
@@ -990,14 +990,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
     case 'DIXI D08-12AM'
         elspec.matfname='dixi_d08_12am';
@@ -1010,14 +1010,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=12;
+        elspec.numContacts=12;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)',...
             'K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'DIXI D08-15AM'
         elspec.matfname='dixi_d08_15am';
@@ -1030,14 +1030,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=15;
+        elspec.numContacts=15;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)',...
             'K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'DIXI D08-18AM'
         elspec.matfname='dixi_d08_18am';
@@ -1050,14 +1050,14 @@ switch elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=2;
         elspec.contact_spacing=1.5;
-        elspec.numel=18;
+        elspec.numContacts=18;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K16 (R)','K17 (R)',...
             'K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)','K32 (L)','K33 (L)','K34 (L)','K35 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech BF08R-SP05X'
         elspec.matfname='adtech_bf08r_sp05x';
@@ -1070,14 +1070,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=3.43;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech BF08R-SP21X'
         elspec.matfname='adtech_bf08r_sp21x';
@@ -1090,14 +1090,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=[1.43, 3.93, 3.93, 3.93, 3.93, 3.93, 3.93];
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech BF08R-SP61X'
         elspec.matfname='adtech_bf08r_sp61x';
@@ -1110,14 +1110,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=[1.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43];
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech BF09R-SP61X-0BB'
         elspec.matfname='adtech_bf09r_sp61x_0bb';
@@ -1130,14 +1130,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=[1.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43];
-        elspec.numel=9;
+        elspec.numContacts=9;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)',...
             'K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD06R-SP05X'
         elspec.matfname='adtech_rd06r_sp05x';
@@ -1150,14 +1150,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=2.71;
-        elspec.numel=6;
+        elspec.numContacts=6;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)',...
             'K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD08R-SP05X'
         elspec.matfname='adtech_rd08r_sp05x';
@@ -1170,14 +1170,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=2.71;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD10R-SP03X'
         elspec.matfname='adtech_rd10r_sp03x';
@@ -1190,14 +1190,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=0.71;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD10R-SP05X'
         elspec.matfname='adtech_rd10r_sp05x';
@@ -1210,14 +1210,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=2.71;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD10R-SP06X'
         elspec.matfname='adtech_rd10r_sp06x';
@@ -1230,14 +1230,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=3.71;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD10R-SP07X'
         elspec.matfname='adtech_rd10r_sp07x';
@@ -1250,14 +1250,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=4.71;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech RD10R-SP08X'
         elspec.matfname='adtech_rd10r_sp08x';
@@ -1270,14 +1270,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=5.71;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech SD06R-SP26X'
         elspec.matfname='adtech_sd06r_sp26x';
@@ -1290,14 +1290,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=[2.59, 2.59, 7.59, 7.59, 7.59];
-        elspec.numel=6;
+        elspec.numContacts=6;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)', ...
             'K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech SD08R-SP05X'
         elspec.matfname='adtech_sd08r_sp05x';
@@ -1310,14 +1310,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=2.59;
-        elspec.numel=8;
+        elspec.numContacts=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech SD10R-SP05X'
         elspec.matfname='adtech_sd10r_sp05x';
@@ -1330,14 +1330,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=2.59;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech SD10R-SP05X Choi'
         elspec.matfname='adtech_sd10r_sp05x_choi';
@@ -1350,14 +1350,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1;
         elspec.contact_spacing=2.4;
-        elspec.numel=10;
+        elspec.numContacts=10;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'AdTech SD14R-SP05X'
         elspec.matfname='adtech_sd14r_sp05x';
@@ -1370,14 +1370,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2;
         elspec.contact_spacing=2.59;
-        elspec.numel=14;
+        elspec.numContacts=14;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)',...
             'K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'ELAINE Rat Electrode'
         elspec.matfname='elaine_rat_electrode';
@@ -1390,13 +1390,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=112.5/1000;
         elspec.contact_spacing=0;
-        elspec.numel=1;
+        elspec.numContacts=1;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K0 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'FHC WU Rat Electrode'
         elspec.matfname='fhc_wu_rat_electrode';
@@ -1409,13 +1409,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=250/1000;
         elspec.contact_spacing=0;
-        elspec.numel=1;
+        elspec.numContacts=1;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K0 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'NuMed Mini Lead'
         elspec.matfname='numed_minilead';
@@ -1428,13 +1428,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=0.5;
         elspec.contact_spacing=0.5;
-        elspec.numel=4;
+        elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'Aleva directSTIM Directed'
         elspec.matfname='aleva_directstim_directed';
@@ -1448,10 +1448,10 @@ switch elmodel
         elspec.tip_length=1.1;
         elspec.contact_spacing=0.5;
         elspec.markerpos = 18; %TOCHECK
-        elspec.numel=12;
+        elspec.numContacts=12;
         elspec.tipiscontact=0;
         elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)',...
-            'K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)'};        
+            'K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)'};
         elspec.isdirected=1;
         elspec.etagenames{1}={'K1-3 (R)','K4-6 (R)','K7-9 (R)','K10-12 (R)'};
         elspec.etagenames{2}={'K13-15 (L)','K16-18 (L)','K19-21 (L)','K22-24 (L)'};
@@ -1468,14 +1468,14 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=2.46;
         elspec.contact_spacing=1.02;
-        elspec.numel=12;
+        elspec.numContacts=12;
         elspec.tipiscontact=0;
         elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)',...
-            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)'};        
+            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)'};
         elspec.isdirected=1;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'SmartFlow Cannula NGS-NC-06'
         elspec.matfname='smartflow_ngs-nc-06';
@@ -1488,13 +1488,13 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=3;
         elspec.contact_spacing=0;
-        elspec.numel=2;
+        elspec.numContacts=2;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K3 (L)','K4 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=0;
 end
 
@@ -1505,9 +1505,9 @@ elseif ~isfield(elspec,'eldist')
 end
 
 if numel(elspec.contact_spacing)>1
-    elspec.contact_span = elspec.contact_length*elspec.numel + sum(elspec.contact_spacing);
+    elspec.contact_span = elspec.contact_length*elspec.numContacts + sum(elspec.contact_spacing);
 else
-    elspec.contact_span = elspec.contact_length*elspec.numel + elspec.contact_spacing*(elspec.numel-1);
+    elspec.contact_span = elspec.contact_length*elspec.numContacts + elspec.contact_spacing*(elspec.numContacts-1);
 end
 
 try

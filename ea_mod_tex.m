@@ -53,15 +53,15 @@ for side=1:2
 
     switch side
         case 1
-            cntnms=options.elspec.contactnames(1:options.elspec.numel);
+            cntnms=options.elspec.contactnames(1:options.elspec.numContacts);
             pf='Right';
         case 2
-            cntnms=options.elspec.contactnames(1+options.elspec.numel:2*options.elspec.numel);
+            cntnms=options.elspec.contactnames(1+options.elspec.numContacts:2*options.elspec.numContacts);
             pf='Left';
     end
 
     fprintf(fID,'%s\n',['	\subsection{',pf,' hemisphere}']);
-    for cnt=1:options.elspec.numel
+    for cnt=1:options.elspec.numContacts
         fprintf(fID,'%s\n',['	\subsubsection{',cntnms{cnt},'}']);
         for view=1:3
             switch view

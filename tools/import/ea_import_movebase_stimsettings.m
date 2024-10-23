@@ -34,7 +34,7 @@ general_stim_settings = get_stim_amp_freq_pwidth(procedure_data);
 contact_stim_settings = get_contact_settings(procedure_data);
 
 % sanity check if number of electrodes equals to the one of the selected electrode
-if ~(options.elspec.numel == length(contact_stim_settings{1, 1}.contact_polarity))
+if ~(options.elspec.numContacts == length(contact_stim_settings{1, 1}.contact_polarity))
     disp('Number of contacts of selected electrode and imported .json file do not match!')
     return;
 end

@@ -38,7 +38,7 @@ try
     end
 end
 
-radius=repmat(1.5,options.elspec.numel,1); % some default setting.
+radius=repmat(1.5,options.elspec.numContacts,1); % some default setting.
 %try % if stimparams are set.
 if ~isfield(S, 'sources')
     S.sources=1:4;

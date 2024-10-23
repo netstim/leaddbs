@@ -35,13 +35,13 @@ if ~isfield(S, 'volume')
     updated = 1;
 end
 
-if ~isfield(S, 'numel')
+if ~isfield(S, 'numContacts')
     if exist('M', 'var')
         numContacts = cell(1, length(M.elstruct));
         for i=1:length(M.elstruct)
             options.elmodel = M.elstruct(i).elmodel;
             options = ea_resolve_elspec(options);
-            numContacts{i} = options.elspec.numel;
+            numContacts{i} = options.elspec.numContacts;
         end
         [S.numContacts] = deal(numContacts{:});
     else
@@ -59,7 +59,7 @@ if ~isfield(S, 'numel')
                 ea_error('uiprefs and reconstruction are both not present! Failed to detect electrode.', showdlg=0, simpleStack=1);
             end
         end
-        S.numContacts = options.elspec.numel;
+        S.numContacts = options.elspec.numContacts;
     end
 
     updated = 1;

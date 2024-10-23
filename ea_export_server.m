@@ -119,7 +119,7 @@ orients={'axial','coronal','saggital'};
 sides={'R','L'}
 oricon=zeros(3,16); % matrix that shows which images are available
 for s=1:length(sides)
-    for con=1:options.elspec.numel
+    for con=1:options.elspec.numContacts
         for or=1:length(orients)
             if exist([options.root,options.patientname,filesep,'K',num2str(con),sides{s},'_',orients{or},'.png'],'file')
                 copyfile([options.root,options.patientname,filesep,'K',num2str(con),sides{s},'_',orients{or},'.png'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices',filesep,'K',num2str(con),sides{s},'_',orients{or},'.png']);
