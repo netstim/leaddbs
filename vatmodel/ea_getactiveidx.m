@@ -7,7 +7,7 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
 % init activeidx:
 
 for s=1:4
-    for c=1:electrode.numel
+    for c=1:electrode.numContacts
         activeidx(s).con(c).ix=[];
         activeidx(s).con(c).perc=0;
         activeidx(s).con(c).pol=0;

@@ -54,7 +54,7 @@ for side=1:length(markers) %valid for unilateral support
                 clear coords_temp
             otherwise
                 A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
-                can_eldist=sum(sum(tril(triu(A,1),1)))/(electrode.numel-1);
+                can_eldist=sum(sum(tril(triu(A,1),1)))/(electrode.numContacts-1);
         end
         vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
         if nargin>3

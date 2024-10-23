@@ -34,8 +34,8 @@ for tracor=1:3
     switch tracor
         case 1
             view = 'ax_';
-            for elcnt=1:(options.elspec.numel)
-                el = [elcnt, elcnt + options.elspec.numel];
+            for elcnt=1:(options.elspec.numContacts)
+                el = [elcnt, elcnt + options.elspec.numContacts];
                 contactTag = strjoin(options.elspec.contactnames(el), '');
                 contactTag = erase(contactTag, {' ', '(', ')'});
 
@@ -46,8 +46,8 @@ for tracor=1:3
             end
         case 2
             view = 'cor_';
-            for elcnt=1:(options.elspec.numel)
-                el = [elcnt, elcnt + options.elspec.numel];
+            for elcnt=1:(options.elspec.numContacts)
+                el = [elcnt, elcnt + options.elspec.numContacts];
                 contactTag = strjoin(options.elspec.contactnames(el), '');
                 contactTag = erase(contactTag, {' ', '(', ')'});
 

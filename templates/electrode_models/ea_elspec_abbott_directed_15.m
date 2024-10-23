@@ -43,7 +43,7 @@ electrode.head_position = [0 0 1.75];
 electrode.tail_position = [0 0 10.75];
 electrode.x_position = [elspec.lead_diameter/2 0 1.75];
 electrode.y_position = [0 elspec.lead_diameter/2 1.75];
-electrode.numel = 8;
+electrode.numContacts = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 

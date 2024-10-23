@@ -147,7 +147,7 @@ if firstrun==1
     Y_org = Y;
     for attempt=1:5 % allow five attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
         try
-            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype,conts]=jr_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
+            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype,conts]=jr_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numContacts,Y,elspec);
             success=1;
             break
         catch

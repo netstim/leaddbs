@@ -132,7 +132,7 @@ if hmchanged
         'ISO2MESH_TEMP=fullfile(tempdir,''iso2mesh'');ISO2MESH_SESSION=ea_generate_uuid;');
     for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
         try
-            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec);
+            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numContacts,Ymod,elspec);
             if ~isempty(mesh.tet)
                 success=1;
                 break
