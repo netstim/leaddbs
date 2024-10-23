@@ -62,7 +62,7 @@ guidata(hObject, handles);
 
 M=varargin{1};
 
-setappdata(handles.editregressor, 'maxnumel', max(M.S.numel));
+setappdata(handles.editregressor, 'maxnumel', max(M.S.numContacts));
 
 [~,ptnames]=cellfun(@fileparts,M.patient.list,'UniformOutput',0);
 set(handles.datatable,'RowName',ptnames);
@@ -74,7 +74,7 @@ catch % new variable
 end
 
 if iscell(regressor)
-   regressor=cell2mat(regressor); 
+   regressor=cell2mat(regressor);
 end
 
 set(handles.datatable,'Data',regressor);
@@ -186,7 +186,7 @@ nreg=nan(size(reg,1),6);
 try
     nreg(1:size(reg,1),1:size(nreg,2))=reg(1:size(reg,1),1:size(nreg,2));
 catch
-    nreg(1:size(reg,1),1:size(reg,2))=reg(1:size(reg,1),1:size(reg,2)); 
+    nreg(1:size(reg,1),1:size(reg,2))=reg(1:size(reg,1),1:size(reg,2));
 end
 reg=nreg; clear('nreg');
 set(handles.datatable,'Data',reg);

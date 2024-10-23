@@ -47,7 +47,7 @@ end
 for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
 
-    for cnt=1:S.numel
+    for cnt=1:S.numContacts
         U(cnt)=stimsource.(['k',num2str(cnt)]).perc;
         Im(cnt)=stimsource.(['k',num2str(cnt)]).imp;
     end

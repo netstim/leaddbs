@@ -141,7 +141,7 @@ if nargin==3
             if S.([sidestr,'s',num2str(S.active(side))]).case.pol==1
                 S.([sidestr,'s',num2str(S.active(side))]).case.pol=2;
                 S=ea_redistribute_voltage(S,varargin{3});
-                for k=1:S.numel
+                for k=1:S.numContacts
                     if S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                         S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                         S=ea_redistribute_voltage(S,['k',num2str(k),sidestr]);
@@ -192,7 +192,7 @@ for source=1:4
 
     %if S.(['Rs',num2str(source)]).amp % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
-    for k=1:S.numel
+    for k=1:S.numContacts
         if S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol==1
             anycontactnegative=1;
         elseif S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol==2
@@ -220,7 +220,7 @@ for source=1:4
 
     % if S.(['Ls',num2str(source)]).amp % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
-    for k=1:S.numel
+    for k=1:S.numContacts
         if S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol==1
             anycontactnegative=1;
         elseif S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol==2
@@ -241,7 +241,7 @@ end
 
 %% model to handles: all GUI elements.
 source=Ractive;
-for k=1:S.numel
+for k=1:S.numContacts
     val=S.(['Rs',num2str(source)]).(['k',num2str(k)]).perc;
     set(handles.(['k',num2str(k),'uR']),'String',num2str(val));
 
@@ -253,7 +253,7 @@ end
 set(handles.CuR,'String',num2str(S.(['Rs',num2str(source)]).case.perc));
 
 source=Lactive;
-for k=1:S.numel
+for k=1:S.numContacts
     val=S.(['Ls',num2str(source)]).(['k',num2str(k)]).perc;
     set(handles.(['k',num2str(k),'uL']),'String',num2str(val));
 
@@ -270,7 +270,7 @@ if contains(model, 'OSS-DBS')
 end
 
 %% model to handles: polarity toggles
-for k=1:S.numel
+for k=1:S.numContacts
     if S.(['Rs',num2str(Ractive)]).(['k',num2str(k)]).pol==0 % off
         icon=fullfile(options.earoot, 'icons', ['empty',num2str(Ractive),'.png']);
     elseif S.(['Rs',num2str(Ractive)]).(['k',num2str(k)]).pol==1 % negative S1
@@ -282,7 +282,7 @@ for k=1:S.numel
     handles.(['k',num2str(k),'polR']).ImageClickedFcn = {@ea_inc_polarity,handles,options,['k',num2str(k),'R']};
 end
 
-for k=1:S.numel
+for k=1:S.numContacts
     if S.(['Ls',num2str(Lactive)]).(['k',num2str(k)]).pol==0 % off
         icon=fullfile(options.earoot, 'icons', ['empty',num2str(Lactive),'.png']);
     elseif S.(['Ls',num2str(Lactive)]).(['k',num2str(k)]).pol==1 % negative S1
@@ -294,7 +294,7 @@ for k=1:S.numel
     handles.(['k',num2str(k),'polL']).ImageClickedFcn = {@ea_inc_polarity,handles,options,['k',num2str(k),'L']};
 end
 
-for k=S.numel+1:16
+for k=S.numContacts+1:16
     handles.(['k',num2str(k), 'polR']).Visible = 'off';
     handles.(['k',num2str(k), 'polL']).Visible = 'off';
 end
@@ -339,7 +339,7 @@ if ~isfield(options,'elspec')
     end
 end
 
-ea_toggle_contacts(handles, S.numel);
+ea_toggle_contacts(handles, S.numContacts);
 
 %if strcmp(options.elspec.matfname,'boston_vercise_directed')
 %    ea_error('VTA modeling for directed leads is not yet supported.');
@@ -484,13 +484,13 @@ switch side
         sidestr='L';
 end
 
-for k=1:S.numel
+for k=1:S.numContacts
     set(handles.(['k',num2str(k),'u',sidestr]), 'visible', onoff);
 end
 
 set(handles.(['Cu', sidestr]),'visible',onoff);
 
-for i = 1:ceil(S.numel/4)
+for i = 1:ceil(S.numContacts/4)
     set(handles.(['perctext', num2str(i), sidestr]), 'visible', onoff);
 end
 
@@ -579,19 +579,19 @@ end
 
 function ea_show_impedance(handles)
 S = getappdata(handles.stimfig, 'S');
-for k=1:S.numel
+for k=1:S.numContacts
     set(handles.(['k', num2str(k), 'imR']), 'Visible', 'on');
     set(handles.(['k', num2str(k), 'imL']), 'Visible', 'on');
 end
 
-for ohm=1:ceil(S.numel/4)
+for ohm=1:ceil(S.numContacts/4)
     set(handles.(['kohmtext', num2str(ohm), 'R']), 'Visible', 'on');
     set(handles.(['kohmtext', num2str(ohm), 'L']), 'Visible', 'on');
 end
 
 
 function S=ea_redistribute_voltage(S,changedobj)
-conts = strcat('k', arrayfun(@num2str, 1:S.numel, 'Uni', 0));
+conts = strcat('k', arrayfun(@num2str, 1:S.numContacts, 'Uni', 0));
 contsCase = [conts, 'case'];
 pulseWidthTextbox = {'pulseWidthTextbox_R', 'pulseWidthTextbox_L'};
 
@@ -849,7 +849,7 @@ S.([sidestr,'s',num2str(S.active(side))]).(gID).pol=newval;
 
 anycontactpositive=0;
 anycontactnegative=0;
-for k=1:S.numel
+for k=1:S.numContacts
     if S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==1
         anycontactnegative=1;
     elseif S.([sidestr,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2

@@ -72,7 +72,7 @@ for source=S.sources
         load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' Electrode_type '.mat']);
         count1=1;
 
-        for cnt=1:S.numel
+        for cnt=1:S.numContacts
             % FastField only has monopolar (cathode) mode
             % So, if VC, all have 100%, no splitting
             if stimsource.(['k',num2str(cnt)]).pol==2
