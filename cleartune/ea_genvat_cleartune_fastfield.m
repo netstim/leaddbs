@@ -27,7 +27,7 @@ for source=S.sources
     amp1 = stimsource.amp;
     if amp1>0
         count1=1;
-        for cnt=1:S.numel
+        for cnt=1:S.numContacts
             perc(cnt) = stimsource.(['k',num2str(cnt)]).perc;
             if perc(cnt)>0
                 Im(count1)=stimsource.(['k',num2str(cnt)]).imp;

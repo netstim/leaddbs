@@ -7,7 +7,7 @@ else
     sidec = 'L';
 end
 
-for con = 1:S.numel
+for con = 1:S.numContacts
     for source=1:4
         if S.([sidec,'s',num2str(source)]).amp % then this active contact could be from this source since source is active
             if S.([sidec,'s',num2str(source)]).(['k',num2str(con)]).perc % current captured contact is from this source

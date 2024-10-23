@@ -37,17 +37,17 @@ end
 
 if ~isfield(S, 'numel')
     if exist('M', 'var')
-        numel = cell(1, length(M.elstruct));
+        numContacts = cell(1, length(M.elstruct));
         for i=1:length(M.elstruct)
             options.elmodel = M.elstruct(i).elmodel;
             options = ea_resolve_elspec(options);
-            numel{i} = options.elspec.numel;
+            numContacts{i} = options.elspec.numel;
         end
-        [S.numel] = deal(numel{:});
+        [S.numContacts] = deal(numContacts{:});
     else
         subjFolder = regexp(stimFile, ['.+derivatives\' filesep 'leaddbs\' filesep 'sub-[^\W_]+'], 'match');
         uiprefFile = ea_regexpdir(fullfile(subjFolder{1}, 'prefs'), '_desc-uiprefs\.mat', 0, 'f');
-        if isfile(uiprefFile{1}) % Check uiprefs first 
+        if isfile(uiprefFile{1}) % Check uiprefs first
             options = ea_resolve_elspec(load(uiprefFile{1}, 'elmodel'));
         else
             reconFile = ea_regexpdir(fullfile(subjFolder{1}, 'reconstruction'), '_desc-reconstruction\.mat', 0, 'f');
@@ -59,9 +59,9 @@ if ~isfield(S, 'numel')
                 ea_error('uiprefs and reconstruction are both not present! Failed to detect electrode.', showdlg=0, simpleStack=1);
             end
         end
-        S.numel = options.elspec.numel;
+        S.numContacts = options.elspec.numel;
     end
-    
+
     updated = 1;
 end
 
@@ -95,7 +95,7 @@ newS = S;
 % Right sources
 for source=1:4
     newS.(['Rs',num2str(source)]) = struct;
-    for k=1:S.numel
+    for k=1:S.numContacts
         newS.(['Rs',num2str(source)]).(['k',num2str(k)]).perc=0;
         newS.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
         newS.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
@@ -110,7 +110,7 @@ end
 % Left sources
 for source=1:4
     newS.(['Ls',num2str(source)]) = struct;
-    for k=1:S.numel
+    for k=1:S.numContacts
         newS.(['Ls',num2str(source)]).(['k',num2str(k)]).perc=0;
         newS.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
         newS.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
@@ -125,7 +125,7 @@ end
 %% Copy old stimulations
 % Right sources
 for source=1:4
-    for k=1:min(S.numel,8)
+    for k=1:min(S.numContacts,8)
         newS.(['Rs',num2str(source)]).(['k',num2str(k)]) = S.(['Rs',num2str(source)]).(['k',num2str(k-1)]);
     end
     newS.(['Rs',num2str(source)]).case = S.(['Rs',num2str(source)]).case;
@@ -138,7 +138,7 @@ end
 
 % Left sources
 for source=1:4
-    for k=1:min(S.numel,8)
+    for k=1:min(S.numContacts,8)
         newS.(['Ls',num2str(source)]).(['k',num2str(k)]) = S.(['Ls',num2str(source)]).(['k',num2str(k+7)]);
     end
     newS.(['Ls',num2str(source)]).case = S.(['Ls',num2str(source)]).case;

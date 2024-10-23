@@ -204,7 +204,7 @@ for hemi = 1:2
     % find out how many contacts have positive and negative contacts ( 1- negative, 2 - positive)
     nr_pos_contacts = 0;
     nr_neg_contacts = 0;
-    for contactNr = 1:S.numel
+    for contactNr = 1:S.numContacts
         if S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 1
             nr_neg_contacts = nr_neg_contacts + 1;
         elseif S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 2
@@ -229,7 +229,7 @@ for hemi = 1:2
     end
 
     % now go through them again and assign the correct percentage
-    for contactNr = 1:S.numel
+    for contactNr = 1:S.numContacts
         if S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 1
             S.([prefix, '1']).(['k', num2str(contactNr)]).perc = 100 / nr_neg_contacts;
         elseif S.([prefix, '1']).(['k', num2str(contactNr)]).pol == 2

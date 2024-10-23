@@ -7,7 +7,7 @@ if isempty(thresh)
 end
 thresh=str2double(thresh{1});
 
-conInd = arrayfun(@num2str, 1:max(M.S.numel), 'Uni', 0);
+conInd = arrayfun(@num2str, 1:max(M.S.numContacts), 'Uni', 0);
 rnames = [strcat('k', conInd, 'R'), strcat('k', conInd, 'L')];
 
 for thr=0:1
@@ -17,9 +17,9 @@ for thr=0:1
         else
             rf(target,thr+1)=figure('color','w','Numbertitle','off','name',['Distances of electrode centers to nearest voxel in ',M.vilist{M.ui.volumeintersections(target)}]);
         end
-        
+
         % Here we suppose electrodes of the select patients have the same
-        % number of contacts 
+        % number of contacts
         numContacts = size(M.stats(1).ea_stats.conmat{1},1);
         distances=zeros(numContacts*2,length(M.ui.listselect));
 

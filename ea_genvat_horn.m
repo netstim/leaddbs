@@ -263,7 +263,7 @@ for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
     constvol=stimsource.va==1; % constvol is 1 for constant voltage and 2 for constant current.
 
-    for cnt=1:S.numel
+    for cnt=1:S.numContacts
         if constvol
             U(cnt)=(logical(stimsource.(['k',num2str(cnt)]).perc))*stimsource.amp; % do not split amplitude in constant voltage setting.
         else
