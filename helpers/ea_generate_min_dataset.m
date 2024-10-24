@@ -52,12 +52,22 @@ for i = 1 : size(M.patient.list, 1)
     ea_mkdir(newStimFolder);
     
     % now we copy some essential files
-    if isfile(fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-rawimages.json']))
+    rawimageJsonFile = fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-rawimages.json']);
+    if isfile(rawimageJsonFile)
+        copyfile(rawimageJsonFile, newPrefsFolder);
+    else
         ea_cprintf('CmdWinWarnings', 'No rawimages.json found for patient %s!\n', patient_tag);
-        copyfile(fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-rawimages.json']), newPrefsFolder);
     end
-    %copyfile(fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-uiprefs.mat']), newPrefsFolder);
+
+    uiPrefFile = fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-uiprefs.mat']);
+    if isfile(uiPrefFile)
+        copyfile(uiPrefFile, newPrefsFolder);
+    else
+        ea_cprintf('CmdWinWarnings', 'No uiprefs.mat found for patient %s!\n', patient_tag);
+    end
+
     copyfile(fullfile(M.patient.list{i}, 'reconstruction', [patient_tag, '_desc-reconstruction.mat']), newReconstFolder);  
+
     if isfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']))
         miniset.stats = 1;
         copyfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']), M_mini.patient.list{i});

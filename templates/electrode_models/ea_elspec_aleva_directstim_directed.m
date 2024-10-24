@@ -8,7 +8,7 @@ modelFolder = 'Aleva_directSTIM_Directed';
 
 % Get specification
 options.elmodel = 'Aleva directSTIM Directed';
-options = ea_resolve_elspec(options);     
+options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
 % Get insulation and contact numbers
@@ -52,13 +52,13 @@ electrode.coords_mm(11,:) = [0 0 7.82]+[cx,-cy, 0];
 electrode.coords_mm(12,:) = [0 0 7.82]+[-cx,-cy, 0];
 
 electrode.head_position = [0 0 1.82];
-electrode.tail_position = [0 0 7.82];        
-electrode.x_position = [elspec.lead_diameter/2, 0, 1.82]; 
+electrode.tail_position = [0 0 7.82];
+electrode.x_position = [elspec.lead_diameter/2, 0, 1.82];
 electrode.y_position = [0, elspec.lead_diameter/2, 1.82];
 
 electrode.electrode_model = options.elmodel;
 electrode.isdirected = elspec.isdirected;
-electrode.numel = elspec.numel;
+electrode.numContacts = elspec.numContacts;
 electrode.contact_color = elspec.contact_color;
 electrode.lead_color = elspec.lead_color;
 

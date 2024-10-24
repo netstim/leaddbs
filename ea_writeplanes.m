@@ -35,7 +35,7 @@ elseif nargin>1 % elstruct has been supplied, this is a group visualization
         ave_coords_mm=ea_ave_elstruct(elstruct,options);
     else % concrete height is being supplied (without electrode star plotting).
         elstruct=varargin{2};
-        options.elspec.numel=1; % only iterate once below.
+        options.elspec.numContacts=1; % only iterate once below.
     end
 end
 
@@ -94,8 +94,8 @@ for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
     for tracor=find(tracorpresent)'
-        for elcnt=1:(options.elspec.numel-options.shifthalfup)
-            el=elcnt+options.elspec.numel*(side-1);
+        for elcnt=1:(options.elspec.numContacts-options.shifthalfup)
+            el=elcnt+options.elspec.numContacts*(side-1);
 
             % Show MR-volume
             set(0,'CurrentFigure',cuts)
@@ -114,7 +114,7 @@ for iside=1:length(options.sides)
                     end
                     if isstruct(elstruct) && length(options.sides)==2
                         showBothSide = 1;
-                        el = [el, elcnt+options.elspec.numel];
+                        el = [el, elcnt+options.elspec.numContacts];
                         if side==2
                             continue;
                         end
@@ -127,7 +127,7 @@ for iside=1:length(options.sides)
                     end
                     if isstruct(elstruct) && length(options.sides)==2
                         showBothSide = 1;
-                        el = [el, elcnt+options.elspec.numel];
+                        el = [el, elcnt+options.elspec.numContacts];
                         if side==2
                             continue;
                         end
@@ -182,7 +182,7 @@ for iside=1:length(options.sides)
             try
                 printstr_el_stat=['Electrode(s) ', strjoin(options.elspec.contactnames(el)) ', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.'];
                 disp(printstr_el_stat);
-                
+
                 if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
                     fprintf(fid,'%s\n',printstr_el_stat);
                 end
@@ -532,11 +532,11 @@ if ~isstruct(elstruct)
 end
 
 if ~isfield(elstruct(c),'activecontacts')
-    elstruct(c).activecontacts{1}=zeros(elspec.numel,1);
-    elstruct(c).activecontacts{2}=zeros(elspec.numel,1);
+    elstruct(c).activecontacts{1}=zeros(elspec.numContacts,1);
+    elstruct(c).activecontacts{2}=zeros(elspec.numContacts,1);
 else
     if isempty(elstruct(c).activecontacts)
-        elstruct(c).activecontacts{1}=zeros(elspec.numel,1);
-        elstruct(c).activecontacts{2}=zeros(elspec.numel,1);
+        elstruct(c).activecontacts{1}=zeros(elspec.numContacts,1);
+        elstruct(c).activecontacts{2}=zeros(elspec.numContacts,1);
     end
 end

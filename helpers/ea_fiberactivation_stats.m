@@ -4,7 +4,7 @@ function ea_fiberactivation_stats(stimFolder)
 results = ea_regexpdir(stimFolder, 'fiberactivation.*\.mat$', 0);
 
 stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
-load(stimParams{1}, 'S');
+S = ea_loadstimulation(stimParams{1});
 modelLabel = ea_simModel2Label(S.model);
 
 for i=1:length(results)

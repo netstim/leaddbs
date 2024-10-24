@@ -27,8 +27,8 @@ else % if elspec is defined for each electrode, overwrite options-struct setting
 end
 
 if ~isfield(elstruct,'activecontacts')
-    elstruct.activecontacts{1}=zeros(elspec.numel,1);
-    elstruct.activecontacts{2}=zeros(elspec.numel,1);
+    elstruct.activecontacts{1}=zeros(elspec.numContacts,1);
+    elstruct.activecontacts{2}=zeros(elspec.numContacts,1);
 end
 
 if isfield(options.d3,'pntcmap')
@@ -204,7 +204,7 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
-            
+
 
 
 
@@ -266,9 +266,9 @@ for side=options.sides
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
         try % sometimes isomatrix not defined.
-            if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % number of contact pairs
+            if size(options.d3.isomatrix{1}{1},2)==elspec.numContacts-1 % number of contact pairs
                 shifthalfup=1;
-            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % number of contacts
+            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numContacts % number of contacts
                 shifthalfup=0;
             else
                 ea_cprintf('CmdWinErrors', 'Be careful! Isomatrix might have wrong size, or numbers of contacts are not consistent across patients.\n');
@@ -299,7 +299,7 @@ for side=options.sides
             %minval=-1;
             %maxval=1;
         end
-        for cntct=1:elspec.numel-shifthalfup
+        for cntct=1:elspec.numContacts-shifthalfup
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.9,0.9,0.7];

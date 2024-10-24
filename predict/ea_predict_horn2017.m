@@ -159,7 +159,7 @@ end
 
 cfg.res.updrs3imp=updrshat;
 cfg.res.updrs3err=avgerror;
-load([directory,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters.mat'])
+S = ea_loadstimulation([directory,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters.mat'])
 % cfg.stim=ea_activecontacts(S);
 cfg.stim=S;
 [~,cfg.stim.patientname]=fileparts(fileparts(directory));

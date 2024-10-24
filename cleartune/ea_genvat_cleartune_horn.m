@@ -134,7 +134,7 @@ if hmchanged
         'ISO2MESH_TEMP=fullfile(tempdir,''iso2mesh'');ISO2MESH_SESSION=ea_generate_uuid;');
     for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
         try
-            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec);
+            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numContacts,Ymod,elspec);
             if ~isempty(mesh.tet)
                 success=1;
                 break
@@ -260,10 +260,8 @@ end
 switch side
     case 1
         sidec='R';
-        cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
     case 2
         sidec='L';
-        cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
 if ~isfield(S, 'sources')
@@ -274,13 +272,13 @@ for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
     constvol=stimsource.va==1; % constvol is 1 for constant voltage and 2 for constant current.
 
-    for cnt=1:length(cnts)
+    for cnt=1:S.numContacts
         if constvol
-            U(cnt)=(logical(stimsource.(cnts{cnt}).perc))*stimsource.amp; % do not split amplitude in constant voltage setting.
+            U(cnt)=(logical(stimsource.(['k',num2str(cnt)]).perc))*stimsource.amp; % do not split amplitude in constant voltage setting.
         else
-            U(cnt)=(stimsource.(cnts{cnt}).perc/100)*stimsource.amp;
+            U(cnt)=(stimsource.(['k',num2str(cnt)]).perc/100)*stimsource.amp;
         end
-        if stimsource.(cnts{cnt}).pol==1
+        if stimsource.(['k',num2str(cnt)]).pol==1
             U(cnt)=U(cnt)*-1;
         end
     end

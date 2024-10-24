@@ -11,7 +11,7 @@ end
 coords_mm = ea_load_reconstruction(options);
 settings.contactLocation = coords_mm;
 eleNum = length(coords_mm); % Number of electrodes
-conNum = options.elspec.numel; % Number of contacts per electrode
+conNum = options.elspec.numContacts; % Number of contacts per electrode
 
 % Save both native and MNI space y and head markers for OSS-DBS
 settings.yMarkerNative = nan(eleNum, 3);
@@ -79,7 +79,7 @@ function [markersNative, markersMNI] = ea_get_markers(options)
         warning('Failed to load native reconstruction!');
         warning('on', 'backtrace');
     end
-    
+
     options.native = 0;
     try
         [~, ~, markersMNI] = ea_load_reconstruction(options);

@@ -21,24 +21,11 @@ for i = 1:eleNum
 
     % should be subsituted to an automatic solution
     % but keep in mind the skip
-    if conNum <= 8
-        switch i
-            case 1
-                sideCode = 'R';
-                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
-            case 2
-                sideCode = 'L';
-                cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
-        end
-    else
-        switch i
-            case 1
-                sideCode = 'R';
-                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7','k8','k9','k10','k11','k12','k13','k14','k15'};
-            case 2
-                sideCode = 'L';
-                cntlabel = {'k16','k17','k18','k19','k20','k21','k22','k23','k24','k25','k26','k27','k28','k29','k30','k31'};
-        end
+    switch i
+        case 1
+            sideCode = 'R';
+        case 2
+            sideCode = 'L';
     end
 
     if ~isnan(source_i(i))
@@ -64,11 +51,11 @@ for i = 1:eleNum
                 % OSS-DBS will make sure that all excess of current is
                 % grounded
                 if S.activecontacts{i}(cnt)
-                    switch stimSource.(cntlabel{cnt}).pol
+                    switch stimSource.(['k',num2str(cnt)]).pol
                         case 1 % Negative, cathode
-                            Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            Phi_vector(i, cnt) = -amp(i)*stimSource.(['k',num2str(cnt)]).perc/100;
                         case 2 % Positive, anode
-                            Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            Phi_vector(i, cnt) = amp(i)*stimSource.(['k',num2str(cnt)]).perc/100;
                     end
                 end
             else
@@ -76,8 +63,8 @@ for i = 1:eleNum
                 % negative volts and grounding
                 % if you have bipolar stim 3V k0+ k1-, OSS-DBS will solve
                 % for 0V vs -3V
-                if v_source.(cntlabel{cnt}).perc    % the contact is active for this source
-                    switch v_source.(cntlabel{cnt}).pol
+                if v_source.(['k',num2str(cnt)]).perc    % the contact is active for this source
+                    switch v_source.(['k',num2str(cnt)]).pol
                         case 1
                             Phi_vector(i, cnt) = -1*amp(i);
                         case 2

@@ -8,7 +8,7 @@ arguments
     settings    % parameters for OSS-DBS simulation
 end
 
-conNum = options.elspec.numel; % number of contacts
+conNum = options.elspec.numContacts; % number of contacts
 coords_mm = ea_load_reconstruction(options);
 eleNum = length(coords_mm); % number of electrodes
 
