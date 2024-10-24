@@ -31,6 +31,7 @@ if redomarkers
                 elstruct.markers(side).tail=elstruct.coords_mm{side}(8,:);
             case {'Boston Scientific Vercise Cartesia HX'
                   'Boston Scientific Vercise Cartesia X'}
+                elstruct.markers(side).head=mean(elstruct.coords_mm{side}(1:3,:));
                 elstruct.markers(side).tail=mean(elstruct.coords_mm{side}(10:12,:));
             otherwise
                 elstruct.markers(side).tail=elstruct.coords_mm{side}(4,:);
