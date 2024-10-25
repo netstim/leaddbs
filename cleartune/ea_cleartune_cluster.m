@@ -26,7 +26,7 @@ function [tractsetclone]=ea_cleartune_cluster(tractsetclone,patlist,app,~,~)
 % if ~exist('command','var') || isempty(command)
 %     command = 'cv';
 % end
-% 
+%
 % % When loading prior optimization, load and stop by default
 % if ~exist('mode','var') || isempty(mode)
 %     mode = 'stop';
@@ -181,7 +181,7 @@ for pt = 1:length(patlist)
         fprintf(fileID,'%d',inputsL{2});
    end
    disp('>>>>> Left hemisphere completed..100% done >>>>>');
-   
+
    %finally save the stimulation parameters in the patient directory
    options = setOPTS(patlist{pt});
    S = ea_initializeS(options);
@@ -231,7 +231,7 @@ else
     Ineq = sum(abs(X(X<0))) - 8.0;
 end
 
-if isempty(X) 
+if isempty(X)
     Fval = Inf;
     return
 end
@@ -241,7 +241,7 @@ Fval=getFval(app,X,patlist,side,ptindx,fileID);
 return
 end
 
-         
+
 % Nested function that computes the objective function
 function Fval = nestedfunR_Monopolar(X,patlist,ptindx,fileID)
 side = 1; %side = 1 since it is right side
@@ -384,7 +384,7 @@ function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
         end
     end
     preFval = ea_nansum(wt_Ihat(:,side)); %should be the same since we are doing only one side now
-    
+
     return
 end
 function Fval = penaltyFunc(app,X,Fval)
@@ -397,7 +397,7 @@ function Fval = penaltyFunc(app,X,Fval)
             Fval = Fval + app.ApplyapenaltyvalueofEditField.Value;
         end
     else
-        return 
+        return
     end
     return
 end
@@ -426,7 +426,7 @@ function createIhatAmpPlot(app,inputsR,inputsL)
    filename = fullfile(inputsR{1},'Ihat_vs_amplitude.png');
    saveas(figure,filename);
 
-   
+
 end
 
 function options = setOPTS(patselect)
@@ -442,7 +442,7 @@ function options = setOPTS(patselect)
     elstruct(1).trajectory=trajectory;
     elstruct(1).name = ['sub-', options.subj.subjId];
     elstruct(1).markers=markers;
-    
+
     options.numcontacts=size(coords_mm{1},1);
     options.d3.verbose='off';
     options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
@@ -457,11 +457,11 @@ function options = setOPTS(patselect)
     options.patient_list=patselect;
     options.d3.mirrorsides=0;
     options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
-    options.patientname = options.subj.subjId;
+    options.patientname = ['sub-', options.subj.subjId];
 return
 end
 function options=ea_setopts_local
-    
+
     options.earoot=ea_getearoot;
     options.verbose=3;
     options.sides=1:2; % re-check this later..

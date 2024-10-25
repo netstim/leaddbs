@@ -46,7 +46,7 @@ options.leadprod = 'group';
 options.patient_list=patselect;
 options.d3.mirrorsides=0;
 options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
-options.patientname = options.subj.subjId;
+options.patientname = ['sub-', options.subj.subjId];
 options.writeVTA = writeVTA;
 setappdata(resultfig,'elstruct',elstruct);
 setappdata(resultfig,'options',options);
@@ -77,7 +77,7 @@ elseif side == 2
     tmp_concval = zeros(1,length(concval));
     stimtmpR = [tmp_ampsel,tmp_concval];
 end
-    
+
 S = ea_initializeS(options);
 S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
 S.label = ['amplitude',num2str(ampselect,'%.2f'),'_contact_',num2str(whichContact,'%d'),'_side_',num2str(side,'%d')];
