@@ -1368,10 +1368,8 @@ switch choice
             end
             M.S = tmpM.S;
             setappdata(handles.leadfigure, 'M', M);
-            
-            [~, folderName, ~] = fileparts(fileparts(M.root));
-            filePath = fullfile(M.root, ['dataset-', folderName, '_analysis-', M.guid, '.mat']);
-            save(filePath, 'M');
+
+            save(ea_getGroupAnalysisFile(M.root), 'M');
         end
         
     otherwise
