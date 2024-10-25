@@ -30,15 +30,7 @@ else
             S.label = [char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))];
         end
         inputStruct.labels{i} = S.label;
-
-        if ~isfield(S, 'sources')
-            S.sources = 1:4;
-        end
-
-        if ~isfield(S, 'volume')
-            S.volume = [];
-        end
-
+        
         inputStruct.S(i) = S;
 
         stimJsonFile = strrep(stimMatFile{i}, '.mat', '.json');
