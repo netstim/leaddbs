@@ -62,8 +62,11 @@ else
 end
 
 if preexist
-    S = ea_loadstimulation([options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat']);
-    return
+    stimParamFile = [options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat'];
+    if isfile(stimParamFile)
+        S = ea_checkStimParams(stimParamFile);
+        return
+    end
 end
 
 % right sources
