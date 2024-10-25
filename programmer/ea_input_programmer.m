@@ -16,6 +16,8 @@ inputStruct.stimDir = stimDir;
 
 stimFileName = [options.patientname, '_desc-stimparameters'];
 stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
+[~, stimFolder] = fileparts(fileparts(stimMatFile));
+stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
 
 if isempty(stimMatFile)
     % Create new stimulation label, set S to empty
