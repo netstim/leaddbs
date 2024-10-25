@@ -20,7 +20,7 @@ stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
 if isempty(stimMatFile)
     % Create new stimulation label, set S to empty
     inputStruct.labels = {[char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))]};
-    inputStruct.S = {};
+    inputStruct.S(1) = ea_initializeS(inputStruct.labels, options);
 else
     % Aggregate existing stimulations
     for i=1:numel(stimMatFile)
@@ -30,7 +30,7 @@ else
             S.label = [char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))];
         end
         inputStruct.labels{i} = S.label;
-        
+
         inputStruct.S(i) = S;
 
         stimJsonFile = strrep(stimMatFile{i}, '.mat', '.json');
