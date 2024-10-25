@@ -24,7 +24,7 @@ if isempty(stimMatFile)
 else
     % Aggregate existing stimulations
     for i=1:numel(stimMatFile)
-        load(stimMatFile{i}, 'S');
+        S = ea_checkStimParams(stimMatFile{i});
 
         if isempty(S.label)
             S.label = [char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))];
