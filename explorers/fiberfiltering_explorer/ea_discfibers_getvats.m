@@ -18,6 +18,7 @@ for sub=1:numPatient
     if ~isfile(stimParams)
         FilesExist = ones(numPatient*2,2);
         ea_cprintf('CmdWinWarnings', 'Stimulation parameters not found! Skip checking stimulation/vta existence.\n');
+        return
     else
         load(stimParams,'S');
 
@@ -58,7 +59,7 @@ for sub=1:numPatient
                         ea_cprintf('CmdWinWarnings', 'Left side VTA doesn''t exist under stimulation folder:\n%s\n\n', stimFolder);
                     end
                     vatlist(sub,side) = {''};
-                    FilesExist(sub,sude)=0;
+                    FilesExist(sub,side)=0;
                 end
             end
         end
