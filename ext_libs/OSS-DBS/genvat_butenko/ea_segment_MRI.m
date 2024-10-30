@@ -151,15 +151,16 @@ switch settings.butenko_segmAlg
             ImageName = [normImageName, '.nii'];
         end
 
-        if ~isfile([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_synthseg.nii'])
+        segMaskPath = [ImageDir, ImageName(1:end-4),'-synthseg_raw.nii'];
+        if ~isfile(segMaskPath)
             env = ea_conda_env('SynthSeg');
             if ~env.is_up_to_date
                 env.force_create;
             end
-            ea_synthseg(ea_path_helper([ImageDir,ImageName]), [ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_synthseg.nii'])
+            ea_synthseg(ea_path_helper([ImageDir,ImageName]), segMaskPath)
         end
 
         % always convert to make sure the chosen algorithm was used
-        ea_convert_synthSeg2segmask([ea_path_helper(outputPaths.outputDir),filesep,'segmask_raw_synthseg.nii'], [outputPaths.outputDir, filesep, segmaskName]);
+        ea_convert_synthSeg2segmask(ea_path_helper(segMaskPath), ea_path_helper([outputPaths.outputDir, filesep, segmaskName]));
         env = ea_conda_env('OSS-DBSv2');
 end
