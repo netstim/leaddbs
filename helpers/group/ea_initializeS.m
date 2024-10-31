@@ -3,10 +3,11 @@ function S = ea_initializeS(varargin)
 preexist = 0;
 
 if nargin == 1
-    if ischar(varargin{1})
+    if ischar(varargin{1}) % only label provided
         label = varargin{1};
-        options = struct;
-    elseif isstruct(varargin{1})
+        options.elspec.numContacts = 4;
+        ea_cprintf('CmdWinWarnings', 'Missing number of contacts (options.elspec.numContacts) when initializing "S"! Set to 4 by default.\n');
+    elseif isstruct(varargin{1}) % 'options' provided
         options = varargin{1};
         [label, preexist] = ea_detstimname(options);
     end
@@ -38,6 +39,14 @@ elseif nargin > 1
     end
 end
 
+% options.elspec could be missing when switching simulation model in LeadGroup
+if ~isfield(options, 'elspec') && strcmp(options.leadprod, 'group')
+    elstruct = getappdata(handles.stimfig, 'elstruct');
+    actpt = getappdata(handles.stimfig, 'actpt');
+    options.elmodel = elstruct(actpt).elmodel;
+    options = ea_resolve_elspec(options);
+end
+
 if isfield(options, 'UsePreExistingStim')
     preexist = options.UsePreExistingStim;
 end
@@ -53,35 +62,38 @@ else
 end
 
 if preexist
-    load([options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat'], 'S');
-    return
+    stimParamFile = [options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat'];
+    if isfile(stimParamFile)
+        S = ea_checkStimParams(stimParamFile);
+        return
+    end
 end
 
 % right sources
 for source=1:4
-    for k=0:7
+    for k=1:options.elspec.numContacts
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).perc=0;
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
         S.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
     end
-    S.(['Rs',num2str(source)]).amp = 0;
-    S.(['Rs',num2str(source)]).va = 1;
     S.(['Rs',num2str(source)]).case.perc = 100;
     S.(['Rs',num2str(source)]).case.pol = 2;
+    S.(['Rs',num2str(source)]).amp = 0;
+    S.(['Rs',num2str(source)]).va = 2;
     S.(['Rs',num2str(source)]).pulseWidth = 60;
 end
 
 % left sources
 for source=1:4
-    for k=8:15
+    for k=1:options.elspec.numContacts
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).perc=0;
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
         S.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
     end
-    S.(['Ls',num2str(source)]).amp = 0;
-    S.(['Ls',num2str(source)]).va = 1;
     S.(['Ls',num2str(source)]).case.perc = 100;
     S.(['Ls',num2str(source)]).case.pol = 2;
+    S.(['Ls',num2str(source)]).amp = 0;
+    S.(['Ls',num2str(source)]).va = 2;
     S.(['Ls',num2str(source)]).pulseWidth = 60;
 end
 
@@ -89,6 +101,8 @@ S.active = [1,1];
 S.model = 'SimBio/FieldTrip (see Horn 2017)';
 S.monopolarmodel = 0;
 S.amplitude = {[0,0,0,0],[0,0,0,0]};
+S.numContacts = options.elspec.numContacts;
 S = ea_activecontacts(S);
 S.sources = 1:4;
-S.volume = [];
+S.volume = [0 0];
+S.ver = '2.0'; % refined version of S

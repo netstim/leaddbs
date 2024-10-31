@@ -5,13 +5,13 @@ function  ncoords_mm=ea_extrapol_coords(coords_mm,options)
 % Andreas Horn
 
 
-ncoords_mm=zeros(options.elspec.numel,3);
+ncoords_mm=zeros(options.elspec.numContacts,3);
 
 for side=1
-    ncoords_mm(1+(side-1)*options.elspec.numel:4+(side-1)*options.elspec.numel,:)=coords_mm(1+(side-1)*4:4+(side-1)*4,:);
-for exc=5+(side-1)*options.elspec.numel:options.elspec.numel+(side-1)*options.elspec.numel
+    ncoords_mm(1+(side-1)*options.elspec.numContacts:4+(side-1)*options.elspec.numContacts,:)=coords_mm(1+(side-1)*4:4+(side-1)*4,:);
+for exc=5+(side-1)*options.elspec.numContacts:options.elspec.numContacts+(side-1)*options.elspec.numContacts
     ncoords_mm(exc,:)=ncoords_mm(exc-1,:)+(ncoords_mm(exc-1,:)-ncoords_mm(exc-2,:));
-    
+
 end
 
 end

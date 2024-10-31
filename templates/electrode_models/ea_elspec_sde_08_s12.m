@@ -50,13 +50,13 @@ for iside=1:length(options.sides)
     startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
     hold on
-    
+
     %% draw patientname
     lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
 
     %% draw trajectory
-    lowerpoint=coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2);
+    lowerpoint=coords_mm{side}(elspec.numContacts,:)-trajvector*(elspec.contact_length/2);
     set(0,'CurrentFigure',resultfig);
     diams=repmat(elspec.lead_diameter/2,1,2);
     [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -96,12 +96,12 @@ for iside=1:length(options.sides)
     else
         usecolor=elspec.lead_color;
     end
-    
+
     aData=1;
     ea_specsurf(elrender{side}(1),usecolor,aData);
-    
+
     cnt=2;
-    
+
     %% draw tip contact
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
@@ -154,7 +154,7 @@ for iside=1:length(options.sides)
     for pt=20:20:(length(p.vertices)-20)
         p.faces=[p.faces;pt,pt+20,length(p.vertices)];
     end
-    
+
     elrender{side}(cnt)=patch(p);
 
     % Calulating the angle between the x direction and the required direction
@@ -170,9 +170,9 @@ for iside=1:length(options.sides)
     end
     ea_specsurf(elrender{side}(cnt),usecolor,aData);
     cnt=cnt+1;
-    
+
     %% draw contacts
-    for cntct=2:elspec.numel
+    for cntct=2:elspec.numContacts
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.contact_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -215,9 +215,9 @@ for iside=1:length(options.sides)
         cnt=cnt+1;
 
     end
-    
+
     %% draw trajectory between contacts
-    for cntct=1:elspec.numel-1
+    for cntct=1:elspec.numContacts-1
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.lead_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -275,15 +275,15 @@ view(0,0);
 cnt=1; cntcnt=1; inscnt=1;
 ea_dispercent(0,'Exporting electrode components');
 
-for comp=1:elspec.numel*2
-    ea_dispercent(comp/(elspec.numel*2));
+for comp=1:elspec.numContacts*2
+    ea_dispercent(comp/(elspec.numContacts*2));
 
 
     cyl=elrender{side}(cnt);
     cnt=cnt+1;
 
 
-    if comp>1 && comp<elspec.numel+2 % these are the CONTACTS
+    if comp>1 && comp<elspec.numContacts+2 % these are the CONTACTS
         electrode.contacts(cntcnt).vertices=cyl.Vertices;
         electrode.contacts(cntcnt).faces=cyl.Faces;
         electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;
@@ -305,7 +305,7 @@ electrode.tail_position=[0,0,4*elspec.contact_length+(4-1)*elspec.contact_spacin
 electrode.x_position=[elspec.lead_diameter/2,0,0.5*elspec.contact_length];
 electrode.y_position=[0,elspec.lead_diameter/2,0.5*elspec.contact_length];
 
-electrode.numel=elspec.numel;
+electrode.numContacts=elspec.numContacts;
 electrode.contact_color=elspec.contact_color;
 electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};

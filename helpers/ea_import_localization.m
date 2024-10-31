@@ -41,6 +41,7 @@ for i=1:length(coords)
             reco.(space).markers(i).tail = coords{i}(8,:);
         case {'Boston Scientific Vercise Cartesia HX'
               'Boston Scientific Vercise Cartesia X'}
+            reco.(space).markers(i).head = mean(coords{i}(1:3,:));
             reco.(space).markers(i).tail = mean(coords{i}(10:12,:));
         otherwise
             reco.(space).markers(i).tail = coords{i}(4,:);

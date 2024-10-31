@@ -26,7 +26,7 @@ function [tractsetclone]=ea_cleartune_optimize_surrogate(tractsetclone,patlist,a
 % if ~exist('command','var') || isempty(command)
 %     command = 'cv';
 % end
-% 
+%
 % % When loading prior optimization, load and stop by default
 % if ~exist('mode','var') || isempty(mode)
 %     mode = 'stop';
@@ -43,7 +43,7 @@ warning off
 %app = ea_cleartune;
 %list of vars to optimize:
 % [paramsR,paramsL] = genParams(app);
-% 
+%
 % lbR = [paramsR(:,1)];
 % lbL = [paramsL(:,1)];
 % ubR = [paramsR(:,2)];
@@ -131,7 +131,7 @@ for pt = 1:length(patlist)
         optionsL.UseParallel=true;
         parpool('Processes',2);
     end
-    
+
     % for monopolar case
     if all(ubR(:) <= 0.0)
         objconstrR=@(x)struct('Fval',nestedfunR_Monopolar(x,patlist,ptindx));
@@ -188,15 +188,15 @@ for pt = 1:length(patlist)
     save(fullfile(patlist{pt},'optimize_status_surrogate_L.mat'),'ipL','XOptimL');
     [inputsL,ampl_L,perc_val_L] = ea_get_inputs_for_optimizer(patlist{pt},XOptimL, app.inputVars.modelVTA,writeVTA,2);
     ea_generate_optim_vat(inputsL{:});
-    
-    
-    
+
+
+
     %finally, we can save the stimulation parameters of the winning VTA
     options = setOPTS(patlist{pt});
     S = ea_initializeS(options);
     S = ea_cleartune_generateMfile([ampl_R,perc_val_R],[ampl_L,perc_val_L],S,0);
     save(fullfile(patlist{pt},'desc-stimparameters.mat'),'S');
-    
+
     %create a plot that shows how Ihat changes with amplitude
     createIhatAmpPlot(app,inputsR,inputsL)
     avgIhat = ((-1*fvalR)+(-1*fvalL))/2;
@@ -301,7 +301,7 @@ function tractsetclone=updateStim(tractsetclone,X)
 end
 
 function Fval=getFval(app,X,patlist,side,ptindx)
-      
+
     %create a vta inside this function, send it to cleartune, get Ihat out and return it as
     %Fval
     selpat = patlist{ptindx};
@@ -336,7 +336,7 @@ function Fval=getFval(app,X,patlist,side,ptindx)
     %add penalty function if user chooses
     Fval = penaltyFunc(app,X,Fval);
 return
-    
+
 end
 
 end
@@ -359,7 +359,7 @@ function preFval = calculateFval(app,Ihat,actualimprovs,side,ptindx)
         end
     end
     preFval = ea_nansum(wt_Ihat(:,side)); %should be the same since we are doing only one side now
-    
+
     return
 end
 function Fval = penaltyFunc(app,X,Fval)
@@ -372,7 +372,7 @@ function Fval = penaltyFunc(app,X,Fval)
             Fval = Fval + app.ApplyapenaltyvalueofEditField.Value;
         end
     else
-        return 
+        return
     end
 end
 function createIhatAmpPlot(app,inputsR,inputsL)
@@ -407,7 +407,7 @@ function options = setOPTS(patselect)
     elstruct(1).trajectory=trajectory;
     elstruct(1).name = ['sub-', options.subj.subjId];
     elstruct(1).markers=markers;
-    
+
     options.numcontacts=size(coords_mm{1},1);
     options.d3.verbose='off';
     options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
@@ -422,11 +422,11 @@ function options = setOPTS(patselect)
     options.patient_list=patselect;
     options.d3.mirrorsides=0;
     options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
-    options.patientname = options.subj.subjId;
+    options.patientname = ['sub-', options.subj.subjId];
 return
 end
 function options=ea_setopts_local
-    
+
     options.earoot=ea_getearoot;
     options.verbose=3;
     options.sides=1:2; % re-check this later..

@@ -52,10 +52,8 @@ setappdata(resultfig,'elstruct',elstruct);
 switch side
     case 1
         sidec='R';
-        cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
     case 2
         sidec='L';
-        cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
 if ~isfield(S, 'sources')
@@ -74,25 +72,25 @@ for source=S.sources
         load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' Electrode_type '.mat']);
         count1=1;
 
-        for cnt=1:length(cnts)
+        for cnt=1:S.numContacts
             % FastField only has monopolar (cathode) mode
             % So, if VC, all have 100%, no splitting
-            if stimsource.(cnts{cnt}).pol==2
+            if stimsource.(['k',num2str(cnt)]).pol==2
                 ea_warndlg("Anodes are not supported in FastField")
                 return
             end
 
             if stimsource.va==1
-                if stimsource.(cnts{cnt}).perc ~= 0.0
+                if stimsource.(['k',num2str(cnt)]).perc ~= 0.0
                     perc(cnt) = 100;
                 else
                     perc(cnt) = 0;
                 end
             else
-                perc(cnt) = stimsource.(cnts{cnt}).perc;
+                perc(cnt) = stimsource.(['k',num2str(cnt)]).perc;
             end
             if perc(cnt)>0
-                Im(count1)=stimsource.(cnts{cnt}).imp;
+                Im(count1)=stimsource.(['k',num2str(cnt)]).imp;
                 count1=count1+1;
             end
         end

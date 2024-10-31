@@ -1,13 +1,15 @@
 function analysisFile = ea_getGroupAnalysisFile(folder)
 % Get group analysis file path from input dataset or group analysis folder.
 
-pattern = '^dataset-[^\W_]+_analysis-[^\W_]+\.mat$';
-
 folder = GetFullPath(folder);
 
 if contains(folder, [filesep, 'derivatives', filesep, 'leadgroup', filesep]) % Input is group analysis folder
+    dataset = regexp(folder, ['[^\' filesep ']+(?=\' filesep 'derivatives)'], 'match', 'once');
+    pattern = ['^dataset-' dataset '_analysis-[^\W_]+\.mat$'];
     analysisFile = ea_regexpdir(folder, pattern, 0);
 elseif isfolder(fullfile(folder, 'derivatives')) % Input is dataset root folder
+    [~, dataset] = fileparts(erase(folder, filesep + textBoundary("end")));
+    pattern = ['^dataset-' dataset '_analysis-[^\W_]+\.mat$'];
     analysisFile = ea_regexpdir(fullfile(folder, 'derivatives', 'leadgroup'), pattern, 1);
 else
     error('Please specify either the dataset root folder or the group analysis folder!');

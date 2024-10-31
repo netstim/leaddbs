@@ -25,10 +25,8 @@ end
 switch side
     case 1
         sidec='R';
-        cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
     case 2
         sidec='L';
-        cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
 [xx,yy,zz]=psphere(100);
@@ -39,7 +37,7 @@ try
     end
 end
 
-radius=repmat(1.5,options.elspec.numel,1); % some default setting.
+radius=repmat(1.5,options.elspec.numContacts,1); % some default setting.
 
 %try % if stimparams are set.
 if ~isfield(S, 'sources')
@@ -50,8 +48,8 @@ for source=S.sources
 
     stimsource=S.([sidec,'s',num2str(source)]);
 
-    for cnt=1:length(cnts)
-        U(cnt)=stimsource.(cnts{cnt}).perc;
+    for cnt=1:S.numContacts
+        U(cnt)=stimsource.(['k',num2str(cnt)]).perc;
     end
     Acnt=find(U>0);
     if length(Acnt)>1

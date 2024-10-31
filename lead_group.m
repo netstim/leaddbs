@@ -145,7 +145,7 @@ end
 
 if ~isempty(varargin) && isfile(GetFullPath(varargin{1})) % Path to group analysis file provided as input
     groupFilePath = GetFullPath(varargin{1});
-    load(groupFilePath, 'M');
+    M = ea_checkStimParams(groupFilePath);
     M.root = [fileparts(groupFilePath), filesep];
     set(handles.groupdir_choosebox, 'String', fileparts(groupFilePath));
     set(handles.groupdir_choosebox, 'TooltipString', fileparts(groupFilePath));
@@ -244,7 +244,7 @@ if strcmp(target, 'groupDir')
             end
             % Group analysis file within dataset folder
             groupdir = fileparts(folders{1});
-            load(folders{1}, 'M');
+            M = ea_checkStimParams(folders{1});
 
             datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
             if isfile(fullfile(datasetFolder, 'miniset.json'))
@@ -258,7 +258,7 @@ if strcmp(target, 'groupDir')
         elseif ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-[^\W_]+_analysis-[^\W_]+\.mat$'], 'match', 'once'))
             % Orphan group analysis file, will create proper dataset folder
             [groupdir, analysisFile] = ea_genDatasetFromGroupAnalysis(folders{1});
-            load(analysisFile, 'M');
+            M = ea_checkStimParams(analysisFile);
         else
             ea_error('Not a Lead Group Analysis file!', simpleStack = 1);
         end
@@ -295,7 +295,7 @@ if strcmp(target, 'groupDir')
             analysisFile = ea_genGroupAnalysisFile(folders{1});
         end
         groupdir = fileparts(analysisFile);
-        load(analysisFile, 'M');
+        M = ea_checkStimParams(analysisFile);
 
         datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
         if isfile(fullfile(datasetFolder, 'miniset.json'))
@@ -359,13 +359,8 @@ else
                 M.S(end+1:end+length(folders)) = tS;
             catch ME
                 if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
-                    if ~isfield(M.S, 'sources')
-                        [M.S.sources] = deal(1:4);
-                    end
-                    if ~isfield(M.S, 'volume')
-                        [M.S.volume] = deal([]);
-                    end
-                    M.S(end+1:end+length(folders)) = tS;
+                    diffFields = strjoin(setdiff(fieldnames(M.S), fieldnames(tS))', ', ');
+                    ea_error(sprintf('Incompatibile S fields found: %s.\n', diffFields), showdlg=0, simpleStack=1);
                 end
             end
         end
@@ -544,13 +539,8 @@ else
         M.S(end+1:end+length(folders)) = tS;
     catch ME
         if ME.identifier == "MATLAB:heterogeneousStrucAssignment"
-            if ~isfield(M.S, 'sources')
-                [M.S.sources] = deal(1:4);
-            end
-            if ~isfield(M.S, 'volume')
-                [M.S.volume] = deal([]);
-            end
-            M.S(end+1:end+length(folders)) = tS;
+            diffFields = strjoin(setdiff(fieldnames(M.S), fieldnames(tS))', ', ');
+            ea_error(sprintf('Incompatibile S fields found: %s.\n', diffFields), showdlg=0, simpleStack=1);
         end
     end
 end
@@ -1336,6 +1326,10 @@ switch choice
         options.native = 0;
         ea_refresh_lg(handles);
 
+        % Temporary solution to reload M
+        currentM = load(ea_getGroupAnalysisFile(M.root));
+        M.S = currentM.M.S;
+
         [file_path, releaseDir, input_file_path] = ea_input_programmer_group(options, M);
         currentOS = ea_getarch;
 
@@ -1366,6 +1360,9 @@ switch choice
 
             % Loading output from programmer
             importedS = loadjson(file_path);
+
+            ea_delete(fullfile(M.root, 'data.json'));
+            ea_delete(fullfile(M.root, 'inputData.json'));
             if isfield(importedS, 'message')
                 disp([importedS.message]);
                 return;
@@ -1378,10 +1375,8 @@ switch choice
             end
             M.S = tmpM.S;
             setappdata(handles.leadfigure, 'M', M);
-            
-            [~, folderName, ~] = fileparts(fileparts(M.root));
-            filePath = fullfile(M.root, ['dataset-', folderName, '_analysis-', M.guid, '.mat']);
-            save(filePath, 'M');
+
+            save(ea_getGroupAnalysisFile(M.root), 'M');
         end
         
     otherwise

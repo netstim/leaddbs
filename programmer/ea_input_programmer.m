@@ -16,28 +16,22 @@ inputStruct.stimDir = stimDir;
 
 stimFileName = [options.patientname, '_desc-stimparameters'];
 stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
+[~, stimFolder] = fileparts(fileparts(stimMatFile));
+stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
 
 if isempty(stimMatFile)
     % Create new stimulation label, set S to empty
     inputStruct.labels = {[char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))]};
-    inputStruct.S = {};
+    inputStruct.S(1) = ea_initializeS(inputStruct.labels, options);
 else
     % Aggregate existing stimulations
     for i=1:numel(stimMatFile)
-        load(stimMatFile{i}, 'S');
+        S = ea_checkStimParams(stimMatFile{i});
 
         if isempty(S.label)
             S.label = [char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))];
         end
         inputStruct.labels{i} = S.label;
-
-        if ~isfield(S, 'sources')
-            S.sources = 1:4;
-        end
-
-        if ~isfield(S, 'volume')
-            S.volume = [];
-        end
 
         inputStruct.S(i) = S;
 

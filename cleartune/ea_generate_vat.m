@@ -53,7 +53,7 @@ options.leadprod = 'group';
 options.patient_list=patselect;
 options.d3.mirrorsides=0;
 options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
-options.patientname = options.subj.subjId;
+options.patientname = ['sub-', options.subj.subjId];
 setappdata(resultfig,'elstruct',elstruct);
 setappdata(resultfig,'options',options);
 setappdata(resultfig,'elspec',options.elspec);
@@ -83,7 +83,7 @@ elseif side == 2
     tmp_concval = zeros(1,length(concval));
     stimtmpR = [tmp_ampsel,tmp_concval];
 end
-    
+
 S = ea_initializeS(options);
 S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
 S.label = ['amp_R_L_',num2str(ampselect,'%.2f'),'_',num2str(ampselect,'%.2f'),'_contactR_L_',num2str(whichContact,'%d'),'_',num2str(whichContact,'%d')];
@@ -106,10 +106,10 @@ for hem=side
     setappdata(resultfig,'elspec',options.elspec);
     if strcmp(modelVTA,'Fastfield')
         Efields=ea_genvat_cleartune_fastfield(S,hem,options,fname,resultfig,t.electrode,elt);
-        
+
         if hem == side && writeVTA
             ea_write_nii(Efields)
-            
+
         end
     else
         tic;

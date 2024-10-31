@@ -10,7 +10,7 @@ arguments
     source_index    {mustBeNumeric} % index of the current source
 end
 
-conNum = options.elspec.numel;
+conNum = options.elspec.numContacts;
 settings.Activation_threshold_VTA = []; % initialize
 nActiveSources = [nnz(~isnan(activeSources(1,:))), nnz(~isnan(activeSources(2,:)))];
 if any(nActiveSources > 1)
@@ -109,7 +109,7 @@ end
 settings.Phi_vector_max = zeros(size(settings.Phi_vector));
 if settings.multisource && settings.calcAxonActivation
     for inx = 1:4
-        
+
         [Phi_vector, ~, ~] = ea_get_OneSourceStimVector(S, 2, conNum, activeSources(:,inx));
         Phi_vector(isnan(Phi_vector)) = 0;
 
