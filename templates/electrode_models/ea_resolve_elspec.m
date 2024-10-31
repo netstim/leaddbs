@@ -1485,9 +1485,9 @@ elseif ~isfield(elspec,'eldist')
 end
 
 if numel(elspec.contact_spacing)>1
-    elspec.contact_span = elspec.contact_length*elspec.numContacts + sum(elspec.contact_spacing);
+    elspec.contact_span = elspec.tip_length*elspec.tipiscontact + elspec.contact_length*(length(elspec.etageidx)-elspec.tipiscontact) + sum(elspec.contact_spacing);
 else
-    elspec.contact_span = elspec.contact_length*elspec.numContacts + elspec.contact_spacing*(elspec.numContacts-1);
+    elspec.contact_span = elspec.tip_length*elspec.tipiscontact + elspec.contact_length*(length(elspec.etageidx)-elspec.tipiscontact) + elspec.contact_spacing*(length(elspec.etageidx)-1);
 end
 
 try
