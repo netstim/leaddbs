@@ -50,7 +50,7 @@ electrode.coords_mm(4,:) = [0 0 4.65]+[cx, -cy, 0];
 electrode.coords_mm(5,:) = [0 0 7.65]+[0, elspec.lead_diameter/2, 0];
 electrode.coords_mm(6,:) = [0 0 7.65]+[-cx,-cy, 0];
 electrode.coords_mm(7,:) = [0 0 7.65]+[cx,-cy, 0];
-electrode.coords_mm(8,:) = [0 0 10.75];
+electrode.coords_mm(8,:) = [0 0 10.65];
 
 electrode.head_position = electrode.coords_mm(1,:);
 electrode.tail_position = electrode.coords_mm(end,:);
