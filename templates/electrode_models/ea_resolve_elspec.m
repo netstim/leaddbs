@@ -24,7 +24,7 @@ if ~nargin
         'AdTech RD06R-SP05X', 'AdTech RD08R-SP05X', 'AdTech RD10R-SP03X', 'AdTech RD10R-SP05X', 'AdTech RD10R-SP06X', 'AdTech RD10R-SP07X', 'AdTech RD10R-SP08X', ...
         'AdTech SD06R-SP26X', 'AdTech SD08R-SP05X', 'AdTech SD10R-SP05X', 'AdTech SD10R-SP05X Choi', 'AdTech SD14R-SP05X', ...
         'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead', ...
-        'Aleva directSTIM Directed', 'Aleva directSTIM 11500', ...
+        'Aleva directSTIM Directed', ...
         'SmartFlow Cannula NGS-NC-06'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
@@ -43,7 +43,7 @@ if ~nargin
         'adtech_rd06r_sp05x', 'adtech_rd08r_sp05x', 'adtech_rd10r_sp03x', 'adtech_rd10r_sp05x', 'adtech_rd10r_sp06x', 'adtech_rd10r_sp07x', 'adtech_rd10r_sp08x', ...
         'adtech_sd06r_sp26x', 'adtech_sd08r_sp05x',  'adtech_sd10r_sp05x', 'adtech_sd10r_sp05x_choi', 'adtech_sd14r_sp05x', ...
         'elaine_rat_electrode', 'fhc_wu_rat_electrode', 'numed_minilead', ...
-        'aleva_directstim_directed', 'aleva_directstim_11500', ...
+        'aleva_directstim_directed', ...
         'smartflow_ngs-nc-06'}';
     return
 else
@@ -1456,26 +1456,6 @@ switch elmodel
         elspec.etagenames{1}={'K1-3 (R)','K4-6 (R)','K7-9 (R)','K10-12 (R)'};
         elspec.etagenames{2}={'K13-15 (L)','K16-18 (L)','K19-21 (L)','K22-24 (L)'};
         elspec.etageidx={1:3,4:6,7:9,10:12};
-        elspec.forstimulation=1;
-    case 'Aleva directSTIM 11500'
-        elspec.matfname='aleva_directstim_11500';
-        elspec.lead_diameter=1.4;
-        elspec.lead_color=0.7;
-        elspec.contact_length=1.52;
-        elspec.contact_diameter=1.4;
-        elspec.contact_color=0.3;
-        elspec.tip_diameter=1.4;
-        elspec.tip_color=0.7;
-        elspec.tip_length=2.46;
-        elspec.contact_spacing=1.02;
-        elspec.numContacts=12;
-        elspec.tipiscontact=0;
-        elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)',...
-            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)'};
-        elspec.isdirected=1;
-        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
-        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
-        elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
     case 'SmartFlow Cannula NGS-NC-06'
         elspec.matfname='smartflow_ngs-nc-06';
