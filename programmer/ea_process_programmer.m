@@ -4,14 +4,14 @@ function [S] = ea_process_programmer(options)
     stimDir = fullfile(options.subj.stimDir, ea_getspace);
 
     importedS = loadjson(fullfile(stimDir, 'data.json'));
+    
+    ea_delete(fullfile(stimDir, 'data.json'));
+    ea_delete(fullfile(stimDir, 'inputData.json'));
 
     if isfield(importedS, 'message')
         S = importedS;
         return;
     end
-
-    ea_delete(fullfile(stimDir, 'data.json'));
-    ea_delete(fullfile(stimDir, 'inputData.json'));
 
     %% Reorganize input for programmer to support lead-dbs convention
 

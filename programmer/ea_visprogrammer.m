@@ -15,12 +15,15 @@ function ea_visprogrammer(resultfig, options, S, elstruct)
     catch
         keyboard
     end
+
     if isequal(S.model, 'OSS-DBS (Butenko 2020)') 
+        options.stimSetMode = 0;
         [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
-        flix = 1; 
     else
         for side=1:2
             try 
+                % [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
+                % [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
                 [vtafv,vtavolume] = feval(ea_genvat,elstruct.coords_mm,S,side,options,S.label,resultfig);
                 vtaCalcPassed(side) = 1;
             catch 

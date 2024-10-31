@@ -1325,6 +1325,9 @@ switch choice
         options.groupid = M.guid;
         options.native = 0;
         ea_refresh_lg(handles);
+        
+        currentM = load(ea_getGroupAnalysisFile(M.root));
+        M.S = currentM.M.S;
 
         [file_path, releaseDir, input_file_path] = ea_input_programmer_group(options, M);
         currentOS = ea_getarch;
@@ -1356,6 +1359,9 @@ switch choice
 
             % Loading output from programmer
             importedS = loadjson(file_path);
+
+            ea_delete(fullfile(M.root, 'data.json'));
+            ea_delete(fullfile(M.root, 'inputData.json'));
             if isfield(importedS, 'message')
                 disp([importedS.message]);
                 return;
