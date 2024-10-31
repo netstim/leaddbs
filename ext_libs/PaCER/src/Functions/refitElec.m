@@ -1,10 +1,10 @@
 %% refitElec - refits a previously extracted corse electrode model using
-%               ptimal oblique samplingto increase accuracy and enable 
+%               ptimal oblique samplingto increase accuracy and enable
 %               automatic contact localisation. Intital refitting
 %               ("2nd pass" is followed by a final "3rd pass" to
 %               calibrate the point of origin / zero according to the detected contacts)
 %
-% Params: initialPoly     - Dx3 double, R3 ploynomial coeffecients, 
+% Params: initialPoly     - Dx3 double, R3 ploynomial coeffecients,
 %         pointCloudWorld - Nx3 double, point cloud of sourounding voxels in respective coordinate system
 %         voxelValues     - Nx1 double, voxels intensitiy values (1:1 to  pointCloudWorld)
 %         varargin        - options cell
@@ -35,7 +35,7 @@ argParser.addParameter('contactDetectionMethod', 'peak', @(x)(ismember(x, {'peak
 argParser.addParameter('displayProfiles', false); % optional plot of intensity profiles
 argParser.addParameter('displayMPR', false); % optional MPR plot of orthogonal oblique resampling along the trajceotry
 
-argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional'}))); 
+argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional', 'Aleva directSTIM Directed'})));
 
 argParser.parse(varargin{:});
 args = argParser.Results;
@@ -111,7 +111,7 @@ if(length(contactPositions) < 4 || strcmp(args.contactDetectionMethod, 'contactA
     end
     electrodeGeometries = load('electrodeGeometries.mat');
     electrodeGeometries = electrodeGeometries.electrodeGeometries;
-    
+
     if(isempty(args.electrodeType)) % no electrode type given TODO: DRY!
         disp('Trying to estimate electrode type by simple contactAreaCenter. ');
         warning('No electrode specification given! Set electrodeType option! Trying to estimate type by contactAreaWidth only which might be wrong!');
@@ -121,7 +121,7 @@ if(length(contactPositions) < 4 || strcmp(args.contactDetectionMethod, 'contactA
         else
             disp('Assuming Medtronic 3387. Setting 3387.');
             electrodeInfo  = electrodeGeometries(2);
-        end   
+        end
     else
         disp(['Setting user specified electrode type (' args.electrodeType ')']);
         [flag, idx] = ismember(args.electrodeType, {electrodeGeometries.string});
@@ -130,10 +130,18 @@ if(length(contactPositions) < 4 || strcmp(args.contactDetectionMethod, 'contactA
             error('Unknown electrode type given');
         end
     end
-    zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-mean(electrodeInfo.ringContactCentersMm)); % calibrate zero
+
+    if contains(args.electrodeType, 'Aleva')
+        % MEMS support tube = 10.2mm,
+        % lower most part of the first contact = 0.43
+        zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-5.1+0.43); % calibrate zero
+    else
+        zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-mean(electrodeInfo.ringContactCentersMm)); % calibrate zero
+    end
+
 
 %     refittedR3PolyReZeroed = fitParamPolyToSkeleton(polyval3(refittedR3Poly2nd, linspace(zeroT,1,totalLengthMm  / XY_RESOLUTION)'),FINAL_DEGREE); % <=== LOWER DEGREE IS BETTER (FOR TIP!!) (TRADE OF)
-%     
+%
 %     refitReZeroedElecMod = PolynomialElectrodeModel(refittedR3PolyReZeroed);
 %     refitReZeroedElecMod.useDetectedContactPositions = 0; %
 else % Indivdual Contact Based (i.e. detect electrode type automaticallay and use first contact)
@@ -205,7 +213,7 @@ refitReZeroedElecMod = PolynomialElectrodeModel(refittedR3PolyReZeroed, electrod
 if(strcmp(refitReZeroedElecMod.electrodeInfo.string,'Unkown Electrode Type') ||  useDetectedContactPositions == 0)
     refitReZeroedElecMod.useDetectedContactPositions = 0;
 else
-    refitReZeroedElecMod.useDetectedContactPositions = 1; 
+    refitReZeroedElecMod.useDetectedContactPositions = 1;
     refitReZeroedElecMod.detectedContactPositions = refittedContactDistances(1:electrodeInfo.noRingContacts,:)';
 end
 

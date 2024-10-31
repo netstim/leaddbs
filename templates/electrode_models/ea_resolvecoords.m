@@ -44,7 +44,8 @@ for side=1:length(markers) %valid for unilateral support
                 can_eldist=sum(sum(tril(triu(A,1),1)))/(3);
                 clear coords_temp
             case {'Boston Scientific Vercise Cartesia HX'
-                  'Boston Scientific Vercise Cartesia X'}
+                  'Boston Scientific Vercise Cartesia X'
+				  'Aleva directSTIM Directed'}
                 coords_temp(1,:) = mean(electrode.coords_mm(1:3,:));
                 coords_temp(2,:) = mean(electrode.coords_mm(4:6,:));
                 coords_temp(3,:) = mean(electrode.coords_mm(7:9,:));

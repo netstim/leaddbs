@@ -168,7 +168,8 @@ if options.elspec.numContacts > 1
                 emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
             end
         case {'Boston Scientific Vercise Cartesia HX'
-              'Boston Scientific Vercise Cartesia X'}
+              'Boston Scientific Vercise Cartesia X'
+			  'Aleva directSTIM Directed'}
             for side=options.sides
                 coords_temp{side}(1,:) = mean(coords_mm{side}(1:3,:));
                 coords_temp{side}(2,:) = mean(coords_mm{side}(4:6,:));

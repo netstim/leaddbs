@@ -1447,7 +1447,7 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.1;
         elspec.contact_spacing=0.5;
-        elspec.markerpos = 18; %TOCHECK
+        elspec.markerpos = 13; % TOCHECK
         elspec.numContacts=12;
         elspec.tipiscontact=0;
         elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)',...
