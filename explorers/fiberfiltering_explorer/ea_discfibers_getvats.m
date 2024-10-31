@@ -15,8 +15,9 @@ for sub=1:numPatient
     % Original VAT E-field
     stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
     stimParams = [stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'];
+
     if ~isfile(stimParams)
-        FilesExist = ones(numPatient*2,2);
+        FilesExist([sub,sub+numPatient], :) = ones(2);
         ea_cprintf('CmdWinWarnings', 'Stimulation parameters not found! Skip checking stimulation/vta existence.\n');
         return
     else
