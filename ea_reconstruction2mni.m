@@ -54,13 +54,14 @@ for side = options.sides
     reco.mni.markers(side).tail = warpedcoord(cnt:cnt+offset-1,:);
     cnt = cnt+offset;
 
-    % offset = size(reco.(usenative).trajectory{side},1);
-    % reco.mni.trajectory{side} = warpedcoord(cnt:cnt+offset-1,:);
-    % cnt = cnt+offset;
+    if length(options.elspec.etageidx) > 8
+        scaleFactor = options.elspec.contact_span*1.5;
+    else
+        scaleFactor = options.elspec.contact_span*2;
+    end
 
-    offset = options.elspec.tip_length*~options.elspec.tipiscontact+options.elspec.contact_length/2;
     reco.mni.trajvector{side}=(reco.mni.markers(side).tail-reco.mni.markers(side).head)/norm(reco.mni.markers(side).tail-reco.mni.markers(side).head);
-    reco.mni.trajectory{side}=[reco.mni.markers(side).head-reco.mni.trajvector{side}*5;reco.mni.coords_mm{side}(end,:)+reco.mni.trajvector{side}*5];
+    reco.mni.trajectory{side}=[reco.mni.markers(side).head-reco.mni.trajvector{side}*5;reco.mni.markers(side).head+reco.mni.trajvector{side}*scaleFactor];
     reco.mni.trajectory{side}=[linspace(reco.mni.trajectory{side}(1,1),reco.mni.trajectory{side}(2,1),50)',...
         linspace(reco.mni.trajectory{side}(1,2),reco.mni.trajectory{side}(2,2),50)',...
         linspace(reco.mni.trajectory{side}(1,3),reco.mni.trajectory{side}(2,3),50)'];
