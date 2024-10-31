@@ -1325,7 +1325,8 @@ switch choice
         options.groupid = M.guid;
         options.native = 0;
         ea_refresh_lg(handles);
-        
+
+        % Temporary solution to reload M
         currentM = load(ea_getGroupAnalysisFile(M.root));
         M.S = currentM.M.S;
 

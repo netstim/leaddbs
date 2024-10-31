@@ -104,5 +104,5 @@ S.amplitude = {[0,0,0,0],[0,0,0,0]};
 S.numContacts = options.elspec.numContacts;
 S = ea_activecontacts(S);
 S.sources = 1:4;
-S.volume = [];
+S.volume = [0 0];
 S.ver = '2.0'; % refined version of S
