@@ -3,19 +3,17 @@ function varargout=ea_genvat_fastfield(varargin)
 useSI = 1;
 
 if nargin==5
-    acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
 elseif nargin==6
-    acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
     resultfig=varargin{6};
-%     lgfigure=varargin{6};
+    % lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}= 'Fastfield (Baniasadi 2020)';
@@ -41,13 +39,9 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-% resultfig=getappdata(lgfigure,'resultfig');
-elstruct=getappdata(resultfig,'elstruct');
-options=getappdata(resultfig,'options');
-elspec=getappdata(resultfig,'elspec');
-options.usediffusion=0;
-coords=acoords{side};
-setappdata(resultfig,'elstruct',elstruct);
+elstruct = getappdata(resultfig,'elstruct');
+options = getappdata(resultfig,'options');
+options.usediffusion = 0;
 
 switch side
     case 1
@@ -60,8 +54,8 @@ if ~isfield(S, 'sources')
     S.sources=1:4;
 end
 
-options=ea_resolve_elspec(options);
-Electrode_type = elspec.matfname;
+options = ea_resolve_elspec(options);
+Electrode_type = options.elspec.matfname;
 
 Efield_all=zeros(100,100,100);
 for source=S.sources
@@ -111,10 +105,9 @@ end
 
 Efield = Efield_all;
 
-electrode_patient = elstruct;
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,Electrode_type '.mat']);
 
-[trans_mat,~,xg,yg,zg] = get_trans_mat(electrode,electrode_patient,grid_vec,side);
+[trans_mat,~,xg,yg,zg] = get_trans_mat(electrode,elstruct,grid_vec,side);
 
 gv=grid_vec;
 
