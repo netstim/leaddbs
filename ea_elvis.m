@@ -642,7 +642,13 @@ if isfolder(releaseDir)
     if isfield(S, 'message')
         disp([S.message]);
         return;
+    else
+        stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
+        ea_mkdir(stimFolder);
+        stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
+        save(stimParams, 'S');
     end
+
     ea_visprogrammer(resultfig, options, S, elstruct);
     
     % system([appDir, ' &']);
