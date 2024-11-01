@@ -1343,15 +1343,15 @@ switch choice
                     savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
                 end
             elseif isunix
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer');
+                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
                 if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
+                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer'));
                     savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
                 end
             else
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.exe');
+                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
                 if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
+                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer'));
                     savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
                 end
             end

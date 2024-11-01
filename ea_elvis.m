@@ -624,15 +624,15 @@ if isfolder(releaseDir)
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
     elseif isunix
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer');
+        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
         if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
     else
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.exe');
+        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
         if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
     end
