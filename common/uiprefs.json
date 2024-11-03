@@ -1,0 +1,96 @@
+{
+	"atl": {
+		"genpt": false,
+		"can": true,
+		"pt": 0,
+		"ptnative": false
+	},
+	"atlasset": "Use none",
+	"atlassetn": 85,
+	"autoimprove": 0,
+	"automask": 1,
+	"axiscontrast": 8,
+	"checkreg": 0,
+	"colormap": "parula(64)",
+	"cor_stdfactor": 1,
+	"coregct": {
+		"do": false,
+		"method": "ANTs (Avants 2008)"
+	},
+	"coregmr": {
+		"check": 0,
+		"method": "ANTs (Avants 2008)",
+		"do": 0
+	},
+	"d2": {
+		"write": false,
+		"atlasopacity": 0.15,
+		"writeatlases": 1
+	},
+	"d3": {
+		"write": false,
+		"prolong_electrode": 2,
+		"verbose": "on",
+		"elrendering": 1,
+		"exportBB": 0,
+		"hlactivecontacts": 0,
+		"showactivecontacts": 1,
+		"showpassivecontacts": 1,
+		"showisovolume": 0,
+		"isovscloud": 0,
+		"mirrorsides": 0,
+		"autoserver": 0,
+		"expdf": 0,
+		"writeatlases": 0
+	},
+	"dolc": 0,
+	"doreconstruction": false,
+	"earoot": "",
+	"ecog": {
+		"extractsurface": {
+			"do": 0,
+			"method": 1
+		}
+	},
+	"elmodel": "Medtronic 3389",
+	"elmodeln": 1,
+	"endtolerance": 10,
+	"entrypoint": "STN, GPi or ViM",
+	"entrypointn": 1,
+	"expstatvat": {
+		"do": 0
+	},
+	"fiberthresh": 10,
+	"importdcm": {
+		"do": 0,
+		"tool": 1
+	},
+	"importnii": {
+		"do": 0
+	},
+	"maskwindow": 10,
+	"modality": 2,
+	"native": 0,
+	"normalize": {
+		"do": false,
+		"settings": [],
+		"method": "ANTs (Avants 2008)",
+		"refine": 0
+	},
+	"numcontacts": 4,
+	"overwriteapproved": 0,
+	"reconmethod": "PaCER (Husch 2017)",
+	"refinelocalization": false,
+	"refinesteps": 0,
+	"scrf": {
+		"do": 0,
+		"mask": "Coarse mask (Schönecker 2008)"
+	},
+	"sides": [1,2],
+	"sprungwert": 4,
+	"tra_stdfactor": 0.9,
+	"verbose": 3,
+	"writeoutpm": 0,
+	"writeoutstats": 1,
+	"zresolution": 10
+}
