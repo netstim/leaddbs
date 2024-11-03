@@ -15,7 +15,9 @@ ea_mkdir(derivativeFolder);
 ea_mkdir(rawDataFolder);
 ea_mkdir(fullfile(dataset, 'sourcedata'));
 
-copyfile('dataset_description.json', dataset);
+if ~isfile(fullfile(dataset, 'dataset_description.json'))
+    ea_generate_datasetDescription(dataset);
+end
 
 subPrefix = ['sub-', patientID];
 patientDerivativeFolder = fullfile(derivativeFolder, subPrefix);
@@ -35,19 +37,15 @@ for i=1:numel(images)
         if contains(images{i}, 'T1', 'IgnoreCase', 1)
             ea_cprintf('*Comments', 'Found pre-operative T1w ...\n');
             acqModality = [acqTag, '_T1w'];
-            raw.preop.anat.(acqModality) = [subPrefix, '_ses-preop_acq-', acqTag, '_T1w'];
         elseif contains(images{i}, 'T2', 'IgnoreCase', 1)
             ea_cprintf('*Comments', 'Found pre-operative T2w ...\n');
             acqModality = [acqTag, '_T2w'];
-            raw.preop.anat.(acqModality) = [subPrefix, '_ses-preop_acq-', acqTag, '_T2w'];
         elseif contains(images{i}, 'FLAIR', 'IgnoreCase', 1)
             ea_cprintf('*Comments', 'Found pre-operative FLAIR ...\n');
             acqModality = [acqTag, '_FLAIR'];
-            raw.preop.anat.(acqModality) = [subPrefix, '_ses-preop_acq-', acqTag, '_FLAIR'];
         elseif contains(images{i}, 'FGATIR', 'IgnoreCase', 1)
             ea_cprintf('*Comments', 'Found pre-operative FGATIR ...\n');
             acqModality = [acqTag, '_FGATIR'];
-            raw.preop.anat.(acqModality) = [subPrefix, '_ses-preop_acq-', acqTag, '_FGATIR'];
         end
         preopRawImage = fullfile(preopRawdataFolder, [subPrefix, '_ses-preop_acq-', acqModality, '.nii']);
         copyfile(images{i}, preopRawImage);
@@ -55,7 +53,6 @@ for i=1:numel(images)
         delete(preopRawImage);
     elseif contains(images{i}, 'CT', 'IgnoreCase', 1)
         ea_cprintf('*Comments', 'Found post-operative CT ...\n');
-        raw.postop.anat.CT = [subPrefix, '_ses-postop_CT'];
         postopRawImage = fullfile(postopRawdataFolder, [subPrefix, '_ses-postop_CT.nii']);
         copyfile(images{i}, postopRawImage);
         gzip(postopRawImage);
@@ -64,13 +61,20 @@ for i=1:numel(images)
 end
 
 %% setup rawimage.json
-savejson('', raw, fullfile(patientDerivativeFolder, 'prefs', [subPrefix, '_desc-rawimages.json']));
+ea_genrawimagesjson(dataset, patientID);
 
 %% Save uiprefs, set electrode model
-if ~isempty(electrodeModel)
-    uiprefs = load('uiprefs.mat');
+uiprefsFile = fullfile(patientDerivativeFolder, 'prefs', [subPrefix, '_desc-uiprefs.mat']);
+if isfile(uiprefsFile)
+    uiprefs = load(uiprefsFile);
+else
+    uiprefs = loadjson(fullfile(ea_getearoot, 'common', 'uiprefs.json'));
     uiprefs.earoot = ea_getearoot;
+end
+
+if ~isempty(electrodeModel)
     uiprefs.elmodel = electrodeModel;
     uiprefs.elmodeln = find(strcmp(ea_resolve_elspec, electrodeModel));
-    save(fullfile(patientDerivativeFolder, 'prefs', [subPrefix, '_desc-uiprefs.mat']), '-struct', 'uiprefs');
 end
+
+save(uiprefsFile, '-struct', 'uiprefs');

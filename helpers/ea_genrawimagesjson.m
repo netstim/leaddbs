@@ -36,7 +36,8 @@ if isempty(fieldnames(rawImages))
     return;
 end
 
-ea_cprintf('CmdWinWarnings', '\nGenerating rawimages.json for "%s":\n', subjId);
+fprintf('\n');
+ea_cprintf('*Comments', 'Generating rawimages.json for "%s":\n', subjId);
 
 % Get prefs folder
 prefsFolder = fullfile(GetFullPath(BIDSRoot), 'derivatives', 'leaddbs', ['sub-', subjId], 'prefs');
@@ -44,5 +45,5 @@ ea_mkdir(prefsFolder);
 
 % Save rawimages.json
 jsonPath = fullfile(prefsFolder, ['sub-', subjId, '_desc-rawimages.json']);
-ea_cprintf('CmdWinWarnings', '%s\n\n', jsonPath);
+ea_cprintf('*Comments', '%s\n\n', jsonPath);
 savejson('', rawImages, jsonPath);
