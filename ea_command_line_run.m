@@ -99,6 +99,8 @@ for i = 2:nargin
                         case 'normmethod'
                             if contains(varargin{i}, 'ANTs', 'IgnoreCase', 1)
                                 handles.(opt).Value = 1;
+                            elseif contains(varargin{i}, 'Apply', 'IgnoreCase', 1)
+                                handles.(opt).Value = 2;
                             elseif contains(varargin{i}, 'EasyReg', 'IgnoreCase', 1)
                                 handles.(opt).Value = 3;
                             elseif contains(varargin{i}, 'DARTEL', 'IgnoreCase', 1)
