@@ -707,7 +707,11 @@ try WinOnTop(awin,true); end
 function closesatellites(src,evnt)
 % Close all valid satellite windows
 structfun(@(f) isa(f, 'matlab.ui.Figure') && isvalid(f) && close(f), getappdata(gcf));
-delete(gcf)
+stimwin = getappdata(gcf, 'stimwin');
+if ~isempty(stimwin) && isvalid(stimwin)
+    delete(stimwin);
+end
+delete(gcf);
 
 
 % default view buttons callback
