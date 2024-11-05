@@ -1,4 +1,4 @@
-function runProcessing(dataset, patientID, opts)
+function ea_runProcessing(dataset, patientID, opts)
 arguments
     dataset         {mustBeFolder}  % dataset folder
     patientID       {mustBeText}    % patient ID

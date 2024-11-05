@@ -31,6 +31,10 @@ ea_mkdir(postopRawdataFolder);
 ea_cprintf('*Comments', 'Preparing patient folder %s ...\n', subPrefix);
 
 %% copy raw data
+if ischar(images)
+    images = {images};
+end
+
 for i=1:numel(images)
     if contains(images{i}, {'T1', 'T2', 'FLAIR', 'FGATIR'}, 'IgnoreCase', 1)
         acqTag = ea_checkacq(images{i});
