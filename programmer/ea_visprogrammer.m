@@ -20,11 +20,17 @@ function ea_visprogrammer(resultfig, options, S, elstruct)
         options.stimSetMode = 0;
         [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
     else
+        if options.native % Reload native space coordinates
+            coords = ea_load_reconstruction(options);
+        else
+            coords = elstruct.coords_mm;
+        end
+
         for side=1:2
             try 
                 % [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
                 % [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
-                [vtafv,vtavolume] = feval(ea_genvat,elstruct.coords_mm,S,side,options,S.label,resultfig);
+                [vtafv,vtavolume] = feval(ea_genvat,coords,S,side,options,S.label,resultfig);
                 vtaCalcPassed(side) = 1;
             catch 
                 vtafv=[];
