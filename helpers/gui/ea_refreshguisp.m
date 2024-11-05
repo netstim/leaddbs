@@ -467,8 +467,14 @@ switch model
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
         set(handles.addStimSet,'visible','off');
-
 end
+
+% Set estimate in template to 0 when visualize in native space
+if options.native
+    ea_setprefs('vatsettings.estimateInTemplate', 0);
+    set(handles.estimateInTemplate, 'Visible', 'off');
+end
+
 S.model=model;
 
 ea_savestimulation(S,options);

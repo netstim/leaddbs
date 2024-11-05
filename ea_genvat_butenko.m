@@ -12,6 +12,7 @@ elseif nargin==3
 elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{1} = 'OSS-DBS (Butenko 2020)';
     varargout{2} = true; % Support directed lead
+    varargout{3} = true; % Support estimation in native space
     return
 end
 % get resultfig handle
@@ -80,9 +81,9 @@ end
 % if single source, we will run only one iteration
 for source_index = first_active_source:4
 
-    % get stim settings for particular source    
+    % get stim settings for particular source
     settings = ea_get_stimProtocol(options,S,settings,activeSources,source_index);
-    
+
     if settings.calcAxonActivation
         % will exit after the first source
         if true_VTA
@@ -91,7 +92,7 @@ for source_index = first_active_source:4
             fibersFound = [0,0];
             if ~isnan(activeSources(1,source_index))
                 settings = ea_switch2VATgrid(options,S,settings,0,outputPaths);
-                fibersFound(:,1) = 1; 
+                fibersFound(:,1) = 1;
             end
             if ~isnan(activeSources(2,source_index))
                 settings = ea_switch2VATgrid(options,S,settings,1,outputPaths);
@@ -103,18 +104,18 @@ for source_index = first_active_source:4
             [settings,fibersFound] = ea_prepare_fibers(options, S, settings, outputPaths,  source_index);
         end
     end
-    
+
     % Save settings for OSS-DBS
     if ~all(isnan(activeSources(:,source_index)))
         parameterFile = ea_save_ossdbs_settings(options, S, settings, outputPaths);
     end
-    
+
     if prepFiles_cluster == 1
         % now you can run OSS-DBS externally
         [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
     end
-    
+
     % Iterate over hemispheres: 0 - rh , 1 - lh
     for side = 0:1
 
@@ -132,9 +133,9 @@ for source_index = first_active_source:4
 
         if ~multiSourceMode(side+1)
             % not relevant in this case, terminate after one iteration;
-            source_use_index = 5;  
+            source_use_index = 5;
         else
-            source_use_index = source_index; 
+            source_use_index = source_index;
         end
 
         % copy Current_protocols if generated externally
@@ -173,7 +174,7 @@ for source_index = first_active_source:4
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
-    
+
         % skip PAM if no fibers were preserved for the stim protocol
         if settings.calcAxonActivation && ~any(fibersFound(:,side+1))
             warning('off', 'backtrace');
@@ -183,9 +184,9 @@ for source_index = first_active_source:4
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
-    
+
         fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
-        
+
         if ~exist(outputPaths.HemiSimFolder,'dir')
             mkdir(outputPaths.HemiSimFolder)
         end
@@ -205,11 +206,11 @@ for source_index = first_active_source:4
                     % for other sources, load already sampled parameters
                     settings = ea_load_prob_parameter(options, settings, outputPaths, sideCode, i);
                 end
-        
+
                 % clean-up
                 ea_delete([outputPaths.HemiSimFolder, filesep, 'Allocated_axons.h5']);
                 ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result*'])
-    
+
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
                 system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
@@ -223,11 +224,11 @@ for source_index = first_active_source:4
 
             % run OSS-DBS
             [~, cmdout] = system(['ossdbs ', ea_path_helper(parameterFile_json)])
-            
+
             % detec error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
-                
+
                 % increase the Bnd_Box dimensions
                 system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
 
@@ -245,7 +246,7 @@ for source_index = first_active_source:4
                 else
                     scaling = 1.0;
                 end
-    
+
                 % check if the time domain results is available
                 timeDomainSolution = [outputPaths.HemiSimFolder,filesep,'Results', filesep, 'oss_time_result_PAM.h5'];
                 if ~isfile(timeDomainSolution) && ~settings.stimSetMode
@@ -287,17 +288,17 @@ for source_index = first_active_source:4
         if settings.outOfCore == 1
             ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep, 'oss_freq_domain_tmp_PAM.hdf5']);
         end
-    
+
         if isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt'])
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
-    
+
             % prepare Lead-DBS BIDS format VATs
             if settings.exportVAT && settings.optimizer
                 % get 4-D unit niftis for the optimizer and exit
                 ea_convert_ossdbs_StimSets_VTAs(settings,side,outputPaths)
                 ea_exit_genvat_butenko;
-            elseif settings.exportVAT 
+            elseif settings.exportVAT
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
@@ -320,7 +321,7 @@ for source_index = first_active_source:4
             warning('on', 'backtrace');
             %runStatus(side+1) = 0;
         end
-   
+
     end
 
     % check only the first source for PAM
@@ -333,7 +334,7 @@ end
 
 % merge multisource VATs
 for side = 0:1
-    if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && ~settings.calcAxonActivation 
+    if multiSourceMode(side+1) && nActiveSources(1,side+1) > 0 && ~settings.calcAxonActivation
         %stimparams = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
         [vatfv,vatvolume] = ea_postprocess_multisource(options,settings,side+1,source_efields,source_vtas,outputPaths);
         stimparams(side+1).VAT.VAT = vatfv;

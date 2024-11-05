@@ -18,6 +18,7 @@ elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Kuncel 2008';
         varargout{2} = false; % Doesn't support directed lead
+        varargout{3} = false; % Support estimation in native space
         return
     end
 end

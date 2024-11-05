@@ -21,6 +21,7 @@ elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1} = 'SimBio/FieldTrip (see Horn 2017)';
         varargout{2} = true; % Support directed lead
+        varargout{3} = true; % Support estimation in native space
         return
     end
 end
