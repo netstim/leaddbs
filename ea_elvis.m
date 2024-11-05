@@ -643,6 +643,14 @@ if isfolder(releaseDir)
         disp([S.message]);
         return;
     else
+        options.orignative = options.native;
+        if options.orignative % Force native space calculation when elvis opened in native space
+            ea_setprefs('vatsettings.estimateInTemplate', 0);
+        else
+            ea_setprefs('vatsettings.estimateInTemplate', S.estimateInTemplate);
+            options.native = ~S.estimateInTemplate;
+        end
+        S = rmfield(S, 'estimateInTemplate');
         stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
         ea_mkdir(stimFolder);
         stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
@@ -650,13 +658,12 @@ if isfolder(releaseDir)
     end
 
     ea_visprogrammer(resultfig, options, S, elstruct);
-    
+
     % system([appDir, ' &']);
     % [status, cmdout] = system([appDir, ' &']);
     % [status, cmdout] = system([appDir, ' & echo $!']);
     % pid = str2double(cmdout);
-    % f = parfeval(backgroundPool, @runApp, 0, appDir);
-        
+    % f = parfeval(backgroundPool, @runApp, 0, appDir);   
 end
 
 % while true

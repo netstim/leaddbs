@@ -5,6 +5,8 @@ function [input_file_path, releaseDir] = ea_input_programmer(options, numElectro
 releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
 
 %% Convert stimparameters.mat to json, handle inputData.json
+inputStruct.nativeViewer = options.native;
+inputStruct.estimateInTemplate = options.prefs.machine.vatsettings.estimateInTemplate;
 inputStruct.patientname = options.patientname;
 inputStruct.numElectrodes = numElectrodes;
 inputStruct.electrodeModel = options.elmodel;

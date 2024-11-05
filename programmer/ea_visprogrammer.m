@@ -36,6 +36,7 @@ function ea_visprogrammer(resultfig, options, S, elstruct)
         end
     end           
     
+    options.native = options.orignative;
     setappdata(resultfig,'stimparams',stimparams);
     setappdata(resultfig,'curS',S);
     hmchanged = 1;
