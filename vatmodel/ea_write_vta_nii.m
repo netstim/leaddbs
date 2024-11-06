@@ -42,7 +42,7 @@ vat.pos=midpts;
 
 %plot3(midpts(:,1),midpts(:,2),midpts(:,3),'g.');
 
-if ~isempty(resultfig)
+if ~isempty(resultfig) && (options.orignative==options.native)
     setappdata(resultfig,'vatgrad',vatgrad);
 end
 
