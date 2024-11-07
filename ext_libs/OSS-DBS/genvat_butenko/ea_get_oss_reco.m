@@ -52,7 +52,7 @@ for i=1:eleNum
             settings.Second_coordinate(i,:) = markersMNI(i).tail;
         end
     elseif ~isempty(coords_mm{i})
-        if contains(options.elmodel, 'DIXI D08')
+        if contains(options.elmodel, 'DIXI D08') || contains(options.elmodel, 'PMT 2102')
             settings.Second_coordinate(i,:) = coords_mm{i}(4,:);
         else
             settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
