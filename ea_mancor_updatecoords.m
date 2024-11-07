@@ -13,7 +13,11 @@ switch movel
         olddist=abs(ea_pdist([markers(options.elside).head;markers(options.elside).tail]));
         cchangecoord=1;
         usefit=options.elside;
-        spin=-1;
+        if markers(options.elside).head(3) < markers(options.elside).tail(3)
+            spin = -1;
+        else % In case tail is lower than head
+            spin = 1;
+        end
 
         refpt=markers(options.elside).tail;
         movedpt=movedheadtail(1,:);
@@ -22,7 +26,11 @@ switch movel
         olddist=abs(ea_pdist([markers(options.elside).head;markers(options.elside).tail]));
         cchangecoord=2;
         usefit=options.elside;
-        spin=1;
+        if markers(options.elside).head(3) < markers(options.elside).tail(3)
+            spin = 1;
+        else % In case tail is lower than head
+            spin = -1;
+        end
 
         refpt=markers(options.elside).head;
         movedpt=movedheadtail(2,:);
