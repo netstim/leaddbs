@@ -65,6 +65,27 @@ if preexist
     stimParamFile = [options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat'];
     if isfile(stimParamFile)
         S = ea_checkStimParams(stimParamFile);
+        existingNumContacts = sum(startsWith(fieldnames(S.Rs1), 'k'));
+        if existingNumContacts < options.elspec.numContacts
+            for source=1:4
+                for k=existingNumContacts+1:options.elspec.numContacts
+                    S.(['Rs',num2str(source)]).(['k',num2str(k)]).perc=0;
+                    S.(['Rs',num2str(source)]).(['k',num2str(k)]).pol=0;
+                    S.(['Rs',num2str(source)]).(['k',num2str(k)]).imp=1;
+                    S.(['Ls',num2str(source)]).(['k',num2str(k)]).perc=0;
+                    S.(['Ls',num2str(source)]).(['k',num2str(k)]).pol=0;
+                    S.(['Ls',num2str(source)]).(['k',num2str(k)]).imp=1;
+                end
+            end
+            S.numContacts = options.elspec.numContacts;
+        elseif existingNumContacts > options.elspec.numContacts
+            for source=1:4
+                excessiveFields = strcat('k', arrayfun(@num2str, options.elspec.numContacts+1:existingNumContacts, 'Uni', 0));
+                S.(['Rs',num2str(source)]) = rmfield(S.(['Rs',num2str(source)]), excessiveFields);
+                S.(['Ls',num2str(source)]) = rmfield(S.(['Ls',num2str(source)]), excessiveFields);
+            end
+            S.numContacts = options.elspec.numContacts;
+        end
         return
     end
 end
