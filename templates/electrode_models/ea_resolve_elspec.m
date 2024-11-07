@@ -481,7 +481,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S10 Legacy'
         elspec.matfname='sde_08_s10_legacy';
         elspec.lead_diameter=0.8;
@@ -501,7 +501,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S12 Legacy'
         elspec.matfname='sde_08_s12_legacy';
         elspec.lead_diameter=0.8;
@@ -521,7 +521,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S16 Legacy'
         elspec.matfname='sde_08_s16_legacy';
         elspec.lead_diameter=0.8;
@@ -541,7 +541,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S8'
         elspec.matfname='sde_08_s8';
         elspec.lead_diameter=0.8;
@@ -561,7 +561,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S10'
         elspec.matfname='sde_08_s10';
         elspec.lead_diameter=0.8;
@@ -581,7 +581,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S12'
         elspec.matfname='sde_08_s12';
         elspec.lead_diameter=0.8;
@@ -601,7 +601,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S14'
         elspec.matfname='sde_08_s14';
         elspec.lead_diameter=0.8;
@@ -621,7 +621,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'SDE-08 S16'
         elspec.matfname='sde_08_s16';
         elspec.lead_diameter=0.8;
@@ -641,7 +641,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-04-091'
         elspec.matfname='pmt_2102_04_091';
         elspec.lead_diameter=0.8;
@@ -660,7 +660,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-06-091'
         elspec.matfname='pmt_2102_06_091';
         elspec.lead_diameter=0.8;
@@ -680,7 +680,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-08-091'
         elspec.matfname='pmt_2102_08_091';
         elspec.lead_diameter=0.8;
@@ -700,7 +700,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-10-091'
         elspec.matfname='pmt_2102_10_091';
         elspec.lead_diameter=0.8;
@@ -720,7 +720,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-12-091'
         elspec.matfname='pmt_2102_12_091';
         elspec.lead_diameter=0.8;
@@ -740,7 +740,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-14-091'
         elspec.matfname='pmt_2102_14_091';
         elspec.lead_diameter=0.8;
@@ -760,7 +760,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-16-091'
         elspec.matfname='pmt_2102_16_091';
         elspec.lead_diameter=0.8;
@@ -780,7 +780,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-16-092'
         elspec.matfname='pmt_2102_16_092';
         elspec.lead_diameter=0.8;
@@ -800,7 +800,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-16-093'
         elspec.matfname='pmt_2102_16_093';
         elspec.lead_diameter=0.8;
@@ -820,7 +820,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'PMT 2102-16-131'
         elspec.matfname='pmt_2102_16_131';
         elspec.lead_diameter=0.8;
@@ -860,7 +860,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case '2069-EPC-05C-35'
         elspec.matfname='epc_05c';
         elspec.lead_diameter=0.8;
@@ -880,7 +880,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case '2069-EPC-15C-35'
         elspec.matfname='epc_15c';
         elspec.lead_diameter=0.8;
@@ -900,7 +900,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'NeuroPace DL-344-3.5'
         elspec.matfname='neuropace_dl_344_35';
         elspec.lead_diameter=1.27;
@@ -998,7 +998,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'DIXI D08-12AM'
         elspec.matfname='dixi_d08_12am';
         elspec.lead_diameter=0.8;
@@ -1475,7 +1475,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
 end
 
 if ~isfield(elspec,'eldist') && numel(elspec.contact_spacing)>1
