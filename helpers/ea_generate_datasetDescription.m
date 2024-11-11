@@ -29,7 +29,7 @@ outputFile = fullfile(datasetDir, 'dataset_description.json');
 savejson('', dataset_description, outputFile);
 
 if exist('flag','var') && strcmp(flag, 'root_folder')
-    generate_bidsIgnore(parent_dir,parent_file);
+    generate_bidsIgnore(datasetDir);
 end
 
     
@@ -64,4 +64,6 @@ ignore_files = {'*CT*','*secondstepmask.nii','*thirdstepmask','*brainmask',...
     '*anchorNative*','*MNI152NLin2009bAsym*','*preproc*','*brainshiftmethod.json',...
     '*.xlsx','coregMR*','coregCT*','normalize*','*method.json','*ea_*.txt','*.mat',...
     '*rawimages*','export','miscellaneous','stimulations','atlases'}';
-writecell(ignore_files, fullfile(datasetDir, '.bidsignore'));
+tempFile = fullfile(datasetDir, '.bidsignore.txt'); %provide a temporary file for now since writecell cannot handle hidden files
+writecell(ignore_files, tempFile); %write cell to this temp file
+movefile(tempFile, fullfile(datasetDir, '.bidsignore'));  %rename temp file to the correct filename.

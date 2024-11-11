@@ -46,6 +46,9 @@ ea_mkdir(fullfile(uipatdir, 'sourcedata'));
 if ~isfile(fullfile(uipatdir, 'dataset_description.json'))
     ea_cprintf('CmdWinWarnings', 'Could not find dataset description file, generating one now...\n');
     ea_generate_datasetDescription(uipatdir, 'root_folder');
+    % if isempty(ea_regexpdir(fullfile(uipatdir,'derivatives','leaddbs'), '^sub-.*', 0, 'd')) && ~isempty(ea_regexpdir(fullfile(uipatdir,'rawdata'), '^sub-.*', 1, 'd')) %only rawdata is available.
+    %     ea_generate_datasetDescription(uipatdir, 'raw');
+    % else
 end
 
 if exist('handles','var')
