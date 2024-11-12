@@ -62,7 +62,7 @@ guidata(hObject, handles);
 
 M=varargin{1};
 
-setappdata(handles.editregressor, 'maxnumel', max(M.S.numContacts));
+setappdata(handles.editregressor, 'maxnumel', max([M.S.numContacts]));
 
 [~,ptnames]=cellfun(@fileparts,M.patient.list,'UniformOutput',0);
 set(handles.datatable,'RowName',ptnames);
