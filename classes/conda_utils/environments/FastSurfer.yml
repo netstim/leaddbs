@@ -4,7 +4,6 @@ channels:
   - conda-forge
 
 dependencies:
-  - bash=5.1.16
   - h5py=3.7.0
   - matplotlib=3.5.1
   - nibabel=3.2.2
@@ -17,9 +16,9 @@ dependencies:
   - scikit-image=0.19.2
   - scipy=1.8.0
   - simpleitk==2.2.1
-  - torchio=0.18.83
-  - torchvision=0.13.0
+  - torchio=0.18.92
+  - torchvision=0.15.2
   - yacs=0.1.8
 
 variables:
-  env_version: 20231108
+  env_version: 20240517

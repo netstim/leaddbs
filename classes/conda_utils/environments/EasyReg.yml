@@ -10,9 +10,8 @@ dependencies:
   - numpy=1.24.3
   - pip=22.0.4
   - python=3.10
-  - pytorch=2.2.2
-  - scipy=1.11.3
-  - cython
+  - pytorch=2.1.2
+  - scipy=1.10.1
 
   - pip:
     - git+https://github.com/simonoxen/ermodels.git
