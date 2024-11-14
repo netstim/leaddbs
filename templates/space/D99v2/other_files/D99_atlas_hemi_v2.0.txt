@@ -1,3 +1,0 @@
-Shift value (Max Value): 522.0
-Note: The atlas values have been modified to distinguish between the left and right brain.
-       - The maximum value was added to elements with row index >= 137, except where the value was 0.
