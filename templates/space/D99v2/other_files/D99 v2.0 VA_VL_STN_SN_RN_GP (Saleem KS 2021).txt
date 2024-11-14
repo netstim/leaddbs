@@ -1,0 +1,13 @@
+4 GPe
+5 GPi
+6 SNpr
+7 SNpc
+8 SNpl
+9 STN
+13 VApc
+14 VAmc
+19 VLc
+20 VLo
+41 RNpc
+70 SNpm
+122 RNmc
