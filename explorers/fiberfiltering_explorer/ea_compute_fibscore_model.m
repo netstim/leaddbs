@@ -1,4 +1,4 @@
-function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
+function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm,vals,usedidx)
 
     if obj.useExternalModel == true
         S = load(obj.ExternalModelFile);
@@ -67,12 +67,14 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
             %obj.draw(vals,fibcell);
             drawnow;
         else
-            if obj.useExternalModel == true
-               [vals,~,usedidx] = ea_discfibers_loadModel_calcstats(obj, vals_connected);
-            else
-               [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            if ~exist('vals','var') || ~exist('usedidx','var')
+
+                if obj.useExternalModel == true
+                    [vals,~,usedidx] = ea_discfibers_loadModel_calcstats(obj, vals_connected);
+                else
+                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                end
             end
-            %[vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
         end
     else
         if obj.cvlivevisualize

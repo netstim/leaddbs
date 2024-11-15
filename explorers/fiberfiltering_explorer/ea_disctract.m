@@ -55,6 +55,7 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
         cleartuneresults % copy of results for auto tuning functions
+        cleartunevars
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
         CleartuneOptim = 0;
@@ -2043,8 +2044,8 @@ for nroi = 1:length(obj.roiintersectdata)
     vatInd = find(abs(vat.img(:))>thresh);
     [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
     vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
-    for i=1:size(obj.drawobject,1)
-        for side = 1:size(obj.drawobject,2)
+    for side = 1:2
+        for i=1:size(obj.drawobject,1)
             vals = {};
             valsPeak = {};
             connected = [];
@@ -2056,14 +2057,15 @@ for nroi = 1:length(obj.roiintersectdata)
             fibers=ea_fibcell2fibmat(resultFibers);
             filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
             if ~any(filter)
+                zeros_arr = zeros(size(obj.drawobject{i,side},1),1);
+                normwts = mat2cell(zeros_arr,ones(size(obj.drawobject{i,side},1),1));
+                [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
                 continue
             end
             trimmedFiber = fibers(filter,:);
-
             % Map mm connectome fibers into VAT voxel space
             [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
             fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
-
             % Remove outliers
             fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
             trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
@@ -2071,19 +2073,26 @@ for nroi = 1:length(obj.roiintersectdata)
             vals = cellfun(@(fib) vat.img(intersect(fib, vatInd)), fibVoxInd(connected), 'Uni', 0);
             valsPeak{1}(trimmedFiberInd(connected)) = cellfun(@mean, vals);
             wts = cell2mat(valsPeak)';
-            if length(wts) ~= size(obj.drawobject{i,side},1)
-                diff = length(wts) - size(obj.drawobject{i,side},1);
-                if diff < 0
-                    wts = [wts;zeros(abs(diff),1)];
+            if ~isempty(wts)
+                if length(wts) ~= size(obj.drawobject{i,side},1)
+                    diff = length(wts) - size(obj.drawobject{i,side},1);
+                    if diff < 0
+                        wts = [wts;zeros(abs(diff),1)];
+                    end
                 end
-            end
-            normwts = normalize(ea_contrast(wts,10,0),'range');
-
-            normwts =  mat2cell(normwts,ones(size(normwts,1),1));
-            if ~isempty(normwts)
+                normwts = normalize(ea_contrast(wts,10,0),'range');
+                normwts =  mat2cell(normwts,ones(size(normwts,1),1));
+                if ~isempty(normwts) && ~isempty(obj.drawobject{i,side})
+                    try
+                        [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
+                        disp(['Changed alpha of tract',num2str(i)]);
+                        normwts = {};
+                    end
+                end
+            else %if it is not connected then they should have zero alpha!!
+                zeros_arr = zeros(size(obj.drawobject{i,side},1),1);
+                normwts = mat2cell(zeros_arr,ones(size(obj.drawobject{i,side},1),1));
                 [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
-                disp(['Changed alpha of tract',num2str(i)]);
-                normwts = {};
             end
         end
     end
