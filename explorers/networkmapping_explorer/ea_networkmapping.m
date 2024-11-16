@@ -151,6 +151,11 @@ classdef ea_networkmapping < handle
                 connName = regexprep(obj.connectome, ' > .*$', '');
                 load([ea_getconnectomebase('fmri'), connName, filesep, 'dataset_volsurf.mat'], 'vol');
                 obj.results.(ea_conn2connid(obj.connectome)).space = vol.space;
+                if isfield(vol,'cifti')
+                    obj.results.(ea_conn2connid(obj.connectome)).space.cifti=vol.cifti; % add cifti space as well (hidden in nii space)
+                    obj.results.(ea_conn2connid(obj.connectome)).space.outidx=vol.outidx;
+                    obj.results.(ea_conn2connid(obj.connectome)).space.inidx=vol.inidx;
+                end
             end
         end
 
@@ -659,6 +664,7 @@ classdef ea_networkmapping < handle
                         end
 
                         res.img(:)=vals{group};
+                        res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
                     case 'Surface (Elvis)'
                         sides=1:2;
                         keep=[obj.modelRH,obj.modelLH]; 
@@ -673,7 +679,8 @@ classdef ea_networkmapping < handle
                             return
                         end
                         res.img(:)=vals{group};
-                        
+                        res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+
                         h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
                         if obj.modelRH && obj.modelLH
                             obj.drawobject{group}{1} = h{1};
@@ -685,6 +692,8 @@ classdef ea_networkmapping < handle
                         end
                     case 'Surface (Surfice)'
                         res.img(:)=vals{group};
+                        res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+
                         res.fname=[fileparts(obj.leadgroup),filesep,'model.nii'];
 
                         if ~obj.posvisible
