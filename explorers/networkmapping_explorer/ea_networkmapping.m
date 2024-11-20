@@ -664,7 +664,9 @@ classdef ea_networkmapping < handle
                         end
 
                         res.img(:)=vals{group};
-                        res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        if isfield(res,'cifti')
+                            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        end
                     case 'Surface (Elvis)'
                         sides=1:2;
                         keep=[obj.modelRH,obj.modelLH]; 
