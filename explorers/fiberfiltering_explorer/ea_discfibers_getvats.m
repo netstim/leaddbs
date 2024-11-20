@@ -1,6 +1,7 @@
 function [vatlist,FilesExist] = ea_discfibers_getvats(obj)
 % Return list of VATs
 
+
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,2);
 FilesExist = zeros(numPatient*2,2); % also check if mirrored fields exist

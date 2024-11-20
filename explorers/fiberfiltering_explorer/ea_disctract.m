@@ -343,10 +343,14 @@ classdef ea_disctract < handle
                     if strcmp(obj.calculationMethod,'Fiber Based Method')
                         [~,FilesExist] = ea_discfibers_getlattice(obj);
                     else
-                       [~,FilesExist] = ea_discfibers_getvats(obj); 
+                        if isfield(obj.M,'pseudoM')
+                            for entry=1:length(obj.M.ROI.list)
+                                FilesExist(entry)=exist(obj.M.ROI.list{entry},'file');
+                            end
+                        else
+                            [~,FilesExist] = ea_discfibers_getvats(obj);
+                        end
                     end
-
-                    
                     while ~all(FilesExist(:))
                         answ=questdlg('It seems like not all stimulation volumes have been calculated. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
                         switch answ
@@ -397,8 +401,11 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).calculationMethod = 'Fiber Based Method';
         end
         function calculate_on_efield(obj,cfile)
-            [vatlist,~] = ea_discfibers_getvats(obj);
-          
+            if isfield(obj.M,'pseudoM')
+                vatlist=obj.M.ROI.list;
+            else
+                [vatlist,~] = ea_discfibers_getvats(obj);
+            end
             [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
             obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
