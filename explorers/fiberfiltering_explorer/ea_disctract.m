@@ -46,6 +46,7 @@ classdef ea_disctract < handle
         subscore
         currentune
         results = struct
+        customRoi = struct % struct used only for pseudoM case (customRoi.isbinary and customRoi.minmax)
         
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
@@ -281,25 +282,31 @@ classdef ea_disctract < handle
                 obj.ADJ = false;
             end
 
-            switch obj.connectivity_type
+            % check if files exist
+            FilesExist = check_stimvols(obj);
+            
 
+            if isfield(obj.M,'pseudoM') % failsave - this should not be necessary but still making sure things are set correctly for the pseudoM case.
+                obj.connectivity_type=1;
+                obj.calculationMethod='E-field/Voxel Based Method';
+            end
+
+            switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     fprintf("Calculating using the PAM method. Using dMRI connectome: %s",obj.connectome);
-                    FilesExist = check_stimvols(obj);
+
                     if all(FilesExist)
                         calculate_on_pam(obj,cfile)
                     end
                 otherwise     % check fiber recruitment via intersection with VTA
                     if strcmp(obj.calculationMethod,'E-field/Voxel Based Method')
                         fprintf("Calculating using the traditional E-field based method. Using dMRI connectome: %s",obj.connectome);
-                        FilesExist = check_stimvols(obj);
                         if all(FilesExist)
                             calculate_on_efield(obj,cfile)
                         end
                     elseif strcmp(obj.calculationMethod,'Fiber Based Method')
                         % check whether to use new (calc_on_fibers) or old method:
                         fprintf("Calculating using the Fiber based method. Using dMRI connectome: %s",obj.connectome);
-                        FilesExist = check_stimvols(obj);
                         if all(FilesExist)%why can this not be psuedo M?
                             calculate_on_fibers(obj,cfile)
                         end
@@ -403,6 +410,10 @@ classdef ea_disctract < handle
         function calculate_on_efield(obj,cfile)
             if isfield(obj.M,'pseudoM')
                 vatlist=obj.M.ROI.list;
+                [obj.customRoi.isbinary,obj.customRoi.minmax]=ea_discfibers_checkcustomNii(vatlist);
+                if obj.customRoi.isbinary
+                    obj.statsettings.stimulationmodel='VTA';
+                end
             else
                 [vatlist,~] = ea_discfibers_getvats(obj);
             end
