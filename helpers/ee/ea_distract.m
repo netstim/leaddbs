@@ -9,6 +9,7 @@ shoot_pressed = false;     % Shoot button press flag
 isGameOver = false;      % Game over flag
 waitForRestart = false;  % Restart flag
 fig = [];                % Figure handle
+mscCredits = [];         % Music Credit Text
 if exist('splat.mat', 'file')
     splatSound = load('splat.mat');
 else
@@ -112,18 +113,23 @@ while true
             'Color', 'k', 'FontSize', 20, 'HorizontalAlignment', 'center', 'Parent', ax);
         text(centerX, 50, ['Fiber Score: ', num2str(score)], ...
             'Color', 'k', 'FontSize', 16, 'HorizontalAlignment', 'center', 'Parent', ax);
-        text(centerX, 40, 'Press Space to Restart or Esc to Exit', ...
+
+        text(centerX, 20, 'Press Space to Restart or Esc to Exit', ...
             'Color', 'k', 'FontSize', 14, 'HorizontalAlignment', 'center', 'Parent', ax);
+
+
 
         % Display scrolling end credits
         displayEndCredits(commitMessages');
 
         % Wait for space bar to restart or escape to exit
         while waitForRestart
-            pause(0.1);
+            showMusicCredits;
             if ~ishandle(fig)
                 return; % Exit if figure is closed
             end
+            pause(0.5)
+            delMusicCredits;
         end
     else
         break; % Exit the game loop if figure is closed
@@ -281,7 +287,7 @@ end
                 gap_y = randi([30, 70]);
                 neuron_size = obstacle_gap;
 
-                obstacle_start_x = xLim(2) + 10;  % Start obstacles slightly off-screen
+                obstacle_start_x = xLim(2) + 2;  % Start obstacles slightly off-screen
 
                 % Top neuron obstacle
                 top_neuron = struct('pos', [obstacle_start_x, gap_y + neuron_size / 2], ...
@@ -637,6 +643,29 @@ end
         end
     end
 
+    function msc=getMusic(player)
+        if player.CurrentSample<5629671
+            msc='Dandy Junior / DNDY';
+        else
+            msc='Dandy Junior / DNDY & Neuston';
+        end
+    end
+
+
+    function showMusicCredits
+        try
+            mscCredits=text(centerX, 40, ['Music by ',getMusic(player),'.'], ...
+                'Color', 'k', 'FontSize', 14, 'HorizontalAlignment', 'center', 'Parent', ax);
+            drawnow;
+        end
+    end
+
+    function delMusicCredits
+        try
+            delete(mscCredits);
+        end
+    end
+
     function drawNeuron(pos, size, type)
         % Draw a neuron-like obstacle with a soma, dendrites, and a vertical axon extending to the edge
 
@@ -790,7 +819,7 @@ end
 
         % Start scrolling
         while yPos < textHeight + 10 && waitForRestart  % Scroll until the text moves above the visible area or interrupted
-
+            showMusicCredits;
             % Check if figure or text object is closed
             if ~ishandle(fig) || ~ishandle(creditHandle)
                 return;
@@ -801,6 +830,7 @@ end
             drawnow;
 
             pause(1 / framesPerSecond);  % Control frame rate
+            delMusicCredits;
         end
 
     end
