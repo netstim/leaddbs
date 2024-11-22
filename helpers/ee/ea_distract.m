@@ -98,6 +98,7 @@ while true
     if ishandle(fig)
         ea_chirp; ea_chirp; ea_chirp;
 
+        pause(3); % make sure player stops pressing buttons
         % Fetch commit data from GitHub
         commitMessages = fetchCommitData();
 
