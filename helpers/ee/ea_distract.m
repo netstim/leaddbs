@@ -4,7 +4,7 @@ function ea_distract()
 
 %% Global Game Variables
 space_pressed = false;   % Space bar press flag
-shots_remaining = 5;       % Player starts with 5 shots
+shots_remaining = 3;       % Player starts with 3 shots
 shoot_pressed = false;     % Shoot button press flag
 isGameOver = false;      % Game over flag
 waitForRestart = false;  % Restart flag
@@ -52,11 +52,6 @@ updateAxesLimits();
 
 % Handle window resizing
 set(fig, 'ResizeFcn', @(src, event) updateAxesLimits());
-
-
-
-
-
 
 
 %% Create and Play Background Music
@@ -218,36 +213,94 @@ end
         obstacles = [];              % List to hold obstacles
         obstacle_speed = -0.5;       % Speed of obstacles moving left
         obstacle_gap = 40;           % Vertical gap in obstacles
-        obstacle_freq = 120;         % Frequency of obstacle generation (frames)
+        obstacle_freq = 200;         % Frequency of obstacle generation (frames)
         frame_rate = 30;             % Frames per second
         score = 0;                   % Player's score
         isGameOver = false;          % Game over flag
         frame_count = 0;             % Frame counter
+        obstdist_count = 0;           % Obstacle distance counter
         difficulty_increase_interval = 1000; % Frames after which difficulty increases
         difficulty_level = 1;        % Initial difficulty level
+        brain_shift_active = 0;      % brain shift active
+        brain_shift_duration = 20;   % brain shift duration (frames)
+        brain_shift_inited = 0;      % brain shift inited
+
 
         %% Set Key Functions for Game
         set(fig, 'KeyPressFcn', @keyDown, 'KeyReleaseFcn', @keyUp);
 
         %% Main Game Loop
+        thisobst_dist=(obstacle_freq*rand);
         while ~isGameOver
             % Update frame count
             frame_count = frame_count + 1;
+            obstdist_count = obstdist_count + 1;
+
 
             % Increase difficulty at intervals
             if mod(frame_count, difficulty_increase_interval) == 0
                 difficulty_level = difficulty_level + 1;
                 gravity = gravity - 0.03; % Increase gravity
-                obstacle_speed = obstacle_speed - 0.2; % Increase obstacle speed
+                obstacle_speed = obstacle_speed - 0.3; % Increase obstacle speed
                 if obstacle_gap > 20
                     obstacle_gap = obstacle_gap - 5; % Decrease gap size gradually
                 end
-                if obstacle_freq > 60
-                    obstacle_freq = obstacle_freq - 5; % Increase obstacle frequency
+                if obstacle_freq > 30
+                    obstacle_freq = obstacle_freq - 30; % Increase obstacle frequency
                 end
 
                 % Notify user of level up
                 notifyLevelUp(difficulty_level);
+            end
+
+
+            % Brain shift effect starts from level 4
+            if difficulty_level >= 4
+                if rand() < 0.001 || brain_shift_active % 5% chance of starting brain shift each frame
+                    % bs init
+                    brain_shift_active = 1;
+                    if ~brain_shift_inited
+                        brain_shift_start = frame_count;
+                        brain_shift_inited = 1;
+                    end
+                    flashRectangle = rectangle('Position', [xLim(1), yLim(1), diff(xLim), diff(yLim)], ...
+                        'FaceColor', [0.8, 0.8, 1], 'EdgeColor', 'none', 'FaceAlpha', 0.5, 'Parent', ax);
+
+                    % Bring the flash rectangle to the front
+                    uistack(flashRectangle, 'top');
+
+                    xLim = get(ax, 'XLim');
+                    yLim = get(ax, 'YLim');
+                    centerX = mean(xLim);
+                    bstext=text(centerX, yLim(2) - 20, 'Uh oh, brain shift!!', ...
+                        'Color', 'k', 'FontSize', 20, 'HorizontalAlignment', 'center', 'Parent', ax);
+
+                    % Update the figure to show the effect
+                    drawnow;
+
+
+                    % Shake electrode and obstacles during brain shift
+                    shakeAmount = 2*randn(1, length(obstacles)); % Random shake magnitude
+                    for i = 1:length(obstacles)
+                        obstacles(i).pos = obstacles(i).pos + shakeAmount(i);
+                    end
+
+                    bstext.Position = bstext.Position + randn(1,3);
+
+                end
+            end
+
+            % stop brain shift
+            if brain_shift_active
+                if frame_count-brain_shift_start >= brain_shift_duration
+                    brain_shift_active = 0;
+                    brain_shift_inited = 0;
+
+                    % Remove the flash rectangle
+                    delete(flashRectangle);
+                    delete(bstext);
+
+                end
             end
 
             % Handle shooting
@@ -284,7 +337,9 @@ end
             end
 
             % Generate new obstacles
-            if mod(frame_count, obstacle_freq) == 0
+            if obstdist_count>thisobst_dist %mod(frame_count, obstacle_freq) == 0
+                obstdist_count = 0; % reset
+                thisobst_dist=(obstacle_freq*rand);
                 gap_y = randi([30, 70]);
                 neuron_size = obstacle_gap;
 
