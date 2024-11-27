@@ -4,8 +4,8 @@ function ea_distract()
 
 %% Global Game Variables
 space_pressed = false;   % Space bar press flag
-shots_remaining = 3;       % Player starts with 3 shots
-shoot_pressed = false;     % Shoot button press flag
+zaps_remaining = 3;       % Player starts with 3 zaps
+zap_pressed = false;     % Zap button press flag
 isGameOver = false;      % Game over flag
 waitForRestart = false;  % Restart flag
 fig = [];                % Figure handle
@@ -127,6 +127,7 @@ while true
             pause(0.5)
             delMusicCredits;
         end
+        zaps_remaining = 3; % reset remaining zaps
     else
         break; % Exit the game loop if figure is closed
     end
@@ -303,15 +304,15 @@ end
                 end
             end
 
-            % Handle shooting
-            if shoot_pressed && shots_remaining > 0
-                % Perform shooting action
-                shots_remaining = shots_remaining - 1;
-                % Call the function to handle shooting
-                obstacles = shootObstacles(electrode, obstacles);
-                % Reset shoot_pressed to prevent continuous firing
-                shoot_pressed = false;
-            elseif shoot_pressed
+            % Handle zapping
+            if zap_pressed && zaps_remaining > 0
+                % Perform zapping action
+                zaps_remaining = zaps_remaining - 1;
+                % Call the function to handle zapping
+                obstacles = zapObstacles(electrode, obstacles);
+                % Reset zap_pressed to prevent continuous firing
+                zap_pressed = false;
+            elseif zap_pressed
                 if ~isempty(splatSound)
                     sound(splatSound.y(1:5000), splatSound.Fs);
                 end
@@ -431,17 +432,17 @@ end
             % Update score
             score = score + 1;
             
-            % Replenish shots every 1000 points
+            % Replenish zaps every 1000 points
             if mod(score, 600) == 0
-                shots_remaining = shots_remaining + 1;
+                zaps_remaining = zaps_remaining + 1;
                 % Display a notification
-                text(50, 90, '+1 Pulse!', 'Color', 'k', 'FontSize', 14, 'HorizontalAlignment', 'center', 'Parent', ax);
+                text(50, 90, '+1 Zap!', 'Color', 'k', 'FontSize', 14, 'HorizontalAlignment', 'center', 'Parent', ax);
                 drawnow;
                 sound(gongSound.y(1:5000), gongSound.Fs);
                 pause(0.5);  % Pause to let the player see the message
             end
 
-            h = title(ax, ['Fiber Score: ', num2str(score), '   Level: ', num2str(difficulty_level), '   Pulses Remaining (.): ', num2str(shots_remaining)], ...
+            h = title(ax, ['Fiber Score: ', num2str(score), '   Level: ', num2str(difficulty_level), '   Zaps Remaining (.): ', num2str(zaps_remaining)], ...
                 'Color', 'k', 'FontSize', 14);           
             % Pause for frame rate
             pause(1/frame_rate);
@@ -461,9 +462,9 @@ end
     end
 
 
-    function obstacles = shootObstacles(electrode, obstacles)
+    function obstacles = zapObstacles(electrode, obstacles)
         % Remove obstacles within a certain radius from the electrode
-        shoot_range = 40;  % Define the effective range of the shot
+        zap_range = 40;  % Define the effective range of the zap
 
         % Loop through obstacles to check distances
         obstacles_to_remove = false(1, length(obstacles));  % Logical array to mark obstacles for removal
@@ -474,7 +475,7 @@ end
             obs_pos = obs.pos;
             distance = sqrt((electrode.pos(1) - obs_pos(1))^2 + (electrode.pos(2) - obs_pos(2))^2);
 
-            if distance <= shoot_range
+            if distance <= zap_range
                 % Mark obstacle for removal
                 obstacles_to_remove(i) = true;
 
@@ -512,7 +513,7 @@ end
         % Remove the marked obstacles
         obstacles(obstacles_to_remove) = [];
 
-        % Optionally, you can add a visual effect to indicate shooting
+        % Optionally, you can add a visual effect to indicate zapping
     end
 
     function drawElectricEffect(ax, electrode_pos)
@@ -550,7 +551,7 @@ end
         if strcmp(event.Key, 'space')
             space_pressed = true;
         elseif strcmp(event.Key, 'period') || strcmp(event.Character, '.')
-            shoot_pressed = true;
+            zap_pressed = true;
         elseif strcmp(event.Key, 'escape')
             % Exit the game
             delete(fig);
@@ -561,7 +562,7 @@ end
         if strcmp(event.Key, 'space')
             space_pressed = false;
         elseif strcmp(event.Key, 'period') || strcmp(event.Character, '.')
-            shoot_pressed = false;
+            zap_pressed = false;
         end
     end
 
