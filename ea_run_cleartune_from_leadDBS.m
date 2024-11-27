@@ -4,7 +4,7 @@ function ea_run_cleartune_from_leadDBS(~,~,handles, file)
 
     % Choose if/which fibfilt file to run with
     if file == 1
-        tractset_path=ea_regexpdir(ea_get_cleartune_root, 'Rajamani_2024.fibfilt', 1, 'file');
+        tractset_path=ea_regexpdir(ea_get_cleartune_root, 'PD_Symptom_Specific_Tracts_Rajamani_2024.fibfilt', 1, 'file');
         if isempty(tractset_path)
             disp('Tractset file does not exist. Select another fibfilt file within the tool to proceed.');
         else
