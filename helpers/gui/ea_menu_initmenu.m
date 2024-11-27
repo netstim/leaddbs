@@ -52,7 +52,7 @@ if isempty(menuprobe)
 
     if exist('ea_cleartune', 'file') == 2
         clt=uimenu(f, 'Label', 'Run Cleartune');
-        uimenu(clt,'Label', 'Run with Rajamani (2024)', 'Callback', {@ea_run_cleartune_from_leadDBS, handles, 1});
+        uimenu(clt,'Label', 'Run with PD Symptom Specific Tracts (Rajamani (2024))', 'Callback', {@ea_run_cleartune_from_leadDBS, handles, 1});
         uimenu(clt,'Label', 'Run with custom file', 'Callback', {@ea_run_cleartune_from_leadDBS, handles, 2});
 
     end
