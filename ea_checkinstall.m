@@ -10,7 +10,7 @@ if ~exist('prefs','var')
     prefs = [];
 end
 
-python_envs = dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
+python_envs = ea_dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
 python_envs = cellfun(@(x) x(1:end-4), {python_envs.name}', 'UniformOutput', false);
 
 menuItems = {'Redownload data files'
