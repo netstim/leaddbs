@@ -6,7 +6,10 @@
 			"FGATIR": ["FGATIR"],
 			"PDw": ["pd"],
 			"T2starw": ["t2star"],
-			"FLAIR": ["flair"]
+			"FLAIR": ["flair"],
+			"SWI": ["swi"],
+			"QSM": ["qsm"],
+			"MTC": ["mtc"]
 		},
 		"postop": {
 			"CT": ["Navigation", "CT"],
