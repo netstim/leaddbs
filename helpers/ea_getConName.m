@@ -26,6 +26,9 @@ switch side
         conName = options.elspec.contactnames(1:conNum);
     case {2, 'L', 'LH'} % LH
         conName = options.elspec.contactnames(conNum+1:end);
+    otherwise
+        conName = options.elspec.contactnames(1:conNum);
+        conName = erase(conName, " (R)" | " (L)");
 end
 
 if ~opts.showSideStr
