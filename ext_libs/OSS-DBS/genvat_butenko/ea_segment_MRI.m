@@ -157,7 +157,7 @@ switch settings.butenko_segmAlg
             if ~env.is_up_to_date
                 env.force_create;
             end
-            ea_synthseg(ea_path_helper([ImageDir,ImageName]), segMaskPath)
+            ea_synthseg([ImageDir,ImageName], segMaskPath)
         end
 
         % always convert to make sure the chosen algorithm was used
