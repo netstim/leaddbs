@@ -208,6 +208,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         setappdata(resultfig,'elstruct',elstruct);
         setappdata(resultfig,'el_render',el_render);
+        setappdata(resultfig,'el_label',el_label);
         % add handles to buttons. Can't be combined with the above loop since all
         % handles need to be set for the buttons to work properly (if alt is
         % pressed, all electrodes are made visible/invisible).
