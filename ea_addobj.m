@@ -1,22 +1,18 @@
 function ea_addobj(resultfig, obj, options)
 
-addht = getappdata(resultfig,'addht');
-if isempty(addht)
-    addht=uitoolbar(resultfig);
-    labelbutton=uitoggletool(addht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-    labelcolorbutton=uipushtool(addht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-end
-
-setappdata(resultfig,'addht',addht)
-
 if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
     if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once'))) %tract
         for i=1:length(obj)
-            addfibertract(obj{i}, resultfig, addht, [], 0, options);
+            addfibertract(obj{i}, resultfig, [], 0, options);
         end
     
-    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) %roi
+    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) % roi
         pobj.plotFigureH = resultfig;
+        addht = getappdata(resultfig,'addht');
+        if isempty(addht)
+            addht=uitoolbar(resultfig);
+        end
+        setappdata(resultfig,'addht',addht);
         pobj.htH = addht;
         if ~isfield(options, 'prefs')
             options.prefs = ea_prefs;
@@ -80,7 +76,7 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 end
 
                 for fi=1:length(tractName)
-                    addfibertract([tractPath,tractName{fi}],resultfig,addht,[],0,options);
+                    addfibertract([tractPath,tractName{fi}],resultfig,[],0,options);
                 end
             end
         case 'roi' % atlas
@@ -95,6 +91,11 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 end
 
                 pobj.plotFigureH = resultfig;
+                addht = getappdata(resultfig,'addht');
+                if isempty(addht)
+                    addht=uitoolbar(resultfig);
+                end
+                setappdata(resultfig,'addht',addht);
                 pobj.htH = addht;
                 prefs = ea_prefs;
                 if prefs.d3.roi.autofillcolor && length(roiName)>1 % i.e. multiple roi's selected
@@ -122,7 +123,7 @@ else  % uigetfile, 'obj' is the type of the files to be selected
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',startPath,'MultiSelect','off');
-            addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+            addtractweighted([tpana,tfina],[rpana,rfina],resultfig,options)
         case 'fiberactivation'
             [fileName,filePath]=uigetfile('*.mat','Choose fiber activation to add to scene...',startPath,'MultiSelect','off');
             ea_fiberactivation_viz([filePath,fileName],resultfig)
@@ -132,8 +133,7 @@ end
 axis fill
 
 
-function addtractweighted(tract,weight,resultfig,addht,options)
-
+function addtractweighted(tract,weight,resultfig,options)
 disp('Loading fibertracts...');
 [fibers, idx] = ea_loadfibertracts(tract, 'ask');
 disp('Done.');
@@ -205,6 +205,11 @@ if numcoloredfibs
     % add toggle button:
     [~, tfina] = fileparts(tract);
     [~, rfina] = fileparts(weight);
+    addht = getappdata(resultfig,'addht');
+    if isempty(addht)
+        addht=uitoolbar(resultfig);
+    end
+    setappdata(resultfig,'addht',addht);
     uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@(src, evt) ea_atlasvisible(addobjr)},'OffCallback',{@(src, evt) ea_atlasinvisible(addobjr)},'State','on','UserData','weightedtract');
     drawnow
 else
@@ -213,7 +218,13 @@ end
 disp('Done.');
 
 
-function addfibertract(obj,resultfig,addht,connect,ft,options)
+function addfibertract(obj,resultfig,connect,ft,options)
+addht = getappdata(resultfig,'addht');
+if isempty(addht)
+    addht=uitoolbar(resultfig);
+end
+setappdata(resultfig,'addht',addht);
+
 if ischar(obj) % addobj
     if endsWith(obj, '.mat')
         load(obj);
