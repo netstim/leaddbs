@@ -1,5 +1,5 @@
 function varargout = ea_runcmd(cmd, opts)
-% Run system command constructed using external binaries.
+% Run system command constructed using external binaries, handling long commands.
 
 arguments
     cmd     {mustBeTextScalar}
@@ -41,11 +41,43 @@ if ~isempty(opts.timeout)
     end
 end
 
-if nargout == 0
-    system(cmd);
-elseif nargout == 1
-    varargout{1} = system(cmd);
-elseif nargout == 2
-    [varargout{1}, varargout{2}] = system(cmd);
-    varargout{2} = strip(varargout{2});
+% Handle long commands for Windows
+if ispc && length(cmd) > 8191 % Windows max command length
+    % Save the command to a batch script
+    batchFile = fullfile(tempdir, 'long_command.bat');
+    fid = fopen(batchFile, 'w');
+    if fid == -1
+        error('Failed to create batch file for long command.');
+    end
+    fprintf(fid, '%s\n', cmd);
+    fclose(fid);
+    
+    % Replace command with batch file execution
+    cmd = ['"' batchFile '"'];
+    
+    % Flag to clean up batch file later
+    cleanupBatchFile = true;
+else
+    cleanupBatchFile = false;
+end
+
+% Execute the command
+try
+    if nargout == 0
+        system(cmd);
+    elseif nargout == 1
+        varargout{1} = system(cmd);
+    elseif nargout == 2
+        [varargout{1}, varargout{2}] = system(cmd);
+        varargout{2} = strip(varargout{2});
+    end
+catch ME
+    error('Error executing command: %s', ME.message);
+end
+
+% Clean up: delete the batch file
+if cleanupBatchFile && exist(batchFile, 'file')
+    delete(batchFile);
+end
+
 end
