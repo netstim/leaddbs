@@ -123,10 +123,18 @@ else  % uigetfile, 'obj' is the type of the files to be selected
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',startPath,'MultiSelect','off');
-            addtractweighted([tpana,tfina],[rpana,rfina],resultfig,options)
+            if isnumeric(tfina) || isnumeric(rfina)
+                return;
+            else
+                addtractweighted([tpana,tfina],[rpana,rfina],resultfig,options);
+            end
         case 'fiberactivation'
             [fileName,filePath]=uigetfile('*.mat','Choose fiber activation to add to scene...',startPath,'MultiSelect','off');
-            ea_fiberactivation_viz([filePath,fileName],resultfig)
+            if isnumeric(fileName)
+                return;
+            else
+                ea_fiberactivation_viz([filePath,fileName],resultfig);
+            end
     end
 end
 
