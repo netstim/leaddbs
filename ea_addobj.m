@@ -375,9 +375,16 @@ end
 
 for f=1:length(recoFile)
     load(recoFile{f}, 'reco');
-    elstruct.coords_mm = reco.mni.coords_mm;
-    elstruct.trajectory = reco.mni.trajectory;
-    elstruct.markers = reco.mni.markers;
+    if ~options.native
+        space = 'mni';
+    elseif isfield(reco, 'scrf')
+        space = 'scrf';
+    else
+        space = 'native';
+    end
+    elstruct.coords_mm = reco.(space).coords_mm;
+    elstruct.trajectory = reco.(space).trajectory;
+    elstruct.markers = reco.(space).markers;
     options.sides = find(cellfun(@(x) ~isempty(x), elstruct.coords_mm));
     elstruct.elmodel = reco.props(options.sides(1)).elmodel;
     if isBIDSFileName(recoFile{f})
