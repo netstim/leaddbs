@@ -1,7 +1,17 @@
 function ea_addobj(resultfig, obj, options)
 
 if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
-    if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once'))) %tract
+    if all(cellfun(@numel, regexp(obj, '\.mat$', 'match', 'once'))) % tract/reco
+        for i=1:length(obj)
+            vars = whos('-file', obj{i});
+            if any(ismember({'fibsin', 'fibers'}, {vars.name}))
+                addfibertract(obj{i}, resultfig, [], 0, options);
+            elseif ismember('reco', {vars.name})
+                addReco(obj{i}, resultfig, options);
+            end
+        end
+
+    elseif all(cellfun(@numel, regexp(obj, '\.trk$', 'match', 'once'))) % tract
         for i=1:length(obj)
             addfibertract(obj{i}, resultfig, [], 0, options);
         end
@@ -119,6 +129,13 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                         addlabel(centroid, roi.Tag, addht);
                     end
                 end
+            end
+        case 'reco'
+            [fileName,filePath]=uigetfile('*.mat','Choose electrode localization to add to scene...',startPath,'MultiSelect','on');
+            if isnumeric(fileName)
+                return;
+            else
+                addReco([filePath,fileName], resultfig, options);
             end
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
@@ -331,6 +348,47 @@ if isempty(toggle.OnCallback)
 end
 toggle.OnCallback{2} = [reshape(toggle.OnCallback{2}, [], 1); objlabel];
 setappdata(addht.Parent, 'addht', addht);
+
+
+function addReco(recoFile, resultfig, options)
+if ischar(recoFile)
+    recoFile = {recoFile};
+end
+
+el_render = getappdata(resultfig,'el_render');
+el_label = getappdata(resultfig,'el_label');
+ht = getappdata(resultfig, 'ht');
+elLabelToggle = findobj(ht, 'Tag', 'elLabelToggle');
+if isempty(elLabelToggle)
+    elLabelToggle = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
+        'Tag', 'elLabelToggle', 'TooltipString', 'Electrode Labels', 'State', 'off');
+end
+
+for f=1:length(recoFile)
+    load(recoFile{f}, 'reco');
+    elstruct.coords_mm = reco.mni.coords_mm;
+    elstruct.trajectory = reco.mni.trajectory;
+    elstruct.markers = reco.mni.markers;
+    options.sides = find(cellfun(@(x) ~isempty(x), elstruct.coords_mm));
+    elstruct.elmodel = reco.props(options.sides(1)).elmodel;
+    if isBIDSFileName(recoFile{f})
+        [~, fName] = fileparts(recoFile{f});
+        elstruct.name = regexp(fName, 'sub-[^\W_]+', 'match', 'once');
+    else
+        [~, elstruct.name] = fileparts(fileparts(recoFile{f}));
+    end
+    if ~isempty(el_render)
+        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct, 1, el_render, el_label);
+    else
+        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct);
+    end
+end
+
+set(elLabelToggle, 'OnCallback', {@(src, evt) set(el_label, 'Visible', 'on')}, 'OffCallback', {@(src, evt) set(el_label, 'Visible', 'off')});
+
+if strcmp(options.leadprod, 'dbs')
+    resultfig.Name = 'Electrode-Scene';
+end
 
 
 function atlabelsvisible(hobj,~,obj,onoff)
