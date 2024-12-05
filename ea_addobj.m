@@ -8,6 +8,8 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
                 addfibertract(obj{i}, resultfig, [], 0, options);
             elseif ismember('reco', {vars.name})
                 addReco(obj{i}, resultfig, options);
+            elseif ismember('vatfv', {vars.name})
+                addVTA(obj{i}, resultfig, options);
             end
         end
 
@@ -136,6 +138,13 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 return;
             else
                 addReco([filePath,fileName], resultfig, options);
+            end
+        case 'vat'
+            [fileName,filePath]=uigetfile('*.mat','Choose VTA (MAT file) to add to scene...',startPath,'MultiSelect','on');
+            if isnumeric(fileName)
+                return;
+            else
+                addVTA([filePath,fileName], resultfig, options);
             end
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
@@ -385,6 +394,60 @@ for f=1:length(recoFile)
 end
 
 set(elLabelToggle, 'OnCallback', {@(src, evt) set(el_label, 'Visible', 'on')}, 'OffCallback', {@(src, evt) set(el_label, 'Visible', 'off')});
+
+if strcmp(options.leadprod, 'dbs')
+    resultfig.Name = 'Electrode-Scene';
+end
+
+
+function addVTA(vtaMatFile, resultfig, options)
+if ischar(vtaMatFile)
+    vtaMatFile = {vtaMatFile};
+end
+
+PL = getappdata(resultfig, 'PL');
+if isempty(PL) || ~isfield(PL, 'ht')
+    PL.ht = uitoolbar(resultfig);
+end
+
+set(0, 'CurrentFigure', resultfig);
+
+for f=1:length(vtaMatFile)
+    if isBIDSFileName(vtaMatFile{f})
+        [stimFolder, fName] = fileparts(vtaMatFile{f});
+        if contains(vtaMatFile{f}, {ea_getspace, 'native'})
+            [~, label] = fileparts(stimFolder); 
+            TooltipTag = [' | File: ' fName ' | Label: ' label ];
+        else
+            TooltipTag = [' | File: ' fName];
+        end
+    else
+        if contains(vtaMatFile{f}, {ea_getspace, 'native'})
+            [~, label] = fileparts(fileparts(vtaMatFile{f})); 
+            [~, subj] = fileparts(fileparts(fileparts(fileparts(fileparts(vtaMatFile{f})))));
+            TooltipTag = [' | Patient: ' subj ' | Label: ' label ];
+        else
+            TooltipTag = '';
+        end
+    end
+
+    vta = load(vtaMatFile{f});
+    fv = vta.vatfv;
+    hold on;
+    vatsurf = trisurf(fv.faces, fv.vertices(:,1), fv.vertices(:,2), fv.vertices(:,3),...
+        abs(repmat(60,length(fv.vertices),1) + randn(length(fv.vertices),1)*2)');
+    ea_spec_atlas(vatsurf, 'vat', jet, 1);
+    uitoggletool(PL.ht,'CData',ea_get_icn('vat'),'TooltipString',['VTA' TooltipTag],'OnCallback',{@(src, evt) set(vatsurf, 'Visible', 'on')},'OffCallback',{@(src, evt) set(vatsurf, 'Visible', 'off')},'State','on');
+            
+    if isfield(vta, 'vatgrad')
+        grad = vta.vatgrad;
+        reduc = ceil(length(grad.x)/100000);
+        quiv = quiver3(grad.x(1:reduc:end),grad.y(1:reduc:end),grad.z(1:reduc:end),grad.qx(1:reduc:end),grad.qy(1:reduc:end),grad.qz(1:reduc:end),0,'w-','LineWidth',1,'Visible','off');             
+        uitoggletool(PL.ht,'CData',ea_get_icn('quiver'),'TooltipString',['E-field' TooltipTag],'OnCallback',{@(src, evt) set(quiv, 'Visible', 'on')},'OffCallback',{@(src, evt) set(quiv, 'Visible', 'off')},'State','off');
+    end
+end
+
+setappdata(resultfig, 'PL', PL);
 
 if strcmp(options.leadprod, 'dbs')
     resultfig.Name = 'Electrode-Scene';
