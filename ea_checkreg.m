@@ -235,7 +235,7 @@ else % normal anatomical 2 anatomical registration
         coregLog = loadjson(options.subj.coreg.log.method);
         modalities = fieldnames(coregLog.approval);
         % Exclude postop modalities
-        modalities(endsWith(modalities, {'CT', '_MRI'})) = [];
+        % modalities(endsWith(modalities, {'CT', '_MRI'})) = [];
         % Exclude current modalities
         currentModality = ea_getmodality(currvol);
         modalities(ismember(modalities, currentModality)) = [];
