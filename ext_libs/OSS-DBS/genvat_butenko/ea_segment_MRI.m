@@ -157,10 +157,10 @@ switch settings.butenko_segmAlg
             if ~env.is_up_to_date
                 env.force_create;
             end
-            ea_synthseg(ea_path_helper([ImageDir,ImageName]), segMaskPath)
+            ea_synthseg([ImageDir,ImageName], segMaskPath)
         end
 
         % always convert to make sure the chosen algorithm was used
-        ea_convert_synthSeg2segmask(ea_path_helper(segMaskPath), ea_path_helper([outputPaths.outputDir, filesep, segmaskName]));
+        ea_convert_synthSeg2segmask((segMaskPath), ([outputPaths.outputDir, filesep, segmaskName]));
         env = ea_conda_env('OSS-DBSv2');
 end

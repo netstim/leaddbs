@@ -167,7 +167,11 @@ for side=options.sides
         end
 
         eltext=getappdata(resultfig,'eltext');
-        [conName, isDirectional] = ea_getConName(elspec, side, showSideStr=1);
+        if length(coords_mm) <= 2
+            [conName, isDirectional] = ea_getConName(elspec, side, showSideStr=1);
+        else
+            [conName, isDirectional] = ea_getConName(elspec, side);
+        end
         for con=1:size(coords_mm{side},1)
             % add text:
             centroid=coords_mm{side}(con,:)+0.01;

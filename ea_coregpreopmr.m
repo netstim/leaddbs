@@ -47,8 +47,8 @@ for i=1:length(moving)
             % convert ANTS matrices to 4x4
             load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat'])
             tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants44.mat'],'tmat')
-            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants.mat'])
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'ants44.mat'],'tmat')
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants.mat'])
             tmat = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
             save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'ants44.mat'],'tmat')
         case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
@@ -67,6 +67,16 @@ for i=1:length(moving)
             save([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'spm44.mat'],'tmat')
             load([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm.mat'],'tmat')
             save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'spm44.mat'],'tmat')
+        case lower({'BRAINSFit (Johnson 2007)', 'BRAINSFit'})
+            movefile(affinefile{1},[options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'brainsfit.mat']);
+            movefile(affinefile{2},[options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'brainsfit.mat']);
+            % convert BRAINSFit matrices to 4x4
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'brainsfit.mat']);
+            tmat = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).forwardBaseName, 'brainsfit44.mat'],'tmat')
+            load([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'brainsfit.mat'])
+            tmat = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+            save([options.subj.coreg.transform.(ea_getmodality(moving{i})).inverseBaseName, 'brainsfit44.mat'],'tmat')
     end
 
     % Better slab support

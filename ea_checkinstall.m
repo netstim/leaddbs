@@ -10,8 +10,8 @@ if ~exist('prefs','var')
     prefs = [];
 end
 
-python_envs = dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
-python_envs = cellfun(@(x) x(1:end-4), {python_envs.name}', 'UniformOutput', false);
+python_envs = ea_regexpdir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments'), '.*\.yml');
+[~, python_envs] = fileparts(python_envs);
 
 menuItems = {'Redownload data files'
              'Install development version of LeadDBS'

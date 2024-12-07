@@ -46,6 +46,7 @@ classdef ea_disctract < handle
         subscore
         currentune
         results = struct
+        customRoi = struct % struct used only for pseudoM case (customRoi.isbinary and customRoi.minmax)
         
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
@@ -55,6 +56,7 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
         cleartuneresults % copy of results for auto tuning functions
+        cleartunevars
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
         CleartuneOptim = 0;
@@ -280,25 +282,31 @@ classdef ea_disctract < handle
                 obj.ADJ = false;
             end
 
-            switch obj.connectivity_type
+            % check if files exist
+            FilesExist = check_stimvols(obj);
+            
 
+            if isfield(obj.M,'pseudoM') % failsave - this should not be necessary but still making sure things are set correctly for the pseudoM case.
+                obj.connectivity_type=1;
+                obj.calculationMethod='E-field/Voxel Based Method';
+            end
+
+            switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     fprintf("Calculating using the PAM method. Using dMRI connectome: %s",obj.connectome);
-                    FilesExist = check_stimvols(obj);
+
                     if all(FilesExist)
                         calculate_on_pam(obj,cfile)
                     end
                 otherwise     % check fiber recruitment via intersection with VTA
                     if strcmp(obj.calculationMethod,'E-field/Voxel Based Method')
                         fprintf("Calculating using the traditional E-field based method. Using dMRI connectome: %s",obj.connectome);
-                        FilesExist = check_stimvols(obj);
                         if all(FilesExist)
                             calculate_on_efield(obj,cfile)
                         end
                     elseif strcmp(obj.calculationMethod,'Fiber Based Method')
                         % check whether to use new (calc_on_fibers) or old method:
                         fprintf("Calculating using the Fiber based method. Using dMRI connectome: %s",obj.connectome);
-                        FilesExist = check_stimvols(obj);
                         if all(FilesExist)%why can this not be psuedo M?
                             calculate_on_fibers(obj,cfile)
                         end
@@ -342,10 +350,14 @@ classdef ea_disctract < handle
                     if strcmp(obj.calculationMethod,'Fiber Based Method')
                         [~,FilesExist] = ea_discfibers_getlattice(obj);
                     else
-                       [~,FilesExist] = ea_discfibers_getvats(obj); 
+                        if isfield(obj.M,'pseudoM')
+                            for entry=1:length(obj.M.ROI.list)
+                                FilesExist(entry)=exist(obj.M.ROI.list{entry},'file');
+                            end
+                        else
+                            [~,FilesExist] = ea_discfibers_getvats(obj);
+                        end
                     end
-
-                    
                     while ~all(FilesExist(:))
                         answ=questdlg('It seems like not all stimulation volumes have been calculated. We can initiate the process now, but this will take some time. Proceed?','Stimvolumes not calculated','yes','no','yes');
                         switch answ
@@ -396,8 +408,15 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).calculationMethod = 'Fiber Based Method';
         end
         function calculate_on_efield(obj,cfile)
-            [vatlist,~] = ea_discfibers_getvats(obj);
-          
+            if isfield(obj.M,'pseudoM')
+                vatlist=obj.M.ROI.list;
+                [obj.customRoi.isbinary,obj.customRoi.minmax]=ea_discfibers_checkcustomNii(vatlist);
+                if obj.customRoi.isbinary
+                    obj.statsettings.stimulationmodel='VTA';
+                end
+            else
+                [vatlist,~] = ea_discfibers_getvats(obj);
+            end
             [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
             obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
@@ -2043,8 +2062,8 @@ for nroi = 1:length(obj.roiintersectdata)
     vatInd = find(abs(vat.img(:))>thresh);
     [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
     vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
-    for i=1:size(obj.drawobject,1)
-        for side = 1:size(obj.drawobject,2)
+    for side = 1:2
+        for i=1:size(obj.drawobject,1)
             vals = {};
             valsPeak = {};
             connected = [];
@@ -2056,14 +2075,15 @@ for nroi = 1:length(obj.roiintersectdata)
             fibers=ea_fibcell2fibmat(resultFibers);
             filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
             if ~any(filter)
+                zeros_arr = zeros(size(obj.drawobject{i,side},1),1);
+                normwts = mat2cell(zeros_arr,ones(size(obj.drawobject{i,side},1),1));
+                [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
                 continue
             end
             trimmedFiber = fibers(filter,:);
-
             % Map mm connectome fibers into VAT voxel space
             [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
             fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
-
             % Remove outliers
             fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
             trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
@@ -2071,19 +2091,26 @@ for nroi = 1:length(obj.roiintersectdata)
             vals = cellfun(@(fib) vat.img(intersect(fib, vatInd)), fibVoxInd(connected), 'Uni', 0);
             valsPeak{1}(trimmedFiberInd(connected)) = cellfun(@mean, vals);
             wts = cell2mat(valsPeak)';
-            if length(wts) ~= size(obj.drawobject{i,side},1)
-                diff = length(wts) - size(obj.drawobject{i,side},1);
-                if diff < 0
-                    wts = [wts;zeros(abs(diff),1)];
+            if ~isempty(wts)
+                if length(wts) ~= size(obj.drawobject{i,side},1)
+                    diff = length(wts) - size(obj.drawobject{i,side},1);
+                    if diff < 0
+                        wts = [wts;zeros(abs(diff),1)];
+                    end
                 end
-            end
-            normwts = normalize(ea_contrast(wts,10,0),'range');
-
-            normwts =  mat2cell(normwts,ones(size(normwts,1),1));
-            if ~isempty(normwts)
+                normwts = normalize(ea_contrast(wts,10,0),'range');
+                normwts =  mat2cell(normwts,ones(size(normwts,1),1));
+                if ~isempty(normwts) && ~isempty(obj.drawobject{i,side})
+                    try
+                        [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
+                        disp(['Changed alpha of tract',num2str(i)]);
+                        normwts = {};
+                    end
+                end
+            else %if it is not connected then they should have zero alpha!!
+                zeros_arr = zeros(size(obj.drawobject{i,side},1),1);
+                normwts = mat2cell(zeros_arr,ones(size(obj.drawobject{i,side},1),1));
                 [obj.drawobject{i,side}.FaceAlpha]=normwts{:};
-                disp(['Changed alpha of tract',num2str(i)]);
-                normwts = {};
             end
         end
     end

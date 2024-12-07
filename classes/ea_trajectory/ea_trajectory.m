@@ -414,6 +414,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             end
             el_render(obj.side).elpatch=obj.elpatch;
             setappdata(obj.plotFigureH,'el_render',el_render);
+            setappdata(obj.plotFigureH,'el_label',obj.ellabel);
             if ~isempty(obj.ellabel)
                 set(obj.ellabel,'Visible','off');
             end

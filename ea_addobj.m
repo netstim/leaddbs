@@ -1,22 +1,30 @@
 function ea_addobj(resultfig, obj, options)
 
-addht = getappdata(resultfig,'addht');
-if isempty(addht)
-    addht=uitoolbar(resultfig);
-    labelbutton=uitoggletool(addht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-    labelcolorbutton=uipushtool(addht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-end
-
-setappdata(resultfig,'addht',addht)
-
 if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
-    if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once'))) %tract
+    if all(cellfun(@numel, regexp(obj, '\.mat$', 'match', 'once'))) % tract/reco
         for i=1:length(obj)
-            addfibertract(obj{i}, resultfig, addht, [], 0, options);
+            vars = whos('-file', obj{i});
+            if any(ismember({'fibsin', 'fibers'}, {vars.name}))
+                addfibertract(obj{i}, resultfig, [], 0, options);
+            elseif ismember('reco', {vars.name})
+                addReco(obj{i}, resultfig, options);
+            elseif ismember('vatfv', {vars.name})
+                addVTA(obj{i}, resultfig, options);
+            end
+        end
+
+    elseif all(cellfun(@numel, regexp(obj, '\.trk$', 'match', 'once'))) % tract
+        for i=1:length(obj)
+            addfibertract(obj{i}, resultfig, [], 0, options);
         end
     
-    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) %roi
+    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) % roi
         pobj.plotFigureH = resultfig;
+        addht = getappdata(resultfig,'addht');
+        if isempty(addht)
+            addht=uitoolbar(resultfig);
+        end
+        setappdata(resultfig,'addht',addht);
         pobj.htH = addht;
         if ~isfield(options, 'prefs')
             options.prefs = ea_prefs;
@@ -80,7 +88,7 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 end
 
                 for fi=1:length(tractName)
-                    addfibertract([tractPath,tractName{fi}],resultfig,addht,[],0,options);
+                    addfibertract([tractPath,tractName{fi}],resultfig,[],0,options);
                 end
             end
         case 'roi' % atlas
@@ -95,6 +103,11 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 end
 
                 pobj.plotFigureH = resultfig;
+                addht = getappdata(resultfig,'addht');
+                if isempty(addht)
+                    addht=uitoolbar(resultfig);
+                end
+                setappdata(resultfig,'addht',addht);
                 pobj.htH = addht;
                 prefs = ea_prefs;
                 if prefs.d3.roi.autofillcolor && length(roiName)>1 % i.e. multiple roi's selected
@@ -119,21 +132,42 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                     end
                 end
             end
+        case 'reco'
+            [fileName,filePath]=uigetfile('*.mat','Choose electrode localization to add to scene...',startPath,'MultiSelect','on');
+            if isnumeric(fileName)
+                return;
+            else
+                addReco([filePath,fileName], resultfig, options);
+            end
+        case 'vat'
+            [fileName,filePath]=uigetfile('*.mat','Choose VTA (MAT file) to add to scene...',startPath,'MultiSelect','on');
+            if isnumeric(fileName)
+                return;
+            else
+                addVTA([filePath,fileName], resultfig, options);
+            end
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',startPath,'MultiSelect','off');
-            addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+            if isnumeric(tfina) || isnumeric(rfina)
+                return;
+            else
+                addtractweighted([tpana,tfina],[rpana,rfina],resultfig,options);
+            end
         case 'fiberactivation'
             [fileName,filePath]=uigetfile('*.mat','Choose fiber activation to add to scene...',startPath,'MultiSelect','off');
-            ea_fiberactivation_viz([filePath,fileName],resultfig)
+            if isnumeric(fileName)
+                return;
+            else
+                ea_fiberactivation_viz([filePath,fileName],resultfig);
+            end
     end
 end
 
 axis fill
 
 
-function addtractweighted(tract,weight,resultfig,addht,options)
-
+function addtractweighted(tract,weight,resultfig,options)
 disp('Loading fibertracts...');
 [fibers, idx] = ea_loadfibertracts(tract, 'ask');
 disp('Done.');
@@ -205,6 +239,11 @@ if numcoloredfibs
     % add toggle button:
     [~, tfina] = fileparts(tract);
     [~, rfina] = fileparts(weight);
+    addht = getappdata(resultfig,'addht');
+    if isempty(addht)
+        addht=uitoolbar(resultfig);
+    end
+    setappdata(resultfig,'addht',addht);
     uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@(src, evt) ea_atlasvisible(addobjr)},'OffCallback',{@(src, evt) ea_atlasinvisible(addobjr)},'State','on','UserData','weightedtract');
     drawnow
 else
@@ -213,7 +252,13 @@ end
 disp('Done.');
 
 
-function addfibertract(obj,resultfig,addht,connect,ft,options)
+function addfibertract(obj,resultfig,connect,ft,options)
+addht = getappdata(resultfig,'addht');
+if isempty(addht)
+    addht=uitoolbar(resultfig);
+end
+setappdata(resultfig,'addht',addht);
+
 if ischar(obj) % addobj
     if endsWith(obj, '.mat')
         load(obj);
@@ -312,6 +357,108 @@ if isempty(toggle.OnCallback)
 end
 toggle.OnCallback{2} = [reshape(toggle.OnCallback{2}, [], 1); objlabel];
 setappdata(addht.Parent, 'addht', addht);
+
+
+function addReco(recoFile, resultfig, options)
+if ischar(recoFile)
+    recoFile = {recoFile};
+end
+
+el_render = getappdata(resultfig,'el_render');
+el_label = getappdata(resultfig,'el_label');
+ht = getappdata(resultfig, 'ht');
+elLabelToggle = findobj(ht, 'Tag', 'elLabelToggle');
+if isempty(elLabelToggle)
+    elLabelToggle = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
+        'Tag', 'elLabelToggle', 'TooltipString', 'Electrode Labels', 'State', 'off');
+end
+
+for f=1:length(recoFile)
+    load(recoFile{f}, 'reco');
+    if ~options.native
+        space = 'mni';
+    elseif isfield(reco, 'scrf')
+        space = 'scrf';
+    else
+        space = 'native';
+    end
+    elstruct.coords_mm = reco.(space).coords_mm;
+    elstruct.trajectory = reco.(space).trajectory;
+    elstruct.markers = reco.(space).markers;
+    options.sides = find(cellfun(@(x) ~isempty(x), elstruct.coords_mm));
+    elstruct.elmodel = reco.props(options.sides(1)).elmodel;
+    if isBIDSFileName(recoFile{f})
+        [~, fName] = fileparts(recoFile{f});
+        elstruct.name = regexp(fName, 'sub-[^\W_]+', 'match', 'once');
+    else
+        [~, elstruct.name] = fileparts(fileparts(recoFile{f}));
+    end
+    if ~isempty(el_render)
+        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct, 1, el_render, el_label);
+    else
+        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct);
+    end
+end
+
+set(elLabelToggle, 'OnCallback', {@(src, evt) set(el_label, 'Visible', 'on')}, 'OffCallback', {@(src, evt) set(el_label, 'Visible', 'off')});
+
+if strcmp(options.leadprod, 'dbs')
+    resultfig.Name = 'Electrode-Scene';
+end
+
+
+function addVTA(vtaMatFile, resultfig, options)
+if ischar(vtaMatFile)
+    vtaMatFile = {vtaMatFile};
+end
+
+PL = getappdata(resultfig, 'PL');
+if isempty(PL) || ~isfield(PL, 'ht')
+    PL.ht = uitoolbar(resultfig);
+end
+
+set(0, 'CurrentFigure', resultfig);
+
+for f=1:length(vtaMatFile)
+    if isBIDSFileName(vtaMatFile{f})
+        [stimFolder, fName] = fileparts(vtaMatFile{f});
+        if contains(vtaMatFile{f}, {ea_getspace, 'native'})
+            [~, label] = fileparts(stimFolder); 
+            TooltipTag = [' | File: ' fName ' | Label: ' label ];
+        else
+            TooltipTag = [' | File: ' fName];
+        end
+    else
+        if contains(vtaMatFile{f}, {ea_getspace, 'native'})
+            [~, label] = fileparts(fileparts(vtaMatFile{f})); 
+            [~, subj] = fileparts(fileparts(fileparts(fileparts(fileparts(vtaMatFile{f})))));
+            TooltipTag = [' | Patient: ' subj ' | Label: ' label ];
+        else
+            TooltipTag = '';
+        end
+    end
+
+    vta = load(vtaMatFile{f});
+    fv = vta.vatfv;
+    hold on;
+    vatsurf = trisurf(fv.faces, fv.vertices(:,1), fv.vertices(:,2), fv.vertices(:,3),...
+        abs(repmat(60,length(fv.vertices),1) + randn(length(fv.vertices),1)*2)');
+    ea_spec_atlas(vatsurf, 'vat', jet, 1);
+    uitoggletool(PL.ht,'CData',ea_get_icn('vat'),'TooltipString',['VTA' TooltipTag],'OnCallback',{@(src, evt) set(vatsurf, 'Visible', 'on')},'OffCallback',{@(src, evt) set(vatsurf, 'Visible', 'off')},'State','on');
+            
+    if isfield(vta, 'vatgrad')
+        grad = vta.vatgrad;
+        reduc = ceil(length(grad.x)/100000);
+        quiv = quiver3(grad.x(1:reduc:end),grad.y(1:reduc:end),grad.z(1:reduc:end),grad.qx(1:reduc:end),grad.qy(1:reduc:end),grad.qz(1:reduc:end),0,'w-','LineWidth',1,'Visible','off');             
+        uitoggletool(PL.ht,'CData',ea_get_icn('quiver'),'TooltipString',['E-field' TooltipTag],'OnCallback',{@(src, evt) set(quiv, 'Visible', 'on')},'OffCallback',{@(src, evt) set(quiv, 'Visible', 'off')},'State','off');
+    end
+end
+
+setappdata(resultfig, 'PL', PL);
+
+if strcmp(options.leadprod, 'dbs')
+    resultfig.Name = 'Electrode-Scene';
+end
 
 
 function atlabelsvisible(hobj,~,obj,onoff)
