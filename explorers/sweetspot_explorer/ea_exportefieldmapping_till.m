@@ -46,7 +46,14 @@ end
 AllX=cell(size(vatlist,2),1);
 for vat=1:size(vatlist,1)
     for side=1:size(vatlist,2)
-        copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);
+        if strcmp(vatlist{vat,side}(end-2:end),'.gz')
+            % unzip .gz to temp file 
+            temp_nii = gunzip(vatlist{vat,side},outdir);
+            copyfile(temp_nii{1,1},[outdir,'tmp_efield.nii']);
+            ea_delete(temp_nii{1,1});   
+        else
+            copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);
+        end
         ea_conformspaceto([outdir,'template',sidesuffices{side},'.nii'],...
             [outdir,'tmp_efield.nii'],0);
         nii=ea_load_nii([outdir,'tmp_efield.nii']);
