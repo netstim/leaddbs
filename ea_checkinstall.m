@@ -10,7 +10,7 @@ if ~exist('prefs','var')
     prefs = [];
 end
 
-python_envs = ea_regexpdir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments'), '.*\.yml');
+python_envs = ea_regexpdir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments'), '.*\.yml', 0, 'f');
 [~, python_envs] = fileparts(python_envs);
 
 menuItems = {'Redownload data files'
