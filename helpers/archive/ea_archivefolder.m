@@ -4,7 +4,7 @@ function ea_archivefolder(options)
 
 % zip sourcedata:
 if ~exist([options.subj.sourcedataDir,'.zip'],'file')
-    zip([options.subj.sourcedataDir,'.zip'],options.subj.sourcedataDir)
+    try zip([options.subj.sourcedataDir,'.zip'],options.subj.sourcedataDir); end
     ea_delete(options.subj.sourcedataDir);
 end
 
