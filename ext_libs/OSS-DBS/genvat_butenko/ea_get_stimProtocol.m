@@ -62,6 +62,17 @@ if ~settings.stimSetMode
             elseif length_active_span > 18.0
                 ea_warndlg("Large span of active contacts is detected. Consider extending VAT grid, see PointModel.Lattice.Shape in lead_settings.py")
             end
+
+            C1_to_last_distance = norm(settings.contactLocation{side}(last_active,:) - settings.contactLocation{side}(1,:));
+            if C1_to_last_distance > 24.0 && length_active_span < 18.0
+                % OSS assumes straight electrodes building them from the first
+                % contact. So if active contacts are too distal, we need to
+                % imitate electrode shift.
+                % IMPORTANT: this trick only works if active contacts are
+                % not far away from each other!
+                settings = ea_elshift_oss(settings,side,first_active,last_active);
+            end
+
         elseif any(nActiveSources > 1)
             % enforce the settings value for all sources in multisource
             settings.Activation_threshold_VTA = [settings.Activation_threshold_VTA;options.prefs.machine.vatsettings.butenko_ethresh];
