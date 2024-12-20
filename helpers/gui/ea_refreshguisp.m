@@ -89,14 +89,28 @@ end
 stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
-    S=ea_initializeS(stimlabel,options,handles);
-    try S.model=gSv.vatmodel; end
-    setappdata(handles.stimfig,'stimlabel',S.label);
+    S = ea_initializeS(stimlabel,options,handles);
+    if ~isempty(S)
+        try
+            S.model = gSv.vatmodel;
+        end
+        setappdata(handles.stimfig, 'stimlabel', S.label);
+    else
+        setappdata(handles.stimfig, 'Status', 'Cancelled');
+        return;
+    end
 else
     if isempty(S.Rs1)
-        S=ea_initializeS(stimlabel,options,handles);
-        try S.model=gSv.vatmodel; end
-        setappdata(handles.stimfig,'stimlabel',S.label);
+        S = ea_initializeS(stimlabel,options,handles);
+        if ~isempty(S)
+            try
+                S.model = gSv.vatmodel;
+            end
+            setappdata(handles.stimfig, 'stimlabel', S.label);
+        else
+            setappdata(handles.stimfig, 'Status', 'Cancelled');
+            return;
+        end
     end
 end
 

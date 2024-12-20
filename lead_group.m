@@ -1036,7 +1036,6 @@ M=getappdata(gcf,'M');
 
 % set options
 options=ea_setopts_local(handles);
-%stimname=ea_detstimname(options);
 
 options.groupmode = 1;
 options.groupid = M.guid;
@@ -1270,7 +1269,7 @@ ea_refresh_lg(handles);
 % % eventdata  reserved - to be defined in a future version of MATLAB
 % % handles    structure with handles and user data (see GUIDATA)
 % M=getappdata(gcf,'M');
-% 
+%
 % % try
 % %     uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
 % %     uidata.U=evalin('base',uicell{1});
@@ -1285,13 +1284,13 @@ ea_refresh_lg(handles);
 % %     warning('Stim-Params could not be evaluated. Please Try again.');
 % %     return
 % % end
-% 
+%
 % options = ea_setopts_local(handles);
 % options.leadprod = 'group';
 % options.groupid = M.guid;
 % options.native = 0;
 % ea_refresh_lg(handles);
-% 
+%
 % ea_stimparams(M.elstruct, handles.leadfigure, options);
 
 % --- Executes on button press in setstimparamsbutton.
@@ -1309,15 +1308,15 @@ choice = questdlg('Select a programmer:', ...
 switch choice
     case 'Old Programmer'
         M = getappdata(handles.leadfigure, 'M');
-        
+
         options = ea_setopts_local(handles);
         options.leadprod = 'group';
         options.groupid = M.guid;
         options.native = 0;
         ea_refresh_lg(handles);
-        
+
         ea_stimparams(M.elstruct, handles.leadfigure, options);
-        
+
     case 'New Programmer'
         M = getappdata(handles.leadfigure, 'M');
         options = ea_setopts_local(handles);
@@ -1367,7 +1366,7 @@ switch choice
                 disp([importedS.message]);
                 return;
             end
-            
+
             tmpM = struct();
             for i = 1:length(importedS)
                 [S] = ea_process_programmer_group(cell2mat(importedS(i)));
@@ -1378,7 +1377,7 @@ switch choice
 
             save(ea_getGroupAnalysisFile(M.root), 'M');
         end
-        
+
     otherwise
         % User canceled the dialog or closed it
         disp('Dialog canceled or closed.');
