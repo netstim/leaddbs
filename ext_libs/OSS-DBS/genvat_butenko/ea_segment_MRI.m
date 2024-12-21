@@ -89,7 +89,7 @@ switch settings.butenko_segmAlg
             % TBD: write a smarter auto-check
             if WM_vol < 100.0 || GM_vol < 100.0
                 warningMsg = sprintf("Brain segmentation with SPM failed for sub-%s", options.subj.subjId);
-                ea_warndlg(warningMsg)
+                ea_warndlg(warningMsg);
                 % check if atropos segmentation was already done 
                 % TBD: we can store atropos segmask_raw in coregistration
                 % instead of stim folder
