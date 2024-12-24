@@ -98,6 +98,7 @@ setappdata(handles.alphaslider,'struct_names',struct_names);
 setappdata(handles.alphaslider,'options',options);
 setappdata(handles.alphaslider,'resultfig',resultfig);
 
+setappdata(handles.alphaedit,'resultfig',resultfig);
 
 axis off
 ea_createpcmenu(handles);
@@ -580,7 +581,6 @@ function alphaslider_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns alphaslider contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from alphaslider
 
-% ea_updatecortex(options,resultfig,sides,structures,labelidx,alpha)
 alpha = handles.alphaslider.Value;
 resultfig = getappdata(hObject,'resultfig');
 options = getappdata(hObject,'options');
@@ -588,7 +588,7 @@ annot = getappdata(hObject,'annot');
 selstate = getappdata(resultfig,'cortsurfs');
 
 ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,alpha);
-set(handles.alphaedit,'String',num2str(alpha));
+set(handles.alphaedit,'String',num2str(alpha, '%.2f'));
 % setuptree({handles,colorbuttons,atlassurfs,atlases,labelbutton,atlaslabels});
 
 
@@ -605,7 +605,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function alphaedit_Callback(hObject, eventdata, handles)
 % hObject    handle to alphaedit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -613,6 +612,13 @@ function alphaedit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of alphaedit as text
 %        str2double(get(hObject,'String')) returns contents of alphaedit as a double
+handles.alphaslider.Value = str2double(handles.alphaedit.String);
+resultfig = getappdata(hObject,'resultfig');
+options = getappdata(hObject,'options');
+annot = getappdata(hObject,'annot');
+selstate = getappdata(resultfig,'cortsurfs');
+
+ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,handles.alphaslider.Value);
 
 
 % --- Executes during object creation, after setting all properties.
