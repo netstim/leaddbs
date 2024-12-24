@@ -458,53 +458,48 @@ function ea_makeselection(~,~,handles,preset)
 
 ea_busyaction('on',handles.cortexselect,'atlcontrol');
 
-h=getappdata(handles.cortexselect,'h');
-jtree=getappdata(handles.cortexselect,'jtree');
-atlases=getappdata(handles.cortexselect,'atlases');
-onatlasnames=atlases.names(preset.show);
-offatlasnames=atlases.names(preset.hide);
-% get rid of file extensions:
-[~,onatlasnames]=cellfun(@fileparts,onatlasnames,'Uniformoutput',0);
-[~,onatlasnames]=cellfun(@fileparts,onatlasnames,'Uniformoutput',0);
-[~,offatlasnames]=cellfun(@fileparts,offatlasnames,'Uniformoutput',0);
-[~,offatlasnames]=cellfun(@fileparts,offatlasnames,'Uniformoutput',0);
+h = getappdata(handles.cortexselect,'h');
+jtree = getappdata(handles.cortexselect, 'jtree');
 
-% iterate through jTree to set selection according to preset:
-sels=ea_storeupdatecortex(jtree,h);
-for branch=1:length(sels.branches)
-    for leaf=1:length(sels.leaves{branch})
-        for side=1:length(sels.sides{branch}{leaf})
+import com.mathworks.mwswing.checkboxtree.SelectionState;
+if isempty(preset.show)
+    set(h.sg{1}, 'SelectionState', SelectionState.NOT_SELECTED);
+    set(h.sgsub{1}, 'SelectionState', SelectionState.NOT_SELECTED);
+    set(h.sgsub{2}, 'SelectionState', SelectionState.NOT_SELECTED);
+    for s=1:2
+        for i=1:length(h.struct_names)
+            set(h.sgsubfi{s}{i}, 'SelectionState', SelectionState.NOT_SELECTED);
+        end
+    end
+else
+    if isempty(preset.hide)
+        set(h.sg{1}, 'SelectionState', SelectionState.SELECTED);
+        set(h.sgsub{1}, 'SelectionState', SelectionState.SELECTED);
+        set(h.sgsub{2}, 'SelectionState', SelectionState.SELECTED);
+    else
+        set(h.sg{1}, 'SelectionState', SelectionState.MIXED);
+        set(h.sgsub{1}, 'SelectionState', SelectionState.MIXED);
+        set(h.sgsub{2}, 'SelectionState', SelectionState.MIXED);
+    end
 
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side,atlases.types(leaf));
-            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
-
-            if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
-                h.atlassurfs{ixs}.Visible='on';
-                if strcmp(h.labelbutton.State, 'on')
-                    h.atlaslabels(ixs).Visible='on';
-                end
-                h.togglebuttons(ixt).State='on';
-            elseif ismember(char(h.sgsubfi{branch}{leaf}),offatlasnames)
-                h.atlassurfs{ixs}.Visible='off';
-                h.atlaslabels(ixs).Visible='off';
-                h.togglebuttons(ixt).State='off';
-            else % not explicitly mentioned
-                switch preset.default
-                    case 'absolute'
-                        h.atlassurfs{ixs}.Visible='off';
-                        h.atlaslabels(ixs).Visible='off';
-                        h.togglebuttons(ixt).State='off';
-                    case 'relative'
-                        % leave state as is.
-                end
+    for s=1:2
+        for i=1:length(h.struct_names)
+            if ismember(i, preset.show)
+                set(h.sgsubfi{s}{i}, 'SelectionState', SelectionState.SELECTED);
+            else
+                set(h.sgsubfi{s}{i}, 'SelectionState', SelectionState.NOT_SELECTED);
             end
         end
-
     end
 end
-ea_busyaction('off',handles.cortexselect,'atlcontrol');
 
-ea_synctree(handles)
+jtree.updateUI;
+
+labelidx{1} = mat2cell(preset.show', ones(length(preset.show),1));
+labelidx{2} = labelidx{1};
+ea_updatecortex(h.options, h.resultfig, 1:2, [], labelidx);
+
+ea_busyaction('off',handles.cortexselect,'atlcontrol');
 
 
 % --- Executes during object creation, after setting all properties.
