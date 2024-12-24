@@ -153,18 +153,10 @@ if ~isempty(files)
 
         for side = 1:2
             % Choose gyri
-            structures{side}={};
-            struct_names=annot(side).colortable.struct_names;
-            labelidx=cell(length(structures{side}),1);
-            if ~isempty(labelidx)
-                for i=1:length(structures{side})
-                    labelidx{i} =  find(~cellfun(@isempty,strfind(struct_names,structures{side}{i})));
-                end
-            else
-                labelidx=mat2cell([1:size(struct_names,1)]',ones(size(struct_names)));
-            end
+            structures{side} = annot(side).colortable.struct_names;
+            labelidx{side} = mat2cell((1:length(structures{side}))', ones(1,length(structures{side})));
             annot(side).cdat = get(cortexH{side},'FaceVertexCData');
-            structidx = arrayfun(@(x) find(annot(side).label==annot(side).colortable.table(x,5)),[labelidx{:}],'uni',0);
+            structidx = arrayfun(@(x) find(annot(side).label==annot(side).colortable.table(x,5)),[labelidx{side}{:}],'uni',0);
             labels = cell2mat(arrayfun(@(x) find(x==annot(side).label),annot(side).colortable.table(:,5),'uni',0));
 
             for i = 1:size(annot(side).colortable.table,1)
@@ -180,8 +172,12 @@ if ~isempty(files)
         setappdata(resultfig,'cortex',cortexH);
         setappdata(resultfig,'annot',annot);
 
+        selstate.structures = structures;
+        selstate.labelidx = labelidx;
+        setappdata(resultfig, 'cortsurfs', selstate)
+
         atlas = strrep(atlas,'.mat','');
-        cswin = ea_cortexselect(cortex, annot, atlas, colorindex, struct_names, options, resultfig);
+        cswin = ea_cortexselect(cortex, annot, atlas, colorindex, structures{1}, options, resultfig);
         set(cswin, 'visible', options.d3.verbose);
         setappdata(resultfig, 'aswin', cswin);
     end
