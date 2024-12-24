@@ -182,71 +182,71 @@ for s=1:2
     end
 end
 
-    ea_cleanpriortree(handles);
+ea_cleanpriortree(handles);
 
-    % Create a standard MJTree:
-    jTree = com.mathworks.mwswing.MJTree(h.sg{1});
+% Create a standard MJTree:
+jTree = com.mathworks.mwswing.MJTree(h.sg{1});
 
-    % Now present the CheckBoxTree:
-    jCheckBoxTree = CheckBoxTree(jTree.getModel);
+% Now present the CheckBoxTree:
+jCheckBoxTree = CheckBoxTree(jTree.getModel);
 
-    jScrollPane = com.mathworks.mwswing.MJScrollPane(jCheckBoxTree);
-    treeinit=getappdata(handles.cortexselect,'treeinit');
-    setappdata(handles.cortexselect,'treeinit',0);
+jScrollPane = com.mathworks.mwswing.MJScrollPane(jCheckBoxTree);
+treeinit=getappdata(handles.cortexselect,'treeinit');
+setappdata(handles.cortexselect,'treeinit',0);
 
-    atlN=length(struct_names);
-    height=(atlN+1.5)*18;
-    norm=360; % max height if full size figure shown.
-    if height>360
-        height=360;
+atlN=length(struct_names);
+height=(atlN+1.5)*18;
+norm=360; % max height if full size figure shown.
+if height>360
+    height=360;
+end
+if height<100
+    height=100;
+end
+
+[jComp,hc] = ea_javacomponent(jScrollPane,[10,5,285,height],handles.cortexselect);
+setappdata(handles.cortexselect,'uitree',jComp);
+
+ea_busyaction('del',handles.cortexselect,'cortex_control');
+
+h.uselabelname = uselabelname;
+h.cortex = cortex;
+h.annot = annot;
+h.struct_names = struct_names;
+h.colorindex = colorindex;
+h.options = options;
+h.resultfig = resultfig;
+set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
+setappdata(handles.cortexselect,'h',h);
+setappdata(handles.cortexselect,'jtree',jCheckBoxTree);
+%sels=ea_storeupdatecortex(jCheckBoxTree,h);
+
+if treeinit
+    if handles.alphaslider.Value>length(handles.alphaslider.String)
+        handles.alphaslider.Value=1;
     end
-    if height<100
-        height=100;
+    if handles.togglepopup.Value>length(handles.togglepopup.String)
+        handles.togglepopup.Value=1;
     end
+    %handles.cortexselect.Position(2)=handles.cortexselect.Position(2)-(450);
+    handles.cortexselect.Position(4)=(534-(360-height));
 
-    [jComp,hc] = ea_javacomponent(jScrollPane,[10,5,285,height],handles.cortexselect);
-    setappdata(handles.cortexselect,'uitree',jComp);
+    handles.cortstructxt.Position(2)=handles.cortexselect.Position(4)-25;
 
-    ea_busyaction('del',handles.cortexselect,'atlcontrol');
+    handles.atlaspopup.Position(2)=handles.cortexselect.Position(4)-75;
+    handles.atlasstatic.Position(2)=handles.atlaspopup.Position(2)+28;
 
-    h.uselabelname = uselabelname;
-    h.cortex = cortex;
-    h.annot = annot;
-    h.struct_names = struct_names;
-    h.colorindex = colorindex;
-    h.options = options;
-    h.resultfig = resultfig;
-    set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
-    setappdata(handles.cortexselect,'h',h);
-    setappdata(handles.cortexselect,'jtree',jCheckBoxTree);
-    %sels=ea_storeupdatecortex(jCheckBoxTree,h);
+    handles.togglepopup.Position(2)=handles.cortexselect.Position(4)-120;
+    handles.togglestatic.Position(2)=handles.togglepopup.Position(2)+28;
 
-    if treeinit
-        if handles.alphaslider.Value>length(handles.alphaslider.String)
-            handles.alphaslider.Value=1;
-        end
-        if handles.togglepopup.Value>length(handles.togglepopup.String)
-            handles.togglepopup.Value=1;
-        end
-        %handles.cortexselect.Position(2)=handles.cortexselect.Position(2)-(450);
-        handles.cortexselect.Position(4)=(534-(360-height));
+    handles.alphaslider.Position(2)=handles.cortexselect.Position(4)-165;
+    handles.alphastatic.Position(2)=handles.alphaslider.Position(2)+28;
+    handles.alphaedit.Position(2)=handles.alphastatic.Position(2);
 
-        handles.cortstructxt.Position(2)=handles.cortexselect.Position(4)-25;
-
-        handles.atlaspopup.Position(2)=handles.cortexselect.Position(4)-75;
-        handles.atlasstatic.Position(2)=handles.atlaspopup.Position(2)+28;
-
-        handles.togglepopup.Position(2)=handles.cortexselect.Position(4)-120;
-        handles.togglestatic.Position(2)=handles.togglepopup.Position(2)+28;
-
-        handles.alphaslider.Position(2)=handles.cortexselect.Position(4)-165;
-        handles.alphastatic.Position(2)=handles.alphaslider.Position(2)+28;
-        handles.alphaedit.Position(2)=handles.alphastatic.Position(2);
-
-        set(0,'CurrentFigure',handles.cortexselect);
-        axis off
-        movegui(handles.cortexselect,'southeast');
-    end
+    set(0,'CurrentFigure',handles.cortexselect);
+    axis off
+    movegui(handles.cortexselect,'southeast');
+end
 
 
 function ea_cleanpriortree(handles)
@@ -403,7 +403,7 @@ setappdata(handles.togglepopup,'presetactions',presetactions);
 
 
 function ea_saveselection(~,~,handles,options)
-ea_busyaction('on',handles.cortexselect,'atlcontrol');
+ea_busyaction('on',handles.cortexselect,'cortex_control');
 
 jtree=getappdata(handles.cortexselect,'jtree');
 h=getappdata(handles.cortexselect,'h');
@@ -445,7 +445,7 @@ try WinOnTop(handles.cortexselect,true); end
 % refresh content menu.
 ea_createpcmenu(handles)
 
-ea_busyaction('off',handles.cortexselect,'atlcontrol');
+ea_busyaction('off',handles.cortexselect,'cortex_control');
 
 
 function str=getridofspaces(str)
@@ -457,7 +457,7 @@ str=strrep(str,'-','');
 
 function ea_makeselection(~,~,handles,preset)
 
-ea_busyaction('on',handles.cortexselect,'atlcontrol');
+ea_busyaction('on',handles.cortexselect,'cortex_control');
 
 h = getappdata(handles.cortexselect,'h');
 jtree = getappdata(handles.cortexselect, 'jtree');
@@ -500,7 +500,7 @@ labelidx{1} = mat2cell(preset.show', ones(length(preset.show),1));
 labelidx{2} = labelidx{1};
 ea_updatecortex(h.options, h.resultfig, 1:2, [], labelidx);
 
-ea_busyaction('off',handles.cortexselect,'atlcontrol');
+ea_busyaction('off',handles.cortexselect,'cortex_control');
 
 
 % --- Executes during object creation, after setting all properties.
@@ -526,7 +526,7 @@ function atlaspopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from atlaspopup
 
 
-ea_busyaction('on',handles.cortexselect,'atlcontrol');
+ea_busyaction('on',handles.cortexselect,'cortex_control');
 
 % retrieve necessary info from cortexselect figure:
 resultfig=getappdata(handles.cortexselect,'resultfig');
@@ -556,7 +556,7 @@ labelbutton = getappdata(resultfig,'labelbutton');
 
 setuptree({handles,colorbuttons,atlassurfs,atlases,labelbutton,atlaslabels});
 ea_createpcmenu(handles);
-ea_busyaction('off',handles.cortexselect,'atlcontrol');
+ea_busyaction('off',handles.cortexselect,'cortex_control');
 
 
 % --- Executes during object creation, after setting all properties.
