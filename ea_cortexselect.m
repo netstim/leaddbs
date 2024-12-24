@@ -22,7 +22,7 @@ function varargout = ea_cortexselect(varargin)
 
 % Edit the above text to modify the response to help ea_cortexselect
 
-% Last Modified by GUIDE v2.5 25-Nov-2017 08:08:41
+% Last Modified by GUIDE v2.5 24-Dec-2024 23:09:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -99,6 +99,8 @@ setappdata(handles.alphaslider,'options',options);
 setappdata(handles.alphaslider,'resultfig',resultfig);
 
 setappdata(handles.alphaedit,'resultfig',resultfig);
+
+setappdata(handles.graycolor,'resultfig',resultfig);
 
 axis off
 ea_createpcmenu(handles);
@@ -216,6 +218,7 @@ h.struct_names = struct_names;
 h.colorindex = colorindex;
 h.options = options;
 h.resultfig = resultfig;
+h.handles = handles;
 set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
 setappdata(handles.cortexselect,'h',h);
 setappdata(handles.cortexselect,'jtree',jCheckBoxTree);
@@ -229,7 +232,7 @@ if treeinit
         handles.togglepopup.Value=1;
     end
     %handles.cortexselect.Position(2)=handles.cortexselect.Position(2)-(450);
-    handles.cortexselect.Position(4)=(534-(360-height));
+    handles.cortexselect.Position(4)=(550-(360-height));
 
     handles.cortstructxt.Position(2)=handles.cortexselect.Position(4)-25;
 
@@ -242,6 +245,8 @@ if treeinit
     handles.alphaslider.Position(2)=handles.cortexselect.Position(4)-165;
     handles.alphastatic.Position(2)=handles.alphaslider.Position(2)+28;
     handles.alphaedit.Position(2)=handles.alphastatic.Position(2);
+
+    handles.graycolor.Position(2)=handles.alphaslider.Position(2) - 15;
 
     set(0,'CurrentFigure',handles.cortexselect);
     axis off
@@ -265,7 +270,7 @@ for s = 1:size(updatematrix,2)
     labelidx{s} = X{s}(logical(updatematrix{s}));
     structures{s} = h.struct_names(logical(updatematrix{s}));
 end
-ea_updatecortex(h.options,h.resultfig,1:2,structures,labelidx);
+ea_updatecortex(h.options,h.resultfig,1:2,structures,labelidx,h.handles.alphaslider.Value,h.handles.graycolor.Value);
 
 selstate.structures=structures;
 selstate.labelidx=labelidx;
@@ -498,7 +503,7 @@ jtree.updateUI;
 
 labelidx{1} = mat2cell(preset.show', ones(length(preset.show),1));
 labelidx{2} = labelidx{1};
-ea_updatecortex(h.options, h.resultfig, 1:2, [], labelidx);
+ea_updatecortex(h.options, h.resultfig, 1:2, [], labelidx, handles.alphaslider.Value, handles.graycolor.Value);
 
 ea_busyaction('off',handles.cortexselect,'cortex_control');
 
@@ -587,9 +592,8 @@ options = getappdata(hObject,'options');
 annot = getappdata(hObject,'annot');
 selstate = getappdata(resultfig,'cortsurfs');
 
-ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,alpha);
+ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,alpha,handles.graycolor.Value);
 set(handles.alphaedit,'String',num2str(alpha, '%.2f'));
-% setuptree({handles,colorbuttons,atlassurfs,atlases,labelbutton,atlaslabels});
 
 
 % --- Executes during object creation, after setting all properties.
@@ -618,7 +622,7 @@ options = getappdata(hObject,'options');
 annot = getappdata(hObject,'annot');
 selstate = getappdata(resultfig,'cortsurfs');
 
-ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,handles.alphaslider.Value);
+ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,handles.alphaslider.Value,handles.graycolor.Value);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -631,4 +635,26 @@ function alphaedit_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in graycolor.
+function graycolor_Callback(hObject, eventdata, handles)
+% hObject    handle to graycolor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of graycolor
+resultfig = getappdata(hObject, 'resultfig');
+cortex = getappdata(resultfig, 'cortex');
+if hObject.Value == 1
+    setappdata(hObject, 'origCData', {cortex{1}.FaceVertexCData, cortex{2}.FaceVertexCData});
+    for s=1:2
+        cortex{s}.FaceVertexCData = repmat([0.65, 0.65, 0.65], length(cortex{s}.FaceVertexCData), 1);
+    end
+else
+    origCData = getappdata(hObject, 'origCData');
+    for s=1:2
+        cortex{s}.FaceVertexCData = origCData{s};
+    end
 end
