@@ -40,6 +40,7 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
 
     % Freesurfer to ITK transform (EasyReg uses disp_crs format)
     itk_fwd_field = strrep(source_image, '.nii', '_itk_fwd_field.h5');
+    ea_delete(itk_fwd_field);
     freesurfer_nii_to_itk_h5(fs_fwd_field, itk_fwd_field);
 
     % Set-up Custom Slicer
@@ -67,7 +68,6 @@ end
 function [] = freesurfer_nii_to_itk_h5(warp_file_in, warp_file_out)
 
 % substract mm coordinates for each voxel
-
 n = load_nii(warp_file_in);
 s = n.hdr.dime.dim(2:4);
 index = 1:prod(s);
@@ -77,14 +77,29 @@ mm = reshape(mm, [s,3]);
 out = n.img - mm;
 
 % reshape output
-
 out_rows = [-reshape(out(:,:,:,1),1,[]); -reshape(out(:,:,:,2),1,[]); reshape(out(:,:,:,3),1,[])];
 out_column = reshape(out_rows,[],1);
 
-% save
-
+% copy template h5 file
 copyfile(fullfile(ea_getearoot, 'ext_libs', 'EasyReg', 'itk_h5_template.h5'), warp_file_out);
-h5create(warp_file_out,"/TransformGroup/0/TransformParameters", numel(out_column));
-h5write(warp_file_out,"/TransformGroup/0/TransformParameters", out_column);
+
+if ~strcmp(ea_getspace, 'MNI152NLin2009bAsym')
+    % calculate TransformFixedParameters
+    spacedef = ea_getspacedef;
+    primarytemplate = [ea_space, spacedef.templates{1}, '.nii'];
+    hdr = ea_fslhd(primarytemplate);
+    TransformFixedParameters = zeros(18,1);
+    TransformFixedParameters(1:3) = [hdr.dim1; hdr.dim2; hdr.dim3];
+    TransformFixedParameters(4:6) = [-hdr.sto_xyz1(4); -hdr.sto_xyz2(4); hdr.sto_xyz3(4)]; % RAS to LPS applied
+    TransformFixedParameters(7:9) = [hdr.pixdim1; hdr.pixdim2; hdr.pixdim3];
+    TransformFixedParameters(10:18) = [-hdr.sto_xyz1(1:3)'/hdr.pixdim1; -hdr.sto_xyz2(1:3)'/hdr.pixdim2; hdr.sto_xyz3(1:3)'/hdr.pixdim3]; % RAS to LPS applied
+
+    % update TransformFixedParameters in h5
+    h5write(warp_file_out, "/TransformGroup/0/TransformFixedParameters", TransformFixedParameters);
+end
+
+% save TransformParameters in h5 
+h5create(warp_file_out, "/TransformGroup/0/TransformParameters", numel(out_column));
+h5write(warp_file_out, "/TransformGroup/0/TransformParameters", out_column);
 
 end
