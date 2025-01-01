@@ -23,4 +23,4 @@ dependencies:
     - voxelmorph==0.2
 
 variables:
-  env_version: 20240921
+  env_version: '20240921'

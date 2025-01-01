@@ -11,4 +11,4 @@ dependencies:
     - antspyx>=0.5.3
 
 variables:
-  env_version: 20240812
+  env_version: '20240812'

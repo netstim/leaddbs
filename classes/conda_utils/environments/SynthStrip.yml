@@ -18,4 +18,4 @@ dependencies:
     - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-win_amd64.whl; platform_system == "Windows"
 
 variables:
-  env_version: 20240921
+  env_version: '20240921'

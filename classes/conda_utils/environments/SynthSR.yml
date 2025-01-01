@@ -20,4 +20,4 @@ dependencies:
     - tensorflow==2.13.1
 
 variables:
-  env_version: 20240921
+  env_version: '20240921'
