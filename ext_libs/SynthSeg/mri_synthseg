@@ -126,7 +126,7 @@ def main():
         topology_classes = topology_classes.replace('_2.0.npy', '_photo_both_1.0.npy')
         n_neutral_labels = 5
 
-    elif (args.photo=='left' or args.photo=='right'):
+    elif (args.photo == 'left') or (args.photo == 'right'):
         labels_segmentation = labels_segmentation.replace('_2.0.npy', '_photo_single_1.0.npy')
         names_segmentation_labels = names_segmentation_labels.replace('_2.0.npy', '_photo_single_1.0.npy')
         topology_classes = topology_classes.replace('_2.0.npy', '_photo_single_1.0.npy')

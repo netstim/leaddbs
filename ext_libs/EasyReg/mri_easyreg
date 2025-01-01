@@ -39,6 +39,8 @@ def main():
     parser.add_argument("--flo_reg", help="(optional) Registetred floating images (in space of reference).")
     parser.add_argument("--fwd_field", help="(optional) Forward field")
     parser.add_argument("--bak_field", help="(optional) Inverse field")
+    parser.add_argument("--fwd_mat", help="(optional) Forward affine matrix")
+    parser.add_argument("--bak_mat", help="(optional) Inverse affine matrix")
     parser.add_argument("--affine_only", action="store_true", help="(optional) Skips nonlinear part")
     parser.add_argument("--autocrop", action="store_true", help="(optional) Ignore background voxels in FOV.")
     parser.add_argument("--threads", type=int, default=1, help="(optional) Number of cores to be used. Default is 1. You can use -1 to use all available cores")
@@ -356,6 +358,19 @@ def main():
             registered = fast_3D_interp_torch(R, II4, JJ4, KK4, 'linear')
             print('  Saving deformed reference image')
             save_volume(registered, Faff, Fh, args.ref_reg)
+
+    # Write affine matrices if needed
+    if args.fwd_mat is not None:
+        T = Mflo @ np.linalg.inv(Mref)
+        with open(args.fwd_mat, 'w') as f:
+            for i in range(4):
+                f.write(str(T[i,0]) + ',' + str(T[i,1]) + ',' + str(T[i,2]) + ',' + str(T[i,3]) + '\n')
+
+    if args.bak_mat is not None:
+        T = Mref @ np.linalg.inv(Mflo)
+        with open(args.bak_mat, 'w') as f:
+            for i in range(4):
+                f.write(str(T[i,0]) + ',' + str(T[i,1]) + ',' + str(T[i,2]) + ',' + str(T[i,3]) + '\n')
 
     print('All done')
     print(' ')
