@@ -11,7 +11,7 @@ current_space = ea_getspace;
 current_space_index = find(cellfun(@(x) strcmp(x, current_space), spaces));
 
 for i = 1:length(spaces)
-    c = uimenu(change_space_menu,'Label',spacesLabel{i},'Callback',{@ea_switchspace,spaces{i}});
+    c = uimenu(change_space_menu,'Label',spacesLabel{i},'Callback',@(~, ~) ea_switchspace(spaces{i}));
     if i == current_space_index
         c.Checked = 'on';
     end
