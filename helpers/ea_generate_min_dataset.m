@@ -50,7 +50,10 @@ for i = 1 : size(M.patient.list, 1)
     ea_mkdir(newReconstFolder);
     newStimFolder = fullfile(newPatientFolder, 'stimulations', ea_getspace, M.S(i).label);
     ea_mkdir(newStimFolder);
-    
+    newNormFolder = fullfile(newPatientFolder, 'normalization');
+    ea_mkdir(newNormFolder);
+    newCoregFolder = fullfile(newPatientFolder, 'coregistration');
+    ea_mkdir(newCoregFolder);
     % now we copy some essential files
     rawimageJsonFile = fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-rawimages.json']);
     if isfile(rawimageJsonFile)
@@ -95,6 +98,15 @@ for i = 1 : size(M.patient.list, 1)
             copyfile(VAT_to_copy, newStimFolder);
         end       
     end 
+
+    if isfolder(fullfile(M.patient.list{i},'normalization'))
+        norm_to_copy = fullfile(M.patient.list{i},'normalization');
+        copyfile(norm_to_copy,newNormFolder);
+    end
+    if isfolder(fullfile(M.patient.list{i},'coregistration'))
+        coreg_to_copy = fullfile(M.patient.list{i},'coregistration');
+        copyfile(coreg_to_copy,newCoregFolder);
+    end
 
     % check if clinical scores are available
 end
