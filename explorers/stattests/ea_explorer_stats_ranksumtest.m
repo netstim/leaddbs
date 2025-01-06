@@ -24,14 +24,12 @@ end
 % Actual test:
 outcomein=repmat(outcomein',size(valsin,1),1);
 
-group1=valsin .* outcomein;
-group2=double(isnan(valsin));
-group2(group2==0)=nan;
-group2=group2 .* outcomein;
-
 psout=nan(size(valsin,1),1);
 for i=1:size(valsin,1)
     [psout(i),~,stats(i)]=ranksum(group1(i,:),group2(i,:));
+    group1 = outcomein(i,valsin(i,:)==1);
+    group2 = outcomein(i,valsin(i,:)==0);
+    [psout(i),~,stats(i)]=ranksum(group1,group2);
 end
 zval=[stats(:).zval]';
 valsout = sign(zval).*-log10(psout);
