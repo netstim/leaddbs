@@ -14,12 +14,21 @@ switch side
     case 1
         sideLabel = 'L';
 end
-
+%for cleartune
+stack = dbstack;
+if any(ismember({'ea_generate_optim_vat', 'ea_genvat_cleartune_butenko'}, {stack.name}))
+    isClearTuneRun = 1;
+else
+    isClearTuneRun = 0;
+end
 % check how this works for only left electrodes
 N_contacts = size(settings.contactLocation{1,side+1},1);
-
 for contact_i = 1:N_contacts
     % also create 4D nii (4-th dimension is for E-field components and magnitude)
-    file2save = [outputPaths.outputBasePath, '4D_efield_model-ossdbs_hemi-', sideLabel,'_',num2str(contact_i), '.nii'];
+    if isClearTuneRun %for cleartune the folder to be saved is different
+        file2save = [outputPaths.BaseFileFolder, '4D_efield_model-ossdbs_hemi-', sideLabel,'_desc-C',num2str(contact_i), '.nii'];
+    else
+        file2save = [outputPaths.outputBasePath,'4D_efield_model-ossdbs_hemi-', sideLabel,'_desc-C',num2str(contact_i), '.nii'];
+    end
     ea_get_4Dfield_from_csv([outputPaths.HemiSimFolder, filesep, 'ResultsE1C',num2str(contact_i), filesep,'E_field_Lattice.csv'], file2save)
 end
