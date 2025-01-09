@@ -455,7 +455,15 @@ classdef ea_disctract < handle
             % warp connectome to native space and compute E-field metrics
             ea_get_Eproj(obj,vatlist)
 
-            % load e-field projection metrics 
+            % define space again
+            switch obj.native
+                case 1
+                    space = 'native';
+                case 0
+                    space = 'MNI';
+            end
+
+            % load e-field projection metrics             
             [fibsvalBin_proj, fibsvalSum_proj, fibsvalMean_proj, fibsvalPeak_proj, fibsval5Peak_proj, fibcell_proj, connFiberInd_proj,fibsvalBin_magn, fibsvalSum_magn, fibsvalMean_magn, fibsvalPeak_magn, fibsval5Peak_magn, fibcell_magn, connFiberInd_magn, totalFibers] = ea_discfibers_native_calcvals(vatlist, cfile, space, obj);
 
             obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
