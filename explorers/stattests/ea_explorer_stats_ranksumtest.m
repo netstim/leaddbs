@@ -26,7 +26,6 @@ outcomein=repmat(outcomein',size(valsin,1),1);
 
 psout=nan(size(valsin,1),1);
 for i=1:size(valsin,1)
-    [psout(i),~,stats(i)]=ranksum(group1(i,:),group2(i,:));
     group1 = outcomein(i,valsin(i,:)==1);
     group2 = outcomein(i,valsin(i,:)==0);
     [psout(i),~,stats(i)]=ranksum(group1,group2);
