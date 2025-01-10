@@ -14,11 +14,20 @@ end
 
 preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 coords_mm = ea_load_reconstruction(options);
-% check if classic S or stimSets are used
+% check if stimSets are used
 if settings.stimSetMode
-    stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+    if settings.optimizer || settings.trainANN
+        stimProtocol{1,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_rh'], '^Current_protocols_\d\.csv$', 0));
+        stimProtocol{2,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_lh'], '^Current_protocols_\d\.csv$', 0));
+    else
+        stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+    end
 else
-    stimProtocol = S;
+    if ~settings.multisource
+        stimProtocol = settings.Phi_vector;  % stim vector for source 1 only
+    else
+        stimProtocol = settings.Phi_vector_max;  % max stim vector accross sources
+    end
 end
 
 % load electrode reconstruction
@@ -63,11 +72,7 @@ for t=1:numel(tracts)
     % end
 
     % Filter fibers based on the spherical ROI
-    if options.native
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
-    else
-        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
-    end
+    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2);
 
     % Filter fibers based on the minimal length
     fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
