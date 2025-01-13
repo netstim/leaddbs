@@ -59,8 +59,9 @@ AllX=cell(size(vatlist,2),1);
 for vat=1:size(vatlist,1)
     for side=1:size(vatlist,2)
         copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);
-        ea_conformspaceto([outdir,'efield_bb',sidesuffices{side},'.nii'], ...
-            [outdir,'tmp_efield.nii'], 0);
+
+        ea_fsl_reslice([outdir,'tmp_efield.nii'],[outdir,'efield_bb',sidesuffices{side},'.nii'],[outdir,'tmp_efield.nii'],'nearestneighbour');
+
         nii=ea_load_nii([outdir,'tmp_efield.nii']);
 
        if ~exist('AllX','var')

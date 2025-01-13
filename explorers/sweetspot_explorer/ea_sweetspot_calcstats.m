@@ -307,28 +307,49 @@ for group=groups
                         nonempty(Nmap<round(size(thisvals,1)*(obj.coverthreshold/100)))=0; % apply N-threshold
                         invals=gval{side}(gpatsel,nonempty)';
                     if ~isempty(invals)
-                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
-                        % restore nans
-                        ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        upSet=invals(:,ImpBinary==1)';
-                        downSet=invals(:,ImpBinary==0)';
+                        if all(double((I(gpatsel,side))>0)) % one sample case, dummy variable, test against zero
+                            ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                            % restore nans
+                            ImpBinary(isnan(I(gpatsel,side)))=nan;
+                            upSet=invals(:,ImpBinary==1)';
+                            if obj.showsignificantonly
+                                [~,ps,~,stats]=ttest(upSet); % Run two-sample t-test across connected / unconnected values
+                                outvals=stats.tstat';
+                                outps=ps;
+                                outvals=ea_corrsignan(outvals,outps,obj);
 
-                        if obj.showsignificantonly
-                            [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
-                            outvals=stats.tstat';
-                            outps=ps;
-                            outvals=ea_corrsignan(outvals,outps,obj);
+                            else % no need to calc p-val here
+                                [~,~,~,stats]=ttest(upSet); % Run two-sample t-test across connected / unconnected values
+                                outvals=stats.tstat';
+                            end
+                             vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
 
-                        else % no need to calc p-val here
-                            [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
-                            outvals=stats.tstat';
+                             vals{group,side}(nonempty)=outvals;
+                        else
+                            ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                            % restore nans
+                            ImpBinary(isnan(I(gpatsel,side)))=nan;
+                            upSet=invals(:,ImpBinary==1)';
+                            downSet=invals(:,ImpBinary==0)';
+
+                            if obj.showsignificantonly
+                                [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+                                outvals=stats.tstat';
+                                outps=ps;
+                                outvals=ea_corrsignan(outvals,outps,obj);
+
+                            else % no need to calc p-val here
+                                [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
+                                outvals=stats.tstat';
+                            end
+                            vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
+
+                            vals{group,side}(nonempty)=outvals;
+                            %                         if exist('outps','var') % only calculated if testing for significance.
+                            %                             pvals{group,side}(nonempty)=outps;
+                            %                         end
+
                         end
-                        vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
-
-                        vals{group,side}(nonempty)=outvals;
-%                         if exist('outps','var') % only calculated if testing for significance.
-%                             pvals{group,side}(nonempty)=outps;
-%                         end
                     end 
                 end
         end
