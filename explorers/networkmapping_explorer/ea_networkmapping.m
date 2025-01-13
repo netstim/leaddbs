@@ -681,8 +681,9 @@ classdef ea_networkmapping < handle
                             return
                         end
                         res.img(:)=vals{group};
-                        res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
-
+                        if isfield(res,'cifti')
+                            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        end
                         h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
                         if obj.modelRH && obj.modelLH
                             obj.drawobject{group}{1} = h{1};
@@ -694,8 +695,9 @@ classdef ea_networkmapping < handle
                         end
                     case 'Surface (Surfice)'
                         res.img(:)=vals{group};
-                        res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
-
+                        if isfield(res,'cifti')
+                            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        end
                         res.fname=[fileparts(obj.leadgroup),filesep,'model.nii'];
 
                         if ~obj.posvisible
