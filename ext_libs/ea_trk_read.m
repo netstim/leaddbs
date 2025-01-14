@@ -50,13 +50,6 @@ if header.hdr_size~=1000, ea_error('FTR-Header length is wrong'), end
 [tmp ix] = max(abs(header.image_orientation_patient(1:3)));
 [tmp iy] = max(abs(header.image_orientation_patient(4:6)));
 iz = 1:3;
-if ix==iy
-    if ix==1
-        iy=2;
-    else
-        iy=1;
-    end
-end
 iz([ix iy]) = [];
 
 % Parse in body
