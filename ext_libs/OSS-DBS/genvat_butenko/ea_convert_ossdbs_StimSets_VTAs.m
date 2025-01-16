@@ -26,7 +26,7 @@ N_contacts = size(settings.contactLocation{1,side+1},1);
 for contact_i = 1:N_contacts
     % also create 4D nii (4-th dimension is for E-field components and magnitude)
     if isClearTuneRun %for cleartune the folder to be saved is different
-        file2save = [outputPaths.BaseFileFolder, '4D_efield_model-ossdbs_hemi-', sideLabel,'_desc-C',num2str(contact_i), '.nii'];
+        file2save = [outputPaths.BaseFileSubPrefix,'4D_efield_model-ossdbs_hemi-', sideLabel,'_desc-C',num2str(contact_i), '.nii'];
     else
         file2save = [outputPaths.outputBasePath,'4D_efield_model-ossdbs_hemi-', sideLabel,'_desc-C',num2str(contact_i), '.nii'];
     end
