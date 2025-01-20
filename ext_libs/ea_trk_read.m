@@ -46,9 +46,47 @@ end
 
 if header.hdr_size~=1000, ea_error('FTR-Header length is wrong'), end
 
+if ~any(header.image_orientation_patient)
+    ea_cprintf('CmdWinWarnings', '"image_orientation_patient" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
+
+    if header.vox_to_ras(1) > 0
+        header.image_orientation_patient(1:3) = [-1 0 0];
+    else
+        header.image_orientation_patient(1:3) = [1 0 0];
+    end
+
+    if header.vox_to_ras(6) > 0
+        header.image_orientation_patient(1:3) = [0 -1 0];
+    else
+        header.image_orientation_patient(1:3) = [0 1 0];
+    end
+end
+
+if ~isany(ismember({'R', 'A', 'S', 'L', 'P', 'I'}, header.pad2))
+    ea_cprintf('CmdWinWarnings', '"pad2" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
+    
+    if header.vox_to_ras(1) > 0
+        header.pad2(1) = 'R';
+    else
+        header.pad2(1) = 'L';
+    end
+
+    if header.vox_to_ras(6) > 0
+        header.pad2(2) = 'A';
+    else
+        header.pad2(2) = 'P';
+    end
+
+    if header.vox_to_ras(11) > 0
+        header.pad2(3) = 'S';
+    else
+        header.pad2(3) = 'I';
+    end
+end
+
 % Check orientation
-[tmp ix] = max(abs(header.image_orientation_patient(1:3)));
-[tmp iy] = max(abs(header.image_orientation_patient(4:6)));
+[~, ix] = max(abs(header.image_orientation_patient(1:3)));
+[~, iy] = max(abs(header.image_orientation_patient(4:6)));
 iz = 1:3;
 iz([ix iy]) = [];
 
