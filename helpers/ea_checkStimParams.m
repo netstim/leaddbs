@@ -47,11 +47,11 @@ if ~isfield(S, 'numContacts')
     else
         subjFolder = regexp(stimFile, ['.+derivatives\' filesep 'leaddbs\' filesep 'sub-[^\W_]+'], 'match');
         uiprefFile = ea_regexpdir(fullfile(subjFolder{1}, 'prefs'), '_desc-uiprefs\.mat', 0, 'f');
-        if isfile(uiprefFile{1}) % Check uiprefs first
+        if ~isempty(uiprefFile) && isfile(uiprefFile{1}) % Check uiprefs first
             options = ea_resolve_elspec(load(uiprefFile{1}, 'elmodel'));
         else
             reconFile = ea_regexpdir(fullfile(subjFolder{1}, 'reconstruction'), '_desc-reconstruction\.mat', 0, 'f');
-            if isfile(reconFile{1}) % Check reconstruction
+            if ~isempty(reconFile) && isfile(reconFile{1}) % Check reconstruction
                 load(reconFile{1}, 'reco');
                 options.elmodel = ea_get_first_notempty_elmodel(reco.props);
                 options = ea_resolve_elspec(options);
