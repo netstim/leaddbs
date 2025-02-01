@@ -1,6 +1,0 @@
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
-
-
-Open access volumetric atlas offering comprehensive anatomical delineations of the rat brain based on structural contrast in isotropic magnetic resonance (39 µm) and diffusion tensor (78 µm) images acquired ex vivo from an 80 day old male Sprague Dawley rat at the Duke Center for In Vivo Microscopy. Spatial reference is provided by the Waxholm Space coordinate system. The location of bregma and lambda are identified as anchors towards stereotaxic space. Application areas include localization of signal in non-structural images e.g. functional or pharmacological MRI and PET.
-
-The atlas, the MRI/DTI volumes, and the diffusion tensor data are shared in NIfTI format with labels and configuration files for use with ITK-SNAP, the Mouse BIRN Atlasing Toolkit, and PMOD. Delineation criteria are described in Papp et al. 2014 & Kjonigsen et al. 2015 (see Docs). The latest atlas version contains 79 structures, intended as a basis for further development by researchers in the community. Missing a region? Get involved!

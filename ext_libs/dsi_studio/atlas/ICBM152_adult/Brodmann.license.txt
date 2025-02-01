@@ -1,0 +1,5 @@
+Version 1; 15-01-2021; Free to use under a Creative Commons Attribution-NonCommercial-Share A like 4.0 International License.
+
+"Myelo- and cytoarchitectonic microstructural and functional human cortical atlases reconstructed in common MRI space", 
+Pijnenburg et al., 2021, NeuroImage
+

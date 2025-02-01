@@ -1,0 +1,8 @@
+White_Matter
+Gray_Matter
+Cerebellar_Cortex
+Basal_Ganglia
+Others
+Necrosis
+Peritumoral Edema
+Enhancing Tumor

@@ -1,0 +1,6 @@
+1 cortical_gray_matter
+2 subcortical_gray_matter
+3 white_matter
+4 csf
+5 vessel
+6 other

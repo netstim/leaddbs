@@ -1,0 +1,16 @@
+1 MedialLemniscusL
+2 MedialLemniscusR
+3 ReticularTractL
+4 ReticularTractR
+5 CorticoSpinalTractR
+6 CorticoSpinalTractL
+7 ThalamicRadiationL
+8 ThalamicRadiationR
+9 CorticostriatalTractL
+10 CorticostriatalTractR
+11 OpticRadiationL
+12 OpticRadiationR
+13 SuperiorLongitudinalFasciculus1
+14 CingulumL_FrontalParietal
+15 CingulumR_FrontalParietal
+16 Hippocampus

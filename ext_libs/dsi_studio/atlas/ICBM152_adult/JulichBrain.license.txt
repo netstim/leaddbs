@@ -1,0 +1,5 @@
+Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v1.18)
+License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+DOI: 10.25493/8EGG-ZAR
+
+Amunts K, Mohlberg H, Bludau S, Zilles K. Julich-Brain: A 3D probabilistic atlas of the human brain’s cytoarchitecture. Science. 2020 Aug 21;369(6506):988-92.

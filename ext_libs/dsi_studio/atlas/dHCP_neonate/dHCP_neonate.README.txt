@@ -1,0 +1,12 @@
+The QA and ISO maps are created from dHCP 642 subjects
+
+The T1W/T2W/cortical/subcortical/tissue/whitematter maps are MODIFIED from
+https://gin.g-node.org/BioMedIA/dhcp-volumetric-atlas-groupwise
+
+Modifications:
+
+1.The images were rotated at z and y axis by 0.03rad to alin midline.
+2.The origin was moved to the same location as defined in ICBM templates
+
+Reference:
+Unbiased morphological atlas of neonatal brain development constructed using neonatal brain images acquired and processed as part of the Developing Human Connectome Project (dHCP). https://doi.org/10.1101/251512

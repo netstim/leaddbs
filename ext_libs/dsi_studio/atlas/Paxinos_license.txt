@@ -1,5 +1,0 @@
-The digital Paxinos atlas from the Marmoset Brain Architecture Project (http://marmoset.braincircuits.org/) was licensed under a CC BY-SA 4.0 License (https://creativecommons.org/licenses/by-sa/4.0/)
-
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
-nih_marmoset: NIH Marmoset Brain Atlas v1.1 release
-https://github.com/NIHMarmosetBrainAtlas/NIH_Marmoset_Atlas posted by Insular Cortex on Dec 6, 2017
