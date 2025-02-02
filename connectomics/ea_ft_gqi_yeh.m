@@ -32,9 +32,9 @@ else
     maskext='.nii';
 end
 
-% build .fib.gz file
+% build .fz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-if ~exist([directory,ftrbase,'.fib.gz'],'file') || redo || ...
+if ~exist([directory,ftrbase,'.fz'],'file') || redo || ...
         (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     disp('Estimating ODF / preparing GQI...');
 
@@ -53,22 +53,19 @@ if ~exist([directory,ftrbase,'.fib.gz'],'file') || redo || ...
 
     disp('Done.');
 else
-    disp('.fib.gz file found, no need to rebuild.');
+    disp('.fz file found, no need to rebuild.');
 end
 
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
-    ' --source=',ea_path_helper([directory,ftrbase,'.fib.gz']),...
+    ' --source=',ea_path_helper([directory,ftrbase,'.fz']),...
     ' --seed=',ea_path_helper([directory,'ttrackingmask',maskext]),...
     ' --fiber_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
     ' --output=',ea_path_helper([directory,ftrbase,'.mat']),...
     ' --dt_threshold=0.2',...
-    ' --initial_dir=0',...
-    ' --interpolation=0',...
     ' --max_length=300.0',...
     ' --min_length=10.0',...
     ' --random_seed=0',...
-    ' --seed_plan=0',...
     ' --smoothing=0.2',...
     ' --step_size=0.5',...
     ' --turning_angle=75'];
@@ -146,46 +143,30 @@ directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
 % source images
-ea_delete([directory,'dti.src.gz']);
+ea_delete([directory,'dti.sz']);
 cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs.dti]),...
     ' --bval=',ea_path_helper([directory,options.prefs.bval])...
     ' --bvec=',ea_path_helper([directory,options.prefs.bvec])...
-    ' --sort_b_table=0',...
-    ' --output=',ea_path_helper([directory,'dti.src.gz'])];
+    ' --output=',ea_path_helper([directory,'dti.sz'])];
 
-if options.lc.struc.ft.upsample.how==1 % internal upsampling used
-    cmd=[cmd,...
-        ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
-
-    %% add methods dump:
-    cits={
-        'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
-        'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
-        };
-    ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample))),' following the concept described in Dyrby et al. 2014 as implemented in DSI Studio (http://dsi-studio.labsolver.org/; Yeh et al. 2010).'],cits);
-
-    maskext='.txt';
-else
-    maskext='.nii';
-end
+maskext='.nii';
 
 err=ea_runcmd(cmd);
 
-if err || ~exist([directory,'dti.src.gz'],'file')
-    ea_warning('DSI studio failed to generate .src file. Using Matlab code instead.');
-    ea_create_dsistudio_src([directory,options.prefs.dti],[directory,'dti.src']);
+if err || ~exist([directory,'dti.sz'],'file')
+    ea_warning('DSI studio failed to generate the src file. Using Matlab code instead.');
+    ea_create_dsistudio_src([directory,options.prefs.dti],[directory,'dti']);
 end
 
 % create .fib file
-cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']),...
+cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.sz']),...
     ' --mask=',ea_path_helper([directory,'ttrackingmask',maskext])...
     ' --method=4',...
-    ' --param0=1.25',...
-    ' --num_fiber=5',...
-    ' --odf_order=8'];
+    ' --param0=1.25'...
+    ' --output=',ea_path_helper([directory,ftrbase,'.fz'])];
 
 err=ea_runcmd(cmd);
-ea_delete([directory,'dti.src.gz']);
+ea_delete([directory,'dti.sz']);
 
 if err
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
@@ -199,11 +180,11 @@ if err
     gzip([directory,ftrbase,'.fib']);
     ea_delete([directory,ftrbase,'.fib']);
 else
-    di=dir([directory,'dti.src.gz*.fib.gz']);
+    di=dir([directory,'dti.*.fz']);
     if length(di)>1
-        ea_error('Too many .fib.gz files present in folder. Please delete older files');
+        ea_error('Too many .fz files present in folder. Please delete older files');
     end
-    movefile([directory,di(1).name],[directory,ftrbase,'.fib.gz']);
+    movefile([directory,di(1).name],[directory,ftrbase,'.fz']);
 end
 
 
