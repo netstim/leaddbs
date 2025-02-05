@@ -69,6 +69,9 @@ else % Manually chosen seeds: multiple NIfTIs or text file with NIfTI entries
     sfile = ea_resolveseeds(sfile, dataset.vol.space);
     for i=1:length(sfile)
         seed = ea_load_nii(sfile{i});
+        if ~ea_isbinary(seed.img)
+            ea_error('Creating connectivity matrices using matrix connectomes is only supported for binary seeds. Please binarize input.');
+        end
         % Intersect roi indices and connectome outidx
         roiInd{i} = intersect(find(round(seed.img)==1), dataset.vol.outidx);
         % Find corresponding indices of connectome X matrix
