@@ -62,7 +62,7 @@ if ~any(header.image_orientation_patient)
     end
 end
 
-if ~isany(ismember({'R', 'A', 'S', 'L', 'P', 'I'}, header.pad2))
+if ~any(ismember({'R', 'A', 'S', 'L', 'P', 'I'}, header.pad2))
     ea_cprintf('CmdWinWarnings', '"pad2" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
     
     if header.vox_to_ras(1) > 0
