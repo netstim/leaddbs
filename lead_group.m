@@ -1324,8 +1324,7 @@ switch choice
         options.groupid = M.guid;
         options.native = 0;
         ea_refresh_lg(handles);
-
-        % Temporary solution to reload M
+        
         currentM = load(ea_getGroupAnalysisFile(M.root));
         M.S = currentM.M.S;
 
@@ -1335,26 +1334,27 @@ switch choice
         if isfolder(releaseDir)
             zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
             if ismac
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
+                appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
                 if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
-                    system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.app'))]);
-                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
+                    unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+                    system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
+                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
                 end
             elseif isunix
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
+                appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
                 if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer'));
-                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
+                    unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
+                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
                 end
             else
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
+                appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
                 if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer'));
-                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
+                    unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
+                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
                 end
             end
 
+            % Testing new programmer
             system([appFile, ' ', ea_path_helper(input_file_path)]);
 
             % Loading output from programmer
@@ -1376,6 +1376,13 @@ switch choice
             setappdata(handles.leadfigure, 'M', M);
 
             save(ea_getGroupAnalysisFile(M.root), 'M');
+            for i = 1:length(M.patient.list)
+                stimFilename = [M.elstruct(i).name, '_desc-stimparameters.mat'];
+                stimFolder = fullfile(M.patient.list{i}, 'stimulations', ea_getspace, ['gs_', M.guid]);
+                ea_mkdir(stimFolder); 
+                S = M.S(i);
+                save(fullfile(stimFolder, stimFilename), 'S');
+            end
         end
 
     otherwise

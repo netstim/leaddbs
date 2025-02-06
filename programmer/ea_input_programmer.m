@@ -5,17 +5,18 @@ function [input_file_path, releaseDir] = ea_input_programmer(options, numElectro
 releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
 
 %% Convert stimparameters.mat to json, handle inputData.json
-inputStruct.nativeViewer = options.native;
-inputStruct.estimateInTemplate = options.prefs.machine.vatsettings.estimateInTemplate;
 inputStruct.patientname = options.patientname;
 inputStruct.numElectrodes = numElectrodes;
-inputStruct.electrodeModel = options.elmodel;
+inputStruct.electrodeModels = options.elmodel;
 
 stimDir = fullfile(options.subj.stimDir, ea_getspace);
 ea_mkdir(stimDir);
 
 inputStruct.stimDir = stimDir;
-
+inputStruct.filepath = options.bids.datasetDir;
+inputStruct.type = 'leaddbs';
+inputStruct.mode = 'stimulate';
+inputStruct.leadpath = ea_getearoot;
 stimFileName = [options.patientname, '_desc-stimparameters'];
 stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
 [~, stimFolder] = fileparts(fileparts(stimMatFile));

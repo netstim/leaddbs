@@ -1,6 +1,6 @@
 function [file_path, releaseDir, input_file_path] = ea_input_programmer_group (options, M)
 
-%   Initializing the communication files between matlab and electron
+    % Initializing the communication files between matlab and electron
     file_path = fullfile(M.root, 'data.json');
     input_file_path = fullfile(M.root, 'inputData.json');
     inputStruct = struct();
@@ -9,9 +9,13 @@ function [file_path, releaseDir, input_file_path] = ea_input_programmer_group (o
     inputStruct.S = M.S;
     inputStruct.stimDir = M.root;
     inputStruct.patientname = arrayfun(@(x) x.name, M.elstruct, 'UniformOutput', false);
+    inputStruct.type = 'leadgroup';
+    inputStruct.filepath = M.root;
+    inputStruct.mode = 'stimulate';
+    inputStruct.leadpath = ea_getearoot;
     programmerDir = strcat(options.earoot, 'programmergroup');
     releaseDir = strcat(programmerDir, '/app/release');
+    inputStruct.patientfolders = M.patient.list;
     savejson('', inputStruct, input_file_path);
-
 
 end
