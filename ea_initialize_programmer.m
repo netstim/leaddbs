@@ -134,7 +134,7 @@ end
 
 function prepareAtlasesForExport()
     leadPath = ea_getearoot();
-    atlasDir = fullfile(leadPath, 'templates/space/MNI_ICBM_2009b_NLIN_ASYM/atlases');
+    atlasDir = fullfile(ea_space, 'atlases');
     atlasList = dir(atlasDir);
 
     for i = 1:numel(atlasList)
