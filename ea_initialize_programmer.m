@@ -269,37 +269,41 @@ end
 
 function writeParticipantsJson(bids)
     % Path to the participants.json file
-    groupFolderPath = bids.datasetDir; 
+    groupFolderPath = bids.datasetDir;
     groupOptions = BIDSFetcher(groupFolderPath);
     numPatients = numel(groupOptions.subjId);
     participantsPath = fullfile(groupFolderPath, 'participants.json');
-    
     % Initialize participantsData
     if isfile(participantsPath)
-        % If the file exists, read the existing data
         participantsData = loadjson(participantsPath);
+        if isempty(participantsData)
+            participantsData = {}; % Ensure it remains a cell array
+        elseif ~iscell(participantsData)
+            participantsData = {participantsData}; % Convert struct to cell array
+        end
     else
-        % Initialize an empty array if the file doesn't exist
-        participantsData = [];
+        participantsData = {}; % No file exists, start fresh
     end
-    
-    % Extract existing IDs from the cell array
-    if iscell(participantsData)
+    % Extract existing IDs from the cell array, ensuring it's not empty
+    if ~isempty(participantsData)
         existingIds = cellfun(@(x) x.id, participantsData, 'UniformOutput', false);
+        idIndexMap = containers.Map(existingIds, 1:length(existingIds));
     else
-        existingIds = {};
+        existingIds = {}; % Prevent empty keys
+        idIndexMap = containers.Map('KeyType', 'char', 'ValueType', 'double'); % Empty map
     end
-    idIndexMap = containers.Map(existingIds, 1:length(existingIds));
-    
     % Update or add patient entries
     for i = 1:numPatients
+        % disp(i);
         ptID = groupOptions.subjId{i};
         BidsID = strcat('sub-', ptID);
         patientFolderPath = fullfile(groupFolderPath, 'derivatives', 'leaddbs', BidsID);
-        
         % Get patient options
         options = ea_getptopts(patientFolderPath);
-        
+        % Ensure elmodel exists
+        if ~isfield(options, 'elmodel') || isempty(options.elmodel)
+            options.elmodel = 'Medtronic 3387';
+        end
         % Check if the patient ID already exists in the JSON file
         if isKey(idIndexMap, BidsID)
             % Update the existing entry
@@ -309,14 +313,9 @@ function writeParticipantsJson(bids)
             newEntry = struct();
             newEntry.id = BidsID;
             newEntry.elmodel = options.elmodel;
-            participantsData = [participantsData; newEntry]; %#ok<AGROW>
+            participantsData{end+1} = newEntry; % Append to cell array
         end
     end
-    
-    % Remove entries that are not in the current groupOptions
-    % validIds = strcat('sub-', groupOptions.subjId);
-    % participantsData = participantsData(ismember({participantsData.id}, validIds));
-    % participantsPath = '/Users/savirmadan/Downloads/participants.json';
     % Save the updated data back to the JSON file
     savejson('', participantsData, participantsPath);
 end
