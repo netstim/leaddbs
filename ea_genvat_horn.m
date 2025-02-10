@@ -177,7 +177,7 @@ if hmchanged
         end
         ea_error(['Despite all attempts the VTA model could not be created.\n' ...
             'Please check MATLAB Command Window for detailed error information.\n' ...
-            'Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.'], simpleStack = true);
+            'Please refer to https://netstim.gitbook.io/leaddbs/appendix/troubleshooting-specific-help/vta-calculation-troubleshoot for troubleshooting instructions.'], simpleStack = true);
     end
 
     % replace wmboundary
