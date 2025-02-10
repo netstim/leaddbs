@@ -2,7 +2,7 @@ function varargout = ea_runcmd(cmd, opts)
 % Run system command constructed using external binaries
 
 arguments
-    cmd     {mustBeTextScalar}
+    cmd          {mustBeText}
     opts.env     {mustBeText} = '' % env to be overridden, can be 'key=value' or {'key1=value1', 'key2=value2'}
     opts.timeout {mustBeTextScalar} = '' % Execute cmd with timeout, can be 10s, 10m, 1h, etc.
 end
@@ -19,6 +19,10 @@ else
     else
         envOverride = ['set "' strjoin(opts.env, '" & set "') '" & '];
     end
+end
+
+if iscell(cmd)
+    cmd = strjoin(cmd, ' ');
 end
 
 cmd = [envOverride, cmd]; 
