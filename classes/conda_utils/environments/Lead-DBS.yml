@@ -8,7 +8,10 @@ dependencies:
   - python=3.12
 
   - pip:
-    - antspyx>=0.5.3
+    - https://github.com/ningfei/ANTsPy/releases/download/v0.5.5/antspyx-0.5.5-cp312-cp312-macosx_13_0_x86_64.whl; platform_system == "Darwin" and platform_machine == "x86_64"
+    - https://github.com/ningfei/ANTsPy/releases/download/v0.5.5/antspyx-0.5.5-cp312-cp312-macosx_14_0_arm64.whl; platform_system == "Darwin" and platform_machine == "arm64"
+    - https://github.com/ningfei/ANTsPy/releases/download/v0.5.5/antspyx-0.5.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl; platform_system == "Linux"
+    - https://github.com/ningfei/ANTsPy/releases/download/v0.5.5/antspyx-0.5.5-cp312-cp312-win_amd64.whl; platform_system == "Windows"
 
 variables:
-  env_version: '20240812'
+  env_version: '20250211'
