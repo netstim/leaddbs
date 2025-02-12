@@ -17,13 +17,9 @@ else
     varargout{1}.name="Mean-Map";
     varargout{1}.file = mfilename;
     varargout{1}.type = "Descriptive";
-    varargout{1}.outcometype = {'gradual','binary'};
+    varargout{1}.outcometype = {'gradual'};
     varargout{1}.compatibility = {'Electric Field','Sigmoid Field','VTA'};
     return
-end
-
-if ea_isbinary(outcomein)
-    ea_error('Outcome variable is binary, please use N-map instead.');
 end
 
 % Actual test:
