@@ -41,7 +41,7 @@ classdef ea_conda_env
         end
 
         function b = get.is_created(obj)
-            b = isfolder(obj.path);
+            b = isfolder(obj.python);
         end
 
         function ver = get.installed_version(obj)
