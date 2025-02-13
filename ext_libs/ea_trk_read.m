@@ -44,7 +44,9 @@ if header.hdr_size~=1000
     header = get_header(fid);
 end
 
-if header.hdr_size~=1000, ea_error('FTR-Header length is wrong'), end
+if header.hdr_size~=1000
+    ea_error('TRK Header length is wrong')
+end
 
 if ~any(header.image_orientation_patient)
     ea_cprintf('CmdWinWarnings', '"image_orientation_patient" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
@@ -56,9 +58,9 @@ if ~any(header.image_orientation_patient)
     end
 
     if header.vox_to_ras(6) > 0
-        header.image_orientation_patient(1:3) = [0 -1 0];
+        header.image_orientation_patient(4:6) = [0 -1 0];
     else
-        header.image_orientation_patient(1:3) = [0 1 0];
+        header.image_orientation_patient(4:6) = [0 1 0];
     end
 end
 
