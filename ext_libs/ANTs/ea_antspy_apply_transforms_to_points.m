@@ -49,8 +49,14 @@ elseif ~condaenv.is_up_to_date
 end
 
 % Set pyenv
-oldpe = pyenv;
-pe = pyenv('Version', condaenv.python);
+pe = pyenv;
+restoreENV = 0;
+if pe.Executable ~= condaenv.python
+    if pe.Version ~= ""
+        restoreENV = 1;
+    end
+    pyenv('Version', condaenv.python);
+end
 
 % Prepare input data frame for ANTsPy
 df = py.pandas.DataFrame(py.numpy.array(points).reshape(py.int(-1),py.int(3)), pyargs('columns', {'x', 'y', 'z'}));
@@ -60,6 +66,6 @@ pointsw = py.ants.apply_transforms_to_points(py.int(3), df, transform, py.list({
 pointsw = cast(double(pointsw.values), class(points));
 
 % Restore pyenv
-if oldpe.Executable ~= pe.Executable && oldpe.Version ~= ""
-    pyenv('Version', oldpe.Executable);
+if restoreENV
+    pyenv('Version', pe.Executable);
 end
