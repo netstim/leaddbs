@@ -34,6 +34,10 @@ function [header,tracks] = ea_trk_read(filePath)
 % Mar 2010
 
 % Parse in header
+if ~isfile(filePath)
+    ea_error('TRK file not found!', showdlg=0, simpleStack=1);
+end
+
 fid    = fopen(filePath, 'r');
 header = get_header(fid);
 
@@ -45,7 +49,7 @@ if header.hdr_size~=1000
 end
 
 if header.hdr_size~=1000
-    ea_error('TRK Header length is wrong')
+    ea_error('TRK Header length is wrong!', showdlg=0, simpleStack=1);
 end
 
 if ~any(header.image_orientation_patient)
@@ -64,7 +68,7 @@ if ~any(header.image_orientation_patient)
     end
 end
 
-if ~any(ismember({'R', 'A', 'S', 'L', 'P', 'I'}, header.pad2))
+if ~any(ismember(header.pad2(1:3), 'RASLPI'))
     ea_cprintf('CmdWinWarnings', '"pad2" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
     
     if header.vox_to_ras(1) > 0
