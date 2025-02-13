@@ -12,13 +12,13 @@ end
 % Check Conda environment
 condaenv = ea_conda_env('SynthSR');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing SynthSR conda environment...\n')
+    ea_cprintf('*Comments', 'Initializing SynthSR conda environment...\n')
     condaenv.create;
-    ea_cprintf('CmdWinWarnings', 'SynthSR conda environment initialized.\n')
+    ea_cprintf('*Comments', 'SynthSR conda environment initialized.\n')
 elseif ~condaenv.is_up_to_date
-    ea_cprintf('CmdWinWarnings', 'Updating SynthSR conda environment...\n')
+    ea_cprintf('*Comments', 'Updating SynthSR conda environment...\n')
     condaenv.update;
-    ea_cprintf('CmdWinWarnings', 'SynthSR conda environment initialized.\n')
+    ea_cprintf('*Comments', 'SynthSR conda environment initialized.\n')
 end
 
 % Run SynthSR

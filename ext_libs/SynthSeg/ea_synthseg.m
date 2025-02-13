@@ -8,13 +8,13 @@ end
 % Check Conda environment
 condaenv = ea_conda_env('SynthSeg');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing SynthSeg conda environment...\n')
+    ea_cprintf('*Comments', 'Initializing SynthSeg conda environment...\n')
     condaenv.create;
-    ea_cprintf('CmdWinWarnings', 'SynthSeg conda environment initialized.\n')
+    ea_cprintf('*Comments', 'SynthSeg conda environment initialized.\n')
 elseif ~condaenv.is_up_to_date
-    ea_cprintf('CmdWinWarnings', 'Updating SynthSeg conda environment...\n')
+    ea_cprintf('*Comments', 'Updating SynthSeg conda environment...\n')
     condaenv.update;
-    ea_cprintf('CmdWinWarnings', 'SynthSeg conda environment initialized.\n')
+    ea_cprintf('*Comments', 'SynthSeg conda environment initialized.\n')
 end
 
 % Run SynthSeg

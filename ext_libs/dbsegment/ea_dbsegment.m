@@ -44,13 +44,13 @@ copyfile(t1, inputFolder);
 % Check Conda environment
 condaenv = ea_conda_env('DBSegment');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing DBSegment conda environment...\n')
+    ea_cprintf('*Comments', 'Initializing DBSegment conda environment...\n')
     condaenv.create;
-    ea_cprintf('CmdWinWarnings', 'DBSegment conda environment initialized.\n')
+    ea_cprintf('*Comments', 'DBSegment conda environment initialized.\n')
 elseif ~condaenv.is_up_to_date
-    ea_cprintf('CmdWinWarnings', 'Updating DBSegment conda environment...\n')
+    ea_cprintf('*Comments', 'Updating DBSegment conda environment...\n')
     condaenv.update;
-    ea_cprintf('CmdWinWarnings', 'DBSegment conda environment initialized.\n')
+    ea_cprintf('*Comments', 'DBSegment conda environment initialized.\n')
 end
 
 % Run check DBSegment

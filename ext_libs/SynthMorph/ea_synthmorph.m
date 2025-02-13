@@ -10,13 +10,13 @@ function [itk_fwd_field, itk_inv_field] = ea_synthmorph(target_image, source_ima
     % Check Conda environment
     condaenv = ea_conda_env('SynthMorph');
     if ~condaenv.is_created
-        ea_cprintf('CmdWinWarnings', 'Initializing SynthMorph conda environment...\n')
+        ea_cprintf('*Comments', 'Initializing SynthMorph conda environment...\n')
         condaenv.create;
-        ea_cprintf('CmdWinWarnings', 'SynthMorph conda environment initialized.\n')
+        ea_cprintf('*Comments', 'SynthMorph conda environment initialized.\n')
     elseif ~condaenv.is_up_to_date
-        ea_cprintf('CmdWinWarnings', 'Updating SynthMorph conda environment...\n')
+        ea_cprintf('*Comments', 'Updating SynthMorph conda environment...\n')
         condaenv.update;
-        ea_cprintf('CmdWinWarnings', 'SynthMorph conda environment initialized.\n')
+        ea_cprintf('*Comments', 'SynthMorph conda environment initialized.\n')
     end
 
     % Run SynthMorph

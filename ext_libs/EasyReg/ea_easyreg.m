@@ -12,13 +12,13 @@ function [itk_fwd_field, itk_inv_field] = ea_easyreg(target_image, source_image)
     % Check Conda environment
     condaenv = ea_conda_env('EasyReg');
     if ~condaenv.is_created
-        ea_cprintf('CmdWinWarnings', 'Initializing EasyReg conda environment...\n')
+        ea_cprintf('*Comments', 'Initializing EasyReg conda environment...\n')
         condaenv.create;
-        ea_cprintf('CmdWinWarnings', 'EasyReg conda environment initialized.\n')
+        ea_cprintf('*Comments', 'EasyReg conda environment initialized.\n')
     elseif ~condaenv.is_up_to_date
-        ea_cprintf('CmdWinWarnings', 'Updating EasyReg conda environment...\n')
+        ea_cprintf('*Comments', 'Updating EasyReg conda environment...\n')
         condaenv.update;
-        ea_cprintf('CmdWinWarnings', 'EasyReg conda environment initialized.\n')
+        ea_cprintf('*Comments', 'EasyReg conda environment initialized.\n')
     end
 
     % Run EasyReg
