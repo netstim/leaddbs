@@ -25,7 +25,9 @@ if strcmp(voxmm,'vox')
 end
 
 %% set header
-header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
+header.id_string = ['TRACK', char(0)];
+header.voxel_order = ['LPS', char(0)];
+header.pad1 = repmat(char(0), 1, 2);
 
 if ~exist('specs','var') || isempty(specs) % Use MNI T1 as reference space by default.
     disp('Header from MNI t1.nii ...');
