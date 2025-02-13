@@ -11,8 +11,8 @@ dependencies:
   - pytorch<2.0
 
   - pip:
-    - git+https://github.com/MIC-DKFZ/nnUNet.git@nnunetv1
+    - git+https://github.com/ningfei/nnUNet.git@nnunetv1
     - git+https://github.com/ningfei/DBSegment.git
 
 variables:
-  env_version: '20240921'
+  env_version: '20250213'
