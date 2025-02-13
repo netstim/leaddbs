@@ -228,7 +228,6 @@ if ~isempty(transform)
                 XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
 
                 % apply transform, need transpose becuase ANTs prefer N*3 like row vector
-                subjDir = fileparts(fileparts(fileparts(GetFullPath(transform)))); % Subj folder (BIDS dataset)
                 XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
 
                 % LPS to RAS, restore to RAS coords
