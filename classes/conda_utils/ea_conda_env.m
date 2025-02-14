@@ -99,8 +99,9 @@ classdef ea_conda_env
             disp(['Creating environment ' obj.name '...'])
             [status, cmdout] = system([obj.mamba_path ' env create -f ' ea_path_helper(obj.yml)]);
             if status
+                ea_delete(obj.path);
                 fprintf('%s\n', strtrim(cmdout));
-                ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)
+                ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name);
             else
                 system([obj.mamba_path ' clean -tpyq']);
             end

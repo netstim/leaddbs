@@ -81,18 +81,7 @@ classdef (Abstract) ea_conda
             ea_cprintf('*Comments', 'miniforge installed...\n');
 
             % Set some conda configs
-            [~, cmdout] = ea_conda.run('conda config --get channels');
-            if isempty(cmdout)
-                ea_conda.run('conda config --prepend channels conda-forge');
-                ea_conda.run('conda config --append channels defaults');
-            else
-                if ~contains(cmdout, "channels 'conda-forge'")
-                    ea_conda.run('conda config --prepend channels conda-forge');
-                end
-                if ~contains(cmdout, "channels 'defaults'")
-                    ea_conda.run('conda config --append channels conda-forge');
-                end
-            end
+            ea_conda.run('conda config --prepend channels conda-forge');
 
             [~, cmdout] = ea_conda.run('conda config --get ssl_verify');
             if isempty(cmdout)
@@ -171,8 +160,9 @@ classdef (Abstract) ea_conda
 
         function run_install_call(install_call)
             ea_cprintf('*Comments', 'Installing miniforge...\n');
-            [status,~] = system(install_call);
+            [status, ~] = system(install_call);
             if status
+                ea_delete(ea_conda.install_path);
                 error('Failed to install miniforge');
             end
         end
