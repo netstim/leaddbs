@@ -228,7 +228,12 @@ if ~isempty(transform)
                 XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
 
                 % apply transform, need transpose becuase ANTs prefer N*3 like row vector
-                XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
+                try
+                    XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
+                catch
+                    ea_cprintf('CmdWinWarnings', 'Failed to run ANTsPy! Fallback to ANTs...\n');
+                    XYZ_dest_mm = ea_ants_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
+                end
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -302,7 +307,12 @@ if ~isempty(transform)
 
             % apply transform, need transpose becuase ANTs prefer N*3
             % like row vector
-            XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', subjDir, useinverse)';
+            try
+                XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', subjDir, useinverse)';
+            catch
+                ea_cprintf('CmdWinWarnings', 'Failed to run ANTsPy! Fallback to ANTs...\n');
+                XYZ_dest_mm = ea_ants_apply_transforms_to_points(XYZ_src_mm(1:3,:)', subjDir, useinverse)';
+            end
 
             % LPS to RAS, restore to RAS coords
             XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -378,7 +388,12 @@ if ~isempty(transform)
 
                 % apply transform, need transpose becuase ANTs prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
+                try
+                    XYZ_dest_mm = ea_antspy_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
+                catch
+                    ea_cprintf('CmdWinWarnings', 'Failed to run ANTsPy! Fallback to ANTs...\n');
+                    XYZ_dest_mm = ea_ants_apply_transforms_to_points(XYZ_src_mm(1:3,:)', transform, useinverse)';
+                end
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
