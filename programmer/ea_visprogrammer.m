@@ -28,8 +28,6 @@ function ea_visprogrammer(resultfig, options, S, elstruct)
 
         for side=1:2
             try 
-                % [vtafv, vtavolume] = ea_genvat_horn(elstruct.coords_mm, S, side, options, S.label, resultfig);
-                % [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
                 [vtafv,vtavolume] = feval(ea_genvat,coords,S,side,options,S.label,resultfig);
                 vtaCalcPassed(side) = 1;
             catch 
@@ -50,4 +48,5 @@ function ea_visprogrammer(resultfig, options, S, elstruct)
     input_file_path = strcat(options.earoot, 'programmer/inputData.json');
     fid = fopen(input_file_path, 'w');
     fclose(fid);
+
 end

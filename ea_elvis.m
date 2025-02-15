@@ -617,6 +617,8 @@ end
 
 
 function leadprogrammer(hobj, ev, elstruct, resultfig, options)
+% handles = getappdata(options.leadfigure, 'handles');
+% ea_initialize_programmer(handles, options.bids, 'stimulate');
 [input_file_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
 currentOS = ea_getarch;
 if isfolder(releaseDir)
@@ -642,6 +644,7 @@ if isfolder(releaseDir)
         end
     end
 
+    % Testing new programming app
     system([appFile, ' ', ea_path_helper(input_file_path)]);
     [S] = ea_process_programmer(options);
     if isfield(S, 'message')
