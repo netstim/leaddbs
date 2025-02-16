@@ -50,12 +50,17 @@ end
 
 % Set pyenv
 pe = pyenv;
-restoreENV = 0;
-if pe.Executable ~= condaenv.python
-    if pe.Version ~= ""
-        restoreENV = 1;
+if pe.Executable ~= condaenv.python || pe.ExecutionMode ~= "InProcess"
+    if pe.Status == "Loaded" && pe.ExecutionMode == "InProcess"
+        ea_error('pyenv already loaded in InProcess mode! Please restart MATLAB.', showdlg=0, simpleStack=1);
+    else
+        try
+            terminate(pe);
+            pyenv(Version=condaenv.python, ExecutionMode="InProcess");
+        catch
+            ea_error('Failed to setup pyenv! Please restart MATLAB.', showdlg=0, simpleStack=1);
+        end
     end
-    pyenv('Version', condaenv.python);
 end
 
 % Prepare input data frame for ANTsPy
@@ -64,8 +69,3 @@ df = py.pandas.DataFrame(py.numpy.array(points).reshape(py.int(-1),py.int(3)), p
 % Apply transform to points
 pointsw = py.ants.apply_transforms_to_points(py.int(3), df, transform, py.list({useinverse}));
 pointsw = cast(double(pointsw.values), class(points));
-
-% Restore pyenv
-if restoreENV
-    pyenv('Version', pe.Executable);
-end
