@@ -89,6 +89,8 @@ if source_index == 5  % no source indexing
 else
     Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_index), '.nii'];
 end
+Vvat2.pinfo = [1;0;352];
+Vvat2.dt = [2, endian];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
 %ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
