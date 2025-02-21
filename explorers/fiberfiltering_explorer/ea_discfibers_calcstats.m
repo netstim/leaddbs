@@ -16,16 +16,16 @@ end
 switch obj.statsettings.stimulationmodel
     case 'Sigmoid Field'
         if obj.connectivity_type == 2
-            fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
+            fibsval = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_probA').fibsval;
         else
-            fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval_raw = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval;
             fibsval = fibsval_raw;  % initialize
             for side = 1:size(fibsval_raw,2)
                 fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
             end
         end
     otherwise
-        fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+        fibsval = cellfun(@full, obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
 end
 
 if size(I,2)==1 % 1 entry per patient, not per electrode
@@ -271,7 +271,7 @@ end
 for group=groups
     for side=1:numel(gfibsval)
         usedidx{group,side} = find(isfinite(vals{group,side}));
-        fibcell{group,side} = obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(usedidx{group,side});
+        fibcell{group,side} = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell{side}(usedidx{group,side});
         vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         if exist('pvals','var')
             pvals{group,side} = pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers

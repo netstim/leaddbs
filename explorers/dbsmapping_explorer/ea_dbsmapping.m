@@ -251,24 +251,7 @@ classdef ea_dbsmapping < handle
 
         function calculate(obj)
             % check that this has not been calculated before:
-            if ~isempty(obj.results) % something has been calculated
-                if isfield(obj.results,'tractset')
-                    if (isfield(obj.results.tractset,(ea_conn2connid(obj.calcsettings.connectome)),'PAM_Ttest') && obj.calcsettings.connectivity_type==2) || ...
-                            (isfield(obj.results.tractset,(ea_conn2connid(obj.calcsettings.connectome)),'efield_mean') && obj.calcsettings.connectivity_type==1)
-                        answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                        if ~strcmp(answ,'Yes')
-                            return
-                        end
-                    end
-                elseif isfield(obj.results,'networkmapping')
-                    if isfield(obj.results.networkmapping,ea_conn2connid(obj.calcsettings.connectome))
-                        answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                        if ~strcmp(answ,'Yes')
-                            return
-                        end
-                    end
-                end
-            end
+            
             if obj.calcsettings.selectedTool == 1 %sweetspotmapping
                   
                 % in case of the sweetspot explorer, calculate rather means to
@@ -305,6 +288,17 @@ classdef ea_dbsmapping < handle
                 % stores the result in the LeadGroup folder
                 % also merges fiberActivation_.._.mat and stores them in
                 % stimulation folders
+                if ~isempty(obj.results) % something has been calculated
+                    if isfield(obj.results,'tractset')
+                        if (isfield(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)),'PAM_Ttest') && obj.calcsettings.connectivity_type==2) || ...
+                                (isfield(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)),'efield_mean') && obj.calcsettings.connectivity_type==1)
+                            answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
+                            if ~strcmp(answ,'Yes')
+                                return
+                            end
+                        end
+                    end
+                end
                 if obj.multi_pathways == 1
                     [cfile, obj.map_list, obj.pathway_list] = ea_discfibers_merge_pathways(obj);
                 else
@@ -341,7 +335,20 @@ classdef ea_dbsmapping < handle
 
                 end
 
-            elseif obj.calcsettings.tool == 3
+            elseif obj.calcsettings.selectedTool == 3
+                
+                if ~isempty(obj.results) % something has been calculated
+
+                    if isfield(obj.results,'networkmapping')
+                        if isfield(obj.results.networkmapping,ea_conn2connid(obj.calcsettings.connectome))
+                            answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
+                            if ~strcmp(answ,'Yes')
+                                return
+                            end
+                        end
+                    end
+                end
+                
                 if isfield(obj.M,'pseudoM')
                     vatlist = obj.M.ROI.list;
                 else
@@ -349,17 +356,17 @@ classdef ea_dbsmapping < handle
                 end
                 [AllX] = ea_networkmapping_calcvals(vatlist, obj.calcsettings.connectome);
 
-                obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connval = AllX;
+                obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.connectome)).connval = AllX;
 
                 % Functional connectome, add spacedef to results
                 if contains(obj.calcsettings.connectome, ' > ')
                     connName = regexprep(obj.calcsettings.connectome, ' > .*$', '');
                     load([ea_getconnectomebase('fmri'), connName, filesep, 'dataset_volsurf.mat'], 'vol');
-                    obj.results.(ea_conn2connid(obj.calcsettings.connectome)).space = vol.space;
+                    obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.connectome)).space = vol.space;
                     if isfield(vol,'cifti')
-                        obj.results.(ea_conn2connid(obj.calcsettings.connectome)).space.cifti=vol.cifti; % add cifti space as well (hidden in nii space)
-                        obj.results.(ea_conn2connid(obj.calcsettings.connectome)).space.outidx=vol.outidx;
-                        obj.results.(ea_conn2connid(obj.calcsettings.connectome)).space.inidx=vol.inidx;
+                        obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.connectome)).space.cifti=vol.cifti; % add cifti space as well (hidden in nii space)
+                        obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.connectome)).space.outidx=vol.outidx;
+                        obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.connectome)).space.inidx=vol.inidx;
                     end
                 end
             end
@@ -446,16 +453,16 @@ classdef ea_dbsmapping < handle
              [pamlist,~] = ea_discfibers_getpams(obj);
             %[fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
             [fibsvalBin, fibsvalprob,~, ~, ~, fibcell_pam, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam_prob(pamlist, obj, cfile);
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_probA').fibsval = fibsvalprob;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM = connFiberInd;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('pam_fibers').fibcell= fibcell_pam;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_probA').fibsval = fibsvalprob;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM = connFiberInd;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('pam_fibers').fibcell= fibcell_pam;
            
             % temp. duplicate fibcell, will be fixed in the new explorer
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('pam_fibers').fibcell;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('pam_fibers').fibcell;
             %add a provision for the results 
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).calculationMethod = 'Fiber Based Method';
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).calculationMethod = obj.calcsettings.calcmethod;
         end
         function calculate_on_efield(obj,cfile)
             if isfield(obj.M,'pseudoM')
@@ -467,21 +474,21 @@ classdef ea_dbsmapping < handle
             else
                 [vatlist,~] = ea_discfibers_getvats(obj);
             end
-            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calsettings.calcthreshold);
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
+            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcsettings.calcthreshold);
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
             % only for e-fields
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_sum').fibsval = fibsvalSum;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_mean').fibsval = fibsvalMean;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_peak').fibsval = fibsvalPeak;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_5peak').fibsval = fibsval5Peak;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('plainconn').fibsval = fibsvalBin;
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').fibcell= fibcell_efield;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_sum').fibsval = fibsvalSum;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_mean').fibsval = fibsvalMean;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_peak').fibsval = fibsvalPeak;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_5peak').fibsval = fibsval5Peak;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('plainconn').fibsval = fibsvalBin;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').fibcell= fibcell_efield;
             % temp. duplicate fibcell, will be fixed in the new explorer
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').fibcell;
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').fibcell;
             %add a provision for results
-            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).calculationMethod = 'Efield/Voxel Based Method';
+            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).calculationMethod = obj.calcsettings.calcmethod;
 
         end
 
@@ -536,11 +543,11 @@ classdef ea_dbsmapping < handle
             obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_proj').connFiberInd_VAT = connFiberInd_proj; % old ff files do not have these data and will fail when using pathway atlases
             obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).calculationMethod = 'Fiber Based Method';
             if strcmp(obj.e_field_metric,'Magnitude')
-                obj.results.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').fibcell;
-                obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').connFiberInd_VAT;
+                obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').fibcell;
+                obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_fibers').connFiberInd_VAT;
             else
-                obj.results.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_proj').fibcell;
-                obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('efield_proj').connFiberInd_VAT;
+                obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_proj').fibcell;
+                obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('efield_proj').connFiberInd_VAT;
             end
 
         end
@@ -880,9 +887,9 @@ classdef ea_dbsmapping < handle
                     disp(S.fibsvalType)
                 end
 
-                fibsval = full(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).(S.fibsvalType).fibsval);
+                fibsval = full(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).(S.fibsvalType).fibsval);
             else
-                fibsval = full(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval);
+                fibsval = full(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval);
             end
 
             %fibsval = full(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval);
@@ -1378,13 +1385,13 @@ classdef ea_dbsmapping < handle
 
         function draw(obj,vals,fibcell,usedidx) %for cv live visualize
             %function draw(obj,vals,fibcell)
-
+             
             % re-define plainconn (since we do not store it)
             try
                 if obj.calcsettings.connectivity_type == 2
-                    obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_Ttest').fibsval;
+                    obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('plainconn').fibsval = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('PAM_Ttest').fibsval;
                 else
-                    obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.calcsettings.connectome)).('VAT_Ttest').fibsval;
+                    obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('plainconn').fibsval = obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).('VAT_Ttest').fibsval;
                 end
             catch
                 ea_warndlg("Connectivity indices were not stored. Please recalculate or stay with the same model (VAT or PAM)");
@@ -1417,16 +1424,16 @@ classdef ea_dbsmapping < handle
                 load(cfile, 'fibers', 'idx');
                 %disp('Conn. Type:')
                 %disp(ea_method2methodid(obj))
-                obj.results.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = length(idx);
+                obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = length(idx);
 
                 try
                     for side = 1:2
                         if obj.calcsettings.connectivity_type == 2
-                            connFiber = fibers(ismember(fibers(:,4), obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}), 1:3);
-                            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}));
+                            connFiber = fibers(ismember(fibers(:,4), obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}), 1:3);
+                            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}));
                         else
-                            connFiber = fibers(ismember(fibers(:,4), obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}), 1:3);
-                            obj.results.(ea_conn2connid(obj.calcsettings.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}));
+                            connFiber = fibers(ismember(fibers(:,4), obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}), 1:3);
+                            obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}));
                         end
                     end
                 catch
@@ -1438,7 +1445,7 @@ classdef ea_dbsmapping < handle
                 end
             else
                 % legacy support
-                if ~isfield(obj.results.(ea_conn2connid(obj.calcsettings.connectome)),'totalFibers')
+                if ~isfield(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)),'totalFibers')
                     if obj.multi_pathways == 1
                         [filepath,~,~] = fileparts(obj.leadgroup);
                         cfile = [filepath,filesep,obj.calcsettings.connectome,filesep,'merged_pathways.mat'];
@@ -1446,7 +1453,7 @@ classdef ea_dbsmapping < handle
                         cfile = [ea_getconnectomebase('dMRI'), obj.calcsettings.connectome, filesep, 'data.mat'];
                     end
                     load(cfile, 'fibers', 'idx');
-                    obj.results.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = length(idx);
+                    obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).totalFibers = length(idx);
                 end
             end
 
@@ -1473,15 +1480,15 @@ classdef ea_dbsmapping < handle
                             switch obj.calcsettings.connectivity_type
                                 case 2
                                     if size(S.vals_all,2) == 2
-                                        vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side});
+                                        vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side});
                                     else
-                                        vals_connected{voter,side} = S.vals_all{voter,1}(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side});
+                                        vals_connected{voter,side} = S.vals_all{voter,1}(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side});
                                     end
                                 otherwise
                                     if size(S.vals_all,2) == 2
-                                        vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side});
+                                        vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side});
                                     else
-                                        vals_connected{voter,side} = S.vals_all{voter,1}(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side});
+                                        vals_connected{voter,side} = S.vals_all{voter,1}(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side});
                                     end
                             end
                         catch
@@ -1560,13 +1567,13 @@ classdef ea_dbsmapping < handle
                             % usedidx will be different for
                             % plainconnectivity, so it should work!
                             if obj.calcsettings.connectivity_type == 2
-                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))));
-                                if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))) > 0
+                                [d, ix] = min(abs(obj.map_list-obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))));
+                                if (obj.map_list(ix)-obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))) > 0
                                     ix = ix - 1;
                                 end
                             else
-                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))));
-                                if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))) > 0
+                                [d, ix] = min(abs(obj.map_list-obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))));
+                                if (obj.map_list(ix)-obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))) > 0
                                     ix = ix - 1;
                                 end
                             end
@@ -2041,7 +2048,7 @@ classdef ea_dbsmapping < handle
                             ctentry=str2double(thisentry(1:k-1));
                             ctside=str2double(thisentry(k+1:end));
                             weights{ctside}=weights{ctside}+...
-                                full(obj.results.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                                full(obj.results.tractset.(ea_conn2connid(obj.calcsettings.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
                             for side=1:size(obj.drawobject,2)
                                 if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
                                     weights{side}=ea_minmax(weights{side}); %ea_contrast(weights{side},0.5,-0.5))*0.5; % enhance constrast a bit

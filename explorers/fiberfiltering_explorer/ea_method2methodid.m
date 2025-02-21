@@ -7,7 +7,7 @@ if ~exist('efm','var')
     efm=obj.statsettings.efieldmetric;
 end
 
-switch obj.connectivity_type
+switch obj.calcsettings.connectivity_type
     case 2 % PAM
         switch obj.statsettings.stimulationmodel
             case 'VTA'

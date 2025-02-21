@@ -5,7 +5,7 @@ numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,1);
 
 [modlist,modType] = ea_genmodlist;
-[~,ix] = ismember(obj.connectome,modlist);
+[~,ix] = ismember(obj.calcsettings.connectome,modlist);
 if ~ix
     ea_error('Something went wrong, connectome disappeared?');
 end
@@ -54,11 +54,11 @@ options.lcm.seeddef = 'vats';
 options.lcm.odir = [];
 options.lcm.omask = [];
 options.lcm.struc.do = 0;
-options.lcm.struc.connectome = obj.connectome;
+options.lcm.struc.connectome = obj.calcsettings.connectome;
 options.lcm.struc.espace = 1;
 options.lcm.func.do = 0;
 options.lcm.func.exportgmtc = 0;
-options.lcm.func.connectome = strrep(obj.connectome,' > ','>');
+options.lcm.func.connectome = strrep(obj.calcsettings.connectome,' > ','>');
 options.lcm.cmd = 1;
 options.lcm.onlygenvats=1; % force to only create VTAs (do not create network maps)
 options.ecog.extractsurface.do = 0;
