@@ -156,6 +156,27 @@ if strcmp(handles.prod, 'dbs')
     handles.datasetselect.TooltipString = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
+    [~, datasetname] = fileparts(BIDSRoot);
+    switch datasetname
+        case 'SWANatlas'
+            setappdata(handles.leadfigure, 'updateStatus', handles.updatebutn.Visible);
+            handles.updatebutn.Visible = "on";
+            handles.updatebutn.String = 'MNI <=> Histo';
+            handles.updatebutn.BackgroundColor = [255, 165, 0]./256;
+            handles.LogoImage.ImageSource = fullfile(ea_getearoot,'tools','swanatlas','swanatlas.jpg');
+        case 'LeadTutor'
+            setappdata(handles.leadfigure, 'updateStatus', handles.updatebutn.Visible);
+            handles.updatebutn.Visible = "on";
+            handles.updatebutn.String = 'Submit Results...';
+        otherwise
+            updateStatus = getappdata(handles.leadfigure, 'updateStatus');
+            if ~isempty(updateStatus)
+                handles.updatebutn.Visible = updateStatus;
+                handles.updatebutn.String = 'Update';
+                handles.LogoImage.ImageSource = fullfile(ea_getearoot,'icons','logo_lead_dbs.png');
+            end
+    end
+
     if isempty(bids.subjId)
         handles.patientlist.Data = table("", 'VariableNames', {'subjId'});
         ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
@@ -204,7 +225,7 @@ if strcmp(handles.prod, 'dbs')
         end
 
         % Set Add DICOMs/NIfTIs Menu/Button Visibility
-        if length(handles.patientlist.Selection) == 1
+        if isscalar(handles.patientlist.Selection)
             handles.AddDICOMsButton.Visible = 'on';
             handles.AddNIfTIsButton.Visible = 'on';
             handles.UpdateNIfTIsButton.Visible = 'on';
@@ -251,7 +272,7 @@ ea_addrecent(handles, {BIDSRoot}, 'datasets');
 ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:
-if length(uipatdir) == 1 && isfield(handles, 'side1')
+if isscalar(uipatdir) && isfield(handles, 'side1')
     if bids.checkModality(subjId{1}, bids.settings.preferMRCT) ~= 3
         recon = bids.getRecon(subjId{1});
         if isfile(recon.recon)
