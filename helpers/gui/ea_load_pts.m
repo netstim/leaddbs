@@ -156,15 +156,23 @@ if strcmp(handles.prod, 'dbs')
     handles.datasetselect.TooltipString = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
-    [~, datasetname] = fileparts(BIDSRoot);
-    switch datasetname
-        case 'SWANatlas'
+    datasetDescFile = fullfile(BIDSRoot, 'dataset_description.json');
+    if isfile(datasetDescFile)
+        datasetDesc = loadjson(datasetDescFile);
+    else
+        datasetDesc = struct;
+    end
+    if ~isfield(datasetDesc, 'Reserved')
+        datasetDesc.Reserved = '';
+    end
+    switch datasetDesc.Reserved
+        case 'SWAN'
             setappdata(handles.leadfigure, 'updateStatus', handles.updatebutn.Visible);
             handles.updatebutn.Visible = "on";
             handles.updatebutn.String = 'MNI <=> Histo';
             handles.updatebutn.BackgroundColor = [255, 165, 0]./256;
             handles.LogoImage.ImageSource = fullfile(ea_getearoot,'tools','swanatlas','swanatlas.jpg');
-        case 'LeadTutor'
+        case 'Tutor'
             setappdata(handles.leadfigure, 'updateStatus', handles.updatebutn.Visible);
             handles.updatebutn.Visible = "on";
             handles.updatebutn.String = 'Submit Results...';
