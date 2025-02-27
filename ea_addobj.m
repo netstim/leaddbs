@@ -364,6 +364,12 @@ if ischar(recoFile)
     recoFile = {recoFile};
 end
 
+elstruct = getappdata(resultfig,'elstruct');
+if isempty(elstruct) || isempty(fieldnames(elstruct))
+    elInd = 1;
+else
+    elInd = length(elstruct) + 1;
+end
 el_render = getappdata(resultfig,'el_render');
 el_label = getappdata(resultfig,'el_label');
 ht = getappdata(resultfig, 'ht');
@@ -382,23 +388,27 @@ for f=1:length(recoFile)
     else
         space = 'native';
     end
-    elstruct.coords_mm = reco.(space).coords_mm;
-    elstruct.trajectory = reco.(space).trajectory;
-    elstruct.markers = reco.(space).markers;
-    options.sides = find(cellfun(@(x) ~isempty(x), elstruct.coords_mm));
-    elstruct.elmodel = reco.props(options.sides(1)).elmodel;
+    elstruct(elInd).coords_mm = reco.(space).coords_mm;
+    elstruct(elInd).trajectory = reco.(space).trajectory;
+    elstruct(elInd).markers = reco.(space).markers;
+    options.sides = find(cellfun(@(x) ~isempty(x), elstruct(elInd).coords_mm));
+    elstruct(elInd).elmodel = reco.props(options.sides(1)).elmodel;
     if isBIDSFileName(recoFile{f})
         [~, fName] = fileparts(recoFile{f});
-        elstruct.name = regexp(fName, 'sub-[^\W_]+', 'match', 'once');
+        elstruct(elInd).name = regexp(fName, 'sub-[^\W_]+', 'match', 'once');
     else
-        [~, elstruct.name] = fileparts(fileparts(recoFile{f}));
+        [~, elstruct(elInd).name] = fileparts(fileparts(recoFile{f}));
     end
     if ~isempty(el_render)
-        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct, 1, el_render, el_label);
+        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct(elInd), 1, el_render, el_label);
     else
-        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct);
+        [el_render, el_label] = ea_renderelstruct(options, resultfig, elstruct(elInd));
     end
 end
+
+setappdata(resultfig,'elstruct',elstruct);
+setappdata(resultfig,'el_render',el_render);
+setappdata(resultfig,'el_label',el_label);
 
 set(elLabelToggle, 'OnCallback', {@(src, evt) set(el_label, 'Visible', 'on')}, 'OffCallback', {@(src, evt) set(el_label, 'Visible', 'off')});
 
