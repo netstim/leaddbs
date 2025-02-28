@@ -1,0 +1,8 @@
+The neonate AAL is modified from Shi et al. (2011) - https://www.med.unc.edu/bric/ideagroup/software/unc-infant-0-1-2-atlases/ which is shared under Creative Commons Attribution 4.0 International Public License
+
+
+The modifications was conducted by the following steps:
+
+1. Merge all AAL regions and apply morphological smoothing 3 times to create a limiting mask
+2. With the mask being the first region, adding all ALL regions and apply morphological smoothing to all regions
+3. Apply [All to First] function

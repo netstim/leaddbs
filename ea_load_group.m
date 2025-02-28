@@ -2,6 +2,7 @@ function ea_load_group(handles, groupdir)
 
 ea_busyaction('on', handles.leadfigure, 'group');
 
+groupdir = erase(groupdir, filesep + textBoundary("end"));
 set(handles.groupdir_choosebox, 'String', groupdir);
 set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
@@ -9,7 +10,7 @@ analysisFile = ea_getGroupAnalysisFile(groupdir);
 if isempty(analysisFile) % Create new analysis file in case not found
     analysisFile = ea_genGroupAnalysisFile(groupdir);
 end
-load(analysisFile, 'M');
+M = ea_checkStimParams(analysisFile);
 
 datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
 if isfile(fullfile(datasetFolder, 'miniset.json'))

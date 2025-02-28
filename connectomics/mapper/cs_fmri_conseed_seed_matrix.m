@@ -221,7 +221,7 @@ for subj = 1:numSubUse % iterate across subjects
             if ~isBIDSFileName(sfile{s})
                 mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcmap.nii']);
             else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap');
+                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcmap', 'ext', '.nii');
             end
         end
 
@@ -230,6 +230,15 @@ for subj = 1:numSubUse % iterate across subjects
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=Rw;
 
+        if isfield(dataset.vol,'extendoutidx')
+            mmap.img=ea_extendoutidx(mmap.img,dataset);
+        end
+        if isfield(dataset.vol,'cifti')
+            ciiout=dataset.vol.cifti;
+            ciiout.cdata(:)=nan;
+            ciiout.cdata(dataset.vol.inidx)=Rw;
+            cifti_write(ciiout,strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcmap.dscalar.nii'])); % export cifti as well
+        end
         if ~isNetworkMappingRun
             ea_write_nii(mmap);
             if usegzip
@@ -244,13 +253,21 @@ for subj = 1:numSubUse % iterate across subjects
             if ~isBIDSFileName(sfile{s})
                 mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.nii']);
             else
-                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
+                mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap', 'ext', '.nii');
             end
         end
 
         mmap.img(:)=0;
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=atanh(Rw);
+        if isfield(dataset.vol,'extendoutidx')
+            mmap.img=ea_extendoutidx(mmap.img,dataset);
+        end
+        if isfield(dataset.vol,'cifti')
+            ciiout.cdata(:)=nan;
+            ciiout.cdata(dataset.vol.inidx)=atanh(Rw);
+            cifti_write(ciiout,strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcmap.dscalar.nii'])); % export cifti as well
+        end
         ea_write_nii(mmap);
         if usegzip
             gzip(mmap.fname);
@@ -268,4 +285,12 @@ if strcmp(dataset.type,'fMRI_matrix')
     howmanyruns=1;
 else
     howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
+end
+
+
+function mmap=ea_extendoutidx(mmap,dataset)
+
+for ext=1:size(dataset.vol.extendoutidx.out,2)
+    ix=find(dataset.vol.extendoutidx.out(:,ext));
+    mmap(dataset.vol.extendoutidx.out(ix,ext))=mmap(dataset.vol.extendoutidx.in(ix));
 end

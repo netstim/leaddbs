@@ -25,14 +25,17 @@ if strcmp(voxmm,'vox')
 end
 
 %% set header
-header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
+header.id_string = ['TRACK', char(0)];
+header.voxel_order = ['LPS', char(0)];
+header.pad1 = repmat(char(0), 1, 2);
 
 if ~exist('specs','var') || isempty(specs) % Use MNI T1 as reference space by default.
-    disp('Header from MNI t1.nii ...');
-    refhdr = ea_fslhd([ea_space,'t1.nii']);
+    disp('Header from space template ...');
+    spacedef = ea_getspacedef;
+    refhdr = ea_fslhd([ea_space, spacedef.templates{1}, '.nii']);
     specs.origin = [0,0,0];
     specs.dim = [refhdr.dim1, refhdr.dim2, refhdr.dim3];
-    specs.affine = ea_get_affine([ea_space,'t1.nii'], 0);
+    specs.affine = ea_get_affine([ea_space, spacedef.templates{1}, '.nii'], 0);
     header.pad2 = ['RAS', char(0)];
 elseif isstruct(specs)
     % Suppose that the affine matrix is from SPM

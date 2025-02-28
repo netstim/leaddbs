@@ -21,8 +21,8 @@ else
 end
 
 % Actual test:
-valsout=sum(valsin,2,'omitmissing');
-psout=zeros(size(valsout));
+valsout=sum(valsin,2,'omitnan');
+psout=nan(size(valsout));
 % map outputs
 varargout{1}=valsout;
 varargout{2}=psout;

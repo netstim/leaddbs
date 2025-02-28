@@ -244,7 +244,7 @@ for mcfi=usesubjects % iterate across subjects
                 if ~isBIDSFileName(sfile{s})
                     ccmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1},'_corr.nii']);
                 else
-                    ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'suffix', 'corr');
+                    ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'suffix', 'corr', 'ext', '.nii');
                 end
             end
 
@@ -263,7 +263,7 @@ for mcfi=usesubjects % iterate across subjects
                     if ~isBIDSFileName(sfile{s})
                         ccmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1},'_hemi-L_corrsurf.nii']);
                     else
-                        ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'hemi', 'L', 'suffix', 'corrsurf');
+                        ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'hemi', 'L', 'suffix', 'corrsurf', 'ext', '.nii');
                     end
                 end
 
@@ -284,7 +284,7 @@ for mcfi=usesubjects % iterate across subjects
                     if ~isBIDSFileName(sfile{s})
                         ccmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_id-',dataset.vol.subIDs{mcfi}{1},'_hemi-R_corrsurf.nii']);
                     else
-                        ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'hemi', 'R', 'suffix', 'corrsurf');
+                        ccmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'id', dataset.vol.subIDs{mcfi}{1}, 'hemi', 'R', 'suffix', 'corrsurf', 'ext', '.nii');
                     end
                 end
 
@@ -318,7 +318,7 @@ switch dataset.type
                 if ~isBIDSFileName(sfile{s})
                     mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgR_funcpmap.nii']);
                 else
-                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcpmap');
+                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgR', 'suffix', 'funcpmap', 'ext', '.nii');
                 end
             end
 
@@ -342,7 +342,7 @@ switch dataset.type
                 if ~isBIDSFileName(sfile{s})
                     mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-VarR_funcpmap.nii']);
                 else
-                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'VarR', 'suffix', 'funcpmap');
+                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'VarR', 'suffix', 'funcpmap', 'ext', '.nii');
                 end
             end
 
@@ -367,7 +367,7 @@ switch dataset.type
                     if ~isBIDSFileName(sfile{s})
                         lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-AvgR_funcpmapsurf.nii']);
                     else
-                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgR', 'suffix', 'funcpmapsurf');
+                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgR', 'suffix', 'funcpmapsurf', 'ext', '.nii');
                     end
                 end
 
@@ -391,7 +391,7 @@ switch dataset.type
                     if ~isBIDSFileName(sfile{s})
                         rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-AvgR_funcpmapsurf.nii']);
                     else
-                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgR', 'suffix', 'funcpmapsurf');
+                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgR', 'suffix', 'funcpmapsurf', 'ext', '.nii');
                     end
                 end
 
@@ -423,7 +423,7 @@ switch dataset.type
                 if ~isBIDSFileName(sfile{s})
                     mmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-AvgRFz_funcpmap.nii']);
                 else
-                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcpmap');
+                    mmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcpmap', 'ext', '.nii');
                 end
             end
 
@@ -448,7 +448,7 @@ switch dataset.type
                     if ~isBIDSFileName(sfile{s})
                         lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-AvgRFz_funcpmapsurf.nii']);
                     else
-                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgRFz', 'suffix', 'funcpmapsurf');
+                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'AvgRFz', 'suffix', 'funcpmapsurf', 'ext', '.nii');
                     end
                 end
 
@@ -472,7 +472,7 @@ switch dataset.type
                     if ~isBIDSFileName(sfile{s})
                         rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-AvgRFz_funcpmapsurf.nii']);
                     else
-                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgRFz', 'suffix', 'funcpmapsurf');
+                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'AvgRFz', 'suffix', 'funcpmapsurf', 'ext', '.nii');
                     end
                 end
 
@@ -498,7 +498,7 @@ switch dataset.type
                 if ~isBIDSFileName(sfile{s})
                     tmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-T_funcpmap.nii']);
                 else
-                    tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcpmap');
+                    tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcpmap', 'ext', '.nii');
                 end
             end
 
@@ -523,7 +523,7 @@ switch dataset.type
                     if ~isBIDSFileName(sfile{s})
                         lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-T_funcpmapsurf.nii']);
                     else
-                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'T', 'suffix', 'funcpmapsurf');
+                        lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'T', 'suffix', 'funcpmapsurf', 'ext', '.nii');
                     end
                 end
 
@@ -547,7 +547,7 @@ switch dataset.type
                     if ~isBIDSFileName(sfile{s})
                         rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-T_funcpmapsurf.nii']);
                     else
-                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'T', 'suffix', 'funcpmapsurf');
+                        rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'T', 'suffix', 'funcpmapsurf', 'ext', '.nii');
                     end
                 end
 

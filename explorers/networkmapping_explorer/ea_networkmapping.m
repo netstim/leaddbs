@@ -62,6 +62,9 @@ classdef ea_networkmapping < handle
         kiter = 1
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
+        ExternalModelFile = 'None'
+        useExternalModel = false;
+        visualizeExternalModel = 0;
     end
 
     properties (Access = private)
@@ -148,6 +151,11 @@ classdef ea_networkmapping < handle
                 connName = regexprep(obj.connectome, ' > .*$', '');
                 load([ea_getconnectomebase('fmri'), connName, filesep, 'dataset_volsurf.mat'], 'vol');
                 obj.results.(ea_conn2connid(obj.connectome)).space = vol.space;
+                if isfield(vol,'cifti')
+                    obj.results.(ea_conn2connid(obj.connectome)).space.cifti=vol.cifti; % add cifti space as well (hidden in nii space)
+                    obj.results.(ea_conn2connid(obj.connectome)).space.outidx=vol.outidx;
+                    obj.results.(ea_conn2connid(obj.connectome)).space.inidx=vol.inidx;
+                end
             end
         end
 
@@ -343,21 +351,34 @@ classdef ea_networkmapping < handle
                     test = cvp.test{c};
                 end
 
-                if ~exist('Iperm', 'var')
+                if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
+                    % load external model, and assign vals from the
+                    % external model.
+                    S = load(obj.ExternalModelFile);
                     if obj.cvlivevisualize
-                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
+                        [vals] = S.model_vals;
                         obj.draw(vals);
                         drawnow;
                     else
-                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
+                        [vals] = S.model_vals;
                     end
                 else
-                    if obj.cvlivevisualize
-                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals);
-                        drawnow;
+                    if ~exist('Iperm', 'var')
+                        if obj.cvlivevisualize
+                            [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
+                            obj.draw(vals);
+                            drawnow;
+                        else
+                            [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
+                        end
                     else
-                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
+                        if obj.cvlivevisualize
+                            [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
+                            obj.draw(vals);
+                            drawnow;
+                        else
+                            [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
+                        end
                     end
                 end
 
@@ -514,7 +535,12 @@ classdef ea_networkmapping < handle
                 return
             end
 
-            if ~exist('vals','var')
+            if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')  && obj.visualizeExternalModel == 1
+                % load external model, and assign vals from the
+                % external model.
+                S = load(obj.ExternalModelFile);
+                [vals] = S.model_vals;           
+            elseif ~exist('vals','var')
                 [vals]=ea_networkmapping_calcstats(obj);
             end
             obj.surfdrawn.vals=vals;
@@ -638,6 +664,9 @@ classdef ea_networkmapping < handle
                         end
 
                         res.img(:)=vals{group};
+                        if isfield(res,'cifti')
+                            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        end
                     case 'Surface (Elvis)'
                         sides=1:2;
                         keep=[obj.modelRH,obj.modelLH]; 
@@ -652,7 +681,9 @@ classdef ea_networkmapping < handle
                             return
                         end
                         res.img(:)=vals{group};
-                        
+                        if isfield(res,'cifti')
+                            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        end
                         h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
                         if obj.modelRH && obj.modelLH
                             obj.drawobject{group}{1} = h{1};
@@ -664,6 +695,9 @@ classdef ea_networkmapping < handle
                         end
                     case 'Surface (Surfice)'
                         res.img(:)=vals{group};
+                        if isfield(res,'cifti')
+                            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
+                        end
                         res.fname=[fileparts(obj.leadgroup),filesep,'model.nii'];
 
                         if ~obj.posvisible

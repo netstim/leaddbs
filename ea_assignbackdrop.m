@@ -35,7 +35,9 @@ if strcmp(bdstring, 'list')
 
     % check if preop and postop images exist
     if ~nopatientmode
-        if ~isfile(options.subj.preopAnat.(options.subj.AnchorModality).coreg)
+        if ~isfield(options.subj, 'preopAnat')
+            haspreop=0;
+        elseif ~isfile(options.subj.preopAnat.(options.subj.AnchorModality).coreg)
             haspreop=0;
         end
 

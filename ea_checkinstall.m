@@ -10,8 +10,8 @@ if ~exist('prefs','var')
     prefs = [];
 end
 
-python_envs = dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
-python_envs = cellfun(@(x) x(1:end-4), {python_envs.name}', 'UniformOutput', false);
+python_envs = ea_regexpdir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments'), '.*\.yml', 0, 'f');
+[~, python_envs] = fileparts(python_envs);
 
 menuItems = {'Redownload data files'
              'Install development version of LeadDBS'
@@ -50,10 +50,12 @@ if ismac
     downloadIDs = ['fixperm'; downloadIDs];
 end
 
-assetNames = menuItems(6:end);
-assetsIDs = downloadIDs(6:end);
+assetNames = menuItems(end-10:end);
+assetsIDs = downloadIDs(end-10:end);
 if ismember(cmd, assetsIDs)
     assetName = assetNames{ismember(assetsIDs, cmd)};
+else
+    assetName = cmd;
 end
 
 switch cmd

@@ -144,6 +144,43 @@ ct.imgtmp = ct.img(mincorner_vx(1):maxcorner_vx(1),mincorner_vx(2):maxcorner_vx(
     [mincorner_mm(2):(maxcorner_mm(2)-mincorner_mm(2))./(size(ct.imgtmp,2)-1):maxcorner_mm(2)],...
     [mincorner_mm(3):(maxcorner_mm(3)-mincorner_mm(3))./(size(ct.imgtmp,3)-1):maxcorner_mm(3)]);
 
+
+% % This approach does not work because interp3 expects rectangular grid
+% %affine_window = ct.mat;
+% %affine_window(1:3,4) = [mincorner_mm(1),mincorner_mm(2),mincorner_mm(3)]; % maybe it should be half voxel shifted
+% [v1, v2, v3] = ndgrid(mincorner_vx(1):maxcorner_vx(1),mincorner_vx(2):maxcorner_vx(2),mincorner_vx(3):maxcorner_vx(3));
+% % Concatenate the combinations into a single matrix
+% all_voxels_table = [v1(:), v2(:), v3(:)];
+% 
+% world_coords_flat = [all_voxels_table, ones(size(all_voxels_table, 1), 1)] * ct.mat'; 
+% world_coords = reshape(world_coords_flat(:,1:3),[size(ct.imgtmp),3]); 
+% world_coords = permute(world_coords,[2,1,3,4]);
+% Xmm = world_coords(:,:,:,1);
+% Ymm = world_coords(:,:,:,2);
+% Zmm = world_coords(:,:,:,3);
+
+% So instead we reslice the CT itself
+if ~isdiag(ct.mat(1:3,1:3))
+    ea_dispt('Reslicing CT to align with the world axes...');
+
+    [v1, v2, v3] = ndgrid(mincorner_vx(1):maxcorner_vx(1),mincorner_vx(2):maxcorner_vx(2),mincorner_vx(3):maxcorner_vx(3));
+    % Concatenate the combinations into a single matrix
+    all_voxels_table = [v1(:), v2(:), v3(:)];
+    world_coords_flat = [all_voxels_table, ones(size(all_voxels_table, 1), 1)] * ct.mat'; 
+    ct_window = reshape(ct.imgtmp,[size(world_coords_flat,1),1]); 
+
+    F = scatteredInterpolant(world_coords_flat(:,1),world_coords_flat(:,2),world_coords_flat(:,3),ct_window,'linear','none');
+    gv=cell(3,1); spacing=zeros(3,1);
+
+    % hardwired N of points, if changed, also change Lattice shape in lead_settings.py
+    for axs = 1:3
+        %n_points(axis) = (max(round(Field_coords_MNI(:,axis))) - min(round(Field_coords_MNI(:,axis)))) / template.voxsize(axis);
+        gv{axs}=linspace(mincorner_mm(axs),maxcorner_mm(axs),size(ct.imgtmp,axs));
+        spacing(axs)=abs(gv{axs}(1)-gv{axs}(2)); 
+    end
+    ct.imgtmp = F(gv);
+end
+
 clear mincorner_mm maxcorner_mm
 
 Vnew = permute(ct.imgtmp,[2,1,3]);

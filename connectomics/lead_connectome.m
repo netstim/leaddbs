@@ -133,8 +133,7 @@ handles.callingfunction='lead_connectome';
 
 if isindependent
     %% add tools menu
-    ea_processguiargs(handles,varargin)
-
+    ea_processguiargs(handles,varargin);
     ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space','methods'},ea_prefs);
 
 end

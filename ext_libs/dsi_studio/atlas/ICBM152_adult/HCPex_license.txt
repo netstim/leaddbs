@@ -1,0 +1,4 @@
+wayalan/HCPex is licensed under the GNU General Public License v3.0
+https://github.com/wayalan/HCPex/blob/main/LICENSE
+
+Source: https://github.com/wayalan/HCPex

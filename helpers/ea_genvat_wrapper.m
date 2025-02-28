@@ -1,10 +1,11 @@
 function ea_genvat_wrapper(patientFolder, stimLabel, side, cathode, stimAmplitude, anode, stimType, estimateInTemplate)
 % Wrapper to create VTA without GUI.
 % Only support single source evenly splitted SimBio model for now.
-% Contacts are indexed as 0-N. Case is indexed as -1.
+% Contacts are indexed as 1-N. Case is indexed as 0.
 
-if endsWith(patientFolder, filesep)
-    patientFolder = patientFolder(1:end-1);
+patientFolder = erase(GetFullPath(patientFolder), filesep + textBoundary("end"));
+if ~isfolder(patientFolder)
+    ea_error('Patient folder not found!', showdlg=false, simpleStack=true);
 end
 
 [~, patientName] = fileparts(patientFolder);
@@ -36,17 +37,15 @@ if ~exist('estimateInTemplate', 'var') || isempty(estimateInTemplate)
     estimateInTemplate = 0;
 end
 
-% Load template stimparameter structure
-load([ea_getearoot, 'common', filesep, 'stimparameters_template.mat'], 'S');
-
 % Get patient options
 options = ea_getptopts(patientFolder);
+options.patientname = ['sub-', options.subj.subjId];
+
+% Initialize stimparameter structure
+S = ea_initializeS(stimLabel, options);
 
 % Save original native flag
 options.orignative = options.native;
-
-% Set stimulation label
-S.label = stimLabel;
 
 % Set native flag depending on estimation space
 if ~estimateInTemplate
@@ -57,11 +56,9 @@ switch lower(side)
     case {0, 'r', 'right'}
         sideChar = 'R';
         sideInd = 1;
-        sideOffSet = 0; % k0-k7, no index offset
     case {1, 'l', 'left'}
         sideChar = 'L';
         sideInd = 2;
-        sideOffSet = 8; % k8-k15, offset the indices from 0-7 to 8-15
 end
 
 switch lower(stimType)
@@ -73,32 +70,37 @@ end
 
 % Set stimulation amplitude and type
 S.amplitude{sideInd}(1) = stimAmplitude;
-eval(['S.',sideChar,'s1.amp = stimAmplitude;']);
-eval(['S.',sideChar,'s1.va = stimType;']);
+S.([sideChar,'s1']).amp = stimAmplitude;
+S.([sideChar,'s1']).va = stimType;
 
 % Set active contact
-S.activecontacts{sideInd}(setdiff(union(anode, cathode),-1)+1) = 1;
+S.activecontacts{sideInd}(setdiff(union(anode, cathode),0)) = 1;
 
-% Set anode parameters
-for i=1:numel(anode)
-    if anode(i) == -1
-        eval(['S.',sideChar,'s1.case.perc = 1/numel(anode)*100;']);
-        eval(['S.',sideChar,'s1.case.pol = 2;']);
-    else
-        eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.perc = 1/numel(anode)*100;']);
-        eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.pol = 2;']);
+% Check anode
+if ismember(0, anode) && numel(anode)>1 % When case is anode, it has to be the only anode
+    ea_error('When case is anode, it has to be the only anode!', showdlg=false, simpleStack=true);
+end
+
+% Check cathode
+if ismember(0, cathode) % Case cannot be cathode
+    ea_error('Case cannot be cathode!', showdlg=false, simpleStack=true);
+end
+
+% Set case
+if ismember(0, anode)
+    S.([sideChar,'s1']).case.perc = 100;
+    S.([sideChar,'s1']).case.pol = 2;
+else
+    for i=1:numel(anode)
+        S.([sideChar,'s1']).(['k',num2str(anode(i))]).perc = 1/numel(anode)*100;
+        S.([sideChar,'s1']).(['k',num2str(anode(i))]).pol = 2;
     end
 end
 
 % Set cathode parameters
 for i=1:numel(cathode)
-    if cathode(i) == -1
-        eval(['S.',sideChar,'s1.case.perc = 1/numel(cathode)*100;']);
-        eval(['S.',sideChar,'s1.case.pol = 1;']);
-    else
-        eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.perc = 1/numel(cathode)*100;']);
-        eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.pol = 1;']);
-    end
+    S.([sideChar,'s1']).(['k',num2str(cathode(i))]).perc = 1/numel(cathode)*100;
+    S.([sideChar,'s1']).(['k',num2str(cathode(i))]).pol = 1;
 end
 
 % Save stimulation parameters in template space output folder

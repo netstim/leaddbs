@@ -21,15 +21,15 @@ argParser.addParameter('brainMask', ''); % for manually providing a brain mask (
 
 argParser.addOptional('reverseDir', false); % for special cases with I-S flip
 argParser.addOptional('contactDetectionMethod', 'contactAreaCenter', @(x)(ismember(x, {'peak', 'peakWaveCenter', 'contactAreaCenter'}))); % default contactAreaCenter, if peak, automatic fallback to contactAreaCenter for "bad quality data"
-argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional'}))); 
+argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional', 'Aleva directSTIM Directed'})));
 
-argParser.addOptional('medtronicXMLPlan', '', @(x)(ischar(x))); 
+argParser.addOptional('medtronicXMLPlan', '', @(x)(ischar(x)));
 argParser.parse(varargin{:});
 args = argParser.Results;
 
 %% profe contactDetectionMethod contactAreaCenter if electrodeType is set manually
 if(~isempty(args.electrodeType))
-   args.contactDetectionMethod = 'contactAreaCenter'; 
+   args.contactDetectionMethod = 'contactAreaCenter';
 end
 %% Checks
 assert(logical(license('test', 'image_toolbox')), 'It seems this system does not have the Image Processing Toolbox installed. PaCER requires the Image Processing Toolbox to continue.')
@@ -54,7 +54,7 @@ elecPointCloudsStruct = extractElectrodePointclouds(niiCT, varargin{:}); % prepr
 elecModels = {};
 intensityProfiles = {};
 skelSkelmms = {};
-for i=1:length(elecPointCloudsStruct) 
+for i=1:length(elecPointCloudsStruct)
     disp('------------- Processing Electrode -------------');
     % Preprocessing and "1st pass" model
     initialR3polynomial = electrodePointCloudModelEstimate(elecPointCloudsStruct(i).pointCloudWorld , elecPointCloudsStruct(i).pixelValues, args.reverseDir); % internally always degree 8

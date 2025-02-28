@@ -28,7 +28,7 @@ end
 if ischar(H0)
     switch H0
         case 'Average'
-            H0=mean(outcomein,'all','omitmissing');
+            H0=mean(outcomein,'all','omitnan');
         case 'Zero'
             H0=0;
     end
@@ -39,7 +39,7 @@ group1=valsin .* outcomein;
 psout=nan(size(valsin,1),1);
 for i=1:size(valsin,1)
     [psout(i),~,stats(i)]=signrank(group1(i,:),repmat(H0,size(group1(i,:))),'method','exact');
-    testsign(i,1) =  sign(median(group1(i,:),"all",'omitmissing')-H0);
+    testsign(i,1) =  sign(median(group1(i,:),"all",'omitnan')-H0);
 end
 valsout = testsign.*-log10(psout);
 % map outputs

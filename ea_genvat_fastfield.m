@@ -3,22 +3,22 @@ function varargout=ea_genvat_fastfield(varargin)
 useSI = 1;
 
 if nargin==5
-    acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
 elseif nargin==6
-    acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    lgfigure=varargin{6};
+    resultfig=varargin{6};
+    % lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}= 'Fastfield (Baniasadi 2020)';
         varargout{2} = true; % Support directed lead
+        varargout{3} = false; % Support estimation in native space
         return
     end
 end
@@ -40,29 +40,23 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-resultfig=getappdata(lgfigure,'resultfig');
-elstruct=getappdata(resultfig,'elstruct');
-options=getappdata(resultfig,'options');
-elspec=getappdata(resultfig,'elspec');
-options.usediffusion=0;
-coords=acoords{side};
-setappdata(resultfig,'elstruct',elstruct);
+elstruct = getappdata(resultfig,'elstruct');
+options = getappdata(resultfig,'options');
+options.usediffusion = 0;
 
 switch side
     case 1
         sidec='R';
-        cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
     case 2
         sidec='L';
-        cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
 
-options=ea_resolve_elspec(options);
-Electrode_type = elspec.matfname;
+options = ea_resolve_elspec(options);
+Electrode_type = options.elspec.matfname;
 
 Efield_all=zeros(100,100,100);
 for source=S.sources
@@ -73,25 +67,25 @@ for source=S.sources
         load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' Electrode_type '.mat']);
         count1=1;
 
-        for cnt=1:length(cnts)
+        for cnt=1:S.numContacts
             % FastField only has monopolar (cathode) mode
             % So, if VC, all have 100%, no splitting
-            if stimsource.(cnts{cnt}).pol==2
+            if stimsource.(['k',num2str(cnt)]).pol==2
                 ea_warndlg("Anodes are not supported in FastField")
                 return
             end
 
             if stimsource.va==1
-                if stimsource.(cnts{cnt}).perc ~= 0.0
+                if stimsource.(['k',num2str(cnt)]).perc ~= 0.0
                     perc(cnt) = 100;
                 else
                     perc(cnt) = 0;
                 end
             else
-                perc(cnt) = stimsource.(cnts{cnt}).perc;
+                perc(cnt) = stimsource.(['k',num2str(cnt)]).perc;
             end
             if perc(cnt)>0
-                Im(count1)=stimsource.(cnts{cnt}).imp;
+                Im(count1)=stimsource.(['k',num2str(cnt)]).imp;
                 count1=count1+1;
             end
         end
@@ -112,10 +106,9 @@ end
 
 Efield = Efield_all;
 
-electrode_patient = elstruct;
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,Electrode_type '.mat']);
 
-[trans_mat,~,xg,yg,zg] = get_trans_mat(electrode,electrode_patient,grid_vec,side);
+[trans_mat,~,xg,yg,zg] = get_trans_mat(electrode,elstruct,grid_vec,side);
 
 gv=grid_vec;
 

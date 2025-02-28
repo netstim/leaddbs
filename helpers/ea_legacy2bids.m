@@ -520,7 +520,7 @@ for patients = 1:length(source)
                     coregMethodJson = fullfile(new_path, 'coregistration', 'log', [subjPrefix, '_desc-coregmethod.json']);
                     json = struct;
                     if isfile(coregMethodJson)
-                        json = loadjson(coregMethodJson); 
+                        json = loadjson(coregMethodJson);
                     end
 
                     for m=1:numel(modalities)
@@ -886,7 +886,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                             'File might be corrupted.\n'], fullfile(new_path,bids_h5name));
                     end
                 end
-               
+
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
@@ -1160,7 +1160,7 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
 function model_name = add_model(stimFolder)
     stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
     if ~isempty(stimParams)
-        load(stimParams{1},'S')
+        S = ea_loadstimulation(stimParams{1})
         model_name = ea_simModel2Label(S.model);
     else
         ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);

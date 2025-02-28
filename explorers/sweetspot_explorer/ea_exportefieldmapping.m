@@ -1,18 +1,23 @@
 function [AllX,space]=ea_exportefieldmapping(vatlist,obj)
 
 disp('Need to export Efields in proper format, this may take a while');
-outdir=[fileparts(obj.leadgroup),filesep,'sweetspots',filesep,obj.ID,filesep];
+outdir = fullfile(fileparts(obj.leadgroup), 'sweetspots', obj.ID, filesep);
 ea_mkdir(outdir);
-copyfile([ea_space,'bb.nii'],[outdir,'bb_nan.nii']);
-nii=ea_load_nii([outdir,'bb_nan.nii']);
+
+% Copy bb template and re-crop it to match the input images
+copyfile([ea_space, 'bb.nii'], [outdir, 'bb_nan.nii']);
+allV = reshape(vatlist', [], 1);
+bbox = ea_get_bbox(allV, tight=1);
+ea_crop_nii_bb([outdir, 'bb_nan.nii'], bbox);
+
+nii = ea_load_nii([outdir, 'bb_nan.nii']);
 nii.dt(1) = 16;
-nii.img(:)=nan;
+nii.img(:) = nan;
 ea_write_nii(nii);
-allV{1}=[outdir,'bb_nan.nii'];
 
-allV = [allV; reshape(vatlist', [], 1)];
+allV = [[outdir, 'bb_nan.nii']; allV];
 
-% export mean to get bounding box
+% Export sum to get bounding box
 matlabbatch{1}.spm.util.imcalc.input = allV;
 matlabbatch{1}.spm.util.imcalc.output = 'efield_bb.nii';
 matlabbatch{1}.spm.util.imcalc.outdir = {outdir};
@@ -27,8 +32,8 @@ spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 if size(vatlist,2)>1
-    sidesuffices={'_r','_l'};
-    ea_split_nii_lr([outdir,'efield_bb.nii']);
+    sidesuffices = {'_r', '_l'};
+    ea_split_nii_lr([outdir, 'efield_bb.nii']);
 else
     sidesuffices={''};
 end
@@ -54,8 +59,9 @@ AllX=cell(size(vatlist,2),1);
 for vat=1:size(vatlist,1)
     for side=1:size(vatlist,2)
         copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);
-        ea_conformspaceto([outdir,'efield_bb',sidesuffices{side},'.nii'],...
-            [outdir,'tmp_efield.nii'],0);
+
+        ea_fsl_reslice([outdir,'tmp_efield.nii'],[outdir,'efield_bb',sidesuffices{side},'.nii'],[outdir,'tmp_efield.nii'],'nearestneighbour');
+
         nii=ea_load_nii([outdir,'tmp_efield.nii']);
 
        if ~exist('AllX','var')

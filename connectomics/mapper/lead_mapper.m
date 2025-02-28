@@ -68,12 +68,17 @@ set(handles.leadfigure,'name','Lead Connectome Mapper','color','w');
 % add recentpatients patients...
 ea_initrecent(handles, 'patients');
 
-ea_processguiargs(handles,varargin)
+parsedInput = ea_processguiargs(handles,varargin);
 
 ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'},ea_prefs);
 
+if isempty(parsedInput) || length(parsedInput) > 1
+    [mdl, sf] = ea_genmodlist;
+else
+    options.prefs = ea_prefs;
+    [mdl, sf] = ea_genmodlist(parsedInput{1}, nan, options);
+end
 
-[mdl,sf]=ea_genmodlist;
 ea_updatemodpopups(mdl,sf,handles)
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -211,7 +216,7 @@ switch seeddef{get(handles.seeddefpopup,'Value')}
     case 'Manually choose seeds'
         [seeds,path] = uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
     case 'Manually choose parcellation'
-        [seeds,path] = uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
+        [seeds,path] = uigetfile({'*.nii', '*.nii.gz'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
 end
 
 if ischar(path) % path is 0 if the user clicks Cancel or close the window

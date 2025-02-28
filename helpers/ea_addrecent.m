@@ -15,7 +15,7 @@ if isrow(uidir)
     uidir = uidir';
 end
 
-recentfolders = unique([uidir; recentfolders], 'stable');
+recentfolders = unique(erase([uidir; recentfolders], filesep + textBoundary("end")), 'stable');
 if length(recentfolders) > 10
    recentfolders = recentfolders(1:10);
 end

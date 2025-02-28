@@ -8,7 +8,7 @@ end
 
 % Check docker image
 dockerImage = 'anagrammarian/thomasmerged:latest';
-ea_checkDocker('dockerImage');
+ea_checkDocker(dockerImage);
 
 % Prepare parameters for docker run
 inputImage = GetFullPath(inputImage);
@@ -24,8 +24,8 @@ end
 %% Run segmentation via docker
 fprintf('\nRunning THOMAS segmentation...\n\n');
 system(['docker run ', ...
-        '--volume ', imageFolder, ':', imageFolder, ' '...
-        '--workdir ', imageFolder, ' '...
+        '--volume ', ea_path_helper(imageFolder), ':/thomas '...
+        '--workdir /thomas '...
         '--rm -t ', dockerImage, ' ', ...
         'bash -c "hipsthomas_csh -i ', imageName, ' ', typeParam, '"']);
 
@@ -59,20 +59,20 @@ end
 
 %% Build atlas
 fprintf('\Building THOMAS atlas...\n\n');
-ea_mkdir(fullfile(imageFolder, 'atlases', 'THOMAS Atlas (Su 2019)', 'lh'));
-ea_mkdir(fullfile(imageFolder, 'atlases', 'THOMAS Atlas (Su 2019)', 'rh'));
+ea_mkdir(fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)', 'lh'));
+ea_mkdir(fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)', 'rh'));
 
 leftNucleus = ea_regexpdir(fullfile(imageFolder, 'left'), '^\d+[-_].+\.nii\.gz$');
-leftNucleusNewPath = replace(leftNucleus, fullfile(imageFolder, 'left'), fullfile(imageFolder, 'atlases', 'THOMAS Atlas (Su 2019)', 'lh'));
+leftNucleusNewPath = replace(leftNucleus, fullfile(imageFolder, 'left'), fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)', 'lh'));
 leftNucleusNewPath = replace(leftNucleusNewPath, regexpPattern(['\' filesep '\d+[-_]']), filesep);
 rightNucleus = ea_regexpdir(fullfile(imageFolder, 'right'), '^\d+[-_].+\.nii\.gz$');
-rightNucleusNewPath = replace(rightNucleus, fullfile(imageFolder, 'right'), fullfile(imageFolder, 'atlases', 'THOMAS Atlas (Su 2019)', 'rh'));
+rightNucleusNewPath = replace(rightNucleus, fullfile(imageFolder, 'right'), fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)', 'rh'));
 rightNucleusNewPath = replace(rightNucleusNewPath, regexpPattern(['\' filesep '\d+[-_]']), filesep);
 cellfun(@(src, dst) copyfile(src, dst), leftNucleus, leftNucleusNewPath);
 cellfun(@(src, dst) copyfile(src, dst), rightNucleus, rightNucleusNewPath);
 
 % Crop nucleus
-nucleus = ea_regexpdir(fullfile(imageFolder, 'atlases', 'THOMAS Atlas (Su 2019)'), '.*\.nii\.gz$');
+nucleus = ea_regexpdir(fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)'), '.*\.nii\.gz$');
 cellfun(@ea_autocrop, nucleus);
 
 atlases = genAtlasesStruct(leftNucleusNewPath);
@@ -81,7 +81,7 @@ options.root = imageFolder;
 options.patientname = '';
 options.native = 1;
 options.reference = inputImage;
-options.atlasset = 'THOMAS Atlas (Su 2019)';
+options.atlasset = 'HIPS-THOMAS Segmentation (Vidal 2024)';
 options.atl.can=0;
 options.atl.ptnative=1;
 ea_genatlastable(atlases, imageFolder, options);
@@ -104,9 +104,9 @@ if ~exist('atlases', 'var') || length(names) ~= length(atlases.names) || ~all(st
     atlases.threshold.value=0.5;
     atlases.colormap = ea_color_wes('all', length(atlases.names));
 
-    atlases.citation.name = 'THOMAS Atlas (Su 2019)';
-    atlases.citation.short = 'Su et al. 2019';
-    atlases.citation.long = {'Su, J.H., Thomas, F.T., Kasoff, W.S., Tourdias, T., Choi, E.Y., Rutt, B.K., Saranathan, M., 2019. Thalamus Optimized Multi Atlas Segmentation (THOMAS): fast, fully automated segmentation of thalamic nuclei from structural MRI. NeuroImage 194, 272–282. https://doi.org/10.1016/j.neuroimage.2019.03.021'};
+    atlases.citation.name = 'HIPS-THOMAS Segmentation (Vidal 2024)';
+    atlases.citation.short = 'Vidal et al. 2024';
+    atlases.citation.long = {'Vidal, J. P., Danet, L., Péran, P., Pariente, J., Bach Cuadra, M., Zahr, N. M., Barbeau, E. J., & Saranathan, M. (2024). Robust thalamic nuclei segmentation from T1-weighted MRI using polynomial intensity transformation. Brain Structure and Function. https://doi.org/10.1007/s00429-024-02777-5'};
 
     atlases.presets(1).label = 'Default';
     atlases.presets(1).hide = find(ismember(names, {'THALAMUS.nii.gz', 'VL.nii.gz', 'VLP.nii.gz'})); % Hide thalamus, VL and VLP, only show sub-regions

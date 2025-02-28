@@ -16,7 +16,7 @@ if isempty(obj.roidata)
             if ~isfile(vatlist{v,side})
                 obj.roidata.nii{v,side} = [];
                 vatlist{v,side} = [];
-                ea_cprintf('CmdWinWarnings', 'vatlist{%d,%d} doesn''t exist!\n', v, side);
+                ea_cprintf('CmdWinWarnings', 'vatlist(%d,%d) not found when loading ROIs!\n', v, side);
             else
                 obj.roidata.nii{v,side}=ea_load_nii(vatlist{v,side});
                 if endsWith(vatlist{v,side}, '.gz')

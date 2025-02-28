@@ -3,6 +3,7 @@ import qt, vtk, slicer
 from PythonQt import BoolResult
 from slicer.util import VTKObservationMixin
 import WarpDrive, ImportAtlas
+from ..Helpers import GridNodeHelper
 import numpy as np
 import glob
 import json
@@ -166,7 +167,8 @@ class AtlasSegmentationBaseTable(baseTable):
         tmpNode.SetAndObserveTransformNodeID(modelNode.GetTransformNodeID())
         tmpNode.HardenTransform()
         labelNode = self.modelToLabel(modelNode)
-        os.makedirs(os.path.dirname(name), exist_ok=True)
+        if os.path.dirname(name):
+          os.makedirs(os.path.dirname(name), exist_ok=True)
         slicer.util.saveNode(labelNode, os.path.join(segmentationPath, name + '.nii.gz'))      
         slicer.mrmlScene.RemoveNode(labelNode)
         slicer.mrmlScene.RemoveNode(tmpNode)
@@ -178,6 +180,20 @@ class AtlasSegmentationBaseTable(baseTable):
     segmentationsLogic.ImportModelToSegmentationNode(model_node, segmentNode)
     segmentationsLogic.ExportAllSegmentsToLabelmapNode(segmentNode, labelNode)
     slicer.mrmlScene.RemoveNode(segmentNode)
+    # pad image
+    extend_mm = 5
+    dimensions, origin, spacing, directionMatrix = GridNodeHelper.getGridDefinition(labelNode)
+    origin = [x - extend_mm for x in origin]
+    dimensions = [int(d + (2*extend_mm) / s) for (d,s) in zip(dimensions, spacing)]
+    auxVolumeNode = GridNodeHelper.emptyVolume(dimensions, origin, spacing, directionMatrix)
+    parameters = {}
+    parameters['inputVolume'] = labelNode.GetID()
+    parameters['referenceVolume'] =  auxVolumeNode.GetID()
+    parameters['outputVolume'] = labelNode.GetID()
+    parameters['pixelType'] = 'uchar'
+    parameters['interpolationMode'] = 'NearestNeighbor'
+    slicer.cli.run(slicer.modules.brainsresample, None, parameters, wait_for_completion=True, update_display=False)
+    slicer.mrmlScene.RemoveNode(auxVolumeNode)
     return labelNode
 
   def onRemoveButton(self):
@@ -240,17 +256,18 @@ class SegmentationsTable(AtlasSegmentationBaseTable):
     result = BoolResult()
     segmentationName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',subFolders,0,0,result) 
     if result:
+      selection = os.path.join(segmentationsPath, segmentationName)
+      segmentationFiles = [selection] if os.path.isfile(selection) else glob.glob(os.path.join(selection, '**', '*.nii*'), recursive=True)
       qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
       qt.QApplication.processEvents()
       try:
-        self.loadSegmentation(os.path.join(segmentationsPath, segmentationName))    
+        self.loadSegmentations(segmentationsPath, segmentationFiles)    
       finally:
         qt.QApplication.restoreOverrideCursor()
     self.updateTable()
 
-  def loadSegmentation(self, segmentationPath):
+  def loadSegmentations(self, segmentationPath, niiFiles):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    niiFiles = glob.glob(os.path.join(segmentationPath, '**', '*.nii*'), recursive=True)
     for file in niiFiles:
       # load
       volumeNode = slicer.util.loadVolume(file,{'show':False})
@@ -259,11 +276,13 @@ class SegmentationsTable(AtlasSegmentationBaseTable):
       modelNode.GetDisplayNode().SetVisibility2D(1)
       # set in hierarchy
       basePath,fileName = os.path.split(file)
-      parentFolders = os.path.relpath(basePath, os.path.dirname(segmentationPath)).split(os.sep)
-      folderID = self.getOrCreateFolderItem(shNode.GetSceneItemID(), parentFolders.pop(0))
-      for parentName in parentFolders:
-        folderID = self.getOrCreateFolderItem(folderID, parentName)
-      shNode.SetItemParent(shNode.GetItemByDataNode(modelNode), folderID)
+      parentFolders = os.path.relpath(basePath, segmentationPath).split(os.sep)
+      if '.' in parentFolders:
+        parentFolders.remove('.')
+      parentID = shNode.GetSceneItemID()
+      while(parentFolders):
+        parentID = self.getOrCreateFolderItem(parentID, parentFolders.pop(0))
+      shNode.SetItemParent(shNode.GetItemByDataNode(modelNode), parentID)
       shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'segmentation', '1')
       modelNode.SetName(fileName.split('.')[0])
     WarpDrive.WarpDriveLogic().invertAtlases(WarpDrive.WarpDriveLogic().getParameterNode().GetNodeReference("InputNode"), int(WarpDrive.WarpDriveLogic().getParameterNode().GetParameter("InverseMode")))
@@ -508,10 +527,10 @@ class WarpDriveCorrectionsTable(baseTable):
   def modiableCorrectionsChanged(self, checked):
     pass
 
-class WarpDriveCorrectionsManager(VTKObservationMixin, WarpDriveCorrectionsTable):
+class WarpDriveCorrectionsManager(WarpDriveCorrectionsTable, VTKObservationMixin):
   def __init__(self):
-    VTKObservationMixin.__init__(self)
     WarpDriveCorrectionsTable.__init__(self)
+    VTKObservationMixin.__init__(self)
     self.sourceFiducialNodeID = ""
     self.targetFiducialNodeID = ""
     self._updatingFiducials = False

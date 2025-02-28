@@ -1,0 +1,13 @@
+1 left_cerebral_white_matter
+2 left_lateral_ventricle
+3 left_inferior_lateral_ventricle
+4 left_cerebellum_white_matter
+5 left_cerebellum_cortex
+6 3rd_ventricle
+7 4th_ventricle
+8 brain_stem
+9 right_cerebral_white_matter
+10 right_lateral_ventricle
+11 right_inferior_lateral_ventricle
+12 right_cerebellum_white_matter
+13 right_cerebellum_cortex

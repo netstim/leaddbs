@@ -156,8 +156,37 @@ if strcmp(handles.prod, 'dbs')
     handles.datasetselect.TooltipString = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
+    datasetDescFile = fullfile(BIDSRoot, 'dataset_description.json');
+    if isfile(datasetDescFile)
+        datasetDesc = loadjson(datasetDescFile);
+    else
+        datasetDesc = struct;
+    end
+    if ~isfield(datasetDesc, 'Reserved')
+        datasetDesc.Reserved = '';
+    end
+    switch datasetDesc.Reserved
+        case 'SWAN'
+            setappdata(handles.leadfigure, 'updateStatus', handles.updatebutn.Visible);
+            handles.updatebutn.Visible = "on";
+            handles.updatebutn.String = 'MNI <=> Histo';
+            handles.updatebutn.BackgroundColor = [255, 165, 0]./256;
+            handles.LogoImage.ImageSource = fullfile(ea_getearoot,'tools','swanatlas','swanatlas.jpg');
+        case 'Tutor'
+            setappdata(handles.leadfigure, 'updateStatus', handles.updatebutn.Visible);
+            handles.updatebutn.Visible = "on";
+            handles.updatebutn.String = 'Submit Results...';
+        otherwise
+            updateStatus = getappdata(handles.leadfigure, 'updateStatus');
+            if ~isempty(updateStatus)
+                handles.updatebutn.Visible = updateStatus;
+                handles.updatebutn.String = 'Update';
+                handles.LogoImage.ImageSource = fullfile(ea_getearoot,'icons','logo_lead_dbs.png');
+            end
+    end
+
     if isempty(bids.subjId)
-        handles.patientlist.Data = [];
+        handles.patientlist.Data = table("", 'VariableNames', {'subjId'});
         ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
         return;
     else
@@ -204,7 +233,7 @@ if strcmp(handles.prod, 'dbs')
         end
 
         % Set Add DICOMs/NIfTIs Menu/Button Visibility
-        if length(handles.patientlist.Selection) == 1
+        if isscalar(handles.patientlist.Selection)
             handles.AddDICOMsButton.Visible = 'on';
             handles.AddNIfTIsButton.Visible = 'on';
             handles.UpdateNIfTIsButton.Visible = 'on';
@@ -227,6 +256,11 @@ if strcmp(handles.prod, 'dbs')
     end
 end
 
+% Set up MR/CT popupmenu and status text
+if isfield(handles, 'MRCT')
+    ea_switchctmr(handles);
+end
+
 % Update ui from patient
 if ~ismember(handles.prod, {'mapper'})
     ea_getui(handles);
@@ -240,18 +274,13 @@ else
     end
 end
 
-% Set up MR/CT popupmenu and status text
-if isfield(handles, 'MRCT')
-    ea_switchctmr(handles);
-end
-
 ea_storeui(handles); % save in pt folder
 
 ea_addrecent(handles, {BIDSRoot}, 'datasets');
 ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:
-if length(uipatdir) == 1 && isfield(handles, 'side1')
+if isscalar(uipatdir) && isfield(handles, 'side1')
     if bids.checkModality(subjId{1}, bids.settings.preferMRCT) ~= 3
         recon = bids.getRecon(subjId{1});
         if isfile(recon.recon)
@@ -273,7 +302,7 @@ if length(uipatdir) == 1 && isfield(handles, 'side1')
             end
 
             if ~isempty(recoType)
-                for el=1:length(reco.(recoType).coords_mm)
+                for el=1:length(reco.(recoType).markers)
                     if ~isempty(reco.(recoType).markers(el).head)
                         set(handles.(['side',num2str(el)]), 'Value', 1);
                     end
@@ -445,6 +474,7 @@ if ea_dcmquery(inputFolder) > 0
         [~, subjId] = fileparts(inputFolder);
     end
 end
+
 
 function subjId = validateSubjId(subjId)
 if ~isempty(regexp(subjId, '[\W_]', 'once'))

@@ -1,7 +1,7 @@
 name: ossdbsv2
 
 channels:
-  - defaults
+  - conda-forge
 
 dependencies:
   - python=3.9.10
@@ -10,4 +10,4 @@ dependencies:
     - git+https://github.com/SFB-ELAINE/OSS-DBSv2.git
 
 variables:
-  env_version: 20240212
+  env_version: '20250211'

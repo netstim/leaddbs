@@ -404,16 +404,10 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             obj.elstruct.elmodel=obj.elmodel;
             poptions.sides=obj.side;
             poptions.colorMacroContacts=obj.colorMacroContacts;
-            el_render=getappdata(obj.plotFigureH,'el_render');
             if strcmp(evtnm,'elstruct')
                 poptions.nowrite=1; % prevent from writing reconstruction to disk.
             end
             [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj,'dbs',poptions);
-            if isempty(el_render)
-                clear el_render
-            end
-            el_render(obj.side).elpatch=obj.elpatch;
-            setappdata(obj.plotFigureH,'el_render',el_render);
             if ~isempty(obj.ellabel)
                 set(obj.ellabel,'Visible','off');
             end

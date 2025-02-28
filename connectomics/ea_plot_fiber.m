@@ -18,5 +18,5 @@ switch options.prefs.d3.fiberstyle
             [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',options.prefs.d3.fiberwidth);
         fv=nan;
     otherwise
-        ea_error('Please set ea_prefs.d3.fiberstyle to either tube or line');
+        ea_error('Please set prefs.d3.fiberstyle to either tube or line');
 end

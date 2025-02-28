@@ -122,7 +122,7 @@ for s=1:length(sfile)
             ea_dispercent(1,'end');
 
             if isempty(find(fiberstrength, 1))
-                warning('No connected fibers found for seed:\n%s', sfile{s});
+                ea_cprintf('CmdWinWarnings', 'No connected fibers found for seed:\n%s\n\n', sfile{s});
                 continue;
             end
 
@@ -162,7 +162,7 @@ for s=1:length(sfile)
             [outputfolder, fname] = fileparts(sfile{s});
             mapFile = fullfile(outputfolder, [fname, '_conn-', connLabel, '_strucmap.nii']);
         else
-            mapFile = setBIDSEntity(sfile{s}, 'conn', connLabel, 'suffix', 'strucmap');
+            mapFile = setBIDSEntity(sfile{s}, 'conn', connLabel, 'suffix', 'strucmap', 'ext', '.nii');
         end
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')

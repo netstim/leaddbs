@@ -5,17 +5,18 @@ if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
     f = uimenu('Label','Tools');
     pp= uimenu('Label','Preferences');
-    uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
-    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@(src, evt) ea_restoreprefs});
+    uimenu(pp,'Label','Edit Preferences File','Callback',{@ea_editprefs},'Accelerator','P');
+    uimenu(pp,'Label','Reset Preferences to Default','Callback',{@(src, evt) ea_restoreprefs});
+    uimenu(pp,'Label','Open OSS-DBS Settings','Callback',{@(src, evt) ea_vatsettings_butenko});
 
-    p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
+    p_c=uimenu(pp,'Label','Play sound on completed tasks','Callback',{@ea_toggle_chirp});
     if prefs.machine.chirp
         p_c.Checked='on';
     else
         p_c.Checked='off';
     end
 
-    m_c=uimenu(pp,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
+    m_c=uimenu(pp,'Label','Show methods popup on completed tasks','Callback',{@ea_toggle_methods});
     if prefs.machine.methods_show
         m_c.Checked='on';
     else
@@ -33,6 +34,7 @@ if isempty(menuprobe)
     if ismember('group',cmd)
        cr=uimenu(f,'Label','Group Tools');
        uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
+       uimenu(cr,'Label','Rebase root directory of patient folders...','Callback',{@(src, evt) ea_rebasegrouppts(handles)});
     end
 
     if ismember('acpc',cmd)
@@ -48,11 +50,21 @@ if isempty(menuprobe)
 
     uimenu(f,'Label','Run DBSegment for T1w','Callback',{@(~, ~) ea_dbsegment_menu(handles)});
 
+    if exist('ea_cleartune', 'file') == 2
+        clt=uimenu(f, 'Label', 'Run Cleartune');
+        uimenu(clt,'Label', 'Run with PD Symptom Specific Tracts (Rajamani (2024))', 'Callback', {@ea_run_cleartune_from_leadDBS, handles, 1});
+        uimenu(clt,'Label', 'Run with custom file', 'Callback', {@ea_run_cleartune_from_leadDBS, handles, 2});
+
+    end
+
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
 
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
 
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
+
+    uimenu(f,'Label','Archive selected folders','Callback',{@ea_archivefolders,'archive',handles});
+    uimenu(f,'Label','Unarchive selected folders','Callback',{@ea_archivefolders,'unarchive',handles});
 
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
 

@@ -1,4 +1,4 @@
-function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
+function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm,vals,usedidx)
 
     if obj.useExternalModel == true
         S = load(obj.ExternalModelFile);
@@ -43,10 +43,14 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
     end
 
     % fiber values can be sigmoid transform
-    if obj.SigmoidTransform 
-        fibsval_raw = fibsval;
-        for side = 1:size(fibsval_raw,2)
-            fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+    if strcmp(obj.statsettings.stimulationmodel, 'Sigmoid Field')
+        if obj.connectivity_type == 2
+            fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
+        else
+            fibsval_raw = fibsval;
+            for side = 1:size(fibsval_raw,2)
+                fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+            end
         end
     end
 
@@ -63,12 +67,14 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
             %obj.draw(vals,fibcell);
             drawnow;
         else
-            if obj.useExternalModel == true
-               [vals,~,usedidx] = ea_discfibers_loadModel_calcstats(obj, vals_connected);
-            else
-               [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            if ~exist('vals','var') || ~exist('usedidx','var')
+
+                if obj.useExternalModel == true
+                    [vals,~,usedidx] = ea_discfibers_loadModel_calcstats(obj, vals_connected);
+                else
+                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                end
             end
-            %[vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
         end
     else
         if obj.cvlivevisualize
@@ -150,14 +156,16 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
             end
 
             if ~isempty(vals{voter,side})
-                switch obj.statmetric % also differentiate between methods in the prediction part.
-                    case {'One-Sample Tests / VTAs / PAM (OSS-DBS)','Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)', 'Proportion Test (Chi-Square) / VTAs (binary vars)'...
-                            'Binomial Tests / VTAs (binary vars)', 'Plain Connections'} % VTAs
+                switch obj.statsettings.stimulationmodel % also differentiate between methods in the prediction part.
+                    case {'VTA'} % VTAs
                         switch lower(obj.basepredictionon)
                             case 'mean of scores'
                                 if lateral_score == false
                                     Ihat_all = ea_nanmean(vals_flat.*fibsval_usedidx_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -181,6 +189,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+                                    
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -191,6 +204,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_nansum(vals_flat.*fibsval_usedidx_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -212,6 +230,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+                                    
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -222,6 +245,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*fibsval_usedidx_flat, obj.posvisible, obj.negvisible, 'peak');
                                     Ihat(test,1, voter) = Ihat_all(test);
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -243,6 +271,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -252,6 +285,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*fibsval_usedidx_flat, obj.posvisible, obj.negvisible, 'peak5');
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
 
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
@@ -274,7 +312,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 else
                                     ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(ihatvals(test), obj.posvisible, obj.negvisible, 'peak5');
-
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+                                    
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(ihatvals(training), obj.posvisible, obj.negvisible, 'peak5');
 
                                     if isstruct(obj.ADJ)
@@ -282,12 +324,17 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     end
                                 end
                         end
-                    case {'Correlations / E-fields (Irmen 2020)', 'Reverse T-Tests / E-Fields (binary vars)', 'Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'} % efields
+                    case {'Electric Field', 'Sigmoid Field'} % efields
                         switch lower(obj.basepredictionon)
                             case 'profile of scores: spearman'
                                 if lateral_score == false
                                     Ihat_all = corr(vals_flat,fibsval_usedidx_flat,'rows','pairwise','type','spearman');
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_all(training);
@@ -307,6 +354,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman');
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+                                    
                                     Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman');
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -316,6 +368,12 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = corr(vals_flat,fibsval_usedidx_flat,'rows','pairwise','type','pearson');
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -335,6 +393,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','pearson');
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','pearson');
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -344,6 +407,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_bendcorr(vals_flat,fibsval_usedidx_flat);
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -363,6 +431,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)));
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+                                    
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)));
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -372,6 +445,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_nanmean(vals_flat.*fibsval_usedidx_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_all(training);
@@ -390,6 +468,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -399,6 +482,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_nansum(vals_flat.*fibsval_usedidx_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -418,6 +506,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -427,6 +520,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*fibsval_usedidx_flat, obj.posvisible, obj.negvisible, 'peak');
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
@@ -446,6 +544,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
+                                   
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
@@ -455,6 +558,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 if lateral_score == false
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*fibsval_usedidx_flat, obj.posvisible, obj.negvisible, 'peak5');
                                     Ihat(test,1, voter) = Ihat_all(test);
+
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval_usedidx_flat(:,test)));
+                                    Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
+
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
 
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
@@ -477,6 +585,10 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                                 else
                                     ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(ihatvals(test), obj.posvisible, obj.negvisible, 'peak5');
+                                    
+                                    testidx=find(test);
+                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(ihatvals(training), obj.posvisible, obj.negvisible, 'peak5');
 

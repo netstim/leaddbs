@@ -1,0 +1,5 @@
+
+The T1W and T2W are derived from the ONPRC18 study:
+
+
+Weiss, Alison R., et al. "The macaque brain ONPRC18 template with combined gray and white matter labelmap for multimodal neuroimaging studies of nonhuman primates." Neuroimage 225 (2021): 117517.

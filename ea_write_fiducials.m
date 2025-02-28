@@ -28,7 +28,7 @@ fprintf(fileID,['# Fiducial List file ',path,'\n',...
 
 for side=1:length(coords_mm)
 for coord=1:length(coords_mm{side})
-    fprintf(fileID,['aK',num2str(coord+((side-1)*options.elspec.numel)-1),',%2.4f,%2.4f,%2.4f,%2.4f'],coords_mm{side}(coord,:));
+    fprintf(fileID,['aK',num2str(coord+((side-1)*options.elspec.numContacts)-1),',%2.4f,%2.4f,%2.4f,%2.4f'],coords_mm{side}(coord,:));
     fprintf(fileID,'1,1 \n');
 end
 end

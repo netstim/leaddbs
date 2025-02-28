@@ -16,7 +16,7 @@ if nargin < 2
     error('Please specify the sample indices!');
 end
 
-if numel(sel) == 1 % sel is a single number
+if isscalar(sel) % sel is a single number
     if nargin < 3 % Treat as sample number by default if type not specified
         warning('Number type not specified! Used as sample number.')
         type = 'number';

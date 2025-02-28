@@ -1,38 +1,34 @@
 #!/usr/bin/env python
 
-import argparse
+import os
+import sys
 import csv
 import glob
-import nibabel as nib
-import numpy as np
-import os
-import surfa as sf
-import sys
 import time
+import argparse
 import traceback
-import synthseg_models as models
-
+import surfa as sf
+import numpy as np
+import nibabel as nib
 from datetime import timedelta
 from itertools import combinations
-from scipy.interpolate import RegularGridInterpolator
-from scipy.ndimage import binary_dilation
-from scipy.ndimage import binary_erosion
-from scipy.ndimage import binary_fill_holes
-from scipy.ndimage import distance_transform_edt
-from scipy.ndimage import gaussian_filter
 from scipy.ndimage import label as scipy_label
+from scipy.interpolate import RegularGridInterpolator
+from scipy.ndimage import binary_dilation, binary_erosion, gaussian_filter, distance_transform_edt, binary_fill_holes
 
 # set tensorflow logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
-import tensorflow.keras.layers as KL
-
 from tensorflow import keras
+import tensorflow.keras.layers as KL
 from tensorflow.keras import backend as K
 K.set_image_data_format('channels_last')
 
+# set model dir
+import synthseg_models
+models_home = synthseg_models.models_dir
 
 # ================================================================================================
 #                                         Main Entrypoint
@@ -56,18 +52,19 @@ def main():
     parser.add_argument("--post", help="(optional) Posteriors output(s). Must be a folder if --i designates a folder.")
     parser.add_argument("--resample", help="(optional) Resampled image(s). Must be a folder if --i is a folder.")
     parser.add_argument("--crop", nargs='+', type=int, help="(optional) Only analyse an image patch of the given size.")
-    parser.add_argument("--threads", type=int, default=1, help="(optional) Number of cores to be used. Default is 1. You can use -1 to use all available cores.")
+    parser.add_argument("--autocrop", action="store_true", help="(optional) Ignore background voxels in FOV.")
+    parser.add_argument("--threads", type=int, default=1, help="(optional) Number of cores to be used. Default is 1.")
     parser.add_argument("--cpu", action="store_true", help="(optional) Enforce running with CPU rather than GPU.")
-    parser.add_argument("--v1", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--keepgeom", action="store_true", help="Force output geometry to be the same as input")
+    parser.add_argument("--addctab", action="store_true", default=True, help="Embed colortable into seg output")
+    parser.add_argument("--noaddctab", action="store_true", help="Do not embed colortable into seg output")
     parser.add_argument("--photo", help="(optional) Photo-SynthSeg: segment 3D reconstructed stack of coronal dissection photos of the cerebrum; must be left, right, or both")
+    parser.add_argument("--model", help="(optional) Provide an alternative model file")
 
     # check for no arguments
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit(1)
-
-    # set model dir
-    models_home = models.models_dir
 
     # parse commandline
     args = parser.parse_args()
@@ -90,8 +87,6 @@ def main():
     if args.photo is not None:
         if args.robust:
             sf.system.fatal('The flag --robust is not compatible with Photo-SynthSeg (--photo).')
-        if args.v1:
-            sf.system.fatal('The flag --v1 is not compatible with Photo-SynthSeg (--photo).')
         if args.ct:
             sf.system.fatal('The flag --ct is not compatible with Photo-SynthSeg (--photo).')
         if args.qc is not None:
@@ -99,7 +94,7 @@ def main():
         version = 'Photo-SynthSeg 1.0'
         if args.photo=='both':
             path_model_segmentation = os.path.join(models_home, 'synthseg_photo_both_1.0.h5')
-        elif (args.photo=='left' or args.photo=='right'):
+        elif (args.photo == 'left') or (args.photo == 'right'):
             path_model_segmentation = os.path.join(models_home, 'synthseg_photo_single_1.0.h5')
             if args.parc:
                 print('Warning: the flag --parc is not well tested with single hemispheres.')
@@ -108,31 +103,21 @@ def main():
 
     elif args.robust:
         args.fast = True
-        if args.v1:
-            sf.system.fatal('The flag --v1 cannot be used with --robust since SynthSeg-robust only came out with 2.0.')
         version = 'SynthSeg-robust 2.0'
         path_model_segmentation = os.path.join(models_home, 'synthseg_robust_2.0.h5')
+
+    elif args.model:
+        path_model_segmentation = args.model
+        version = args.model
+
     else:
-        if args.v1:
-            path_model_segmentation = os.path.join(models_home, 'synthseg_1.0.h5')
-            version = 'SynthSeg 1.0'
-        else:
-            path_model_segmentation = os.path.join(models_home, 'synthseg_2.0.h5')
-            version = 'SynthSeg 2.0'
+        path_model_segmentation = os.path.join(models_home, 'synthseg_2.0.h5')
+        version = 'SynthSeg 2.0'
         if args.fast:
             version += ' (fast)'
 
 
     print(version)
-
-    # use v1 labels if needed
-    if args.v1:
-        labels_segmentation = labels_segmentation.replace('_2.0.npy', '.npy')
-        labels_qc = labels_qc.replace('_2.0.npy', '.npy')
-        names_segmentation_labels = names_segmentation_labels.replace('_2.0.npy', '.npy')
-        names_qc_labels = names_qc_labels.replace('_2.0.npy', '.npy')
-        topology_classes = topology_classes.replace('_2.0.npy', '.npy')
-        n_neutral_labels = 18
 
     # use photo labels if needed
     if args.photo=='both':
@@ -141,7 +126,7 @@ def main():
         topology_classes = topology_classes.replace('_2.0.npy', '_photo_both_1.0.npy')
         n_neutral_labels = 5
 
-    elif (args.photo=='left' or args.photo=='right'):
+    elif (args.photo == 'left') or (args.photo == 'right'):
         labels_segmentation = labels_segmentation.replace('_2.0.npy', '_photo_single_1.0.npy')
         names_segmentation_labels = names_segmentation_labels.replace('_2.0.npy', '_photo_single_1.0.npy')
         topology_classes = topology_classes.replace('_2.0.npy', '_photo_single_1.0.npy')
@@ -155,7 +140,7 @@ def main():
     # limit the number of threads to be used if running on CPU
     if args.threads == 1:
         print('using 1 thread')
-    elif args.threads<0:
+    elif args.threads < 0:
         args.threads = os.cpu_count()
         print('using all available threads ( %s )' % args.threads)
     else:
@@ -163,8 +148,14 @@ def main():
     tf.config.threading.set_inter_op_parallelism_threads(args.threads)
     tf.config.threading.set_intra_op_parallelism_threads(args.threads)
 
+    lut_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'FreeSurferColorLUT.txt')
+    labels = None
+    if(args.noaddctab): args.addctab = False;
+    if(args.addctab): labels = sf.load_label_lookup(lut_file)
+    print("addctab ",args.addctab)
 
-
+    if args.crop is not None and args.autocrop:
+        sf.system.fatal('Argument --autocrop cannot be used with --crop.')
 
     # run prediction
     predict(
@@ -174,7 +165,6 @@ def main():
         labels_segmentation=labels_segmentation,
         robust=args.robust,
         fast=args.fast,
-        v1=args.v1,
         photo=args.photo,
         do_parcellation=args.parc,
         n_neutral_labels=n_neutral_labels,
@@ -193,6 +183,9 @@ def main():
         cropping=args.crop,
         topology_classes=topology_classes,
         ct=args.ct,
+        keepgeom=args.keepgeom,
+        labels=labels,
+        autocrop=args.autocrop
     )
 
 
@@ -207,7 +200,6 @@ def predict(path_images,
             labels_segmentation,
             robust,
             fast,
-            v1,
             photo,
             n_neutral_labels,
             names_segmentation,
@@ -225,7 +217,10 @@ def predict(path_images,
             names_qc,
             cropping,
             topology_classes,
-            ct):
+            ct,
+            keepgeom=False,
+            labels=None,
+            autocrop=False):
     '''
     Prediction pipeline.
     '''
@@ -244,7 +239,7 @@ def predict(path_images,
 
     # get label lists
     labels_segmentation, _ = get_list_labels(label_list=labels_segmentation)
-    if (n_neutral_labels is not None) & (not fast) & (not robust) & (photo!='left') & (photo!='right'):
+    if (n_neutral_labels is not None) & (not fast) & (not robust) & (photo != 'left') & (photo != 'right'):
         labels_segmentation, flip_indices, unique_idx = get_flip_indices(labels_segmentation, n_neutral_labels)
     else:
         labels_segmentation, unique_idx = np.unique(labels_segmentation, return_index=True)
@@ -262,7 +257,7 @@ def predict(path_images,
     else:
         labels_volumes = labels_segmentation
         names_volumes = names_segmentation
-    if (not v1) & (photo is None):
+    if photo is None:
         labels_volumes = np.concatenate([labels_volumes, np.array([np.max(labels_volumes + 1)])])
         names_volumes = np.concatenate([names_volumes, np.array(['total intracranial'])])
     do_qc = True if path_qc_scores[0] is not None else False
@@ -279,7 +274,7 @@ def predict(path_images,
 
     # prepare volume/QC files if necessary
     if unique_vol_file & (path_volumes[0] is not None):
-        write_csv(path_volumes[0], None, True, labels_volumes, names_volumes, last_first=((not v1) & (photo is None)))
+        write_csv(path_volumes[0], None, True, labels_volumes, names_volumes, last_first=(photo is None))
     if unique_qc_file & do_qc:
         write_csv(path_qc_scores[0], None, True, labels_qc, names_qc)
 
@@ -312,7 +307,8 @@ def predict(path_images,
                                                                          ct=ct,
                                                                          crop=cropping,
                                                                          min_pad=min_pad,
-                                                                         path_resample=path_resampled[i])
+                                                                         path_resample=path_resampled[i],
+                                                                         autocrop=autocrop)
 
             # prediction
             shape_input = add_axis(np.array(image.shape[1:-1]))
@@ -332,7 +328,6 @@ def predict(path_images,
                 post_patch_parcellation = qc_score = None
 
             if photo=='right':
-                image = np.flip(image, axis=0)
                 post_patch_segmentation = np.flip(post_patch_segmentation, axis=1)
                 if post_patch_parcellation is not None:
                     post_patch_parcellation = np.flip(post_patch_parcellation, axis=1)
@@ -348,18 +343,19 @@ def predict(path_images,
                                                    aff=aff,
                                                    im_res=im_res,
                                                    fast=fast,
-                                                   topology_classes=topology_classes,
-                                                   v1=(v1 or (photo is not None)))
+                                                   topology_classes=topology_classes)
 
             # write predictions to disc
-            save_volume(seg, aff, h, path_segmentations[i], dtype='int32')
+            sfimage = None;
+            if(keepgeom): sfimage = sf.load_volume(path_images[i]);
+            save_volume(seg, aff, h, path_segmentations[i], dtype='int32', resample_like_image=sfimage, labels=labels)
             if path_posteriors[i] is not None:
                 save_volume(posteriors, aff, h, path_posteriors[i], dtype='float32')
 
             # write volumes to disc if necessary
             if path_volumes[i] is not None:
                 row = [os.path.basename(path_images[i]).replace('.nii.gz', '')] + [str(vol) for vol in volumes]
-                write_csv(path_volumes[i], row, unique_vol_file, labels_volumes, names_volumes, last_first=((not v1) & (photo is None)))
+                write_csv(path_volumes[i], row, unique_vol_file, labels_volumes, names_volumes, last_first=(photo is None))
 
             # write QC scores to disc if necessary
             if path_qc_scores[i] is not None:
@@ -369,7 +365,7 @@ def predict(path_images,
 
         except Exception as e:
             list_errors.append(path_images[i])
-            print('\nthe following problem occured with image %s :' % path_images[i])
+            print('\nthe following problem occurred with image %s :' % path_images[i])
             print(traceback.format_exc())
             print('resuming program execution\n')
             continue
@@ -398,21 +394,21 @@ def predict(path_images,
             if path_qc_scores[0] is not None:
                 print('QC scores saved in:        ' + path_qc_scores[0])
 
-
     if len(list_errors) > 0:
         print('\nERROR: some problems occured for the following inputs (see corresponding errors above):')
         for path_error_image in list_errors:
             print(path_error_image)
         sys.exit(1)
     else:
+        print('\n#@# mri_synthseg vmpeak ',sf.system.vmpeak());
         print('\nIf you use this tool in a publication, please cite:')
         print('SynthSeg: Segmentation of brain MRI scans of any contrast and resolution without retraining')
         print('B. Billot, D.N. Greve, O. Puonti, A. Thielscher, K. Van Leemput, B. Fischl, A.V. Dalca, J.E. Iglesias')
-        print('Medical Image Analysis, accepted for publication.')
+        print('Medical Image Analysis, 2023.')
         if robust:
             print('\nRobust machine learning segmentation for large-scale analysis of heterogeneous clinical brain MRI datasets')
             print('B. Billot, C. Magdamo, Y. Cheng, S.E. Arnold, S. Das, J.E. Iglesias')
-            print('PNAS, accepted for publication.')
+            print('PNAS, 2023.')
         if photo is not None:
             print('\n3D analysis of dissection photographs with surface scanning and machine learning for quantitative neuropathology')
             print('H. Gazula, H. Tregidgo, B. Billot, Y. Balbastre, ..., & J.E. Iglesias')
@@ -556,24 +552,24 @@ def prepare_output_files(path_images, out_seg, out_posteriors, out_resampled, ou
            out_qc, unique_qc_file
 
 
-def preprocess(path_image, ct, n_levels=5, crop=None, min_pad=None, path_resample=None):
+def preprocess(path_image, ct, n_levels=5, crop=None, min_pad=None, path_resample=None, autocrop=False):
 
     # read image and corresponding info
     im, _, aff, n_dims, n_channels, h, im_res = get_volume_info(path_image, True)
     if n_dims < 3:
-        sf.system.fatal('input should have 3 dimensions, had %s' % n_dims)
+        raise Exception('input should have 3 dimensions, had %s' % n_dims)
     elif n_dims == 4 and n_channels == 1:
         n_dims = 3
         im = im[..., 0]
     elif n_dims > 3:
-        sf.system.fatal('input should have 3 dimensions, had %s' % n_dims)
+        raise Exception('input should have 3 dimensions, had %s' % n_dims)
     elif n_channels > 1:
         print('Detected more than 1 channel, we keep the average.')
         im = np.mean(im, axis=-1)
 
     # resample image if necessary
     if np.any((im_res > 1.05) | (im_res < 0.95)):
-        im_res = np.array([1.]*3)
+        im_res = np.array([1.] * 3)
         im, aff = resample_volume(im, aff, im_res)
         if path_resample is not None:
             save_volume(im, aff, h, path_resample)
@@ -594,6 +590,22 @@ def preprocess(path_image, ct, n_levels=5, crop=None, min_pad=None, path_resampl
     if ct:
         im = np.clip(im, 0, 80)
     im = rescale_volume(im, new_min=0, new_max=1, min_percentile=0.5, max_percentile=99.5)
+
+    # Automatically crop to bounding box of non-zero stuff in the re-normalised image
+    if autocrop and crop_idx is None:
+        nz_locs = np.argwhere(im > 0)
+        min_indices = np.min(nz_locs, axis=0)
+        max_indices = np.max(nz_locs, axis=0)
+        nz_crop = max_indices - min_indices + 2
+        crop_shape = [find_closest_number_divisible_by_m(s, 2 ** n_levels, 'higher') for s in nz_crop]
+        half_dim_diff = np.floor_divide([crop_shape[i] - nz_crop[i] for i in range(n_dims)], 2)
+        min_crop_idx = np.maximum(min_indices - half_dim_diff, 0)
+        max_crop_idx = np.minimum(min_crop_idx + crop_shape, im.shape[:n_dims])
+        crop_idx = np.concatenate([np.array(min_crop_idx), np.array(max_crop_idx)])
+        if n_dims == 2:
+            im = im[crop_idx[0]: crop_idx[2], crop_idx[1]: crop_idx[3], ...]
+        elif n_dims == 3:
+            im = im[crop_idx[0]: crop_idx[3], crop_idx[1]: crop_idx[4], crop_idx[2]: crop_idx[5], ...]
 
     # pad image
     input_shape = im.shape[:n_dims]
@@ -719,7 +731,7 @@ def build_model(model_file_segmentation,
             last_tensor = RandomFlip(flip_axis=0, prob=1)(last_tensor)
             last_tensor = KL.Lambda(lambda x: tf.split(x, [1] * n_labels_seg, axis=-1), name='split')(last_tensor)
             reordered_channels = [last_tensor[flip_indices[i]] for i in range(n_labels_seg)]
-            # we need the [0, ...] below because in this vresion of TF, tf.split adds a dim at the beginning...
+            # we need the [0, ...] below because in this version of TF, tf.split adds a dim at the beginning...
             last_tensor = KL.Lambda(lambda x: tf.concat(x, -1)[0, ...], name='concat')(reordered_channels)
 
             # average two segmentations and build model
@@ -809,7 +821,7 @@ def build_model(model_file_segmentation,
 
 
 def postprocess(post_patch_seg, post_patch_parc, shape, pad_idx, crop_idx,
-                labels_segmentation, labels_parcellation, aff, im_res, fast, topology_classes, v1):
+                labels_segmentation, labels_parcellation, aff, im_res, fast, topology_classes):
 
     # get posteriors
     post_patch_seg = np.squeeze(post_patch_seg)
@@ -820,7 +832,7 @@ def postprocess(post_patch_seg, post_patch_parc, shape, pad_idx, crop_idx,
     tmp_post_patch_seg = post_patch_seg[..., 1:]
     post_patch_seg_mask = np.sum(tmp_post_patch_seg, axis=-1) > 0.25
     post_patch_seg_mask = get_largest_connected_component(post_patch_seg_mask)
-    post_patch_seg_mask = np.stack([post_patch_seg_mask]*tmp_post_patch_seg.shape[-1], axis=-1)
+    post_patch_seg_mask = np.stack([post_patch_seg_mask] * tmp_post_patch_seg.shape[-1], axis=-1)
     tmp_post_patch_seg = mask_volume(tmp_post_patch_seg, mask=post_patch_seg_mask, return_copy=False)
     post_patch_seg[..., 1:] = tmp_post_patch_seg
 
@@ -871,13 +883,16 @@ def postprocess(post_patch_seg, post_patch_parc, shape, pad_idx, crop_idx,
 
     # compute volumes
     volumes = np.sum(posteriors[..., 1:], axis=tuple(range(0, len(posteriors.shape) - 1)))
-    if not v1:
-        volumes = np.concatenate([np.array([np.sum(volumes)]), volumes])
+    total_volume_cortex_left = np.sum(volumes[np.where(labels_segmentation == 3)[0] - 1])
+    total_volume_cortex_right = np.sum(volumes[np.where(labels_segmentation == 42)[0] - 1])
+    volumes = np.concatenate([np.array([np.sum(volumes)]), volumes])
     if post_patch_parc is not None:
         volumes_parc = np.sum(post_patch_parc[..., 1:], axis=tuple(range(0, len(posteriors.shape) - 1)))
-        total_volume_cortex = np.sum(volumes[np.where((labels_segmentation == 3) | (labels_segmentation == 42))[0] - 1])
-        volumes_parc = volumes_parc / np.sum(volumes_parc) * total_volume_cortex
-        volumes = np.concatenate([volumes, volumes_parc])
+        volumes_parc_left = volumes_parc[:int(len(volumes_parc) / 2)]
+        volumes_parc_right = volumes_parc[int(len(volumes_parc) / 2):]
+        volumes_parc_left = volumes_parc_left / np.sum(volumes_parc_left) * total_volume_cortex_left
+        volumes_parc_right = volumes_parc_right / np.sum(volumes_parc_right) * total_volume_cortex_right
+        volumes = np.concatenate([volumes, volumes_parc_left, volumes_parc_right])
     volumes = np.around(volumes * np.prod(im_res), 3)
 
     return seg, posteriors, volumes
@@ -1199,7 +1214,7 @@ def conv_enc(nb_features,
 
         if batch_norm is not None:
             name = '%s_bn_down_%d' % (prefix, level)
-            last_tensor = keras.layers.BatchNormalization(axis=batch_norm, name=name)(last_tensor)
+            last_tensor = keras.layers.BatchNormalization(axis=batch_norm, name=name, fused=False)(last_tensor)
 
         # max pool if we're not at the last level
         if level < (nb_levels - 1):
@@ -1334,7 +1349,7 @@ def conv_dec(nb_features,
 
         if batch_norm is not None:
             name = '%s_bn_up_%d' % (prefix, level)
-            last_tensor = keras.layers.BatchNormalization(axis=batch_norm, name=name)(last_tensor)
+            last_tensor = keras.layers.BatchNormalization(axis=batch_norm, name=name, fused=False)(last_tensor)
 
     # Compute likelyhood prediction (no activation yet)
     name = '%s_likelihood' % prefix
@@ -1371,7 +1386,7 @@ def load_volume(path_volume, im_only=True, squeeze=True, dtype=None, aff_ref=Non
     Load volume file.
     :param path_volume: path of the volume to load. Can either be a nii, nii.gz, mgz, or npz format.
     If npz format, 1) the variable name is assumed to be 'vol_data',
-    2) the volume is associated with a identity affine matrix and blank header.
+    2) the volume is associated with an identity affine matrix and blank header.
     :param im_only: (optional) if False, the function also returns the affine matrix and header of the volume.
     :param squeeze: (optional) whether to squeeze the volume when loading.
     :param dtype: (optional) if not None, convert the loaded volume to this numpy dtype.
@@ -1411,7 +1426,7 @@ def load_volume(path_volume, im_only=True, squeeze=True, dtype=None, aff_ref=Non
         return volume, aff, header
 
 
-def save_volume(volume, aff, header, path, res=None, dtype=None, n_dims=3):
+def save_volume(volume, aff, header, path, res=None, dtype=None, n_dims=3, resample_like_image=None, labels=None):
     """
     Save a volume.
     :param volume: volume to save
@@ -1436,19 +1451,37 @@ def save_volume(volume, aff, header, path, res=None, dtype=None, n_dims=3):
                 aff = np.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0], [0, 0, 0, 1]])
         elif aff is None:
             aff = np.eye(4)
-        nifty = nib.Nifti1Image(volume, aff, header)
         if dtype is not None:
             if 'int' in dtype:
                 volume = np.round(volume)
             volume = volume.astype(dtype=dtype)
+            nifty = nib.Nifti1Image(volume, aff, header)
             nifty.set_data_dtype(dtype)
+        else:
+            nifty = nib.Nifti1Image(volume, aff, header)
         if res is not None:
             if n_dims is None:
                 n_dims, _ = get_dims(volume.shape)
             res = reformat_to_list(res, length=n_dims, dtype=None)
             nifty.header.set_zooms(res)
         nib.save(nifty, path)
-
+        if (resample_like_image is not None) or (labels is not None):
+            # This is a total hack to make the output take the same
+            # geom as the input and/or add a colortable to the
+            # output. Surfa-reads in the file writen by nibabel above,
+            # then reslices using the surface command to look like the
+            # resample_like_image (should be the original image as read
+            # by surf), then uses surfa to write out the volume. Should
+            # write the nibabel to some temp volume.
+            src = sf.load_volume(path); # re-read the nibabel volume with surfa
+            if resample_like_image is not None:
+                res = resample_like_image._geometry.voxsize
+                # Could only do this if not iso1mm, but not sure if dim is right
+                print(f'Reslicing to have same geom as the input {res}')
+                newsrc = src.resample_like(resample_like_image, method='nearest')
+            else: newsrc = src;
+            if(labels is not None): newsrc.labels = labels;
+            newsrc.save(path);
 
 def get_volume_info(path_volume, return_volume=False, aff_ref=None, max_channels=10):
     """
@@ -1457,6 +1490,7 @@ def get_volume_info(path_volume, return_volume=False, aff_ref=None, max_channels
     :param return_volume: (optional) whether to return the volume along with the information.
     :param aff_ref: (optional) If not None, the loaded volume is aligned to this affine matrix.
     All info relative to the volume is then given in this new space. Must be a numpy array of dimension 4x4.
+    :param max_channels: maximum possible number of channels for the input volume.
     :return: volume (if return_volume is true), and corresponding info. If aff_ref is not None, the returned aff is
     the original one, i.e. the affine of the image before being aligned to aff_ref.
     """
@@ -1588,12 +1622,12 @@ def reformat_to_list(var, length=None, load_as_numpy=False, dtype=None):
     """This function takes a variable and reformat it into a list of desired
     length and type (int, float, bool, str).
     If variable is a string, and load_as_numpy is True, it will be loaded as a numpy array.
-    If variable is None, this funtion returns None.
+    If variable is None, this function returns None.
     :param var: a str, int, float, list, tuple, or numpy array
     :param length: (optional) if var is a single item, it will be replicated to a list of this length
     :param load_as_numpy: (optional) whether var is the path to a numpy array
     :param dtype: (optional) convert all item to this type. Can be 'int', 'float', 'bool', or 'str'
-    :return: reformated list
+    :return: reformatted list
     """
 
     # convert to list
@@ -1642,7 +1676,7 @@ def reformat_to_list(var, length=None, load_as_numpy=False, dtype=None):
 
 
 def list_images_in_folder(path_dir, include_single_image=True, check_if_empty=True):
-    """List all files with extension nii, nii.gz, mgz, or npz whithin a folder."""
+    """List all files with extension nii, nii.gz, mgz, or npz within a folder."""
     basename = os.path.basename(path_dir)
     if include_single_image & \
             (('.nii.gz' in basename) | ('.nii' in basename) | ('.mgz' in basename) | ('.npz' in basename)):
@@ -1660,9 +1694,10 @@ def list_images_in_folder(path_dir, include_single_image=True, check_if_empty=Tr
             assert len(list_images) > 0, 'no .nii, .nii.gz, .mgz or .npz image could be found in %s' % path_dir
     return list_images
 
-def mkdir(path_dir):
 
-    if len(path_dir)>0:
+def mkdir(path_dir):
+    """Recursively creates the current dir as well as its parent folders if they do not already exist."""
+    if len(path_dir) > 0:
         if path_dir[-1] == '/':
             path_dir = path_dir[:-1]
         if not os.path.isdir(path_dir):
@@ -1697,6 +1732,7 @@ def get_dims(shape, max_channels=10):
 
 def add_axis(x, axis=0):
     """Add axis to a numpy array.
+    :param x: input array
     :param axis: index of the new axis to add. Can also be a list of indices to add several axes at the same time."""
     axis = reformat_to_list(axis)
     for ax in axis:
@@ -1708,7 +1744,7 @@ def add_axis(x, axis=0):
 
 
 def infer(x):
-    ''' Try to parse input to float. If it fails, tries boolean, and otherwise keep it as string '''
+    """ Try to parse input to float. If it fails, tries boolean, and otherwise keep it as string """
     try:
         x = float(x)
     except ValueError:
@@ -1788,7 +1824,7 @@ def get_mapping_lut(source, dest=None):
     source = np.array(reformat_to_list(source), dtype='int32')
     n_labels = source.shape[0]
 
-    # build new label list if neccessary
+    # build new label list if necessary
     if dest is None:
         dest = np.arange(n_labels, dtype='int32')
     else:
@@ -1805,7 +1841,7 @@ def get_mapping_lut(source, dest=None):
 
 def find_closest_number_divisible_by_m(n, m, answer_type='lower'):
     """Return the closest integer to n that is divisible by m. answer_type can either be 'closer', 'lower' (only returns
-    values lower than n), or 'higher (only returns values higher than m)."""
+    values lower than n), or 'higher' (only returns values higher than m)."""
     if n % m == 0:
         return n
     else:
@@ -1852,6 +1888,7 @@ def mask_volume(volume, mask=None, threshold=0.1, dilate=0, erode=0, fill_holes=
     :param fill_holes: (optional) whether to fill the holes in the provided or computed mask.
     :param masking_value: (optional) masking value
     :param return_mask: (optional) whether to return the applied mask
+    :param return_copy: (optional) whether to return the original volume or a copy. Default is copy.
     :return: the masked volume, and the applied mask if return_mask is True.
     """
 
@@ -1986,12 +2023,13 @@ def crop_volume(volume, cropping_margin=None, cropping_shape=None, aff=None, ret
 def crop_volume_with_idx(volume, crop_idx, aff=None, n_dims=None, return_copy=True):
     """Crop a volume with given indices.
     :param volume: a 2d or 3d numpy array
-    :param crop_idx: croppping indices, in the order [lower_bound_dim_1, ..., upper_bound_dim_1, ...].
+    :param crop_idx: cropping indices, in the order [lower_bound_dim_1, ..., upper_bound_dim_1, ...].
     Can be a list or a 1d numpy array.
     :param aff: (optional) if aff is specified, this function returns an updated affine matrix of the volume after
     cropping.
     :param n_dims: (optional) number of dimensions (excluding channels) of the volume. If not provided, n_dims will be
     inferred from the input volume.
+    :param return_copy: (optional) whether to return the original volume or a copy. Default is copy.
     :return: the cropped volume, and the updated affine matrix if aff is not None.
     """
 
@@ -2020,6 +2058,8 @@ def pad_volume(volume, padding_shape, padding_value=0, aff=None, return_pad_idx=
     :param padding_shape: shape to pad volume to. Can be a number, a sequence or a 1d numpy array.
     :param padding_value: (optional) value used for padding
     :param aff: (optional) affine matrix of the volume
+    :param return_pad_idx: (optional) the pad_idx corresponds to the indices where we should crop the resulting
+    padded image (ie the output of this function) to go back to the original volume (ie the input of this function).
     :return: padded volume, and updated affine matrix if aff is not None.
     """
 
@@ -2068,6 +2108,7 @@ def flip_volume(volume, axis=None, direction=None, aff=None, return_copy=True):
     :param direction: (optional) if axis is None, the volume can be flipped along an anatomical direction:
     'rl' (right/left), 'ap' anterior/posterior), 'si' (superior/inferior).
     :param aff: (optional) please provide an affine matrix if direction is not None
+    :param return_copy: (optional) whether to return the original volume or a copy. Default is copy.
     :return: flipped volume
     """
 
@@ -2091,11 +2132,14 @@ def flip_volume(volume, axis=None, direction=None, aff=None, return_copy=True):
     return np.flip(new_volume, axis=axis)
 
 
-def resample_volume(volume, aff, new_vox_size, interpolation='linear'):
+def resample_volume(volume, aff, new_vox_size, interpolation='linear', blur=True):
     """This function resizes the voxels of a volume to a new provided size, while adjusting the header to keep the RAS
     :param volume: a numpy array
     :param aff: affine matrix of the volume
     :param new_vox_size: new voxel size (3 - element numpy vector) in mm
+    :param interpolation: (optional) type of interpolation. Can be 'linear' or 'nearest'. Default is 'linear'.
+    :param blur: (optional) whether to blur before resampling to avoid aliasing effects.
+    Only used if the input volume is downsampled. Default is True.
     :return: new volume and affine matrix
     """
 
@@ -2105,7 +2149,7 @@ def resample_volume(volume, aff, new_vox_size, interpolation='linear'):
     sigmas = 0.25 / factor
     sigmas[factor > 1] = 0  # don't blur if upsampling
 
-    volume_filt = gaussian_filter(volume, sigmas)
+    volume_filt = gaussian_filter(volume, sigmas) if blur else volume
 
     # volume2 = zoom(volume_filt, factor, order=1, mode='reflect', prefilter=False)
     x = np.arange(0, volume_filt.shape[0])
@@ -2143,7 +2187,7 @@ def get_ras_axes(aff, n_dims=3):
     """This function finds the RAS axes corresponding to each dimension of a volume, based on its affine matrix.
     :param aff: affine matrix Can be a 2d numpy array of size n_dims*n_dims, n_dims+1*n_dims+1, or n_dims*n_dims+1.
     :param n_dims: number of dimensions (excluding channels) of the volume corresponding to the provided affine matrix.
-    :return: two numpy 1d arrays of lengtn n_dims, one with the axes corresponding to RAS orientations,
+    :return: two numpy 1d arrays of length n_dims, one with the axes corresponding to RAS orientations,
     and one with their corresponding direction.
     """
     aff_inverted = np.linalg.inv(aff)
@@ -2165,6 +2209,7 @@ def align_volume_to_ref(volume, aff, aff_ref=None, return_aff=False, n_dims=None
     :param return_aff: (optional) whether to return the affine matrix of the aligned volume
     :param n_dims: (optional) number of dimensions (excluding channels) of the volume. If not provided, n_dims will be
     inferred from the input volume.
+    :param return_copy: (optional) whether to return the original volume or a copy. Default is copy.
     :return: aligned volume, with corresponding affine matrix if return_aff is True.
     """
 
@@ -2401,7 +2446,7 @@ class GaussianBlur(keras.layers.Layer):
             self.n_channels = input_shape[-1]
 
         # prepare blurring kernel
-        self.stride = [1]*(self.n_dims+2)
+        self.stride = [1] * (self.n_dims + 2)
         self.sigma = reformat_to_list(self.sigma, length=self.n_dims)
         self.separable = np.linalg.norm(np.array(self.sigma)) > 5
         if self.blur_range is None:  # fixed kernels
@@ -2437,7 +2482,7 @@ class GaussianBlur(keras.layers.Layer):
                         maskb = tf.cast(mask, 'float32')
                         maskb = tf.concat([self.convnd(tf.expand_dims(maskb[..., n], -1), k, self.stride, 'SAME')
                                            for n in range(self.n_channels)], -1)
-                        image = image / (maskb + keras.backend.epsilon())
+                        image = image / (maskb + K.epsilon())
                         image = tf.where(mask, image, tf.zeros_like(image))
         else:
             if any(self.sigma):
@@ -2447,7 +2492,7 @@ class GaussianBlur(keras.layers.Layer):
                     maskb = tf.cast(mask, 'float32')
                     maskb = tf.concat([self.convnd(tf.expand_dims(maskb[..., n], -1), self.kernels, self.stride, 'SAME')
                                        for n in range(self.n_channels)], -1)
-                    image = image / (maskb + keras.backend.epsilon())
+                    image = image / (maskb + K.epsilon())
                     image = tf.where(mask, image, tf.zeros_like(image))
 
         return image
@@ -2577,7 +2622,7 @@ def gaussian_kernel(sigma, max_sigma=None, blur_range=None, separable=True):
 
         # compute gaussians
         sigma_is_0 = tf.equal(sigma_tens, 0)
-        exp_term = -K.square(diff) / (2 * tf.where(sigma_is_0, tf.ones_like(sigma_tens), sigma_tens)**2)
+        exp_term = -K.square(diff) / (2 * tf.where(sigma_is_0, tf.ones_like(sigma_tens), sigma_tens) ** 2)
         norms = exp_term - tf.math.log(tf.where(sigma_is_0, tf.ones_like(sigma_tens), np.sqrt(2 * np.pi) * sigma_tens))
         kernels = K.sum(norms, -1)
         kernels = tf.exp(kernels)

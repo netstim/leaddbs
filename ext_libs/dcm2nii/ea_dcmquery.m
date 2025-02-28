@@ -1,22 +1,19 @@
-function [numDICOM, fileList, isCompressed] = ea_dcmquery(inputFolder, queryOption)
+function [numDICOM, fileList, isCompressed] = ea_dcmquery(input, queryOption)
 % Check the number of DICOM file(s) in the specified folder
 %
 % queryOption can be 'y' (only show number of DICOMs found) or 'l'(show
 % number of DICOMs found and list of DICOMs)
 
-inputFolder = GetFullPath(inputFolder);
-
-if ~exist('queryOption', 'var')
-    queryOption = 'y';
+arguments
+    input {mustBeFolder}
+    queryOption {mustBeMember(queryOption, {'y', 'l'})} = 'y'
 end
 
+input = GetFullPath(input);
+
 basedir = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', filesep);
-
 dcm2niix = ea_getExec([basedir, 'dcm2niix'], escapePath = 1);
-
-
-cmd = [dcm2niix, ' -q ', queryOption, ' ', ea_path_helper(inputFolder)];
-
+cmd = [dcm2niix, ' -q ', queryOption, ' ', ea_path_helper(input)];
 [status, cmdout] = ea_runcmd(cmd);
 
 fileList = {};

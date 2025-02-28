@@ -186,11 +186,11 @@ else % from [untouched] achor space to template space
         trstr=strrep(trstr,'.','_');
         if ~exist([ea_space,'resliced_templates',filesep,trstr,'.nii.gz'],'file')
             copyfile(ea_niigz([ea_space,options.primarytemplate]),[ea_space,'resliced_templates',filesep,trstr,'.nii']);
-            ea_reslice_nii([ea_space,'resliced_templates',filesep,trstr,'.nii'],[ea_space,'resliced_templates',filesep,trstr,'.nii'],repmat(templateresolution,1,3));
             nii=ea_load_nii([ea_space,'resliced_templates',filesep,trstr,'.nii']);
             nii.img(:)=0;
             nii.dt(1) = 4;
             ea_write_nii(nii);
+            ea_reslice_nii([ea_space,'resliced_templates',filesep,trstr,'.nii'],[ea_space,'resliced_templates',filesep,trstr,'.nii'],repmat(templateresolution,1,3));
             gzip(nii.fname);
             delete(nii.fname);
         end

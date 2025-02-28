@@ -25,7 +25,11 @@ end
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
 
-el_o_orig=[0,0,15+(20*stretchfactor)];
+if elspec.contact_span < 15
+    el_o_orig=[0,0,15+(20*stretchfactor)];
+else
+    el_o_orig=[0,0,elspec.contact_span+(20*stretchfactor)];
+end
 el_o_etop=[0,0,-20*stretchfactor];
 
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
@@ -296,10 +300,10 @@ for reg=1:length(centroids)
                 % source and polarity
                 for source=1:4
                     if S.([sidec,'s',num2str(source)]).amp % then this active contact could be from this source since source is active
-                        if S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).perc % current captured contact is from this source
+                        if S.([sidec,'s',num2str(source)]).(['k',num2str(con)]).perc % current captured contact is from this source
                             activeidx(source).con(con).ix=[activeidx(source).con(con).ix;unique(thiscompsnodes(:))];
-                            activeidx(source).con(con).pol=S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).pol;
-                            activeidx(source).con(con).perc=S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).perc;
+                            activeidx(source).con(con).pol=S.([sidec,'s',num2str(source)]).(['k',num2str(con)]).pol;
+                            activeidx(source).con(con).perc=S.([sidec,'s',num2str(source)]).(['k',num2str(con)]).perc;
                         end
                     end
                 end

@@ -2,6 +2,9 @@ function h=ea_heatmap2surface(nii,surface,sides,colormap,opts)
 
 % surface can be a char (smoothed/full) or a cell pointing to rh and lh
 % .mz3 surface files.
+if ~exist('nii','var')
+nii=[];
+end
 if ~exist('opts','var')
     opts.posvisible=1;
     opts.negvisible=1;
@@ -44,6 +47,17 @@ else
     res=nii;
 end
 
+if isempty(res) % simply plot surface
+    if ismember(1,sides)
+        h{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','w','EdgeColor','none',...
+            'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
+    end
+
+    if ismember(2,sides)
+        h{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','w','EdgeColor','none',...
+            'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
+    end
+else
 % get colors for surface:
 bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
 [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...
@@ -87,4 +101,4 @@ if ismember(2,sides)
         'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
     h{2}.Tag=[niiname,'_left'];
 end
-
+end

@@ -29,14 +29,19 @@ end
 if ischar(H0)
     switch H0
         case 'Average'
-            H0=mean(outcomein,'all','omitmissing');
+            H0=mean(outcomein,'all','omitnan');
         case 'Zero'
             H0=0;
     end
 end
 outcomein=repmat(outcomein',size(valsin,1),1);
 
-group1=valsin .* outcomein;
+valsout = ~valsin;
+valsin_new = ones(size(valsin));
+% zero entries are meaningless!
+valsin_new(valsin==0) = nan;
+
+group1=valsin_new .* outcomein;
 valsout=nan(size(valsin,1),1);
 psout=nan(size(valsin,1),1);
 [~,psout,~,stats]=ttest(group1',H0);

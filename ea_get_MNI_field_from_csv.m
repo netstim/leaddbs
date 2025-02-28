@@ -1,4 +1,4 @@
-function ea_get_MNI_field_from_csv(options, Field_array_file, Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+function ea_get_MNI_field_from_csv(options, Field_array_file, Activation_threshold_VTA, sideLabel, templateOutputBasePath, source_index)
 
 % converts any spatial field (e.g. VAT) to MNI based on available transformations
 % the output resolution is defined by options.primarytemplate
@@ -65,14 +65,17 @@ end
 Vvat.dim=[n_points,n_points,n_points];
 Vvat.dt = [4, endian];
 Vvat.n=[1 1];
-Vvat.descrip='oss-dbs - Field';
+Vvat.descrip='oss-dbs-v2 - Field_ref';
 
 ea_dispt('Filling data with values from interpolant...');
 E_field_interp = F(gv);
 E_field_interp(isnan(E_field_interp)) = 0;
 E_field_interp(E_field_interp>10000.0) = 10000.0; % upperlimit files to 10000.
-
-Vvat.fname = [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+if source_index == 5  % no source indexing
+    Vvat.fname = [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'];
+else
+    Vvat.fname = [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_index), '.nii'];
+end
 Vvat.img = E_field_interp; 
 ea_write_nii(Vvat);
 
@@ -80,12 +83,18 @@ ea_write_nii(Vvat);
 VTA_interp = E_field_interp;
 VTA_interp = E_field_interp >= (Activation_threshold_VTA);
 Vvat2 = Vvat;
-Vvat2.descrip='oss-dbs - VAT';
-Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+Vvat2.descrip='oss-dbs-v2 - VAT_ref';
+if source_index == 5  % no source indexing
+    Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
+else
+    Vvat2.fname = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_index), '.nii'];
+end
+Vvat2.pinfo = [1;0;352];
+Vvat2.dt = [2, endian];
 Vvat2.img = VTA_interp; 
 ea_write_nii(Vvat2);
-%ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
-%ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], '',0,10);
+%ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
+%ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
 
 
 

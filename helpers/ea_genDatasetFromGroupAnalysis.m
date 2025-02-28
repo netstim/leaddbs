@@ -23,7 +23,7 @@ if isfolder(fullfile(fileparts(analysisFile), dataset))
 end
 
 ea_cprintf('CmdWinWarnings', 'Creating new dataset folder: %s\n', fullfile(fileparts(analysisFile), dataset));
-groupdir = fullfile(fileparts(analysisFile), dataset, 'derivatives', 'leadgroup', analysis, filesep);
+groupdir = fullfile(fileparts(analysisFile), dataset, 'derivatives', 'leadgroup', analysis);
 leaddbsFolder = fullfile(fileparts(analysisFile), dataset, 'derivatives', 'leaddbs');
 datasetFolder = fullfile(fileparts(analysisFile), dataset);
 
@@ -31,7 +31,7 @@ ea_mkdir(groupdir);
 ea_mkdir(leaddbsFolder);
 
 load(analysisFile, 'M');
-M.root = groupdir;
+M.root = fullfile(groupdir, filesep);
 
 miniset.name = dataset;
 miniset.numSubj = length(M.patient.list);

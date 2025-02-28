@@ -59,7 +59,8 @@ function ea_connectome_from_pathways(obj, connectomeName, N_voters, N_sides, neg
                 all_indices = [all_indices, gl_indices];
                 % fibers are unique within the symptom, so we compare only with
                 % other symptoms at the end
-    
+
+                pathways_files(k).name = strrep(pathways_files(k).name,'-','_');
     
                 pathway_file_conn = fullfile(connectome_folder, pathways_files(k).name);
                 copyfile(pathway_file, pathway_file_conn)

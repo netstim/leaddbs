@@ -1,0 +1,9 @@
+1 Cortical_Gray_Matter
+2 Deep_Gray_Matter
+3 White_Matter
+4 Brainstem
+5 Cerebellum_L
+6 Cerebellum_R
+7 Lateral_Ventricle_L
+8 Lateral_Ventricle_R
+9 CSF

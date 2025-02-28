@@ -1,6 +1,6 @@
 function ea_options2handles(options,handles)
 
-if  isempty(handles.patientlist.Data) || isempty(handles.patientlist.Selection) || ~isfield(options, 'modality')
+if  isempty(handles.patientlist.Data.subjId) || isempty(handles.patientlist.Selection) || ~isfield(options, 'modality')
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationtab.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.localizationtab.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.optionaltab.Children);
@@ -26,7 +26,7 @@ if isfield(options, 'coregct')
     else
         index = find(ismember(handles.coregctmethod.String, options.coregct.method), 1);
     end
-    
+
     if ~isempty(index)
         set(handles.coregctmethod, 'Value', index);
     else
@@ -46,6 +46,8 @@ if isfield(options, 'normalize')
     else
         set(handles.normmethod,'Value',1);
     end
+
+    ea_normsettings(handles, 'normmethod');
 end
 
 if isfield(options, 'modality')

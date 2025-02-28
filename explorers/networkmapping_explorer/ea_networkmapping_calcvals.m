@@ -3,7 +3,6 @@ function [AllX] = ea_networkmapping_calcvals(vatlist,cfile)
 %% Run Lead Mapper:
 % --------------------------------------
 options = getoptslocal;
-options.prefs.lcm.vatseed = 'efield';
 options.lcm.seeds = vatlist(:);
 %%
 % determine whether connectome of use is structural or functional:

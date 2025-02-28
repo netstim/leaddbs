@@ -66,13 +66,14 @@ for side=1:numel(myvalsgroup)
     vals{1,side}=nan(size(myvalsgroup{side},1),1);
     pvals{1,side}=nan(size(myvalsgroup{side},1),1);
 
-    nonempty=sum(myvalsgroup{side}(:,patientselectiongroup),2,'omitmissing')>0;
+    nonempty=sum(myvalsgroup{side}(:,patientselectiongroup),2,'omitnan')>0;
     nonemptyidx=find(nonempty);
 
     valsin=myvalsgroup{side}(nonempty,patientselectiongroup);
     outcomein=Outcome(:,side);
 
-    disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...'])
+    disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...']);
+
     switch obj.statsettings.stattest
         case 'N-Map'
             [valsout,psout]=ea_explorer_stats_nmap(valsin);
@@ -88,7 +89,7 @@ for side=1:numel(myvalsgroup)
             [valsout,psout]=ea_explorer_stats_ranksumtest(valsin,outcomein);
         case '1-Sample Weighted Regression'            
             [valsout,psout]=ea_explorer_stats_1sampleweightedlinreg(valsin,outcomein,obj.statsettings.H0);
-             case '2-Sample Weighted Regression'            
+        case '2-Sample Weighted Regression'
             [valsout,psout]=ea_explorer_stats_2sampleweightedlinreg(valsin,outcomein);
         case 'Spearman'
             [valsout,psout]=ea_explorer_stats_spearman(valsin,outcomein);
@@ -99,5 +100,4 @@ for side=1:numel(myvalsgroup)
     end
     vals{1,side}(nonemptyidx)=valsout;
     pvals{1,side}(nonemptyidx)=psout;
-end
 end

@@ -21,7 +21,12 @@ if ~isempty(stimname)
 end
 
 if isempty(stimname) || (isfield(options, 'gen_newstim') && options.gen_newstim==1)
-    stimname{end+1} = ea_getnewstimname;
+    newstimname = ea_getnewstimname;
+    if ~isempty(newstimname)
+        stimname{end+1} = newstimname;
+    else
+        return;
+    end
 end
 
 % add commands
@@ -31,17 +36,14 @@ stimname{end+1} = ' => Delete stimulation';
 stimname = stimname';
 
 
-function stimname=ea_getnewstimname
-try
-    stimname=datestr(datevec(now), 'yyyymmddHHMMSS' );
-catch
-    import java.util.UUID;
-
-    uid = char(UUID.randomUUID());
-end
+function stimname = ea_getnewstimname
+stimname = char(datetime('now', 'Format', 'yyyyMMddHHmmss'));
 while 1
     stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimname});
-    if length(stimc{1})<3
+    if isempty(stimc)
+        stimname = '';
+        return
+    elseif length(stimc{1})<3
         break
     else
         if startsWith(stimc{1},'gs_')

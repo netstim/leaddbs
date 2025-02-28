@@ -50,7 +50,7 @@ electrode.coords_mm(4,:) = [0 0 3.65]+[cx, -cy, 0];
 electrode.coords_mm(5,:) = [0 0 5.65]+[0, elspec.lead_diameter/2, 0];
 electrode.coords_mm(6,:) = [0 0 5.65]+[-cx,-cy, 0];
 electrode.coords_mm(7,:) = [0 0 5.65]+[cx,-cy, 0];
-electrode.coords_mm(8,:) = [0 0 7.75];
+electrode.coords_mm(8,:) = [0 0 7.65];
 
 electrode.head_position = electrode.coords_mm(1,:);
 electrode.tail_position = electrode.coords_mm(end,:);
@@ -59,7 +59,7 @@ electrode.y_position = [0, elspec.lead_diameter/2, electrode.coords_mm(1,3)];
 
 electrode.electrode_model = options.elmodel;
 electrode.isdirected = elspec.isdirected;
-electrode.numel = elspec.numel;
+electrode.numContacts = elspec.numContacts;
 electrode.contact_color = elspec.contact_color;
 electrode.lead_color = elspec.lead_color;
 

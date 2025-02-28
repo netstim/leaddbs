@@ -21,15 +21,15 @@ else
     weights=ones(size(regressor));
 end
 
-    nz=sum(logical(X),2)>0.2*size(X,2); % at least 20% of images covered by values.
-    nnz=sum(nz);
-    [mdls]=cellfun(@fitlm,cellfun(@transpose,mat2cell(X(nz,:),ones(1,nnz)),'un',0),repmat({regressor},1,nnz)',...
-        repmat({'Weights'},1,nnz)',...
-        repmat({weights},1,nnz)','Uniformoutput',0);
+X(~isfinite(X)) = 0;
+nz=sum(logical(X),2)>0.2*size(X,2); % at least 20% of images covered by values.
+nnz=sum(nz);
+[mdls]=cellfun(@fitlm,cellfun(@transpose,mat2cell(X(nz,:),ones(1,nnz)),'un',0),repmat({regressor},1,nnz)',...
+    repmat({'Weights'},1,nnz)',...
+    repmat({weights},1,nnz)','Uniformoutput',0);
 
 
 % maybe replace loop if can be done more easily:
-
 Nvox=length(mdls);
 R2ord=zeros(Nvox,1);
 R2adj=zeros(Nvox,1);
@@ -43,13 +43,15 @@ ea_dispercent(1,'end');
 
 vargs=varargin(1:5);
 [pth,fn]=fileparts(vargs{3});
-    EXP=nan(size(X,1),1); EXP(nz)=R2ord;
+
+EXP=nan(size(X,1),1);
+EXP(nz)=R2ord;
 vargs{3}=fullfile(pth,[ea_stripext(fn), '_Rord.nii']);
 n.fname=vargs{3};
 ea_exportmap(n,EXP,vargs{1:5});
-    EXP=nan(size(X,1),1); EXP(nz)=R2adj;
 
+EXP=nan(size(X,1),1);
+EXP(nz)=R2adj;
 vargs{3}=fullfile(pth,[ea_stripext(fn), '_Radj.nii']);
 n.fname=vargs{3};
 ea_exportmap(n,EXP,vargs{1:5});
-

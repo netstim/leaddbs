@@ -1,0 +1,24 @@
+name: synthmorph
+
+channels:
+  - conda-forge
+
+dependencies:
+  - h5py=3.11.0
+  - keras=2.13.1
+  - numpy=1.24.3
+  - pip=22.0.4
+  - python=3.10
+
+  - pip:
+    - git+https://github.com/ningfei/synthmorph-models.git
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-macosx_11_0_x86_64.whl; platform_system == "Darwin" and platform_machine == "x86_64"
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-macosx_11_0_arm64.whl; platform_system == "Darwin" and platform_machine == "arm64"
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-linux_x86_64.whl; platform_system == "Linux"
+    - https://github.com/ningfei/surfa/releases/download/v0.6.0/surfa-0.6.0-cp310-cp310-win_amd64.whl; platform_system == "Windows"
+    - git+https://github.com/adalca/neurite.git
+    - git+https://github.com/voxelmorph/voxelmorph.git
+    - tensorflow==2.13.1
+
+variables:
+  env_version: '20240923'

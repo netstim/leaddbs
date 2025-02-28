@@ -1,5 +1,5 @@
 function [elrender,ellabel,eltype,eltext]=ea_showelectrode(obj,cmd,options)
-% This function renders the electrode as defined by options.elspec and coords_mm.
+% This function renders the electrode as defined by elspec and coords_mm.
 % _______________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -27,8 +27,8 @@ else % if elspec is defined for each electrode, overwrite options-struct setting
 end
 
 if ~isfield(elstruct,'activecontacts')
-    elstruct.activecontacts{1}=zeros(elspec.numel,1);
-    elstruct.activecontacts{2}=zeros(elspec.numel,1);
+    elstruct.activecontacts{1}=zeros(elspec.numContacts,1);
+    elstruct.activecontacts{2}=zeros(elspec.numContacts,1);
 end
 
 if isfield(options.d3,'pntcmap')
@@ -167,7 +167,11 @@ for side=options.sides
         end
 
         eltext=getappdata(resultfig,'eltext');
-        [contactnames,directional]=ea_getelcontactnames(elspec,side);
+        if length(coords_mm) <= 2
+            [conName, isDirectional] = ea_getConName(elspec, side, showSideStr=1);
+        else
+            [conName, isDirectional] = ea_getConName(elspec, side);
+        end
         for con=1:size(coords_mm{side},1)
             % add text:
             centroid=coords_mm{side}(con,:)+0.01;
@@ -190,12 +194,12 @@ for side=options.sides
             Spt = Ppt + dot(v,u)*u;
 
             normv=norm(centroid-Spt);
-            if directional(con)
+            if isDirectional(con)
                 pointfortext=centroid+0.9*((centroid-Spt)/normv);
             else
                 pointfortext=centroid+1.8*((centroid-Spt)/normv);
             end
-            eltext(side,con)=text(pointfortext(1),pointfortext(2),pointfortext(3),contactnames{con},'FontWeight','bold','FontSize',14,'Color',[0,0,0],'HorizontalAlignment','center','VerticalAlignment','middle');
+            eltext(side,con)=text(pointfortext(1),pointfortext(2),pointfortext(3),conName{con},'FontWeight','bold','FontSize',14,'Color',[0,0,0],'HorizontalAlignment','center','VerticalAlignment','middle');
             set(eltext(side,con), 'Visible','off');
         end
         setappdata(resultfig,'eltext',eltext);
@@ -204,7 +208,7 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
-            
+
 
 
 
@@ -244,7 +248,7 @@ for side=options.sides
                       'Abbott Directed 6172 (short)'
                       'Abbott Directed 6173 (long)'}
                     % Marker position relative to head position along z axis
-                    markerposRel = options.elspec.markerpos-electrode.head_position(3);
+                    markerposRel = elspec.markerpos-electrode.head_position(3);
                     dothearrows = 1;
                 otherwise
                     dothearrows = 0;
@@ -266,9 +270,9 @@ for side=options.sides
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
         try % sometimes isomatrix not defined.
-            if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % number of contact pairs
+            if size(options.d3.isomatrix{1}{1},2)==elspec.numContacts-1 % number of contact pairs
                 shifthalfup=1;
-            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % number of contacts
+            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numContacts % number of contacts
                 shifthalfup=0;
             else
                 ea_cprintf('CmdWinErrors', 'Be careful! Isomatrix might have wrong size, or numbers of contacts are not consistent across patients.\n');
@@ -299,7 +303,7 @@ for side=options.sides
             %minval=-1;
             %maxval=1;
         end
-        for cntct=1:elspec.numel-shifthalfup
+        for cntct=1:elspec.numContacts-shifthalfup
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.9,0.9,0.7];

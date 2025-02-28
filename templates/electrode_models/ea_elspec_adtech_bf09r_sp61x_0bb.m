@@ -57,7 +57,7 @@ for iside=1:length(options.sides)
 
 
     % draw trajectory
-    lowerpoint=coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2);
+    lowerpoint=coords_mm{side}(elspec.numContacts,:)-trajvector*(elspec.contact_length/2);
     set(0,'CurrentFigure',resultfig);
     diams=repmat(elspec.lead_diameter/2,1,2);
     [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -105,7 +105,7 @@ for iside=1:length(options.sides)
     ea_specsurf(elrender{side}(1),usecolor,aData);
 
     % draw contacts
-    for cntct=1:elspec.numel
+    for cntct=1:elspec.numContacts
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.contact_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -150,8 +150,8 @@ for iside=1:length(options.sides)
     end
 
     % draw trajectory between contacts
-    for cntct=1:elspec.numel-1
-        
+    for cntct=1:elspec.numContacts-1
+
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.lead_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -299,13 +299,13 @@ view(0,0);
 cnt=1; cntcnt=1; inscnt=1;
 ea_dispercent(0,'Exporting electrode components');
 
-for comp=1:elspec.numel*2+1
-    ea_dispercent(comp/(elspec.numel*2+1));
+for comp=1:elspec.numContacts*2+1
+    ea_dispercent(comp/(elspec.numContacts*2+1));
 
     cyl=elrender{side}(cnt);
     cnt=cnt+1;
 
-    if comp>1 && comp<elspec.numel+2 % these are the CONTACTS
+    if comp>1 && comp<elspec.numContacts+2 % these are the CONTACTS
         electrode.contacts(cntcnt).vertices=cyl.Vertices;
         electrode.contacts(cntcnt).faces=cyl.Faces;
         electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;
@@ -327,11 +327,39 @@ electrode.tail_position=[0,0,elspec.tip_length+4*elspec.contact_length+elspec.co
 electrode.x_position=[elspec.lead_diameter/2,0,elspec.tip_length+0.5*elspec.contact_length];
 electrode.y_position=[0,elspec.lead_diameter/2,elspec.tip_length+0.5*elspec.contact_length];
 
-electrode.numel=elspec.numel;
+electrode.numContacts=elspec.numContacts;
 electrode.contact_color=elspec.contact_color;
 electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
+
+%% build volumetric addition to it:
+ea_genvol_adtech(meshel,elspec,rescaleratio,vizz);
+
+%% Revert to real dimension
+electrode.head_position = electrode.head_position/rescaleratio;
+electrode.tail_position = electrode.tail_position/rescaleratio;
+electrode.x_position = electrode.x_position/rescaleratio;
+electrode.y_position = electrode.y_position/rescaleratio;
+electrode.coords_mm = electrode.coords_mm/rescaleratio;
+
+for i=1:length(electrode.insulation)
+    electrode.insulation(i).vertices = electrode.insulation(i).vertices/rescaleratio;
+end
+
+for i=1:length(electrode.contacts)
+    electrode.contacts(i).vertices = electrode.contacts(i).vertices/rescaleratio;
+end
+
+for i=1:length(meshel.ins)
+    meshel.ins{i}.vertices = meshel.ins{1}.vertices * rescaleratio;
+end
+
+for i=1:length(meshel.con)
+    meshel.con{i}.vertices = meshel.con{1}.vertices * rescaleratio;
+end
+
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
 if vizz
     % visualize
@@ -366,31 +394,3 @@ if vizz
     axis equal
     view(0,0);
 end
-
-%% build volumetric addition to it:
-ea_genvol_adtech(meshel,elspec,rescaleratio,vizz);
-
-%% Revert to real dimension
-electrode.head_position = electrode.head_position/rescaleratio;
-electrode.tail_position = electrode.tail_position/rescaleratio;
-electrode.x_position = electrode.x_position/rescaleratio;
-electrode.y_position = electrode.y_position/rescaleratio;
-electrode.coords_mm = electrode.coords_mm/rescaleratio;
-
-for i=1:length(electrode.insulation)
-    electrode.insulation(i).vertices = electrode.insulation(i).vertices/rescaleratio;
-end
-
-for i=1:length(electrode.contacts)
-    electrode.contacts(i).vertices = electrode.contacts(i).vertices/rescaleratio;
-end
-
-for i=1:length(meshel.ins)
-    meshel.ins{i}.vertices = meshel.ins{1}.vertices * rescaleratio;
-end
-
-for i=1:length(meshel.con)
-    meshel.con{i}.vertices = meshel.con{1}.vertices * rescaleratio;
-end
-
-save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');

@@ -18,6 +18,8 @@ elseif contains(json.method, 'SPM')
     warpSuffix='spm.nii';
 elseif contains(json.method, 'EasyReg')
     warpSuffix='ants.nii.gz';
+elseif contains(json.method, 'SynthMorph')
+    warpSuffix='ants.nii.gz';
 end
 
 transformfiles.forward=[options.subj.norm.transform.forwardBaseName,warpSuffix];

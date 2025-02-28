@@ -150,7 +150,7 @@ try delete(captions); end
 
 % Correct inhomogeneous spacings, calculate spacing for info text display.
 % Only do it when number of contacts > 1
-if options.elspec.numel > 1
+if options.elspec.numContacts > 1
     % emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
     clear emp_eldist
     switch options.elmodel
@@ -168,7 +168,8 @@ if options.elspec.numel > 1
                 emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
             end
         case {'Boston Scientific Vercise Cartesia HX'
-              'Boston Scientific Vercise Cartesia X'}
+              'Boston Scientific Vercise Cartesia X'
+			  'Aleva directSTIM Directed'}
             for side=options.sides
                 coords_temp{side}(1,:) = mean(coords_mm{side}(1:3,:));
                 coords_temp{side}(2,:) = mean(coords_mm{side}(4:6,:));
@@ -180,7 +181,7 @@ if options.elspec.numel > 1
         otherwise
             for side=options.sides
                 A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
-                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numContacts-1);
             end
     end
     memp_eldist=mean([emp_eldist{:}]);

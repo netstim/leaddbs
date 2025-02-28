@@ -20,7 +20,7 @@ if factor == 0 && fixed_N == 0
 elseif factor ~= 0
     new_connectome_path = [connectome_path,'_downsampled_by_',char(string(factor))];
 else
-    new_connectome_path = [connectome_path,'_downsampled_to_',char(string(factor))];
+    new_connectome_path = [connectome_path,'_downsampled_to_',char(string(fixed_N))];
 end
 mkdir(new_connectome_path)
 
@@ -29,6 +29,7 @@ myFiles = dir(fullfile(connectome_path,'*.mat'));
 
 % remove adjacency matrix if present
 myFiles = myFiles(~endsWith({myFiles.name}, '_ADJ.mat'));
+myFiles = myFiles(~endsWith({myFiles.name}, '_info.mat'));
 
 
 for k = 1:length(myFiles)
@@ -45,7 +46,7 @@ for k = 1:length(myFiles)
         if factor ~= 0
             New_N = round(length(ftr_full.idx) / factor);
         else
-            New_N = N_threshold;
+            New_N = fixed_N;
         end
         
         indices_picked = randperm(length(ftr_full.idx),New_N)';

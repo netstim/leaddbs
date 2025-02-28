@@ -34,7 +34,7 @@ subPrefix = ['sub-', options.subj.subjId];
 hemiTag = regexprep(usevat, {'right', 'left'}, {'R', 'L'});
 
 try
-    load([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,subPrefix,'_desc-stimparameters.mat'], 'S');
+    S = ea_loadstimulation([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,subPrefix,'_desc-stimparameters.mat']);
 catch
     ea_error(['Could not find stimulation parameters for ',directory,ea_nt(options),vsname,'.']);
 end
@@ -69,7 +69,8 @@ if isstruct(handles) && get(handles.savefibers,'Value')
     end
 
     if ~exist([savedir,'workspace.mat'],'file')
-        mode = 'vat'; save([savedir,'fiberstate.mat'],'fibersfile','seedfile','targetsfile','thresh','mode')
+        mode = 'vat';
+        save([savedir,'fiberstate.mat'],'fibersfile','seedfile','targetsfile','thresh','mode')
         options.savefibers.load=0;
     elseif exist([savedir,'workspace.mat'],'file') && exist([savedir,'fiberstate.mat'],'file')
         options.savefibers.load=1;

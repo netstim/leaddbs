@@ -10,13 +10,13 @@ end
 % Check Conda environment
 condaenv = ea_conda_env('SynthStrip');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing SynthStrip conda environment...\n')
+    ea_cprintf('*Comments', 'Initializing SynthStrip conda environment...\n')
     condaenv.create;
-    ea_cprintf('CmdWinWarnings', 'SynthStrip conda environment initialized.\n')
+    ea_cprintf('*Comments', 'SynthStrip conda environment initialized.\n')
 elseif ~condaenv.is_up_to_date
-    ea_cprintf('CmdWinWarnings', 'Updating SynthStrip conda environment...\n')
+    ea_cprintf('*Comments', 'Updating SynthStrip conda environment...\n')
     condaenv.update;
-    ea_cprintf('CmdWinWarnings', 'SynthStrip conda environment initialized.\n')
+    ea_cprintf('*Comments', 'SynthStrip conda environment initialized.\n')
 end
 
 % Run SynthStrip

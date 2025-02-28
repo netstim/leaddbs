@@ -24,6 +24,19 @@ if isfield(options, 'leadfigure')
             options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
         end
     end
+else % Exported code
+    if ~isempty(options.uipatdirs{options.subjInd})
+        datasetDir = regexp(options.uipatdirs{options.subjInd}, ['.*(?=\' filesep 'derivatives\' filesep 'leaddbs\' filesep 'sub-)'], 'match', 'once');
+        bids = BIDSFetcher(datasetDir);
+        options.bids = bids;
+    
+        subjId = erase(options.uipatdirs, fullfile(datasetDir, 'derivatives', 'leaddbs', 'sub-'));
+        if isfield(options, 'modality')
+            options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
+        else
+            options.subj = bids.getSubj(subjId{options.subjInd});
+        end
+    end
 end
 
 if strcmp(options.leadprod, 'dbs')
@@ -40,7 +53,7 @@ if strcmp(options.leadprod, 'dbs')
         unsortedFiles = ea_regexpdir(fullfile(options.subj.rawdataDir, 'unsorted'), '.*\.nii(\.gz)?');
         if ~isempty(unsortedFiles)
             [~, returnCode] = ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
-            if strcmp(returnCode, 'discard')
+            if ismember(returnCode, {'okay', 'discard', 'empty'})
                 ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
             end
         else

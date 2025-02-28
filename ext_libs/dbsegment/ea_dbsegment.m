@@ -44,26 +44,27 @@ copyfile(t1, inputFolder);
 % Check Conda environment
 condaenv = ea_conda_env('DBSegment');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing DBSegment conda environment...\n')
+    ea_cprintf('*Comments', 'Initializing DBSegment conda environment...\n')
     condaenv.create;
-    ea_cprintf('CmdWinWarnings', 'DBSegment conda environment initialized.\n')
+    ea_cprintf('*Comments', 'DBSegment conda environment initialized.\n')
 elseif ~condaenv.is_up_to_date
-    ea_cprintf('CmdWinWarnings', 'Updating DBSegment conda environment...\n')
+    ea_cprintf('*Comments', 'Updating DBSegment conda environment...\n')
     condaenv.update;
-    ea_cprintf('CmdWinWarnings', 'DBSegment conda environment initialized.\n')
+    ea_cprintf('*Comments', 'DBSegment conda environment initialized.\n')
 end
 
 % Run check DBSegment
-DBSegment = fullfile(condaenv.path, 'bin', 'DBSegment');
 modelPath = fullfile(condaenv.path, 'share', 'models');
 
-segcmd = {ea_path_helper(DBSegment), ...
+segcmd = {'DBSegment', ...
     '-i', ea_path_helper(inputFolder), ...
     '-o', ea_path_helper(outputFolder), ...
     '-mp', ea_path_helper(modelPath)};
 
 status = condaenv.system(strjoin(segcmd, ' '));
 if status ~= 0
+    ea_delete(inputFolder);
+    ea_delete(outputFolder);
     ea_error('DBSegment failed!', showdlg=false, simpleStack=true);
 end
 
@@ -81,7 +82,7 @@ ea_delete(outputFolder);
 
 % Prepare atlas
 if exist('atlasFolder', 'var')
-    fprintf('\Building DBSegment atlas...\n\n');
+    ea_cprintf('*Comments', 'Building DBSegment atlas...\n\n');
 
     % Load names
     names = readcell(fullfile(ea_getearoot, 'ext_libs', 'DBSegment', 'dbsegment_label.txt'));

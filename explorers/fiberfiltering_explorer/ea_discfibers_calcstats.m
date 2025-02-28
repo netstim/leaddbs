@@ -7,24 +7,26 @@ else % used in permutation based statistics - in this case the real improvement 
     I=Iperm;
 end
 
-
 % quickly recalc stats
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
     patsel=obj.patientselection;
 end
 
-
 % fiber values can be sigmoid transform
-if obj.SigmoidTransform 
-    fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-    fibsval = fibsval_raw;  % initialize
-    for side = 1:size(fibsval_raw,2)
-        fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
-    end
-else
-    fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+switch obj.statsettings.stimulationmodel
+    case 'Sigmoid Field'
+        if obj.connectivity_type == 2
+            fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
+        else
+            fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval = fibsval_raw;  % initialize
+            for side = 1:size(fibsval_raw,2)
+                fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+            end
+        end
+    otherwise
+        fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
 end
-
 
 if size(I,2)==1 % 1 entry per patient, not per electrode
     I=[I,I]; % both sides the same;
@@ -34,12 +36,21 @@ if obj.mirrorsides
     I=[I;I];
 end
 
+%% Centrally deal with Covariates here by regressing them out from target variable:
 if ~isempty(obj.covars)
     for i=1:length(obj.covars)
         if obj.mirrorsides
             covars{i} = [obj.covars{i};obj.covars{i}];
         else
             covars{i} = obj.covars{i};
+        end
+        % directly regress out covars from variable here:
+        for side=1:2
+            if size(covars{i},2)==1 % single entry, use the same for both sides
+                I(:,side)=ea_resid(covars{i},I(:,side));
+            elseif size(covars{i},2)==2 % two entries in covars, use each for the respective side:
+                I(:,side)=ea_resid(covars{i}(:,side),I(:,side));
+            end
         end
     end
 end
@@ -102,7 +113,7 @@ end
 
 switch obj.multitractmode
     case 'Split & Color By Group'
-        groups = unique(obj.M.patient.group)';
+        groups = unique(obj.M.patient.group(obj.patientselection))';
         dogroups = 1;
         dosubscores = 0;
     case 'Split & Color By Subscore'
@@ -166,330 +177,84 @@ for group=groups
     end
 
     for side=1:numel(gfibsval)
+
+        %% Step 1: Prefiltering. This part does not use improvements but simply selects potential tracts that fullfil criteria (conn sliders):
+
         % check connthreshold
-        if obj.runwhite || strcmp(obj.statmetric,'Plain Connections')
+        if obj.runwhite || strcmp(obj.statsettings.stattest,'N-Map')
             Nmap=sum(gfibsval{side}(:,gpatsel),2);
         else
-            switch obj.statmetric
-                case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}
+            switch obj.statsettings.stimulationmodel
+                case 'VTA'
                     Nmap=sum(gfibsval{side}(:,gpatsel),2);
-                case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Odds Ratios / EF-Sigmoid (Jergas 2023)','Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'}
-                    if obj.SigmoidTransform == 1 && (strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak'))
-                        % 0.5 V / mm -> 0.5 probability 
-                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold/1000.0),2);
-                    else
-                        Nmap=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
-                    end
+%                 case 'Sigmoid Field'
+%                     if strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak')
+%                         % 0.5 V / mm -> 0.5 probability
+%                         Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold/1000.0),2);
+%                     else
+%                         Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
+%                     end
+                case 'Sigmoid Field'
+                    Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
+                case 'Electric Field'
+                    Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
             end
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
         if ~obj.runwhite
-            gfibsval{side}(Nmap<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
-            if ~(ismember(obj.statmetric,{'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'})) % efields & reverse t-tests for binary vars cases
+            gfibsval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+            if strcmp(obj.statsettings.stimulationmodel,'VTA')
                 % only in case of VTAs (given two-sample-t-test statistic) do we
                 % need to also exclude if tract is connected to too many VTAs:
-                gfibsval{side}(Nmap>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
+                gfibsval{side}(Nmap>((1-(obj.statsettings.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
             end
         end
-        
+
         % init outputvars
         vals{group,side}=nan(size(gfibsval{side},1),1);
         if obj.showsignificantonly
             pvals{group,side}=vals{group,side};
         end
-        if obj.runwhite || strcmp(obj.statmetric,'Plain Connections')
+        if obj.runwhite
             vals{group,side} = Nmap/length(gpatsel);
-       
-            if ~obj.runwhite % the white fibers will always show connection to any single vta/roi.
-                vals{group,side}(Nmap<((obj.connthreshold/100)*length(gpatsel)))=nan;
-            else
-                vals{group,side}(vals{group,side}==0)=nan;
-            end
-
-            if strcmp(obj.statmetric,'Plain Connections') && obj.showsignificantonly
-                ea_error('Calculating significance does not make sense (plain connections mode)');
-            end
+            vals{group,side}(vals{group,side}==0)=nan;
         else
-            switch obj.statmetric
-                case 'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)' % two-sample t-tests / OSS-DBS
-                    gfibsval{side}(isnan(gfibsval{side}))=0; % for t-tests safe to convert nans back to zeros (which means unconnected).
-                    % check if covariates exist:
-                    if exist('covars', 'var')
-                        % they do:
-                        nixfib=find(any(gfibsval{side}(:,gpatsel)').*~all(gfibsval{side}(:,gpatsel)'));
-                        warning('off', 'stats:classreg:regr:lmeutils:StandardLinearMixedModel:Message_PerfectFit');
-                        ea_dispercent(0,['Side ',num2str(side),': Calculating T-values (taking covariates into account)']);
-                        for fib=1:length(nixfib)
-                            data = table(I(gpatsel,side),gfibsval{side}(nixfib(fib),gpatsel)',...
-                                'VariableNames',{'response','fibsval'});
-                            formula = 'response ~ 1 + fibsval';
-                            data.fibsval=categorical(data.fibsval);
-                            for cv=1:length(covars)
-                                thiscv=covars{cv}(gpatsel,:);
-                                if (size(thiscv,2)==2)
-                                    thiscv=thiscv(:,side);
-                                end
-                                data=addvars(data,thiscv,'NewVariableNames',ea_space2sub(obj.covarlabels{cv}));
-                                if isequal(thiscv,logical(thiscv))
-                                    formula=[formula,' + (1 + fibsval | ',ea_space2sub(obj.covarlabels{cv}),')'];
-                                    data.(ea_space2sub(obj.covarlabels{cv}))=categorical(data.(ea_space2sub(obj.covarlabels{cv})));
-                                else
-                                    formula=[formula,' + ',ea_space2sub(obj.covarlabels{cv})];
-                                end
-                            end
-                            mdl = fitlme(data,formula);
-                            vals{group,side}(nixfib(fib))=mdl.Coefficients.tStat(2);
-                            if obj.showsignificantonly
-                                pvals{group,side}(nixfib(fib))=mdl.Coefficients.pValue(2);
-                            end
-                            ea_dispercent(fib/length(nixfib));
-                        end
-                        ea_dispercent(1,'end');
-                        fprintf('\b');
-                        warning('on', 'stats:classreg:regr:lmeutils:StandardLinearMixedModel:Message_PerfectFit');
+            nonempty=sum(gfibsval{side}(:,gpatsel),2,'omitnan')>0;
+            nonemptyidx=find(nonempty);
 
-                    else
-                        % no covariates exist:
-                        allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
-                        fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
-                        fibsimpval=double(fibsimpval); % in case entered logical
-                        fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
-                        nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
-                        nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
-                        [~,ps,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
-                        vals{group,side}=stats.tstat';
-                        
-                        %% Comment this if you don't want the graphs
-                        %% if you need negative fibers just use min here 
-                        %[~, maxidx] = max(vals{group,side}); 
-                        %imp_conn = fibsimpval(maxidx, :); 
-                        %imp_nonconn = nfibsimpval(maxidx, :); 
-                        %% [~,ps,~,stats]=ttest2(imp_conn', imp_nonconn'); 
-                        %figure
-                        %%swarmchart([ones(size(imp_conn)); ones(size(imp_conn))*2]',[imp_conn; imp_nonconn]'); 
-                        %boxplot([imp_conn; imp_nonconn]');
-                        %xticks(1:2)
-                        %xticklabels({'Connected VTAs', 'Non-connected VTAs'}); 
-                        %ylabel('Improvement')                        
-                        
-                        if obj.showsignificantonly
-                            pvals{group,side}=ps';
-                        end
-                        
-                        %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
-                    end
-                case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
-                    switch obj.corrtype
-                        case 'T-Tests'
-                            gfibsval{side}(isnan(gfibsval{side}))=0; % for t-tests safe to convert nans back to zeros (which means unconnected).
-                            if exist('covars', 'var')
-                                ea_error('Covariates not implemented for One-Sample T-Tests.')
-                            else
-                                % no covariates exist:
-                                allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
-                                fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
-                                fibsimpval=double(fibsimpval); % in case entered logical
-                                fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
-                                [~,ps,~,stats]=ttest(fibsimpval'); % Run one-sample t-test across connected / unconnected values
-                                vals{group,side}=stats.tstat';
-                                if obj.showsignificantonly
-                                    pvals{group,side}=ps';
-                                end
-                            end
-                    
-                        case 'Wicoxon Signed Rank Tests'
-                            if exist('covars', 'var')
-                                ea_error('Covariates not implemented for Wilcoxon Tests.')
-                            else
-                                ea_error('Wilcoxon Tests not yet implemented.')
-                            end
+            valsin=gfibsval{side}(nonempty,gpatsel);
+            outcomein=I(gpatsel,side);
 
-                    end
-                    
-                case 'Correlations / E-fields (Irmen 2020)'
-                    if ismember(lower(obj.corrtype),{'pearson','spearman'})
-                        conventionalcorr=1;
-                    else
-                        conventionalcorr=0;
-                    end
+            if strcmp(obj.statsettings.statfamily, 'Correlations')
+                disp(['Calculating ' obj.statsettings.stattest ' correlation for side ' num2str(side) '...']);
+            else
+                disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...']);
+            end
 
-                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
-                    if ~isempty(invals)
-                        if exist('covars', 'var') && conventionalcorr % partial corrs only implemented for Pearson & Spearman
-                            usecovars=[];
+            stattests=ea_explorer_statlist(obj.responsevar);
 
-                            for cv=1:length(covars)
-                                thiscv=covars{cv}(gpatsel,:);
-                                if (size(thiscv,2)==2)
-                                    thiscv=thiscv(:,side);
-                                end
-                                usecovars=[usecovars,thiscv];
-                            end
-                            if obj.showsignificantonly
-                                [outvals,outps]=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
-                            else % no need to calc p-val here
-                                outvals=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
-                            end
-                        else
-                            if conventionalcorr
-                                if obj.showsignificantonly
-                                    [outvals,outps]=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
-                                else % no need to calc p-val here
-                                    outvals=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
-                                end
-                            else
-                                if exist('covars', 'var')
-                                    ea_error('Inclusion of covariates not implemented for this type of correlation');
-                                end
-                                switch lower(obj.corrtype)
-                                    case 'bend'
-                                        if obj.showsignificantonly
-                                            [outvals,outps]=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
-                                        else % no need to calc p-val here
-                                            outvals=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
-                                        end
-                                    case 'skipped pearson'
-                                        if obj.showsignificantonly
-                                            ea_error('Significance not implemented for Skipped correlations');
-                                        else
-                                            outvals=ea_skipped_correlation(invals,I(gpatsel,side),'Pearson'); % generate optimality values on all but left out patients
-                                        end
-                                    case 'skipped spearman'
-                                        if obj.showsignificantonly
-                                            ea_error('Significance not implemented for Skipped correlations');
-                                        else
-                                            outvals=ea_skipped_correlation(invals,I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
-                                        end
-                                end
+            [is,idx]=ismember(obj.statsettings.stattest,stattests.name);
+            if ~is
+                ea_error(['Function for test ',obj.statsettings.stattest,' missing.']);
+            end
 
-                            end
-                        end
+            %% Step 2: Fiberfiltering. This part filters fibers based on outcome variable (except for descriptive tests):
 
-                        vals{group,side}(nonempty)=outvals;
-                        if exist('outps','var') % only calculated if testing for significance.
-                            pvals{group,side}(nonempty)=outps;
-                        end
-                    end
-                case 'Proportion Test (Chi-Square) / VTAs (binary vars)'
-
-                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
-                    if ~isempty(invals)
-
-                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
-                        % restore nans
-                        ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        suminvals=sum(invals(ImpBinary == 1,:),1); % for each fiber, how many vtas cover it of patients that also had the effect (binary outcome)
-                        Ninvals=sum(ImpBinary == 1,1);
-                        sumoutvals=sum(invals(ImpBinary == 0,:),1); % for each fiber, how many vtas cover it of patients that did not have the effect (binary var)
-                        Noutvals=sum(ImpBinary == 0,1);
-
-                        prop=zeros(size(invals,2),1); %
-                        outps=prop; %
-
-                        for fib=1:size(invals,2)
-                            [h,outps(fib), prop(fib)]  = ea_prop_test([suminvals(fib),sumoutvals(fib)],[Ninvals,Noutvals],1);
-                        end
-
-                        vals{group,side}(nonempty)=prop;
-
-                        if exist('outps','var') % only calculated if testing for significance.
-                            pvals{group,side}(nonempty)=outps;
-                        end
-                    end
-                case 'Binomial Tests / VTAs (binary vars)'
-                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0; % number of connected tracts
-                    invals=gfibsval{side}(nonempty,gpatsel)';
-                    if ~isempty(invals)
-
-                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
-                        % restore nans
-                        ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        sum_coverage_createeffect=sum(invals(ImpBinary == 1,:),1); % sum of coverage that creates the effect for all tracts
-                        sum_coverage_noeffect=sum(invals(ImpBinary == 0,:),1); % sum of coverage that does not create the effect for all tracts
-
-                        prob_createeffect=ea_nansum(ImpBinary)/sum(~isnan(ImpBinary));
-                        sum_coverage=sum_coverage_noeffect+sum_coverage_createeffect;
-                        outps = binopdf(sum_coverage_createeffect,sum_coverage_noeffect+sum_coverage_createeffect,ea_nansum(ImpBinary)/sum(~isnan(ImpBinary)));
-                        thisvals = (sum_coverage_createeffect./(sum_coverage)) - prob_createeffect;
-                        
-                        vals{group,side}(nonempty)=thisvals;
-                        if exist('outps','var') % only calculated if testing for significance.
-                            pvals{group,side}(nonempty)=outps;
-                        end
-
-                    end
-                case 'Reverse T-Tests / E-Fields (binary vars)'
-                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
-                    if ~isempty(invals)
-                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
-                        % restore nans
-                        ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        upSet=invals(ImpBinary==1,:);
-                        downSet=invals(ImpBinary==0,:);
-
-                        if obj.showsignificantonly
-                            [~,ps,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
-                            outvals=stats.tstat';
-                            outps=ps;
-                        else % no need to calc p-val here
-                            [~,~,~,stats]=ttest2(upSet,downSet); % Run two-sample t-test across connected / unconnected values
-                            outvals=stats.tstat';
-                        end
-
-                        vals{group,side}(nonempty)=outvals;
-                        if exist('outps','var') % only calculated if testing for significance.
-                            pvals{group,side}(nonempty)=outps;
-                        end
-                    end
-                case 'Weighted Linear Regression / EF-Sigmoid (Dembek 2023)'
-                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0;
-                    invals=gfibsval{side}(nonempty,gpatsel)';
-    
-                    %weighted_linear_regression_test = 'two-sample';
-                    %if strcmp('two-sample',weighted_linear_regression_test)
-                    if strcmp('2-Sample',obj.twoSampleWeighted)
-                        [outvals,outps] = ea_discfibers_TwoSample_weightedLinearRegression(invals,I(gpatsel,side),'t-value');
-                    else
-                        [outvals,outps] = ea_discfibers_weightedLinearRegression(invals,I(gpatsel,side),'mean','t-value'); % generate optimality values on all but left out patients
-                    end
-                    vals{group,side}(nonempty)=outvals;
-                    if exist('outps','var') % only calculated if testing for significance.
-                        pvals{group,side}(nonempty)=outps;
-                    end
-                case 'Odds Ratios / EF-Sigmoid (Jergas 2023)'
-
-                    nonempty=sum(gfibsval{side}(:,gpatsel),2)>0; % number of connected tracts
-                    invals=gfibsval{side}(nonempty,gpatsel)';
-
-                    if ~isempty(invals)
-                    
-                        Impr = I(gpatsel,side);
-
-                        if any(isnan(I(gpatsel,side)))
-                            ea_warndlg("NaNs in scores detected, removing...")
-                            %return
-                            % remove the whole row
-                            nan_scores = isnan(I(gpatsel,side));
-                            
-                            Impr(nan_scores,:) = [];
-                            invals(nan_scores,:) = [];
-                        end
-
-                        ImpBinary=logical((Impr)>0); % make sure variable is actually binary
-                        % restore nans
-
-                        [outvals,CI95_up,CI95_low,outps] = ea_discfibers_odds_ratios(invals,ImpBinary);
-             
-                        vals{group,side}(nonempty)=outvals;
-                        if exist('outps','var') % only calculated if testing for significance.
-                            pvals{group,side}(nonempty)=outps;
-                        end
-                    end
-                    
+            %this following line calls the actual statistical test:
+            if ~isempty(valsin) && ~isempty(outcomein)
+                [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
+                vals{group,side}(nonemptyidx)=valsout;
+                if exist('pvals','var')
+                    pvals{group,side}(nonemptyidx)=psout;
+                end
+            else
+                if isempty(valsin)
+                    ea_cprintf('CmdWinWarnings', 'group %d side %d: empty valsin!\n', group, side);
+                end
+                if isempty(outcomein)
+                    ea_cprintf('CmdWinWarnings', 'group %d side %d: empty outcomein!\n', group, side);
+                end
             end
         end
     end
@@ -502,35 +267,43 @@ if ~obj.runwhite
     end
 end
 
-% reopen group loop for thresholding etc:
+% Clean up non-finite values from fibcell and vals
 for group=groups
     for side=1:numel(gfibsval)
-        fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
-        % Remove vals and fibers outside the thresholding range
-        obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0); % only collected for first group (positives)
+        usedidx{group,side} = find(isfinite(vals{group,side}));
+        fibcell{group,side} = obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(usedidx{group,side});
+        vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
+        if exist('pvals','var')
+            pvals{group,side} = pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
+        end
+
+        obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0);
         obj.stats.neg.available(side)=sum(cat(1,vals{:,side})<0);
+
         if dosubscores || dogroups
             if ~obj.subscore.special_case
-                obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,side})>0); % collected for every group
+                obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,side})>0);
                 obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,side})<0);
             end
         end
-        usedidx{group,side}=find(~isnan(vals{group,side}));
-        vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
-        if exist('pvals','var')
-            pvals{group,side}=pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
-        end
+    end
+end
 
+unthresholdedVals = vals; % Need to keep this original vals when calculating the (same) threshold to both sides. 
 
+% Thresholding
+for group=groups
+    for side=1:numel(gfibsval)
         switch obj.threshstrategy
-            case 'Fixed Amount' % here we want to create threshs for each side separately.
+            case 'Fixed Amount' % here we want to create thresholds for each side separately.
                 posvals = sort(vals{group,side}(vals{group,side}>0),'descend');
                 negvals = sort(vals{group,side}(vals{group,side}<0),'ascend');
-            otherwise % in other cases, we want to apply the same thresh to both sides.
-                allvals = vertcat(vals{group,:});
+            otherwise % in other cases, we want to apply the same threshold to both sides.
+                allvals = vertcat(unthresholdedVals{group,:});
                 posvals = sort(allvals(allvals>0),'descend');
                 negvals = sort(allvals(allvals<0),'ascend');
         end
+
         % positive thresholds
         if dosubscores || dogroups
             if obj.subscore.special_case
@@ -576,50 +349,16 @@ for group=groups
                 negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.shownegamount(side));
             end
         end
+
         if ~obj.runwhite
             % Remove vals and fibers outside the thresholding range (set by
             % sliders)
-            remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
+            remove = vals{group,side}<posthresh & vals{group,side}>negthresh;
             vals{group,side}(remove)=[];
             fibcell{group,side}(remove)=[];
             usedidx{group,side}(remove)=[];
         end
     end
-end
-
-
-
-function vals=ea_corrsignan(vals,ps,obj)
-allvals=cat(1,vals{:});
-allps=cat(1,ps{:});
-
-nnanidx=~isnan(allvals);
-numtests=sum(nnanidx);
-
-switch lower(obj.multcompstrategy)
-    case 'fdr'
-        pnnan=allps(nnanidx); % pvalues from non-nan value entries
-        [psort,idx]=sort(pnnan);
-        pranks=zeros(length(psort),1);
-        for rank=1:length(pranks)
-            pranks(idx(rank))=rank;
-        end
-        pnnan=pnnan.*numtests;
-        pnnan=pnnan./pranks;
-        allps(nnanidx)=pnnan;
-    case 'bonferroni'
-        allps(nnanidx)=allps(nnanidx).*numtests;
-end
-
-allps(~nnanidx)=1; % set p values from values with nan to 1
-allvals(allps>obj.alphalevel)=nan; % delete everything nonsignificant.
-
-% feed back into cell format:
-cnt=1;
-for cellentry=1:numel(vals)
-    vals{cellentry}(:)=allvals(cnt:cnt+length(vals{cellentry})-1);
-    ps{cellentry}(:)=allps(cnt:cnt+length(vals{cellentry})-1);
-    cnt=cnt+length(vals{cellentry});
 end
 
 
@@ -659,6 +398,7 @@ switch threshstrategy
     case 'Fixed Fiber Value'
         fibValThreshold = threshold;
 end
+
 
 function result = ea_isnan(input_array,flag)
 if size(input_array,2) > 1

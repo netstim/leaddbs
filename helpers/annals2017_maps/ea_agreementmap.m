@@ -1,5 +1,8 @@
 function [outputMap, mask] = ea_agreementmap(inputMaps, outputFileName, writeoutMask, mode, zz)
 % Calculate agreement R-map
+% mode can be 'mult' or 'sum', 'avg' or 'sum/avg0...x' which creates an average/sum map across pixels that agree in
+% polarity for 0 to x cases. (avg0 for instance would just be the average
+% map across cases without any constraints.
 
 if ~exist('mode','var')
    mode='mult';
@@ -13,34 +16,65 @@ end
 % Find agreeing voxels
 positiveMask = inputMaps{1}.img>0;
 negativeMask = inputMaps{1}.img<0;
-for i=2:numel(inputMaps)
-    positiveMask = positiveMask .* inputMaps{i}.img>0;
-    negativeMask = negativeMask .* inputMaps{i}.img<0;
+AllX=[];
+for i=1:numel(inputMaps)
+    if i>1
+        positiveMask = positiveMask .* inputMaps{i}.img>0;
+        negativeMask = negativeMask .* inputMaps{i}.img<0;
+    end
+    AllX=[AllX,inputMaps{i}.img(:)];
 end
+AllX(isnan(AllX))=0;
 mask.both = logical(positiveMask + negativeMask);
 mask.pos = positiveMask;
 mask.neg = negativeMask;
 
 % Initialize output map
-outputMap = inputMaps{1};
-outputMap.img = nan(size(outputMap.img));
+outputMap = inputMaps{1}; % use for space
+outputMap.img = nan(size(outputMap.img)); % set all voxels to nan
 
-% Multiply agreeing voxels
-outputMap.img(positiveMask) = inputMaps{1}.img(positiveMask);
-outputMap.img(negativeMask) = inputMaps{1}.img(negativeMask);
-for i=2:numel(inputMaps)
-    switch mode
-        case {'mult','multiplication','multiply','*'}
-            outputMap.img(positiveMask) = outputMap.img(positiveMask) .* inputMaps{i}.img(positiveMask);
-            outputMap.img(negativeMask) = outputMap.img(negativeMask) .* inputMaps{i}.img(negativeMask);
-        case {'sum','+'}
-            outputMap.img(positiveMask) = outputMap.img(positiveMask) + inputMaps{i}.img(positiveMask);
-            outputMap.img(negativeMask) = outputMap.img(negativeMask) + inputMaps{i}.img(negativeMask);
-    end
+
+switch mode(1:3)
+    
+    case 'avg'
+        if length(mode)>3
+            minagree=str2double(mode(4:end));
+        else
+            minagree=size(AllX,2); % all have to agree
+        end
+
+        outputMap.img(:)=mean(AllX,2);
+        pos=sum(AllX>0,2);
+        neg=sum(AllX<0,2);
+        outputMap.img((pos<minagree).*outputMap.img(:)>0)=nan;
+        outputMap.img((neg<minagree).*outputMap.img(:)<0)=nan;
+
+    case 'sum'
+        if length(mode)>3
+            minagree=str2double(mode(4:end));
+        else
+            minagree=size(AllX,2); % all have to agree
+        end
+
+        outputMap.img(:)=sum(AllX,2);
+        pos=sum(AllX>0,2);
+        neg=sum(AllX<0,2);
+        outputMap.img((pos<minagree).*outputMap.img(:)>0)=nan;
+        outputMap.img((neg<minagree).*outputMap.img(:)<0)=nan;
+
+    case 'mul'
+        minagree=size(AllX,2); % all have to agree (always the case for multiplications
+
+        outputMap.img(:)=prod(abs(AllX),2);
+        pos=sum(AllX>0,2);
+        neg=sum(AllX<0,2);
+        outputMap.img(logical((pos<minagree).*(neg<minagree)))=nan;
+        outputMap.img(logical(neg))=-outputMap.img(logical(neg)); % retain sign
 end
 
-% Ensure that negatively agreeing voxels have negative values
-outputMap.img(negativeMask) = -abs(outputMap.img(negativeMask));
+% set all zeros to nan
+outputMap.img(all(AllX==0,2))=nan;
+
 
 if exist('zz','var')
     switch zz

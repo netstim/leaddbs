@@ -1,11 +1,22 @@
-function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor, ref)
-% Filter fibers based on the active contacts and stimulation amplitudes
+function fiberFiltered = ea_filterfiber_stim(ftr, coords, stimVector, type, factor)
+% Pre-filter fibers based on the active contacts and stimulation amplitudes.
+% This allows to reduce the computational burden, but in some cases should be
+% disabled!
+% By Butenko and Li, konstantinmgtu@gmail.com
+
+arguments
+    ftr         % Lead-DBS structure for fibers
+    coords      % Lead-DBS array of contact coordinates
+    stimVector  % stimulation for particular source
+    type        {mustBeTextScalar} % VAT approximation model, 'kuncel' or 'madler'
+    factor      {mustBeNumeric}    % multiplicative factor for radius of VAT approximation
+end
 
 fprintf('\nCollecting stimulation parameters...\n')
 
 % Active contacts indices
-if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
-    stimProtocol = S;
+if iscell(stimVector) % stimSetMode, stimProtocol (cell of csv files) provided
+    stimProtocol = stimVector;
     stimProtocol = cellfun(@(f) table2array(readtable(f, ReadVariableNames=false)), stimProtocol, 'Uni', 0)';
     % special case for unilateral StimSets
     % assign a null stim protocol for the other side
@@ -39,36 +50,29 @@ if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     end
     
 else % normal mode
-    if ischar(S) && isfile(S) % stimparameters.mat provided
-        load(S, 'S');
-    end
 
-    activeContacts = cell(size(S.activecontacts));
+    stimVector(isnan(stimVector)) = 0;
+    activeContacts = cell(size(coords));
     for i=1:length(activeContacts)
-        activeContacts{i} = find(S.activecontacts{i});
+        activeContacts{i} = find(stimVector(i,:));
     end
     
     % define the stim vector as in OSS-DBS (sources are merged)
-    stimAmplitudes = cell(size(S.amplitude));
-    eleNum = length(coords); % Number of electrodes
-    conNum = cellfun(@(x) size(x,1), coords); % Number of contacts per electrode
-    conNum = conNum(find(conNum, 1));
-    stimVector = ea_getStimVector(S, eleNum, conNum);
-    for side = 1:size(S.amplitude,2)
-        for cnt = 1:size(stimVector(side,:),2)
-            if isnan(stimVector(side,cnt))
-                stimAmplitudes{side}(cnt) = 0.0;
-            else 
-                stimAmplitudes{side}(cnt) = abs(stimVector(side,cnt)); % sign does not matter for Kuncel-VTA
-            end
-        end
+    stimAmplitudes = cell(size(coords));
+    %stimVector = ea_getStimVector(S, 2, conNum);
+    for side = 1:size(coords,2)        
+        stimAmplitudes{side} = abs(stimVector(side,:)); % sign does not matter for Kuncel-VTA
     end
 end
 
 % Active contacts coordinates
 stimCoords = cell(size(coords));
 for i=1:length(stimCoords)
-    stimCoords{i} = coords{i}(activeContacts{i},:);
+    if  isempty(coords{i})
+        stimCoords{i} = [0 0 0];  % placeholder
+    else
+        stimCoords{i} = coords{i}(activeContacts{i},:);
+    end
 end
 
 % Only keep amplitudes for active contacts
@@ -90,8 +94,6 @@ switch lower(type)
         fprintf('\nEstimating radius based on Maedler et al. 2012...\n')
 end
 
-
-
 % Calculate radius
 if ~exist('factor', 'var')
     factor = 1;  % Multiply the radius from the estimation by a fixed factor
@@ -102,12 +104,6 @@ for i=1:length(radius)
     disp(['Radius (mm): ', num2str(radius{i}), ' x ', num2str(factor)]);
     % Triple the radius since the model tends to underestimate activation
     radius{i} = radius{i} * factor;
-end
-
-% Load fiber connectome
-if ischar(ftr) && isfile(ftr)
-    fprintf('\nLoading fibers...\n');
-    ftr = load(ftr);
 end
 
 % Convert voxel coordinates to mm in case needed
@@ -123,11 +119,6 @@ end
 load([ea_space, 'spacedef.mat'], 'spacedef');
 primarytemplate = spacedef.templates{1};
 
-% Reference image when construct the spherical ROI, use MNI t1 by default
-if ~exist('ref','var')
-    ref = [ea_space, primarytemplate, '.nii'];
-end
-
 % Check if fibers pass through the ROI
 fibConn = zeros(length(ftr.idx), length(stimAmplitudes));
 fiberFiltered = cell(size(stimAmplitudes));
@@ -136,7 +127,7 @@ for i=1:length(radius)
         disp('No stimulation found, skipping...');
     else
         fprintf('\nConstructing spherical ROI...\n');
-        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0, ref);
+        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0, [ea_space, primarytemplate, '.nii']);
 
         % Find indices within sphere ROI region
         sphereROIInd = find(sphereROI.img(:));

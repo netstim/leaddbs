@@ -5,7 +5,7 @@ function [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj)
 % also returns global indices of the first fibers in pathways and the
 % corresponding list of pathways' names
 
-myDir = [ea_getconnectomebase('dMRI_multitract'), obj.connectome];
+myDir = [ea_getconnectomebase('dMRI_MultiTract'), obj.connectome];
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
 myFiles = myFiles(~endsWith({myFiles.name}, '_ADJ.mat'));
 
@@ -17,6 +17,8 @@ C = cell(1,numel(myFiles));
 C_idx = cell(1,numel(myFiles));
 
 disp('Merging different pathways ...')
+
+assume_mirrored = 1;  % the alg. checks if all pathways have this flag true, otherwise set to false
 
 for k = 1:length(myFiles)
     baseFileName = myFiles(k).name;
@@ -34,6 +36,15 @@ for k = 1:length(myFiles)
 
     C{k} = fiber_file.fibers;
     C_idx{k} = fiber_file.idx;
+    
+    % check if mirrored
+    if isfield(fiber_file,'mirrored')
+        if fiber_file.mirrored == 0
+            assume_mirrored = 0;
+        end
+    else
+        assume_mirrored = 0;
+    end
 
     glob_index = glob_index + num_of_fibers;
 end
@@ -42,6 +53,7 @@ ftr = fiber_file; % just initialization
 % merge cell contents along axis 0
 ftr.fibers = cat(1, C{:});
 ftr.idx = cat(1, C_idx{:});
+ftr.mirrored = assume_mirrored;
 
 if isprop(obj.M, 'pseudoM')
     if obj.M.pseudoM == 1
@@ -84,23 +96,44 @@ for sub=1:numPatient
             C_fibState{k} = C{k};
 
             if side == 1
+                side_name = 'right';
                 BIDS_side = '_model-ossdbs_hemi-R_tract-'; % this block is only executed for OSS-DBS
                 BIDS_side_merged = '_model-ossdbs_hemi-R';
             else
+                side_name = 'left';
                 BIDS_side = '_model-ossdbs_hemi-L_tract-';
                 BIDS_side_merged = '_model-ossdbs_hemi-L';
             end
 
-            %BIDS notation
+            % BIDS notation
             [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
             subSimPrefix = [subj_tag, '_sim-'];
             fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
+            pam_result_folder = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+                ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM'];
+            pam_file = [pam_result_folder, filesep, fiberActivation_file];
 
-            pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-                ea_nt(0), 'gs_',obj.M.guid,filesep, fiberActivation_file];
+            % temp crutch to look in the old location
+            if ~exist(pam_file,'file')
+                pam_file_old = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+                ea_nt(0), 'gs_',obj.M.guid, filesep, fiberActivation_file];
+                if exist(pam_file_old,'file')
+                    if ~exist(pam_result_folder, 'dir')
+                        mkdir(pam_result_folder)
+                    end
+                    copyfile(pam_file_old,pam_file);
+                end
+            end
 
             try
                 fib_state_raw = load(char(pam_file));
+
+                if isempty(fib_state_raw.fibers)
+                    C_fibState{k}(:,5) = 0;
+                    C_fibState_idx{k} = C_idx{k};
+                    continue
+                end
+
             catch  % if activation file for the pathway does not exist, assign 0 activation
                 C_fibState{k}(:,5) = 0;
                 C_fibState_idx{k} = C_idx{k};
@@ -139,17 +172,22 @@ for sub=1:numPatient
             C_fibState_idx{k} = C_idx{k};
         end
 
-        ftr2 = fib_state_raw; % just initialization
-        % merge cell contents along axis 0
-        ftr2.fibers = cat(1, C_fibState{:});
-        ftr2.idx = cat(1, C_fibState_idx{:});
-
-        % store as fiberActivation_side.mat in the corresp. stim folder
-        [filepath,~,~] = fileparts(pam_file);
-        %BIDS notation
-        [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
-        subSimPrefix = [subj_tag, '_sim-'];
-        fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
-        save(fiberActivation_merged, '-struct', 'ftr2');
+        if ~exist('fib_state_raw')
+            ea_cprintf('CmdWinWarnings', "   No fiber activation files were found for %s on the %s side \n",subj_tag,side_name)
+        else
+            ftr2 = fib_state_raw; % just initialization
+            % merge cell contents along axis 0
+            ftr2.fibers = cat(1, C_fibState{:});
+            ftr2.idx = cat(1, C_fibState_idx{:});
+    
+            % store as fiberActivation_side.mat in the corresp. stim folder
+            [filepath,~,~] = fileparts(pam_file);
+            %BIDS notation
+            [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
+            subSimPrefix = [subj_tag, '_sim-'];
+            fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
+            save(fiberActivation_merged, '-struct', 'ftr2');
+            clear fib_state_raw;
+        end
     end
 end

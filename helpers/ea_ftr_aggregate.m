@@ -1,20 +1,24 @@
-function [fibers, idx, partition] = ea_ftr_aggregate(ftrFiles, outputFile, sel, type, filtermask)
+function [fibers, idx, partition] = ea_ftr_aggregate(ftrFiles, outputFile, opts)
 % Aggregate fibers in the input FTR files
-% 
-% Arguments:
-%     ftrFiles: input FTR files
-%     outputFile: output file
-%     sel: number/interval/index of selected fibers
-%     type: type of 'sel', can be 'number', 'interval' and 'index'
 %
 % Example:
-%     ea_ftr_aggregate(ftrFiles, 'FTR.mat');                     Aggregate fibers in ftrFiles
-%     ea_ftr_aggregate(ftrFiles, 'FTR.mat', 20000, 'number');    Sample 20000 fibers and aggregate
-%     ea_ftr_aggregate(ftrFiles, 'FTR.mat', 2, 'interval');      Sample with interval 2 and aggregate
-%     ea_ftr_aggregate(ftrFiles, 'FTR.mat', 1:2:20000, 'index'); Sample the specified fibers and aggregate
+%     ea_ftr_aggregate(ftrFiles, 'FTR.mat');                              % Aggregate fibers in ftrFiles
+%     ea_ftr_aggregate(ftrFiles, 'FTR.mat', sel=20000, type='number');    % Sample 20000 fibers and aggregate
+%     ea_ftr_aggregate(ftrFiles, 'FTR.mat', sel=2, type='interval');      % Sample with interval 2 and aggregate
+%     ea_ftr_aggregate(ftrFiles, 'FTR.mat', sel=1:2:20000, type='index'); % Sample the specified fibers and aggregate
 
-if ~exist('filtermask','var')
-    filtermask='';
+arguments
+    ftrFiles        {mustBeText}                                                 % Input FTR files
+    outputFile      {mustBeTextScalar}                                           % Output file name
+    opts.sel        {mustBeInteger}                                              % number/interval/index of selected fibers
+    opts.type       {mustBeMember(opts.type, {'number', 'interval', 'index'})}   % Type of 'opts.sel'
+    opts.mask       {mustBeFile}                                                 % Filter mask for output
+    opts.ref        {mustBeFile}                                                 % Reference space when exporting trk
+end
+
+ftrFiles = GetFullPath(ftrFiles);
+if ~all(isfile(ftrFiles))
+    ea_error(sprintf('Missing FTR file[s]:\n%s\n', strjoin(ftrFiles(~isfile(ftrFiles)), '\n')), showdlg=0, simpleStack=1);
 end
 
 fibers = [];
@@ -23,18 +27,18 @@ partition = []; % Store Num fibers of each FTR file
 
 for i=1:length(ftrFiles)
     fprintf('Aggregating fibers from %d/%d FTR files...\n', i, length(ftrFiles));
-    if nargin < 3 % Simple aggregate
+    if ~isfield(opts, 'sel') % Simple aggregate
         ftr = load(ftrFiles{i});
     else % Sample and aggregate
-        if numel(sel) == 1 % sel is a single number
-            if nargin < 4 % Treat as sample number by default if type not specified
+        if isscalar(opts.sel) % sel is a single number
+            if ~isfield(opts, 'type') % Treat as sample number by default if type not specified
                 warning('Number type not specified! Used as sample number.')
-                type = 'number';
+                opts.type = 'number';
             end
         else % sel is a serial of numbers
-            type = 'index';
+            opts.type = 'index';
         end
-        [ftr.fibers, ftr.idx] = ea_ftr_sample(ftrFiles{i}, sel, type);
+        [ftr.fibers, ftr.idx] = ea_ftr_sample(ftrFiles{i}, opts.sel, opts.type);
     end
 
     fibers = [fibers;ftr.fibers];
@@ -46,16 +50,16 @@ end
 fibers(:, 4) = repelem(1:numel(idx), idx);
 
 % filter
-if ~isempty(filtermask)
-    [~,~,ext]=fileparts(filtermask);
+if isfield(opts, 'mask')
+    [~,~,ext]=fileparts(opts.mask);
     if strcmp(ext,'.gz')
         tmpfn=tempname;
-        copyfile(filtermask,[tmpfn,'.nii.gz']);
+        copyfile(opts.mask,[tmpfn,'.nii.gz']);
         gunzip([tmpfn,'.nii.gz']);
         ea_delete([tmpfn,'.nii.gz']);
-        filtermask=[tmpfn,'.nii'];
+        opts.mask=[tmpfn,'.nii'];
     end
-    filter=ea_open_vol(filtermask); 
+    filter=ea_open_vol(opts.mask); 
     fibvox=fibers;
     fibvox(:,4)=1;
     fibvox=(filter.mat\fibvox');
@@ -78,4 +82,10 @@ ftr = load(ftrFiles{1});
 ftr.fibers = fibers;
 ftr.idx = idx;
 save(outputFile, '-struct', 'ftr', '-v7.3');
-ea_ftr2trk(outputFile);
+
+if ~isfield(opts, 'ref')
+    spacedef = ea_getspacedef;
+    opts.ref = [ea_space, spacedef.templates{1}, '.nii'];
+end
+
+ea_ftr2trk(outputFile, opts.ref);

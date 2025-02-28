@@ -32,6 +32,8 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
             ea_normalize_spmshoot(options);
         case lower({'EasyReg (Iglesias 2023)', 'EasyReg'})
             ea_normalize_easyreg(options);
+        case lower({'SynthMorph (Hoffmann 2024)', 'SynthMorph'})
+            ea_normalize_synthmorph(options);
         otherwise
             warning('Normalization method not recognized...');
             if options.prefs.diary
@@ -50,6 +52,7 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
     end
 
     if options.overwriteapproved && isfolder(options.subj.brainshiftDir)
+        ea_segmask_cleanup(options);
         ea_cprintf('CmdWinWarnings', 'Normalization has been rerun. Please also rerun brain shift correction!\n');
     end
 end

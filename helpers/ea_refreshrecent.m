@@ -10,6 +10,7 @@ end
 if ismember(['No recent ', type, ' found'], recentfolders) % No recent folder found, set to empty
     recentfolders = {};
 else
+    recentfolders = unique(erase(recentfolders, filesep + textBoundary("end")), 'stable');
     if strcmp(type, 'patients')
         recentfolders = regexp(recentfolders, ['(?<=\', filesep, 'leaddbs\', filesep, 'sub-).+'], 'match', 'once');
     elseif strcmp(type, 'groups')

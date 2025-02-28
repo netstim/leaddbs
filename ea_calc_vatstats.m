@@ -117,9 +117,11 @@ for iside=1:length(options.sides)
         if ~exist('K','var') % e.g. maedler model used
             try
                 K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
-            catch
-                keyboard
-                if isnan(VAT{side}.VAT) % empty VTA
+            catch ME
+                PL = [];
+                ea_cprintf('CmdWinErrors', 'Failed to compute convex hull\n%s\n', ME.message);
+                if isnan(VAT{side}.VAT) % empty VT
+                    ea_cprintf('CmdWinErrors', 'Empty VTA found!\n');
                     continue
                 end
             end
@@ -275,8 +277,8 @@ function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
 % set visibility
 try
     set(atls, 'Visible', getstate(onoff));
-catch
-    keyboard
+catch ME
+    ea_cprintf('CmdWinErrors', 'Failed to set visibility!\n%s\n', ME.message);
 end
 % log visibility
 tvalue=getappdata(resultfig,what);

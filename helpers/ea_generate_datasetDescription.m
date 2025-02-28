@@ -1,9 +1,10 @@
-function ea_generate_datasetDescription(dest_filepath,flag,postop_modality)
-[parent_dir,parent_file] = fileparts(dest_filepath);
-dataset_description.Name = parent_file;
+function ea_generate_datasetDescription(datasetDir, flag, postop_modality)
+datasetDir = GetFullPath(datasetDir);
+[~, datasetName] = fileparts(erase(datasetDir, filesep + textBoundary("end")));
+dataset_description.Name = datasetName;
 dataset_description.BIDSVersion = '1.6.0';
-dataset_description.LEADVersion = '2.6';
-dataset_description.DatasetType = 'raw'; %for backwards compatibility, as suggested by BIDS (by default)
+dataset_description.LeadDBSVersion = ea_getvsn('local');
+dataset_description.DatasetType = 'raw'; % for backwards compatibility, as suggested by BIDS (by default)
 
 if exist('flag', 'var') && strcmp(flag, 'raw')
    dataset_description.DatasetType = 'rawdata';
@@ -15,25 +16,23 @@ if exist('flag', 'var') && strcmp(flag, 'raw')
    end
 end
 
-output_file = fullfile(parent_dir,parent_file,'dataset_description.json');
-json_fid = fopen(output_file,'w');
-encodejson = savejson('',dataset_description);
-fprintf(json_fid,encodejson);
+% if exist('flag','var') && strcmp(flag,'derivatives')
+%     [filepath,filename,ext] = fileparts(dest_filepath);
+%     description = generate_pipelineDescription(filename);
+%     dataset_description.DatasetType = 'derivatives';
+%     dataset_description.GeneratedBy.Name = filename;
+%     dataset_description.GeneratedBy.Description = description{1};
+%     dataset_description.HowToAcknowledge = '';
+% end
 
-if strcmp(flag,'root_folder')
-    generate_bidsIgnore(parent_dir,parent_file);
+outputFile = fullfile(datasetDir, 'dataset_description.json');
+savejson('', dataset_description, outputFile);
+
+if exist('flag','var') && strcmp(flag, 'root_folder')
+    generate_bidsIgnore(datasetDir);
 end
 
-%     if exist('flag','var') && strcmp(flag,'derivatives')
-%         [filepath,filename,ext] = fileparts(dest_filepath);
-%         description = generate_pipelineDescription(filename);
-%         dataset_description.DatasetType = 'derivatives'; 
-%         dataset_description.GeneratedBy.Name = filename;
-%         dataset_description.GeneratedBy.Description = description{1};
-%         dataset_description.HowToAcknowledge = '';
-%     end
-    
-    
+
 function description = generate_pipelineDescription(which_pipeline)
 if strcmp(which_pipeline,'coregistration')
     description = {'Co-registration performs linear registration between the anchor modality and the anat modality of your choice'};
@@ -60,13 +59,11 @@ else
 end
 
 
-function generate_bidsIgnore(parent_dir,parent_file)
-output_file_ignore = fullfile(parent_dir,parent_file,'.bidsignore');
-opfile_ignore_fid = fopen(output_file_ignore,'w');
-ignore_files = {'*CT*','*secondstepmask.nii','*thirdstepmask','*brainmask','*anchorNative*','*MNI152NLin2009bAsym*',...
-    '*preproc*','*brainshiftmethod.json','*.xlsx','coregMR*','coregCT*','normalize*','*method.json','*ea_*.txt','*.mat',...
-    '*rawimages*','export','miscellaneous','stimulations','atlases'};
-for files = 1:length(ignore_files)
-    ignore_filenames = [ignore_files{files} '\n'];
-    fprintf(opfile_ignore_fid,ignore_filenames);
-end
+function generate_bidsIgnore(datasetDir)
+ignore_files = {'*CT*','*secondstepmask.nii','*thirdstepmask','*brainmask',...
+    '*anchorNative*','*MNI152NLin2009bAsym*','*preproc*','*brainshiftmethod.json',...
+    '*.xlsx','coregMR*','coregCT*','normalize*','*method.json','*ea_*.txt','*.mat',...
+    '*rawimages*','export','miscellaneous','stimulations','atlases'}';
+tempFile = fullfile(datasetDir, '.bidsignore.txt'); %provide a temporary file for now since writecell cannot handle hidden files
+writecell(ignore_files, tempFile); %write cell to this temp file
+movefile(tempFile, fullfile(datasetDir, '.bidsignore'));  %rename temp file to the correct filename.

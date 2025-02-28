@@ -1,0 +1,15 @@
+Resources made public on "MarmosetBrainMapping.org" is licensed under Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) . You are free to share, use and modify these materials as long as you attribute the Marmoset Brain Mapping Project and provide a link to "MarmosetBrainMapping.org". If you use the materials in your publications or products, you must provide apporiate citations.
+
+The atlas data are derived from MarMarmoset Brain Mapping V3 (Liu C, et al. Marmoset Brain Mapping V3: Population multi-modal standard volumetric and surface-based templates. Neuroimage (2021) doi:10.1016/j.neuroimage.2020.117620.) after the following modifications:
+
+1. The (0,0,0) of V3 atlas is not located at AC. ThE srow matrix in the NIFTI header was modified to
+
+0.2 0 0 -14.6
+0 0.2 0 -25.7
+0 0 0.2 -13.3
+
+
+For Atlas-V1 (Cortical parcellaion) and 150um MRI data:
+Liu C, et al, A digital 3D atlas of the marmoset brain based on multi-modal MRI. Neuroimage (2018) doi: 10.1016/j.neuroimage.2017.12.004.
+For Atlas-V2 (White matter atlas) and 150um, 60um, 80um and 50um MRI data:
+Liu C, et al. A resource for detailed 3D mapping of white matter pathways in the marmoset brain. Nature Neuroscience (2020) doi:10.1038/s41593-019-0575-0.

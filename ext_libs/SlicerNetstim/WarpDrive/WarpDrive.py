@@ -104,8 +104,9 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.shrinkExpandButton = toolWidgets[4].effectButton
 
     # Add Tree View
+    self.correctionsManager = Tables.WarpDriveCorrectionsManager()
     correctionsLayout = qt.QVBoxLayout(self.ui.correctionsFrame)
-    correctionsLayout.addWidget(Tables.WarpDriveCorrectionsManager())
+    correctionsLayout.addWidget(self.correctionsManager)
 
     self.atlasesTable = Tables.AtlasesTable()
     atlasesLayout = qt.QVBoxLayout(self.ui.atlasesFrame)
@@ -245,6 +246,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     Called when the application closes and the module widget is destroyed.
     """
     self.cleanTools()
+    self.correctionsManager.removeObservers()
     self.removeObservers()
 
   def exit(self):

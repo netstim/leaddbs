@@ -34,7 +34,7 @@ for side = options.sides
     towarp{end+1} = reco.(usenative).coords_mm{side};
     towarp{end+1} = reco.(usenative).markers(side).head;
     towarp{end+1} = reco.(usenative).markers(side).tail;
-    towarp{end+1} = reco.(usenative).trajectory{side};
+    % towarp{end+1} = reco.(usenative).trajectory{side};
 end
 
 towarp = cell2mat(towarp');
@@ -54,9 +54,17 @@ for side = options.sides
     reco.mni.markers(side).tail = warpedcoord(cnt:cnt+offset-1,:);
     cnt = cnt+offset;
 
-    offset = size(reco.(usenative).trajectory{side},1);
-    reco.mni.trajectory{side} = warpedcoord(cnt:cnt+offset-1,:);
-    cnt = cnt+offset;
+    if length(options.elspec.etageidx) > 8
+        scaleFactor = options.elspec.contact_span*1.5;
+    else
+        scaleFactor = options.elspec.contact_span*2;
+    end
+
+    reco.mni.trajvector{side}=(reco.mni.markers(side).tail-reco.mni.markers(side).head)/norm(reco.mni.markers(side).tail-reco.mni.markers(side).head);
+    reco.mni.trajectory{side}=[reco.mni.markers(side).head-reco.mni.trajvector{side}*5;reco.mni.markers(side).head+reco.mni.trajvector{side}*scaleFactor];
+    reco.mni.trajectory{side}=[linspace(reco.mni.trajectory{side}(1,1),reco.mni.trajectory{side}(2,1),50)',...
+        linspace(reco.mni.trajectory{side}(1,2),reco.mni.trajectory{side}(2,2),50)',...
+        linspace(reco.mni.trajectory{side}(1,3),reco.mni.trajectory{side}(2,3),50)'];
 
     if ~isempty(reco.mni.markers(side).head)
         % Enforce the rotation of x and y markers in MNI space. Use the

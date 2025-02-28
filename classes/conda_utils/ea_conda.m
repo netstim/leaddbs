@@ -81,10 +81,13 @@ classdef (Abstract) ea_conda
             ea_cprintf('*Comments', 'miniforge installed...\n');
 
             % Set some conda configs
+            ea_conda.run('conda config --prepend channels conda-forge');
+
             [~, cmdout] = ea_conda.run('conda config --get ssl_verify');
             if isempty(cmdout)
                 ea_conda.run('conda config --set ssl_verify false');
             end
+
             [~, cmdout] = ea_conda.run('conda config --get auto_activate_base');
             if isempty(cmdout)
                 ea_conda.run('conda config --set auto_activate_base false');
@@ -95,12 +98,12 @@ classdef (Abstract) ea_conda
 
         % Run command (for example mamba or pip) in conda base environment
         function varargout = run(command)
-            if ispc
-                bin_folder = fullfile(ea_conda.install_path, 'Scripts');
-                setenv('PATH', [bin_folder ';' getenv('PATH')]);
+            pathEnv = getenv('PATH');
+
+            if isunix
+                setenv('PATH', [fullfile(ea_conda.install_path, 'bin') ':' getenv('PATH')]);
             else
-                bin_folder = fullfile(ea_conda.install_path, 'bin');
-                setenv('PATH', [bin_folder ':' getenv('PATH')]);
+                setenv('PATH', [ea_conda.install_path ';' fullfile(ea_conda.install_path, 'Scripts') ';' getenv('PATH')]);
             end
 
             if nargout <= 1
@@ -109,6 +112,9 @@ classdef (Abstract) ea_conda
                 [varargout{1}, varargout{2}]  = system(command);
                 varargout{2} = strip(varargout{2});
             end
+
+            % Restore env after running conda command
+            setenv('PATH', pathEnv)
         end
 
         function update_base
@@ -154,8 +160,9 @@ classdef (Abstract) ea_conda
 
         function run_install_call(install_call)
             ea_cprintf('*Comments', 'Installing miniforge...\n');
-            [status,~] = system(install_call);
+            [status, ~] = system(install_call);
             if status
+                ea_delete(ea_conda.install_path);
                 error('Failed to install miniforge');
             end
         end

@@ -102,8 +102,7 @@ options.earoot=ea_getearoot;
 % Initialize norm methods popupmenu
 ea_init_normpopup(handles, options.prefs.normalize.default);
 
-ea_processguiargs(handles,varargin)
-
+ea_processguiargs(handles,varargin);
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 

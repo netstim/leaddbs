@@ -59,6 +59,9 @@ classdef ea_sweetspot < handle
         kfold = 5 % divide into k sets when doing k-fold CV
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
+        ExternalModelFile = 'None'
+        useExternalModel = false;
+        visualizeExternalModel = 0;
     end
 
     properties (Access = private)
@@ -278,6 +281,7 @@ classdef ea_sweetspot < handle
 
             % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(patientsel),2);
+            Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2);
 
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
@@ -292,59 +296,100 @@ classdef ea_sweetspot < handle
                     test = cvp.test{c};
                 end
 
-                if ~exist('Iperm', 'var')
+                if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
+                    % load external model, and assign vals from the
+                    % external model.
+                    S=ea_sweetspot_importedModel2Efields(obj, obj.ExternalModelFile);;
                     if obj.cvlivevisualize
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                        [vals] = S.model_vals;
                         obj.draw(vals);
                         drawnow;
                     else
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                        [vals] = S.model_vals;
+
                     end
                 else
-                    if obj.cvlivevisualize
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals);
-                        drawnow;
+                    if ~exist('Iperm', 'var')
+                        if obj.cvlivevisualize
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                            obj.draw(vals);
+                            drawnow;
+                        else
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training));
+                        end
                     else
-                        [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
+                        if obj.cvlivevisualize
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
+                            obj.draw(vals);
+                            drawnow;
+                        else
+                            [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
+                        end
                     end
                 end
-
                 for side=1:numel(vals)
                     if ~isempty(vals{1,side})
                         switch obj.statlevel % also differentiate between methods in the prediction part.
                             case 'VTAs'
                                 efield = obj.results.efield{side}(patientsel(test),:)';
+                                efield_train = obj.results.efield{side}(patientsel(training),:)';
                                 efield(~isnan(efield)) = efield(~isnan(efield)) > obj.efieldthreshold;
+                                efield_train(~isnan(efield_train)) = efield_train(~isnan(efield_train)) > obj.efieldthreshold;
                                 switch lower(obj.basepredictionon)
                                     case 'mean of scores'
                                         Ihat(test,side) = ea_nanmean(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*efield,1);
+                                        Ihat_train_global(c,training,side) = ea_nanmean(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*efield_train,1);
                                     case 'sum of scores'
                                         Ihat(test,side) = ea_nansum(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*efield,1);
+                                        Ihat_train_global(c,training,side) = ea_nansum(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*efield_train,1);
                                     case 'peak of scores'
                                         Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*efield, obj.posvisible, obj.negvisible, 'peak');
+                                        Ihat_train_global(c,training,side) = ea_discfibers_getpeak(vals{1,side}.*efield_train, obj.posvisible, obj.negvisible, 'peak');
                                     case 'peak 5% of scores'
                                         Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*efield, obj.posvisible, obj.negvisible, 'peak5');
+                                        Ihat_train_global(c,training,side) = ea_discfibers_getpeak(vals{1,side}.*efield_train, obj.posvisible, obj.negvisible, 'peak5');
                                 end
                             case 'E-Fields'
                                 switch lower(obj.basepredictionon)
                                     case 'profile of scores: spearman'
                                         Ihat(test,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(test),:)','spearman'));
+                                        Ihat_train_global(c,training,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(training),:)','spearman'));
                                     case 'profile of scores: pearson'
                                         Ihat(test,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(test),:)','pearson'));
-                                   case 'profile of scores: bend'
+                                        Ihat_train_global(c,training,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(training),:)','pearson'));
+                                    case 'profile of scores: bend'
                                         Ihat(test,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(test),:)','bend'));
+                                        Ihat_train_global(c,training,side) = atanh(ea_corr(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible),obj.results.efield{side}(patientsel(training),:)','bend'));
                                     case 'mean of scores'
                                         Ihat(test,side) = ea_nanmean(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*obj.results.efield{side}(patientsel(test),:)',1);
+                                        Ihat_train_global(c,training,side) = ea_nanmean(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*obj.results.efield{side}(patientsel(training),:)',1);
                                     case 'sum of scores'
                                         Ihat(test,side) = ea_nansum(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*obj.results.efield{side}(patientsel(test),:)',1);
+                                        Ihat_train_global(c,training,side) = ea_nansum(obj.maskvals(vals{1,side},obj.posvisible,obj.negvisible).*obj.results.efield{side}(patientsel(training),:)',1);
                                     case 'peak of scores'
                                         Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)', obj.posvisible, obj.negvisible, 'peak');
+                                        Ihat_train_global(c,training,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(training),:)', obj.posvisible, obj.negvisible, 'peak');
                                     case 'peak 5% of scores'
                                         Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)', obj.posvisible, obj.negvisible, 'peak5');
+                                        Ihat_train_global(c,training,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(training),:)', obj.posvisible, obj.negvisible, 'peak5');
                                 end
                         end
                     end
+                end
+            end
+
+            % check if binary variable and not permutation test
+            if (~exist('Iperm', 'var') || isempty(Iperm)) && all(ismember(I(:,1), [0,1]))
+                % average across sides. This might be wrong for capsular response.
+                Ihat_av_sides = ea_nanmean(Ihat,2);
+
+                if isobject(cvp)
+                    % In-sample
+                    AUC = ea_logit_regression(0 ,Ihat_av_sides, I, 1:size(I,1), 1:size(I,1));
+                elseif isstruct(cvp)
+                    % actual training and test
+                    Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3); % in this case, dimens is (1, N, sides)
+                    AUC = ea_logit_regression(Ihat_train_global_av_sides(training)', Ihat_av_sides, I, training, test);
                 end
             end
 
@@ -420,7 +465,12 @@ classdef ea_sweetspot < handle
         end
 
         function export=draw(obj,vals)
-            if ~exist('vals','var')
+            if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None') && obj.visualizeExternalModel == 1
+                % load external model, and assign vals from the
+                % external model.
+                S=ea_sweetspot_importedModel2Efields(obj, obj.ExternalModelFile);
+                [vals] = S.model_vals;           
+            elseif ~exist('vals','var')
                 [vals]=ea_sweetspot_calcstats(obj);
             end
             obj.spotdrawn.vals=vals;

@@ -3,7 +3,7 @@ import numpy as np
 
 def getGridDefinition(node):
 
-  if isinstance(node, slicer.vtkMRMLScalarVolumeNode):
+  if isinstance(node, slicer.vtkMRMLScalarVolumeNode) or isinstance(node, slicer.vtkMRMLLabelMapVolumeNode):
     directionMatrix = vtk.vtkMatrix4x4()
     node.GetIJKToRASDirectionMatrix(directionMatrix)
     grid = node.GetImageData()

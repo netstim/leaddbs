@@ -77,9 +77,11 @@ else
         groupsuffx=['_group_',num2str(group)];
     end
     if exist('pperm', 'var')
-        h=ea_corrbox(I,Ihat,pperm,{title,empiricallabel,fibscorelabel},groupID,[],groupColors);
+        h=ea_corrbox(I(~isnan(Ihat)),Ihat(~isnan(Ihat)),pperm,{title,empiricallabel,fibscorelabel},groupID(~isnan(Ihat)),[],groupColors);
     else
-        h=ea_corrbox(I,Ihat,'permutation',{title,empiricallabel,fibscorelabel},groupID,[],groupColors);
+        h=ea_corrbox(I(~isnan(Ihat)),Ihat(~isnan(Ihat)),'permutation',{title,empiricallabel,fibscorelabel},groupID(~isnan(Ihat)),[],groupColors);
     end
+    assignin('base','Empirical',I);
+    assignin('base','Estimate',Ihat);
     try saveas(h,[fileparts(tractset.leadgroup),filesep,'fiberfiltering',filesep,tractset.ID,'_',tractset.responsevarlabel,'_',cvs,groupsuffx,'.png']); end
 end

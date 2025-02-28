@@ -1,13 +1,31 @@
-function ea_switchspace(~,~,spacename,mute)
-if startsWith(spacename,'->')
+function ea_switchspace(spacename, opts)
+arguments
+    spacename {mustBeTextScalar} = ''
+    opts.mute {mustBeNumericOrLogical} = false
+end
+
+if startsWith(spacename, '->')
     return
 end
 
-if ~exist('mute','var')
+if isempty(spacename)
+    spaces = dir(fullfile(ea_getearoot,'templates','space','*','spacedef.mat'));
+    [~, spaces] = cellfun(@fileparts, {spaces.folder}', 'UniformOutput', false);
+    spaces = setdiff(spaces, ea_getspace);
+    index = listdlg('PromptString', 'Select New Space', 'ListString', spaces, 'SelectionMode', 'single');
+    if isempty(index)
+        return;
+    else
+        spacename = spaces{index};
+    end
+end
+
+if ~opts.mute
     answ=questdlg('Please be aware that switching the default template space is a critical and more or less complicated step. Not all functions may perfectly work if you switch to a different default template as opposed to the ICBM2009b Nonlinear Asymmetric series. Are you sure you wish to switch to a different space?','Switch anatomical space','Sure','Cancel','Cancel');
 else
     answ='Sure';
 end
+
 if strcmp(answ,'Sure')
     ea_setprefs('space',spacename);
 
