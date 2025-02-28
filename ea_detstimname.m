@@ -23,7 +23,7 @@ end
 if isempty(stimname) || (isfield(options, 'gen_newstim') && options.gen_newstim==1)
     newstimname = ea_getnewstimname;
     if ~isempty(newstimname)
-        stimname{end+1} = ea_getnewstimname;
+        stimname{end+1} = newstimname;
     else
         return;
     end
