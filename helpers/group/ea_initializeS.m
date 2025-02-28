@@ -35,15 +35,18 @@ elseif nargin > 1
     elseif isfield(options, 'gen_newstim') && options.gen_newstim==1
         label = ea_detstimname(options);
         options.gen_newstim = 0;
-        if exist('handles', 'var') && isfield(handles, 'stimlabel')
-            if ~isempty(label)
-                handles.stimlabel.String = label;
-                if isempty(handles.stimlabel.Value)
-                    handles.stimlabel.Value = 1;
+        if exist('handles', 'var')
+            figure(handles.stimfig);
+            if isfield(handles, 'stimlabel')
+                if ~isempty(label)
+                    handles.stimlabel.String = label;
+                    if isempty(handles.stimlabel.Value)
+                        handles.stimlabel.Value = 1;
+                    end
+                else
+                    S = [];
+                    return;
                 end
-            else
-                S = [];
-                return;
             end
         end
     end
