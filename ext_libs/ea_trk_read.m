@@ -53,19 +53,22 @@ if header.hdr_size~=1000
 end
 
 if ~any(header.image_orientation_patient)
-    ea_cprintf('CmdWinWarnings', '"image_orientation_patient" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
+    % ea_cprintf('CmdWinWarnings', '"image_orientation_patient" was not set properly in the header!\nWill try to set it in a heuristic way.\n');
 
-    if header.vox_to_ras(1) > 0
-        header.image_orientation_patient(1:3) = [-1 0 0];
-    else
-        header.image_orientation_patient(1:3) = [1 0 0];
-    end
+    % if header.vox_to_ras(1) > 0
+    %     header.image_orientation_patient(1:3) = [-1 0 0];
+    % else
+    %     header.image_orientation_patient(1:3) = [1 0 0];
+    % end
+    % 
+    % if header.vox_to_ras(6) > 0
+    %     header.image_orientation_patient(4:6) = [0 -1 0];
+    % else
+    %     header.image_orientation_patient(4:6) = [0 1 0];
+    % end
 
-    if header.vox_to_ras(6) > 0
-        header.image_orientation_patient(4:6) = [0 -1 0];
-    else
-        header.image_orientation_patient(4:6) = [0 1 0];
-    end
+    ea_cprintf('CmdWinWarnings', '"image_orientation_patient" was not set properly in the header!\nFallback to [1 0 0 0 1 0] (LPS).\n');
+    header.image_orientation_patient = [1 0 0 0 1 0];
 end
 
 if ~any(ismember(header.pad2(1:3), 'RASLPI'))
