@@ -1300,9 +1300,13 @@ function setstimparamsbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Display a dialog box with options
-choice = questdlg('Select a programmer:', ...
-                  '', ...
-                  'Old Programmer', 'New Programmer', 'Old Programmer');
+options = getappdata(handles.leadfigure, 'options');
+if options.prefs.env.dev ...
+    && isfile(fullfile(options.earoot, 'programmer', 'app', 'release', ['LeadDBSProgrammer_', ea_getarch, '.zip']))
+    choice = questdlg('Select a programmer:', '', 'Old Programmer', 'New Programmer', 'Old Programmer');
+else
+    choice = 'Old Programmer';
+end
 
 % Handle user's response
 switch choice
@@ -1377,10 +1381,6 @@ switch choice
 
             save(ea_getGroupAnalysisFile(M.root), 'M');
         end
-
-    otherwise
-        % User canceled the dialog or closed it
-        disp('Dialog canceled or closed.');
 end
 
 
