@@ -356,9 +356,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString','Stimulation Control Figure',...
                 'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
         end
-        if ~strcmp(options.leadprod, 'group') ...
-                && options.prefs.env.dev ...
-                && isfile(fullfile(options.earoot, 'programmer', 'app', 'release', ['LeadDBSProgrammer_', ea_getarch, '.zip']))
+        if ~strcmp(options.leadprod, 'group')
+%                 && options.prefs.env.dev ...
+%                 && isfile(fullfile(options.earoot, 'programmer', 'app', 'release', ['LeadDBSProgrammer_', ea_getarch, '.zip']))
             stimbutton = uipushtool(ht,'CData',ea_get_icn('programmer'),...
                 'TooltipString','Lead Programmer',...
                 'ClickedCallback',{@leadprogrammer,elstruct,resultfig,options});
@@ -631,6 +631,8 @@ end
 
 
 function leadprogrammer(hobj, ev, elstruct, resultfig, options)
+handles = getappdata(options.leadfigure, 'handles');
+ea_initialize_programmer(handles, options.bids, 'stimulate');
 [input_file_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
 currentOS = ea_getarch;
 if isfolder(releaseDir)

@@ -5,22 +5,22 @@ function [input_file_path, releaseDir] = ea_input_programmer(options, numElectro
 releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
 
 %% Convert stimparameters.mat to json, handle inputData.json
-inputStruct.nativeViewer = options.native;
-inputStruct.estimateInTemplate = options.prefs.machine.vatsettings.estimateInTemplate;
 inputStruct.patientname = options.patientname;
 inputStruct.numElectrodes = numElectrodes;
-inputStruct.electrodeModel = options.elmodel;
+inputStruct.electrodeModels = options.elmodel;
 
 stimDir = fullfile(options.subj.stimDir, ea_getspace);
 ea_mkdir(stimDir);
 
 inputStruct.stimDir = stimDir;
-
+inputStruct.filepath = options.bids.datasetDir;
+inputStruct.type = 'leaddbs';
+inputStruct.mode = 'stimulate';
+inputStruct.leadpath = ea_getearoot;
 stimFileName = [options.patientname, '_desc-stimparameters'];
 stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
 [~, stimFolder] = fileparts(fileparts(stimMatFile));
 stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
-
 if isempty(stimMatFile)
     % Create new stimulation label, set S to empty
     inputStruct.labels = {[char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))]};
@@ -29,7 +29,9 @@ else
     % Aggregate existing stimulations
     for i=1:numel(stimMatFile)
         S = ea_checkStimParams(stimMatFile{i});
-
+        if ~isfield(S, 'template')
+            S.template = 0;
+        end
         if isempty(S.label)
             S.label = [char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))];
         end
