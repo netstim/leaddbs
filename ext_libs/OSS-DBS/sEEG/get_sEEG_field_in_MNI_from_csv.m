@@ -15,13 +15,13 @@ Field_array = table2array(readtable(field_in_csv));
 Field_coords = Field_array(:,2:4);
 
 % convert to native voxel space (will be as floating numbers)
-Field_vox_native = ea_mm2vox(Field_coords, anchor)';
+Field_vox_native = ea_mm2vox(Field_coords, anchor_img)';
 
 ea_dispt('Transforming spatial coordinates to MNI space...');
 Field_coords_MNI  = ea_map_coords(Field_vox_native, ...
     anchor_img, ...
     transform, ...
-    anchor_img, 'ANTS')';
+    [ea_space,'t1.nii'], 'ANTS')';
 
 %ea_dispt('Creating nifti header for export...');
 % create nifti

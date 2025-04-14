@@ -12,8 +12,8 @@ reslice2segmask = false; % if true, all VTRs are stored in the same voxel space 
 VTR = false;             % if false, computes stimulation volumes instead
 Stim_Mode = 'VC';       % CC - current-controlled, VC - voltage-controlled
 warp2MNI = false;   % warp from the anchor space to MNI
-transform = "JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative.nii.gz";      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
-
+transform = 'JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative-ANTS.nii.gz';      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
+                                                                                 % IMPORTANT: make sure ants is mentioned in the name and use single quotes
 % auto-definitions
 [basepath,~,~] = fileparts(sEEG_table);
 if VTR
@@ -80,7 +80,7 @@ for vtr_i = 1:size(Result_folders,1)
     if warp2MNI
         % ToDo: Test!
         if ~isfile(file2save_MNI)
-            get_sEEG_field_in_MNI_from_csv(field_in_csv, file2save, VTR, anchor, transform)
+            get_sEEG_field_in_MNI_from_csv(field_in_csv, file2save_MNI, VTR, anchor, transform)
         end
     end
 end
