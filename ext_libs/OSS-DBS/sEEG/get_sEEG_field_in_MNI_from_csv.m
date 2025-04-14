@@ -6,7 +6,7 @@ arguments
     field_in_csv     % where the csv file with field components is stored
     file2save        % path for niftis to save
     phi_field        % if true, potential is exported
-    anchor_img
+    anchor_img       % path to the anchor image
     transform        % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
 end
 
@@ -19,7 +19,7 @@ Field_vox_native = ea_mm2vox(Field_coords, anchor)';
 
 ea_dispt('Transforming spatial coordinates to MNI space...');
 Field_coords_MNI  = ea_map_coords(Field_vox_native, ...
-    anchor, ...
+    anchor_img, ...
     transform, ...
     anchor_img, 'ANTS')';
 
