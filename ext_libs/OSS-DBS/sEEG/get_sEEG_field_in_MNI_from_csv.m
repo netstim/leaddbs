@@ -43,7 +43,7 @@ gv=cell(3,1);
 % hardwired N of points, if changed, also change Lattice shape in lead_settings.py
 n_points = 71;
 for axis = 1:3
-    gv{axis}=linspace(min(round(Field_coords(:,axis))),max(round(Field_coords(:,axis))),n_points);
+    gv{axis}=linspace(min(round(Field_coords_MNI(:,axis))),max(round(Field_coords_MNI(:,axis))),n_points);
 end
 chun1=randperm(n_points); chun2=randperm(n_points); chun3=randperm(n_points); 
 ROI.mat=mldivide([(chun1);(chun2);(chun3);ones(1,n_points(1))]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,n_points)]')';
