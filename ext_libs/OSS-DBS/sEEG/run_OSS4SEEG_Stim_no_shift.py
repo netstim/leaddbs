@@ -216,13 +216,24 @@ if __name__ == '__main__':
             if index_on_electrode == len(contacts): 
                 # last contact on the electrode
                 flip = True
-                previous_cnt_inx = cnt_active_idx[0]-1
-                cnts_first_last.append(SEEG_recos_df[(SEEG_recos_df['name'] == contacts[previous_cnt_inx]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)])
-                cnts_labels.append(contacts[previous_cnt_inx])
+
+                # check the previous contact coordinates from the reconstruction file                
+                row_index = SEEG_recos_df[(SEEG_recos_df['name'] == used_contacts[0]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)].index.min()
+                previous_row_index = SEEG_recos_df.index[SEEG_recos_df.index.get_loc(row_index) - 1]
+                if SEEG_recos_df.loc[previous_row_index,'Electrode_ID'] == Electrode_ID:
+                    cnts_labels.append(SEEG_recos_df.loc[previous_row_index,'name'])
+                    cnts_first_last.append(SEEG_recos_df[(SEEG_recos_df['name'] == cnts_labels[-1]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)])
+                    
             else:
-                next_cnt_inx = cnt_active_idx[0]+1
-                cnts_labels.append(contacts[next_cnt_inx])
-                cnts_first_last.append(SEEG_recos_df[(SEEG_recos_df['name'] == contacts[next_cnt_inx]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)])
+                # check the next contact coordinates from the reconstruction file      
+                row_index = SEEG_recos_df[(SEEG_recos_df['name'] == used_contacts[0]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)].index.min()
+                next_row_index = SEEG_recos_df.index[SEEG_recos_df.index.get_loc(row_index) + 1]
+                if SEEG_recos_df.loc[next_row_index,'Electrode_ID'] == Electrode_ID:
+                    cnts_labels.append(SEEG_recos_df.loc[next_row_index,'name'])
+                    cnts_first_last.append(SEEG_recos_df[(SEEG_recos_df['name'] == cnts_labels[-1]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)])
+                
+                #cnts_labels.append(contacts[next_cnt_inx])
+                #cnts_first_last.append(SEEG_recos_df[(SEEG_recos_df['name'] == contacts[next_cnt_inx]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)])
         else:
             cnts_first_last.append(SEEG_recos_df[(SEEG_recos_df['name'] == used_contacts[-1]) & (SEEG_recos_df['Electrode_ID'] == Electrode_ID)])
             cnts_labels.append(used_contacts[-1])
