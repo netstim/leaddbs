@@ -10,10 +10,67 @@ from scipy.stats import qmc
 import csv
 import h5py
 import json
+from scipy.optimize import minimize
 
 # hardwired: max total currents allowed
 one_pol_current_threshold = 8.0  # in mA
 total_current_threshold = 8.0
+abs_current_threshold = 12.0
+
+
+def l1_pos_neg_max(array):
+    """
+    Computes the L1 norm of positive and negative values for each row of a 2D NumPy array,
+    and returns a vector containing the maximum of the two norms for each row.
+
+    Args:
+        array (numpy.ndarray): A 2D NumPy array.
+
+    Returns:
+        numpy.ndarray: A 1D NumPy array where each element is the maximum of the L1 norm
+                       of the positive and negative values in the corresponding row of the input array.
+    """
+    positive_values = np.clip(array, 0, np.inf)  # Get positive values, set negative to 0
+    negative_values = np.clip(array, -np.inf, 0) # Get negative values, set positive to 0
+
+    l1_positive = np.sum(positive_values, axis=1)  # L1 norm of positive values for each row
+    l1_negative = np.sum(np.abs(negative_values), axis=1)  # L1 norm of negative values for each row
+
+    max_l1 = np.maximum(l1_positive, l1_negative)  # Get the maximum of the two L1 norms for each row
+    return max_l1
+
+def scale_array_to_l1_norm(array, target_norm, norm_type):
+    """
+    Scales an array of vectors (where each vector is a row) to have a specified L1 norm.
+
+    Args:
+        array (numpy.ndarray): The array to scale.  Each row represents a vector.
+        target_norm (float): The desired L1 norm for each vector.
+        norm_type (string): type of norm to check
+
+    Returns:
+        numpy.ndarray: The array with scaled vectors.
+    """
+
+    if norm_type == 'L1':
+        original_norms = np.sum(np.abs(array), axis=1)  # L1 norms of each row
+    elif norm_type == 'L1_sign':
+        original_norms = np.sum(array, axis=1)  # L1 norms of each row
+    elif norm_type == 'L1_polarity':
+        original_norms = l1_pos_neg_max(array)
+        
+    for vector_i in range(array.shape[0]):
+    
+        if original_norms[vector_i] < target_norm:
+            continue
+        else:
+            scaling_factor = target_norm / original_norms[vector_i]
+            #if norm_type == 'L1_polarity':
+            #    print(scaling_factor, array[vector_i,:],original_norms[vector_i])
+            array[vector_i,:] = array[vector_i,:] * scaling_factor
+
+    return array
+
 
 def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm_threshold, side):
 
@@ -40,10 +97,10 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
     el_type = determine_el_type(Electrode_model)
     if el_type == 'concentric4':
         N_contacts = 4
-        sample_size = 5000  # half training, half test
+        sample_size = 8000  # half training, half test
     else:
         N_contacts = 8
-        sample_size = 10000
+        sample_size = 16000
 
     # ## split to train and test and sample
     # # see "Test Set Sizing Via Random Matrix Theory" by A. Dubbs
@@ -74,10 +131,16 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
     else:
         samples[:, :] = samples[:, :] * (conc_threshold[1] - conc_threshold[0]) + conc_threshold[0]
 
+    # downscale (if necessary to abide current bounds)
+    samples = scale_array_to_l1_norm(samples, abs_current_threshold,'L1')
+    samples = scale_array_to_l1_norm(samples, total_current_threshold,'L1_sign')
+    samples = scale_array_to_l1_norm(samples, one_pol_current_threshold,'L1_polarity')
+
     # randomly nullify entries in a 25% of samples to marginalize
     import random
     for i in range(samples.shape[0]):
         if i % 4 == 0:
+            # set a random number (1-3 or 1-6) of contacts to 0 mA
             if N_contacts == 4:
                 N_null = int(round(random.uniform(1, 3)))
                 C_list = [0, 1, 2, 3]
@@ -93,7 +156,7 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
             for j in inx_null:
                 samples[i, j] = 0.0
 
-            # increase currents below 0.5 mA
+            # double if all currents below 0.5 mA
             if np.all(abs(samples[i, :]) < 0.5):
                 samples[i, :] = samples[i, :] * 2
 
@@ -119,8 +182,13 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
     # exclude samples that violate current sum thresholds
     trainSize_actual, testSize_actual = [0,0]
     for i in range(samples.shape[0]):
-        if np.sum(samples[i,:]) < total_current_threshold and np.where(samples[i,:] < 0, samples[i,:], 0).sum(
-                0) > -1*one_pol_current_threshold and np.where(samples[i,:] > 0, samples[i,:], 0).sum(0) < one_pol_current_threshold:
+        if np.round(np.sum(np.abs(samples[i,:])),6) <= abs_current_threshold \
+            and np.sum(samples[i,:]) <= total_current_threshold \
+            and np.round(np.where(samples[i,:] < 0, samples[i,:], 0).sum(0),6) >= -1*one_pol_current_threshold \
+            and np.round(np.where(samples[i,:] > 0, samples[i,:], 0).sum(0),6) <= one_pol_current_threshold:
+                
+        #if np.sum(samples[i,:]) < total_current_threshold and np.where(samples[i,:] < 0, samples[i,:], 0).sum(
+        #        0) > -1*one_pol_current_threshold and np.where(samples[i,:] > 0, samples[i,:], 0).sum(0) < one_pol_current_threshold:
 
             stim_prot = samples[i].tolist()
             with open(current_protocols_path, 'a') as fd:
@@ -131,7 +199,7 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
                 trainSize_actual += 1
             else:
                 testSize_actual += 1
-
+                
     # create a json that describes Current protocols
     StimSets_info = {
         'trainSize_actual': trainSize_actual,
