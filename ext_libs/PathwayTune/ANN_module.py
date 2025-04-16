@@ -177,7 +177,7 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
     model.add(Dense(y_train.shape[1], activation='sigmoid'))
 
     adam = optimizers.Adamax(lr=learn_rate)
-    model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy', 'mse'])
+    model.compile(optimizer=adam, loss='mean_squared_error', metrics=['mse'])
     model.fit(X_train, y_train, epochs=N_epochs, verbose=1)
     results = model.evaluate(X_test, y_test)
 
@@ -214,6 +214,28 @@ def train_test_ANN(stim_dir,res_folder, TrainTest_currents_file, trainSize, Err_
 
     import matplotlib
     matplotlib.rcParams['figure.dpi'] = 200
+    plt.figure()
+
+    total_current = np.sum(X_test,axis=1)
+    total_abs_current = np.sum(np.abs(X_test),axis=1)
+    
+    print(total_current.shape, error_ANN.shape)
+
+    from scipy.stats import spearmanr, pearsonr
+    pearson_r,pearson_p = pearsonr(total_current,abs(error_ANN[:,0]))   
+    pearson_r2,pearson_p2 = pearsonr(total_abs_current,abs(error_ANN[:,0]))   
+
+    plt.scatter(total_current, abs(error_ANN[:,0])) # Add label for legend
+    plt.text(0.05, 0.90, f"Pearson's R = {pearson_r:.2f}, p = {pearson_p:.5f}", transform=plt.gca().transAxes, fontsize=10) #Positioning
+    plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],pathway_filtered[0]+'_ANN_abs_errors_on_Test_versus_total_current' + SIDE_SUFFIX[side] + '.png'), format='png',
+                dpi=500)
+    
+    plt.figure()
+    plt.scatter(total_abs_current, abs(error_ANN[:,0])) # Add label for legend
+    plt.text(0.05, 0.85, f"Pearson's R = {pearson_r2:.2f}, p = {pearson_p2:.5f}", transform=plt.gca().transAxes, fontsize=10) #Positioning
+    plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],pathway_filtered[0]+'_ANN_abs_errors_on_Test_versus_abs_current' + SIDE_SUFFIX[side] + '.png'), format='png',
+                dpi=500)
+
     plt.figure()
 
     pathways_max_errors = {}  # also store
