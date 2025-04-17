@@ -11,7 +11,7 @@ import json
 import subprocess
 import re
 
-from run_OSS4SEEG_Stim_no_shift import check_electrode_availability, get_geom_definitions
+from run_OSS4SEEG_Stim_no_shift import check_electrode_availability, get_geom_definitions, extract_index
 from ossdbs.electrodes.defaults import default_electrode_parameters
 
 if __name__ == '__main__':
@@ -35,10 +35,11 @@ if __name__ == '__main__':
         SEEG_recos_mat = h5py.File(str(SEEG_recos), "r")
         # create a pandas dataframe analogous to above
 
-    if sys.argv[2] == 'CC':
-        current_controlled = True
-    else:
-        current_controlled = False
+    # if sys.argv[2] == 'CC':
+    #     current_controlled = True
+    # else:
+    #     current_controlled = False
+    current_controlled = False   # always use VC for VTRs
 
     if len(sys.argv) > 3:
         Electrode_ID = int(sys.argv[3])
@@ -65,7 +66,7 @@ if __name__ == '__main__':
         flip = False;
         
         # IMPORTANT: this is a hard assumption that contact labels start with 1!
-        index_on_electrode = int(re.sub(r"\D", "",cnt_ID)) - 1  # integer index
+        index_on_electrode = extract_index(cnt_ID) - 1  # integer index
         if index_on_electrode < 0:
             print("Numbering for contact labels is expected to start from 1!")
             raise SystemExit
@@ -76,7 +77,7 @@ if __name__ == '__main__':
             flip = True
         else:
             cnt_ID2 = contacts2simulate[cnt_i+1]
-            index_on_electrode2 = int(re.sub(r"\D", "",cnt_ID2)) - 1
+            index_on_electrode2 = extract_index(cnt_ID2) - 1
             if index_on_electrode2 - index_on_electrode != 1:
                 # last contact, use previous to define a trajectory
                 cnt_ID2 = contacts2simulate[cnt_i-1]
@@ -143,10 +144,10 @@ if __name__ == '__main__':
                       "Contacts": [         # we need only one contact! Move the forth one for now!
                         {
                           "Contact_ID": index_on_electrode+1,
-                          "Active": False,
-                          "Current[A]": amp,
-                          "Voltage[V]": False,
-                          "Floating": True,
+                          "Active": True,
+                          "Current[A]": False,
+                          "Voltage[V]": amp,
+                          "Floating": False,
                           "SurfaceImpedance[Ohmm]": {
                             "real": 0.0,
                             "imag": 0.0
@@ -169,7 +170,7 @@ if __name__ == '__main__':
                     {
                         "Name": "BrainSurface",
                         "Active": True,
-                        "Current[A]": -1*amp,
+                        "Current[A]": False,
                         "Voltage[V]": 0.0,
                     }
                 ],

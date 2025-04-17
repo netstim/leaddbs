@@ -128,6 +128,34 @@ def get_geom_definitions(contact_locations):
     
     return Dimensions, grid_center, unit_directions
     
+def extract_index(cnt_id):
+    """
+    Extracts the numerical index from the end of a string.
+
+    Args:
+        cnt_id (str): The string that contains the index at the end.
+
+    Returns:
+        int: The numerical index, or None if no index is found.
+    """
+    # Iterate through the string from the end
+    for i in range(len(cnt_id) - 1, -1, -1):
+        # Check if the character is a digit
+        if cnt_id[i].isdigit():
+            # If it is, start extracting the number from this position
+            start_index = i
+            # Keep moving left until we find a non-digit character
+            while start_index > 0 and cnt_id[start_index - 1].isdigit():
+                start_index -= 1
+            # Extract the number
+            num_str = cnt_id[start_index:]
+            # Convert the string to an integer and return it
+            return int(num_str)
+        # If the character is not a digit, and we are at the beginning of the string
+        # it means there is no number, so return None
+        elif i == 0:
+            return None
+    return None # added for the case where the string does not contain any digits
 
 if __name__ == '__main__':
 
@@ -212,7 +240,7 @@ if __name__ == '__main__':
             # to build the trajectory
             
             # IMPORTANT: this is a hard assumption that contact labels start with 1!
-            index_on_electrode = int(re.sub(r"\D", "",used_contacts[0]))
+            index_on_electrode = extract_index(used_contacts[0])
             if index_on_electrode == len(contacts): 
                 # last contact on the electrode
                 flip = True
