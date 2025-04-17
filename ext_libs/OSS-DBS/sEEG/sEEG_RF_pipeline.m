@@ -9,7 +9,7 @@ segmaskFile = '/home/forel/Documents/data/SEEG/tst/segmask.nii';
 reslice2segmask = false; % if true, all VTRs are stored in the same voxel space defined by segmask
                         % this is handy when voxelwise operations are used
                         % but each VTR nii is > 100 MBs
-VTR = false;             % if false, computes stimulation volumes instead
+VTR = false;             % if true, computes recording fields (aka volume of tissue recorded)
 Stim_Mode = 'VC';       % CC - current-controlled, VC - voltage-controlled
 warp2MNI = false;   % warp from the anchor space to MNI
 transform = 'JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative-ANTS.nii.gz';      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
