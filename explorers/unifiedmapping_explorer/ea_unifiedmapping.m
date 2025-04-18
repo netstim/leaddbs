@@ -360,10 +360,10 @@ classdef ea_unifiedmapping < handle
                     vatlist = obj.M.ROI.list;
                 else
                     %TODO:I have removed this from the networkmapping explorer folder and added it to the unified mapping explorer. Please adjust based on the future of the tool. I refrained from making a copy since the name of this script makes sense and would be redundant to change the name
-                    vatlist = ea_networkmapping_getvats(obj); 
+                    vatlist = ea_unified_nm_getvats(obj); 
                 end
                 %TODO:I have removed this from the networkmapping explorer folder and added it to the unified mapping explorer. Please adjust based on the future of the tool. I refrained from making a copy since the name of this script makes sense and would be redundant to change the name
-                [AllX] = ea_networkmapping_calcvals(vatlist, obj.calcsettings.netmap_connectome);
+                [AllX] = ea_unified_nm_calcvals(vatlist, obj.calcsettings.netmap_connectome);
 
                 obj.results.networkmapping.(ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome)).connval = AllX;
 
