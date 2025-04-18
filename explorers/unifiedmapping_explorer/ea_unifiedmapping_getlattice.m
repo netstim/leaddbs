@@ -1,4 +1,4 @@
-function [vatlist,FilesExist] = ea_discfibers_getlattice(obj)
+function [vatlist,FilesExist] = ea_unifiedmapping_getlattice(obj)
 % Return list of VATs
 
 numPatient = length(obj.allpatients);
@@ -11,7 +11,7 @@ for sub=1:numPatient
     subSimPrefix = [subj_tag, '_sim-'];
 
     % we load stim parameters and check for each side if there was a stimulation
-    stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(obj.calcspace), 'gs_', obj.M.guid];
+    stimFolder = [obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(obj.calcsettings.calcspace), 'gs_', obj.M.guid];
     stimParams = [stimFolder, filesep, subj_tag, '_desc-stimparameters.mat'];
 
     if ~isfile(stimParams)
