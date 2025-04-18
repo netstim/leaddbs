@@ -859,19 +859,22 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             copyfile(old_path,new_path);
             %then rename%
             if startsWith(which_file,'glanat')  %already renamed
+                coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
+                if isempty(coregfiles)
+                    coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
+                end
                 if contains(which_file,'glanatComposite')
                     reference = fullfile(ea_space,'t1.nii');
-                elseif contains(which_file,'glanatInverseComposite')
-                    coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
-                    if isempty(coregfiles)
-                        coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
+                    if ~isempty(coregfiles)
+                        generate_pair_ref = fullfile(coregfiles(1).folder,coregfiles(3).name); %this is the reference for the inverse transform. If the forward is available, inverse is needed. 
                     end
+                elseif contains(which_file,'glanatInverseComposite')
                     if ~isempty(coregfiles)
                         reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
                     end
-                    
+                    generate_pair_ref = fullfile(ea_space,'t1.nii'); %this is the reference for the forward transform. If the inverse is available, forward is needed. 
                 end
-                checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,reference)
+                checkAndGeneratePair(which_file,new_path,patient_name,generate_pair_ref)
                 if endsWith(which_file,'.h5')
                     bids_name = [patient_name,'_',bids_name];
                     outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
@@ -1498,10 +1501,9 @@ function [modalities, anchorModality] = checkModalities(coregAnatFolder)
         modalities = [anchorModalities(2:end); otherModalities];
     end
 
-function checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,ref)
+function checkAndGeneratePair(which_file,new_path,patient_name,ref)
 
 
-imageDim = '3';
 %determine expected pair filename
 if contains(which_file, 'InverseComposite')
     expectedPair = fullfile(new_path, strrep(which_file, 'InverseComposite', 'Composite'));
@@ -1511,28 +1513,14 @@ else
     bids_name = 'from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz';
 end
 
-input_file = fullfile(source_patient_path,'glanat.nii');
-if ~exist(input_file,'file')
-    disp("Pair transform could not be generated.");
-    return
-else
-    input_transform = fullfile(new_path,which_file);
-    [~,output_filename,~] = fileparts(expectedPair);
-    if ~isfile(expectedPair)
-        fprintf('Pair file missing: %s. Generating...\n', expectedPair);
-        basedir = [ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
-        applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
-        cmd = [applyTransforms, ...
-            ' --verbose 1' ...
-            ' --dimensionality ',imageDim, ...
-            ' --float 1' ...
-            ' --input ',ea_path_helper(input_file), ...
-            ' --transform ',ea_path_helper(input_transform), ...
-            ' --reference-image ',ea_path_helper(ref),...
-            ' --output ',ea_path_helper(expectedPair)];
-        ea_runcmd(cmd);
-        disp(['Renaming file ' output_filename ' to ' bids_name]);
-
-        movefile(expectedPair,fullfile(new_path,[patient_name,'_',bids_name]));
-    end
+input_transform = fullfile(new_path,which_file);
+[~,output_filename,~] = fileparts(expectedPair);
+if ~isfile(expectedPair)
+    fprintf('Pair file missing: %s. Generating...\n', expectedPair);
+    basedir = [ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
+    applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
+    cmd = [applyTransforms ' -r ' ea_path_helper(ref) ' -t ' ea_path_helper(input_transform) ' -o [' ea_path_helper(expectedPair) ',1]'];
+    ea_runcmd(cmd);
+    disp(['Renaming file ' output_filename ' to ' bids_name]);
+    movefile(expectedPair,fullfile(new_path,[patient_name,'_',bids_name]));
 end

@@ -392,7 +392,8 @@ end
 
 function checkFlag = isLegacyFolder(inputFolder)
 
-checkFlag = isfile(fullfile(inputFolder, 'ea_ui.mat')) || isfile(fullfile(inputFolder, 'ea_reconstruction.mat'));
+checkFlag = isfile(fullfile(inputFolder, 'ea_ui.mat')) || isfile(fullfile(inputFolder, 'glanat.nii')) || ...
+    isfile(fullfile(inputFolder, 'ea_reconstruction.mat')); %sometimes reconstruction file is not available
 
 
 function [checkFlag, BIDSRoot, subjId] = isBIDSFolder(inputFolder)
