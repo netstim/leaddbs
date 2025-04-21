@@ -866,7 +866,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 if contains(which_file,'glanatComposite')
                     reference = fullfile(ea_space,'t1.nii');
                     if ~isempty(coregfiles)
-                        generate_pair_ref = fullfile(coregfiles(1).folder,coregfiles(3).name); %this is the reference for the inverse transform. If the forward is available, inverse is needed. 
+                        generate_pair_ref = fullfile(coregfiles(1).folder,coregfiles(1).name); %this is the reference for the inverse transform. If the forward is available, inverse is needed. 
                     end
                 elseif contains(which_file,'glanatInverseComposite')
                     if ~isempty(coregfiles)
