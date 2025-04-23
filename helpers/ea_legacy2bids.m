@@ -32,7 +32,7 @@ else
    end
 end
 
-%define names of the new directorey structur
+%define names of the new directorey structure
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
 fmri_keywords = {'(Yeo 2011)','HCP 612','HCP 1200','PPMI 74','Depression 38'};
 
@@ -1517,10 +1517,7 @@ input_transform = fullfile(new_path,which_file);
 [~,output_filename,~] = fileparts(expectedPair);
 if ~isfile(expectedPair)
     fprintf('Pair file missing: %s. Generating...\n', expectedPair);
-    basedir = [ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
     ea_slicer_invert_transform(input_transform, ref, expectedPair)
-    %applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
-    %cmd = [applyTransforms ' -r ' ea_path_helper(ref) ' -t ' ea_path_helper(input_transform) ' -o [' ea_path_helper(expectedPair) ',1]'];
     disp(['Renaming file ' output_filename ' to ' bids_name]);
     movefile(expectedPair,fullfile(new_path,[patient_name,'_',bids_name]));
 end

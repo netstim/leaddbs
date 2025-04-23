@@ -19,7 +19,7 @@ antsdir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 applyTransforms = ea_getExec([antsdir, 'antsApplyTransforms'], escapePath = 1);
 
 
-cmd = [applyTransforms ' -r ' ea_path_helper(reference) ' -t ' ea_path_helper(transform_file_name) ' -o [' ea_path_helper(out_file_name) ',0]'];
+cmd = [applyTransforms ' -r ' ea_path_helper(reference) ' -t ' ea_path_helper(transform_file_name) ' -o [' ea_path_helper(out_file_name) ',1]'];
 
 if exist('float', 'var')
     if ischar(float) && strcmp(float, 'float') || float
