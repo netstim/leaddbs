@@ -1518,9 +1518,9 @@ input_transform = fullfile(new_path,which_file);
 if ~isfile(expectedPair)
     fprintf('Pair file missing: %s. Generating...\n', expectedPair);
     basedir = [ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
-    applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
-    cmd = [applyTransforms ' -r ' ea_path_helper(ref) ' -t ' ea_path_helper(input_transform) ' -o [' ea_path_helper(expectedPair) ',1]'];
-    ea_runcmd(cmd);
+    ea_slicer_invert_transform(input_transform, ref, expectedPair)
+    %applyTransforms = ea_getExec([basedir, 'antsApplyTransforms'], escapePath = 1);
+    %cmd = [applyTransforms ' -r ' ea_path_helper(ref) ' -t ' ea_path_helper(input_transform) ' -o [' ea_path_helper(expectedPair) ',1]'];
     disp(['Renaming file ' output_filename ' to ' bids_name]);
     movefile(expectedPair,fullfile(new_path,[patient_name,'_',bids_name]));
 end
