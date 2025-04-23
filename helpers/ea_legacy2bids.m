@@ -858,41 +858,48 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            if startsWith(which_file,'glanat') && endsWith(which_file,'.h5') %already renames
-                bids_name = [patient_name,'_',bids_name];
-                outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
-                if contains(which_file,'glanatComposite.h5')
+            if startsWith(which_file,'glanat')  %already renamed
+                coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
+                if isempty(coregfiles)
+                    coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
+                end
+                if contains(which_file,'glanatComposite')
                     reference = fullfile(ea_space,'t1.nii');
-                elseif contains(which_file,'glanatInverseComposite.h5')
-                    coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
-                    if isempty(coregfiles)
-                        coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
+                    if ~isempty(coregfiles)
+                        generate_pair_ref = fullfile(coregfiles(1).folder,coregfiles(1).name); %this is the reference for the inverse transform. If the forward is available, inverse is needed. 
                     end
+                elseif contains(which_file,'glanatInverseComposite')
                     if ~isempty(coregfiles)
                         reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
                     end
+                    generate_pair_ref = fullfile(ea_space,'t1.nii'); %this is the reference for the forward transform. If the inverse is available, forward is needed. 
                 end
-                try
-                    ea_conv_antswarps(fullfile(new_path,which_file), reference);
-                    movefile(outfile,fullfile(new_path,bids_name));
-                catch
-                    bids_h5name = strrep(bids_name,'.nii.gz','.h5');
-                    movefile(fullfile(new_path,which_file),fullfile(new_path,bids_h5name));
-                    if ~exist('reference', 'var')
-                        ea_cprintf('CmdWinWarnings', ['Transform: %s\nCould not convert the transform to *.nii.gz format since anchor image is missing.\n', ...
-                            'Please double check the legacy folder and consider reruning the pipeline to generate necessary files.\n'], fullfile(new_path,bids_h5name));
-                    else
-                        ea_cprintf('CmdWinWarnings', ['Transform: %s\nFailed to convert the transform to *.nii.gz format. ', ...
-                            'File might be corrupted.\n'], fullfile(new_path,bids_h5name));
+                checkAndGeneratePair(which_file,new_path,patient_name,generate_pair_ref)
+                if endsWith(which_file,'.h5')
+                    bids_name = [patient_name,'_',bids_name];
+                    outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
+                    try
+                        ea_conv_antswarps(fullfile(new_path,which_file), reference);
+                        movefile(outfile,fullfile(new_path,bids_name));
+                    catch
+                        bids_h5name = strrep(bids_name,'.nii.gz','.h5');
+                        movefile(fullfile(new_path,which_file),fullfile(new_path,bids_h5name));
+                        if ~exist('reference', 'var')
+                            ea_cprintf('CmdWinWarnings', ['Transform: %s\nCould not convert the transform to *.nii.gz format since anchor image is missing.\n', ...
+                                'Please double check the legacy folder and consider reruning the pipeline to generate necessary files.\n'], fullfile(new_path,bids_h5name));
+                        else
+                            ea_cprintf('CmdWinWarnings', ['Transform: %s\nFailed to convert the transform to *.nii.gz format. ', ...
+                                'File might be corrupted.\n'], fullfile(new_path,bids_h5name));
+                        end
                     end
-                end
 
-            else
-                disp(['Renaming file ' which_file ' to ' bids_name]);
-                rename_path = fullfile(new_path,which_file);
-                derivatives_cell{end+1,1} = fullfile(old_path);
-                derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-                movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+                else
+                    disp(['Renaming file ' which_file ' to ' bids_name]);
+                    rename_path = fullfile(new_path,which_file);
+                    derivatives_cell{end+1,1} = fullfile(old_path);
+                    derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+                    movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+                end
             end
         end
     end
@@ -1160,7 +1167,7 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
 function model_name = add_model(stimFolder)
     stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
     if ~isempty(stimParams)
-        S = ea_loadstimulation(stimParams{1})
+        S = ea_loadstimulation(stimParams{1});
         model_name = ea_simModel2Label(S.model);
     else
         ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
@@ -1493,3 +1500,24 @@ function [modalities, anchorModality] = checkModalities(coregAnatFolder)
         anchorModality = anchorModalities{1};
         modalities = [anchorModalities(2:end); otherModalities];
     end
+
+function checkAndGeneratePair(which_file,new_path,patient_name,ref)
+
+
+%determine expected pair filename
+if contains(which_file, 'InverseComposite')
+    expectedPair = fullfile(new_path, strrep(which_file, 'InverseComposite', 'Composite'));
+    bids_name = 'from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz';
+else
+    expectedPair = fullfile(new_path, strrep(which_file, 'Composite', 'InverseComposite'));
+    bids_name = 'from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz';
+end
+
+input_transform = fullfile(new_path,which_file);
+[~,output_filename,~] = fileparts(expectedPair);
+if ~isfile(expectedPair)
+    fprintf('Pair file missing: %s. Generating...\n', expectedPair);
+    ea_slicer_invert_transform(input_transform, ref, expectedPair)
+    disp(['Renaming file ' output_filename ' to ' bids_name]);
+    movefile(expectedPair,fullfile(new_path,[patient_name,'_',bids_name]));
+end
