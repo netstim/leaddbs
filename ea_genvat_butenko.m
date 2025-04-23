@@ -213,27 +213,27 @@ for source_index = first_active_source:4
 
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
-                system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
+                env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
-            system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
+            env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
                 ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
             [~,input_name,~] = fileparts(parameterFile);
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
 
             % run OSS-DBS
-            [~, cmdout] = system(['ossdbs ', ea_path_helper(parameterFile_json)])
+            [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
 
             % detec error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
 
                 % increase the Bnd_Box dimensions
-                system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
+                env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
 
                 % run OSS-DBS
-                system(['ossdbs ', ea_path_helper(parameterFile_json)])
+                env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
             end
 
             % prepare NEURON simulation
@@ -255,14 +255,14 @@ for source_index = first_active_source:4
                 end
 
                 if settings.optimizer
-                    system(['python ', ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
+                    env.system(['python ', ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
                 else
                     if settings.prob_PAM
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
-                        system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                        env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                     else
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
-                        system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                        env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
                     end
                 end
 
