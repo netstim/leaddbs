@@ -874,7 +874,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                     end
                     generate_pair_ref = fullfile(ea_space,'t1.nii'); %this is the reference for the forward transform. If the inverse is available, forward is needed. 
                 end
-                checkAndGeneratePair(which_file,new_path,patient_name,generate_pair_ref)
+                checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,generate_pair_ref)
                 if endsWith(which_file,'.h5')
                     bids_name = [patient_name,'_',bids_name];
                     outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
@@ -1501,19 +1501,19 @@ function [modalities, anchorModality] = checkModalities(coregAnatFolder)
         modalities = [anchorModalities(2:end); otherModalities];
     end
 
-function checkAndGeneratePair(which_file,new_path,patient_name,ref)
+function checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,ref)
 
 
 %determine expected pair filename
 if contains(which_file, 'InverseComposite')
-    expectedPair = fullfile(new_path, strrep(which_file, 'InverseComposite', 'Composite'));
+    expectedPair = fullfile(source_patient_path, strrep(which_file, 'InverseComposite', 'Composite'));
     bids_name = 'from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz';
 else
-    expectedPair = fullfile(new_path, strrep(which_file, 'Composite', 'InverseComposite'));
+    expectedPair = fullfile(source_patient_path, strrep(which_file, 'Composite', 'InverseComposite'));
     bids_name = 'from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz';
 end
 
-input_transform = fullfile(new_path,which_file);
+input_transform = fullfile(source_patient_path,which_file);
 [~,output_filename,~] = fileparts(expectedPair);
 if ~isfile(expectedPair)
     fprintf('Pair file missing: %s. Generating...\n', expectedPair);
