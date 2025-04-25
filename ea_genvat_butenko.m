@@ -28,6 +28,7 @@ setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
 [settings,S] = ea_prepare_ossdbs(options,S);
+env = ea_conda_env('OSS-DBSv2');
 
 % some hardcoded parameters, can be added to GUI later
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
