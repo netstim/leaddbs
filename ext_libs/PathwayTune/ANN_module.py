@@ -56,33 +56,33 @@ def matplotlib_kdeplot(data, ax=None, bw_method=None, **kwargs):
     return ax
 
 
-def load_activation_results(res_folder: str, pathways: List[str], currents_shape: Tuple[int, int]) -> np.ndarray:
+def load_activation_results(res_folder: str, pathway: str, currents_shape: Tuple[int, int]) -> np.ndarray:
     """Loads activation results for each pathway from JSON files.
 
     Args:
         res_folder: Path to the results subfolder.
-        pathways: List of pathway names.
+        pathway: Name of the pathway for the ANN training.
         currents_shape: Shape of the currents array (number of protocols, number of contacts).
 
     Returns:
         A NumPy array containing activation results (percentage activated) for each protocol and pathway.
     """
-    activation_results = np.zeros((currents_shape[0], len(pathways)), dtype=float)
-    for path_i, pathway in enumerate(pathways):
-        for prot_i in range(currents_shape[0]):
-            pathway_file = os.path.join(res_folder, f'Pathway_status_{pathway}_{prot_i}.json')
-            if os.path.isfile(pathway_file):
-                with open(pathway_file, 'r') as fp:
-                    pam_res_dict = json.load(fp)
-                    activation_results[prot_i, path_i] = 0.01 * pam_res_dict['percent_activated']
+    activation_results = np.zeros((currents_shape[0],1), dtype=float)
+    for prot_i in range(currents_shape[0]):
+        pathway_file = os.path.join(res_folder, f'Pathway_status_{pathway}_{prot_i}.json')
+        if os.path.isfile(pathway_file):
+            with open(pathway_file, 'r') as fp:
+                pam_res_dict = json.load(fp)
+                activation_results[prot_i,0] = 0.01 * pam_res_dict['percent_activated']
+                
     return activation_results
 
 
-def filter_pathways(pathways: List[str], axons_in_path: np.ndarray, y_train_all: np.ndarray, y_test_all: np.ndarray) -> Tuple[np.ndarray, np.ndarray, List[str], Optional[np.ndarray], Optional[np.ndarray]]:
+def filter_pathways(pathway: str, axons_in_path: np.ndarray, y_train_all: np.ndarray, y_test_all: np.ndarray) -> Tuple[np.ndarray, np.ndarray, List[str], Optional[np.ndarray], Optional[np.ndarray]]:
     """Filters pathways based on minimum axon number and activation threshold.
 
     Args:
-        pathways: List of all simulated pathway names.
+        pathway: Name of the pathway for the ANN training.
         axons_in_path: NumPy array containing the number of axons in each pathway.
         y_train_all: All training activation results.
         y_test_all: All testing activation results.
@@ -97,7 +97,7 @@ def filter_pathways(pathways: List[str], axons_in_path: np.ndarray, y_train_all:
         if axons_in_path[i] >= MIN_AXON_NUMBER and np.max(y_train_all[:, i]) >= MIN_ACTIV_THRESHOLD and np.max(y_test_all[:, i]) >= MIN_ACTIV_THRESHOLD:
             y_train[:, i] = y_train_all[:, i]
             y_test[:, i] = y_test_all[:, i]
-            pathway_filtered.append(pathways[i])
+            pathway_filtered.append(pathway)
 
     y_train_filtered = y_train[:, ~np.all(y_train == -100.0, axis=0)]
     y_test_filtered = y_test[:, ~np.all(y_test == -100.0, axis=0)]
@@ -157,7 +157,7 @@ def analyze_and_plot_ann_errors(
     plt.figure()
     total_current = np.sum(X_test, axis=1)
     pearson_r, pearson_p = pearsonr(total_current, np.abs(error_ann[:, 0]))
-    plt.scatter(total_current*100.0, np.abs(error_ann[:, 0]))
+    plt.scatter(total_current*1000.0, np.abs(error_ann[:, 0]))
     plt.text(0.05, 0.90, f"Pearson's R = {pearson_r:.2f}, p = {pearson_p:.5f}",
              transform=plt.gca().transAxes, fontsize=10)
     plt.xlabel("Total current, mA")
@@ -169,7 +169,7 @@ def analyze_and_plot_ann_errors(
     plt.figure()
     total_abs_current = np.sum(np.abs(X_test), axis=1)
     pearson_r2, pearson_p2 = pearsonr(total_abs_current, np.abs(error_ann[:, 0]))
-    plt.scatter(total_abs_current*100.0, np.abs(error_ann[:, 0]))
+    plt.scatter(total_abs_current*1000.0, np.abs(error_ann[:, 0]))
     plt.text(0.05, 0.85, f"Pearson's R = {pearson_r2:.2f}, p = {pearson_p2:.5f}",
              transform=plt.gca().transAxes, fontsize=10)
     plt.xlabel("Absolute current, mA")
@@ -306,23 +306,19 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
 
     # Load PAM results
     if vat_recruit:
-        from VAT_pathway_recruitment import remove_failed_protocols, get_VAT_pathways
-        currents, activation_results_prelim = remove_failed_protocols(currents, None) # Assuming ActivationResults is loaded elsewhere in VAT context
-        pathways, axons_in_path = get_VAT_pathways(side)
-        if activation_results_prelim is None:
-            activation_results = load_activation_results(res_folder, pathways, currents.shape)
-        else:
-            activation_results = activation_results_prelim # Use pre-loaded if available
+        print("TBD")
+        raise SystemExit()
     else:
         # Determine pathways and load activation results
         from Pathways_Stats import get_simulated_pathways
         pathways, axons_in_path = get_simulated_pathways(side, stim_dir)
-        activation_results = load_activation_results(res_folder, pathways, currents.shape)
+        activation_results = load_activation_results(res_folder, pathway, currents.shape)
 
     # plot activation across the protocols 
     import matplotlib
     matplotlib.rcParams['figure.dpi'] = 200
     
+    plt.figure()
     plt.scatter(np.sum(currents,axis=1),activation_results[:,0]*100.0) # Add label for legend
     plt.xlabel("Absolute current, mA")
     plt.ylabel("Percent Activation")
@@ -331,7 +327,7 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
 
     # Filter pathways based on activity and axon number
     y_train_filtered, y_test_filtered, pathway_filtered = filter_pathways(
-        pathways, axons_in_path, activation_results[:train_size, :], activation_results[train_size:, :]
+        pathway, axons_in_path, activation_results[:train_size, :], activation_results[train_size:, :]
     )
     if not pathway_filtered:
         print("Low activation levels for ", pathway)
@@ -363,7 +359,7 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
 
     adam = optimizers.Adamax(lr=learn_rate)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['mse'])
-    model.fit(X_train_augmented, y_train_augmented, epochs=N_epochs, verbose=1)
+    model.fit(X_train_augmented, y_train_augmented, epochs=N_epochs, verbose=0)
     
     results = model.evaluate(X_test, y_test)
 

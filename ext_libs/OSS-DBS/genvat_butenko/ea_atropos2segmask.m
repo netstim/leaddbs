@@ -14,12 +14,12 @@ segmask = rawSegmask;
 segmask.fname = [stim_folder, filesep, 'segmask.nii'];
 
 % we need to re-number as GM_index = 1; WM_index = 2; CSF_index = 3;
-if contains(anchorModality, 'T1w')
+if contains(anchorModality, 'T1w') || contains(anchorModality, 'anat_t1')
     % csf - dark (0), grey matter - grey (1), white matter - bright (2),
     % misc (3)`
     segmask.img(segmask.img == 3) = 0;
     segmask.img(segmask.img == 0) = 3;
-elseif contains(anchorModality, 'T2w')
+elseif contains(anchorModality, 'T2w') || contains(anchorModality, 'anat_t2')
     % white matter - dark (1), grey matter - grey (2), csf - bright (3)
     segmask.img(rawSegmask.img == 1) = 2;
     segmask.img(rawSegmask.img == 2) = 1;
