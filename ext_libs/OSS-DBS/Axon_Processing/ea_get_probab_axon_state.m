@@ -1,12 +1,13 @@
-function ea_get_probab_axon_state(results_folder,plot_rates,damaged_as_activated)
+function ea_get_probab_axon_state(results_folder,plot_rates,settings,side)
 % Estimate probability of axon activation based on a sweep of parameters
 % (e.g. fiber diameters).
 % By Butenko and Li, konstantinmgtu@gmail.com
 
 arguments
-    results_folder          % path to save the output
-    plot_rates              {mustBeNumericOrLogical} = 0  % if true, plot activation rates over parameter sweep
-    damaged_as_activated    {mustBeNumericOrLogical} = 0  % if true, interpret axons intersected with the electrode (damaged) as activated
+    results_folder      % path to save the output
+    plot_rates          {mustBeNumericOrLogical}% if true, plot activation rates over parameter sweep
+    settings            % parameters for OSS-DBS simulation
+    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
 end
 
 % check which pathways were simulated and their percent activations
@@ -75,6 +76,13 @@ for pt_counter = 1:length(pathways)
 
         Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(scaling_i),'.mat']);
         load(Axon_state_file, 'fibers','ea_fibformat','connectome_name');
+        n_comp = sum(bsxfun(@eq, fibers(:,4), fibers(:,4)'), 2)';
+        % the number is the same since these are OSS-DBS axons
+        idx = n_comp(1) * ones(length(unique(fibers(:,4))),1);
+
+        if strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+            fibers = OSS_DBS_Damaged2Activated(settings,fibers,idx,side+1);
+        end
 
         % intialize new axon state file with probabilistic activations
         % morphologz defined by the first scaling!
@@ -91,12 +99,12 @@ for pt_counter = 1:length(pathways)
             % here we only count really activated ones
             fibers_state(fiber_i) = (fibers(idx_comp(1),5) == 1);
             % can also add damaged
-            if fibers_state(fiber_i) == 0 && damaged_as_activated
+            if fibers_state(fiber_i) == 0 && strcmp(settings.butenko_intersectStatus,'activated')
                 fibers_state(fiber_i) = (fibers(idx_comp(1),5) == -1 || fibers(idx_comp(1),5) == -3);
             end
 
-            % key line. Probability is estimated as number of success
-            % across scaling divided by the number of scalings
+            % The key line. Probability is estimated as the number of
+            % activations across scalings divided by the number of the scalings
             idx_comp_orig = find(fibers_prob(:,4)==fiber_i);
             fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_scalings;
         end

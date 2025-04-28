@@ -282,7 +282,7 @@ for source_index = first_active_source:4
 
         if settings.prob_PAM && all(~multiSourceMode)
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
-            ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,strcmp(settings.butenko_intersectStatus,'activated'));
+            ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,settings,side);
         end
 
         % clean-up time domain solution if outOfCore was used
