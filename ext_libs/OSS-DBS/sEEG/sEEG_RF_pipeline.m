@@ -25,7 +25,7 @@ end
 % segment the anchor modality
 % TBD: multimodal segmentation with SynthSeg
 if ~isfile(segmaskFile)
-    if ~isfile(multisegment) 
+    if ~isfile(multisegment)
         ea_synthseg(anchor, multisegment)
     end
     ea_convert_synthSeg2segmask(multisegment, segmaskFile);
@@ -34,22 +34,14 @@ end
 % Set OSS-DBS python path
 env = ea_conda_env('OSS-DBSv2');
 ea_checkOSSDBSInstallv2(env);
-binPath = getenv('PATH');
-if isunix
-    pythonPath = [env.path, filesep, 'bin'];
-    setenv('PATH', [pythonPath, ':', binPath]);
-else
-    pythonPath = [env.path,';',env.path,filesep,'Scripts'];
-    setenv('PATH', [pythonPath, ';', binPath]);
-end
 
 % call a python script to compute stim. volumes
 if VTR
-    system(['python3 ', ea_path_helper(OSS_sEEG_script), ' ', ea_path_helper(sEEG_table),  ' ',Stim_Mode])
+    env.system(['python ', ea_path_helper(OSS_sEEG_script), ' ', ea_path_helper(sEEG_table),  ' ',Stim_Mode])
 else
     % each electrode has a separate sitm protocol sheet
     for elec = 1:size(sEEG_stim_protocols,1)
-        system(['python3 ', ea_path_helper(OSS_sEEG_script), ' ', ea_path_helper(sEEG_table), ' ',ea_path_helper(sEEG_stim_protocols{elec,1}),  ' ',Stim_Mode, ' ', num2str(elec)])
+        env.system(['python ', ea_path_helper(OSS_sEEG_script), ' ', ea_path_helper(sEEG_table), ' ',ea_path_helper(sEEG_stim_protocols{elec,1}),  ' ',Stim_Mode, ' ', num2str(elec)])
     end
 end
 
@@ -62,13 +54,13 @@ end
 
 mono_field = {};
 for vtr_i = 1:size(Result_folders,1)
-   
+
     if VTR
         file2save = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_potential.nii'];  % can be adjusted as you wish, this is just an output
         file2save_MNI = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_potential_MNI.nii'];  % can be adjusted as you wish, this is just an output
         field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'oss_potentials_Lattice.csv'];
     else
-        file2save = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_efield.nii']; 
+        file2save = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_efield.nii'];
         file2save_MNI = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_efield_MNI.nii'];  % can be adjusted as you wish, this is just an output
         field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'E_field_Lattice.csv'];
     end

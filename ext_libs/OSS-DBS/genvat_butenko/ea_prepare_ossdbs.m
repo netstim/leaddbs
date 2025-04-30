@@ -12,16 +12,6 @@ end
 env = ea_conda_env('OSS-DBSv2');
 ea_checkOSSDBSInstallv2(env);
 
-% Set python path
-binPath = getenv('PATH');
-if isunix
-    pythonPath = [env.path, filesep, 'bin'];
-    setenv('PATH', [pythonPath, ':', binPath]);
-else
-    pythonPath = [env.path,';',env.path,filesep,'Scripts'];
-    setenv('PATH', [pythonPath, ';', binPath]);
-end
-
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
     ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], simpleStack = 1);
@@ -40,7 +30,7 @@ settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsula
 settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive_ethresh;
 % check what we simulate
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
-try 
+try
     % compute PAM over an uncertain parameter (set in the GUI)
     settings.prob_PAM = options.prefs.machine.vatsettings.butenko_prob_PAM;
     if settings.prob_PAM
@@ -60,7 +50,7 @@ settings.Estimate_In_Template = ~options.native;
 settings.stimSetMode = options.stimSetMode;
 
 % advance options
-try 
+try
     % check if OSS-DBS is called via ea_OSS_optimizer
     settings.optimizer = options.optimizer;
     if settings.optimizer
@@ -80,7 +70,7 @@ catch
     settings.optimizer = 0;
 end
 
-try 
+try
     % check if OSS-DBS is called for ANN training (StimSet case)
     settings.trainANN = options.trainANN;
 catch

@@ -16,16 +16,6 @@ end
 env = ea_conda_env('OSS-DBSv2');
 ea_checkOSSDBSInstallv2(env);
 
-% Set python path
-binPath = getenv('PATH');
-if isunix
-    pythonPath = [env.path, filesep, 'bin'];
-    setenv('PATH', [pythonPath, ':', binPath]);
-else
-    pythonPath = [env.path,';',env.path,filesep,'Scripts'];
-    setenv('PATH', [pythonPath, ';', binPath]);
-end
-
 %% First we generate training and test datasets (as StimSet) based on the electrode model and provided current limits
 
 % set S to max values
@@ -40,16 +30,16 @@ end
 if length(side) == 2
     disp("Electrodes in both hemispheres")
     for side = 0:1
-        system(['python', ' ', ea_getearoot, 'ext_libs/PathwayTune/TrainTest_Generator.py ', ...
+        env.system(['python', ' ', ea_getearoot, 'ext_libs/PathwayTune/TrainTest_Generator.py ', ...
             stim_folder, ' ', el_model_right, ' ', num2str(side), ' ', num2str(minCylindricCurrent), ' ', num2str(maxCylindricCurrent), ' ', num2str(minSegmentedCurrent), ' ', num2str(maxSegmentedCurrent)]);	% 0 is right side, 1 is the left side here
     end
 elseif side == 0
     disp("Only right electrode")
-    system(['python', ' ', ea_getearoot, 'ext_libs/PathwayTune/TrainTest_Generator.py ', ...
+    env.system(['python', ' ', ea_getearoot, 'ext_libs/PathwayTune/TrainTest_Generator.py ', ...
         stim_folder, ' ', el_model_right, ' ', num2str(side), ' ', num2str(minCylindricCurrent), ' ', num2str(maxCylindricCurrent), ' ', num2str(minSegmentedCurrent), ' ', num2str(maxSegmentedCurrent)]);	% 0 is right side, 1 is the left side here
 elseif side == 1
     disp("Only left electrode")
-    system(['python', ' ', ea_getearoot, 'ext_libs/PathwayTune/TrainTest_Generator.py ', ...
+    env.system(['python', ' ', ea_getearoot, 'ext_libs/PathwayTune/TrainTest_Generator.py ', ...
         stim_folder, ' ', el_model_left, ' ', num2str(side), ' ', num2str(minCylindricCurrent), ' ', num2str(maxCylindricCurrent), ' ', num2str(minSegmentedCurrent), ' ', num2str(maxSegmentedCurrent)]);	% 0 is right side, 1 is the left side here
 else
     disp("No electrodes found, check the reconstruction file")
