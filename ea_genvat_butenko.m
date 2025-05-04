@@ -240,7 +240,7 @@ for source_index = first_active_source:4
             % prepare NEURON simulation
             if settings.calcAxonActivation
 
-                if strcmp(settings.butenko_intersectStatus,'activated')
+                if ~strcmp(settings.butenko_intersectStatus,'damaged')
                     % we additionally correct for the tissue push and
                     % downscale the solution (equivalent of pulling VTAs into the electrode volume)
                     scaling = 0.80;  % estimate for our default comp. domain, see eq. for el. potential in co-axial cables
