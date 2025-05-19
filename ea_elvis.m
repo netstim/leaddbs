@@ -637,27 +637,44 @@ ea_initialize_programmer(handles, options.bids, 'stimulate');
 currentOS = ea_getarch;
 if isfolder(releaseDir)
     zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
+    version = '1.1.0';
     if ismac
         appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
+        appVersion = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app', 'Contents', 'Resources', 'assets', 'version.json');
         if ~isfile(appFile)
             unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
             system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
+        appVersion = loadjson(appVersion).version;
+        if ~isequal(appVersion, version)
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
+        end
     elseif isunix
         appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
+        appVersion = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'Contents', 'Resources', 'assets', 'version.json');
         if ~isfile(appFile)
             unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
+        end
+        appVersion = loadjson(appVersion).version;
+        if ~isequal(appVersion, version)
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
         end
     else
         appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
+        appVersion = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'Contents', 'Resources', 'assets', 'version.json');
         if ~isfile(appFile)
             unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
             savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
         end
+        if ~isequal(appVersion, version)
+            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
+            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
+        end
     end
-
     system([appFile, ' ', ea_path_helper(input_file_path)]);
     [S] = ea_process_programmer(options);
     if isfield(S, 'message')
@@ -675,7 +692,7 @@ if isfolder(releaseDir)
         stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
         ea_mkdir(stimFolder);
         stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
-        save(stimParams, 'S');
+        save(stimParams, 'S');        
     end
 
     ea_visprogrammer(resultfig, options, S, elstruct);

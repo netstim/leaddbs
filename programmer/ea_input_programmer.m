@@ -9,7 +9,8 @@ inputStruct.patientname = options.patientname;
 inputStruct.numElectrodes = numElectrodes;
 inputStruct.electrodeModels = options.elmodel;
 
-stimDir = fullfile(options.subj.stimDir, ea_getspace);
+% stimDir = fullfile(options.subj.stimDir, ea_getspace);
+stimDir = fullfile(options.subj.stimDir, ea_nt(options));
 ea_mkdir(stimDir);
 
 inputStruct.stimDir = stimDir;
@@ -26,7 +27,6 @@ if isempty(stimMatFile)
     inputStruct.labels = {[char(datetime('now', 'Format', 'yyyyMMddHHmmSS'))]};
     inputStruct.S(1) = ea_initializeS(inputStruct.labels, options);
 else
-    % Aggregate existing stimulations
     for i=1:numel(stimMatFile)
         S = ea_checkStimParams(stimMatFile{i});
         if ~isfield(S, 'template')

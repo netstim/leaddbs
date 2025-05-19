@@ -83,8 +83,11 @@ function prepareStimulations(groupFolderPath, groupOptions)
         stimFileName = [bidsPt, '_desc-stimparameters'];
         stimMatFile = ea_regexpdir(stimDir, ['^', stimFileName, '\.mat$'], 1, 'f');
         [~, stimFolder] = fileparts(fileparts(stimMatFile));
-        stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
-        stimFolder = stimFolder(~startsWith(stimFolder, 'gs_'));
+        if ~iscell(stimFolder)
+            stimFolder = {stimFolder};
+        end
+%         stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
+%         stimFolder = stimFolder(~startsWith(stimFolder, 'gs_'));
         for k=1:numel(stimMatFile)
             S = ea_checkStimParams(stimMatFile{k});
             sessionId = strcat('ses-', stimFolder{k});
@@ -93,6 +96,7 @@ function prepareStimulations(groupFolderPath, groupOptions)
             if ~exist(stimJsonFile)
                 ea_mkdir(fullfile(clinicalDir, sessionId));
                 savejson('', S, stimJsonFile);
+                disp(['Created ', stimJsonFile])
             end
         end
     end
@@ -262,8 +266,16 @@ function writeParticipantsJson(bids)
     end
     % Extract existing IDs from the cell array, ensuring it's not empty
     if ~isempty(participantsData)
-        existingIds = cellfun(@(x) x.id, participantsData, 'UniformOutput', false);
+%         existingIds = cellfun(@(x) x.id, participantsData, 'UniformOutput', false);
+%         idIndexMap = containers.Map(existingIds, 1:length(existingIds));
+        validParticipants = participantsData(~cellfun(@(x) ~isfield(x, 'id') || isempty(x.id), participantsData));
+        
+        % Extract IDs from the valid participants
+        existingIds = cellfun(@(x) x.id, validParticipants, 'UniformOutput', false);
+        
+        % Create the map using only valid IDs
         idIndexMap = containers.Map(existingIds, 1:length(existingIds));
+
     else
         existingIds = {}; % Prevent empty keys
         idIndexMap = containers.Map('KeyType', 'char', 'ValueType', 'double'); % Empty map
