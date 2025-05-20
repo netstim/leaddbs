@@ -175,7 +175,7 @@ function r = kuncel08_eq1(U)
 % stimulation settings U (Kuncel 2008).
 
 r = 0;
-if U
+if any(U)
     k = 0.22;
     Uo = 0.1;
     U(U<0.1) = 0.1;  % fix for algorithm-based protocols
@@ -191,7 +191,7 @@ function r = maedler12_eq3(U)
 Im = 1000;
 
 r = 0;
-if U
+if any(U)
     k1 =-1.0473;
     k3 = 0.2786;
     k4 = 0.0009856;
