@@ -6,7 +6,6 @@ subjId = getappdata(handles.leadfigure,'subjId');
 if ~isempty(bids)
     % Determine prefs path
     if isempty(handles.patientlist.Data.subjId) || isempty(handles.patientlist.Selection)
-    	% prefsPath = fullfile(ea_prefsdir, 'ea_ui.mat');
         prefsPath = '';
     else
     	prefsPath = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
