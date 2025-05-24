@@ -97,7 +97,12 @@ classdef ea_conda_env
             end
 
             disp(['Creating environment ' obj.name '...'])
-            [status, cmdout] = system([obj.mamba_path ' env create -f ' ea_path_helper(obj.yml)]);
+
+            [status, cmdout] = system([obj.mamba_path ' env create --yes --file ' ea_path_helper(obj.yml)]);
+            if status && contains(cmdout, 'unrecognized arguments')
+                [status, cmdout] = system([obj.mamba_path ' env create --file ' ea_path_helper(obj.yml)]);
+            end
+            
             if status
                 ea_delete(obj.path);
                 fprintf('%s\n', strtrim(cmdout));
