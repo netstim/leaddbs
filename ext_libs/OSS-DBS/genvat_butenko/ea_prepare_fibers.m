@@ -178,7 +178,8 @@ else % Multi-Tract connectome
         end
 
         % Filter fibers based on the minimal length
-        fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
+        inlay = 1.0;
+        fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t)+inlay);
 
         % Move original fiber id to the 5th column, the 4th column will be 1:N
         for i=1:length(fiberFiltered)

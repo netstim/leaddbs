@@ -145,6 +145,11 @@ for source_index = first_active_source:4
                 mkdir(outputPaths.HemiSimFolder)
             end
             copyfile([outputPaths.outputDir,filesep,'NB_',sideCode,filesep,'Current_protocols_',num2str(side),'.csv'],[outputPaths.HemiSimFolder,filesep,'Current_protocols_',num2str(side),'.csv'])
+        elseif settings.stimSetMode
+            if ~exist(outputPaths.HemiSimFolder,'dir')
+                mkdir(outputPaths.HemiSimFolder)
+            end
+            copyfile([outputPaths.outputDir,filesep,'Current_protocols_',num2str(side),'.csv'],[outputPaths.HemiSimFolder,filesep,'Current_protocols_',num2str(side),'.csv'])
         end
 
         % skip non-active sources when using single source
@@ -298,6 +303,8 @@ for source_index = first_active_source:4
             if settings.exportVAT && settings.optimizer
                 % get 4-D unit niftis for the optimizer and exit
                 ea_convert_ossdbs_StimSets_VTAs(settings,side,outputPaths)
+                stimparams(side+1).VAT.VAT = -42.0;
+                stimparams(side+1).volume = -42.0;
                 ea_exit_genvat_butenko;
             elseif settings.exportVAT
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
@@ -322,6 +329,9 @@ for source_index = first_active_source:4
             warning('on', 'backtrace');
             %runStatus(side+1) = 0;
         end
+
+        % clean-up StimSets FEM solutions
+        ea_delete([outputPaths.HemiSimFolder, filesep, 'ResultsE*']);
 
     end
 
