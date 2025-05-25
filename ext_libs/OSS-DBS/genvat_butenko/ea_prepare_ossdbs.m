@@ -70,6 +70,14 @@ catch
     settings.optimizer = 0;
 end
 
+if settings.stimSetMode == 1 && ~settings.optimizer
+    % default stimulation (Stim_protocols will be actually used)
+    S.Rs1.amp = 1.0;
+    S.Ls1.amp = 1.0;
+    S.amplitude{1,1}(1) = 1.0;
+    S.amplitude{1,2}(1) = 1.0;
+end
+
 try
     % check if OSS-DBS is called for ANN training (StimSet case)
     settings.trainANN = options.trainANN;
@@ -79,6 +87,10 @@ end
 
 if settings.optimizer || settings.trainANN
     settings.stimSetMode = 1; % OSS-DBS will solve a "unit" problem
+end
+
+if (settings.optimizer || settings.trainANN || settings.stimSetMode) && strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+    ea_error("Option 'Activated near active contacts' is not supported for StimSet mode")
 end
 
 %% Lead-DBS hardwired parameters

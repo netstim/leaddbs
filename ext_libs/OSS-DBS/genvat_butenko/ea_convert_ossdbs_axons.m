@@ -77,12 +77,23 @@ if ~isempty(axonState)
             ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
             ftr.connectome_name = settings.connectome;
         end
-        ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
+
+        if size(ftr.idx,1) ~= size(ind,1)
+            % enforce this condition for now
+            ea_error("Mismatch detected. Perhaps, some axons were not seeded")
+        end
+
+        % this is wrong, because these indices are from different spaces
+        % (when some axons could not be seeded)
+        fibers_subset = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
         originalFibID = ftr.fibers(:,5);
+
+        % initialize activation state as 0
+        ftr.fibers(:,5) = 0;
 
         % Extract original conn fiber id and idx, needed in case
         % calculation is done in native space
-        [connFibID, idx] = unique(ftr.fibers(:,5));
+        [connFibID, idx] = unique(fibers_subset(:,5));
 
         % Set fiber state
         for fib=1:length(fibId)
@@ -93,7 +104,7 @@ if ~isempty(axonState)
         % calculation is  done in native space
         connFibState = ftr.fibers(idx, 5);
 
-        % Reset original fiber id as in the connectome
+        %% Reset original fiber id as in the connectome
         ftr.fibers(:,4) = originalFibID;
 
         if ~prob_PAM
@@ -146,7 +157,7 @@ if ~isempty(axonState)
             end
 
             fprintf('Convert fiber activation result into MNI space...\n\n');
-            conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
+            %conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
             % Set fiber state
             conn.fibers = [conn.fibers, zeros(size(conn.fibers,1),1)];
             for fib=1:length(connFibID)
