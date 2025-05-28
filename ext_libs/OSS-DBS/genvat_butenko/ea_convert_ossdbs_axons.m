@@ -35,7 +35,7 @@ else
     axonState = ea_regexpdir([outputPaths.HemiSimFolder, filesep, 'Results'], 'Axon_state.*\.mat', 0);
 end   
 
-if ~isempty(axonState)
+if ~isempty(axonState) && ~settings.stimSetMode
     for f=1:length(axonState)
 
         if prob_PAM
