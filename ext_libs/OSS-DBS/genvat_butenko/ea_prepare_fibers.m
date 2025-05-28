@@ -63,7 +63,8 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
     end
 
     % Filter fibers based on the minimal length
-    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
+    inlay = 2.0;
+    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength+inlay);
 
     % Move original fiber id to the 5th column, the 4th column will be 1:N
     fibersFound = zeros(size(fiberFiltered));
@@ -178,7 +179,7 @@ else % Multi-Tract connectome
         end
 
         % Filter fibers based on the minimal length
-        inlay = 1.0;
+        inlay = 2.0;
         fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t)+inlay);
 
         % Move original fiber id to the 5th column, the 4th column will be 1:N
