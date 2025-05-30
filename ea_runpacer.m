@@ -17,9 +17,9 @@ elecmodels=PaCER(niiCTSPM,'finalDegree',1,'electrodeType',ea_mod2pacermod(option
 disp('======== PaCER reconstruction finished. Converting PaCER reconstructions to LeadDBS. ========')
 
 if(length(elecmodels) ~= length(options.sides))
-   error(['PaCER returned a different number of electrodes than expected by LeadDBS! ' ...
+   error(sprintf(['PaCER returned a different number of electrodes than expected by LeadDBS!\n' ...
        'In most cases this indicates an error in PaCER preprocessing (brain mask estimation) ' ...
-       'due to untypical CT data. Please provide a brain mask to PaCER in this case using the mask parameter.']);
+       'due to untypical CT data.\nPlease provide a brain mask to PaCER in this case using the mask parameter.']));
 end
 
 for iside=1:length(options.sides)
