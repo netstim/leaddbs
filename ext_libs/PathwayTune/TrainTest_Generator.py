@@ -17,6 +17,54 @@ one_pol_current_threshold = 8.0  # in mA
 total_current_threshold = 8.0
 abs_current_threshold = 12.0
 
+def create_monopolar_dataset(min_bound, max_bound, num_columns):
+    """
+    Creates a 2D array where each row has exactly one non-zero entry.
+    Each non-zero entry is an integer from the range [min_bound, max_bound].
+    Every combination of a value and a column position is represented.
+    Rows consisting entirely of zeros are excluded.
+
+    Args:
+        min_bound (int): The lower bound (inclusive) for the non-zero value.
+        max_bound (int): The upper bound (inclusive) for the non-zero value.
+        num_columns (int): The fixed number of columns for each row.
+
+    Returns:
+        list[list[int]]: A 2D array (list of lists) with the specified properties.
+                         Returns an empty list if min_bound > max_bound or num_columns <= 0.
+    """
+    if min_bound > max_bound:
+        print("Error: Minimum bound cannot be greater than maximum bound.")
+        return []
+    if num_columns <= 0:
+        print("Error: Number of columns must be a positive integer.")
+        return []
+
+    result_array = []
+
+    # Iterate through each integer value from min_bound to max_bound
+    for value in range(min_bound, max_bound + 1):
+        # If the value is 0, then setting it as the only non-zero element
+        # would result in an all-zero row, which we want to exclude.
+        if value == 0:
+            continue
+
+        # For each value, iterate through all possible column positions
+        for col_index in range(num_columns):
+            # Create a new row filled with zeros
+            new_row = [0] * num_columns
+            
+            # Place the current 'value' at the current 'col_index'
+            new_row[col_index] = value
+            
+            # Add the completed row to the result array
+            result_array.append(new_row)
+
+    # Convert the list of lists to a NumPy array before returning
+    if not result_array: # Handle case where result_array is empty (e.g., only 0 in range, or invalid bounds)
+        return np.array([], dtype=float)
+    return np.array(result_array, dtype=float)
+
 
 def l1_pos_neg_max(array):
     """
@@ -72,15 +120,19 @@ def scale_array_to_l1_norm(array, target_norm, norm_type):
     return array
 
 
-def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm_threshold, side):
+def create_Training_Test_sets(stim_folder, electrode_model, conc_threshold, segm_threshold, side, monopolar_review=True):
 
     """ Generate current sets to solve for training (using LHS) and testing (random) of the approximation model
 
     Inputs
     ------
-    stim_folder : str
-        path to the stimulation folder
-
+    stim_folder : str, path to the stimulation folder
+    electrode_model: str, name of the electrode in OSS-DBS v1 nomenclature
+    conc_threshold: float, lower and upper current boundaries for ring contacts (- for cathode!)
+    segm_threshold: float, lower and upper current boundaries for segmented contacts (- for cathode!)
+    side: int, hemisphere index, 0 - right
+    monopolar_review: bool, if true, appends a monopolar review to the test dataset (a 1 mA step using provided bounds)
+    
     Returns
     -------
     trainSize_actual, int, number of protocols for training
@@ -94,7 +146,7 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
 
     # check the electrode configuration
     from NB_outline import determine_el_type
-    el_type = determine_el_type(Electrode_model)
+    el_type = determine_el_type(electrode_model)
     if el_type == 'concentric4':
         N_contacts = 4
         sample_size = 8000  # half training, half test
@@ -140,9 +192,9 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
     import random
     for i in range(samples.shape[0]):
         if i % 4 == 0:
-            # set a random number (1-3 or 1-6) of contacts to 0 mA
+            # set a random number (1-2 or 1-6) of contacts to 0 mA
             if N_contacts == 4:
-                N_null = int(round(random.uniform(1, 3)))
+                N_null = int(round(random.uniform(1, 2)))
                 C_list = [0, 1, 2, 3]
 
             elif N_contacts == 8:
@@ -159,7 +211,20 @@ def create_Training_Test_sets(stim_folder, Electrode_model, conc_threshold, segm
             # double if all currents below 0.5 mA
             if np.all(abs(samples[i, :]) < 0.5):
                 samples[i, :] = samples[i, :] * 2
-
+                
+    # additionally, add monopolar review data   
+    if monopolar_review:
+        
+        sample_mono = create_monopolar_dataset(int(np.round(conc_threshold[0])), int(np.round(conc_threshold[1])), N_contacts)
+        if el_type == 'segmented8':
+            # scale segmented contacts if needed
+            # ToDo: implement scaling for non constant bound ratio
+            if np.sign(conc_threshold[0]) == np.sign(segm_threshold[0]) and np.sign(segm_threshold[0]) != 0:
+                sample_mono[:,1:7] = sample_mono[:,1:7] * segm_threshold[0]/conc_threshold[0]
+            else:
+                sample_mono[:,1:7] = sample_mono[:,1:7] * segm_threshold[1]/conc_threshold[1]
+                
+        samples = np.concatenate((samples,sample_mono))
 
     if not os.path.exists(os.path.join(stim_folder,'NB' + side_suffix)):
         os.mkdir(os.path.join(stim_folder,'NB' + side_suffix))
