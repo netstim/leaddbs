@@ -157,8 +157,11 @@ def analyze_and_plot_ann_errors(
     plt.figure()
     total_current = np.sum(X_test, axis=1)
     pearson_r, pearson_p = pearsonr(total_current, np.abs(error_ann[:, 0]))
+    mae = np.mean(np.abs(error_ann[:, 0]))
     plt.scatter(total_current*1000.0, np.abs(error_ann[:, 0]))
     plt.text(0.05, 0.90, f"Pearson's R = {pearson_r:.2f}, p = {pearson_p:.5f}",
+             transform=plt.gca().transAxes, fontsize=10)
+    plt.text(0.05, 0.80, f"MAE = {mae:.2f}",
              transform=plt.gca().transAxes, fontsize=10)
     plt.xlabel("Total current, mA")
     plt.ylabel("Absolute Error of Percent Activation")
@@ -171,6 +174,8 @@ def analyze_and_plot_ann_errors(
     pearson_r2, pearson_p2 = pearsonr(total_abs_current, np.abs(error_ann[:, 0]))
     plt.scatter(total_abs_current*1000.0, np.abs(error_ann[:, 0]))
     plt.text(0.05, 0.85, f"Pearson's R = {pearson_r2:.2f}, p = {pearson_p2:.5f}",
+             transform=plt.gca().transAxes, fontsize=10)
+    plt.text(0.05, 0.75, f"MAE = {mae:.2f}",
              transform=plt.gca().transAxes, fontsize=10)
     plt.xlabel("Absolute current, mA")
     plt.ylabel("Absolute Error of Percent Activation")
@@ -189,6 +194,9 @@ def analyze_and_plot_ann_errors(
             kde = gaussian_kde(error_ann[:, i])
             x_vals = np.linspace(min(error_ann[:, i]), max(error_ann[:, i]), 200) # Generate x values for plotting
             plt.plot(x_vals, kde(x_vals), label=pathway)
+            
+            plt.text(0.05, 0.80, f"MAE = {mae:.2f}",
+                     transform=plt.gca().transAxes, fontsize=10)
 
     error_filename_base = f"{pathway_filtered[0]}_ANN_abs_errors"
     with open(os.path.join(nb_side_folder, f"{error_filename_base}.json"), 'w') as save_as_dict:
@@ -205,10 +213,16 @@ def analyze_and_plot_ann_errors(
     if check_trivial and error_ann_bi is not None:
         plt.figure()
         for i, pathway in enumerate(pathway_filtered):
-            if np.max(np.abs(error_ann_bi[:, i])) > 0.05:
+            if np.max(np.abs(error_ann_bi[:, i])) > 0.01:
+                
+                mae_bi = np.mean(np.abs(error_ann_bi[:, 0]))
+                
                 kde = gaussian_kde(error_ann_bi[:, i])
                 x_vals = np.linspace(min(error_ann_bi[:, i]), max(error_ann_bi[:, i]), 200)
                 plt.plot(x_vals, kde(x_vals), label=pathway)
+                
+                plt.text(0.05, 0.80, f"MAE = {mae_bi:.2f}",
+                         transform=plt.gca().transAxes, fontsize=10)
         plt.legend()
         plt.title('Absolute Errors for ANN on Bipolar')
         plt.xlim(min(error_ann_bi[:, i]), max(error_ann_bi[:, i]))
@@ -220,7 +234,12 @@ def analyze_and_plot_ann_errors(
     if check_trivial and error_ann_mono is not None:
         plt.figure()
         for i, pathway in enumerate(pathway_filtered):
-            if np.max(np.abs(error_ann_mono[:, i])) > 0.05:
+            if np.max(np.abs(error_ann_mono[:, i])) > 0.01:
+                mae_mono = np.mean(np.abs(error_ann_mono[:, 0]))
+                
+                plt.text(0.05, 0.80, f"MAE = {mae_mono:.2f}",
+                         transform=plt.gca().transAxes, fontsize=10)
+                
                 kde = gaussian_kde(error_ann_mono[:, i])
                 x_vals = np.linspace(min(error_ann_mono[:, i]), max(error_ann_mono[:, i]), 200)
                 plt.plot(x_vals, kde(x_vals), label=pathway)
@@ -366,20 +385,19 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
     # on Test
     y_predicted = model.predict(X_test)
     error_ANN = (y_test - y_predicted) * 100.0
+    error_ANN_bi = None
+    error_ANN_mono = None
 
     if check_trivial == True:
         nonzero_counts = np.sum(X_test != 0, axis=1)
-        if ~np.any(np.where(nonzero_counts == 2)) or ~np.any(np.where(nonzero_counts == 1)):
-            # no such Test protocols
-            check_trivial = False
-            error_ANN_bi = None
-            error_ANN_mono = None
-        else:
+        if np.any(np.where(nonzero_counts == 2)):
             error_ANN_bi = error_ANN[np.where(nonzero_counts == 2)[0],:]
+            
+        if np.any(np.where(nonzero_counts == 1)):
             error_ANN_mono = error_ANN[np.where(nonzero_counts == 1)[0],:]
-    else:
-        error_ANN_bi = None
-        error_ANN_mono = None
+            
+        if not np.any(error_ANN_mono) and not np.any(error_ANN_bi):
+            check_trivial = False
 
     # Plot the errors
     analyze_and_plot_ann_errors(stim_dir,side,pathway_filtered,X_test,error_ANN,error_ANN_bi,error_ANN_mono,check_trivial)
