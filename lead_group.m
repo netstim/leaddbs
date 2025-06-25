@@ -734,7 +734,7 @@ if ~strcmp(whichelmodel,'Patient specified')
     [M.elstruct(ptidx).elmodel]=arcell{:};
 end
 
-resultfig=ea_elvis(options,M.elstruct(ptidx));
+resultfig=ea_elvis(options,{M,ptidx}); % varargin 2 changed to M and ptidx
 
 try % zoom on coordinates.
     coords={M.elstruct(:).coords_mm};

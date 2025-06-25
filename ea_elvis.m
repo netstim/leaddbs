@@ -116,14 +116,28 @@ prefs=ea_prefs;
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if nargin>1 || isfield(options.subj, 'recon') && isfile(options.subj.recon.recon)
         if nargin>1
-            multiplemode=1;
+            multiplemode=1; % i.e. call from lead group
 
             % mer development
             % if isstruct(varargin{2})
             %     elstruct=varargin{2}.elstruct;
             %     merstruct=varargin{2}.merstruct;
             % else
-            elstruct=varargin{2};
+            tmp=varargin{2};
+            M=tmp{1}; 
+            ptidx=tmp{2};
+            elstruct=M.elstruct(ptidx);
+            % prune unused entries from isomatrix (patients not selected)
+
+            for side=options.sides
+                % idx=zeros(size(options.d3.isomatrix{1}{side},1),1);
+                % idx(ptidx)=1;
+                % idx=~idx;
+                % options.d3.isomatrix{1}{side}(idx,:)=nan;
+      
+                options.d3.isomatrix{1}{side}=options.d3.isomatrix{1}{side}(ptidx,:);
+            end
+           
             % end
 
             if options.d3.mirrorsides
@@ -142,10 +156,16 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         end
 
         elSide = cell(1, length(elstruct));
+
+
+
         for pt=1:length(elstruct)
             if exist('el_render','var')
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
+
+                
+
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
 
