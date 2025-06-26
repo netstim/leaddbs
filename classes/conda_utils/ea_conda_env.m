@@ -109,6 +109,14 @@ classdef ea_conda_env
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name);
             else
                 system([obj.mamba_path ' clean -tpyq']);
+                if isempty(obj.installed_version)
+                    stateFile = fullfile(obj.path, 'conda-meta', 'state');
+                    if isfile(stateFile)
+                        state = loadjson(stateFile);
+                    end
+                    state.env_vars.env_version = str2double(obj.latest_version);
+                    savejson('', state, stateFile);
+                end
             end
         end
 
