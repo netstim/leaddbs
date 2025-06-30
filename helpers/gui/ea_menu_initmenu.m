@@ -7,7 +7,11 @@ if isempty(menuprobe)
     pp= uimenu('Label','Preferences');
     uimenu(pp,'Label','Edit Preferences File','Callback',{@ea_editprefs},'Accelerator','P');
     uimenu(pp,'Label','Reset Preferences to Default','Callback',{@(src, evt) ea_restoreprefs});
-    uimenu(pp,'Label','Open OSS-DBS Settings','Callback',{@(src, evt) ea_vatsettings_butenko});
+    vatSettingMemu = uimenu(pp,'Label','VTA Model Setting');
+    uimenu(vatSettingMemu,'Label','Dembek 2017','Callback',{@(src, evt) ea_vatsettings_dembek});
+    uimenu(vatSettingMemu,'Label','Fastfield (Baniasadi 2020)','Callback',{@(src, evt) ea_vatsettings_fastfield});
+    uimenu(vatSettingMemu,'Label','OSS-DBS (Butenko 2020)','Callback',{@(src, evt) ea_vatsettings_butenko});
+    uimenu(vatSettingMemu,'Label','SimBio/FieldTrip (see Horn 2017)','Callback',{@(src, evt) ea_vatsettings_horn});
 
     p_c=uimenu(pp,'Label','Play sound on completed tasks','Callback',{@ea_toggle_chirp});
     if prefs.machine.chirp
