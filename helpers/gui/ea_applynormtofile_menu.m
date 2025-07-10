@@ -141,8 +141,51 @@ if useinverse % from template space to [untouched] achor space
 
             if expdicom
                 natpath=fileparts(untouchedanchorImage.fname);
-                [filename,pathname]=uigetfile('*.*','Select sample DICOM',[natpath,filesep,'DICOM']);
-                dicom_file=fullfile(pathname,filename);
+                dicomRootFolder = uigetdir(natpath, 'Select DICOM root folder');
+                if dicomRootFolder == 0, return; end
+                % Get immediate subfolders only (the series folders)
+                folderContents = dir(dicomRootFolder);
+                dicomFolders = folderContents([folderContents.isdir] & ~startsWith({folderContents.name}, '.'));
+                dicomFolderPaths = fullfile(dicomRootFolder, {dicomFolders.name});
+
+                desc = cell(size(dicomFolderPaths));
+                validIndices = false(size(dicomFolderPaths));
+
+                for i = 1:length(dicomFolderPaths)
+                    dcmList = dir(fullfile(dicomFolderPaths{i}, '*.dcm'));
+                    if isempty(dcmList), continue; end
+                    try
+                        info = dicominfo(fullfile(dicomFolderPaths{i}, dcmList(1).name));
+                        desc{i} = sprintf('%s | Series %d | %s', ...
+                            info.SeriesDescription, info.SeriesNumber, dicomFolders(i).name);
+                        validIndices(i) = true;
+                    catch
+                        desc{i} = sprintf('Unreadable | %s', dicomFolders(i).name);
+                    end
+                end
+
+                % Filter out folders with no readable DICOM
+                desc = desc(validIndices);
+                dicomFolderPaths = dicomFolderPaths(validIndices);
+
+                if isempty(dicomFolderPaths)
+                    errordlg('No valid DICOM series found.');
+                    return;
+                end
+                [idx, tf] = listdlg('PromptString', 'Select DICOM series to burn into:', ...
+                    'SelectionMode', 'single', ...
+                    'ListString', desc);
+                if ~tf
+                    return
+                end
+                dcmFilesInSelected = dir(fullfile(dicomFolderPaths{idx}, '*.dcm'));
+                if isempty(dcmFilesInSelected)
+                    error('No DICOM files found in selected folder.');
+                end
+
+                % Select the first .dcm file
+                [~, sortIdx] = sort({dcmFilesInSelected.name}); %always select the first file in a series
+                selectedDicomFile = fullfile(dicomFolderPaths{idx}, dcmFilesInSelected(sortIdx(1)).name);
                 merged_file=fused.fname;
                 newSeriesNumber=100;
                 newSeriesDescription='LeadDBS Plan';
@@ -151,7 +194,7 @@ if useinverse % from template space to [untouched] achor space
                 mergedImageVolume=1;
                 outputImagePosition=2;
 
-                uw_overlay_convert2dicom(dicom_file, merged_file, newSeriesNumber, newSeriesDescription, outputDirectory, mergedImageVolume, outputImagePosition);
+                uw_overlay_convert2dicom(selectedDicomFile, merged_file, newSeriesNumber, newSeriesDescription, outputDirectory, mergedImageVolume, outputImagePosition);
             end
         end
     end
