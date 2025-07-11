@@ -213,8 +213,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             a2 = copyobj(a1,f1, 'legacy');
             % helptext is also copied, we delete it here so it is not
             % duplicated when when magnifying
-            delete(findall(a2,'Type','text')); 
-            
+            delete(findall(a2,'Type','text'));
+
             i2 = get(a2,'Children');
             try
                 i2=i2(2);

@@ -124,7 +124,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             %     merstruct=varargin{2}.merstruct;
             % else
             tmp=varargin{2};
-            M=tmp{1}; 
+            M=tmp{1};
             ptidx=tmp{2};
             elstruct=M.elstruct(ptidx);
             % prune unused entries from isomatrix (patients not selected)
@@ -134,10 +134,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 % idx(ptidx)=1;
                 % idx=~idx;
                 % options.d3.isomatrix{1}{side}(idx,:)=nan;
-      
+
                 options.d3.isomatrix{1}{side}=options.d3.isomatrix{1}{side}(ptidx,:);
             end
-           
+
             % end
 
             if options.d3.mirrorsides
@@ -164,7 +164,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
 
-                
+
 
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
@@ -390,7 +390,7 @@ if ~strcmp(options.leadprod, 'group')
 end
 
 % Initialize Convis-Button
-if ~strcmp(options.leadprod,'group') 
+if ~strcmp(options.leadprod,'group')
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
@@ -690,7 +690,7 @@ if isfolder(releaseDir)
     % [status, cmdout] = system([appDir, ' &']);
     % [status, cmdout] = system([appDir, ' & echo $!']);
     % pid = str2double(cmdout);
-    % f = parfeval(backgroundPool, @runApp, 0, appDir);   
+    % f = parfeval(backgroundPool, @runApp, 0, appDir);
 end
 
 % while true
@@ -711,7 +711,7 @@ end
 %         [S] = ea_process_programmer(file_path);
 %         ea_visprogrammer(resultfig, options, S, elstruct);
 %     end
-%     
+%
 %     % Pause for 5 seconds before checking again
 % end
 
