@@ -2,7 +2,7 @@ function dndobj = ea_bind_dragndrop(target, DropFileFcn, DropStringFcn)
 % Bind MATLAB uicontrol or figure with drag-drop event
 
 if isMatlabVer('>=', [25,1])
-    % Won't work since JavaFrame have been removed since R2025a
+    % Won't work since JavaFrame has been removed since R2025a
     return;
 end
 
