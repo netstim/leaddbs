@@ -136,7 +136,7 @@ classdef ea_roi < handle
                 obj.nii.img(obj.nii.img==0) = nan;
                 obj.nii.img(isinf(obj.nii.img)) = nan;
 
-                if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
+                if isscalar(unique(obj.nii.img(~isnan(obj.nii.img))))
                     obj.binary=1;
                 else
                     obj.nii.img=obj.nii.img-ea_nanmin(obj.nii.img(:)); % set min to zero
@@ -230,10 +230,12 @@ classdef ea_roi < handle
 
             if ~isempty(obj.plotFigureH)
                 if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
-                    % Get the underlying java object using findobj
-                    jtoggle = findjobj(obj.toggleH);
-                    % Specify a callback to be triggered on any mouse release event
-                    set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+                    if isMatlabVer('<', [25,1])
+                        % Get the underlying java object using findobj
+                        jtoggle = findjobj(obj.toggleH);
+                        % Specify a callback to be triggered on any mouse release event
+                        set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+                    end
                 end
                 setappdata(obj.plotFigureH, 'addht', obj.htH);
             end
