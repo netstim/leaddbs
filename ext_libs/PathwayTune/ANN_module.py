@@ -78,7 +78,7 @@ def load_activation_results(res_folder: str, pathway: str, currents_shape: Tuple
     return activation_results
 
 
-def filter_pathways(pathway: str, axons_in_path: np.ndarray, y_train_all: np.ndarray, y_test_all: np.ndarray) -> Tuple[np.ndarray, np.ndarray, List[str], Optional[np.ndarray], Optional[np.ndarray]]:
+def filter_pathways(pathway: str, axons_in_path: np.ndarray, y_train_all: np.ndarray, y_test_all: np.ndarray, no_test=False) -> Tuple[np.ndarray, np.ndarray, List[str], Optional[np.ndarray], Optional[np.ndarray]]:
     """Filters pathways based on minimum axon number and activation threshold.
 
     Args:
@@ -92,15 +92,19 @@ def filter_pathways(pathway: str, axons_in_path: np.ndarray, y_train_all: np.nda
     """
     y_train = -100 * np.ones((y_train_all.shape), dtype=float)
     y_test = -100 * np.ones((y_test_all.shape), dtype=float)
+
     pathway_filtered = []
     for i in range(y_train_all.shape[1]):
-        if axons_in_path[i] >= MIN_AXON_NUMBER and np.max(y_train_all[:, i]) >= MIN_ACTIV_THRESHOLD and np.max(y_test_all[:, i]) >= MIN_ACTIV_THRESHOLD:
+        if axons_in_path[i] >= MIN_AXON_NUMBER and np.max(y_train_all[:, i]) >= MIN_ACTIV_THRESHOLD and (no_test or np.max(y_test_all[:, i]) >= MIN_ACTIV_THRESHOLD):
             y_train[:, i] = y_train_all[:, i]
             y_test[:, i] = y_test_all[:, i]
             pathway_filtered.append(pathway)
 
     y_train_filtered = y_train[:, ~np.all(y_train == -100.0, axis=0)]
-    y_test_filtered = y_test[:, ~np.all(y_test == -100.0, axis=0)]
+    if no_test:
+        y_test_filtered = None
+    else:
+        y_test_filtered = y_test[:, ~np.all(y_test == -100.0, axis=0)]
 
     return y_train_filtered, y_test_filtered, pathway_filtered
 
@@ -312,6 +316,7 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
         StimSets_info = json.load(fp)
     fp.close()
     train_size = StimSets_info['trainSize_actual']
+    no_test = StimSets_info['testSize_actual'] == 0
 
     #================================================== Import Training and Test Data =====================================================#
 
@@ -344,14 +349,16 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
     plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],pathway+'_Percent_Activation_versus_total_current' + SIDE_LABEL[side] + '.png'), format='png',
                 dpi=500)
 
-    # Filter pathways based on activity and axon number
+    # Filter pathways based on activity and axon number    
     y_train_filtered, y_test_filtered, pathway_filtered = filter_pathways(
-        pathway, axons_in_path, activation_results[:train_size, :], activation_results[train_size:, :]
+        pathway, axons_in_path, activation_results[:train_size, :], activation_results[train_size:, :], no_test=no_test
     )
+    
     if not pathway_filtered:
         print("Low activation levels for ", pathway)
         return False
-    y_test = y_test_filtered 
+    if not no_test:
+        y_test = y_test_filtered 
 
     # Augment training data with zero protocols
     X_train_augmented, y_train_augmented = augment_training_data_with_zeros(X_train, y_train_filtered)
@@ -360,6 +367,17 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
         print("Multiple pathways detected after filtering. Ensure the logic for selecting a single pathway is correct.")
         raise SystemExit
         # Consider if this should be an error or if the code should handle multiple pathways
+
+    # inject monopolar review
+    if not no_test:
+        mono_protocols = X_test[X_test.shape[0]-56:,:]
+        mono_solutions = y_test[y_test.shape[0]-56:,:]
+    else:
+        mono_protocols = X_train[X_train.shape[0]-56:,:]
+        mono_solutions = y_train_filtered[y_train_filtered.shape[0]-56:,:]
+    
+    X_train_augmented = np.concatenate((X_train_augmented,mono_protocols,mono_protocols,mono_protocols,mono_protocols,mono_protocols))
+    y_train_augmented = np.concatenate((y_train_augmented,mono_solutions,mono_solutions,mono_solutions,mono_solutions,mono_solutions))
 
     print(f"Training on pathway: {pathway}")
     print(f"Number of training samples: {X_train.shape[0]}")
@@ -378,7 +396,13 @@ def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, 
 
     adam = optimizers.Adamax(lr=learn_rate)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['mse'])
-    model.fit(X_train_augmented, y_train_augmented, epochs=N_epochs, verbose=0)
+    model.fit(X_train_augmented, y_train_augmented, epochs=N_epochs, verbose=1)
+    
+    if no_test:
+        pathway_to_save = pathway_filtered[-1] if pathway_filtered else "default_pathway" # Save based on the final filtered pathway?
+        save_path = os.path.join(stim_dir, 'NB' + SIDE_SUFFIX[side], f'ANN_approved_model_{pathway_to_save}')
+        model.save(save_path)
+        return True
     
     results = model.evaluate(X_test, y_test)
 
