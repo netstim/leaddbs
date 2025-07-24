@@ -27,17 +27,15 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
+%options.stimSetMode = 0;
 [settings,S] = ea_prepare_ossdbs(options,S);
 env = ea_conda_env('OSS-DBSv2');
 
-% some hardcoded parameters, can be added to GUI later
+% some hardcoded parameters, can be added to the GUI later
+settings.reuse_warped_connectome = 1;  % set to 1 if the connectome was already processed for the given stim. settings
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
 settings.outOfCore = 0; % set to 1 if RAM capacity is exceeded during PAM
-
-if settings.stimSetMode
-    settings.current_control = [1;1];
-end
 
 % set outputs
 outputPaths = ea_get_oss_outputPaths(options,S);

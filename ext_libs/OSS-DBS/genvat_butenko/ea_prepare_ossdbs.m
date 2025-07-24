@@ -93,6 +93,10 @@ if (settings.optimizer || settings.trainANN || settings.stimSetMode) && strcmp(s
     ea_error("Option 'Activated near active contacts' is not supported for StimSet mode")
 end
 
+if settings.stimSetMode
+    settings.current_control = [1;1];
+end
+
 %% Lead-DBS hardwired parameters
 
 % Set patient folder
