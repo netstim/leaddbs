@@ -32,7 +32,7 @@ setenv('TZ', timezone);
 env = ea_conda_env('OSS-DBSv2');
 
 % some hardcoded parameters, can be added to the GUI later
-settings.reuse_warped_connectome = 1;  % set to 1 if the connectome was already processed for the given stim. settings
+settings.reuse_warped_connectome = 0;  % set to 1 if the connectome was already processed for the given stim. settings
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
 settings.outOfCore = 0; % set to 1 if RAM capacity is exceeded during PAM
