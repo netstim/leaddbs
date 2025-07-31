@@ -618,7 +618,7 @@ else
 end
 
 if ismac
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',currvol]);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ', ea_path_helper(currvol)]);
 end
 
 if activevolume == length(checkregImages)
@@ -784,7 +784,7 @@ else
 end
 
 if ismac
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ', currvol]);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ', ea_path_helper(currvol)]);
 end
 
 b0restanchor = getappdata(handles.leadfigure,'b0restanchor');
