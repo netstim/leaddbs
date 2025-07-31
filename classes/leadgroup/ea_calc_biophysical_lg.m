@@ -56,7 +56,7 @@ for pt=selection
     options.patient_list=M.patient.list;
     options.d3.mirrorsides=0;
 
-    resultfig=ea_elvis(options,M.elstruct(pt));
+    resultfig=ea_elvis(options, M.elstruct, pt);
 
     if ~isfield(options.subj, 'norm')
         ea_cprintf('CmdWinWarnings', 'Running in Miniset mode: %s...\n', options.subj.subjId);

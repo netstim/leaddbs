@@ -317,7 +317,6 @@ for side=options.sides
                 if options.d3.colorpointcloud
                     % draw contacts as colored cloud defined by isomatrix.
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
-
                         usefacecolor=((normalisomatrix{side}(pt,cntct)-minval)/(maxval-minval))*(length(cmap)-1);
                         % % Add some contrast (remove these lines for linear mapping)
                         % usefacecolor=usefacecolor-20;

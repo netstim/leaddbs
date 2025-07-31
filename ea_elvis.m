@@ -19,19 +19,6 @@ if ~isfield(options, 'leadprod')
     options.leadprod = '';
 end
 
-if nargin>2
-    stimparams=varargin{3};
-else
-    stimparams=nan;
-end
-
-if nargin==4
-    fiberthresh=varargin{4};
-else
-
-    fiberthresh=options.fiberthresh;
-end
-
 % Initialize figure
 
 titlePrefix = erase(options.patientname, 'sub-');
@@ -123,21 +110,19 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             %     elstruct=varargin{2}.elstruct;
             %     merstruct=varargin{2}.merstruct;
             % else
-            tmp=varargin{2};
-            M=tmp{1};
-            ptidx=tmp{2};
-            elstruct=M.elstruct(ptidx);
-            % prune unused entries from isomatrix (patients not selected)
-
-            for side=options.sides
-                % idx=zeros(size(options.d3.isomatrix{1}{side},1),1);
-                % idx(ptidx)=1;
-                % idx=~idx;
-                % options.d3.isomatrix{1}{side}(idx,:)=nan;
-
-                options.d3.isomatrix{1}{side}=options.d3.isomatrix{1}{side}(ptidx,:);
+            elstruct = varargin{2};
+            if nargin > 2
+                ptidx = varargin{3};
+                % Only keep elstruct and isomatrix entries from selected patients
+                elstruct = elstruct(ptidx);
+                if ~isempty(options.d3.isomatrix)
+                    for side=options.sides
+                        % idx = setdiff(1:size(options.d3.isomatrix{1}{side},1), ptidx);
+                        % options.d3.isomatrix{1}{side}(idx,:)=nan;
+                        options.d3.isomatrix{1}{side} = options.d3.isomatrix{1}{side}(ptidx,:);
+                    end
+                end
             end
-
             % end
 
             if options.d3.mirrorsides
@@ -156,16 +141,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         end
 
         elSide = cell(1, length(elstruct));
-
-
-
         for pt=1:length(elstruct)
             if exist('el_render','var')
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
-
-
-
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
 
@@ -190,6 +169,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
 
             end
+
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                 % this part for brainbrowser support.
                 vizstruct=struct('faces',[],'vertices',[],'colors',[]);
@@ -265,7 +245,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
                     'ClickedCallback', {@ea_add_sweetspot,fullfile(options.groupdir,'sweetspots',di(d).name),resultfig});
             end
-
 
             % add discriminative fiber explorer button.
             discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
