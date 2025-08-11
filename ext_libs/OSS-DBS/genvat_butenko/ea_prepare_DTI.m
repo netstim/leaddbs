@@ -74,6 +74,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
         if exist('tensorDir', 'var')
             fprintf('Scaling tensor data...\n\n')
 
+            env = ea_conda_env('OSS-DBSv2');
             env.system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/MRI_DTI_processing/Tensor_scaling.py ', tensorDir,filesep, tensorPrefix, tensorName, ' ', scalingMethod]);
 
             if ~isfile([tensorDir, filesep, tensorPrefix, scaledTensorName])
