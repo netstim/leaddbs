@@ -356,6 +356,29 @@ classdef BIDSFetcher
             % Set acpc autodetect
             subj.acpc.acpcAutodetect = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcautodetect.mat']);
             subj.acpc.acpcManual     = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcmanual.fcsv']);
+
+            % ===== Add support for diffusion MRI and resting-state fMRI =====
+
+            % Get diffusion MRI data
+            try
+                dwiData = BIDSFetcherExt.getDWI(obj.datasetDir, subjId, obj.settings);
+                if ~isempty(fieldnames(dwiData))
+                    subj.preop.dwi = dwiData;
+                end
+            catch ME
+                % Silent fail - DWI data might not be present
+            end
+
+            % Get functional MRI data (including rest)
+            try
+                funcData = BIDSFetcherExt.getFunc(obj.datasetDir, subjId, obj.settings);
+                if ~isempty(fieldnames(funcData))
+                    subj.preop.func = funcData;
+                end
+            catch ME
+                % Silent fail - functional data might not be present
+            end
+
         end
 
         function preopAnat = getPreopAnat(obj, subjId)
