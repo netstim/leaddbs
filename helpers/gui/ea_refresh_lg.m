@@ -183,6 +183,10 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
         for pt=1:length(M.patient.list)
+
+            % check if folders exist:
+            M=ea_checkremap_lg(M,handles);
+
             % set stimparams based on values provided by user
             for side=1:2
                 if M.ui.labelpopup>length(get(handles.labelpopup,'String'))
