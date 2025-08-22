@@ -1,4 +1,4 @@
-function [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj,patsel,Iperm)
+function [vals,fibcell,usedidx] = ea_unified_discfibers_calcstats(obj,patsel,Iperm)
 
 % NB: for PCA, we are going to reassign I later in the function
 if ~exist('Iperm','var')

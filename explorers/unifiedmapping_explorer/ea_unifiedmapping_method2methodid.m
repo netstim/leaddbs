@@ -1,7 +1,7 @@
-function id=ea_method2methodid(obj,efm)
+function id=ea_unifiedmapping_method2methodid(obj,efm)
 
 obj.compat_statmetric; % old compatibility for old statmetric notation (used to be stored as integers).
-obj=ea_discfibers_compat_statmetrics2statsettings(obj);
+obj=ea_unified_discfibers_compat_statmetrics2statsettings(obj);
 
 if ~exist('efm','var')
     efm=obj.statsettings.efieldmetric;

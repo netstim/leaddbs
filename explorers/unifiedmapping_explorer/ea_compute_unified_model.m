@@ -69,7 +69,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
     % if obj.useExternalModel == true
     %    [vals,fibcell,usedidx] = ea_discfibers_loadModel_calcstats(obj, vals_connected);
     % else
-    %    [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+    %    [vals,fibcell,usedidx] = ea_unified_discfibers_calcstats(obj, patientsel(training));
     %end
     % if no fibers were selected for the permutation iteration,
     % assign dummies that will have r = 0

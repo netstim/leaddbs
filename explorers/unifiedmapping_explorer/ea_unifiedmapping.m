@@ -519,7 +519,7 @@ classdef ea_unifiedmapping < handle
             
             
             % warp connectome to native space and compute E-field metrics
-            ea_get_Eproj(obj,vatlist)
+            ea_unified_get_Eproj(obj,vatlist)
 
             % define space again
             switch obj.calcsettings.calcspace
