@@ -187,16 +187,7 @@ for group=groups
             switch obj.statsettings.stimulationmodel
                 case 'VTA'
                     Nmap=sum(gfibsval{side}(:,gpatsel),2);
-%                 case 'Sigmoid Field'
-%                     if strcmp(ea_method2methodid(obj), 'spearman_5peak') || strcmp(ea_method2methodid(obj), 'spearman_peak')
-%                         % 0.5 V / mm -> 0.5 probability
-%                         Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold/1000.0),2);
-%                     else
-%                         Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
-%                     end
-                case 'Sigmoid Field'
-                    Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
-                case 'Electric Field'
+                otherwise
                     Nmap=sum((gfibsval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
             end
         end

@@ -94,8 +94,3 @@ for connectome=1:length(connvals)
     end
 end
 
-tractset.statmetric=nan; % switch off legacy statmetric.
-tractset.efieldmetric=nan; % switch off legacy
-tractset.efieldthreshold=nan;
-tractset.connthreshold=nan;
-tractset.fileformatversion=1.1;

@@ -36,7 +36,7 @@ end
 
 % find which space and stim folder is used
 if ~isfield(tractset.M,'pseudoM')
-    stim_space = [ea_nt(tractset.native),'gs_',tractset.M.guid]; 
+    stim_space = [ea_nt(tractset.calcspace),'gs_',tractset.M.guid]; 
 end
 
 ea_dispercent(1/size(tractset.M.patient.list,1),'Computing E-field metrics on fibers')
@@ -67,7 +67,7 @@ for pt_i = 1:size(tractset.M.patient.list,1)
                 if tractset.M.pseudoM
                     [stim_folder_path,~,~] = fileparts(vatlist{pt_i,side});
                     [~,stim_folder,~] = fileparts(stim_folder_path);
-                    stim_space = [ea_nt(tracetset.native),stim_folder];
+                    stim_space = [ea_nt(tracetset.calcspace),stim_folder];
                 end
             end  
 
