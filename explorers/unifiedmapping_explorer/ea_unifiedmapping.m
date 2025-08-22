@@ -258,7 +258,7 @@ classdef ea_unifiedmapping < handle
                     end
                 end
             end
-            if obj.calcsettings.selectedTool == 1 %sweetspotmapping
+            if obj.calcsettings.selectedTool == 1 % sweetspotmapping
                   
                 % in case of the sweetspot explorer, calculate rather means to
                 % gather all E-Fields. To keep consistency of the logic with
@@ -289,7 +289,7 @@ classdef ea_unifiedmapping < handle
                         obj.results.sweetspotmapping.activecnt{side}=[obj.results.sweetspotmapping.activecnt{side};ea_flip_lr_nonlinear(obj.results.sweetspotmapping.activecnt{side})];
                     end
                 end
-            elseif obj.calcsettings.selectedTool == 2
+            elseif obj.calcsettings.selectedTool == 2 % Fiber Filtering
                 % if multi_pathways = 1, assemble cfile from multiple
                 % pathway.dat files in dMRI_MultiTract/Connectome_name/
                 % stores the result in the LeadGroup folder
@@ -342,7 +342,7 @@ classdef ea_unifiedmapping < handle
 
                 end
 
-            elseif obj.calcsettings.selectedTool == 3
+            elseif obj.calcsettings.selectedTool == 3 % network mapping
                 
                 if ~isempty(obj.results) % something has been calculated
 
