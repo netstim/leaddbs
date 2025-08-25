@@ -70,6 +70,14 @@ classdef ea_unifiedmapping < handle
         useExternalModel = false
         ExternalModelFile = 'None'
         
+        % NM visualization
+        NMviz=struct; 
+        % NMviz.vizmode='Regions'; % way to plot results
+        % NMviz.model='Smoothed'; % in case of surface above, on which surface to plot.
+        % NMviz.modelLH=1; % show left hemisphere
+        % NMviz.modelRH=1; % show right hemisphere
+
+
         % stats: (how many fibers available and shown etc for GUI)
         modelNormalization = 'None';
         numBins=15;
