@@ -95,7 +95,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
     else
         lateral_score = false;
     end
-    if obj.drawTool == 3
+    if strcmp(obj.drawTool,'networkmapping')
         lateral_score = false;
     end
     switch obj.modelNormalization
@@ -115,21 +115,22 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
             vals_flat = vertcat(vals{voter,:});
             % just concatenate values from both hemispheres
             orig_model = cell(1,2);
-            if obj.drawTool == 1
-                
-                orig_model{1} = obj.results.sweetspotmapping.efield{1}';
-                if size(obj.results.sweetspotmapping.efield,1)==2
-                    orig_model{2} = obj.results.sweetspotmapping.efield{2}';
-                end
-                orig_model_flat = vertcat(orig_model{:});
-            elseif obj.drawTool == 2
-                orig_model{1} = fibsval{1,1}(usedidx{voter,1},patientsel);
-                if size(vals,2) == 2
-                    orig_model{2} = fibsval{1,2}(usedidx{voter,2},patientsel);
-                end
-                orig_model_flat = vertcat(orig_model{:});
-            elseif obj.drawTool == 3
-                orig_model_flat = full(obj.results.networkmapping.(ea_conn2connid(obj.netmap_connectome)).connval);
+            switch obj.drawTool
+                case 'sweetspotmapping'
+
+                    orig_model{1} = obj.results.sweetspotmapping.efield{1}';
+                    if size(obj.results.sweetspotmapping.efield,1)==2
+                        orig_model{2} = obj.results.sweetspotmapping.efield{2}';
+                    end
+                    orig_model_flat = vertcat(orig_model{:});
+                case 'fiberfiltering'
+                    orig_model{1} = fibsval{1,1}(usedidx{voter,1},patientsel);
+                    if size(vals,2) == 2
+                        orig_model{2} = fibsval{1,2}(usedidx{voter,2},patientsel);
+                    end
+                    orig_model_flat = vertcat(orig_model{:});
+                case 'networkmapping'
+                    orig_model_flat = full(obj.results.networkmapping.(ea_conn2connid(obj.netmap_connectome)).connval);
             end
 
         end

@@ -1,9 +1,10 @@
 function [vals,fibcell,usedidx] = ea_unifiedmapping_calcstats(obj,patsel,Iperm)
 
 %No fibcell and usedidx for sweetspotmapping or networkmapping
-if obj.drawTool == 1 || obj.drawTool == 3
-    fibcell = {};
-    usedidx = {};
+switch obj.drawTool
+    case {'sweetspotmapping','networkmapping'}
+        fibcell = {};
+        usedidx = {};
 end
 % NB: for PCA, we are going to reassign I later in the function
 if ~exist('Iperm','var')
@@ -43,31 +44,32 @@ end
 groups=1;
 dogroups = 0;
 dosubscores = 0;
-if obj.drawTool == 1 %sweetspotmapping
-    init_val = obj.results.sweetspotmapping.efield';
-    for i=1:length(init_val)
-        init_val{i} = init_val{i}';
-    end
+switch obj.drawTool
+    case 'sweetspotmapping' %sweetspotmapping
+        init_val = obj.results.sweetspotmapping.efield';
+        for i=1:length(init_val)
+            init_val{i} = init_val{i}';
+        end
 
-elseif obj.drawTool == 2 %fiberfiltering
-    switch obj.statsettings.stimulationmodel
-        case 'Sigmoid Field'
-            if obj.connectivity_type == 2
-                init_val = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).('PAM_probA').fibsval;
-            else
-                fibsval_raw = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).(ea_unifiedmapping_method2methodid(obj)).fibsval;
-                init_val = fibsval_raw;  % initialize
-                for side = 1:size(fibsval_raw,2)
-                    init_val{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+    case 'fiberfiltering' %fiberfiltering
+        switch obj.statsettings.stimulationmodel
+            case 'Sigmoid Field'
+                if obj.connectivity_type == 2
+                    init_val = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).('PAM_probA').fibsval;
+                else
+                    fibsval_raw = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).(ea_unifiedmapping_method2methodid(obj)).fibsval;
+                    init_val = fibsval_raw;  % initialize
+                    for side = 1:size(fibsval_raw,2)
+                        init_val{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+                    end
                 end
-            end
-        otherwise
-            init_val = cellfun(@full, obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).(ea_unifiedmapping_method2methodid(obj)).fibsval, 'Uni', 0);
-    end
+            otherwise
+                init_val = cellfun(@full, obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).(ea_unifiedmapping_method2methodid(obj)).fibsval, 'Uni', 0);
+        end
 
-elseif obj.drawTool == 3 %networkmapping
-    init_val = ea_get_AllX(obj);
-    init_val = {init_val'}; %side will always be 1 - both the hemispheres are combined for this analysis!
+    case 'networkmapping' %networkmapping
+        init_val = ea_get_AllX(obj);
+        init_val = {init_val'}; %side will always be 1 - both the hemispheres are combined for this analysis!
 end
 
 for group = groups
@@ -87,28 +89,28 @@ for group = groups
         if obj.showsignificantonly
             pvals{group,side}=vals{group,side};
         end
-        
-        if obj.drawTool == 1 || obj.drawTool == 2 
-            switch obj.statsettings.stimulationmodel
-                case 'VTA'
-                    Nmap=ea_nansum(gval{side}(:,gpatsel),2);
-                    gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
-                otherwise
-                    gval{side}(gval{side}<=obj.statsettings.efieldthreshold) = nan;
-                    Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
-                    gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
-            end
-            %initialize vals and pvals if necessary
+        switch obj.drawTool
+            case {'sweetspotmapping','fiberfiltering'}
+                switch obj.statsettings.stimulationmodel
+                    case 'VTA'
+                        Nmap=ea_nansum(gval{side}(:,gpatsel),2);
+                        gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+                    otherwise
+                        gval{side}(gval{side}<=obj.statsettings.efieldthreshold) = nan;
+                        Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
+                        gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+                end
+                %initialize vals and pvals if necessary
 
-            %rules for removing nonempty values, since there are many nans in
-            %the voxel wise analysis we can choose two different ways of
-            %dealing with the vals
+                %rules for removing nonempty values, since there are many nans in
+                %the voxel wise analysis we can choose two different ways of
+                %dealing with the vals
 
-            nonempty = sum(gval{side}(:,gpatsel),2,'omitnan')>0;
-            nonemptyidx=find(nonempty);
-            valsin=gval{side}(nonempty,gpatsel);
-        else
-            valsin = gval{side}(:,gpatsel);
+                nonempty = sum(gval{side}(:,gpatsel),2,'omitnan')>0;
+                nonemptyidx=find(nonempty);
+                valsin=gval{side}(nonempty,gpatsel);
+            case 'networkmapping'
+                valsin = gval{side}(:,gpatsel);
         end
 
         
@@ -137,16 +139,17 @@ for group = groups
                 gval{side}(Nmap>((1-(obj.statsettings.connthreshold/100))*length(gpatsel)),gpatsel)=nan;
             end
             [valsout,psout]=feval(stattests.file(idx),valsin,outcomein,obj.statsettings.H0); % apply test
-            if  obj.drawTool == 1 || obj.drawTool == 2
-                vals{group,side}(nonemptyidx)=valsout;
-                if exist('pvals','var')
-                    pvals{group,side}(nonemptyidx)=psout;
-                end
-            else
-                 vals{group,side}=valsout;
-                if exist('pvals','var')
-                    pvals{group,side}=psout;
-                end
+            switch  obj.drawTool
+                case {'sweetspotmapping','fiberfiltering'}
+                    vals{group,side}(nonemptyidx)=valsout;
+                    if exist('pvals','var')
+                        pvals{group,side}(nonemptyidx)=psout;
+                    end
+                case 'networkmapping'
+                    vals{group,side}=valsout;
+                    if exist('pvals','var')
+                        pvals{group,side}=psout;
+                    end
             end
           
         else
@@ -161,7 +164,7 @@ for group = groups
 end
 
 if strcmp(obj.threshstrategy,'Unthresholded')
-    if obj.drawTool == 2
+    if strcmp(obj.drawTool,'fiberfiltering')
         for side=1:numel(gval)
             usedidx{group,side} = find(isfinite(vals{group,side}));
             fibcell{group,side} = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).fibcell{side}(usedidx{group,side});
@@ -183,7 +186,8 @@ if strcmp(obj.threshstrategy,'Unthresholded')
     end
    return
 else
-    if obj.drawTool == 1 || obj.drawTool == 3
+    switch obj.drawTool
+        case {'sweetspotmapping','networkmapping'}
         
         for group = groups
             for side=1:numel(gval)
@@ -197,7 +201,7 @@ else
                 end
             end
         end
-    else
+        case 'fiberfiltering'
         % Clean up non-finite values from fibcell and vals
         for group=groups
             for side=1:numel(gval)
@@ -286,8 +290,9 @@ else
                 % Remove vals and fibers outside the thresholding range (set by
                 % sliders)
                 remove = vals{group,side}<posthresh & vals{group,side}>negthresh;
-                vals{group,side}(remove)=[];
-                if obj.drawTool == 2
+                vals{group,side}(remove)=nan;
+                if strcmp(obj.drawTool,'fiberfiltering')       
+                    vals{group,side}(remove)=[];
                     fibcell{group,side}(remove)=[];
                     usedidx{group,side}(remove)=[];
                 end

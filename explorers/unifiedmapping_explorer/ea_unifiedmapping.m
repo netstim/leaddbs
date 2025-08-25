@@ -84,7 +84,8 @@ classdef ea_unifiedmapping < handle
         kIter = 1;
         roiintersectdata = {}; %roi, usually efield with which you can calculate fiber intersection
         roithresh = 200; %threshold above which efield metrics are considered
-        drawTool = 1;
+        drawTool = 'sweetspotmapping'; % active draw tool: sweetspotmapping, fiberfiltering, networkmapping
+        activated = struct; % activated.fiberfiltering, activated.sweetspotmapping, activated.networkmapping % for activation status mapping.
         
         % misc
         runwhite = 0; % flag to calculate connected tracts instead of stat tracts
@@ -126,7 +127,7 @@ classdef ea_unifiedmapping < handle
             obj.statsettings.statfamily = 'Correlations'; % the
             obj.statsettings.stattest = 'Spearman';
             obj.statsettings.H0 = 'Average';
-            obj.calcsettings.selectedTool = 1; %1 = ss, 2 = ff, 3 = nm;
+            obj.calcsettings.selectedTool = 1; %1 = sweetspotmapping, 2 = fiberfiltering, 3 = networkmapping;
             obj.calcsettings.calcthreshold = 200;
             obj.calcsettings.switch_connectivity = 1;
             obj.calcsettings.connectivity_type = 1; %1 = vta, 2 = PAM
@@ -487,7 +488,7 @@ classdef ea_unifiedmapping < handle
             end
             [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell_efield,  connFiberInd, totalFibers] = ea_fiberfiltering_calcvals(vatlist, cfile, obj.calcsettings.calcthreshold);
             obj.results.fiberfiltering.(connid).('VAT_Ttest').fibsval = fibsvalBin;
-            obj.results.fiberfiltering.(connid).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
+            obj.results.fiberfiltering.(connid).connFiberInd_VAT = connFiberInd; % old fiberfiltering files do not have these data and will fail when using pathway atlases
             obj.results.fiberfiltering.(connid).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
             % only for e-fields
             obj.results.fiberfiltering.(connid).('efield_sum').fibsval = fibsvalSum;
@@ -540,7 +541,7 @@ classdef ea_unifiedmapping < handle
             obj.results.fiberfiltering.(connid).('efield_5peak').fibsval = fibsval5Peak_magn;
             obj.results.fiberfiltering.(connid).('plainconn').fibsval = fibsvalBin_magn;
             obj.results.fiberfiltering.(connid).('efield_fibers').fibcell = fibcell_magn;
-            obj.results.fiberfiltering.(connid).('efield_fibers').connFiberInd_VAT = connFiberInd_magn; % old ff files do not have these data and will fail when using pathway atlases
+            obj.results.fiberfiltering.(connid).('efield_fibers').connFiberInd_VAT = connFiberInd_magn; % old fiberfiltering files do not have these data and will fail when using pathway atlases
             
             obj.results.fiberfiltering.(connid).('VAT_Ttest_proj').fibsval = fibsvalBin_proj;
             obj.results.fiberfiltering.(connid).('efield_proj_sum').fibsval = fibsvalSum_proj;
@@ -549,7 +550,7 @@ classdef ea_unifiedmapping < handle
             obj.results.fiberfiltering.(connid).('efield_proj_5peak').fibsval = fibsval5Peak_proj;
             obj.results.fiberfiltering.(connid).('plainconn_proj').fibsval = fibsvalBin_proj;
             obj.results.fiberfiltering.(connid).('efield_proj').fibcell = fibcell_proj;
-            obj.results.fiberfiltering.(connid).('efield_proj').connFiberInd_VAT = connFiberInd_proj; % old ff files do not have these data and will fail when using pathway atlases
+            obj.results.fiberfiltering.(connid).('efield_proj').connFiberInd_VAT = connFiberInd_proj; % old fiberfiltering files do not have these data and will fail when using pathway atlases
             obj.results.fiberfiltering.(connid).calculationMethod = 'Fiber Based Method';
             if strcmp(obj.e_field_metric,'Magnitude')
                 obj.results.fiberfiltering.(connid).fibcell = obj.results.fiberfiltering.(ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome)).('efield_fibers').fibcell;
@@ -1095,7 +1096,7 @@ classdef ea_unifiedmapping < handle
                             ea_error('This has not been implemented for hemiscores.');
                         end
 
-                        % these predictors are defined within the same ff model
+                        % these predictors are defined within the same fiberfiltering model
                         % of iteration 'c'
                         % do not get rid of the first dimension when it has size of 1
                         Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3);
@@ -1391,11 +1392,12 @@ classdef ea_unifiedmapping < handle
             else
                 [DBSMappingfolder,~,~] = fileparts(obj.analysispath);
             end
-            if obj.drawTool == 1
+            switch obj.drawTool
+                case 'sweetspotmapping'
                 conn_val = 'default';
-            elseif obj.drawTool == 2
+                case 'fiberfiltering'
                 conn_val = ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome);
-            elseif obj.drawTool == 3
+                case 'networkmapping'
                  conn_val = ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome);
             end
         
@@ -1441,273 +1443,74 @@ classdef ea_unifiedmapping < handle
             end
         end
 
-        function draw(obj,vals,fibcell,usedidx) %for cv live visualize
-            %function draw(obj,vals,fibcell)
-            % re-define plainconn (since we do not store it)
-            %this is all based on which tool is selected
-            %match draw tool with field name
-            if obj.drawTool == 1
-                flag2tool = 'sweetspotmapping';
-                if isempty(obj.drawobject)
-                    obj.drawobject.sweetspotmapping = struct;
-                end
-            elseif obj.drawTool == 2
-                flag2tool = 'fiberfiltering';
-                 if isempty(obj.drawobject)
-                    obj.drawobject.fiberfiltering = struct;
-                end
-            else
-                flag2tool = 'networkmapping';
-                 if isempty(obj.drawobject)
-                    obj.drawobject.networkmapping = struct;
-                end
-            end
-            [vals,fibcell,usedidx] = ea_unifiedmapping_calcstats(obj);
-            if obj.drawTool == 2
-                ea_updatePAM_VAT(obj);
-                
-            end
-            %ea_discfibers_showroi(obj);
-            obj.fiberdrawn.fibcell = fibcell;
-            obj.fiberdrawn.vals = vals;
-            obj.fiberdrawn.usedidx = usedidx;
-            % if show connected (white) fibers, also calculate those
+        function draw(obj)
             
-            allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
-            if size(vals,2)==2 % can be a single cell in case of custom code (pseudoM setting).
-                allvals{2}=[];
+            if ~isfield(obj.activated,'sweetspotmapping')
+                obj.activated.sweetspotmapping='Off';
             end
-            for v=1:size(vals,1)
-                allvals{1}=[allvals{1};vals{v,1}];
-                if size(vals,2)==2
-                    allvals{2}=[allvals{2};vals{v,2}];
-                end
+            if ~isfield(obj.activated,'fiberfiltering')
+                obj.activated.fiberfiltering='Off';
             end
-            obj.stats.pos.shown(1)=sum(allvals{1}>0);
-            obj.stats.neg.shown(1)=sum(allvals{1}<0);
-            if size(vals,2)>1 % bihemispheric usual case
-                obj.stats.pos.shown(2)=sum(allvals{2}>0);
-                obj.stats.neg.shown(2)=sum(allvals{2}<0);
+            if ~isfield(obj.activated,'networkmapping')
+                obj.activated.networkmapping='Off';
             end
 
-            set(0,'CurrentFigure',obj.resultfig);
-
-            domultitract=size(vals,1)>1; % if color by groups is set will be positive.
-            if ~isfield(obj.M,'groups')
-                obj.M.groups.group=1;
-                obj.M.groups.color=ea_color_wes('all');
-            end
-
-            switch obj.multitractmode
-                case 'Split & Color By Group'
-                    linecols=obj.M.groups.color;
-                case 'Split & Color By Subscore'
-                    linecols = obj.subscore.colors;
-                case 'Split & Color By PCA'
-                    linecols = obj.subscore.pcacolors;
-                case 'Single Tract Analysis'
-                    linecols = obj.M.groups.color;
-            end
-            if isfield(obj.drawobject,flag2tool)
-                if isempty(obj.drawobject.(flag2tool)) % check if prior object has been stored
-                    obj.drawobject.(flag2tool)=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
-                else
-                    for s=1:numel(obj.drawobject.(flag2tool))
-                        for ins=1:numel(obj.drawobject.(flag2tool){s})
-                            try delete(obj.drawobject.(flag2tool){s}{ins}.toggleH); end
-                            try delete(obj.drawobject.(flag2tool){s}{ins}.patchH); end
-                            try delete(obj.drawobject.(flag2tool){s}{ins}); end
+            % delete prior spots:
+            if isfield(obj.drawobject,'sweetspotmapping')
+                if ~isempty(obj.drawobject.sweetspotmapping)
+                    for s=1:numel(obj.drawobject.sweetspotmapping)
+                        for ins=1:numel(obj.drawobject.sweetspotmapping{s})
+                            try delete(obj.drawobject.sweetspotmapping{s}{ins}.toggleH); end
+                            try delete(obj.drawobject.sweetspotmapping{s}{ins}.patchH); end
+                            try delete(obj.drawobject.sweetspotmapping{s}{ins}); end
                         end
                     end
                 end
-                obj.drawobject.(flag2tool)={};
-            else
-                obj.drawobject.(flag2tool) = {};
             end
-
-
-            if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
-                % reset colorbar
-                obj.colorbar=[];
-                if ~any([obj.posvisible,obj.negvisible])
-                    return
-                end
+            % plot new spots
+            switch lower(obj.activated.sweetspotmapping)
+                case 'on'
+                    obj.drawTool='sweetspotmapping';
+                    ea_unified_draw(obj);
             end
-
-            for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
-                % vals will also be >1 for subscore tracts
-                % Vertcat all values for colorbar construction
-                if domultitract && ~obj.subscore.special_case
-                    if ~any([obj.subscore.posvisible(group),obj.subscore.negvisible(group)])
-                        continue
-                    end
-                end
-                if domultitract
-                    obj.subscore.vis.pos_shown(group,1)=sum(vals{group,1}>0);
-                    obj.subscore.vis.neg_shown(group,1)=sum(vals{group,1}<0);
-                    if size(vals{group},2)==1 % unihemispheric case, should then be pseudoM case
-                        obj.subscore.vis.pos_shown(group,2) = 0;
-                        obj.subscore.vis.neg_shown(group,2) = 0;
-                    elseif (size(vals{group,2},1))>1 % bihemispheric usual case
-                        obj.subscore.vis.pos_shown(group,2)=sum(vals{group,2}>0);
-                        obj.subscore.vis.neg_shown(group,2)=sum(vals{group,2}<0);
-                    elseif length(vals(group,:)) == 2 % in the case that it still exist
-                        obj.subscore.vis.pos_shown(group,2) = 0;
-                        obj.subscore.vis.neg_shown(group,2) = 0;
-                    end
-                end
-                allvals = full(vertcat(vals{group,:}));
-
-                if isempty(allvals) || all(isnan(allvals))
-                    % ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
-                    continue;
-                else
-                    allvals(isnan(allvals)) = 0;
-                    allvals(isinf(allvals)) = 0; % ignore infs for colormap generation.
-                end
-
-                if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
-                    if obj.subscore.special_case && group == 1
-                        vals_across_subscores = full(vertcat(vals{1:size(vals,1),:}));
-                        check_and_update_visibility(obj, 'posvisible', vals_across_subscores, '<0');
-                        check_and_update_visibility(obj, 'negvisible', vals_across_subscores, '>0');
-                    elseif obj.subscore.special_case
-                        check_and_update_visibility(obj.subscore, 'posvisible', allvals, '<0', group);
-                        check_and_update_visibility(obj.subscore, 'negvisible', allvals, '>0', group);
-                    else
-                        check_and_update_visibility(obj, 'posvisible', allvals, '<0');
-                        check_and_update_visibility(obj, 'negvisible', allvals, '>0');
-                    end
-                end
-                colormap(gray);
-                gradientLevel = 1024;
-                cmapShiftRatio = 0.5;
-                shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
-                shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
-                shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
-                shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
-
-                if obj.subscore.special_case || ~domultitract
-                    pos_active = obj.posvisible;
-                    neg_active = obj.negvisible;
-                else
-                    pos_active = obj.subscore.posvisible(group);
-                    neg_active = obj.subscore.negvisible(group);
-                end
-                if domultitract
-                    switch obj.multitractmode
-                        %logic is different for groups (pos & neg cannot be
-                        %shown together), whereas for PCA it is not as
-                        %such. Therefore, I am splitting the cases into
-                        %two.
-                        case 'Split & Color By Group'
-                            obj.poscolor = linecols(group,:);
-                            obj.negcolor = [0.94,0.97,1.00];
-                        case 'Split & Color By Subscore'
-                            obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
-                            obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color
-                        case 'Split & Color By PCA'
-                            obj.poscolor = obj.subscore.pcacolors(group,:);
-                            obj.negcolor = [0.94,0.97,1.00];
-                    end
-                else
-                    obj.poscolor = obj.poscolor; % positive main color
-                    obj.negcolor = obj.negcolor; % negative main color
-                end
-                cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                if pos_active && ~neg_active
-                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
-                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                    alphaind = ones(size(allvals));
-                    % alphaind = normalize(allvals, 'range');
-                elseif ~pos_active && neg_active
-                    cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
-                    fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
-                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                    alphaind = ones(size(allvals));
-                    % alphaind = normalize(-allvals, 'range');
-                elseif pos_active && neg_active
-                    if strcmp(obj.multitractmode,'Split & Color By Group')
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                        return;
-                    else
-                        cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
-                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
-                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
-                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
-                        fibcmap{group} = [cmapLeft;cmapRight];
-                        cmapind = ones(size(allvals))*gradientLevel/2;
-                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
-                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                    end
-                end
-                setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
-                if size(vals,2)>1 % standard case
-                    cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
-                    alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
-                else % potential scripting case, only one side
-                    cmapind = mat2cell(cmapind, numel(vals{group,1}))';
-                    alphaind = mat2cell(alphaind, numel(vals{group,1}))';
-                end
-                for side=1:size(vals,2)
-                    if obj.drawTool == 1 || obj.drawTool == 3
-                        ea_drawspots_or_networks(obj,vals,group,side,gradientLevel,fibcmap);
-                    elseif obj.drawTool == 2
-                        ea_drawtracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind);
-                      %  obj.activate_tractset; % function to highlight tracts ac
-                    end
-                    if domultitract % introduce small jitter for visualization
-                        fibcell{group,side}=ea_unifiedmapping_addjitter(fibcell{group,side},0.03);
-                    end
-                end
-                % Set colorbar tick positions and labels
-                if ~isempty(allvals)
-                    if pos_active && neg_active
-                        tick{group} = [1, floor(length(fibcmap{group})/2-40), ceil(length(fibcmap{group})/2+40), length(fibcmap{group})];
-                        poscbvals = sort(allvals(allvals>0));
-                        negcbvals = sort(allvals(allvals<0));
-                        if ~isempty(negcbvals) && ~isempty(poscbvals)
-                            ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
-                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                        else
-                            continue
+            % delete prior tracts
+            if isfield(obj.drawobject,'fiberfiltering')
+                if ~isempty(obj.drawobject.fiberfiltering)
+                    for s=1:numel(obj.drawobject.fiberfiltering)
+                        for ins=1:numel(obj.drawobject.fiberfiltering{s})
+                            try delete(obj.drawobject.fiberfiltering{s}{ins}.toggleH); end
+                            try delete(obj.drawobject.fiberfiltering{s}{ins}.patchH); end
                         end
-                    elseif pos_active && ~neg_active
-                        tick{group} = [1, length(fibcmap{group})];
-                        posvals = sort(allvals(allvals>0));
-                        ticklabel{group} = [posvals(1), posvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                    elseif neg_active && ~pos_active
-                        tick{group} = [1, length(fibcmap{group})];
-                        negvals = sort(allvals(allvals<0));
-                        ticklabel{group} = [negvals(1), negvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     end
-                    % store colorbar in object
-                    if exist('fibcmap','var') % could be no fibers present at all.
-                        obj.colorbar.cmap = fibcmap;
-                        obj.colorbar.tick = tick;
-                        obj.colorbar.ticklabel = ticklabel;
-                    end
-
-                end
-              
-            end
-            function copyobj(thisObj,newObj)
-                % Construct a new object based on a deep copy of the current
-                % object of this class by copying properties over.
-                props = properties(thisObj);
-                for i = 1:length(props)
-                    % Use Dynamic Expressions to copy the required property.
-                    % For more info on usage of Dynamic Expressions, refer to
-                    % the section "Creating Field Names Dynamically" in:
-                    % web([docroot '/techdoc/matlab_prog/br04bw6-38.html#br1v5a9-1'])
-                    newObj.(props{i}) = thisObj.(props{i});
+                    try delete(obj.drawobject.fiberfiltering{s}(:)); end
                 end
             end
+            % plot new tracts
+            switch lower(obj.activated.fiberfiltering)
+                case 'on'
+                    obj.drawTool='fiberfiltering';
+                    ea_unified_draw(obj);
+            end
+            % delete prior nets
+            if isfield(obj.drawobject,'networkmapping')
+                if ~isempty(obj.drawobject.networkmapping)
+                    for s=1:numel(obj.drawobject.networkmapping)
+                        for ins=1:numel(obj.drawobject.networkmapping{s})
+                            try delete(obj.drawobject.networkmapping{s}{ins}.toggleH); end
+                            try delete(obj.drawobject.networkmapping{s}{ins}.patchH); end
+                            try delete(obj.drawobject.networkmapping{s}{ins}); end
+                        end
+                    end
+                end
+            end
+            % plot new nets
+            switch lower(obj.activated.networkmapping)
+                case 'on'
+                    obj.drawTool='networkmapping';
+                    ea_unified_draw(obj);
+            end
 
+   
         end
     end
     methods (Static)
@@ -1717,61 +1520,7 @@ classdef ea_unifiedmapping < handle
     end
 end
 
-function ea_updatePAM_VAT(obj)
-% Extract connectome ID once
-conn_id = ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome);
 
-% Ensure 'plainconn' has correct connectivity values
-try
-    key = "PAM_Ttest";
-    if obj.calcsettings.connectivity_type ~= 2
-        key = "VAT_Ttest";
-    end
-    obj.results.fiberfiltering.(conn_id).('plainconn').fibsval = obj.results.fiberfiltering.(conn_id).(key).fibsval;
-catch
-    warn_msg = "Connectivity indices were not stored. Please recalculate or stay with the same model (VAT or PAM)";
-    ea_warndlg(warn_msg);
-    disp(repmat("=", 1, 55)); disp("WARNING: " + warn_msg); disp(repmat("=", 1, 55));
-end
-
-% If switching connectivity, update fiber pathways
-if obj.calcsettings.switch_connectivity == 1
-    cfile = find_connectivity_file(obj);
-    load(cfile, 'fibers', 'idx');
-
-    try
-        for side = 1:2
-            conn_key = "connFiberInd_PAM";
-            if obj.calcsettings.connectivity_type ~= 2
-                conn_key = "connFiberInd_VAT";
-            end
-
-            connFiberInd = obj.results.fiberfiltering.(conn_id).(conn_key){side};
-            connFiber = fibers(ismember(fibers(:,4), connFiberInd), 1:3);
-            obj.results.fiberfiltering.(conn_id).fibcell{side} = mat2cell(connFiber, idx(connFiberInd));
-        end
-    catch
-        ea_warndlg(warn_msg);
-        disp(repmat("=", 1, 55)); disp("WARNING: " + warn_msg); disp(repmat("=", 1, 55));
-    end
-end
-
-% Ensure 'totalFibers' is stored
-if ~isfield(obj.results.fiberfiltering.(conn_id), 'totalFibers')
-    cfile = find_connectivity_file(obj);
-    load(cfile, 'idx');
-    obj.results.fiberfiltering.(conn_id).totalFibers = length(idx);
-end
-
-% Helper function to find the connectivity file
-    function cfile = find_connectivity_file(obj)
-        if obj.multi_pathways == 1
-            cfile = fullfile(fileparts(obj.analysispath), obj.calcsettings.fibfilt_connectome, 'merged_pathways.mat');
-        else
-            cfile = fullfile(ea_getconnectomebase('dMRI'), obj.calcsettings.fibfilt_connectome, 'data.mat');
-        end
-    end
-end
 
 function activatebychange(~,event)
       % activate_tractset();
@@ -1837,189 +1586,7 @@ for nroi = 1:length(obj.roiintersectdata)
     end
 end
 end
-function ea_drawtracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind)
-% Plot fibers if any survived
-if ~isempty(fibcell{group,side})
-    prefs = ea_prefs;
-    obj.drawobject.fiberfiltering{group,side} = streamtube(fibcell{group,side}, prefs.d3.fiberwidth);
-    nones=repmat({'none'},size(fibcell{group,side}));
-    [obj.drawobject.fiberfiltering{group,side}.EdgeColor]=nones{:};
 
-    % Calulate fiber colors alpha values
-    fibcolor = mat2cell(fibcmap{group}(cmapind{side},:), ones(size(fibcell{group,side})));
-    fibalpha = mat2cell(alphaind{side},ones(size(fibcell{group,side})));
-
-    % Set fiber colors and alphas
-    [obj.drawobject.fiberfiltering{group,side}.FaceColor]=fibcolor{:};
-    [obj.drawobject.fiberfiltering{group,side}.FaceAlpha]=fibalpha{:};
-    obj.drawvals{group,side} = vals{group,side};
-else
-    obj.drawobject.fiberfiltering{group,side} = {};
-    obj.drawvals{group,side} = {};
-end
-end
-function ea_drawspots_or_networks(obj,vals,group,side,gradientLevel,voxcmap)
-    if obj.drawTool == 1
-        % Plot fibers if any survived
-        res=obj.results.sweetspotmapping.space{side};
-        res.dt(1) = 16;
-        res.img(:)=nan;
-        obj.vizmode = 'sweetspot';
-    elseif obj.drawTool == 3
-        if contains(obj.calcsettings.netmap_connectome, ' > ')
-            % For functional connectome, should use the spacedef provided by the connectome itself
-            res = obj.results.networkmapping.(ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome)).space;
-        else
-            res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
-        end
-        res.dt(1) = 16;
-        
-
-    end
-    %plot based on vizmode
-    if strcmp(obj.vizmode,'sweetspot') || strcmp(obj.vizmode,'Regions')
-        % Plot voxels if any survived
-        if obj.posvisible
-            % plot positives:
-            posvox=res;
-            posvox.img(:)=0;
-            posvox.img(vals{group,side}>0)=vals{group,side}(vals{group,side}>0);
-
-            pobj.nii=posvox;
-            pobj.name='Positive';
-            pobj.niftiFilename='Positive.nii';
-            pobj.binary=0;
-            pobj.usesolidcolor=0;
-            pobj.color=obj.poscolor;
-            pobj.colormap=ea_colorgradient(gradientLevel, obj.posBaseColor, obj.poscolor);
-            pobj.smooth=10;
-            pobj.hullsimplify=0.5;
-            pobj.threshold=0;
-            obj.drawobject.sweetspotmapping{group,side}{1}=ea_roi('Positive.nii',pobj);
-
-            res=posvox; % keep copy for export
-        end
-
-        if obj.negvisible
-            % plot negatives:
-            negvox=res;
-            negvox.img(:)=0;
-            negvox.img(vals{group,side}<0)=-vals{group,side}(vals{group,side}<0);
-
-            pobj.nii=negvox;
-            pobj.name='Negative';
-            pobj.niftiFilename='Negative.nii';
-            pobj.binary=0;
-            pobj.usesolidcolor=0;
-            pobj.color=obj.negcolor;
-            pobj.colormap=ea_colorgradient(gradientLevel, obj.negcolor, obj.negBaseColor);
-            pobj.smooth=10;
-            pobj.hullsimplify=0.5;
-            pobj.threshold=0;
-            obj.drawobject.sweetspotmapping{group,side}{2}=ea_roi('Negative.nii',pobj);
-
-            res.img(:)=nansum([res.img(:),-negvox.img(:)],2); % keep copy for export.
-        end
-        if obj.drawTool == 1
-            if side == 1
-                sideCode = 'lh';
-            else
-                sideCode = 'rh';
-            end
-            res.img(res.img==0)=nan;
-            obj.spotdrawn.(sideCode) = res;
-        end
-
-    elseif strcmp(obj.vizmode,'Surface (Elvis)')
-
-        sides=1:2;
-        % Check cmap
-        if exist('voxcmap','var') && ~isempty(voxcmap{group})
-            defaultColor = [1 1 1]; % Default color for nan values
-            cmap = [voxcmap{group}; defaultColor];
-        else
-            warning('Colormap not defined!')
-            return
-        end
-        res.img(:)=vals{group};
-        if isfield(res,'cifti')
-            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
-        end
-        h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
-        obj.drawobject.networkmapping{group}{1} = h{1};
-        obj.drawobject.networkmapping{group}{2} = h{2};
-        
-
-    elseif strcmp(obj.vizmode,'Surface (Surfice)')
-        res.img(:)=vals{group};
-        if isfield(res,'cifti')
-            res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
-        end
-        res.fname=[fileparts(obj.leadgroup),filesep,'model.nii'];
-
-        if ~obj.posvisible
-            res.img(res.img>0)=0;
-        end
-
-        if ~obj.negvisible
-            res.img(res.img<0)=0;
-        end
-        ea_write_nii(res);
-        % det mesh to plot:
-        switch obj.model
-            case 'Smoothed'
-                mesh=([ea_space,'surf_smoothed.mz3']);
-                azimuth = '90'; % Right lateral side
-                hemiCode = '0'; % Show both hemishperes
-            case 'Full'
-                mesh=([ea_space,'surf.mz3']);
-                azimuth = '90'; % Right lateral side
-                hemiCode = '0'; % Show both hemishperes
-              
-        end
-
-        threshs=ea_sfc_getautothresh({res.fname});
-
-        script=['BEGIN;',...
-            ' RESETDEFAULTS;'...
-            ' ORIENTCUBEVISIBLE(FALSE);'];
-
-        script=[script,...
-            ' MESHLOAD(''',mesh,''');',...
-            ' MESHCOLOR(255,255,255);'];
-
-        cnt=1;
-
-        if ~any(isnan(threshs(1,1:2)))
-            script=[script,...
-                ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
-                ' OVERLAYCOLORNAME(',num2str(cnt),', ''Red-Yellow'');',...
-                ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,1)),',',num2str(threshs(1,2)),');'];
-            cnt=cnt+1;
-        end
-
-        if ~any(isnan(threshs(1,3:4)))
-            script=[script,...
-                ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
-                ' OVERLAYCOLORNAME(',num2str(cnt),', ''Blue-Green'');',...
-                ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,3)),',',num2str(threshs(1,4)),');'];
-        end
-
-        script=[script,...
-            ' COLORBARVISIBLE(','false',');',...
-            ' AZIMUTHELEVATION(',azimuth,', 0);',...
-            ' MESHHEMISPHERE(',hemiCode,');'];
-
-        script=[script,...
-            ' END.'];
-
-        ea_surfice(script,0);
-    end
-    if obj.drawTool == 3
-        res.img(:)=vals{group};
-        obj.networkdrawn = res;
-    end
-end
 
 
 function check_and_update_visibility(obj, field, ~, condition, group)
