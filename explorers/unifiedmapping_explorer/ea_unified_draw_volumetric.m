@@ -4,7 +4,6 @@ if strcmp(obj.drawTool,'sweetspotmapping')
     res=obj.results.sweetspotmapping.space{side};
     res.dt(1) = 16;
     res.img(:)=nan;
-    obj.vizmode = 'sweetspot';
 elseif strcmp(obj.drawTool,'networkmapping')
     if contains(obj.calcsettings.netmap_connectome, ' > ')
         % For functional connectome, should use the spacedef provided by the connectome itself
@@ -17,7 +16,7 @@ elseif strcmp(obj.drawTool,'networkmapping')
 
 end
 %plot based on vizmode
-if strcmp(obj.vizmode,'sweetspot') || strcmp(obj.vizmode,'Regions')
+if strcmp(obj.drawTool,'sweetspotmapping') || strcmp(obj.vizmode,'Regions')
     % Plot voxels if any survived
     if obj.posvisible
         % plot positives:
@@ -73,6 +72,8 @@ if strcmp(obj.vizmode,'sweetspot') || strcmp(obj.vizmode,'Regions')
 elseif strcmp(obj.vizmode,'Surface (Elvis)')
 
     sides=1:2;
+    sides=sides([obj.NMviz.modelRH,obj.NMviz.modelLH]);
+
     % Check cmap
     if exist('voxcmap','var') && ~isempty(voxcmap{group})
         defaultColor = [1 1 1]; % Default color for nan values
@@ -86,9 +87,12 @@ elseif strcmp(obj.vizmode,'Surface (Elvis)')
         res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
     end
     h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
-    obj.drawobject.networkmapping{group}{1} = h{1};
-    obj.drawobject.networkmapping{group}{2} = h{2};
-
+    if ismember(sides,1)
+        obj.drawobject.networkmapping{group}{1} = h{1};
+    end
+    if ismember(sides,2)
+        obj.drawobject.networkmapping{group}{2} = h{2};
+    end
 
 elseif strcmp(obj.vizmode,'Surface (Surfice)')
     res.img(:)=vals{group};

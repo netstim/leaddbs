@@ -119,7 +119,7 @@ for group = groups
 
         %start the stats process
         if strcmp(obj.statsettings.statfamily,'Correlations')
-            disp(['Calculating ' obj.statsettings.stattest ' correlation for side ' num2str(side) '...']);
+            disp([obj.drawTool,': Calculating ' obj.statsettings.stattest ' correlation for side ' num2str(side) '...']);
         else
             
             disp(['Calculating ' obj.statsettings.stattest ' for side ' num2str(side) '...']);

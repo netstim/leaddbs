@@ -144,6 +144,12 @@ classdef ea_unifiedmapping < handle
             obj.calcsettings.calcspace = 1; %0 = native space, 1 = MNI space
             obj.calcsettings.netmap_connectome = '';
             obj.calcsettings.fibfilt_connectome = '';
+            if ~isfield(obj.NMviz,'modelRH')
+            obj.NMviz.modelRH=1;
+            end
+            if ~isfield(obj.NMviz,'modelLH')
+            obj.NMviz.modelLH=1;
+            end
             obj.subscore.vars = {};
             obj.subscore.labels = {};
             obj.subscore.pcavars = {};
@@ -878,7 +884,7 @@ classdef ea_unifiedmapping < handle
                 Ihat = nan(length(patientsel),2,length(obj.subscore.vars));
                 Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
             end
-            if obj.drawTool == 2
+            if strcmp(obj.drawTool,'fiberfiltering')
                 if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
                     S = load(obj.ExternalModelFile);
                     if ~strcmp(ea_unifiedmapping_method2methodid(obj),S.fibsvalType)
@@ -1400,13 +1406,14 @@ classdef ea_unifiedmapping < handle
             else
                 [DBSMappingfolder,~,~] = fileparts(obj.analysispath);
             end
+            conn_val = 'default';
             switch obj.drawTool
                 case 'sweetspotmapping'
                 conn_val = 'default';
                 case 'fiberfiltering'
                 conn_val = ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome);
                 case 'networkmapping'
-                 conn_val = ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome);
+                conn_val = ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome);
             end
         
             if ~isfolder(DBSMappingfolder)
