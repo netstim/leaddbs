@@ -114,10 +114,12 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
         if lateral_score == false && size(vals,2) == 2
             vals_flat = vertcat(vals{voter,:});
             % just concatenate values from both hemispheres
+        else
+            vals_flat=vals{voter};
+        end
             orig_model = cell(1,2);
             switch obj.drawTool
                 case 'sweetspotmapping'
-
                     orig_model{1} = obj.results.sweetspotmapping.efield{1}';
                     if size(obj.results.sweetspotmapping.efield,1)==2
                         orig_model{2} = obj.results.sweetspotmapping.efield{2}';
@@ -130,10 +132,9 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                     end
                     orig_model_flat = vertcat(orig_model{:});
                 case 'networkmapping'
-                    orig_model_flat = full(obj.results.networkmapping.(ea_conn2connid(obj.netmap_connectome)).connval);
+                    orig_model_flat = full(obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval);
             end
-
-        end
+  
         for side=1:size(vals,2)
             % if not lateral, compute Ihat for both hemispheres at the same time
             if ~isempty(vals{voter,side})

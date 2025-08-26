@@ -28,10 +28,36 @@ switch explorer.multitractmode
         explorer.multitractmode='Split & Color By Group';
         explorer.patientselection=allptsel;
     otherwise
-        [I,Ihat,cvs,sel,val_struct{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
-        if viz
-            ea_unifiedmapping_crossval_visualize(explorer,I,Ihat,cvs,posthoccorrect,sel);
+        cnt=0;
+        if strcmp(explorer.activated.sweetspotmapping,'On')
+            cnt=cnt+1;
+            explorer.drawTool='sweetspotmapping';
+            [I{cnt},Ihat{cnt},cvs{cnt},sel{cnt},val_struct{cnt}{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
+            if viz
+                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt});
+            end
         end
+        if strcmp(explorer.activated.fiberfiltering,'On')
+            cnt=cnt+1;
+            explorer.drawTool='fiberfiltering';
+            [I{cnt},Ihat{cnt},cvs{cnt},sel{cnt},val_struct{cnt}{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
+            if viz
+                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt});
+            end
+        end
+        if strcmp(explorer.activated.networkmapping,'On')
+            cnt=cnt+1;
+            explorer.drawTool='networkmapping';
+            [I{cnt},Ihat{cnt},cvs{cnt},sel{cnt},val_struct{cnt}{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
+            if viz
+                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt});
+            end            
+        end
+
+        if cnt>1
+            ea_glmplot(cell2mat(Ihat),I{1},'Normal',{'Unified Model','Estimates','Empirical'});
+        end
+
 end
 
 
