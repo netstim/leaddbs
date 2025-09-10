@@ -9,8 +9,10 @@ arguments
 end
 
 % Check OSS-DBS installation, set env
-env = ea_conda_env('OSS-DBSv2');
-ea_checkOSSDBSInstallv2(env);
+if ~isfield(options.prefs,'ext_oss_env') || strcmp(options.prefs.ext_oss_env,'None')
+    env = ea_conda_env('OSS-DBSv2');
+    ea_checkOSSDBSInstallv2(env);
+end
 
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)

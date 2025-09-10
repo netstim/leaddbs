@@ -29,7 +29,13 @@ setenv('TZ', timezone);
 % import settings from Lead-DBS GUI
 %options.stimSetMode = 0;
 [settings,S] = ea_prepare_ossdbs(options,S);
-env = ea_conda_env('OSS-DBSv2');
+if isfield(options.prefs,'ext_oss_env') && ~strcmp(options.prefs.ext_oss_env,'None')
+    % use external environment
+    env = ea_ext_env(options.prefs.ext_oss_env);
+    disp("Using the external OSS-DBS environment")
+else
+    env = ea_conda_env('OSS-DBSv2');
+end
 
 % some hardcoded parameters, can be added to the GUI later
 settings.reuse_warped_connectome = 0;  % set to 1 if the connectome was already processed for the given stim. settings
