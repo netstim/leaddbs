@@ -5,7 +5,12 @@ end
 
 if isempty(proxy)
     proxy = inputdlg('Set proxy for conda and pip', '', 1, {'http://'});
+end
+
+if ~isempty(proxy) && ~strcmp(proxy, 'http://')
     proxy = proxy{1};
+else
+    return;
 end
 
 ea_cprintf('*Comments', 'Set proxy for pip...\n');
