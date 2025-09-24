@@ -361,7 +361,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 && isfile(fullfile(options.earoot, 'programmer', 'app', 'release', ['LeadDBSProgrammer_', ea_getarch, '.zip']))
             stimbutton = uipushtool(ht,'CData',ea_get_icn('programmer'),...
                 'TooltipString','Lead Programmer',...
-                'ClickedCallback',{@leadprogrammer,elstruct,resultfig,options});
+                'ClickedCallback',{@(~,~) leadprogrammer(elstruct,resultfig,options)});
         end
 
     else
@@ -630,82 +630,32 @@ while true
 end
 
 
-function leadprogrammer(hobj, ev, elstruct, resultfig, options)
-[input_file_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
-currentOS = ea_getarch;
-if isfolder(releaseDir)
-    zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
-    if ismac
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
-        if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
-            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
-            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-        end
-    elseif isunix
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
-        if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
-            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-        end
+function leadprogrammer(elstruct, resultfig, options)
+handles = getappdata(options.leadfigure, 'handles');
+ea_initialize_programmer(handles, options.bids, 'stimulate');
+input_file_path = ea_input_programmer(options, length(elstruct.markers));
+system([ea_getProgrammerPath, ' ', ea_path_helper(input_file_path)]);
+[S] = ea_process_programmer(options);
+if isfield(S, 'message')
+    disp([S.message]);
+    return;
+else
+    options.orignative = options.native;
+    if options.orignative % Force native space calculation when elvis opened in native space
+        ea_setprefs('vatsettings.estimateInTemplate', 0);
     else
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
-        if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
-            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-        end
+        ea_setprefs('vatsettings.estimateInTemplate', S.estimateInTemplate);
+        options.native = ~S.estimateInTemplate;
     end
 
-    system([appFile, ' ', ea_path_helper(input_file_path)]);
-    [S] = ea_process_programmer(options);
-    if isfield(S, 'message')
-        disp([S.message]);
-        return;
-    else
-        options.orignative = options.native;
-        if options.orignative % Force native space calculation when elvis opened in native space
-            ea_setprefs('vatsettings.estimateInTemplate', 0);
-        else
-            ea_setprefs('vatsettings.estimateInTemplate', S.estimateInTemplate);
-            options.native = ~S.estimateInTemplate;
-        end
-        S = rmfield(S, 'estimateInTemplate');
-        stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
-        ea_mkdir(stimFolder);
-        stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
-        save(stimParams, 'S');
-    end
-
-    ea_visprogrammer(resultfig, options, S, elstruct);
-
-    % system([appDir, ' &']);
-    % [status, cmdout] = system([appDir, ' &']);
-    % [status, cmdout] = system([appDir, ' & echo $!']);
-    % pid = str2double(cmdout);
-    % f = parfeval(backgroundPool, @runApp, 0, appDir);
+    S = rmfield(S, 'estimateInTemplate');
+    stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
+    ea_mkdir(stimFolder);
+    stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
+    save(stimParams, 'S');
 end
 
-% while true
-%     % Check if the file_path is empty
-%     pause(5);
-%     data = fileread(file_path);
-%     status_data = fileread(status_path);
-% %     [status, cmdout] = system(['ps -p ', num2str(pid)]);
-% %     if contains(cmdout, 'defunct')
-% %         disp('Application has terminated. Exiting loop.');
-% %         break;
-% %     end
-%     if status_data == '0'
-%         break;
-%     end
-%     if ~isempty(data)
-%         % If file_path is not empty, run the following code
-%         [S] = ea_process_programmer(file_path);
-%         ea_visprogrammer(resultfig, options, S, elstruct);
-%     end
-%
-%     % Pause for 5 seconds before checking again
-% end
+ea_visprogrammer(resultfig, options, S, elstruct);
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)
