@@ -2,8 +2,7 @@ function ea_initialize_programmer(handles, bids, action)
     %% Set the lead DBS patient folder path here
     groupFolderPath = bids.datasetDir; 
     %% Initialize Parameters
-    groupOptions = BIDSFetcher(groupFolderPath);
-    numPatients = numel(groupOptions.subjId);
+    groupOptions = BIDSFetcher(groupFolderPath);\
     
     %% Prepare PLY Reconstructions
     preparePLYReconstructions(groupFolderPath, groupOptions, handles);
@@ -12,41 +11,20 @@ function ea_initialize_programmer(handles, bids, action)
     prepareReconstructionJSON(groupFolderPath, groupOptions);
     
     %% Prepare Atlases for Export
-%     prepareAtlasesForExport();
+    % prepareAtlasesForExport();
 
     %% Prepare participants json file
      writeParticipantsJson(bids);
 
     %% Conditionally launch application
     if (action == "standalone")
-        currentOS = ea_getarch;
         prepareStimulations(groupFolderPath, groupOptions);
-        releaseDir = fullfile(ea_getearoot, 'programmer', 'app', 'release');
-        zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
-        if ismac
-            appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
-            if ~isfile(appFile)
-                unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
-                system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
-                savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-            end
-        elseif isunix
-            appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
-            if ~isfile(appFile)
-                unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
-                savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-            end
-        else
-            appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
-            if ~isfile(appFile)
-                unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
-                savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-            end
-        end
-%         prepare_ossdbs(groupOptions, handles);
-        system([appFile, ' ', groupFolderPath, ' > /dev/null 2>&1 &']);
+
+        % prepare_ossdbs(groupOptions, handles);
+        system([ea_getProgrammerPath, ' ', groupFolderPath, ' > /dev/null 2>&1 &']);
     end
 end
+
 
 function prepare_ossdbs(groupOptions, handles)
     ptID = groupOptions.subjId{1};
@@ -86,8 +64,8 @@ function prepareStimulations(groupFolderPath, groupOptions)
         if ~iscell(stimFolder)
             stimFolder = {stimFolder};
         end
-%         stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
-%         stimFolder = stimFolder(~startsWith(stimFolder, 'gs_'));
+        % stimMatFile = stimMatFile(~startsWith(stimFolder, 'gs_'));
+        % stimFolder = stimFolder(~startsWith(stimFolder, 'gs_'));
         for k=1:numel(stimMatFile)
             S = ea_checkStimParams(stimMatFile{k});
             sessionId = strcat('ses-', stimFolder{k});
@@ -101,6 +79,7 @@ function prepareStimulations(groupFolderPath, groupOptions)
         end
     end
 end
+
 
 function preparePLYReconstructions(groupFolderPath, groupOptions, handles)
     for i = 1:numel(groupOptions.subjId)
@@ -187,6 +166,7 @@ function prepareAtlasesForExport()
         end
     end
 end
+
 
 function [reco_output] = writeRecoToJSON(matFileName)
     % Load the .mat file

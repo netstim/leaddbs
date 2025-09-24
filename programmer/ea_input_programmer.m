@@ -1,8 +1,5 @@
-function [input_file_path, releaseDir] = ea_input_programmer(options, numElectrodes)
+function input_file_path = ea_input_programmer(options, numElectrodes)
 % Prepare input for programmer
-
-%% Handle output variables
-releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
 
 %% Convert stimparameters.mat to json, handle inputData.json
 inputStruct.patientname = options.patientname;
