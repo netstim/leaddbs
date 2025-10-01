@@ -73,4 +73,6 @@ ROI.img=eeg; %permute(eeg,[2,1,3]);
 ROI.dt=[4,endian];
 ROI.n=[1 1];
 ea_write_nii(ROI);
+gzip(ROI.fname)
+ea_delete(ROI.fname)
 
