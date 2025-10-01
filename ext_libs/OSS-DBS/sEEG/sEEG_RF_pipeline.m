@@ -1,19 +1,24 @@
 
 % Inputs
-sEEG_table = '/home/forel/Documents/data/SEEG/tst/reconstruction_sheet_midsize.tsv';
-sEEG_stim_protocols = {'/home/forel/Documents/data/SEEG/tst/stim_protocols_EL1.csv'
-    '/home/forel/Documents/data/SEEG/tst/stim_protocols_EL2.csv'};
-anchor = '/home/forel/Documents/data/SEEG/tst/anat_t1.nii.gz';
-multisegment = '/home/forel/Documents/data/SEEG/tst/anat_t1_synthSeg.nii.gz';  % output of the segmentation alg.
-segmaskFile = '/home/forel/Documents/data/SEEG/tst/segmask.nii';
-reslice2segmask = false; % if true, all VTRs are stored in the same voxel space defined by segmask
+sEEG_table = '/home/interscan/Documents/data/EM1271/sub-EM1271_ses-implantation-01_two_electrodes.tsv';
+sEEG_stim_protocols = {'/home/interscan/Documents/data/EM1271/sub-EM1271_ses-stimulations-01_electrodes.csv'};
+anchor = '/home/interscan/Documents/data/EM1271/anat_t2.nii';
+reslice2segmask = true; % if true, all VTRs are stored in the same voxel space defined by segmask
                         % this is handy when voxelwise operations are used
                         % but each VTR nii is > 100 MBs
-VTR = false;             % if true, computes recording fields (aka volume of tissue recorded)
+VTR = true;             % if true, computes recording fields (aka volume of tissue recorded)
 Stim_Mode = 'VC';       % CC - current-controlled, VC - voltage-controlled
 warp2MNI = false;   % warp from the anchor space to MNI
 transform = 'JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative-ANTS.nii.gz';      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
-                                                                                 % IMPORTANT: make sure ants is mentioned in the name and use single quotes
+                                                                                 % IMPORTANT: make sure ants is mentioned in the name and use single quote
+
+Segment_SVD = true;
+images = dir_without_dots('/home/interscan/Documents/data/EM1271/anat_*');
+
+
+% autopath
+segmaskFile = '/home/forel/Documents/data/SEEG/tst/segmask.nii';
+
 % auto-definitions
 [basepath,~,~] = fileparts(sEEG_table);
 if VTR
@@ -22,13 +27,19 @@ else
     OSS_sEEG_script = [ea_getearoot, '/ext_libs/OSS-DBS/sEEG/run_OSS4SEEG_Stim_no_shift.py'];
 end
 
-% segment the anchor modality
-% TBD: multimodal segmentation with SynthSeg
-if ~isfile(segmaskFile)
-    if ~isfile(multisegment)
-        ea_synthseg(anchor, multisegment)
+if Segment_SVD
+    ea_svd_segmentation(images, anchor)
+else
+    % segment the anchor modality
+    % TBD: multimodal segmentation with SynthSeg
+    [workingDir,~,~] = fileparts(anchor); 
+    multisegment = [workingDir,filesep,'segmask_synthSeg.nii'];
+    if ~isfile(segmaskFile)
+        if ~isfile(multisegment)
+            ea_synthseg(anchor, multisegment)
+        end
+        ea_convert_synthSeg2segmask(multisegment, segmaskFile);
     end
-    ea_convert_synthSeg2segmask(multisegment, segmaskFile);
 end
 
 % Set OSS-DBS python path

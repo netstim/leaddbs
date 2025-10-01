@@ -195,6 +195,9 @@ if __name__ == '__main__':
     if Electrode_ID != None:
         # if elecrode ID is specified, drop entries for the rest
         SEEG_recos_df = SEEG_recos_df[SEEG_recos_df['Electrode_ID'] == Electrode_ID]
+        Electrode_ID_given = True
+    else:
+        Electrode_ID_given = False
     
     # some auto-definitions
     stim_folder = os.path.dirname(SEEG_recos)
@@ -210,7 +213,7 @@ if __name__ == '__main__':
         # electrode type and ID
         electrode = SEEG_recos_df.loc[SEEG_recos_df['Electrode_ID'] == Electrode_ID, 'electrode']
         oss_electrode = check_electrode_availability(electrode.iloc[0])  
-        if Electrode_ID == None:
+        if not Electrode_ID_given:
             Electrode_ID = SEEG_recos_df['Electrode_ID'][stim_i]
         
         # ToDO: sanity check for the number of contacts in the stim. protocol file for this electrode model
