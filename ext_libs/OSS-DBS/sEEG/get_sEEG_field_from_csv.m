@@ -70,7 +70,8 @@ else
     ROI.descrip='OSS E-Field';
 end
 ROI.img=eeg; %permute(eeg,[2,1,3]);
-ROI.dt=[4,endian];
+ROI.pinfo = [1;0;352];
+ROI.dt = [64, endian];
 ROI.n=[1 1];
 ea_write_nii(ROI);
 gzip(ROI.fname)

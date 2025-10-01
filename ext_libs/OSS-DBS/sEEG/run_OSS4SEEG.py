@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # some auto-definitions
     stim_folder = os.path.dirname(SEEG_recos)
-    Amplitude = [0.001]  # 1 mA. The exact value is not important for VTRs
+    Amplitude = [1.0]  # 1 V. The exact value is not important for VTRs
     contacts2simulate = SEEG_recos_df.name   # all reconstructed
 
     # we iterate over all contacts of all electrodes, but rebuilding the geometry everytime
