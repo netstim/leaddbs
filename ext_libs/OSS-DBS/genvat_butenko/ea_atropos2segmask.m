@@ -21,8 +21,11 @@ if contains(anchorModality, 'T1w') || contains(anchorModality, 'anat_t1')
     segmask.img(segmask.img == 0) = 3;
 elseif contains(anchorModality, 'T2w') || contains(anchorModality, 'anat_t2')
     % white matter - dark (1), grey matter - grey (2), csf - bright (3)
-    segmask.img(rawSegmask.img == 1) = 2;
-    segmask.img(rawSegmask.img == 2) = 1;
+    %segmask.img(rawSegmask.img == 1) = 2;
+    %segmask.img(rawSegmask.img == 2) = 1;
+    segmask.img(segmask.img == 0) = 3;  % default to CSF
+elseif contains(anchorModality, 'T1T2')
+    segmask.img(segmask.img == 0) = 3;  % default to CSF
 else
     ea_warndlg("%s anchor modality is not supported at the moment",anchorModality)
     return
