@@ -111,26 +111,24 @@ if strcmp(alg4Lacunes,'TeamTea')
     end
 
     if ~all(found)
-        disp("Not all required modalities were found for TeamTea Lacune segmentation")
-        disp(sub_ID)
+        fprintf('\nFor %s, not all required modalities were found for TeamTea Lacune segmentation\n',sub_ID)
         %return
     end
 
     % % run TeamTea docker
     % you might need to add user to the docker group
-    % system(['docker run ', ...
-    %     '-v ', TT_input_path, ':/input ', ...
-    %     '-v ', TT_output_path, ':/output', ...
-    %     '--gpus all', ...
-    %     '--rm ', '59f961f4a16d']);
+    system(['docker run --gpus all --rm ', ...
+        '-v ', TT_input_path, ':/input ', ...
+        '-v ', TT_output_path, ':/output ', ...
+        '59f961f4a16d']);
     
     % for now run externally
-    fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/input -v %s:/output 59f961f4a16d\n',TT_input_path,TT_output_path)
-    ea_warndlg("Copy the docker command and make sure the process is over")
+    %fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/input -v %s:/output 59f961f4a16d\n',TT_input_path,TT_output_path)
+    %ea_warndlg("Copy the docker command and make sure the process is over")
 
     lacunesFile = [TT_output_path,filesep,'images',filesep,'sub-',sub_ID,'_space-default_desc-prediction.nii.gz'];
     if ~isfile(lacunesFile)
-        ea_warndlg("WMH segmentation with segcsvd failed!")
+        ea_warndlg("Lacune segmentation with segcsvd failed!")
         disp(sub_ID)
     end
 
@@ -167,11 +165,25 @@ end
 % segment the anchor modality
 
 if strcmp(segmenter,'SynthSeg')
-    multisegment = [workingDir,filesep,anchorName,'_synthSeg.nii.gz'];  % output of the segmentation alg.
+    synth_fn = 'T1_synthSeg.nii.gz';
+    multisegment = [workingDir,filesep,synth_fn];  % output of the segmentation alg.
 
     if ~isfile(multisegment)
-        ea_synthseg(anchorImage, multisegment)
+        if strcmp(alg4Lacunes,'TeamTea')
+            T12segment = [TT_input_path,filesep,image_T1];
+        else
+            T12segment = [workingDir,filesep,image_T1];
+        end
+        ea_synthseg(T12segment, multisegment)
         ea_convert_synthSeg2segmask(multisegment, segmaskFile);
+
+        % reslice segmask to AnchorImage space
+        % does not matter which image, they are all co-registered
+        % but maybe better use anchor in the 
+        gunzip(T12segment)
+        T12segment_nii = T12segment(1:end-3);
+        ea_conformspaceto(T12segment_nii,segmaskFile)
+
     end
 
     if strcmp(alg4Lacunes,'TeamTea')
@@ -201,7 +213,7 @@ if strcmp(alg4WMH,'segcsvd')
     end
 
     % synthSeg definitions
-	synth_fn = [anchorName,'_synthSeg.nii.gz'];
+	%synth_fn = [anchorName,'_synthSeg.nii.gz'];
 	seg_wmh_fn = 'seg_wmh.nii.gz';
     seg_wmh_thr_float = 0.1;
 	seg_wmh_thr = char(string(seg_wmh_thr_float));
@@ -211,14 +223,18 @@ if strcmp(alg4WMH,'segcsvd')
 	%rm -f /${out_dir}/${seg_wmh_fn}
     ea_delete([segcsvdDir,filesep,seg_wmh_fn])
      
-    % system(['docker run ', ...
-    %     '-v ',  inputDir, ':/indir ', ...
-    %     '-v ', segcsvdDir, ':/outdir', ...
-    %     '--gpus all',
-    %     '--rm ', '59f961f4a16d');
+    system(['docker run --gpus all --rm ', ...
+        '-v ',  inputDir, ':/indir ', ...
+        '-v ', segcsvdDir, ':/outdir ', ...
+        '-w / segcsvd_rc03 segment_wmh ', ...
+        '/indir/',image_FLAIR, ...
+        ' /indir/',synth_fn, ...
+        ' /outdir/',seg_wmh_fn, ...
+        ' 1 "96,128" ', seg_wmh_thr, ' 1 ', ...
+        skip_mask_and_bias, ' ', cleanup]);
 
-    fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/indir -v %s:/outdir -w / segcsvd_rc03 segment_wmh /indir/%s /indir/%s /outdir/%s 1 "96,128" %s 1 %s %s\n',inputDir,segcsvdDir,image_FLAIR,synth_fn,seg_wmh_fn,seg_wmh_thr,skip_mask_and_bias,cleanup)
-	ea_warndlg("Copy the docker command and make sure the process is over")
+    %fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/indir -v %s:/outdir -w / segcsvd_rc03 segment_wmh /indir/%s /indir/%s /outdir/%s 1 "96,128" %s 1 %s %s\n',inputDir,segcsvdDir,image_FLAIR,synth_fn,seg_wmh_fn,seg_wmh_thr,skip_mask_and_bias,cleanup)
+	%ea_warndlg("Copy the docker command and make sure the process is over")
 
     if ~isfile([segcsvdDir,filesep,seg_wmh_fn])
         ea_warndlg("WMH segmentation with segcsvd failed!")
@@ -240,14 +256,24 @@ if strcmp(alg4WMH,'segcsvd')
 
         ea_delete([segcsvdDir,filesep,seg_pvs_fn])
 
-        fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/indir -v %s:/outdir -w / segcsvd_rc03 segment_pvs /indir/%s /indir/%s /outdir/%s /outdir/%s "1.0,1.4" 0 %s %s %s\n',inputDir,segcsvdDir,image_T1,synth_fn,seg_wmh_fn,seg_pvs_fn,skip_mask_and_bias,cleanup,seg_pvs_thr)
-    	ea_warndlg("Copy the docker command and make sure the process is over")
+        system(['docker run --gpus all --rm ', ...
+            '-v ',  inputDir, ':/indir ', ...
+            '-v ', segcsvdDir, ':/outdir ', ...
+            '-w / segcsvd_rc03 segment_pvs ', ...
+            '/indir/',image_T1, ...
+            ' /indir/',synth_fn, ...
+            ' /outdir/',seg_wmh_fn, ...
+            ' /outdir/',seg_pvs_fn, ...
+            ' "1.0,1.4" 0 ', skip_mask_and_bias, ' ', ...
+            cleanup, ' ',seg_pvs_thr]);
 
-        if ~isfile([segcsvdDir,filesep,seg_pvs_fn])
+        %fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/indir -v %s:/outdir -w / segcsvd_rc03 segment_pvs /indir/%s /indir/%s /outdir/%s /outdir/%s "1.0,1.4" 0 %s %s %s\n',inputDir,segcsvdDir,image_T1,synth_fn,seg_wmh_fn,seg_pvs_fn,skip_mask_and_bias,cleanup,seg_pvs_thr)
+    	%ea_warndlg("Copy the docker command and make sure the process is over")
+
+        pvsFile = [segcsvdDir,filesep,seg_pvs_fn];
+        if ~isfile(pvsFile)
             ea_warndlg("PVS segmentation with segcsvd failed!")
             disp(sub_ID)
-        else
-            pvsFile = [segcsvdDir,filesep,seg_pvs_fn];
         end
     end
 
@@ -265,31 +291,43 @@ segmask = ea_load_nii(segmaskFile);
 
 % WMH, PVS and Lacune burn-in is ordered based on the VCM relevance
 if ~strcmp(alg4WMH,'None')
-    wmh = ea_load_nii(wmhFile);
-    if all(size(segmask.dim) == size(wmh.dim)) & all(segmask.mat == wmh.mat)
-        % WMH ca be burned in as default to be filtered out during PAM
-        segmask.img(wmh.img >= seg_wmh_thr_float) = 0;
-    else
-        ea_warndlg("Voxel space of segmask and PVS did not match, check!")
+    try
+        wmh = ea_load_nii(wmhFile);
+        if all(size(segmask.img) == size(wmh.img)) & all(segmask.mat == wmh.mat)
+            % WMH ca be burned in as default to be filtered out during PAM
+            segmask.img(wmh.img >= seg_wmh_thr_float) = 0;
+        else
+            ea_warndlg("Voxel space of segmask and WMH did not match, check!")
+        end
+    catch ME
+        fprintf('\nNo WMH segmentation found for %s\n',sub_ID)
     end
 end
 
 if ~strcmp(alg4PVS,'None')
-    pvs = ea_load_nii(pvsFile);
-    if all(size(segmask.dim) == size(pvs.dim)) & all(segmask.mat == pvs.mat)
-        segmask.img(pvs.img >= seg_pvs_thr_float) = 3;
-    else
-        ea_warndlg("Voxel space of segmask and PVS did not match, check!")
+    try
+        pvs = ea_load_nii(pvsFile);
+        if all(size(segmask.img) == size(pvs.img)) & all(segmask.mat == pvs.mat)
+            segmask.img(pvs.img >= seg_pvs_thr_float) = 3;
+        else
+            ea_warndlg("Voxel space of segmask and PVS did not match, check!")
+        end
+    catch ME
+        fprintf('\nNo PVS segmentation found for %s\n',sub_ID)
     end
 end
 
 if ~strcmp(alg4Lacunes,'None')
     % file cannot be loaded if no lacunes found?
-    lacunes = ea_load_nii(lacunesFile);
-    if all(size(segmask.dim) == size(lacunes.dim)) && all(segmask.mat == lacunes.mat)
-        segmask.img(lacunes.img >= 0.99) = 3;
-    else
-        ea_warndlg("Voxel space of segmask and PVS did not match, check!")
+    try
+        lacunes = ea_load_nii(lacunesFile);
+        if all(size(segmask.img) == size(lacunes.img)) && all(segmask.mat == lacunes.mat)
+            segmask.img(lacunes.img >= 0.99) = 3;
+        else
+            ea_warndlg("Voxel space of segmask and lacunes did not match, check!")
+        end
+    catch ME
+        fprintf('\nNo lacune segmentation found for %s \n',sub_ID)
     end
 end
 
