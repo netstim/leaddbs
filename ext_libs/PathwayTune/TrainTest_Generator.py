@@ -203,7 +203,7 @@ def create_Training_Test_sets(stim_folder, electrode_model, conc_threshold, segm
         elif predefined_testset:
             samples = training_samples
         else:
-            samples = np.concatenate((currents_training,test_samples))
+            samples = np.concatenate((training_samples,test_samples))
     
         # # scale sample [0 1] samples to [threshold0, threshold1]
         if el_type == 'segmented8':
