@@ -1,6 +1,6 @@
 '''
     By K. Butenko
-    This script trains and test an ANN model to approximate pathway activation for a given electrode position
+    This script trains and tests an ANN model to approximate pathway activation for a given electrode position
 '''
 
 import matplotlib
@@ -8,480 +8,387 @@ import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 import numpy as np
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'   # to avoid any CUDA issues
 import sys
 import json
-import copy
 from typing import Tuple, List, Optional, Dict
-from scipy.stats import pearsonr
+
+# Set environment variable to avoid CUDA issues if not needed
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Lambda
 from tensorflow.keras import optimizers
 
+from Pathways_Stats import get_simulated_pathways
 
-SIDE_SUFFIX = ['_rh','_lh']
-SIDE_LABEL = {0: '_right', 1: '_left'}
+# --- Global Constants and Utilities ---
+
+HEMI_SUFFIX = ['_rh','_lh']
+hemi_idx_LABEL = {0: '_right', 1: '_left'}
 
 # ANN parameters
-learn_rate = 0.0025
-N_epochs = 500
+LEARN_RATE = 0.0025
+N_EPOCHS = 500
 MIN_AXON_NUMBER = 10
-MIN_ACTIV_THRESHOLD = 0.05  # Define a default value if not specified elsewhere
+MIN_ACTIV_THRESHOLD = 5.0   # at least one train and one test protocol should have percent activation above this threshold
+ZERO_PROTOCOLS_PERC = 10.0  # To soft-enforce zero activation for zero current
 
-def matplotlib_kdeplot(data, ax=None, bw_method=None, **kwargs):
-    """
-    Replicates seaborn's kdeplot functionality using matplotlib and scipy.stats.gaussian_kde.
+# --- Configuration and Data Classes ---
+class DataProcessor:
+    """Handles data loading, filtering, and augmentation."""
 
-    Parameters:
-    - data: 1D array-like data.
-    - ax: matplotlib Axes object, if None, a new figure and axes will be created.
-    - bw_method: The method used to calculate the estimator bandwidth. Can be 'scott', 'silverman', or a scalar.
-    - **kwargs: Additional keyword arguments passed to matplotlib's plot function.
+    def __init__(self, stim_dir: str, hemi_idx: int):
+        self.stim_dir = stim_dir
+        self.hemi_idx = hemi_idx
+        
+        self.res_folder = os.path.join(stim_dir, 'OSS_sim_files' + HEMI_SUFFIX[hemi_idx], 'Results')
+        self.stimsets_info: Dict = self._load_stimsets_info()
+        self.train_size = self.stimsets_info.get('trainSize_actual', 0)
+        self.no_test = self.stimsets_info.get('testSize_actual', 0) == 0
 
-    Returns:
-    - matplotlib Axes object.
-    """
-
-    if ax is None:
-        fig, ax = plt.subplots()
-
-    kde = gaussian_kde(data, bw_method=bw_method)
-    x_vals = np.linspace(min(data), max(data), 1000)  # Adjust range and resolution as needed
-    y_vals = kde(x_vals)
-
-    ax.plot(x_vals, y_vals, **kwargs)
-
-    return ax
-
-
-def load_activation_results(res_folder: str, pathway: str, currents_shape: Tuple[int, int]) -> np.ndarray:
-    """Loads activation results for each pathway from JSON files.
-
-    Args:
-        res_folder: Path to the results subfolder.
-        pathway: Name of the pathway for the ANN training.
-        currents_shape: Shape of the currents array (number of protocols, number of contacts).
-
-    Returns:
-        A NumPy array containing activation results (percentage activated) for each protocol and pathway.
-    """
-    activation_results = np.zeros((currents_shape[0],1), dtype=float)
-    for prot_i in range(currents_shape[0]):
-        pathway_file = os.path.join(res_folder, f'Pathway_status_{pathway}_{prot_i}.json')
-        if os.path.isfile(pathway_file):
-            with open(pathway_file, 'r') as fp:
-                pam_res_dict = json.load(fp)
-                activation_results[prot_i,0] = 0.01 * pam_res_dict['percent_activated']
+    def _load_stimsets_info(self) -> Dict:
+        """Loads StimSets_info """
+        with open(os.path.join(self.stim_dir, 'master_dict.json'), 'r') as fp:
+            return json.load(fp)['stim_sets' + HEMI_SUFFIX[self.hemi_idx]]
                 
-    return activation_results
+    @staticmethod
+    def _load_activation_results(res_folder: str, pathway: str, currents_shape: Tuple[int, int]) -> np.ndarray:
+        """Loads activation results for a pathway from JSON files.
+
+        Args:
+            res_folder: Path to the results subfolder.
+            pathway: Name of the pathway for the ANN training.
+            currents_shape: Shape of the currents array (number of protocols, number of contacts).
+
+        Returns:
+            A NumPy array containing activation results (percentage activated) for each protocol and pathway.
+        """
+        activation_results = np.zeros((currents_shape[0], currents_shape[1]), dtype=float) # Corrected to handle multiple pathways if passed, although the original code implies one pathway at a time
+        
+        # NOTE: Original code only loads for a single named pathway, but is structured for multiple.
+        # Assuming the external logic ensures `pathway` is correct for the single pathway loaded.
+        # The inner loop will iterate over protocols, loading the 'percent_activated' for the named pathway.
+        
+        # The refactored version assumes it needs to load a 1-column array (single pathway)
+        activation_results = np.zeros((currents_shape[0],1), dtype=float)
+
+        for prot_i in range(currents_shape[0]):
+            pathway_file = os.path.join(res_folder, f'Pathway_status_{pathway}_{prot_i}.json')
+            if os.path.isfile(pathway_file):
+                with open(pathway_file, 'r') as fp:
+                    pam_res_dict = json.load(fp)
+                    # Convert to fraction (0.0 to 1.0)
+                    activation_results[prot_i, 0] = 0.01 * pam_res_dict['percent_activated']
+        return activation_results
 
 
-def filter_pathways(pathway: str, axons_in_path: np.ndarray, y_train_all: np.ndarray, y_test_all: np.ndarray, no_test=False) -> Tuple[np.ndarray, np.ndarray, List[str], Optional[np.ndarray], Optional[np.ndarray]]:
-    """Filters pathways based on minimum axon number and activation threshold.
+    def load_data(self, pathway: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[str], np.ndarray]:
+        """Loads currents and activation results, then filters and segments data.
+        
+        Args:
+            pathway: Name of the pathway for the ANN training.
+        """
+        currents_file = os.path.join(self.stim_dir, 'OSS_sim_files' + HEMI_SUFFIX[self.hemi_idx],
+                                     f'Current_protocols_{self.hemi_idx}.csv')
+        currents = np.genfromtxt(currents_file, delimiter=',', skip_header=True)
 
-    Args:
-        pathway: Name of the pathway for the ANN training.
-        axons_in_path: NumPy array containing the number of axons in each pathway.
-        y_train_all: All training activation results.
-        y_test_all: All testing activation results.
-    Returns:
-        A tuple containing filtered training activation results, filtered testing activation results,
-        a list of filtered pathway names, and optionally filtered bipolar and monopolar activation results.
-    """
-    y_train = -100 * np.ones((y_train_all.shape), dtype=float)
-    y_test = -100 * np.ones((y_test_all.shape), dtype=float)
+        # Convert currents to A
+        currents_A = currents * 0.001
+        X_train = currents_A[:self.train_size, :]
+        X_test = currents_A[self.train_size:, :]
 
-    pathway_filtered = []
-    for i in range(y_train_all.shape[1]):
-        if axons_in_path[i] >= MIN_AXON_NUMBER and np.max(y_train_all[:, i]) >= MIN_ACTIV_THRESHOLD and (no_test or np.max(y_test_all[:, i]) >= MIN_ACTIV_THRESHOLD):
-            y_train[:, i] = y_train_all[:, i]
-            y_test[:, i] = y_test_all[:, i]
-            pathway_filtered.append(pathway)
-
-    y_train_filtered = y_train[:, ~np.all(y_train == -100.0, axis=0)]
-    if no_test:
-        y_test_filtered = None
-    else:
-        y_test_filtered = y_test[:, ~np.all(y_test == -100.0, axis=0)]
-
-    return y_train_filtered, y_test_filtered, pathway_filtered
-
-
-def augment_training_data_with_zeros(X_train: np.ndarray, y_train: np.ndarray, zero_protocol_percentage: float = 0.1) -> Tuple[np.ndarray, np.ndarray]:
-    """Injects a percentage of zero protocols into the training data.
-
-    Args:
-        X_train: Training currents.
-        y_train: Training activation results.
-        zero_protocol_percentage: Percentage of zero protocols to inject (default: 0.1).
-
-    Returns:
-        A tuple containing augmented training currents and augmented training activation results.
-    """
-    n_zero = int(zero_protocol_percentage * y_train.shape[0])
-    y_train_ext = np.zeros((y_train.shape[0] + n_zero, y_train.shape[1]), dtype=float)
-    X_train_ext = np.zeros((X_train.shape[0] + n_zero, X_train.shape[1]), dtype=float)
-    y_train_ext[:y_train.shape[0], :] = y_train
-    X_train_ext[:X_train.shape[0], :] = X_train
-    return X_train_ext, y_train_ext
-
-def analyze_and_plot_ann_errors(
-    stim_dir: str,
-    side: int,
-    pathway_filtered: List[str],
-    X_test: np.ndarray,
-    error_ann: np.ndarray,
-    error_ann_bi: Optional[np.ndarray] = None,
-    error_ann_mono: Optional[np.ndarray] = None,
-    check_trivial: bool = False
-):
-    """
-    Analyzes and plots the absolute errors of an Artificial Neural Network (ANN)
-    on test data, correlating them with total current and absolute total current.
-    Also generates kernel density estimate (KDE) plots of the errors for each
-    filtered pathway using scipy.stats.gaussian_kde. Optionally plots errors
-    for bipolar and monopolar protocols.
-
-    Args:
-        stim_dir: Path to the stimulation directory.
-        side: Hemisphere index (0 - right, 1 - left).
-        pathway_filtered: List of filtered pathway names.
-        X_test: NumPy array of the test current protocols.
-        error_ann: NumPy array of the ANN errors on the test data.
-        error_ann_bi: Optional NumPy array of ANN errors on bipolar protocols.
-        error_ann_mono: Optional NumPy array of ANN errors on monopolar protocols.
-        check_trivial: Boolean flag indicating whether to plot trivial protocol errors.
-    """
-    matplotlib.rcParams['figure.dpi'] = 200
-    nb_side_folder = os.path.join(stim_dir, 'NB' + SIDE_SUFFIX[side])
-
-    # --- Plotting errors vs. total current ---
-    plt.figure()
-    total_current = np.sum(X_test, axis=1)
-    pearson_r, pearson_p = pearsonr(total_current, np.abs(error_ann[:, 0]))
-    mae = np.mean(np.abs(error_ann[:, 0]))
-    plt.scatter(total_current*1000.0, np.abs(error_ann[:, 0]))
-    plt.text(0.05, 0.90, f"Pearson's R = {pearson_r:.2f}, p = {pearson_p:.5f}",
-             transform=plt.gca().transAxes, fontsize=10)
-    plt.text(0.05, 0.80, f"MAE = {mae:.2f}",
-             transform=plt.gca().transAxes, fontsize=10)
-    plt.xlabel("Total current, mA")
-    plt.ylabel("Absolute Error of Percent Activation")
-    filename_total_current = f"{pathway_filtered[0]}_ANN_abs_errors_on_Test_versus_total_current{SIDE_LABEL[side]}.png"
-    plt.savefig(os.path.join(nb_side_folder, filename_total_current), format='png', dpi=500)
-
-    # --- Plotting errors vs. absolute total current ---
-    plt.figure()
-    total_abs_current = np.sum(np.abs(X_test), axis=1)
-    pearson_r2, pearson_p2 = pearsonr(total_abs_current, np.abs(error_ann[:, 0]))
-    plt.scatter(total_abs_current*1000.0, np.abs(error_ann[:, 0]))
-    plt.text(0.05, 0.85, f"Pearson's R = {pearson_r2:.2f}, p = {pearson_p2:.5f}",
-             transform=plt.gca().transAxes, fontsize=10)
-    plt.text(0.05, 0.75, f"MAE = {mae:.2f}",
-             transform=plt.gca().transAxes, fontsize=10)
-    plt.xlabel("Absolute current, mA")
-    plt.ylabel("Absolute Error of Percent Activation")
-    filename_abs_total_current = f"{pathway_filtered[0]}_ANN_abs_errors_on_Test_versus_abs_current{SIDE_LABEL[side]}.png"
-    plt.savefig(os.path.join(nb_side_folder, filename_abs_total_current), format='png', dpi=500)
-
-    # --- Plotting KDE of absolute errors for each pathway ---
-    plt.figure()
-    pathways_max_errors: Dict[str, any] = {}
-    for i, pathway in enumerate(pathway_filtered):
-        max_error = np.max(np.abs(error_ann[:, i]))
-        pathways_max_errors[pathway] = max_error
-        inx_max_error = np.argmax(np.abs(error_ann[:, i]))
-        pathways_max_errors['stim_protocol'] = X_test[inx_max_error, :].tolist()  # Store as list for JSON
-        if max_error > 0.05:
-            kde = gaussian_kde(error_ann[:, i])
-            x_vals = np.linspace(min(error_ann[:, i]), max(error_ann[:, i]), 200) # Generate x values for plotting
-            plt.plot(x_vals, kde(x_vals), label=pathway)
-            
-            plt.text(0.05, 0.80, f"MAE = {mae:.2f}",
-                     transform=plt.gca().transAxes, fontsize=10)
-
-    error_filename_base = f"{pathway_filtered[0]}_ANN_abs_errors"
-    with open(os.path.join(nb_side_folder, f"{error_filename_base}.json"), 'w') as save_as_dict:
-        json.dump(pathways_max_errors, save_as_dict, indent=4)  # Added indent for readability
-
-    plt.legend()
-    plt.title('Absolute Errors for ANN on Test')
-    plt.xlim([-25.0, 25.0])
-    plt.xlabel("Absolute Error of Percent Activation")
-    filename_kde_test = f"{error_filename_base}_on_Test{SIDE_LABEL[side]}.png"
-    plt.savefig(os.path.join(nb_side_folder, filename_kde_test), format='png', dpi=1000)
-
-    # --- Plotting KDE of absolute errors for bipolar protocols (if check_trivial is True) ---
-    if check_trivial and error_ann_bi is not None:
-        plt.figure()
-        for i, pathway in enumerate(pathway_filtered):
-            if np.max(np.abs(error_ann_bi[:, i])) > 0.01:
-                
-                mae_bi = np.mean(np.abs(error_ann_bi[:, 0]))
-                
-                kde = gaussian_kde(error_ann_bi[:, i])
-                x_vals = np.linspace(min(error_ann_bi[:, i]), max(error_ann_bi[:, i]), 200)
-                plt.plot(x_vals, kde(x_vals), label=pathway)
-                
-                plt.text(0.05, 0.80, f"MAE = {mae_bi:.2f}",
-                         transform=plt.gca().transAxes, fontsize=10)
-        plt.legend()
-        plt.title('Absolute Errors for ANN on Bipolar')
-        plt.xlim(min(error_ann_bi[:, i]), max(error_ann_bi[:, i]))
-        plt.xlabel("Absolute Error of Percent Activation")
-        filename_kde_bipolar = f"{error_filename_base}_on_Bipolar{SIDE_LABEL[side]}.png"
-        plt.savefig(os.path.join(nb_side_folder, filename_kde_bipolar), format='png', dpi=500)
-
-    # --- Plotting KDE of absolute errors for monopolar protocols (if check_trivial is True) ---
-    if check_trivial and error_ann_mono is not None:
-        plt.figure()
-        for i, pathway in enumerate(pathway_filtered):
-            if np.max(np.abs(error_ann_mono[:, i])) > 0.01:
-                mae_mono = np.mean(np.abs(error_ann_mono[:, 0]))
-                
-                plt.text(0.05, 0.80, f"MAE = {mae_mono:.2f}",
-                         transform=plt.gca().transAxes, fontsize=10)
-                
-                kde = gaussian_kde(error_ann_mono[:, i])
-                x_vals = np.linspace(min(error_ann_mono[:, i]), max(error_ann_mono[:, i]), 200)
-                plt.plot(x_vals, kde(x_vals), label=pathway)
-        plt.legend()
-        plt.title('Absolute Errors for ANN on Monopolar')
-        plt.xlim(min(error_ann_mono[:, i]), max(error_ann_mono[:, i]))
-        plt.xlabel("Absolute Error of Percent Activation")
-        filename_kde_monopolar = f"{error_filename_base}_on_Monopolar{SIDE_LABEL[side]}.png"
-        plt.savefig(os.path.join(nb_side_folder, filename_kde_monopolar), format='png', dpi=500)
-
-
-def check_pathway_errors(pathway, side, profiles, error_array, error_threshold, pathway_filtered, check_trivial, error_array_bi=None, error_array_mono=None):
-    """
-    Check error thresholds for a given pathway.
-    """
-    
-    error_threshold = error_threshold * 100.0
-    
-    if pathway not in pathways:
-        print(f"{pathway} was not in the training set. Perhaps, it is too far from the electrode")
-        return True  # Continue to the next pathway
-
-    if pathway not in pathway_filtered:
-        print(f"{pathway} had a low activation for training set, and was not added to ANN")
-        return True  # Continue to the next pathway
-
-    inx = pathway_filtered.index(pathway)
-
-    if np.any(error_array[:, inx] > error_threshold):
-        print(f'Error threshold for {pathway} was exceeded, the model has to be revised')
-        return False
-
-    n_half_errors = (error_array[:, inx] > error_threshold / 2.0).sum()
-    if n_half_errors > 0.01 * error_array.shape[0]:
-        print(f'0.5 * error threshold for {pathway} was exceeded for more than 1% of tests, the model has to be revised')
-        print(f"{pathway}")
-        print(f"{np.max(error_array[:, inx])}, {error_threshold}")
-        return False
-
-    if check_trivial and (error_array_bi is not None and np.any(error_array_bi[:, inx] > error_threshold)) or \
-                       (error_array_mono is not None and np.any(error_array_mono[:, inx] > error_threshold)):
-        print(f'Error threshold for {pathway} was exceeded (trivial check), the approximation model has to be revised')
-        return False
-
-    return True
-
-def train_test_ANN(stim_dir: str, side: int, pathway: str, check_trivial: bool, vat_recruit: bool = False):
-    """Trains an ANN model and tests it.
-
-    Parameters:
-        stim_dir: Path to the lead-dbs stimulation folder.
-        side: Hemisphere index (0 - right, 1 - left).
-        pathway: Name of the pathway for training.
-        check_trivial: If True, also train and test on predefined monopolar and bipolar protocols.
-        vat_recruit: If True, train ANN for VATs.
-    """
-    
-    res_folder = os.path.join(stim_dir, 'OSS_sim_files' + SIDE_SUFFIX[side], 'Results')
-
-    # load parameters from .json folder generated in previous steps
-    with open(stim_dir + '/netblend_dict_file.json', 'r') as fp:
-        netblend_dict = json.load(fp)
-    fp.close()
-    netblend_dict = netblend_dict['netblendict']
-    err_threshold = netblend_dict['Err_threshold']
-    SE_err_threshold = netblend_dict['SE_err_threshold']
-
-    # load StimSets_parameters (were created by Train_Test_Generator.py)
-    with open(stim_dir + '/NB' + SIDE_SUFFIX[side] + '/StimSets_info.json', 'r') as fp:
-        StimSets_info = json.load(fp)
-    fp.close()
-    train_size = StimSets_info['trainSize_actual']
-    no_test = StimSets_info['testSize_actual'] == 0
-
-    #================================================== Import Training and Test Data =====================================================#
-
-    # Load currents for training and test protocols
-    train_test_currents_file = os.path.join(stim_dir, 'OSS_sim_files' + SIDE_SUFFIX[side], 'Current_protocols_' + str(side) + '.csv')
-    currents = np.genfromtxt(train_test_currents_file, delimiter=',', skip_header=True)
-
-    # Convert currents to A
-    X_train = currents[:train_size, :] * 0.001
-    X_test = currents[train_size:, :] * 0.001
-
-    # Load PAM results
-    if vat_recruit:
-        print("TBD")
-        raise SystemExit()
-    else:
         # Determine pathways and load activation results
-        from Pathways_Stats import get_simulated_pathways
-        pathways, axons_in_path = get_simulated_pathways(side, stim_dir)
-        activation_results = load_activation_results(res_folder, pathway, currents.shape)
+        _, axons_in_path = get_simulated_pathways(self.hemi_idx, self.stim_dir)
+        # Note: The original code loads only for the *current* pathway name, but the rest of the flow
+        # seems to expect activation_results to be filtered later.
+        # We'll load the single pathway's results as an N x 1 array.
+        activation_results = self._load_activation_results(self.res_folder, pathway, currents_A.shape)
 
-    # plot activation across the protocols 
-    import matplotlib
-    matplotlib.rcParams['figure.dpi'] = 200
+        y_train = activation_results[:self.train_size, :]
+        y_test = activation_results[self.train_size:, :]
+
+        # Filter pathways based on activity and axon number
+        y_train_filtered, y_test_filtered, pathway_filtered = self._filter_pathways(
+            pathway, axons_in_path, y_train, y_test
+        )
+
+        return X_train, X_test, y_train_filtered, y_test_filtered, pathway_filtered, axons_in_path
+
+    def _filter_pathways(self, pathway: str, axons_in_path: np.ndarray, y_train: np.ndarray, y_test: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray], List[str]]:
+        """Filters pathways based on minimum axon number and activation threshold.
     
-    plt.figure()
-    plt.scatter(np.sum(currents,axis=1),activation_results[:,0]*100.0) # Add label for legend
-    plt.xlabel("Absolute current, mA")
-    plt.ylabel("Percent Activation")
-    plt.savefig(os.path.join(stim_dir,'NB' + SIDE_SUFFIX[side],pathway+'_Percent_Activation_versus_total_current' + SIDE_LABEL[side] + '.png'), format='png',
-                dpi=500)
+        Args:
+            pathway: Name of the pathway for the ANN training.
+            axons_in_path: NumPy array containing the number of axons in each pathway.
+            y_train: All training activation results.
+            y_test: All testing activation results.
+        Returns:
+            np.ndarray, filtered Training activation results
+            np.ndarray, filtered testing activation results,
+            list, filtered pathway names, and optionally filtered bipolar and monopolar activation results.
+        """
+        
+        pathway_filtered = []
 
-    # Filter pathways based on activity and axon number    
-    y_train_filtered, y_test_filtered, pathway_filtered = filter_pathways(
-        pathway, axons_in_path, activation_results[:train_size, :], activation_results[train_size:, :], no_test=no_test
-    )
-    
-    if not pathway_filtered:
-        print("Low activation levels for ", pathway)
-        return False
-    if not no_test:
-        y_test = y_test_filtered 
-
-    # Augment training data with zero protocols
-    X_train_augmented, y_train_augmented = augment_training_data_with_zeros(X_train, y_train_filtered)
-
-    if y_train_augmented.shape[1] > 1:
-        print("Multiple pathways detected after filtering. Ensure the logic for selecting a single pathway is correct.")
-        raise SystemExit
-        # Consider if this should be an error or if the code should handle multiple pathways
-
-    # inject monopolar review
-    if not no_test:
-        mono_protocols = X_test[X_test.shape[0]-56:,:]
-        mono_solutions = y_test[y_test.shape[0]-56:,:]
-    else:
-        mono_protocols = X_train[X_train.shape[0]-56:,:]
-        mono_solutions = y_train_filtered[y_train_filtered.shape[0]-56:,:]
-    
-    X_train_augmented = np.concatenate((X_train_augmented,mono_protocols,mono_protocols,mono_protocols,mono_protocols,mono_protocols))
-    y_train_augmented = np.concatenate((y_train_augmented,mono_solutions,mono_solutions,mono_solutions,mono_solutions,mono_solutions))
-
-    print(f"Training on pathway: {pathway}")
-    print(f"Number of training samples: {X_train.shape[0]}")
-    print(f"Number of testing samples: {X_test.shape[0]}")
-    print(f"Filtered pathways: {pathway_filtered}")
-
-    #================================================== Train ANN =====================================================#
-
-    model = Sequential(layers=None, name=None)
-    model.add(Dense(128, input_shape=(X_train_augmented.shape[1],), activation='linear'))
-    model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))  # alpha -1.25 to have a steeper slope for cathode
-    #model.add(Dropout(0.2))
-    model.add(Dense(np.sum(axons_in_path), activation='sigmoid'))  # following the percent activation curves
-    #model.add(Dense(y_train.shape[1], activation='tanh'))
-    model.add(Dense(y_train_augmented.shape[1], activation='sigmoid'))
-
-    adam = optimizers.Adamax(lr=learn_rate)
-    model.compile(optimizer=adam, loss='mean_squared_error', metrics=['mse'])
-    model.fit(X_train_augmented, y_train_augmented, epochs=N_epochs, verbose=1)
-    
-    if no_test:
-        pathway_to_save = pathway_filtered[-1] if pathway_filtered else "default_pathway" # Save based on the final filtered pathway?
-        save_path = os.path.join(stim_dir, 'NB' + SIDE_SUFFIX[side], f'ANN_approved_model_{pathway_to_save}')
-        model.save(save_path)
-        return True
-    
-    results = model.evaluate(X_test, y_test)
-
-    # on Test
-    y_predicted = model.predict(X_test)
-    error_ANN = (y_test - y_predicted) * 100.0
-    error_ANN_bi = None
-    error_ANN_mono = None
-
-    if check_trivial == True:
-        nonzero_counts = np.sum(X_test != 0, axis=1)
-        if np.any(np.where(nonzero_counts == 2)):
-            error_ANN_bi = error_ANN[np.where(nonzero_counts == 2)[0],:]
+        # Check only the single loaded pathway (index 0 in the N x 1 array)
+        if y_train.shape[1] > 0 and y_train.shape[1] == 1:
             
-        if np.any(np.where(nonzero_counts == 1)):
-            error_ANN_mono = error_ANN[np.where(nonzero_counts == 1)[0],:]
+            # Find the corresponding axon count index (simplification for refactoring)
+            all_pathways, all_axons = get_simulated_pathways(self.hemi_idx, self.stim_dir)
+            try:
+                pathway_idx = all_pathways.index(pathway)
+                pathway_axon_count = all_axons[pathway_idx]
+            except ValueError:
+                print(f"Warning: Pathway {pathway} not found in simulated pathways list.")
+                pathway_axon_count = 0
+
+            # Check criteria for the single pathway
+            if (pathway_axon_count >= MIN_AXON_NUMBER and 
+                np.max(y_train[:, 0]) >= MIN_ACTIV_THRESHOLD*0.01 and 
+                (self.no_test or np.max(y_test[:, 0]) >= MIN_ACTIV_THRESHOLD*0.01)):
+                
+                pathway_filtered.append(pathway)
+                y_train_filtered = y_train
+                y_test_filtered = y_test if not self.no_test else None
+                return y_train_filtered, y_test_filtered, pathway_filtered
+        
+        # If the check failed or the array shape was unexpected (e.g., N x 0), return empty
+        return np.zeros((0,0)), None, []
+
+    def augment_data(self, X_train: np.ndarray, y_train: np.ndarray, extra_training_protocols: range=range(0), n_injections: int=5) -> Tuple[np.ndarray, np.ndarray]:
+        """Injects a percentage of zero protocols into the training data.
+        Optionally, also duplicates specified protocol range.
+        
+        Args:
+            X_train: Training currents.
+            y_train: Training activation results.
+            extra_training_protocols: range of protocols to be injected several times
+            n_injections: number of injected protocols
+        
+        Returns:
+            A tuple containing augmented training currents and augmented training activation results.
+        """
+        # 1. Inject zero protocols
+        n_zero = int(ZERO_PROTOCOLS_PERC * 0.01 * y_train.shape[0])
+        y_train_ext = np.zeros((y_train.shape[0] + n_zero, y_train.shape[1]), dtype=float)
+        X_train_ext = np.zeros((X_train.shape[0] + n_zero, X_train.shape[1]), dtype=float)
+        y_train_ext[:y_train.shape[0], :] = y_train
+        X_train_ext[:X_train.shape[0], :] = X_train
+        
+        # 2. Inject monopolar review (5x repetition)
+        # Find monopolar protocols (assumed to be the last 56)
+        if extra_training_protocols.stop !=0:
+             # Monopolar protocols were mixed into the training set (in no_test case)
+            mono_protocols = X_train[extra_training_protocols,:]
+            mono_solutions = y_train[extra_training_protocols,:]
             
-        if not np.any(error_ANN_mono) and not np.any(error_ANN_bi):
-            check_trivial = False
+            # Concatenate 
+            X_train_augmented = np.concatenate([X_train_ext] + [mono_protocols] * n_injections)
+            y_train_augmented = np.concatenate([y_train_ext] + [mono_solutions] * n_injections)
+            
+            return X_train_augmented, y_train_augmented
+            
+        else:
+            return X_train_ext, y_train_ext
 
-    # Plot the errors
-    analyze_and_plot_ann_errors(stim_dir,side,pathway_filtered,X_test,error_ANN,error_ANN_bi,error_ANN_mono,check_trivial)
+class ANNModel:
+    """Handles the creation, compilation, and training of the ANN."""
 
-    # ====================================== Check if errors acceptable ===============================================#
+    def __init__(self, input_shape: int, output_shape: int, total_axons: int):
+        self.model: Optional[Sequential] = None
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.total_axons = total_axons
 
-    # iterate over each previously approved profile
-    with open(os.path.join(stim_dir, 'target_profiles.json'), 'r') as fp:
-        target_profiles = json.load(fp)
-    fp.close()
+    def create_and_compile(self):
+        """Defines and compiles the Keras model."""
+        model = Sequential(name="PathwayANN")
+        model.add(Dense(128, input_shape=(self.input_shape,), activation='linear'))
+        # Using LeakyReLU with alpha -1.25 as in original code
+        model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25)))
+        
+        # The original code uses total axon count here, which is unusual for a typical ANN, 
+        # but kept for fidelity.
+        model.add(Dense(self.total_axons, activation='sigmoid'))
+        
+        # Final output layer
+        model.add(Dense(self.output_shape, activation='sigmoid'))
 
-    # we can discard the error sign here
-    error_ANN = abs(error_ANN)
+        adam = optimizers.Adamax(learning_rate=LEARN_RATE)
+        model.compile(optimizer=adam, loss='mean_squared_error', metrics=['mse'])
+        self.model = model
 
-    # Check critical side-effects
-    if 'SE_dict' in target_profiles:
-        for key, profile in target_profiles['SE_dict'].items():
-            if side == 0 and "_rh" not in key:
-                continue
-            elif side == 1 and "_lh" not in key:
-                continue
+    def train(self, X_train: np.ndarray, y_train: np.ndarray):
+        """Fits the model to the training data."""
+        if self.model is None:
+            raise ValueError("Model has not been created and compiled.")
+        
+        print(f"Starting training for {N_EPOCHS} epochs...")
+        self.model.fit(X_train, y_train, epochs=N_EPOCHS, verbose=1)
 
-            for pathway in profile.keys():
-                if not check_pathway_errors(pathway, side, profile, error_ANN, SE_err_threshold, pathway_filtered, check_trivial, error_ANN_bi, error_ANN_mono):
-                    return False
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """Makes predictions using the trained model."""
+        if self.model is None:
+            raise ValueError("Model has not been trained.")
+        return self.model.predict(X)
 
-    # Merge target profiles for symptoms and threshold profiles for soft side-effects
-    target_profiles_and_sse = copy.deepcopy(target_profiles.get('profile_dict', {}))
-    target_profiles_and_sse.update(target_profiles.get('Soft_SE_dict', {}))
-
-    for key, profile in target_profiles_and_sse.items():
-        if side == 0 and "_rh" not in key:
-            continue
-        elif side == 1 and "_lh" not in key:
-            continue
-
-        for pathway in profile.keys():
-            if not check_pathway_errors(pathway, side, profile, error_ANN, err_threshold, pathway_filtered, check_trivial, error_ANN_bi, error_ANN_mono):
-                return False
+    def save_model(self, save_path: str):
+        """Saves the trained model."""
+        if self.model is None:
+            raise ValueError("Model has not been trained.")
+        self.model.save(save_path)
+        print(f"Model saved to: {save_path}")
 
 
-    pathway_to_save = pathway_filtered[-1] if pathway_filtered else "default_pathway" # Save based on the final filtered pathway?
-    save_path = os.path.join(stim_dir, 'NB' + SIDE_SUFFIX[side], f'ANN_approved_model_{pathway_to_save}')
-    model.save(save_path)
+class PathwayApproximator:
+    """The main class orchestrating the entire ANN training and testing process."""
+    
+    def __init__(self, stim_dir: str, hemi_idx: int, pathway: str, check_trivial: bool, vat_recruit: bool = False):
+        
+        """
+        Parameters:
+            stim_dir: Path to the lead-dbs stimulation folder.
+            hemi_idx: Hemisphere index (0 - right, 1 - left).
+            pathway: Name of the pathway for training.
+            check_trivial: If True, also train and test on predefined monopolar and bipolar protocols.
+            vat_recruit: If True, train ANN for VATs.
+        """
+        
+        if vat_recruit:
+            print("VAT recruitment is TBD and not implemented.")
+            raise NotImplementedError()
+        
+        self.stim_dir = stim_dir
+        self.hemi_idx = hemi_idx
+        self.pathway = pathway
+        self.check_trivial = check_trivial
+        
+        self.data_processor = DataProcessor(stim_dir, hemi_idx)
+        from ANN_report import AnalysisReporter
+        self.reporter = AnalysisReporter(stim_dir, hemi_idx)
+        #self.model: Optional[ANNModel] = None
+        _, self.axons_in_path = get_simulated_pathways(hemi_idx, stim_dir) # Needed for error checking
 
-    return pathway_filtered
+    def run(self) -> Optional[List[str]]:
+        """Executes the training and testing workflow."""
+
+        # 1. Load, filter, and segment data
+        X_train, X_test, y_train_filtered, y_test_filtered, pathway_filtered, axons_in_path = self.data_processor.load_data(self.pathway)
+
+        if not pathway_filtered:
+            print(f"Low activation levels for {self.pathway}. Skipping ANN training.")
+            return None
+
+        # 2. Augment training data
+        X_train_augmented, y_train_augmented = self.data_processor.augment_data(X_train, y_train_filtered)
+        
+        # Ensure only one pathway is being trained (as per original code's check)
+        if y_train_augmented.shape[1] > 1:
+            print("Multiple pathways detected after filtering. Refactor logic expects single pathway output.")
+            return None
+        
+        # Determine total axon count (assuming it's the sum of all simulated pathways)
+        total_axons_count = np.sum(axons_in_path)
+
+        print(f"Training on pathway: {self.pathway}")
+        print(f"Number of training samples (original): {X_train.shape[0]}")
+        print(f"Number of training samples (augmented): {X_train_augmented.shape[0]}")
+        print(f"Number of testing samples: {X_test.shape[0]}")
+        print(f"Filtered pathways: {pathway_filtered}")
+
+        # 3. Train ANN
+        self.model = ANNModel(
+            X_train_augmented.shape[1], y_train_augmented.shape[1], total_axons_count
+        )
+        self.model.create_and_compile()
+        self.model.train(X_train_augmented, y_train_augmented)
+
+        # 4. Test and Analyze
+        if self.data_processor.no_test:
+            # Save model if no test data exists
+            pathway_to_save = pathway_filtered[0]
+            save_path = os.path.join(self.stim_dir, 'NB' + HEMI_SUFFIX[self.hemi_idx], f'ANN_approved_model_{pathway_to_save}')
+            self.model.save_model(save_path)
+            return pathway_filtered
+        
+        # Testing phase
+        y_test = y_train_filtered if self.data_processor.no_test else y_test_filtered
+        y_predicted = self.model.predict(X_test)
+        
+        # Evaluate model (optional, for metrics printing)
+        # self.model.model.evaluate(X_test, y_test)
+        
+        error_ANN, error_ANN_bi, error_ANN_mono = self.reporter.calculate_errors(
+            X_test, y_test, y_predicted, self.check_trivial
+        )
+
+        self.reporter.analyze_and_plot_ann_errors(
+            pathway_filtered, X_test, error_ANN, error_ANN_bi, error_ANN_mono, self.check_trivial
+        )
+
+        # 5. Check Error Thresholds
+        errors_acceptable = self.reporter.check_error_thresholds(
+            pathway_filtered, error_ANN, error_ANN_bi, error_ANN_mono, self.check_trivial
+        )
+
+        if errors_acceptable:
+            pathway_to_save = pathway_filtered[0]
+            save_path = os.path.join(self.stim_dir, 'NB' + HEMI_SUFFIX[self.hemi_idx], f'ANN_approved_model_{pathway_to_save}')
+            self.model.save_model(save_path)
+            return pathway_filtered
+        else:
+            print(f"ANN model for {self.pathway} failed error threshold check.")
+            return None
 
 
 if __name__ == '__main__':
-
-    # called from MATLAB
+    # Called from MATLAB
     # sys.argv[1] - stim folder
-    # sys.argv[2] - side (0 - right hemisphere)
+    # sys.argv[2] - hemi_idx (0 - right hemisphere, 1 - left hemisphere)
 
+    if len(sys.argv) < 3:
+        print("Usage: python ANN_module.py <stim_folder> <hemi_idx>")
+        sys.exit(1)
+        
     stim_dir = sys.argv[1]
-    side = int(sys.argv[2])
+    try:
+        hemi_idx = int(sys.argv[2])
+    except ValueError:
+        print("hemi_idx must be an integer (0 or 1).")
+        sys.exit(1)
 
-    # train a separate ANN for each pathway
-    from Pathways_Stats import get_simulated_pathways
-    pathways, axons_in_path = get_simulated_pathways(side, stim_dir)
+    try:
+        all_pathways, _ = get_simulated_pathways(hemi_idx, stim_dir)
+    except Exception as e:
+        print(f"Could not load simulated pathways: {e}")
+        sys.exit(1)
+        
+    print(f"Starting ANN approximation for hemi_idx {hemi_idx} in directory {stim_dir}.")
+    
+    for pathway in all_pathways:
+        # it is more efficient to train separate ANNs for each pathway
+        try:
+            # Create and run the approximator for each pathway
+            approximator = PathwayApproximator(
+                stim_dir=stim_dir, 
+                hemi_idx=hemi_idx, 
+                pathway=pathway, 
+                check_trivial=True,
+                vat_recruit=False
+            )
+            approved_pathways = approximator.run()
 
-    for pathway in pathways:
-        approx_pathways = train_test_ANN(stim_dir, side, pathway, check_trivial=True)
+            if approved_pathways:
+                print(f"Successfully approved and saved model for pathway: {pathway}")
+            else:
+                print(f"Failed or skipped pathway: {pathway}")
+
+        except NotImplementedError:
+            print("VAT recruitment is not yet supported. Exiting.")
+            break
+        except Exception as e:
+            print(f"An unexpected error occurred during processing of pathway {pathway}: {e}")
+            # Optionally, continue to the next pathway or re-raise
+            # raise # Uncomment to stop on first unhandled error
+            continue
