@@ -30,7 +30,7 @@ def determine_el_type(el_model):
         print('The electrode model was not recognized')
         return 'Not classified electrode model'
 
-def launch_weight_optimizer(stim_folder, netblend_dict, fixed_symptom_weights, side, approx_pathways):
+def launch_weight_optimizer(stim_folder, netblend_dict, fixed_symptom_weights, target_profiles_dict, side, approx_pathways):
 
     ''' Launch ANN-based optimization that will find optimal current protocol I while adjusting weights(!):
         Global_score = W1 * DS1(I) + W2 * DS2(I) + ... , where
@@ -42,25 +42,6 @@ def launch_weight_optimizer(stim_folder, netblend_dict, fixed_symptom_weights, s
     #netblend_dict['similiarity_metric'] = 'Canberra'  # or Bray-Curtis, Euclidean, etc
     #netblend_dict['optim_alg'] = 'Dual Annealing'  # or PSO
     #netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
-
-
-    # # load previously approved symptom-specific profiles
-    # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/profile_dict.json', 'r') as fp:
-    #     profile_dict = json.load(fp)
-    # fp.close()
-    #
-    # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/Soft_SE_dict.json', 'r') as fp:
-    #     Soft_SE_dict = json.load(fp)
-    # fp.close()
-    #
-    # with open(os.environ['STIMDIR'] + '/NB_' + str(side) + '/SE_dict.json', 'r') as fp:
-    #     SE_dict = json.load(fp)
-    # fp.close()
-
-    # # iterate over each previously approved profile
-    # with open(os.path.join(stim_folder, netblend_dict['ActivProfileDict']), 'r') as fp:
-    #     target_profiles = json.load(fp)
-    # fp.close()
 
     if netblend_dict['optim_alg'] == 'Dual Annealing':
 
@@ -77,7 +58,7 @@ def launch_weight_optimizer(stim_folder, netblend_dict, fixed_symptom_weights, s
         from Optim_strategies import choose_weights_minimizer
         res = dual_annealing(choose_weights_minimizer,
                              bounds=list(zip(netblend_dict['min_bound_per_contact'], netblend_dict['max_bound_per_contact'])),
-                             args=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways], maxfun=netblend_dict['num_iterations_ANN'], seed=42, visit=2.62,
+                             args=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], target_profiles_dict, side, approx_pathways], maxfun=netblend_dict['num_iterations_ANN'], seed=42, visit=2.62,
                              no_local_search=True)
 
         optimized_current = res.x  # in A!
@@ -94,7 +75,7 @@ def launch_weight_optimizer(stim_folder, netblend_dict, fixed_symptom_weights, s
         optimizer = GlobalBestPSO(n_particles=20, dimensions=len(netblend_dict['min_bound_per_contact']), options=options, bounds=bounds)
 
         from Optim_strategies import prepare_swarm
-        cost, optimized_current = optimizer.optimize(prepare_swarm, iters=netblend_dict['num_iterations_ANN'], args_to_pass=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], profile_dict, Soft_SE_dict, SE_dict, side, approx_pathways])
+        cost, optimized_current = optimizer.optimize(prepare_swarm, iters=netblend_dict['num_iterations_ANN'], args_to_pass=[approx_model, fixed_symptom_weights, netblend_dict['similarity_metric'], target_profiles_dict, side, approx_pathways])
 
     # ============================================ Plotting ===========================================================#
 
@@ -123,17 +104,12 @@ if __name__ == '__main__':
     stim_dir = sys.argv[1]
     side = int(sys.argv[2])
 
-    # load parameters from .json folder generated in previous steps
-    with open(os.path.join(stim_dir,'netblend_dict.json'), 'r') as fp:
-        netblend_dict = json.load(fp)
-    fp.close()
-    netblend_dict = netblend_dict['netblendict']
-
-    # load Fixed_symptoms
-    with open(os.path.join(stim_dir,'Fixed_symptoms.json'), 'r') as fp:
-        fixed_symptom_weights_dict = json.load(fp)
-    fp.close()
-    fixed_symptom_weights_dict = fixed_symptom_weights_dict['fixed_symptom_weights']
+    # load parameters from master_dict generated in previous steps
+    with open(os.path.join(stim_dir, 'master_dict.json'), 'r') as fp:
+        netblend_dict = json.load(fp)['netblendict']
+        fixed_symptom_weights_dict = json.load(fp)['fixed_symptom_weights']
+        target_profiles_dict = json.load(fp)['target_profiles']
+    
 
     # load ANN approximated pathways
     with open(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'ANN_abs_errors.json'), 'r') as fp:
@@ -148,4 +124,4 @@ if __name__ == '__main__':
     if os.path.isfile(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'All_iters_estim_weights_and_total_score.csv')):
         os.remove(os.path.join(stim_dir,'NB_' + str(SIDE_SUFFIX[side]),'All_iters_estim_weights_and_total_score.csv'))
 
-    launch_weight_optimizer(stim_dir, netblend_dict, fixed_symptom_weights_dict, side, approx_pathways)
+    launch_weight_optimizer(stim_dir, netblend_dict, fixed_symptom_weights_dict, side, target_profiles_dict, approx_pathways)
