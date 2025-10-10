@@ -57,6 +57,8 @@ class PamOptimizer:
             optim_settings = json.load(fp)
         fp.close()
         self.optim_settings = optim_settings['netblendict']
+        self.target_profiles = optim_settings['target_profiles']
+        self.fixed_symptom_weights = optim_settings['fixed_symptom_weights']
 
         if self.optim_settings['optim_alg'] == 'Dual Annealing':
 
@@ -179,7 +181,7 @@ class PamOptimizer:
 
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)
-        stim_result.make_prediction(self.optim_settings['similarity_metric'], self.optim_settings['ActivProfileDict'], self.optim_settings['symptom_weights_file'], plot_results=False)
+        stim_result.make_prediction(self.optim_settings['similarity_metric'], self.target_profiles, self.fixed_symptom_weights, plot_results=False)
 
         # put this in a separate function
         # load predicted symptom improvement and weights
@@ -190,9 +192,7 @@ class PamOptimizer:
         fp.close()
 
         # load fixed symptom weights
-        fp = open(self.optim_settings['symptom_weights_file'])
-        symptom_weights = json.load(fp)
-        symptom_weights = symptom_weights['fixed_symptom_weights']
+        symptom_weights = self.fixed_symptom_weights
         remaining_weights = 1.0
         N_fixed = 0
         # is it iterating only across the correct side?

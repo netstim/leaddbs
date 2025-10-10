@@ -265,7 +265,7 @@ for source_index = first_active_source:4
                 end
 
                 if settings.optimizer
-                    env.system(['python ', ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py ', settings.netblend_settings_file, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
+                    env.system(['python ', ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py ', settings.PathwayTune_master_dict, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
                 else
                     if settings.prob_PAM
                         %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);

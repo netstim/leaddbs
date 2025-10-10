@@ -163,7 +163,7 @@ class DataProcessor:
         Args:
             X_train: Training currents.
             y_train: Training activation results.
-            extra_training_protocols: range of protocols to be injected several times
+            extra_training_protocols: range of training protocols to be injected several times
             n_injections: number of injected protocols
         
         Returns:
@@ -178,7 +178,7 @@ class DataProcessor:
         
         # 2. Inject monopolar review (5x repetition)
         # Find monopolar protocols (assumed to be the last 56)
-        if extra_training_protocols.stop !=0:
+        if extra_training_protocols.stop != 0:
              # Monopolar protocols were mixed into the training set (in no_test case)
             mono_protocols = X_train[extra_training_protocols,:]
             mono_solutions = y_train[extra_training_protocols,:]

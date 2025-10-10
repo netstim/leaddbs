@@ -130,9 +130,11 @@ def choose_weights_minimizer(stim_vector, *args):
 
     # quick fix
     if len(args) == 1:
-        approx_model, fixed_symptom_weights, score_symptom_metric, Target_profiles, Soft_SE_thresh, SE_thresh, side, approx_pathways = args[0]
+        approx_model, fixed_symptom_weights, score_symptom_metric, target_profiles_dict, side, approx_pathways = args[0]
     else:
-        approx_model, fixed_symptom_weights, score_symptom_metric, Target_profiles, Soft_SE_thresh, SE_thresh, side, approx_pathways = args
+        approx_model, fixed_symptom_weights, score_symptom_metric, target_profiles_dict, side, approx_pathways = args
+
+    Target_profiles, Soft_SE_thresh, SE_thresh = (target_profiles_dict['profile_dict'],target_profiles_dict['Soft_SE_dict'],target_profiles_dict['SE_dict'])
 
     # IMPORTANT: activation profile should be composed by the same order of pathways as PD_profiles
     #activation_profile = get_profiles_ANN(stim_vector)

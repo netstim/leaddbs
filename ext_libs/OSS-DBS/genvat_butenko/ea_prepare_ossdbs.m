@@ -62,9 +62,9 @@ try
 
         if settings.exportVAT
             % special case of VTA-based optimization
-            options.netblend_settings_file = [];
+            options.PathwayTune_master_dict = [];
         elseif settings.calcAxonActivation
-            settings.netblend_settings_file = options.netblend_settings_file;
+            settings.PathwayTune_master_dict = options.PathwayTune_master_dict;
         end
 
     end
