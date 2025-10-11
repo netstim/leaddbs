@@ -671,11 +671,18 @@ if __name__ == '__main__':
     # called from MATLAB
     # sys.argv[1] - stim folder
     # sys.argv[2] - side
-    # sys.argv[3] - Activation Profile Dictionary based on Fiber Filtering
-    # sys.argv[4] - Fixed Symptoms Dictionary
-    # sys.argv[5] - Score Symptom Metric
+    # sys.argv[3] - master_dict
 
     stim_dir = sys.argv[1]
 
+    with open(sys.argv[3], 'r') as fp:
+        master_settings = json.load(fp)
+    fp.close()
+    target_profiles = master_settings['target_profiles']
+    fixed_symptom_weights = master_settings['fixed_symptom_weights']
+    optim_settings = master_settings['netblendict']
+
     stim_result = ResultPAM(int(sys.argv[2]),sys.argv[1])
-    stim_result.make_prediction(sys.argv[5], sys.argv[3], sys.argv[4])
+    stim_result.make_prediction(optim_settings['similarity_metric'], target_profiles, fixed_symptom_weights)
+    
+
