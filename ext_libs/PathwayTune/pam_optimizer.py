@@ -174,6 +174,7 @@ class PamOptimizer:
         input_settings["ScalingIndex"] = None
         input_settings["StimSets"]["StimSetsFile"] = None  # won't be used here
         input_settings["CurrentVector"] = S_vector * 1000  # S_vector already in mA, but scaling to A is done later
+        print(S_vector)
         run_PAM(input_settings)
 
         # the original solution for 10 mA
@@ -230,7 +231,6 @@ class PamOptimizer:
                     # this is a suboptimal approach if multiple side-effect pathways / symptoms are consdered
                     return 1e9 * stim_result.SE_dict[key]["rate"]
 
-        print(-1 * global_score)
         return -1 * global_score
 
 if __name__ == '__main__':
