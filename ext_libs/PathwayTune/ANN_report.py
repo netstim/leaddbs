@@ -22,6 +22,41 @@ from typing import Tuple, List, Optional, Dict, Union
 HEMI_SUFFIX = ['_rh','_lh']
 hemi_idx_LABEL = {0: '_right', 1: '_left'}
 
+def find_key_recursively(data, target_key):
+    """
+    Recursively searches for a target_key within nested dictionaries and lists.
+    
+    Args:
+        data: The current structure (dict, list, or other value) to search.
+        target_key: The string key to find.
+        
+    Returns:
+        True if the key is found, False otherwise.
+    """
+    
+    # 1. Check if the current data structure is a dictionary
+    if isinstance(data, dict):
+        
+        # Check if the key is in the current dictionary
+        if target_key in data:
+            return True
+        
+        # Recursively search in all values of the current dictionary
+        for value in data.values():
+            if find_key_recursively(value, target_key):
+                return True
+                
+    # 2. Check if the current data structure is a list (or tuple)
+    elif isinstance(data, (list, tuple)):
+        
+        # Recursively search in every item of the list
+        for item in data:
+            if find_key_recursively(item, target_key):
+                return True
+                
+    # If not a dict or list, the key cannot be here (base case for recursion)
+    return False
+
 
 def matplotlib_kdeplot(data, ax=None, bw_method=None, **kwargs):
     """
@@ -210,6 +245,9 @@ class AnalysisReporter:
 
         err_threshold, SE_err_threshold = self._load_error_thresholds()
         
+        # assuming a single pathway model
+        pathway = pathway_filtered[0]
+        
         # Load target profiles (symptoms, SSE, CSE)
         try:
             with open(os.path.join(self.stim_dir, 'master_dict.json'), 'r') as fp:
@@ -222,50 +260,54 @@ class AnalysisReporter:
         abs_error_ANN = np.abs(error_array)
 
         # Helper to check a single pathway against a threshold
-        def _check_single_pathway_error(pathway: str, threshold: float, profiles: dict) -> bool:
-            
-            if pathway not in pathway_filtered:
-                print(f"{pathway} had a low activation for training set, and was not added to ANN")
-                return True
-
-            inx = pathway_filtered.index(pathway)
+        def _check_single_pathway_error(pathway: str, threshold: float) -> bool:
+        
             error_threshold_percent = threshold * 100.0
 
-            if np.any(abs_error_ANN[:, inx] > error_threshold_percent):
+            if np.any(abs_error_ANN[:] > error_threshold_percent):
                 print(f'Error threshold for {pathway} was exceeded (Test), model must be revised.')
                 return False
 
-            n_half_errors = (abs_error_ANN[:, inx] > error_threshold_percent / 2.0).sum()
+            n_half_errors = (abs_error_ANN[:] > error_threshold_percent / 2.0).sum()
             if n_half_errors > 0.01 * abs_error_ANN.shape[0]:
                 print(f'0.5 * error threshold for {pathway} was exceeded for >1% of tests, model must be revised.')
                 return False
 
             if check_trivial:
-                error_bi_check = error_array_bi is not None and np.any(np.abs(error_array_bi[:, inx]) > error_threshold_percent)
-                error_mono_check = error_array_mono is not None and np.any(np.abs(error_array_mono[:, inx]) > error_threshold_percent)
+                error_bi_check = error_array_bi is not None and np.any(np.abs(error_array_bi[:]) > error_threshold_percent)
+                error_mono_check = error_array_mono is not None and np.any(np.abs(error_array_mono[:]) > error_threshold_percent)
                 if error_bi_check or error_mono_check:
                     print(f'Error threshold for {pathway} was exceeded (Trivial check), model must be revised.')
                     return False
             
             return True
-
-        # 1. Check Critical hemi_idx-Effects (CSE)
-        for key, profile in target_profiles.get('SE_dict', {}).items():
-            if (self.hemi_idx == 0 and "_rh" not in key) or (self.hemi_idx == 1 and "_lh" not in key):
-                continue
-            for pathway in profile.keys():
-                if not _check_single_pathway_error(pathway, SE_err_threshold, profile):
-                    return False
-
-        # 2. Check Symptoms and Soft hemi_idx-Effects (SSE)
-        target_profiles_and_sse = copy.deepcopy(target_profiles.get('profile_dict', {}))
-        target_profiles_and_sse.update(target_profiles.get('Soft_SE_dict', {}))
         
-        for key, profile in target_profiles_and_sse.items():
-            if (self.hemi_idx == 0 and "_rh" not in key) or (self.hemi_idx == 1 and "_lh" not in key):
-                continue
-            for pathway in profile.keys():
-                if not _check_single_pathway_error(pathway, err_threshold, profile):
-                    return False
+        if find_key_recursively(target_profiles['SE_dict'], pathway) or find_key_recursively(target_profiles['Soft_SE_dict'], pathway):
+            if not _check_single_pathway_error(pathway, SE_err_threshold):
+               return False
+           
+        if find_key_recursively(target_profiles['profile_dict'], pathway):
+            return _check_single_pathway_error(pathway, err_threshold)
+                                           
+           
+
+        # # 1. Check Critical hemi_idx-Effects (CSE)
+        # for key, profile in target_profiles.get('SE_dict', {}).items():
+        #     if (self.hemi_idx == 0 and "_rh" not in key) or (self.hemi_idx == 1 and "_lh" not in key):
+        #         continue
+        #     for pathway in profile.keys():
+        #         if not _check_single_pathway_error(pathway, SE_err_threshold, profile):
+        #             return False
+
+        # # 2. Check Symptoms and Soft hemi_idx-Effects (SSE)
+        # target_profiles_and_sse = copy.deepcopy(target_profiles.get('profile_dict', {}))
+        # target_profiles_and_sse.update(target_profiles.get('Soft_SE_dict', {}))
+        
+        # for key, profile in target_profiles_and_sse.items():
+        #     if (self.hemi_idx == 0 and "_rh" not in key) or (self.hemi_idx == 1 and "_lh" not in key):
+        #         continue
+        #     for pathway in profile.keys():
+        #         if not _check_single_pathway_error(pathway, err_threshold, profile):
+        #             return False
 
         return True
