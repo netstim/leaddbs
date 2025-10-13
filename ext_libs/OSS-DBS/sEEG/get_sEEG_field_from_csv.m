@@ -33,7 +33,9 @@ gv=cell(3,1);
 if reslice2segmask
     res = 0.5;
     segmaskFileResliced = [segmaskFile(1:end-4),'_resliced.nii'];
-    ea_reslice_nii(segmaskFile, segmaskFileResliced, res)
+    if ~isfile(segmaskFileResliced)
+        ea_reslice_nii(segmaskFile, segmaskFileResliced, res)
+    end
     segmask = ea_load_nii(segmaskFileResliced);
     n_points = round(segmask.dim);  % change this for higher resolution
     first_point = segmask.mat * [0,0,0,1]';
