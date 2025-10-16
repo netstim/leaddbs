@@ -1,5 +1,5 @@
 function legui2reco(options)
-    load(fullfile(options.root, options.patientname, 'reconstruction', 'Electrodes.mat'));
+    load(fullfile(options.root, options.patientname, 'reconstruction', strcat('sub-', options.patientname, '_electrodes.mat')));%'Electrodes.mat'));
     c_labels = cellfun(@(x) regexprep(x, '\d+$', ''), ElecMapRaw(:,1), 'UniformOutput', false);
     c_numbers = cellfun(@(x) str2double(regexp(x, '\d+', 'match')), ElecMapRaw(:,1));
     el_names = unique(c_labels(DepthElecRaw)); % here, only select electrodes that are depth electrodes

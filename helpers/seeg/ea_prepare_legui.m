@@ -9,7 +9,11 @@ function app = ea_prepare_legui(app, event) %#ok<INUSD>
     subjRoot = app.SelDir;
     [~, subjId] = fileparts(subjRoot);
     app.SelDir = subjRoot;
-
+    
+    GM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-GM_mod-iso_T1w_mask.nii');
+    WM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-WM_mod-iso_T1w_mask.nii');
+    Electrodes_filename = strcat(subjId, '_electrodes.mat');
+    Channels_filename = strcat(subjId, '_channels.mat');
     % ------- Find MR/CT inside that Lead-DBS tree -------
     try
         [mrFile, ctFile] = findLeadDBSImagePair_local(subjRoot, preferBrainshiftCT, useMNI);
@@ -39,12 +43,12 @@ function app = ea_prepare_legui(app, event) %#ok<INUSD>
     [app.MRImg, MRRng] = normalizeImage(app.MRImg);
     [app.CTImg, app.CTRng] = normalizeImage(app.CTImg);
     
-    if exist(fullfile(subjRoot, 'segmentations', 'GMMask.nii'), 'file') && ...
-       exist(fullfile(subjRoot, 'segmentations', 'WMMask.nii'), 'file')
+    if exist(fullfile(subjRoot, 'coregistration', GM_filename), 'file') && ...
+       exist(fullfile(subjRoot, 'coregistration', WM_filename), 'file')
     
         % load existing GM/WM
-        GM = spm_vol(fullfile(subjRoot, 'segmentations', 'GMMask.nii'));
-        WM = spm_vol(fullfile(subjRoot, 'segmentations', 'WMMask.nii'));
+        GM = spm_vol(fullfile(subjRoot, 'coregistration', GM_filename));
+        WM = spm_vol(fullfile(subjRoot, 'coregistration', GM_filename));
     else
         % run segmentation
         [GM, WM] = get_segmentations(mrFile, subjRoot);
@@ -82,8 +86,8 @@ function app = ea_prepare_legui(app, event) %#ok<INUSD>
     %------------ Saving filepath for electrodes and channelmap files -----------------
     app.Reco = fullfile(subjRoot, 'reconstruction');
     app.subjId = strcat(subjId, '_desc-reconstruction.mat');
-    app.recofile = fullfile(app.Reco, 'Electrodes.mat'); %fullfile(app.Reco, app.subjId);
-    app.channelfile = fullfile(app.Reco, 'Channel.mat');
+    app.recofile = fullfile(app.Reco, Electrodes_filename); %'Electrodes.mat'); %fullfile(app.Reco, app.subjId);
+    app.channelfile = fullfile(app.Reco, Channels_filename); %'Channel.mat');
 
     % ------- Electrodes / ChannelMap -------
     app.WaitH.Message = 'Loading electrodes...';
@@ -212,8 +216,8 @@ function [GM, WM] = get_segmentations(mrPath, subjRoot)
     GM = spm_vol(c1Path); %c1Vol = spm_read_vols(V1);
     WM = spm_vol(c2Path); %c2Vol = spm_read_vols(V2);
     ea_mkdir(fullfile(subjRoot, 'segmentations'));
-    copyfile(c1Path, fullfile(subjRoot, 'segmentations', 'GMMask.nii'));
-    copyfile(c2Path, fullfile(subjRoot, 'segmentations', 'WMMask.nii'));
+    copyfile(c1Path, fullfile(subjRoot, 'coregistration', GM_filename));
+    copyfile(c2Path, fullfile(subjRoot, 'coregistration', GM_filename));
 end
 
 function [img, rng] = normalizeImage(img)
