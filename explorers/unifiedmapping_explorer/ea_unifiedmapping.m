@@ -91,7 +91,7 @@ classdef ea_unifiedmapping < handle
         adjustforgroups = 1 % adjust correlations for group effects
         kIter = 1;
         roiintersectdata = {}; %roi, usually efield with which you can calculate fiber intersection
-        roithresh = 200; %threshold above which efield metrics are considered
+        roithresh = 200; % threshold above which efield metrics are considered
         drawTool = 'sweetspotmapping'; % active draw tool: sweetspotmapping, fiberfiltering, networkmapping
         activated = struct; % activated.fiberfiltering, activated.sweetspotmapping, activated.networkmapping % for activation status mapping.
         
@@ -131,6 +131,8 @@ classdef ea_unifiedmapping < handle
             obj.statsettings.stimulationmodel = 'Electric Field';
             obj.statsettings.efieldmetric = 'Peak'; % if statmetric == ;Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
             obj.statsettings.efieldthreshold = 200;
+            obj.statsettings.nanthreshold = 0; % set values below this number to nan on the fly when calculating sweetspot statistics
+            obj.statsettings.sweetspotresolution = 0.5; % resolution of sweetspot in mm
             obj.statsettings.connthreshold = 20;
             obj.statsettings.statfamily = 'Correlations'; % the
             obj.statsettings.stattest = 'Spearman';
@@ -286,6 +288,8 @@ classdef ea_unifiedmapping < handle
                 else
                     vatlist = ea_sweetspotmapping_getvats(obj);
                 end
+
+
                 [AllX,space] = ea_unifiedmapping_exportefieldmap(vatlist,obj);
 
                 obj.results.sweetspotmapping.efield = AllX;
@@ -293,6 +297,7 @@ classdef ea_unifiedmapping < handle
                 obj.results.sweetspotmapping.space = space;
 
                 if ~isfield(obj.M,'pseudoM')
+                    try
                     % get active coordinates, as well
                     for pt=1:length(obj.M.patient.list)
                         for side=1:2
@@ -302,6 +307,7 @@ classdef ea_unifiedmapping < handle
                     end
                     for side=1:2
                         obj.results.sweetspotmapping.activecnt{side}=[obj.results.sweetspotmapping.activecnt{side};ea_flip_lr_nonlinear(obj.results.sweetspotmapping.activecnt{side})];
+                    end
                     end
                 end
             elseif obj.calcsettings.selectedTool == 2 % Fiber Filtering
