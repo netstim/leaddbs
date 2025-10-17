@@ -1,172 +1,4 @@
-% function sel = ea_multiple_electrodes(varargin)
-% % EA_MULTIPLE_ELECTRODES
-% % Standalone popup(s) to pick:
-% %   1) Number of electrodes
-% %   2) Electrode model (one-for-all OR per-electrode)
-% %
-% % RETURNS struct SEL:
-% %   .count      double              % number of electrodes
-% %   .models     1 x count cellstr   % model per electrode
-% %   .sameForAll logical
-% %   .canceled   logical
-% 
-%     models       = [];
-%     defaultCount = 2;     % safe fallback
-%     defaultModel = [];    % will fill from models later
-%     options = ea_handles2options(varargin{1});
-%     bids = varargin{2};
-%     reco_file = fullfile(bids.datasetDir, 'derivatives', 'leaddbs', strcat('sub-', bids.subjId{1}), 'reconstruction', strcat('sub-', bids.subjId{1}, '_desc-reconstruction.mat'));
-%     
-%     models = try_get_models_from_leaddbs();
-%     models = normalize_model_list(models);
-%     if isempty(models)
-%         models = {'Medtronic 3389','Medtronic 3387','Abbott 6172 (Infinity)', ...
-%                   'Boston Sci Vercise','Boston Sci Cartesia (Directional)','Other'};
-%     end
-% 
-%     if isempty(defaultModel) || ~any(strcmp(models, defaultModel))
-%         defaultModel = models{1};
-%     end
-% 
-%     % Coerce count to a clean scalar int >=1
-%     defaultCount = max(1, round(coerce_double(defaultCount, 2)));
-% 
-%     sel = struct('count',[], 'models',{{}}, 'sameForAll',true, 'canceled',true);
-% 
-%     % ---------- Step 1: number of electrodes ----------
-%     defStr = sprintf('%d', defaultCount);     % <- safe even if defaultCount came in odd
-%     answ = inputdlg({'Number of electrodes:'}, 'Electrode Setup', 1, {defStr});
-%     if isempty(answ), return; end
-%     n = round(str2double(answ{1}));
-%     if ~isfinite(n) || n < 1, n = 1; end
-% 
-%     % ---------- Step 2: same model for all? ----------
-%     ch = questdlg('Use the same electrode model for all electrodes?', ...
-%                   'Electrode Models','Yes','No','Cancel','Yes');
-%     if isempty(ch) || strcmpi(ch,'Cancel'), return; end
-%     same = strcmpi(ch,'Yes');
-% 
-%     initIdx = find(strcmp(models, defaultModel),1);
-%     if isempty(initIdx), initIdx = 1; end
-% 
-%     % ---------- Step 3: pick model(s) ----------
-%     if same
-%         idx = listdlg('PromptString','Select electrode model:', ...
-%                       'ListString',models,'SelectionMode','single', ...
-%                       'InitialValue',initIdx,'CancelString','Cancel');
-%         if isempty(idx), return; end
-%         sel.count      = n;
-%         sel.models     = repmat(models(idx), 1, n);
-%         sel.sameForAll = true;
-%         sel.canceled   = false;
-%     else
-%         per = cell(1,n);
-%         for i = 1:n
-%             idx = listdlg('PromptString',sprintf('Model for electrode %d:', i), ...
-%                           'ListString',models,'SelectionMode','single', ...
-%                           'InitialValue',initIdx,'CancelString','Cancel');
-%             if isempty(idx), return; end
-%             per{i} = models{idx};
-%         end
-%         sel.count      = n;
-%         sel.models     = per;
-%         sel.sameForAll = false;
-%         sel.canceled   = false;
-%     end
-% end
-% 
-% % ================= helpers =================
-% 
-% function tf = iscellstrlike(x)
-%     tf = iscell(x) && all(cellfun(@(c) ischar(c) || (isstring(c)&&isscalar(c)), x));
-% end
-% 
-% function tf = isnumericlike(x)
-%     tf = isnumeric(x) || (isstring(x)&&isscalar(x) && ~isnan(str2double(x))) ...
-%          || (ischar(x) && ~isempty(x) && ~isnan(str2double(x)));
-% end
-% 
-% function tf = istextlike(x)
-%     tf = ischar(x) || (isstring(x) && isscalar(x));
-% end
-% 
-% function y = aschar(x)
-%     if isstring(x), y = char(x); else, y = x; end
-% end
-% 
-% function y = coerce_double(x, fallback)
-%     try
-%         if isnumeric(x)
-%             y = double(x);
-%             if isempty(y) || ~isfinite(y), y = fallback; end
-%             if numel(y) > 1, y = y(1); end
-%         elseif isstring(x) || ischar(x)
-%             y = str2double(x);
-%             if ~isfinite(y), y = fallback; end
-%         else
-%             y = fallback;
-%         end
-%     catch
-%         y = fallback;
-%     end
-% end
-% 
-% function models = try_get_models_from_leaddbs()
-%     models = {};
-%     try
-%         if exist('ea_resolve_elspec','file')
-%             out = ea_resolve_elspec; % often 73x1 cell
-%             models = normalize_model_list(out);
-%         end
-%     catch
-%         % ignore
-%     end
-% end
-% 
-% function models = normalize_model_list(x)
-%     % Accepts cellstr (row/col), string array, char array
-%     % Returns row cellstr, unique, non-empty
-%     
-%     if isstring(x)
-%         x = cellstr(x);
-%     elseif ischar(x)
-%         x = cellstr(x);
-%     elseif ~iscell(x)
-%         x = {};
-%     end
-%     
-%     % Flatten into column
-%     x = x(:);
-%     
-%     % Remove empty / whitespace-only
-%     x = x(~cellfun(@(s) isempty(s) || all(isspace(char(s))), x));
-%     
-%     % Ensure everything is char (not string)
-%     for k = 1:numel(x)
-%         if isstring(x{k}), x{k} = char(x{k}); end
-%     end
-%     
-%     % Keep unique values in stable order
-%     if ~isempty(x)
-%         [~,ia] = unique(x, 'stable');
-%         x = x(sort(ia));
-%     end
-%     
-%     % Force row
-%     models = x(:)';  
-% end
-
 function sel = ea_multiple_electrodes(varargin)
-% EA_MULTIPLE_ELECTRODES
-% Standalone popup(s) to pick:
-%   1) Number of electrodes
-%   2) Electrode model (one-for-all OR per-electrode)
-%
-% RETURNS struct SEL:
-%   .count      double              % number of electrodes
-%   .models     1 x count cellstr   % model per electrode
-%   .sameForAll logical
-%   .canceled   logical
 
     models       = [];
     defaultCount = 2;     % safe fallback
@@ -206,9 +38,10 @@ function sel = ea_multiple_electrodes(varargin)
 
     sel = struct('count',[], 'models',{{}}, 'sameForAll',true, 'canceled',true);
 
-    % ---------- Step 1: number of electrodes ----------
+    % ---------- Step 1: number of electrodes (wider dialog) ----------
     defStr = sprintf('%d', defaultCount);
-    answ = inputdlg({'Number of electrodes:'}, 'Electrode Setup', 1, {defStr});
+    dlgOpts = struct('Resize','on','WindowStyle','normal','Interpreter','none');
+    answ = inputdlg({'Number of electrodes:'}, 'Electrode Setup', [1 60], {defStr}, dlgOpts);
     if isempty(answ), return; end
     n = round(str2double(answ{1}));
     if ~isfinite(n) || n < 1, n = 1; end
@@ -229,8 +62,11 @@ function sel = ea_multiple_electrodes(varargin)
         if isempty(initIdx), initIdx = 1; end
 
         idx = listdlg('PromptString','Select electrode model:', ...
-                      'ListString',models,'SelectionMode','single', ...
-                      'InitialValue',initIdx,'CancelString','Cancel');
+                      'ListString',models, ...
+                      'SelectionMode','single', ...
+                      'InitialValue',initIdx, ...
+                      'CancelString','Cancel', ...
+                      'ListSize',[720 480]);   % wider/taller
         if isempty(idx), return; end
 
         sel.count      = n;
@@ -238,7 +74,7 @@ function sel = ea_multiple_electrodes(varargin)
         sel.sameForAll = true;
         sel.canceled   = false;
     else
-        % Per-electrode selection with informative prompt.
+        % Per-electrode selection with informative multi-line prompt.
         per = cell(1,n);
 
         % Build per-electrode initial default indices if recoProps provided
@@ -259,17 +95,25 @@ function sel = ea_multiple_electrodes(varargin)
         end
 
         for i = 1:n
-            % Compose informative prompt: include elname and #labels (if reco)
-            prompt = sprintf('Model for electrode %d:', i);
+            % Multi-line prompt: show Label and #contacts if available
             if i <= numel(recoProps)
                 eln  = safe_elname(recoProps(i));
                 nlab = safe_num_labels(recoProps(i));
-                prompt = sprintf('Model for electrode %d (%s, %d labels):', i, eln, nlab);
+                promptLines = { ...
+                    sprintf('Model for electrode %d', i), ...
+                    sprintf('Label: %s', eln), ...
+                    sprintf('Number of contacts: %d', nlab) ...
+                };
+            else
+                promptLines = {sprintf('Model for electrode %d', i)};
             end
 
-            idx = listdlg('PromptString',prompt, ...
-                          'ListString',models,'SelectionMode','single', ...
-                          'InitialValue',initIdxPer(i),'CancelString','Cancel');
+            idx = listdlg('PromptString',promptLines, ...
+                          'ListString',models, ...
+                          'SelectionMode','single', ...
+                          'InitialValue',initIdxPer(i), ...
+                          'CancelString','Cancel', ...
+                          'ListSize',[720 520]);   % wider/taller for clarity
             if isempty(idx), return; end
             per{i} = models{idx};
         end
