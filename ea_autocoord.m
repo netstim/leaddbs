@@ -338,9 +338,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                     [coords_mm,trajectory,markers]=ea_runmanualslicer(poptions);
                     options.native=1;
                 case 'LeGUI (Davis 2021)'
-                    options.leadprod = 'seeg';
-                    setappdata(0, 'options', options);
-                    ea_runlegui(options);
+                    ea_runlegui(poptions);
             end
             options.hybridsave=1;
             options.elside=options.sides(1);

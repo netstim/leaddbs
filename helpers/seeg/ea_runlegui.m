@@ -1,7 +1,10 @@
 function run = ea_runlegui(options)
     selDir = fullfile(options.uipatdirs, 'legui');
     tempdir = selDir;
-    ea_mkdir(selDir);
+	prefsPath = options.bids.getPrefs(options.bids.subjId{1}, 'uiprefs', 'mat');
+    prefs = load(prefsPath);
+    prefs.reconmethod = 'LeGUI (Davis 2021)';
+    save(prefsPath, '-struct', 'prefs');
     open_legui(fullfile(options.root, options.patientname));
 end
 

@@ -306,7 +306,7 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
                     if ~isempty(reco.(recoType).markers(el).head)
 %                         set(handles.(['side',num2str(el)]), 'Value', 1);
                         sf = ['side', num2str(el)];
-                        if isfield(handles, sf) && isgraphics(handles.(sf))
+                        if isfield(handles, sf) %&& isgraphics(handles.(sf))
                             set(handles.(sf), 'Value', 1);
                         end
                     end
