@@ -93,3 +93,9 @@ if isfield(options, 'atlasset')
         ea_cprintf('CmdWinWarnings', 'Specified atlas not found: %s\n', options.atlasset);
     end
 end
+
+if isfield(options, 'reconmethod') && ~isempty(options.reconmethod)
+    handles.reconmethod = options.reconmethod;
+else
+    handles.reconmethod = 'PaCER (Husch 2017)';
+end

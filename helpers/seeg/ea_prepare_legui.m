@@ -43,15 +43,15 @@ function app = ea_prepare_legui(app, event) %#ok<INUSD>
     [app.MRImg, MRRng] = normalizeImage(app.MRImg);
     [app.CTImg, app.CTRng] = normalizeImage(app.CTImg);
     
-    if exist(fullfile(subjRoot, 'coregistration', GM_filename), 'file') && ...
-       exist(fullfile(subjRoot, 'coregistration', WM_filename), 'file')
+    if exist(fullfile(subjRoot, 'coregistration', 'anat', GM_filename), 'file') && ...
+       exist(fullfile(subjRoot, 'coregistration', 'anat', WM_filename), 'file')
     
         % load existing GM/WM
-        GM = spm_vol(fullfile(subjRoot, 'coregistration', GM_filename));
-        WM = spm_vol(fullfile(subjRoot, 'coregistration', GM_filename));
+        GM = spm_vol(fullfile(subjRoot, 'coregistration', 'anat', GM_filename));
+        WM = spm_vol(fullfile(subjRoot, 'coregistration', 'anat', GM_filename));
     else
         % run segmentation
-        [GM, WM] = get_segmentations(mrFile, subjRoot);
+        [GM, WM] = get_segmentations(mrFile, subjRoot, GM_filename, WM_filename);
     end
     app.GrayInfo = GM;
     app.WhiteInfo = WM;
@@ -166,7 +166,7 @@ function copyIf_local(app, S, fields)
     end
 end
 
-function [GM, WM] = get_segmentations(mrPath, subjRoot)
+function [GM, WM] = get_segmentations(mrPath, subjRoot, GM_filename, WM_filename)
 %SEGMENT_GM_WM_INMEMORY Run SPM12 segmentation and return GM/WM masks in memory.
 %
 % Inputs
@@ -215,9 +215,8 @@ function [GM, WM] = get_segmentations(mrPath, subjRoot)
 
     GM = spm_vol(c1Path); %c1Vol = spm_read_vols(V1);
     WM = spm_vol(c2Path); %c2Vol = spm_read_vols(V2);
-    ea_mkdir(fullfile(subjRoot, 'segmentations'));
-    copyfile(c1Path, fullfile(subjRoot, 'coregistration', GM_filename));
-    copyfile(c2Path, fullfile(subjRoot, 'coregistration', GM_filename));
+    copyfile(c1Path, fullfile(subjRoot, 'coregistration', 'anat', GM_filename));
+    copyfile(c2Path, fullfile(subjRoot, 'coregistration', 'anat', WM_filename));
 end
 
 function [img, rng] = normalizeImage(img)

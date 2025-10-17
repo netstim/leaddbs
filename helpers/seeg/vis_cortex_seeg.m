@@ -1,59 +1,60 @@
-try delete(cortexH{1}); end
-try delete(cortexH{2}); end
-delete(findobj(gca, 'Tag', 'seeg_cortex'));
-
-S = load('CortexHiRes.mat','Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
-
-Vfull = [S.Vertices_lh; S.Vertices_rh];
-Ffull = [fliplr(S.Faces_lh); fliplr(S.Faces_rh) + size(S.Vertices_lh,1)];
-% If you only want one hemisphere
-% Vfull = [S.Vertices_lh];
-% Ffull = [fliplr(S.Faces_lh)];
-
-keepFraction = 1;                  % resolution, 0-1
-
-[F, V] = reducepatch(Ffull, Vfull, keepFraction);
-
-TR = triangulation(F,V);
-A  = TR.freeBoundary;
-
-% Geometric transforms for 'inverse' cortex visualization
-L  = cotLaplacian(V,F);  
-TR = triangulation(F,V);
-N  = vertexNormal(TR);    
-H     = sqrt(sum((L * V).^2, 2));
-w_abs = abs(H);
-nrmlz = @(x) min(max((x - prctile(x,5)) ./ max(eps, prctile(x,95)-prctile(x,5)),0),1);
-wc    = nrmlz(w_abs).^.3;
-
-% Lighting manipulations for 'darker' faces and 'glow' around the rim
-ax  = gca;
-cp  = get(ax,'CameraPosition');
-V2C = cp - V;  V2C = V2C ./ vecnorm(V2C,2,2);
-rim = 1 - abs(sum(N .* V2C, 2));
-rim = rim.^2;
-
-figure(gcf); hold on;
-
-% Parameters for cortex glow
-a_curve = 0.1;   % glow of the face / outer parts of the cortex, 0-1
-b_rim   = 1.0;   % glow of the rim, 0-1
-w = min(1, a_curve*wc + b_rim*rim);
-
-% Dark base + glow to white
-base = [0 0 0];
-C = base + w .* (1 - base);
-
-% Render
-p = patch('Faces',F,'Vertices',V, ...
-          'FaceVertexCData',C, 'FaceColor','interp', ...
-          'EdgeColor','none', 'FaceAlpha',0.4, ...   % slightly more transparent
-          'BackFaceLighting','lit', 'FaceLighting','gouraud', ...
-          'AmbientStrength',0.10, 'DiffuseStrength',0.95, ...
-          'SpecularStrength',0.03, 'SpecularExponent',8, ...
-          'SpecularColorReflectance',0, 'Tag', 'seeg_cortex');
-axis vis3d off
-
+function vis_cortex_seeg(varargin)
+    try delete(cortexH{1}); end
+    try delete(cortexH{2}); end
+    delete(findobj(gca, 'Tag', 'seeg_cortex'));
+    
+    S = load('CortexHiRes.mat','Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
+    
+    Vfull = [S.Vertices_lh; S.Vertices_rh];
+    Ffull = [fliplr(S.Faces_lh); fliplr(S.Faces_rh) + size(S.Vertices_lh,1)];
+    % If you only want one hemisphere
+    % Vfull = [S.Vertices_lh];
+    % Ffull = [fliplr(S.Faces_lh)];
+    
+    keepFraction = 1;                  % resolution, 0-1
+    
+    [F, V] = reducepatch(Ffull, Vfull, keepFraction);
+    
+    TR = triangulation(F,V);
+    A  = TR.freeBoundary;
+    
+    % Geometric transforms for 'inverse' cortex visualization
+    L  = cotLaplacian(V,F);  
+    TR = triangulation(F,V);
+    N  = vertexNormal(TR);    
+    H     = sqrt(sum((L * V).^2, 2));
+    w_abs = abs(H);
+    nrmlz = @(x) min(max((x - prctile(x,5)) ./ max(eps, prctile(x,95)-prctile(x,5)),0),1);
+    wc    = nrmlz(w_abs).^.3;
+    
+    % Lighting manipulations for 'darker' faces and 'glow' around the rim
+    ax  = gca;
+    cp  = get(ax,'CameraPosition');
+    V2C = cp - V;  V2C = V2C ./ vecnorm(V2C,2,2);
+    rim = 1 - abs(sum(N .* V2C, 2));
+    rim = rim.^3; % exponent here is useful for visualization
+    
+    figure(gcf); hold on;
+    
+    % Parameters for cortex glow
+    a_curve = 0;   % glow of the face / outer parts of the cortex, 0-1
+    b_rim   = 1.0;   % glow of the rim, 0-1
+    w = min(1, a_curve*wc + b_rim*rim);
+    
+    % Dark base + glow to white
+    base = [0 0 0];
+    C = base + w .* (1 - base);
+    
+    % Render
+    p = patch('Faces',F,'Vertices',V, ...
+              'FaceVertexCData',C, 'FaceColor','interp', ...
+              'EdgeColor','none', 'FaceAlpha',0.4, ...   % slightly more transparent
+              'BackFaceLighting','lit', 'FaceLighting','gouraud', ...
+              'AmbientStrength',0.10, 'DiffuseStrength',0.95, ...
+              'SpecularStrength',0.03, 'SpecularExponent',8, ...
+              'SpecularColorReflectance',0, 'Tag', 'seeg_cortex');
+    axis vis3d off
+end
 % Math helpers
 function L = cotLaplacian(V,F)
   v1 = V(F(:,1),:); v2 = V(F(:,2),:); v3 = V(F(:,3),:);
@@ -74,3 +75,4 @@ function L = cotLaplacian(V,F)
   d = -sum(W,2);
   L = spdiags(d,0,nV,nV) + W;
 end
+
