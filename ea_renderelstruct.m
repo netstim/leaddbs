@@ -40,8 +40,9 @@ for side=elSide
     if ~exist('el_render','var') || ~isstruct(el_render)
         el_render = struct([]);
     end
-    options.leadprod = 'seeg';
-    if isequal(options.leadprod, 'seeg')
+    if isequal(options.reconmethod, 'LeGUI (Davis 2021)')
+%         ea_trajectory(pobj); % Option for if you want to visualize the
+%         actual electrodes as opposed to spheres
         ea_trajectory_seeg(elstruct, options);
         stub = struct('ellabel', 'SEEG');
         if isempty(el_render)

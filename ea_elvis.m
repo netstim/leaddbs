@@ -155,11 +155,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
             if isequal(options.reconmethod, 'LeGUI (Davis 2021)')
                 multiplemode = 1;
-                try
-                    vis_cortex_seeg;
-                catch
-                    disp('Failed to display cortex');
-                end
             end
             if ~multiplemode
                 side=options.sides(end);
