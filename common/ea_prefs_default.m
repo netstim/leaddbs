@@ -87,6 +87,9 @@ prefs.lcm.chunk=10; % define how many fMRI seeds to handle in the same run. Can 
 prefs.lcm.includesurf=0; % if surface definitions are available for connectomes, include those, too
 prefs.lcm.struc.patienttracts.nativeseed = 0; % Use native space VAT for calculation when patient's fiber tracts is selected.
 
+%% explorers:
+prefs.explorer.efieldlowfilter=150; % at least a single e-field has to have a value of this magnitude for the sweetspot FOV to take the point into account
+
 %% DTI-files:
 prefs.b0='b0.nii';
 prefs.fa='fa.nii';

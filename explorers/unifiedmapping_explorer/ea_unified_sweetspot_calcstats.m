@@ -64,11 +64,11 @@ for group=groups
         % check connthreshold
         switch obj.statsettings.stimulationmodel
             case 'VTA'
-                gval{side}=gval{side}>obj.efieldthreshold; % binarize
+                gval{side}=gval{side}>obj.statsettings.efieldthreshold; % binarize
             case 'Electric Field'
-                gval{side}(gval{side}<=obj.efieldthreshold) = nan;
-                Nmap=ea_nansum(gval{side}(gpatsel,:)>obj.efieldthreshold);
-                gval{side}(gpatsel,Nmap<round(length(gpatsel)*(obj.coverthreshold/100)))=nan; % Set pixels to Nan that do not meet coverthreshold criteria
+                gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
+                Nmap=ea_nansum(gval{side}(gpatsel,:)>obj.statsettings.efieldthreshold);
+                gval{side}(gpatsel,Nmap<round(length(gpatsel)*(obj.statsettings.coverthreshold/100)))=nan; % Set pixels to Nan that do not meet coverthreshold criteria
         end
         switch obj.statlevel
             case 'VTAs'
