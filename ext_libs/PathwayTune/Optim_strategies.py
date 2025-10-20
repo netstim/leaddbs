@@ -4,7 +4,7 @@
     Functions for PathwayTune (see description in the headers)
 '''
 
-import pandas
+#import pandas
 import numpy as np
 import os
 from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, cosine
@@ -130,9 +130,9 @@ def choose_weights_minimizer(stim_vector, *args):
 
     # quick fix
     if len(args) == 1:
-        approx_model, fixed_symptom_weights, score_symptom_metric, target_profiles_dict, side, approx_pathways = args[0]
+        approx_models, fixed_symptom_weights, score_symptom_metric, target_profiles_dict, side, approx_pathways_dict = args[0]
     else:
-        approx_model, fixed_symptom_weights, score_symptom_metric, target_profiles_dict, side, approx_pathways = args
+        approx_models, fixed_symptom_weights, score_symptom_metric, target_profiles_dict, side, approx_pathways_dict = args
 
     Target_profiles, Soft_SE_thresh, SE_thresh = (target_profiles_dict['profile_dict'],target_profiles_dict['Soft_SE_dict'],target_profiles_dict['SE_dict'])
 
@@ -141,8 +141,15 @@ def choose_weights_minimizer(stim_vector, *args):
 
     # estimate the activation profile
     stim_array = np.reshape(np.array(stim_vector), (-1, len(stim_vector)))
-    activation_profile = approx_model.predict(stim_array, verbose=0)
-    activation_profile = activation_profile[0]   # get the actual array
+    
+    # activation_profile should be a dictionary
+    for inx,pathway in enumerate(approx_pathways_dict.keys()):
+        activation = approx_models[inx].predict(stim_array, verbose=0)
+        approx_pathways_dict[pathway] = activation[0]
+        print(pathway,approx_pathways_dict[pathway])
+    
+    #activation_profile = approx_model.predict(stim_array, verbose=0)
+    #activation_profile = activation_profile[0]   # get the actual array
 
     # first check the strict thresholds
     for key in SE_thresh:

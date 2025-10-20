@@ -225,7 +225,7 @@ class ANNModel:
             raise ValueError("Model has not been created and compiled.")
         
         print(f"Starting training for {N_EPOCHS} epochs...")
-        self.model.fit(X_train, y_train, epochs=N_EPOCHS, verbose=1)
+        self.model.fit(X_train, y_train, epochs=N_EPOCHS, verbose=0)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Makes predictions using the trained model."""
@@ -368,27 +368,27 @@ if __name__ == '__main__':
     
     for pathway in all_pathways:
         # it is more efficient to train separate ANNs for each pathway
-        try:
-            # Create and run the approximator for each pathway
-            approximator = PathwayApproximator(
-                stim_dir=stim_dir, 
-                hemi_idx=hemi_idx, 
-                pathway=pathway, 
-                check_trivial=True,
-                vat_recruit=False
-            )
-            approved_pathways = approximator.run()
 
-            if approved_pathways:
-                print(f"Successfully approved and saved model for pathway: {pathway}")
-            else:
-                print(f"Failed or skipped pathway: {pathway}")
+        # Create and run the approximator for each pathway
+        approximator = PathwayApproximator(
+            stim_dir=stim_dir, 
+            hemi_idx=hemi_idx, 
+            pathway=pathway, 
+            check_trivial=True,
+            vat_recruit=False
+        )
+        approved_pathways = approximator.run()
 
-        except NotImplementedError:
-            print("VAT recruitment is not yet supported. Exiting.")
-            break
-        except Exception as e:
-            print(f"An unexpected error occurred during processing of pathway {pathway}: {e}")
-            # Optionally, continue to the next pathway or re-raise
-            # raise # Uncomment to stop on first unhandled error
-            continue
+        if approved_pathways:
+            print(f"Successfully approved and saved model for pathway: {pathway} \n")
+        else:
+            print(f"Failed or skipped pathway: {pathway} \n")
+
+        # except NotImplementedError:
+        #     print("VAT recruitment is not yet supported. Exiting.")
+        #     break
+        # except Exception as e:
+        #     print(f"An unexpected error occurred during processing of pathway {pathway}: {e}")
+        #     # Optionally, continue to the next pathway or re-raise
+        #     # raise # Uncomment to stop on first unhandled error
+        #     continue
