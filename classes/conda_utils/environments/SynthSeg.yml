@@ -21,4 +21,4 @@ dependencies:
     - matplotlib==3.10.7
 
 variables:
-  env_version: '20240921'
+  env_version: '20251022'
