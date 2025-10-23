@@ -358,6 +358,17 @@ ea_busyaction('on', handles.leadfigure, 'connectome');
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
+% BIDS FIX: Extract patientname and root from uipatdirs for Lead-Connectome
+if ~isempty(options.uipatdirs)
+    [options.root, options.patientname] = fileparts(options.uipatdirs{1});
+    options.root = [options.root, filesep];
+end
+
+% BIDS fix: Update prefs with correct BIDS paths if in derivatives folder
+if ~isempty(options.uipatdirs) && contains(options.uipatdirs{1}, 'derivatives')
+    options = ea_getptopts(options.uipatdirs{1}, options);
+end
+
 isindependent = getappdata(handles.leadfigure,'isindependent');
 ea_savelcopts(handles)
 

@@ -8,6 +8,42 @@ else
     overwrite = 0;
 end
 
+% BIDS FIX: Check if normalization has been run - if not, run SPM12 normalization
+normFile = fullfile(directory, 'y_ea_inv_normparams.nii');
+if ~exist(normFile, 'file')
+    disp('No normalization found. Running SPM12 normalization...');
+    
+    % Get anatomical image
+    anatFile = fullfile(directory, options.prefs.prenii_unnormalized);
+    
+    % Run SPM12 normalization (quick estimate)
+    matlabbatch{1}.spm.spatial.normalise.estwrite.subj.vol = {[anatFile, ',1']};
+    matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[anatFile, ',1']};
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.biasreg = 0.0001;
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.biasfwhm = 60;
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.tpm = {[spm('Dir'), '/tpm/TPM.nii']};
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.affreg = 'mni';
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.reg = [0 0.001 0.5 0.05 0.2];
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.fwhm = 0;
+    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.samp = 3;
+    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.bb = [-78 -112 -70; 78 76 85];
+    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.vox = [1 1 1];
+    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.interp = 4;
+    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.prefix = 'w';
+    
+    spm_jobman('run', {matlabbatch});
+    clear matlabbatch
+    
+    % Rename output to Lead-DBS convention
+    [anatDir, anatName] = fileparts(anatFile);
+    spmNormFile = fullfile(anatDir, ['y_', anatName, '.nii']);
+    if exist(spmNormFile, 'file')
+        movefile(spmNormFile, normFile);
+    end
+    
+    disp('Done.');
+end
+
 if ~exist([directory,'templates',filesep,'labeling',filesep, ...
         'w',options.lc.general.parcellation,'.nii'],'file') ...
         || overwrite
@@ -66,16 +102,30 @@ end
 [~,refname]=fileparts(reference);
 [~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
 
-% For fMRI, the real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
-if strcmp(reference, ['r', options.prefs.rest])
-    reference = ['hdmean', options.prefs.rest];
+% BIDS FIX: Determine modality and use short names for template files
+% This avoids too-long BIDS filenames in template directory
+rest_r = ea_prependFilename(options.prefs.rest, 'r');
+isFMRI = false;
+isDWI = false;
+
+% Check if this is fMRI reference
+if strcmp(reference, rest_r)
+    rest_hdmean = ea_prependFilename(options.prefs.rest, 'hdmean');
+    reference = rest_hdmean;
+    isFMRI = true;
     % Re-calculate mean re-aligned image if not found
     if ~exist([directory, reference], 'file')
-        if ~exist(['mean', options.prefs.rest],'file')
-            ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
+        rest_mean = ea_prependFilename(options.prefs.rest, 'mean');
+        if ~exist([directory, rest_mean],'file')
+            ea_meanimage([directory, rest_r], rest_mean);
         end
-        ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],3);
+        ea_reslice_nii([directory, rest_mean],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],3);
     end
+    refname = 'rest';
+% Check if this is b0 reference (DWI)
+elseif contains(reference, 'b0')
+    isDWI = true;
+    refname = 'b0';
 end
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
@@ -94,7 +144,12 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
     else
         fprintf(['Unable to determine the coregistration method used.\n', ...
                  'Will redo the coregistration using the method chosen from GUI.\n']);
-        coregmrmethod.([refname, '_', anatfname]) = checkCoregMethod(options);
+        % BIDS FIX: Sanitize field name for MATLAB (max 63 chars)
+        fieldName = matlab.lang.makeValidName([refname, '_', anatfname], 'ReplacementStyle', 'delete');
+        if length(fieldName) > 63
+            fieldName = fieldName(1:63);
+        end
+        coregmrmethod.(fieldName) = checkCoregMethod(options);
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','coregmrmethod');
     end
 
@@ -115,16 +170,29 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
             warning('Transformation not found! Running coregistration now!');
         end
 
+        % BIDS FIX: Build output name correctly (get basename of anat)
+        [~, anatBaseName] = fileparts(ea_stripext(options.prefs.prenii_unnormalized));
+        [~, refBaseName] = fileparts(refname);
+        outputName = [refBaseName, '_', anatBaseName, '.nii'];
+        
+        % For BIDS paths, construct full output path
+        if contains(reference, filesep)
+            [refDir, ~] = fileparts(reference);
+            outputPath = fullfile(refDir, outputName);
+        else
+            outputPath = outputName;
+        end
+
         if strcmp(options.coregmr.method, 'ANTsSyN') % ANTs nonlinear case, only for b0 coreg
             ea_ants_nonlinear_coreg([directory, options.prefs.prenii_unnormalized],...
                 [directory, reference],...
-                [directory, refname, '2', options.prefs.prenii_unnormalized]);
-            ea_delete([directory, refname, '2', options.prefs.prenii_unnormalized]);
-            transform = [directory, refname, '2', anatfname, 'InverseComposite.nii.gz'];
+                [directory, outputPath]);
+            ea_delete([directory, outputPath]);
+            transform = [directory, refBaseName, '2', anatBaseName, 'InverseComposite.nii.gz'];
         else
             transform = ea_coregimages(options,[directory,options.prefs.prenii_unnormalized],...
                 [directory,reference],...
-                [directory,refname,'_',options.prefs.prenii_unnormalized],...
+                [directory,outputPath],...
                 [],1,[],1);
 
             % Fix transformation names, replace 'mean' by 'r' for fMRI
@@ -155,8 +223,8 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
             transform, 'label');
     end
 
-    ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation],...
-        [directory,refname],...
+    ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'],...
+        [directory,reference],...
         [directory,'checkreg',filesep,options.lc.general.parcellation,'2',refname,'.png']);
 end
 

@@ -29,3 +29,5 @@ end
 if options.escapePath
     fullPath = ea_path_helper(fullPath);
 end
+
+end

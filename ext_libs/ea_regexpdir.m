@@ -49,3 +49,5 @@ if ~listHidden
         end
     end
 end
+
+end  % End of function

@@ -9,7 +9,7 @@ arguments
 end
 
 if size(points,2) ~= 3
-    ea_error('Input must have the size of N*3!', showdlg=0, simpleStack=1);
+    ea_error('Input must have the size of N*3!', 'showdlg', 0, 'simpleStack', 1);
 end
 
 if isfolder(transform)
@@ -33,7 +33,7 @@ if isfolder(transform)
 end
 
 if ~isfile(transform)
-    ea_error('Transformation not found!', showdlg=0, simpleStack=1);
+    ea_error('Transformation not found!', 'showdlg', 0, 'simpleStack', 1);
 else
     tstring = [' --transform [', ea_path_helper(transform), ',', num2str(useinverse), ']']; % [transformFileName,useInverse]
 end
@@ -42,7 +42,7 @@ ea_libs_helper;
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
-applyTransformsToPoints = ea_getExec([basedir, 'antsApplyTransformsToPoints'], escapePath = 1);
+applyTransformsToPoints = ea_getExec([basedir, 'antsApplyTransformsToPoints'], 'escapePath', 1);
 
 uuid = ea_generate_uuid;
 
@@ -82,3 +82,5 @@ catch
 end
 fprintf(fid,'%.9f, %.9f, %.9f, 0\n',input'); % transpose needed for 'fprintf': matrix column to file row
 fclose(fid);
+
+end

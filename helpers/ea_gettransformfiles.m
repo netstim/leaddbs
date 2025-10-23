@@ -1,5 +1,15 @@
 function transformfiles=ea_gettransformfiles(options)
 
+% BIDS FIX: Check if we have Lead-DBS BIDS metadata or Lead-Connectome mode
+if ~isfield(options, 'subj') || ~isfield(options.subj, 'norm') || ...
+   ~isfield(options.subj.norm, 'log') || ~isfield(options.subj.norm.log, 'method')
+    % Lead-Connectome mode: Use SPM deformation field directly
+    directory = [options.root, options.patientname, filesep];
+    transformfiles.forward = fullfile(directory, 'y_ea_normparams.nii');
+    transformfiles.inverse = fullfile(directory, 'y_ea_inv_normparams.nii');
+    return;
+end
+
 json = loadjson(options.subj.norm.log.method);
 
 if contains(json.method, 'ANTs')

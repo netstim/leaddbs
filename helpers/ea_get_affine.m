@@ -12,7 +12,25 @@ end
 % Remove volume index used in SPM (',1' in '/PATH/TO/image.nii.gz,1')
 [fpath, ~, fext] = ea_niifileparts(nii);
 
-hdr = ea_fslhd([fpath, fext]);
+% Try spm_vol first (faster and more reliable)
+try
+    v = spm_vol([fpath, fext]);
+    affine = v.mat;
+    % spm_vol already returns SPM-style affine (one-based)
+    % So we need to adjust based on 'type'
+    switch type
+        case {'spm', 'SPM', 1, '1'}  % SPM type, one-based (already correct)
+            best_affine = affine;
+            return;
+        case {0, '0'}  % zero-based, need to adjust
+            best_affine = affine;
+            best_affine(:,4) = best_affine(:,4) + sum(best_affine(:,1:3),2);
+            return;
+    end
+catch
+    % Fallback to ea_fslhd if spm_vol fails
+    hdr = ea_fslhd([fpath, fext]);
+end
 
 if hdr.sform_code ~= 0 % Prefer sform
     affine = [hdr.sto_xyz1; hdr.sto_xyz2; hdr.sto_xyz3; hdr.sto_xyz4];

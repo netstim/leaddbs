@@ -27,14 +27,26 @@ if isfield(options, 'leadfigure')
 else % Exported code
     if ~isempty(options.uipatdirs{options.subjInd})
         datasetDir = regexp(options.uipatdirs{options.subjInd}, ['.*(?=\' filesep 'derivatives\' filesep 'leaddbs\' filesep 'sub-)'], 'match', 'once');
-        bids = BIDSFetcher(datasetDir);
-        options.bids = bids;
-    
-        subjId = erase(options.uipatdirs, fullfile(datasetDir, 'derivatives', 'leaddbs', 'sub-'));
-        if isfield(options, 'modality')
-            options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
+        
+        % BIDS FIX: Only initialize BIDSFetcher if dataset root exists
+        if ~isempty(datasetDir) && exist(datasetDir, 'dir')
+            try
+                bids = BIDSFetcher(datasetDir);
+                options.bids = bids;
+            
+                subjId = erase(options.uipatdirs, fullfile(datasetDir, 'derivatives', 'leaddbs', 'sub-'));
+                if isfield(options, 'modality')
+                    options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
+                else
+                    options.subj = bids.getSubj(subjId{options.subjInd});
+                end
+            catch ME
+                warning('BIDSFetcher initialization failed: %s. Continuing with direct file access.', ME.message);
+                % For Lead-Connectome, we use ea_getptopts instead
+            end
         else
-            options.subj = bids.getSubj(subjId{options.subjInd});
+            % No valid BIDS dataset root found - use direct file access (Lead-Connectome mode)
+            fprintf('BIDSFetcher skipped - using direct file access for Lead-Connectome.\n');
         end
     end
 end
@@ -79,14 +91,20 @@ end
 
 % only 3D-rendering viewer can be opened if no patient is selected.
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
-    if isfile(fullfile(options.bids.datasetDir, 'miniset.json'))
-        isMiniset = 1;
+    % BIDS FIX: Check if options.bids exists (Lead-DBS mode)
+    if isfield(options, 'bids') && isfield(options.bids, 'datasetDir')
+        if isfile(fullfile(options.bids.datasetDir, 'miniset.json'))
+            isMiniset = 1;
+        else
+            isMiniset = 0;
+        end
     else
+        % Lead-Connectome mode: no miniset
         isMiniset = 0;
     end
 
     % Copy post-op images to preprocessing folder, no preproc is done for now
-    if  isMiniset || ~isfield(options.subj, 'postopAnat')
+    if  isMiniset || ~isfield(options, 'subj') || ~isfield(options.subj, 'postopAnat')
         fields = {};
     else
         fields = fieldnames(options.subj.postopAnat);
@@ -108,7 +126,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     % Preprocessing pre-op images
     preprocessing = 0;
-    if isMiniset || ~isfield(options.subj, 'preopAnat')
+    if isMiniset || ~isfield(options, 'subj') || ~isfield(options.subj, 'preopAnat')
         fields = {};
     else
         fields = fieldnames(options.subj.preopAnat);
@@ -146,6 +164,18 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if preprocessing
         fprintf('\nPreprocessing finished.\n\n');
+    end
+
+    % BIDS FIX: For Lead-Connectome, check if we have full BIDS metadata
+    % If options.subj exists but doesn't have AnchorModality, it's from ea_getptopts (Lead-Connectome mode)
+    % If options.subj has AnchorModality, it's from BIDSFetcher (Lead-DBS mode)
+    hasFullBIDS = isfield(options, 'subj') && isfield(options.subj, 'AnchorModality');
+    
+    if options.dolc && ~hasFullBIDS
+        fprintf('\n*** Lead-Connectome mode (direct file access) ***\n');
+        fprintf('Proceeding with connectomics pipeline (preprocessing will be done as needed)...\n\n');
+        ea_perform_lc(options);
+        return;
     end
 
     % Set primary template

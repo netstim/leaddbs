@@ -7,7 +7,8 @@ if ischar(pixdim)
     pixdim = [header.pixdim1, header.pixdim2, header.pixdim3];
 end
 
-if range(pixdim) < 0.05
+% BIDS FIX: Replace range() with max()-min() for MATLAB R2019a compatibility
+if (max(pixdim) - min(pixdim)) < 0.05
     acqTag = 'iso';
     return;
 end
