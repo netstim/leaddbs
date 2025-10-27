@@ -1,14 +1,13 @@
-function app = ea_prepare_legui(app, event) %#ok<INUSD>
+function app = ea_prepare_legui(app) %#ok<INUSD>
     preferBrainshiftCT = true;
     enforceSameGrid    = false;
     useMNI             = false;
     app.LoadImgsBtnH.Enable = "off";
 
     % ------- Determine subject root (Lead-DBS subject folder) -------
-    app.SelDir = LeG_lastDir();
+%     app.SelDir = LeG_lastDir();
     subjRoot = app.SelDir;
     [~, subjId] = fileparts(subjRoot);
-    app.SelDir = subjRoot;
     
     GM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-GM_mod-iso_T1w_mask.nii');
     WM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-WM_mod-iso_T1w_mask.nii');
@@ -47,8 +46,8 @@ function app = ea_prepare_legui(app, event) %#ok<INUSD>
        exist(fullfile(subjRoot, 'coregistration', 'anat', WM_filename), 'file')
     
         % load existing GM/WM
-        GM = spm_vol(fullfile(subjRoot, 'coregistration', 'anat', GM_filename));
-        WM = spm_vol(fullfile(subjRoot, 'coregistration', 'anat', GM_filename));
+        GM = spm_vol(char(fullfile(subjRoot, 'coregistration', 'anat', GM_filename)));
+        WM = spm_vol(char(fullfile(subjRoot, 'coregistration', 'anat', WM_filename)));
     else
         % run segmentation
         [GM, WM] = get_segmentations(mrFile, subjRoot, GM_filename, WM_filename);

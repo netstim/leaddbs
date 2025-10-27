@@ -105,7 +105,8 @@ for ii = 1:length(el_names)
     [xunitv, yunitv] = ea_calcxy(reco.native.markers(ii).head, reco.native.markers(ii).tail);
     reco.native.markers(ii).x = reco.native.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.native.markers(ii).y = reco.native.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
-    [~, reco.native.trajectory(ii)] = ea_resolvecoords(reco.native.markers(ii), elmodel);
+    reco.native.trajectory(ii) = struct();
+    [~, reco.native.trajectory(ii), ~] = ea_resolvecoords(reco.native.markers(ii), elmodel);
 
     % --- scrf
     reco.scrf.markers(ii).head = reco.scrf.coords_mm{ii}(1, :);
@@ -113,7 +114,7 @@ for ii = 1:length(el_names)
     [xunitv, yunitv] = ea_calcxy(reco.scrf.markers(ii).head, reco.scrf.markers(ii).tail);
     reco.scrf.markers(ii).x = reco.scrf.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.scrf.markers(ii).y = reco.scrf.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
-    [~, reco.scrf.trajectory(ii)] = ea_resolvecoords(reco.scrf.markers(ii), elmodel);
+    [~, reco.scrf.trajectory(ii), ~] = ea_resolvecoords(reco.scrf.markers(ii), elmodel);
 
     % --- mni
     reco.mni.markers(ii).head = reco.mni.coords_mm{ii}(1, :);
@@ -121,7 +122,7 @@ for ii = 1:length(el_names)
     [xunitv, yunitv] = ea_calcxy(reco.mni.markers(ii).head, reco.mni.markers(ii).tail);
     reco.mni.markers(ii).x = reco.mni.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.mni.markers(ii).y = reco.mni.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
-    [~, reco.mni.trajectory(ii)] = ea_resolvecoords(reco.mni.markers(ii), elmodel);
+    [~, reco.mni.trajectory(ii), ~] = ea_resolvecoords(reco.mni.markers(ii), elmodel);
 end
 
 % --- Save reconstruction ---------------------------------------------------
