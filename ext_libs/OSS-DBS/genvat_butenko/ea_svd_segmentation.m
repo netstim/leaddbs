@@ -45,9 +45,11 @@ end
 % clean-up
 ea_delete([workingDir,filesep,'anchor_synthSeg.nii.gz']);
 ea_delete([workingDir,filesep,'T1_synthSeg.nii.gz']);
+ea_delete([workingDir,filesep,'segmask_synthSeg.nii']);
 
 segmaskFile = [workingDir,filesep,'segmask_',segmenter,'.nii'];
 segmaskSVDFile = [workingDir,filesep,'segmask.nii'];
+
 
 % 0) additional co-registration
 % also re-slices to the same voxel space, which is handy
@@ -91,6 +93,9 @@ if strcmp(segmenter,'SynthSeg')
         if nnz(mask_nifti.img) ~= 0
             % segmentation was "successful"
             break
+        elseif im_i == size(images,1)
+            disp("SynthSeg failed for all modalities, skipping the subject")
+            return
         end
     end    
 else
@@ -114,25 +119,34 @@ for im_i = 1:size(images,1)
     % we need T1, T2 and FLAIR
     image = [images(im_i).folder,filesep,images(im_i).name];
 
+    % check if subject prefix is already used in the naming
+    %subj_prefix = ['sub-',sub_ID];
+    % if contains(sub_ID,'rsub-')
+    %     subj_prefix = ['sub-',sub_ID(6:end)];
+    if contains(sub_ID,'sub-')
+        subj_prefix = sub_ID;
+    else
+        subj_prefix = ['sub-',sub_ID];
+    end
+
     % apply the mask
     image_nifti = ea_load_nii(image);
     image_nifti.img(mask_nifti.img < 0.5) = 0.0;
-
 
     ea_delete(image)  % comment this out if we need .nii somewhere downstream  
     images(im_i).folder = TT_input_path;
 
     % rename to TeamTea notation (synthSeg, segmsvd and MARS support it directly)
-    if contains(image, 'T1w') || contains(image, 'anat_t1')
-        image_T1 = ['sub-',sub_ID,'_space-anchor_desc-masked_T1.nii.gz'];
+    if contains(image, 'T1w') || contains(image, 'anat_t1') || contains(image, 'masked_T1') 
+        image_T1 = [subj_prefix,'_space-anchor_desc-masked_T1.nii.gz'];
         images(im_i).name = image_T1;
         found(1) = true;
-    elseif contains(image, 'T2w') || contains(image, 'anat_t2')
-        image_T2 = ['sub-',sub_ID,'_space-anchor_desc-masked_T2.nii.gz'];
+    elseif contains(image, 'T2w') || contains(image, 'anat_t2') || contains(image, 'masked_T2')
+        image_T2 = [subj_prefix,'_space-anchor_desc-masked_T2.nii.gz'];
         images(im_i).name = image_T2;
         found(2) = true;
-    elseif contains(image, 'FLAIR') || contains(image, 'anat_flair')
-        image_FLAIR = ['sub-',sub_ID,'_space-anchor_desc-masked_FLAIR.nii.gz'];
+    elseif contains(image, 'FLAIR') || contains(image, 'anat_flair') 
+        image_FLAIR = [subj_prefix,'_space-anchor_desc-masked_FLAIR.nii.gz'];
         images(im_i).name = image_FLAIR;
         found(3) = true;
     else
@@ -147,11 +161,6 @@ end
 
 
 if strcmp(alg4Lacunes,'TeamTea')
-
-    if strcmp(segmenter,'SynthSeg')
-        % keep all in one place
-        copyfile([workingDir,filesep,synth_fn],TT_input_path)
-    end
 
     if ~all(found)
         fprintf('\nFor %s, not all required modalities were found for TeamTea Lacune segmentation\n',sub_ID)
@@ -173,12 +182,12 @@ if strcmp(alg4Lacunes,'TeamTea')
     %fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/input -v %s:/output 59f961f4a16d\n',TT_input_path,TT_output_path)
     %disp("Copy the docker command and make sure the process is over")
 
-    lacunesFile = [TT_output_path,filesep,'images',filesep,'sub-',sub_ID,'_space-anchor_desc-prediction.nii.gz'];
+    lacunesFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
     if ~isfile(lacunesFile)
         disp("Lacune segmentation with TeamTea failed!")
         disp(sub_ID)
     else
-        lacunesFileAccessible = [workingDir,filesep,'sub-',sub_ID,'_space-anchor_desc-lacunes.nii.gz'];
+        lacunesFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-lacunes.nii.gz'];
         copyfile(lacunesFile,lacunesFileAccessible)
     end
 
@@ -189,13 +198,34 @@ else
     %return
 end
 
-% we can do it in a batch
-% we can create a batch bash script from matlab
-%create_bash_batch()
+if strcmp(alg4PVS,'TeamTea')
+    if ~all(found)
+        fprintf('\nFor %s, not all required modalities were found for TeamTea PVS segmentation\n',sub_ID)
+        return
+    end
 
-% 1) do synthseg (it is good with general anatomy)
-% segment the anchor modality
+    % % run TeamTea docker
+    % you might need to add user to the docker group
 
+    system(['docker run --gpus all --rm ', ...
+        '-v ', TT_input_path, ':/input ', ...
+        '-v ', TT_output_path, ':/output ', ...
+        '13387316fdfe']);    % TeamTea    
+
+    pvsFileFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
+    if ~isfile(pvsFileFile)
+        disp("PVS segmentation with TeamTea failed!")
+        disp(sub_ID)
+    else
+        pvsFileFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-PVS.nii.gz'];
+        copyfile(pvsFileFile,pvsFileFileAccessible)
+    end
+end
+
+if strcmp(segmenter,'SynthSeg')
+    % keep all in one place
+    copyfile([workingDir,filesep,synth_fn],TT_input_path)
+end
 
 % 2) do segmsvd WMH and PVS
 if strcmp(alg4WMH,'segcsvd')
