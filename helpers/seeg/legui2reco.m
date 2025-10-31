@@ -1,3 +1,4 @@
+
 function legui2reco(options)
 load(fullfile(options.root, options.patientname, 'reconstruction', ...
      strcat(options.patientname, '_electrodes.mat')));
@@ -60,7 +61,7 @@ for ii = 1:length(el_names)
     el_idx        = find(strcmp(c_labels, el_names{ii}));
     native_coords = ElecXYZRaw(el_idx, :);
     proj_coords   = ElecXYZProjRaw(el_idx, :);
-    mni_coords    = ElecXYZMNIProjRaw(el_idx, :);
+    mni_coords    = ElecXYZMNIRaw(el_idx, :);
 
     % Decide start contact: lateral vs vertical
     if abs(max(native_coords(:,1)) - min(native_coords(:,1))) > 10
@@ -74,7 +75,7 @@ for ii = 1:length(el_names)
     % Fill coordinates
     reco.native.coords_mm{ii} = native_coords(sort_idx, :);
     reco.scrf.coords_mm{ii}   = proj_coords(sort_idx, :);
-    reco.mni.coords_mm{ii}    = mni_coords(sort_idx, :);
+    reco.mni.coords_mm{ii}    = native_coords(sort_idx, :);
 
     % Label ordering sanity check
     if ~issorted(c_numbers(el_idx(sort_idx)),'ascend')
@@ -106,15 +107,16 @@ for ii = 1:length(el_names)
     reco.native.markers(ii).x = reco.native.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.native.markers(ii).y = reco.native.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
     reco.native.trajectory(ii) = struct();
-    [~, reco.native.trajectory(ii), ~] = ea_resolvecoords(reco.native.markers(ii), elmodel);
-
+%     [~, reco.native.trajectory(ii), ~] = ea_resolvecoords(reco.native.markers(ii), elmodel);
+%     reco.native.trajectory(ii) = ea_resolvecoords(reco.native.markers(ii), elmodel){1};
     % --- scrf
     reco.scrf.markers(ii).head = reco.scrf.coords_mm{ii}(1, :);
     reco.scrf.markers(ii).tail = reco.scrf.coords_mm{ii}(4, :);
     [xunitv, yunitv] = ea_calcxy(reco.scrf.markers(ii).head, reco.scrf.markers(ii).tail);
     reco.scrf.markers(ii).x = reco.scrf.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.scrf.markers(ii).y = reco.scrf.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
-    [~, reco.scrf.trajectory(ii), ~] = ea_resolvecoords(reco.scrf.markers(ii), elmodel);
+%     reco.scrf.trajectory(ii) = struct();
+%     [~, reco.scrf.trajectory(ii), ~] = ea_resolvecoords(reco.scrf.markers(ii), elmodel);
 
     % --- mni
     reco.mni.markers(ii).head = reco.mni.coords_mm{ii}(1, :);
@@ -122,7 +124,8 @@ for ii = 1:length(el_names)
     [xunitv, yunitv] = ea_calcxy(reco.mni.markers(ii).head, reco.mni.markers(ii).tail);
     reco.mni.markers(ii).x = reco.mni.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.mni.markers(ii).y = reco.mni.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
-    [~, reco.mni.trajectory(ii), ~] = ea_resolvecoords(reco.mni.markers(ii), elmodel);
+%     reco.mni.trajectory(ii) = struct();
+%     [~, reco.mni.trajectory(ii), ~] = ea_resolvecoords(reco.mni.markers(ii), elmodel);
 end
 
 % --- Save reconstruction ---------------------------------------------------

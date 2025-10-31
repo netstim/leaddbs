@@ -11,11 +11,13 @@ ProjSurfRaw = app.ProjSurfRaw;
 TMax = (app.CTRng(4)-app.CTRng(1))/(app.CTRng(2)-app.CTRng(1)); %max (CTRng(4)) normalized with respect to 1st (CTRng(1)) and 99th (CTRng(2)) percentiles
 TMin = 1; %99th percentile
 Thresh = linspace(TMax,TMin,21); Thresh(1) = []; %start with 1 step below max and progressively lower threshold to search for electrodes
+
 ThreshHU = Thresh*(app.CTRng(2)-app.CTRng(1))+app.CTRng(1); %thresholds in raw units
 ThreshHU = (ThreshHU-app.CTInfo.pinfo(2))./app.CTInfo.pinfo(1); %convert to hounsfield
-
+voxelSize = sqrt(sum(app.CTInfo.mat(1:3,1:3).^2));  % [dx, dy, dz] in mm
 ElecVolVox = ceil(4/3*pi*mean(ElecRad./XYZScale).^3); %approximate volume of an electrode (standard ecog - typically largest intracranial electrode) in number of voxels
-ElecVolRng = [6,ElecVolVox]; %6 voxels as minimum seems to work well for a wide range of electrode types
+% ElecVolRng = [6,ElecVolVox]; %6 voxels as minimum seems to work well for a wide range of electrode types
+ElecVolRng = [6*0.4/voxelSize(1), ElecVolVox];  % wider tolerance
 
 StartTime = tic;
 CCList = cell(length(Thresh),1);

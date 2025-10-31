@@ -1,5 +1,5 @@
 function app = ea_prepare_legui(app) %#ok<INUSD>
-    preferBrainshiftCT = true;
+    preferBrainshiftCT = false;
     enforceSameGrid    = false;
     useMNI             = false;
     app.LoadImgsBtnH.Enable = "off";
@@ -69,7 +69,6 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
 
     %---------- Store normalization matrices within app ------------
     transDir = fullfile(subjRoot, 'normalization', 'transformations');
-    
     % look for files containing the convention
     mni2nat = dir(fullfile(transDir, '*MNI152NLin2009bAsym_to-anchorNative*'));
     nat2mni = dir(fullfile(transDir, '*anchorNative_to-MNI152NLin2009bAsym*'));
