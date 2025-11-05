@@ -19,12 +19,6 @@ if ~isfield(options, 'leadprod')
     options.leadprod = '';
 end
 
-% options.reconmethod = 'LeGUI (Davis 2021)'; % May need to hardcode, tried setting through options2handles but got reset
-
-if isfield(options, 'reconmethod') && isequal(options.reconmethod, 'LeGUI (Davis 2021)')
-    legui2reco(options);
-end
-
 % Initialize figure
 
 titlePrefix = erase(options.patientname, 'sub-');
