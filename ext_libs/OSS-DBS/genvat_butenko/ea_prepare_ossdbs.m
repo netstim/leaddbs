@@ -32,6 +32,13 @@ settings.encapsulationType = options.prefs.machine.vatsettings.butenko_encapsula
 settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive_ethresh;
 % check what we simulate
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
+
+if strcmp(options.prefs.machine.vatsettings.butenko_cond_model,'Homogeneous')
+    settings.cond_model = 'Constant';
+else
+    settings.cond_model = options.prefs.machine.vatsettings.butenko_cond_model;
+end
+
 try
     % compute PAM over an uncertain parameter (set in the GUI)
     settings.prob_PAM = options.prefs.machine.vatsettings.butenko_prob_PAM;
