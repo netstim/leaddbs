@@ -11,6 +11,7 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
     GM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-GM_mod-iso_T1w_mask.nii');
     WM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-WM_mod-iso_T1w_mask.nii');
     CSF_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-CSF_mod-iso_T1w_mask.nii');
+    Surfaces_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_surface.mat');
     Electrodes_filename = strcat(subjId, '_electrodes.mat');
     Channels_filename = strcat(subjId, '_channels.mat');
     % ------- Find MR/CT inside that Lead-DBS tree -------
@@ -61,9 +62,14 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
     app.GrayImg = spm_read_vols(app.GrayInfo);
     app.WhiteImg = spm_read_vols(app.WhiteInfo);
     app.CSFImg = spm_read_vols(app.CSFInfo);
-
+    SR = [];
     app.BrainSurfRaw = []; app.ProjSurfRaw = [];
     [app.BrainSurfRaw,app.ProjSurfRaw] = LeG_genSurfaces({app.GrayImg,app.WhiteImg},app.GrayInfo);
+    SR.BrainSurfRaw = app.BrainSurfRaw;
+    SR.ProjSurfRaw = app.ProjSurfRaw;
+    ea_mkdir(fullfile(subjRoot, 'surfaces'));
+    app.SurfacesFile = fullfile(subjRoot, 'surfaces', Surfaces_filename);
+    save(app.SurfacesFile,'-struct','SR')
 
     % ------- Atlas / scaling / initial display -------
     app.XYZScale   = sqrt(sum(app.MRInfo.mat(1:3,1:3).^2));
