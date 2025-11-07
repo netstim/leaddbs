@@ -15,12 +15,13 @@ end
 
 % for now, enforce co-registration
 coregister = true;
+%anchorNii = anchorImage;
 
 % check if all images provided actually exist
 for im_i = 1:size(images,1)
     image = [images(im_i).folder,filesep,images(im_i).name];
     if ~isfile(image)
-        fprintf('\nFor %s, not all listed modalities were found for TeamTea Lacune segmentation\n',sub_ID)
+        fprintf('\nFor %s, not all listed modalities were found\n',sub_ID)
         return
     end
 end
@@ -133,7 +134,9 @@ for im_i = 1:size(images,1)
     image_nifti = ea_load_nii(image);
     image_nifti.img(mask_nifti.img < 0.5) = 0.0;
 
-    ea_delete(image)  % comment this out if we need .nii somewhere downstream  
+    if coregister
+        ea_delete(image)  % comment this out if we need .nii somewhere downstream  
+    end
     images(im_i).folder = TT_input_path;
 
     % rename to TeamTea notation (synthSeg, segmsvd and MARS support it directly)
@@ -212,13 +215,13 @@ if strcmp(alg4PVS,'TeamTea')
         '-v ', TT_output_path, ':/output ', ...
         '13387316fdfe']);    % TeamTea    
 
-    pvsFileFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
-    if ~isfile(pvsFileFile)
+    pvsFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
+    if ~isfile(pvsFile)
         disp("PVS segmentation with TeamTea failed!")
         disp(sub_ID)
     else
-        pvsFileFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-PVS.nii.gz'];
-        copyfile(pvsFileFile,pvsFileFileAccessible)
+        pvsFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-PVS.nii.gz'];
+        copyfile(pvsFile,pvsFileAccessible)
     end
 end
 
@@ -232,7 +235,7 @@ if strcmp(alg4WMH,'segcsvd')
 
     if ~found(3)
         disp("No FLAIR image for WMH segmentation with segcsvd !")
-        %return
+        return
     end
 
     segcsvdDir = [workingDir,filesep,'segcsvd'];
@@ -298,8 +301,8 @@ if strcmp(alg4WMH,'segcsvd')
         %fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/indir -v %s:/outdir -w / segcsvd_rc03 segment_pvs /indir/%s /indir/%s /outdir/%s /outdir/%s "1.0,1.4" 0 %s %s %s\n',inputDir,segcsvdDir,image_T1,synth_fn,seg_wmh_fn,seg_pvs_fn,skip_mask_and_bias,cleanup,seg_pvs_thr)
     	%disp("Copy the docker command and make sure the process is over")
 
-        pvsFile = [segcsvdDir,filesep,seg_pvs_fn];
-        if ~isfile(pvsFile)
+        pvsFileAccessible = [segcsvdDir,filesep,seg_pvs_fn];
+        if ~isfile(pvsFileAccessible)
             disp("PVS segmentation with segcsvd failed!")
             disp(sub_ID)
         end
@@ -334,9 +337,13 @@ end
 
 if ~strcmp(alg4PVS,'None')
     try
-        pvs = ea_load_nii(pvsFile);
+        pvs = ea_load_nii(pvsFileAccessible);
         if all(size(segmask.img) == size(pvs.img)) & all(abs(segmask.mat - pvs.mat) <= 0.001, 'all')
-            segmask.img(pvs.img >= seg_pvs_thr_float) = 3;
+            if strcmp(alg4PVS,'segcsvd')
+                segmask.img(pvs.img >= seg_pvs_thr_float) = 3;
+            elseif strcmp(alg4PVS,'TeamTea')
+                segmask.img(pvs.img == 1) = 3;
+            end
         else
             disp("Voxel space of segmask and PVS did not match, check!")
         end
