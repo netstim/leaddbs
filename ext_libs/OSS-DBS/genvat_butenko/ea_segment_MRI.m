@@ -90,6 +90,13 @@ switch settings.butenko_segmAlg
             if WM_vol < 100.0 || GM_vol < 100.0
                 warningMsg = sprintf("Brain segmentation with SPM failed for sub-%s", options.subj.subjId);
                 ea_warndlg(warningMsg);
+
+                if settings.use_wsl
+                    warningMsg = sprintf("Atropos fallback cannot be used with WSL, consider Atlas based segmentation model");
+                    ea_warndlg(warningMsg);
+                    return
+                end
+
                 % check if atropos segmentation was already done 
                 % TBD: we can store atropos segmask_raw in coregistration
                 % instead of stim folder
