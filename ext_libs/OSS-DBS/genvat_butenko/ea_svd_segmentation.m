@@ -1,4 +1,4 @@
-function ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,sub_ID)
+function ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,sub_ID,only_segmask)
 % Add enlarged perivascular spaces, WMH and lacunes to segmask
 % By Butenko, konstantinmgtu@gmail.com
 arguments
@@ -11,10 +11,11 @@ arguments
     alg4WMH = 'segcsvd'             % algorithm for WMH segmentation
     alg4Lacunes = 'TeamTea'         % algorithm for lacune segmentation
     sub_ID = 'JD'                   % subject label
+    only_segmask = false            % only keep segmask.nii, remove all intermediate files
 end
 
 % for now, enforce co-registration
-coregister = true;
+coregister = false;
 %anchorNii = anchorImage;
 
 % check if all images provided actually exist
@@ -49,21 +50,20 @@ ea_delete([workingDir,filesep,'T1_synthSeg.nii.gz']);
 ea_delete([workingDir,filesep,'segmask_synthSeg.nii']);
 
 segmaskFile = [workingDir,filesep,'segmask_',segmenter,'.nii'];
-segmaskSVDFile = [workingDir,filesep,'segmask.nii'];
+segmaskSVDFile = segmaskPath;
 
+% we need .nii for spm commands
+if strcmp(anchorImage(end-2:end),'.gz')
+    % SPM does not handle .gz
+    gunzip(anchorImage);
+    anchorNii = [anchorImage(1:end-3)];
+else
+    anchorNii = anchorImage;
+end
 
 % 0) additional co-registration
 % also re-slices to the same voxel space, which is handy
 if coregister
-
-    if strcmp(anchorImage(end-2:end),'.gz')
-        % SPM does not handle .gz
-        gunzip(anchorImage);
-        anchorNii = [anchorImage(1:end-3)];
-    else
-        anchorNii = anchorImage;
-    end
-
     for im_i = 1:size(images,1)
         image = [images(im_i).folder,filesep,images(im_i).name];
 
@@ -408,6 +408,22 @@ function [segmask_nifti,synth_fn] = get_SynthSeg_segmask(workingDir,image2segmen
     % end
     ea_conformspaceto(anchorNii,segmaskFile)
     segmask_nifti = ea_load_nii(segmaskFile);
+end
+
+if only_segmask
+    ea_delete(segmaskFile)
+    ea_delete([workingDir,filesep,synth_fn])
+    ea_delete(TT_input_path)
+    %ea_delete(TT_output_path)
+    ea_delete(lacunesFileAccessible)
+    ea_delete(pvsFileAccessible)
+    ea_delete(wmhFile)
+    ea_delete(segcsvdDir)
+    ea_delete([workingDir,filesep,'spm_affine_*'])
+
+    if strcmp(anchorImage(end-2:end),'.gz')
+        ea_delete(anchorNii);
+    end
 end
 
 end
