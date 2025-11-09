@@ -29,12 +29,25 @@ setenv('TZ', timezone);
 % import settings from Lead-DBS GUI
 %options.stimSetMode = 0;
 [settings,S] = ea_prepare_ossdbs(options,S);
-if isfield(options.prefs,'ext_oss_env') && ~strcmp(options.prefs.ext_oss_env,'None')
-    % use external environment
-    env = ea_ext_env(options.prefs.ext_oss_env);
-    disp("Using the external OSS-DBS environment")
+if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env
+    disp("Running OSS-DBS via WSL")
+    disp("Lead-DBS conda packages cannot be used (e.g. SynthSeg and Tensorflow)")
+    settings.use_wsl = true;
+    if strcmp(settings.butenko_segmAlg,'SynthSeg')
+        warningMsg = sprintf("SynthSeg segmentation cannot be used with WSL");
+        ea_warndlg(warningMsg);
+        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
+        return
+    end
 else
-    env = ea_conda_env('OSS-DBSv2');
+    settings.use_wsl = false;
+    if isfield(options.prefs,'ext_oss_env') && ~strcmp(options.prefs.ext_oss_env,'None')
+        % use external environment
+        env = ea_ext_env(options.prefs.ext_oss_env);
+        disp("Using the external OSS-DBS environment")
+    else
+        env = ea_conda_env('OSS-DBSv2');
+    end
 end
 
 % some hardcoded parameters, can be added to the GUI later
@@ -223,27 +236,44 @@ for source_index = first_active_source:4
 
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
-                env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
+                
+                if settings.use_wsl 
+                    [~, ~] = vta_runwslcommand(['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)]);
+                else
+                    env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
+                end
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
-            env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
-                ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
+            if settings.use_wsl 
+                [~, ~] = vta_runwslcommand(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
+                    ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)]);
+            else
+                env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
+                    ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
+            end
             [~,input_name,~] = fileparts(parameterFile);
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
 
             % run OSS-DBS
-            [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
-
+            if settings.use_wsl 
+                [~,cmdout] = vta_runwslcommand(['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
+            else
+                [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)]);
+            end
             % detec error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
-
-                % increase the Bnd_Box dimensions
-                env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
-
-                % run OSS-DBS
-                env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
+                if settings.use_wsl 
+                    [~, ~] = vta_runwslcommand(cell2mat(['python3 ' vta_windowspathstowsl(ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py')) ' ', vta_windowspathstowsl(parameterFile_json)]));
+                    % run OSS-DBS
+                    [~, ~] = vta_runwslcommand(['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
+                else
+                    % increase the Bnd_Box dimensions
+                    env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
+                    % run OSS-DBS
+                    env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
+                end
             end
 
             % prepare NEURON simulation
@@ -265,14 +295,24 @@ for source_index = first_active_source:4
                 end
 
                 if settings.optimizer
-                    env.system(['python ', ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py ', settings.PathwayTune_master_dict, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
+                    if settings.use_wsl 
+                        vta_runwslcommand(['python ', vta_windowspathstowsl(ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py'),' ', settings.PathwayTune_master_dict, ' ', vta_windowspathstowsl(outputPaths.outputDir), ' ', num2str(side), ' ', vta_windowspathstowsl(parameterFile_json), ' ', num2str(scaling)])
+                    else
+                        env.system(['python ', ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py ', settings.PathwayTune_master_dict, ' ', ea_path_helper(outputPaths.outputDir), ' ', num2str(side), ' ', ea_path_helper(parameterFile_json), ' ', num2str(scaling)])
+                    end
                 else
                     if settings.prob_PAM
-                        %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile, ' ', num2str(scaling), ' ', num2str(i)]);
-                        env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                        if settings.use_wsl
+                            vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                        else
+                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                        end
                     else
-                        %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/PAM_caller.py ', neuron_folder, ' ', folder2save,' ', timeDomainSolution, ' ', pathwayParameterFile]);
-                        env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                        if settings.use_wsl
+                            vta_runwslcommand(['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                        else
+                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                        end
                     end
                 end
 

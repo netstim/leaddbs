@@ -1,4 +1,4 @@
-function ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,sub_ID)
+function ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,sub_ID,only_segmask)
 % Add enlarged perivascular spaces, WMH and lacunes to segmask
 % By Butenko, konstantinmgtu@gmail.com
 arguments
@@ -11,16 +11,18 @@ arguments
     alg4WMH = 'segcsvd'             % algorithm for WMH segmentation
     alg4Lacunes = 'TeamTea'         % algorithm for lacune segmentation
     sub_ID = 'JD'                   % subject label
+    only_segmask = false            % only keep segmask.nii, remove all intermediate files
 end
 
 % for now, enforce co-registration
-coregister = true;
+coregister = false;
+%anchorNii = anchorImage;
 
 % check if all images provided actually exist
 for im_i = 1:size(images,1)
     image = [images(im_i).folder,filesep,images(im_i).name];
     if ~isfile(image)
-        fprintf('\nFor %s, not all listed modalities were found for TeamTea Lacune segmentation\n',sub_ID)
+        fprintf('\nFor %s, not all listed modalities were found\n',sub_ID)
         return
     end
 end
@@ -48,21 +50,20 @@ ea_delete([workingDir,filesep,'T1_synthSeg.nii.gz']);
 ea_delete([workingDir,filesep,'segmask_synthSeg.nii']);
 
 segmaskFile = [workingDir,filesep,'segmask_',segmenter,'.nii'];
-segmaskSVDFile = [workingDir,filesep,'segmask.nii'];
+segmaskSVDFile = segmaskPath;
 
+% we need .nii for spm commands
+if strcmp(anchorImage(end-2:end),'.gz')
+    % SPM does not handle .gz
+    gunzip(anchorImage);
+    anchorNii = [anchorImage(1:end-3)];
+else
+    anchorNii = anchorImage;
+end
 
 % 0) additional co-registration
 % also re-slices to the same voxel space, which is handy
 if coregister
-
-    if strcmp(anchorImage(end-2:end),'.gz')
-        % SPM does not handle .gz
-        gunzip(anchorImage);
-        anchorNii = [anchorImage(1:end-3)];
-    else
-        anchorNii = anchorImage;
-    end
-
     for im_i = 1:size(images,1)
         image = [images(im_i).folder,filesep,images(im_i).name];
 
@@ -133,7 +134,9 @@ for im_i = 1:size(images,1)
     image_nifti = ea_load_nii(image);
     image_nifti.img(mask_nifti.img < 0.5) = 0.0;
 
-    ea_delete(image)  % comment this out if we need .nii somewhere downstream  
+    if coregister
+        ea_delete(image)  % comment this out if we need .nii somewhere downstream  
+    end
     images(im_i).folder = TT_input_path;
 
     % rename to TeamTea notation (synthSeg, segmsvd and MARS support it directly)
@@ -212,13 +215,13 @@ if strcmp(alg4PVS,'TeamTea')
         '-v ', TT_output_path, ':/output ', ...
         '13387316fdfe']);    % TeamTea    
 
-    pvsFileFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
-    if ~isfile(pvsFileFile)
+    pvsFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
+    if ~isfile(pvsFile)
         disp("PVS segmentation with TeamTea failed!")
         disp(sub_ID)
     else
-        pvsFileFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-PVS.nii.gz'];
-        copyfile(pvsFileFile,pvsFileFileAccessible)
+        pvsFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-PVS.nii.gz'];
+        copyfile(pvsFile,pvsFileAccessible)
     end
 end
 
@@ -232,7 +235,7 @@ if strcmp(alg4WMH,'segcsvd')
 
     if ~found(3)
         disp("No FLAIR image for WMH segmentation with segcsvd !")
-        %return
+        return
     end
 
     segcsvdDir = [workingDir,filesep,'segcsvd'];
@@ -298,8 +301,8 @@ if strcmp(alg4WMH,'segcsvd')
         %fprintf('\nIn the terminal: sudo docker run --rm --gpus all -v %s:/indir -v %s:/outdir -w / segcsvd_rc03 segment_pvs /indir/%s /indir/%s /outdir/%s /outdir/%s "1.0,1.4" 0 %s %s %s\n',inputDir,segcsvdDir,image_T1,synth_fn,seg_wmh_fn,seg_pvs_fn,skip_mask_and_bias,cleanup,seg_pvs_thr)
     	%disp("Copy the docker command and make sure the process is over")
 
-        pvsFile = [segcsvdDir,filesep,seg_pvs_fn];
-        if ~isfile(pvsFile)
+        pvsFileAccessible = [segcsvdDir,filesep,seg_pvs_fn];
+        if ~isfile(pvsFileAccessible)
             disp("PVS segmentation with segcsvd failed!")
             disp(sub_ID)
         end
@@ -334,9 +337,13 @@ end
 
 if ~strcmp(alg4PVS,'None')
     try
-        pvs = ea_load_nii(pvsFile);
+        pvs = ea_load_nii(pvsFileAccessible);
         if all(size(segmask.img) == size(pvs.img)) & all(abs(segmask.mat - pvs.mat) <= 0.001, 'all')
-            segmask.img(pvs.img >= seg_pvs_thr_float) = 3;
+            if strcmp(alg4PVS,'segcsvd')
+                segmask.img(pvs.img >= seg_pvs_thr_float) = 3;
+            elseif strcmp(alg4PVS,'TeamTea')
+                segmask.img(pvs.img == 1) = 3;
+            end
         else
             disp("Voxel space of segmask and PVS did not match, check!")
         end
@@ -401,6 +408,22 @@ function [segmask_nifti,synth_fn] = get_SynthSeg_segmask(workingDir,image2segmen
     % end
     ea_conformspaceto(anchorNii,segmaskFile)
     segmask_nifti = ea_load_nii(segmaskFile);
+end
+
+if only_segmask
+    ea_delete(segmaskFile)
+    ea_delete([workingDir,filesep,synth_fn])
+    ea_delete(TT_input_path)
+    %ea_delete(TT_output_path)
+    ea_delete(lacunesFileAccessible)
+    ea_delete(pvsFileAccessible)
+    ea_delete(wmhFile)
+    ea_delete(segcsvdDir)
+    ea_delete([workingDir,filesep,'spm_affine_*'])
+
+    if strcmp(anchorImage(end-2:end),'.gz')
+        ea_delete(anchorNii);
+    end
 end
 
 end
