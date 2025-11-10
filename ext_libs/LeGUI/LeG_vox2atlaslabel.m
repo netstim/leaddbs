@@ -235,81 +235,209 @@ classdef LeG_vox2atlaslabel < handle
             Label = getLabels(AtlasVal, obj.AtlasVals{aIdx}, obj.AtlasLabels{aIdx});  % 1 label per voxel
         end
         
+%         function LabelProbs = findLabelProbabilities(obj, COMIdx, AtlasName, varargin)
+%             %Uses voxel COM (COMIdx) to create a sphere of specified radius
+%             %for finding label probabilities for specified atlas
+%             %(AtlasName). COMIdx are voxel indices in patient space.
+%                         
+%             if isempty(obj.Def)
+%                 obj.loadDefFile(varargin{:});
+%             else
+%                 obj.parseInput(varargin{:});
+%             end
+% 
+%             RadiusMM = 10; %listening radius (mm) for finding labels
+%             if ~isempty(obj.ProbRadius)
+%                 RadiusMM = obj.ProbRadius;
+%             end
+%             
+%             Idx = strcmp(regexprep(obj.AtlasNames,'\.nii$',''),AtlasName);            
+%             if isempty(obj.VoxDef{Idx})
+%                 mm2vox_atlas = inv(obj.AtlasMat{Idx}); %atlas transform
+%                 obj.VoxDef(Idx) = {affine(obj.Def,mm2vox_atlas)}; %vox2vox transform (patient to mni)
+%             end
+%             
+%             voxdef = obj.VoxDef{Idx};
+%             atlasdata = obj.AtlasData{Idx};
+%             atlasvals = obj.AtlasVals{Idx};
+%             atlaslabels = obj.AtlasLabels{Idx};
+%             
+%             XYZScale = sqrt(sum(obj.DefMat(1:3,1:3).^2)); %pt mm/vox scaling
+%             RadiusVox = ceil(RadiusMM./XYZScale);
+%             
+%             LabelProbs = cell(size(COMIdx,1),1);
+%             for m=1:size(COMIdx,1)
+%                 
+%                 % full index values centered on click point (XYZ)
+%                 xidx = COMIdx(m,1)-RadiusVox(1):COMIdx(m,1)+RadiusVox(1);
+%                 yidx = COMIdx(m,2)-RadiusVox(2):COMIdx(m,2)+RadiusVox(2);
+%                 zidx = COMIdx(m,3)-RadiusVox(3):COMIdx(m,3)+RadiusVox(3);
+%                 [YIdx,XIdx,ZIdx] = meshgrid(yidx,xidx,zidx);
+%                 
+%                 com = RadiusVox+1;
+%                 
+%                 [my,mx,mz] = meshgrid(1:length(yidx),1:length(xidx),1:length(zidx));
+%                 mx = (mx - com(1)).*XYZScale(1);
+%                 my = (my - com(2)).*XYZScale(2);
+%                 mz = (mz - com(3)).*XYZScale(3);
+%                 
+%                 elecimg = (sqrt(mx.^2+my.^2+mz.^2)<=RadiusMM); %1s are sphere around center, 0s everywhere else
+%                 
+%                 fullidx = [XIdx(elecimg),YIdx(elecimg),ZIdx(elecimg)]; %full index of electrode sphere
+%                 
+%                 %%%%%%%%% Faster linear index version %%%%%%%%%%%%%%%%
+%                 sz_vox = size(voxdef);
+%                 n_vox = prod(sz_vox(1:3));
+%                 
+%                 lidx = calcLinIdx(sz_vox(1:3),fullidx);
+%                 
+%                 atlasvox = nan(length(lidx),3);
+%                 atlasvox(:,1) = round((voxdef(lidx)));
+%                 atlasvox(:,2) = round((voxdef(lidx+n_vox)));
+%                 atlasvox(:,3) = round((voxdef(lidx+2*n_vox)));
+%                 
+%                 sz_atlas = size(atlasdata);
+%                 
+%                 lidx_atlas = calcLinIdx(sz_atlas(1:3),atlasvox);
+%                 nan_idx = isnan(lidx_atlas);    
+%                 
+%                 AtlasVal = zeros(length(lidx_atlas),1);
+%                 AtlasVal(~nan_idx) = round(atlasdata(lidx_atlas(~nan_idx)));
+%                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                 
+%                 [~,labelprobs] = getLabels(AtlasVal, atlasvals, atlaslabels);
+%                 LabelProbs(m) = {labelprobs};
+%             end %end for
+%             
+%         end %end function
         function LabelProbs = findLabelProbabilities(obj, COMIdx, AtlasName, varargin)
-            %Uses voxel COM (COMIdx) to create a sphere of specified radius
-            %for finding label probabilities for specified atlas
-            %(AtlasName). COMIdx are voxel indices in patient space.
-                        
-            if isempty(obj.Def)
-                obj.loadDefFile(varargin{:});
-            else
-                obj.parseInput(varargin{:});
+        % Uses voxel COM(s) (COMIdx, N×3 in source/patient grid) to create a sphere
+        % (RadiusMM) and compute label probabilities from the chosen atlas in MNI space.
+        %
+        % Name-Value (required):
+        %   'SrcImg'      : path to the source image whose grid COMIdx refer to (e.g., MR/CT)
+        %   'Template'    : path to the atlas/template image in MNI space
+        %   'InvXformDir' : subject directory containing 'inverseTransform' (Lead-DBS)
+        %   'NormMethod'  : normalization method string, e.g. 'ants','spm','fsl'
+        %
+        % Name-Value (optional):
+        %   'RadiusMM'    : scalar spherical radius in mm (default = 10 or obj.ProbRadius if set)
+        %
+        % Output:
+        %   LabelProbs : cell(N,1). Each cell is the label-probability map returned by:
+        %                [~, labelprobs] = getLabels(AtlasVal, atlasvals, atlaslabels);
+        
+            % ---------- parse inputs ----------
+            p = inputParser;
+            addParameter(p,'SrcImg','',@(s)ischar(s)||isstring(s));
+            addParameter(p,'Template','',@(s)ischar(s)||isstring(s));
+            addParameter(p,'InvXformDir','',@(s)ischar(s)||isstring(s));
+            addParameter(p,'NormMethod','',@(s)ischar(s)||isstring(s));
+            addParameter(p,'RadiusMM',[],@(x)isnumeric(x)&&isscalar(x)&&x>0);
+            parse(p,varargin{:});
+        
+            srcImg   = char(p.Results.SrcImg);
+            template = char(p.Results.Template);
+            invDir   = char(p.Results.InvXformDir);
+            normmtd  = upper(char(p.Results.NormMethod));
+        
+            if any(cellfun(@isempty,{srcImg,template,invDir,normmtd}))
+                error('findLabelProbabilities:MissingInputs', ...
+                      'Provide SrcImg, Template, InvXformDir, and NormMethod.');
             end
-
-            RadiusMM = 10; %listening radius (mm) for finding labels
-            if ~isempty(obj.ProbRadius)
+            if size(COMIdx,2)~=3
+                error('findLabelProbabilities:BadCOMIdx','COMIdx must be N×3 voxel indices.');
+            end
+        
+            % radius selection: NV pair > obj.ProbRadius > default 10
+            if ~isempty(p.Results.RadiusMM)
+                RadiusMM = p.Results.RadiusMM;
+            elseif ~isempty(obj.ProbRadius)
                 RadiusMM = obj.ProbRadius;
+            else
+                RadiusMM = 10;
             end
-            
-            Idx = strcmp(regexprep(obj.AtlasNames,'\.nii$',''),AtlasName);            
-            if isempty(obj.VoxDef{Idx})
-                mm2vox_atlas = inv(obj.AtlasMat{Idx}); %atlas transform
-                obj.VoxDef(Idx) = {affine(obj.Def,mm2vox_atlas)}; %vox2vox transform (patient to mni)
+        
+            % ---------- resolve atlas (affine + volume + lut) ----------
+            atlasClean = regexprep(obj.AtlasNames,'\.nii(\.gz)?$','');
+            targetName = regexprep(AtlasName,'\.nii(\.gz)?$','');
+            aIdx = find(strcmp(atlasClean, targetName), 1);
+            if isempty(aIdx), error('Atlas "%s" not found.', AtlasName); end
+        
+            Avox2mm = obj.AtlasMat{aIdx};                % atlas vox -> mm
+            if isequal(size(Avox2mm),[3 4]), Avox2mm=[Avox2mm; 0 0 0 1]; end
+            if ~isequal(size(Avox2mm),[4 4]), error('Unexpected atlas affine size.'); end
+            mm2vox_atlas = inv(Avox2mm);
+        
+            atlasVol    = obj.AtlasData{aIdx};
+            atlasvals   = obj.AtlasVals{aIdx};
+            atlaslabels = obj.AtlasLabels{aIdx};
+            szA         = size(atlasVol);
+        
+            % ---------- source image geometry ----------
+            Vsrc  = spm_vol(srcImg);
+            vxmm  = sqrt(sum(Vsrc.mat(1:3,1:3).^2));     % [dx dy dz] mm/vox
+            isz   = Vsrc.dim(1:3);
+            Rvox  = ceil(RadiusMM ./ vxmm);              % radius in voxels
+        
+            % inverseTransform stub for ea_map_coords
+            transStub = invDir;
+            if ~endsWith(transStub,'inverseTransform')
+                transStub = fullfile(transStub,'inverseTransform');
             end
-            
-            voxdef = obj.VoxDef{Idx};
-            atlasdata = obj.AtlasData{Idx};
-            atlasvals = obj.AtlasVals{Idx};
-            atlaslabels = obj.AtlasLabels{Idx};
-            
-            XYZScale = sqrt(sum(obj.DefMat(1:3,1:3).^2)); %pt mm/vox scaling
-            RadiusVox = ceil(RadiusMM./XYZScale);
-            
+        
+            % ---------- per-COM neighborhood ----------
             LabelProbs = cell(size(COMIdx,1),1);
-            for m=1:size(COMIdx,1)
-                
-                % full index values centered on click point (XYZ)
-                xidx = COMIdx(m,1)-RadiusVox(1):COMIdx(m,1)+RadiusVox(1);
-                yidx = COMIdx(m,2)-RadiusVox(2):COMIdx(m,2)+RadiusVox(2);
-                zidx = COMIdx(m,3)-RadiusVox(3):COMIdx(m,3)+RadiusVox(3);
-                [YIdx,XIdx,ZIdx] = meshgrid(yidx,xidx,zidx);
-                
-                com = RadiusVox+1;
-                
-                [my,mx,mz] = meshgrid(1:length(yidx),1:length(xidx),1:length(zidx));
-                mx = (mx - com(1)).*XYZScale(1);
-                my = (my - com(2)).*XYZScale(2);
-                mz = (mz - com(3)).*XYZScale(3);
-                
-                elecimg = (sqrt(mx.^2+my.^2+mz.^2)<=RadiusMM); %1s are sphere around center, 0s everywhere else
-                
-                fullidx = [XIdx(elecimg),YIdx(elecimg),ZIdx(elecimg)]; %full index of electrode sphere
-                
-                %%%%%%%%% Faster linear index version %%%%%%%%%%%%%%%%
-                sz_vox = size(voxdef);
-                n_vox = prod(sz_vox(1:3));
-                
-                lidx = calcLinIdx(sz_vox(1:3),fullidx);
-                
-                atlasvox = nan(length(lidx),3);
-                atlasvox(:,1) = round((voxdef(lidx)));
-                atlasvox(:,2) = round((voxdef(lidx+n_vox)));
-                atlasvox(:,3) = round((voxdef(lidx+2*n_vox)));
-                
-                sz_atlas = size(atlasdata);
-                
-                lidx_atlas = calcLinIdx(sz_atlas(1:3),atlasvox);
-                nan_idx = isnan(lidx_atlas);    
-                
-                AtlasVal = zeros(length(lidx_atlas),1);
-                AtlasVal(~nan_idx) = round(atlasdata(lidx_atlas(~nan_idx)));
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                
-                [~,labelprobs] = getLabels(AtlasVal, atlasvals, atlaslabels);
-                LabelProbs(m) = {labelprobs};
-            end %end for
-            
-        end %end function
+        
+            for m = 1:size(COMIdx,1)
+                c = double(COMIdx(m,:));  % [i j k] in src grid
+        
+                % neighborhood ranges (clipped to bounds)
+                xidx = (c(1)-Rvox(1)):(c(1)+Rvox(1)); xidx = xidx(xidx>=1 & xidx<=isz(1));
+                yidx = (c(2)-Rvox(2)):(c(2)+Rvox(2)); yidx = yidx(yidx>=1 & yidx<=isz(2));
+                zidx = (c(3)-Rvox(3)):(c(3)+Rvox(3)); zidx = zidx(zidx>=1 & zidx<=isz(3));
+                if isempty(xidx) || isempty(yidx) || isempty(zidx)
+                    LabelProbs{m} = containers.Map(); %#ok<AGROW>
+                    continue
+                end
+        
+                % grid the subvolume and form a spherical mask in mm
+                [YIdx,XIdx,ZIdx] = meshgrid(yidx,xidx,zidx);              % note (y,x,z) order for meshgrid
+                % find the COM index within the subvolume
+                cx = find(xidx==c(1),1); cy = find(yidx==c(2),1); cz = find(zidx==c(3),1);
+                [my,mx,mz] = meshgrid(1:numel(yidx),1:numel(xidx),1:numel(zidx));
+                mx = (mx - cx) .* vxmm(1);
+                my = (my - cy) .* vxmm(2);
+                mz = (mz - cz) .* vxmm(3);
+                sphereMask = (mx.^2 + my.^2 + mz.^2) <= (RadiusMM^2);
+        
+                % voxels inside sphere (N×3 in src grid)
+                fullidx = [XIdx(sphereMask), YIdx(sphereMask), ZIdx(sphereMask)];
+        
+                % ---- map patient vox -> MNI mm (batch; ea_map_coords prefers 3×N) ----
+                XYZ_vx_3xN = fullidx.';                             % 3×N
+                mm_mni_3xN = ea_map_coords(XYZ_vx_3xN, srcImg, transStub, template, normmtd); % 3×N
+        
+                % ---- MNI mm -> atlas vox; sample labels ----
+                hom_mni     = [mm_mni_3xN; ones(1,size(mm_mni_3xN,2))];   % 4×N
+                vox_atlas_4 = mm2vox_atlas * hom_mni;                      % 4×N
+                AtlasVox    = round(vox_atlas_4(1:3,:)).';                 % N×3
+        
+                inb = AtlasVox(:,1)>=1 & AtlasVox(:,1)<=szA(1) & ...
+                      AtlasVox(:,2)>=1 & AtlasVox(:,2)<=szA(2) & ...
+                      AtlasVox(:,3)>=1 & AtlasVox(:,3)<=szA(3);
+        
+                AtlasVal = zeros(size(AtlasVox,1),1,'like',atlasVol);
+                if any(inb)
+                    linA = sub2ind(szA(1:3), AtlasVox(inb,1), AtlasVox(inb,2), AtlasVox(inb,3));
+                    AtlasVal(inb) = round(atlasVol(linA));
+                end
+        
+                % aggregate to probabilities
+                [~, labelprobs] = getLabels(AtlasVal, atlasvals, atlaslabels);
+                LabelProbs{m} = labelprobs;                              %#ok<AGROW>
+            end
+        end
 
         function LabelProbs = findLabelProbabilities2(obj, COMIdx, AtlasName, varargin)
             %Uses voxel COM (COMIdx) to create a sphere of specified radius
