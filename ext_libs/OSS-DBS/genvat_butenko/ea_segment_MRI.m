@@ -158,9 +158,11 @@ switch settings.butenko_segmAlg
                 % get T1, T2 and FLAIR
                 all_images = dir_without_dots(anchorImageDir);
                 allNames = {all_images.name};
-                logicalIndex = contains(allNames, 'T1w') | contains(allNames, 'T2w') | contains(allNames, 'FLAIR');
+                logicalIndex = contains(allNames, 'T1w.nii') | contains(allNames, 'T2w.nii') | contains(allNames, 'FLAIR.nii');
                 images = all_images(logicalIndex);
-                
+                % re-order to have T2w and T1w before FLAIR
+                images = flipud(images);
+
                 %ea_get_ANN_env();
                 env = ea_conda_env('SynthSeg');
                 
