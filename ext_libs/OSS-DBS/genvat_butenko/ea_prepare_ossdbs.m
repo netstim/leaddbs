@@ -33,7 +33,9 @@ settings.adaptive_threshold = options.prefs.machine.vatsettings.butenko_adaptive
 % check what we simulate
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcPAM;
 
-if strcmp(options.prefs.machine.vatsettings.butenko_cond_model,'Homogeneous')
+if ~isfield(options.prefs.machine.vatsettings,'butenko_cond_model')
+    settings.cond_model = 'ColeCole4';
+elseif strcmp(options.prefs.machine.vatsettings.butenko_cond_model,'Homogeneous')
     settings.cond_model = 'Constant';
 else
     settings.cond_model = options.prefs.machine.vatsettings.butenko_cond_model;
