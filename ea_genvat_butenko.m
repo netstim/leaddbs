@@ -2,6 +2,10 @@ function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS simulations.
 % By Butenko and Li, konstantinmgtu@gmail.com
 
+fprintf("\n\nOSS-DBS v2 by J. Zimmermann, J.P. Payonk and K. Butenko\n")
+fprintf("Please cite 'Butenko et al. (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.'\n")
+fprintf("PLoS Comput Biol 16(7), https://doi.org/10.1371/journal.pcbi.1008023'\n\n\n")
+
 if nargin==2
     S=varargin{1};
     options=varargin{2};
@@ -167,7 +171,6 @@ for source_index = first_active_source:4
             if ~exist(outputPaths.HemiSimFolder,'dir')
                 mkdir(outputPaths.HemiSimFolder)
             end
-            copyfile([outputPaths.outputDir,filesep,'Current_protocols_',num2str(side),'.csv'],[outputPaths.HemiSimFolder,filesep,'Current_protocols_',num2str(side),'.csv'])
         end
 
         % skip non-active sources when using single source
@@ -183,20 +186,23 @@ for source_index = first_active_source:4
                 warning('No stimulation exists for %s side! Skipping...\n', sideStr);
                 warning('on', 'backtrace');
             end
-
             fclose(fopen([outputPaths.outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
             runStatusMultiSource(source_index,side+1) = 1;
             continue;
         end
 
         % skip stimSets if not provided for this side
-        if settings.stimSetMode && ~isfile(strcat(outputPaths.HemiSimFolder,  filesep, 'Current_protocols_',string(side),'.csv'))
-            warning('off', 'backtrace');
-            warning('No stimulation set for %s side! Skipping...\n', sideStr);
-            warning('on', 'backtrace');
-            fclose(fopen([outputPaths.outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
-            runStatusMultiSource(source_index,side+1) = 1;
-            continue;
+        if settings.stimSetMode && ~settings.optimizer
+            if isfile([outputPaths.outputDir,filesep,'Current_protocols_',num2str(side),'.csv'])
+                warning('off', 'backtrace');
+                warning('No stimulation set for %s side! Skipping...\n', sideStr);
+                warning('on', 'backtrace');
+                fclose(fopen([outputPaths.outputDir, filesep, 'skip_', sideCode, '.txt'], 'w'));
+                runStatusMultiSource(source_index,side+1) = 1;
+                continue;
+            else
+                copyfile([outputPaths.outputDir,filesep,'Current_protocols_',num2str(side),'.csv'],[outputPaths.HemiSimFolder,filesep,'Current_protocols_',num2str(side),'.csv'])
+            end
         end
 
         % skip PAM if no fibers were preserved for the stim protocol

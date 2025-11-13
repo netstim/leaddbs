@@ -23,7 +23,7 @@ if iscell(stimVector) % stimSetMode, stimProtocol (cell of csv files) provided
     if size(stimProtocol,2) == 1
         disp("StimProtocol exists only for one side")
         N_contacts = size(stimProtocol{1,1},2);
-        [~,SetName,~] = fileparts(S);
+        [~,SetName,~] = fileparts(stimVector{1,1});
         if strcmp(SetName, 'Current_protocols_0')
             N_contacts = size(stimProtocol{1,1},2);
             stimProtocol{1,2} = zeros(1,N_contacts);
