@@ -1,4 +1,4 @@
-function ea_merge_PathwayTune_dicts(stimFolder,mainDict,stimSetsDictPath_rh,stimSetsDictPath_lh,fixedSymtpomsDictPath,targetProfilesDictPath)
+function ea_merge_PathwayTune_dicts(stimFolder,mainDict,stimSetsDictPath_rh,stimSetsDictPath_lh,fixedSymtpomsDictPath,targetProfilesDictPath,masterDictPath)
 % Merge PathwayTune dictionaries into one master_dict.json
 % By Butenko, konstantinmgtu@gmail.com
 
@@ -9,6 +9,7 @@ arguments
     stimSetsDictPath_lh         % path to StimSets_info of the left electrode, otherwise None
     fixedSymtpomsDictPath       % path to Fixed_symptoms
     targetProfilesDictPath      % path to target_profiles
+    masterDictPath {mustBeText} = "None"
 end
 
 %inputFilePath = '/home/forel/Documents/data/JB_project/fin_mSTN/netblend_dict_file.json';
@@ -52,26 +53,36 @@ if ~strcmp(stimSetsDictPath_lh,'None')
     mainDict.stim_sets_lh = StimSetsDict;
 end
 
-
-fid = fopen(fixedSymtpomsDictPath, 'r');
-if fid == -1
-    error('Could not open file %s for reading.', fixedSymtpomsDictPath);
+if ~strcmp(masterDictPath,"None")
+    fid = fopen(masterDictPath, 'r');
+    if fid == -1
+        error('Could not open file %s for reading.', masterDictPath);
+    end
+    jsonStringFromFile = fread(fid, '*char')';
+    fclose(fid);
+    masterDict = jsondecode(jsonStringFromFile);
+    mainDict.fixed_symptom_weights = masterDict.fixed_symptom_weights;
+    mainDict.target_profiles = masterDict.target_profiles;
+else
+    fid = fopen(fixedSymtpomsDictPath, 'r');
+    if fid == -1
+        error('Could not open file %s for reading.', fixedSymtpomsDictPath);
+    end
+    jsonStringFromFile = fread(fid, '*char')';
+    fclose(fid);
+    FixedSymptomsDict = jsondecode(jsonStringFromFile);
+    mainDict.fixed_symptom_weights = FixedSymptomsDict.fixed_symptom_weights;
+    
+    
+    fid = fopen(targetProfilesDictPath, 'r');
+    if fid == -1
+        error('Could not open file %s for reading.', targetProfilesDictPath);
+    end
+    jsonStringFromFile = fread(fid, '*char')';
+    fclose(fid);
+    TargetProfilesDict = jsondecode(jsonStringFromFile);
+    mainDict.target_profiles = TargetProfilesDict;
 end
-jsonStringFromFile = fread(fid, '*char')';
-fclose(fid);
-FixedSymptomsDict = jsondecode(jsonStringFromFile);
-mainDict.fixed_symptom_weights = FixedSymptomsDict.fixed_symptom_weights;
-
-
-fid = fopen(targetProfilesDictPath, 'r');
-if fid == -1
-    error('Could not open file %s for reading.', targetProfilesDictPath);
-end
-jsonStringFromFile = fread(fid, '*char')';
-fclose(fid);
-TargetProfilesDict = jsondecode(jsonStringFromFile);
-mainDict.target_profiles = TargetProfilesDict;
-
 
 jsonString = jsonencode(mainDict, 'PrettyPrint', true);
 outputFilePath = [stimFolder,filesep,'master_dict.json'];
