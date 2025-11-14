@@ -159,80 +159,155 @@ classdef LeG_vox2atlaslabel < handle
 %             Label = getLabels(AtlasVal, obj.AtlasVals{Idx}, obj.AtlasLabels{Idx});
 %         end %end findLabel
 
-        function [Label, XYZMNImm, AtlasVox, AtlasVal] = findLabel(obj, XYZIdx, AtlasName, varargin)
-        % Map patient-space voxel indices -> MNI mm via ea_map_coords, then read atlas labels.
-        % Returns a label PER VOXEL plus the mean MNI mm of the set.
+%         function [Label, XYZMNImm, AtlasVox, AtlasVal] = findLabel(obj, XYZIdx, AtlasName, varargin)
+%         % Map patient-space voxel indices -> MNI mm via ea_map_coords, then read atlas labels.
+%         % Returns a label PER VOXEL plus the mean MNI mm of the set.
+%         %
+%         % Required name-values:
+%         %   'SrcImg'      : source image path whose grid XYZIdx refer to (e.g., MR or CT)
+%         %   'InvXformDir' : subject's inverseTransform directory
+%         %   'Template'    : template (MNI) image path used for normalization
+%         %   'NormMethod'  : 'ants' or 'spm'
+%         
+%             % ---- parse inputs
+%             p = inputParser;
+%             addParameter(p,'SrcImg','',@(s)ischar(s)||isstring(s));
+%             addParameter(p,'InvXformDir','',@(s)ischar(s)||isstring(s));
+%             addParameter(p,'Template','',@(s)ischar(s)||isstring(s));
+%             addParameter(p,'NormMethod','',@(s)ischar(s)||isstring(s));
+%             parse(p,varargin{:});
+%             srcImg   = char(p.Results.SrcImg);
+%             invDir   = char(p.Results.InvXformDir);
+%             template = char(p.Results.Template);
+%             normmtd  = char(p.Results.NormMethod);
+%         
+%             if any(cellfun(@isempty,{srcImg,invDir,template,normmtd}))
+%                 error('Provide SrcImg, InvXformDir, Template, and NormMethod.');
+%             end
+%             if size(XYZIdx,2)~=3, error('XYZIdx must be N×3 voxel indices.'); end
+%         
+%             % ---- pick atlas
+%             atlasClean = regexprep(obj.AtlasNames,'\.nii(\.gz)?$','');
+%             targetName = regexprep(AtlasName,'\.nii(\.gz)?$','');
+%             aIdx = find(strcmp(atlasClean, targetName),1);
+%             if isempty(aIdx), error('Atlas "%s" not found.', AtlasName); end
+%         
+%             Avox2mm      = obj.AtlasMat{aIdx};        % atlas vox→mm
+%             mm2vox_atlas = inv(Avox2mm);
+%             atlasVol     = obj.AtlasData{aIdx};
+%             szA          = size(atlasVol);
+%         
+%             % ---- vox -> native mm (vectorized)
+%             Vsrc      = spm_vol(srcImg);
+%             hom_vox   = [double(XYZIdx), ones(size(XYZIdx,1),1)];   % N×4
+%             mm_native = (Vsrc.mat * hom_vox.').';                   % N×4
+%             mm_native = mm_native(:,1:3);                           % N×3 (mm)
+%         
+%             % ---- native mm -> MNI mm (vectorized if supported)
+%             try
+%                 mm_mni = ea_map_coords(mm_native', srcImg, invDir, template, normmtd);  % N×3
+%             catch
+%                 % fallback: loop if your ea_map_coords only accepts 1×3
+%                 mm_mni = nan(size(mm_native));
+%                 for i = 1:size(mm_native,1)
+%                     mm_mni(i,:) = ea_map_coords(mm_native(i,:), srcImg, invDir, template, normmtd);
+%                 end
+%             end
+%             mm_mni = mm_mni';
+%             % report mean MNI mm for the set
+%             XYZMNImm = mean(mm_mni, 1, 'omitnan');
+%         
+%             % ---- MNI mm -> atlas voxels, sample labels
+%             hom_mni   = [mm_mni, ones(size(mm_mni,1),1)];
+%             AtlasVox  = (mm2vox_atlas * hom_mni.').';               % N×4
+%             AtlasVox  = round(AtlasVox(:,1:3));                     % nearest voxel
+%         
+%             inb = AtlasVox(:,1)>=1 & AtlasVox(:,1)<=szA(1) & ...
+%                   AtlasVox(:,2)>=1 & AtlasVox(:,2)<=szA(2) & ...
+%                   AtlasVox(:,3)>=1 & AtlasVox(:,3)<=szA(3);
+%         
+%             AtlasVal = zeros(size(AtlasVox,1),1);
+%             if any(inb)
+%                 lin = sub2ind(szA(1:3), AtlasVox(inb,1), AtlasVox(inb,2), AtlasVox(inb,3));
+%                 AtlasVal(inb) = round(atlasVol(lin));
+%             end
+%         
+%             Label = getLabels(AtlasVal, obj.AtlasVals{aIdx}, obj.AtlasLabels{aIdx});  % 1 label per voxel
+%         end
+
+        function [Label, XYZMNImm, AtlasVox, AtlasVal] = findLabel(obj, XYZMNImm, AtlasName, varargin)
+        % FINDLABEL  Get atlas label(s) from MNI mm coordinates.
         %
-        % Required name-values:
-        %   'SrcImg'      : source image path whose grid XYZIdx refer to (e.g., MR or CT)
-        %   'InvXformDir' : subject's inverseTransform directory
-        %   'Template'    : template (MNI) image path used for normalization
-        %   'NormMethod'  : 'ants' or 'spm'
+        %   [Label, XYZMNImm, AtlasVox, AtlasVal] = obj.findLabel(XYZMNImm, AtlasName)
+        %
+        % Inputs
+        %   XYZMNImm : N×3 MNI coordinates (mm) in template space
+        %   AtlasName: name of the atlas in obj.AtlasNames (with or without .nii/.nii.gz)
+        %
+        % Outputs
+        %   Label    : cell array of label strings, one per row of XYZMNImm
+        %   XYZMNImm : echo of the input MNI coords (N×3)
+        %   AtlasVox : N×3 voxel indices in atlas space
+        %   AtlasVal : N×1 numeric atlas values (indices into AtlasVals/AtlasLabels)
         
-            % ---- parse inputs
-            p = inputParser;
-            addParameter(p,'SrcImg','',@(s)ischar(s)||isstring(s));
-            addParameter(p,'InvXformDir','',@(s)ischar(s)||isstring(s));
-            addParameter(p,'Template','',@(s)ischar(s)||isstring(s));
-            addParameter(p,'NormMethod','',@(s)ischar(s)||isstring(s));
-            parse(p,varargin{:});
-            srcImg   = char(p.Results.SrcImg);
-            invDir   = char(p.Results.InvXformDir);
-            template = char(p.Results.Template);
-            normmtd  = char(p.Results.NormMethod);
+            %#ok<*INUSD>  % varargin unused now but kept for backwards compatibility
         
-            if any(cellfun(@isempty,{srcImg,invDir,template,normmtd}))
-                error('Provide SrcImg, InvXformDir, Template, and NormMethod.');
+            % ---- basic checks ----
+            if isempty(XYZMNImm)
+                Label    = {};
+                AtlasVox = [];
+                AtlasVal = [];
+                return;
             end
-            if size(XYZIdx,2)~=3, error('XYZIdx must be N×3 voxel indices.'); end
         
-            % ---- pick atlas
+            XYZMNImm = double(XYZMNImm);
+            % Allow 3×1 vector
+            if isvector(XYZMNImm) && numel(XYZMNImm)==3
+                XYZMNImm = XYZMNImm(:).';   % 1×3
+            end
+            if size(XYZMNImm,2) ~= 3
+                error('XYZMNImm must be N×3 MNI mm coordinates.');
+            end
+        
+            % ---- locate atlas ----
             atlasClean = regexprep(obj.AtlasNames,'\.nii(\.gz)?$','');
             targetName = regexprep(AtlasName,'\.nii(\.gz)?$','');
             aIdx = find(strcmp(atlasClean, targetName),1);
-            if isempty(aIdx), error('Atlas "%s" not found.', AtlasName); end
-        
-            Avox2mm      = obj.AtlasMat{aIdx};        % atlas vox→mm
-            mm2vox_atlas = inv(Avox2mm);
-            atlasVol     = obj.AtlasData{aIdx};
-            szA          = size(atlasVol);
-        
-            % ---- vox -> native mm (vectorized)
-            Vsrc      = spm_vol(srcImg);
-            hom_vox   = [double(XYZIdx), ones(size(XYZIdx,1),1)];   % N×4
-            mm_native = (Vsrc.mat * hom_vox.').';                   % N×4
-            mm_native = mm_native(:,1:3);                           % N×3 (mm)
-        
-            % ---- native mm -> MNI mm (vectorized if supported)
-            try
-                mm_mni = ea_map_coords(mm_native', srcImg, invDir, template, normmtd);  % N×3
-            catch
-                % fallback: loop if your ea_map_coords only accepts 1×3
-                mm_mni = nan(size(mm_native));
-                for i = 1:size(mm_native,1)
-                    mm_mni(i,:) = ea_map_coords(mm_native(i,:), srcImg, invDir, template, normmtd);
-                end
+            if isempty(aIdx)
+                error('Atlas "%s" not found in obj.AtlasNames.', AtlasName);
             end
-            mm_mni = mm_mni';
-            % report mean MNI mm for the set
-            XYZMNImm = mean(mm_mni, 1, 'omitnan');
         
-            % ---- MNI mm -> atlas voxels, sample labels
-            hom_mni   = [mm_mni, ones(size(mm_mni,1),1)];
-            AtlasVox  = (mm2vox_atlas * hom_mni.').';               % N×4
-            AtlasVox  = round(AtlasVox(:,1:3));                     % nearest voxel
+            Avox2mm  = obj.AtlasMat{aIdx};    % atlas vox -> mm
+            if isequal(size(Avox2mm),[3 4])
+                Avox2mm = [Avox2mm; 0 0 0 1]; % make it 4×4 if stored as 3×4
+            end
+            mm2vox_atlas = inv(Avox2mm);
         
+            atlasVol = obj.AtlasData{aIdx};
+            szA      = size(atlasVol);
+        
+            % ---- MNI mm -> atlas vox ----
+            N       = size(XYZMNImm,1);
+            hom_mni = [XYZMNImm, ones(N,1)];            % N×4
+            vox4    = (mm2vox_atlas * hom_mni.').';     % N×4
+            AtlasVox = round(vox4(:,1:3));              % N×3
+        
+            % ---- bounds + sampling ----
             inb = AtlasVox(:,1)>=1 & AtlasVox(:,1)<=szA(1) & ...
                   AtlasVox(:,2)>=1 & AtlasVox(:,2)<=szA(2) & ...
                   AtlasVox(:,3)>=1 & AtlasVox(:,3)<=szA(3);
         
-            AtlasVal = zeros(size(AtlasVox,1),1);
+            AtlasVal = zeros(N,1);
             if any(inb)
-                lin = sub2ind(szA(1:3), AtlasVox(inb,1), AtlasVox(inb,2), AtlasVox(inb,3));
+                lin = sub2ind(szA(1:3), ...
+                              AtlasVox(inb,1), ...
+                              AtlasVox(inb,2), ...
+                              AtlasVox(inb,3));
                 AtlasVal(inb) = round(atlasVol(lin));
             end
         
-            Label = getLabels(AtlasVal, obj.AtlasVals{aIdx}, obj.AtlasLabels{aIdx});  % 1 label per voxel
+            % ---- convert numeric labels → text labels ----
+            Label = getLabels(AtlasVal, obj.AtlasVals{aIdx}, obj.AtlasLabels{aIdx});
         end
         
 %         function LabelProbs = findLabelProbabilities(obj, COMIdx, AtlasName, varargin)
