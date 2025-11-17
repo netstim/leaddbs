@@ -31,7 +31,7 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
-%options.stimSetMode = 0;
+options.stimSetMode = 0;
 [settings,S] = ea_prepare_ossdbs(options,S);
 if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env
     disp("Running OSS-DBS via WSL")
@@ -193,7 +193,7 @@ for source_index = first_active_source:4
 
         % skip stimSets if not provided for this side
         if settings.stimSetMode && ~settings.optimizer
-            if isfile([outputPaths.outputDir,filesep,'Current_protocols_',num2str(side),'.csv'])
+            if ~isfile([outputPaths.outputDir,filesep,'Current_protocols_',num2str(side),'.csv'])
                 warning('off', 'backtrace');
                 warning('No stimulation set for %s side! Skipping...\n', sideStr);
                 warning('on', 'backtrace');
