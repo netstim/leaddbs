@@ -31,7 +31,7 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
-%options.stimSetMode = 0;
+% options.stimSetMode = 0;
 [settings,S] = ea_prepare_ossdbs(options,S);
 if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env
     disp("Running OSS-DBS via WSL")
@@ -69,6 +69,9 @@ settings = ea_segment_MRI(options, settings, outputPaths);
 
 % prepare tensor data
 settings.DTI_data_name = ea_prepare_DTI(options,outputPaths);
+if settings.use_wsl
+    settings.DTI_data_name =  vta_windowspathstowsl(settings.DTI_data_name);
+end
 
 % get electrode reconstruction parameters in OSS-DBS format
 settings = ea_get_oss_reco(options, settings);
@@ -310,7 +313,7 @@ for source_index = first_active_source:4
                 else
                     if settings.prob_PAM
                         if settings.use_wsl
-                            vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                            [~,cmdout] = vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         else
                             env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         end
