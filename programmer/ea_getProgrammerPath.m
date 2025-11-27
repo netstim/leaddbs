@@ -2,7 +2,7 @@ function appFile = ea_getProgrammerPath
 % Get the programmer path
 % Install/update it when necessary
 
-releaseDir = fullfile(options.earoot, 'programmer', 'app', 'release');
+releaseDir = fullfile(ea_getearoot, 'programmer', 'app', 'release');
 currentOS = ea_getarch;
 zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
 
