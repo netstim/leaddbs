@@ -2,7 +2,7 @@ function ea_initialize_programmer(handles, bids, action)
     %% Set the lead DBS patient folder path here
     groupFolderPath = bids.datasetDir; 
     %% Initialize Parameters
-    groupOptions = BIDSFetcher(groupFolderPath);\
+    groupOptions = BIDSFetcher(groupFolderPath);
     
     %% Prepare PLY Reconstructions
     preparePLYReconstructions(groupFolderPath, groupOptions, handles);
