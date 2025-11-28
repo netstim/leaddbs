@@ -17,7 +17,12 @@ settings.GM_index = 1;
 settings.WM_index = 2;
 settings.CSF_index = 3;
 settings.default_material = 'GM'; % GM, WM or CSF
-settings.MRI_data_name = [outputPaths.outputDir, filesep, segmaskName];
+
+if settings.use_wsl
+    settings.MRI_data_name =  vta_windowspathstowsl([outputPaths.outputDir, filesep, segmaskName]);
+else
+     settings.MRI_data_name = [outputPaths.outputDir, filesep, segmaskName];
+end
 
 if options.native
     anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
