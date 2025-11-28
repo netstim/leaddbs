@@ -69,6 +69,9 @@ settings = ea_segment_MRI(options, settings, outputPaths);
 
 % prepare tensor data
 settings.DTI_data_name = ea_prepare_DTI(options,outputPaths);
+if settings.use_wsl && ~strcmp(settings.DTI_data_name,'no dti')
+    settings.DTI_data_name =  vta_windowspathstowsl(settings.DTI_data_name);
+end
 
 % get electrode reconstruction parameters in OSS-DBS format
 settings = ea_get_oss_reco(options, settings);
@@ -310,7 +313,7 @@ for source_index = first_active_source:4
                 else
                     if settings.prob_PAM
                         if settings.use_wsl
-                            vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                            [~,cmdout] = vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         else
                             env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         end
@@ -433,5 +436,4 @@ function [runStatus, stimparameters] = ea_exit_genvat_butenko()
     setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
     setenv('LD_LIBRARY_PATH', getenv('LD_LIBRARY_PATH'));
     setenv('PATH', getenv('PATH'));
-
 
