@@ -1,4 +1,4 @@
-function ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,sub_ID,only_segmask)
+function ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,sub_ID,only_segmask,alg4MB)
 % Add enlarged perivascular spaces, WMH and lacunes to segmask
 % By Butenko, konstantinmgtu@gmail.com
 arguments
@@ -12,10 +12,11 @@ arguments
     alg4Lacunes = 'TeamTea'         % algorithm for lacune segmentation
     sub_ID = 'JD'                   % subject label
     only_segmask = false            % only keep segmask.nii, remove all intermediate files
+    alg4MB = 'None'
 end
 
 % for now, enforce co-registration
-coregister = false;
+coregister = true;
 %anchorNii = anchorImage;
 
 % check if all images provided actually exist
@@ -39,6 +40,7 @@ if strcmp(segmaskPath,'default')
     if strcmp(anchorImage(end-2:end),'.gz')
         anchorName = anchorName(1:end-4);
     end
+    segmaskPath = [workingDir, filesep, 'segmask.nii'];
 else
     [workingDir,~,~] = fileparts(segmaskPath);
     [~,anchorName,~] = fileparts(anchorImage); 
@@ -144,14 +146,17 @@ for im_i = 1:size(images,1)
         image_T1 = [subj_prefix,'_space-anchor_desc-masked_T1.nii.gz'];
         images(im_i).name = image_T1;
         found(1) = true;
-    elseif contains(image, 'T2w') || contains(image, 'anat_t2') || contains(image, 'masked_T2')
-        image_T2 = [subj_prefix,'_space-anchor_desc-masked_T2.nii.gz'];
-        images(im_i).name = image_T2;
-        found(2) = true;
     elseif contains(image, 'FLAIR') || contains(image, 'anat_flair') 
         image_FLAIR = [subj_prefix,'_space-anchor_desc-masked_FLAIR.nii.gz'];
         images(im_i).name = image_FLAIR;
         found(3) = true;
+    elseif contains(image, 'T2wS') || contains(image, 'anat_t2S') || contains(image, 'masked_T2S')
+        image_T2S = [subj_prefix,'_space-anchor_desc-masked_T2S.nii.gz'];
+        images(im_i).name = image_T2S;
+    elseif contains(image, 'T2w') || contains(image, 'anat_t2') || contains(image, 'masked_T2')
+        image_T2 = [subj_prefix,'_space-anchor_desc-masked_T2.nii.gz'];
+        images(im_i).name = image_T2;
+        found(2) = true;
     else
         % we do not need this image
         continue
@@ -172,6 +177,8 @@ if strcmp(alg4Lacunes,'TeamTea')
 
     % D = gpuDevice;
     % reset(D);
+
+    disp("Running lacune segmentation with TeamTea")
 
     % % run TeamTea docker
     % you might need to add user to the docker group
@@ -207,6 +214,7 @@ if strcmp(alg4PVS,'TeamTea')
         return
     end
 
+    disp("Running PVS segmentation with TeamTea")
     % % run TeamTea docker
     % you might need to add user to the docker group
 
@@ -225,6 +233,35 @@ if strcmp(alg4PVS,'TeamTea')
     end
 end
 
+if strcmp(alg4MB,'TeamTea')
+    if ~all(found)
+        fprintf('\nFor %s, not all required modalities were found for TeamTea microbleed segmentation\n',sub_ID)
+        return
+    end
+
+    % % pretend that T2* is T2
+    % image_T2S = [subj_prefix,'_space-anchor_desc-masked_T2S.nii.gz'];
+    % copyfile([TT_input_path,filesep,image_T2],[TT_input_path,filesep,image_T2S])
+
+    % % run TeamTea docker
+    % you might need to add user to the docker group
+    disp("Running microbleed segmentation with TeamTea")
+
+    system(['docker run --gpus all --rm ', ...
+        '-v ', TT_input_path, ':/input ', ...
+        '-v ', TT_output_path, ':/output ', ...
+        '95a63079481e']);    % TeamTea    
+
+    mbFile = [TT_output_path,filesep,'images',filesep,subj_prefix,'_space-anchor_desc-prediction.nii.gz'];
+    if ~isfile(mbFile)
+        disp("MB segmentation with TeamTea failed!")
+        disp(sub_ID)
+    else
+        mbFileAccessible = [workingDir,filesep,subj_prefix,'_space-anchor_desc-MB.nii.gz'];
+        copyfile(mbFile,mbFileAccessible)
+    end
+end
+
 if strcmp(segmenter,'SynthSeg')
     % keep all in one place
     copyfile([workingDir,filesep,synth_fn],TT_input_path)
@@ -237,6 +274,8 @@ if strcmp(alg4WMH,'segcsvd')
         disp("No FLAIR image for WMH segmentation with segcsvd !")
         return
     end
+
+    disp("Running WMH segmentation with segcsvd")
 
     segcsvdDir = [workingDir,filesep,'segcsvd'];
     mkdir(segcsvdDir);
@@ -280,6 +319,8 @@ if strcmp(alg4WMH,'segcsvd')
             disp("No T1 image for PVS segmentation with segcsvd !")
             %return
         end
+
+        disp("Running PVS segmentation with segcsvd")
 
         seg_pvs_thr_float = 0.35;
 	    seg_pvs_thr = char(string(seg_pvs_thr_float));
@@ -365,6 +406,21 @@ if ~strcmp(alg4Lacunes,'None')
         fprintf('\nNo lacune segmentation found for %s \n',sub_ID)
     end
 end
+
+% burn in microbleeds as default (not conductive since hypointense on T2?)
+if ~strcmp(alg4MB,'None')
+    try
+        microbleeds = ea_load_nii(mbFileAccessible);
+        if all(size(segmask.img) == size(microbleeds.img)) & all(abs(segmask.mat - microbleeds.mat) <= 0.001, 'all')
+            segmask.img(microbleeds.img >= 0.99) = 0;
+        else
+            disp("Voxel space of segmask and microbleeds did not match, check!")
+        end
+    catch ME
+        fprintf('\nNo microbleed segmentation found for %s \n',sub_ID)
+    end
+end
+
 
 segmask.fname = segmaskSVDFile;
 ea_write_nii(segmask)
