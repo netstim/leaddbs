@@ -11,12 +11,13 @@ end
 if isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations_CSE.csv'])
     optim_result = readtable([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations_CSE.csv']);
     % remove iterations with predicted critical side-effects
-    if side == 0 && isfield(optim_result,'complete_avoidance_rh')
-        toDelete = optim_result.complete_avoidance_rh == 1;
-        optim_result(toDelete,:) = [];
-    elseif isfield(optim_result,'complete_avoidance_lh')
-        toDelete = optim_result.complete_avoidance_lh == 1;
-        optim_result(toDelete,:) = [];
+    CSE_field = ['CSE', side_suffix];
+    toDelete = optim_result.(CSE_field) == 1;
+    optim_result(toDelete,:) = [];
+
+    if isempty(optim_result)
+        ea_warndlg("All iterations predicted CSE!")
+        return
     end
 elseif isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv'])
     optim_result = readtable([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv']);
@@ -53,25 +54,78 @@ contact_perc_currents = 100 * contact_currents / amplitude;
 contact_perc_currents = [amplitude,contact_perc_currents];
 
 if plot_progress
-    goal_function = [];
-    iter_num = [];
-
-    for i = 1:size(optim_result,1)
-        if i == 1
-            goal_function = [goal_function, optim_result.weighted_total_score(i)];
-            iter_num = [iter_num, i];
-        else
-            if optim_result.weighted_total_score(i) > goal_function(end)
-               goal_function = [goal_function, optim_result.weighted_total_score(i)];
-               iter_num = [iter_num, i]; 
+    % Construct the field names for target and SSE
+    target_field = ['target', side_suffix];
+    SSE_field = ['SSE', side_suffix];
+    
+    % Check if the necessary SSE field exists
+    Exist_Column = strcmp(SSE_field,optim_result.Properties.VariableNames);
+    show_target_and_SSE = Exist_Column(Exist_Column==1);
+    
+    % --- Data Extraction (Using Logical Indexing and Pre-allocation) ---
+    
+    % Assume optim_result is a structure array where each element 'i' is an iteration.
+    % The logic seems to track iterations where the weighted_total_score improves (is greater than the last recorded score),
+    % or is the very first iteration.
+    
+    % 1. Find the indices of iterations that show improvement or are the first one
+    num_iterations = size(optim_result, 1);
+    weighted_scores = [optim_result.weighted_total_score]; % Convert to a vector for easy comparison
+    
+    % Initialize a logical vector for the selected indices
+    improvement_indices = false(1, num_iterations);
+    if num_iterations >= 1
+        improvement_indices(1) = true; % Always include the first iteration
+        current_max_score = weighted_scores(1);
+        
+        % Find subsequent improvements
+        for i = 2:num_iterations
+            if weighted_scores(i) > current_max_score
+                improvement_indices(i) = true;
+                current_max_score = weighted_scores(i);
             end
         end
     end
-
-    figure
-    plot(iter_num,goal_function,'b--o');
-    xlabel('Iteration Number')
-    ylabel('Weighted General Improvement')
+    
+    % 2. Extract the data for the selected iterations
+    iter_num = find(improvement_indices);
+    goal_function = weighted_scores(improvement_indices); % Optimization progress scores
+    
+    % Check if goal_function is empty (only happens if optim_result is empty)
+    if isempty(goal_function)
+        warning('optim_result appears to be empty or invalid.');
+        return; % Exit if no data to plot
+    end
+    
+    if show_target_and_SSE
+        % Extract target and SSE values directly using the logical indices and dynamic field names
+        target_values = [optim_result.(target_field)(improvement_indices)];
+        SSE_values = [optim_result.(SSE_field)(improvement_indices)];
+    end
+    
+    % --- Plotting ---
+    
+    figure;
+    hold on; % Use hold on to plot multiple lines on the same axes
+    
+    % Plot Optimization Progress (Goal Function)
+    plot(iter_num, goal_function, 'b-o', 'DisplayName', 'Weighted Total Score');
+    
+    if show_target_and_SSE
+        % Plot Target Values
+        plot(iter_num, target_values, 'r--x', 'DisplayName', ['Target (', side_suffix(2:end), ')']);
+        
+        % Plot SSE Values
+        plot(iter_num, SSE_values, 'g:s', 'DisplayName', ['SSE (', side_suffix(2:end), ')']);
+    end
+    
+    xlabel('Iteration Number');
+    ylabel('Value'); % Changed to 'Value' since it plots multiple types of values
+    title('Optimization Progress');
+    legend('show', 'Location', 'NorthWest'); % Show legend to distinguish the lines
+    grid on;
+    
+    hold off;
     saveas(gcf,[stimfolder,filesep,'NB',side_suffix,filesep,'Optimization_convergence.png'])
 end
 

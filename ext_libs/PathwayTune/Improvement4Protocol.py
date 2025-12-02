@@ -502,7 +502,7 @@ class ResultPAM:
                                                                                                  fixed_symptom_weights)
 
         results = np.vstack((symp_dist,null_symp_dist,max_symp_dist,I_hat[:,0])).T
-        metrics = ['Distances', 'Null Distances', 'Max Distances', 'I_hat']
+        metrics = ['Distances', 'Null Act. Distances', 'Max Distances', 'I_hat']
         print(pd.DataFrame(results,self.symptom_list,metrics))
 
         # save json
