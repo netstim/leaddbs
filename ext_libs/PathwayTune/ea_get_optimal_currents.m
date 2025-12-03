@@ -17,12 +17,14 @@ if isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations_CSE.csv
 
     if isempty(optim_result)
         ea_warndlg("All iterations predicted CSE!")
+        contact_perc_currents = false;
         return
     end
 elseif isfile([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv'])
     optim_result = readtable([stimfolder,filesep,'NB',side_suffix,filesep,'optim_iterations.csv']);
 else
     ea_warndlg("No optimization result found!")
+    contact_perc_currents = false;
     return
 end
 
@@ -94,6 +96,7 @@ if plot_progress
     % Check if goal_function is empty (only happens if optim_result is empty)
     if isempty(goal_function)
         warning('optim_result appears to be empty or invalid.');
+        contact_perc_currents = false;
         return; % Exit if no data to plot
     end
     

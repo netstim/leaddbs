@@ -236,7 +236,8 @@ class PamOptimizer:
                 if stim_result.SE_dict[key]["predicted"]:
                     # assign large penalty based on the activation rate of the side-effect pathway
                     # this is a suboptimal approach if multiple side-effect pathways / symptoms are consdered
-                    return 1e9 * stim_result.SE_dict[key]["rate"]
+                    print(key,stim_result.SE_dict[key]["avg_rate_above_thresh"])
+                    return 1e3 * stim_result.SE_dict[key]["avg_rate_above_thresh"]
 
         return -1 * global_score
 
