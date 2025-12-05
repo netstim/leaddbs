@@ -16,7 +16,7 @@ arguments
 end
 
 % for now, enforce co-registration
-coregister = true;
+coregister = false;
 %anchorNii = anchorImage;
 
 % check if all images provided actually exist
@@ -150,7 +150,7 @@ for im_i = 1:size(images,1)
         image_FLAIR = [subj_prefix,'_space-anchor_desc-masked_FLAIR.nii.gz'];
         images(im_i).name = image_FLAIR;
         found(3) = true;
-    elseif contains(image, 'T2wS') || contains(image, 'anat_t2S') || contains(image, 'masked_T2S')
+    elseif contains(image, 'T2starw') || contains(image, 'T2wS') || contains(image, 'anat_t2S') || contains(image, 'masked_T2S')
         image_T2S = [subj_prefix,'_space-anchor_desc-masked_T2S.nii.gz'];
         images(im_i).name = image_T2S;
     elseif contains(image, 'T2w') || contains(image, 'anat_t2') || contains(image, 'masked_T2')
