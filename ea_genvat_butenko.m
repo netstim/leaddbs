@@ -366,7 +366,6 @@ for source_index = first_active_source:4
                 ea_convert_ossdbs_StimSets_VTAs(settings,side,outputPaths)
                 stimparams(side+1).VAT.VAT = -42.0;
                 stimparams(side+1).volume = -42.0;
-                ea_exit_genvat_butenko;
             elseif settings.exportVAT
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
@@ -394,6 +393,11 @@ for source_index = first_active_source:4
         % clean-up StimSets FEM solutions
         ea_delete([outputPaths.HemiSimFolder, filesep, 'ResultsE*']);
 
+    end
+
+    if settings.exportVAT && settings.optimizer
+        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
+        return
     end
 
     % check only the first source for PAM

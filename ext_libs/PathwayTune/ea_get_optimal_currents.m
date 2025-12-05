@@ -129,7 +129,7 @@ if plot_progress
     grid on;
     
     hold off;
-    saveas(gcf,[stimfolder,filesep,'NB',side_suffix,filesep,'Optimization_convergence.png'])
+    saveas(gcf,[stimfolder,filesep,'NB',side_suffix,filesep,'Optimization_convergence',side_suffix,'.png'])
 end
 
     
