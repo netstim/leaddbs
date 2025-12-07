@@ -40,7 +40,7 @@ if ~isfile(appFile) || ~strcmp(latestVersion, installedVersion)
     if ismac
         system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
     end
-    savejson('', latestVersion, fullfile(ea_prefsdir, 'Programmer', 'version.json'));
+    savejson('', struct('version', latestVersion), fullfile(ea_prefsdir, 'Programmer', 'version.json'));
     savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
 end
 
