@@ -157,21 +157,29 @@ switch settings.butenko_segmAlg
                 alg4Lacunes = 'TeamTea'; 
                 alg4PVS = 'TeamTea';
                 alg4WMH = 'segcsvd';
-                only_segmask = true;
+                only_segmask = false;
                 subj = options.subj.subjId;
     
                 % get T1, T2 and FLAIR
                 all_images = dir_without_dots(anchorImageDir);
                 allNames = {all_images.name};
-                logicalIndex = contains(allNames, 'T1w.nii') | contains(allNames, 'T2w.nii') | contains(allNames, 'FLAIR.nii');
+                logicalIndex = contains(allNames, 'T2starw.nii') | contains(allNames, 'T1w.nii') | contains(allNames, 'T2w.nii') | contains(allNames, 'FLAIR.nii');
                 images = all_images(logicalIndex);
                 % re-order to have T2w and T1w before FLAIR
                 images = flipud(images);
 
-                %ea_get_ANN_env();
+                if any(contains(allNames, 'T2starw.nii'))
+                    alg4MB = 'TeamTea';
+                else
+                    alg4MB = 'None';
+                end
+
                 env = ea_conda_env('SynthSeg');
+                if ~env.is_up_to_date
+                    env.force_create;
+                end
                 
-                ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,subj,only_segmask)
+                ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,subj,only_segmask,alg4MB)
             end
             copyfile(segmaskPath, [outputPaths.outputDir, filesep, segmaskName]);
         else
@@ -189,7 +197,7 @@ switch settings.butenko_segmAlg
                 ImageDir = [normImageDir, filesep];
                 ImageName = [normImageName, '.nii'];
             end
-    
+
             segMaskPath = [ImageDir, ImageName(1:end-4),'-synthseg_raw.nii'];
             if ~isfile(segMaskPath)
                 env = ea_conda_env('SynthSeg');
@@ -198,7 +206,7 @@ switch settings.butenko_segmAlg
                 end
                 ea_synthseg([ImageDir,ImageName], segMaskPath)
             end
-    
+
             % always convert to make sure the chosen algorithm was used
             ea_convert_synthSeg2segmask((segMaskPath), ([outputPaths.outputDir, filesep, segmaskName]));
         end

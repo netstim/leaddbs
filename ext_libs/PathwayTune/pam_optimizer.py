@@ -8,6 +8,9 @@ from scipy.optimize import dual_annealing
 from Improvement4Protocol import ResultPAM
 from ossdbs.api import run_PAM
 
+TOTAL_CURRENT = 5.0
+ABS_TOTAL_CURRENT = 5.0
+CURRENT_EXCESS_LIMIT = 3.0
 
 
 class PamOptimizer:
@@ -80,8 +83,6 @@ class PamOptimizer:
             options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
             nParticles = 10
             optimizer = GlobalBestPSO(n_particles=nParticles, dimensions=len(self.optim_settings['min_bound_per_contact']), options=options, bounds=bounds)
-
-            # int(self.optim_settings['num_iterations'] / n_particles) ?
             cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=int(self.optim_settings['num_iterations'] / nParticles))
 
 
@@ -100,7 +101,7 @@ class PamOptimizer:
         """
 
         # store info about the iteration
-        print("Global Score (to maximize): ", global_score, "\n")
+        print("Global Score (to maximize): ", global_score)
         df = pd.DataFrame(
             {
                 "weighted_total_score": [global_score],
@@ -118,18 +119,26 @@ class PamOptimizer:
             df[key] = estim_Ihat[key]
 
         for i in range(len(S_vector)):
-            df['Contact_' + str(i)] = S_vector[i]  # Lead-DBS notation!
-
-        iter_file = os.path.join(self.stim_folder,'NB' + self.side_suffix,'optim_iterations.csv')
-        df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
+            df['Contact_' + str(i)] = S_vector[i] 
+            
+        df['Total_current'] = np.sum(S_vector)
+        df['Total_abs_current'] = np.sum(np.abs(S_vector)) 
 
         # critical side-effect status if provided
         if SE_dict:
             for key in SE_dict:
                 df[key] = SE_dict[key]["predicted"]
+                
+                if SE_dict[key]["predicted"]:
+                    print(key, "is predicted. Penalizing the iteration \n")
 
-        iter_file = os.path.join(self.stim_folder,'NB' + self.side_suffix,'optim_iterations_CSE.csv')
-        df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
+            iter_file = os.path.join(self.stim_folder,'NB' + self.side_suffix,'optim_iterations_CSE.csv')
+            df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
+        else:
+            iter_file = os.path.join(self.stim_folder,'NB' + self.side_suffix,'optim_iterations.csv')
+            df.to_csv(iter_file, mode='a', header=not os.path.exists(iter_file))
+            
+        print("\n")
 
     def prepare_swarm(self, x, args_to_pass=[]):
 
@@ -174,7 +183,25 @@ class PamOptimizer:
         input_settings["ScalingIndex"] = None
         input_settings["StimSets"]["StimSetsFile"] = None  # won't be used here
         input_settings["CurrentVector"] = S_vector * 1000  # S_vector already in mA, but scaling to A is done later
-        print(S_vector)
+        print("Currents in mA: ", input_settings["CurrentVector"])
+        
+        
+        # assign penalty if total current bounds are violated
+        if np.sum(input_settings["CurrentVector"]) > TOTAL_CURRENT:
+            current_excess = np.abs(np.sum(input_settings["CurrentVector"])) - TOTAL_CURRENT
+            total_current_penalty = (np.exp(current_excess)-1)/(np.e)            
+        elif np.sum(np.abs(input_settings["CurrentVector"])) > ABS_TOTAL_CURRENT:
+            current_excess = np.sum(np.abs(input_settings["CurrentVector"])) - ABS_TOTAL_CURRENT
+            total_current_penalty = (np.exp(current_excess)-1)/(np.e)
+        else:
+            current_excess = 0
+            total_current_penalty = 0
+            
+        if current_excess >= CURRENT_EXCESS_LIMIT:
+            print("CURRENT_EXCESS_LIMIT violation")
+            # this iteration will not be stored
+            return 1e3 + total_current_penalty
+        
         run_PAM(input_settings)
 
         # the original solution for 10 mA
@@ -196,10 +223,12 @@ class PamOptimizer:
         symptom_weights = self.fixed_symptom_weights
         remaining_weights = 1.0
         N_fixed = 0
-        # is it iterating only across the correct side?
+
         for key in symptom_weights:
-            remaining_weights = remaining_weights - symptom_weights[key]
-            N_fixed += 1
+            if key in stim_result.symptom_list:
+                # only symptoms relevant for this side
+                remaining_weights = remaining_weights - symptom_weights[key]
+                N_fixed += 1
 
         # compute weight for non-fixed as the equal distribution of what remained
         if len(stim_result.symptom_list) != N_fixed:
@@ -221,7 +250,7 @@ class PamOptimizer:
             else:
                 global_score = global_score + rem_weight * estim_Ihat[key]
 
-        self.store_iteration_results(S_vector, global_score, stim_result.symptom_list, estim_Ihat, stim_result.SE_dict)
+        self.store_iteration_results(S_vector, global_score-total_current_penalty, stim_result.symptom_list, estim_Ihat, stim_result.SE_dict)
 
         # check if any side-effect responses were predicted
         if stim_result.SE_dict:
@@ -229,9 +258,10 @@ class PamOptimizer:
                 if stim_result.SE_dict[key]["predicted"]:
                     # assign large penalty based on the activation rate of the side-effect pathway
                     # this is a suboptimal approach if multiple side-effect pathways / symptoms are consdered
-                    return 1e9 * stim_result.SE_dict[key]["rate"]
+                    print(key,stim_result.SE_dict[key]["avg_rate_above_thresh"])
+                    return 1e3 * stim_result.SE_dict[key]["avg_rate_above_thresh"] + total_current_penalty
 
-        return -1 * global_score
+        return -1 * global_score + total_current_penalty
 
 if __name__ == '__main__':
 

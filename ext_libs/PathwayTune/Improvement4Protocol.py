@@ -320,6 +320,7 @@ class ResultPAM:
 
             target_rates = []
             predicted_rates = []
+            rate_above_thresh = []
 
             activ_target_profile = list(SE_threshold_profile[key].keys())
 
@@ -339,10 +340,16 @@ class ResultPAM:
                 # check if above the threshold
                 if predicted_rates[-1] > target_rates[-1]:
                     SE_threshold_profile_side[key]["predicted"] = 1
-                    SE_threshold_profile_side[key]["rate"] = predicted_rates[-1]
-                    break
+                    
+                    rate_above_thresh.append(predicted_rates[-1])
+                    
+                    #SE_threshold_profile_side[key]["rate"] = predicted_rates[-1]
+                    #break
                 else:
                     SE_threshold_profile_side[key]["predicted"] = 0
+                    
+            if rate_above_thresh:
+                SE_threshold_profile_side[key]["avg_rate_above_thresh"] = sum(rate_above_thresh) / len(rate_above_thresh)
 
         return SE_threshold_profile_side
 
@@ -502,7 +509,7 @@ class ResultPAM:
                                                                                                  fixed_symptom_weights)
 
         results = np.vstack((symp_dist,null_symp_dist,max_symp_dist,I_hat[:,0])).T
-        metrics = ['Distances', 'Null Distances', 'Max Distances', 'I_hat']
+        metrics = ['Distances', 'Null Act. Distances', 'Max Distances', 'I_hat']
         print(pd.DataFrame(results,self.symptom_list,metrics))
 
         # save json
