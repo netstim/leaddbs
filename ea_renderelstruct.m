@@ -37,17 +37,41 @@ for side=elSide
     pobj.side = side;
 
     set(0,'CurrentFigure',resultfig);
-    if exist('el_render','var')
-        el_render(end+1) = ea_trajectory(pobj);
-    else
-        el_render(1) = ea_trajectory(pobj);
+    if ~exist('el_render','var') || ~isstruct(el_render)
+        el_render = struct([]);
     end
-
+    options.leadprod = 'seeg';
+    if isequal(options.leadprod, 'seeg')
+        ea_trajectory_seeg(elstruct, options);
+        stub = struct('ellabel', 'SEEG');
+        if isempty(el_render)
+            el_render = stub;
+        else
+            el_render(end+1) = stub;
+        end
+    else
+        if isempty(el_render)
+            el_render = ea_trajectory(pobj);
+        else
+            el_render(end+1) = ea_trajectory(pobj);
+        end
+    end
+    
     if ~exist('el_label','var')
-        el_label = el_render(end).ellabel;
+        if isfield(el_render(end),'ellabel') && ~isempty(el_render(end).ellabel)
+            el_label = el_render(end).ellabel;
+        else
+            el_label = 'SEEG';
+        end
     else
         try
             el_label(end+1) = el_render(end).ellabel;
+        catch
+            if iscell(el_label)
+                el_label{end+1} = 'SEEG';
+            else
+                el_label = [el_label, 'SEEG'];
+            end
         end
     end
 end

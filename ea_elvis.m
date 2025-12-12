@@ -19,6 +19,11 @@ if ~isfield(options, 'leadprod')
     options.leadprod = '';
 end
 
+options.leadprod = 'seeg'; % Hard coded for now - may need to look into a adding it to a json file
+if isequal(options.leadprod, 'seeg')
+    legui2reco(options);
+end
+
 % Initialize figure
 
 titlePrefix = erase(options.patientname, 'sub-');
@@ -146,6 +151,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
+            end
+            if isequal(options.leadprod, 'seeg')
+                multiplemode = 1;
+                try
+                    vis_cortex_seeg;
+                catch
+                    disp('Failed to display cortex');
+                end
             end
 
             if ~multiplemode
