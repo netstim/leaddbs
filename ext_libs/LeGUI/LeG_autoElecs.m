@@ -16,8 +16,8 @@ ThreshHU = Thresh*(app.CTRng(2)-app.CTRng(1))+app.CTRng(1); %thresholds in raw u
 ThreshHU = (ThreshHU-app.CTInfo.pinfo(2))./app.CTInfo.pinfo(1); %convert to hounsfield
 voxelSize = sqrt(sum(app.CTInfo.mat(1:3,1:3).^2));  % [dx, dy, dz] in mm
 ElecVolVox = ceil(4/3*pi*mean(ElecRad./XYZScale).^3); %approximate volume of an electrode (standard ecog - typically largest intracranial electrode) in number of voxels
-% ElecVolRng = [6,ElecVolVox]; %6 voxels as minimum seems to work well for a wide range of electrode types
-ElecVolRng = [6*0.4/voxelSize(1), ElecVolVox];  % wider tolerance
+ElecVolRng = [6,ElecVolVox]; %6 voxels as minimum seems to work well for a wide range of electrode types
+% ElecVolRng = [6*0.4/voxelSize(1), ElecVolVox];  % wider tolerance
 
 StartTime = tic;
 CCList = cell(length(Thresh),1);

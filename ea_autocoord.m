@@ -209,6 +209,10 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     coregDone = 0;
 
+    if options.acpc.do
+        acpcDone = ea_runacpc(options);
+    end
+
     if options.coregmr.do
         % Coregister pre-op MRIs to pre-op anchor image
         % TODO: coreg_fa disabled currently

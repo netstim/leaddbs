@@ -2,7 +2,6 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
     preferBrainshiftCT = false;
     enforceSameGrid    = false;
     useMNI             = false;
-    app.LoadImgsBtnH.Enable = "off";
 
     % ------- Determine subject root (Lead-DBS subject folder) -------
 %     app.SelDir = LeG_lastDir();
@@ -11,6 +10,7 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
     
     GM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-GM_mod-iso_T1w_mask.nii');
     WM_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-WM_mod-iso_T1w_mask.nii');
+    CSF_filename = strcat(subjId, '_ses-preop_space-anchorNative_desc-preproc_acq-iso_label-CSF_mod-iso_T1w_mask.nii');
     Electrodes_filename = strcat(subjId, '_electrodes.mat');
     Channels_filename = strcat(subjId, '_channels.mat');
     % ------- Find MR/CT inside that Lead-DBS tree -------
@@ -43,19 +43,24 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
     [app.CTImg, app.CTRng] = normalizeImage(app.CTImg);
     
     if exist(fullfile(subjRoot, 'coregistration', 'anat', GM_filename), 'file') && ...
-       exist(fullfile(subjRoot, 'coregistration', 'anat', WM_filename), 'file')
+       exist(fullfile(subjRoot, 'coregistration', 'anat', WM_filename), 'file') && ...
+       exist(fullfile(subjRoot, 'coregistration', 'anat', CSF_filename), 'file')
     
         % load existing GM/WM
         GM = spm_vol(char(fullfile(subjRoot, 'coregistration', 'anat', GM_filename)));
         WM = spm_vol(char(fullfile(subjRoot, 'coregistration', 'anat', WM_filename)));
+        CSF = spm_vol(char(fullfile(subjRoot, 'coregistration', 'anat', CSF_filename)));
+
     else
         % run segmentation
-        [GM, WM] = get_segmentations(mrFile, subjRoot, GM_filename, WM_filename);
+        [GM, WM, CSF] = get_segmentations(mrFile, subjRoot, GM_filename, WM_filename, CSF_filename);
     end
     app.GrayInfo = GM;
     app.WhiteInfo = WM;
+    app.CSFInfo = CSF;
     app.GrayImg = spm_read_vols(app.GrayInfo);
     app.WhiteImg = spm_read_vols(app.WhiteInfo);
+    app.CSFImg = spm_read_vols(app.CSFInfo);
 
     app.BrainSurfRaw = []; app.ProjSurfRaw = [];
     [app.BrainSurfRaw,app.ProjSurfRaw] = LeG_genSurfaces({app.GrayImg,app.WhiteImg},app.GrayInfo);
@@ -164,7 +169,7 @@ function copyIf_local(app, S, fields)
     end
 end
 
-function [GM, WM] = get_segmentations(mrPath, subjRoot, GM_filename, WM_filename)
+function [GM, WM, CSF] = get_segmentations(mrPath, subjRoot, GM_filename, WM_filename, CSF_filename)
 %SEGMENT_GM_WM_INMEMORY Run SPM12 segmentation and return GM/WM masks in memory.
 %
 % Inputs
@@ -210,11 +215,17 @@ function [GM, WM] = get_segmentations(mrPath, subjRoot, GM_filename, WM_filename
     % --- Load GM/WM volumes directly ---
     c1Path = fout.tiss(1).c{1}; % GM prob map
     c2Path = fout.tiss(2).c{1}; % WM prob map
-
+    c3Path = fout.tiss(3).c{1};
     GM = spm_vol(c1Path); %c1Vol = spm_read_vols(V1);
     WM = spm_vol(c2Path); %c2Vol = spm_read_vols(V2);
+    CSF = spm_vol(c3Path);
     copyfile(c1Path, fullfile(subjRoot, 'coregistration', 'anat', GM_filename));
     copyfile(c2Path, fullfile(subjRoot, 'coregistration', 'anat', WM_filename));
+    copyfile(c3Path, fullfile(subjRoot, 'coregistration', 'anat', CSF_filename));
+    ea_delete(c1Path);
+    ea_delete(c2Path);
+    ea_delete(c3Path);
+
 end
 
 function [img, rng] = normalizeImage(img)
