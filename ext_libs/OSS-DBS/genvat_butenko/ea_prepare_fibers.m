@@ -19,6 +19,11 @@ if settings.stimSetMode
         stimProtocol{2,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_lh'], '^Current_protocols_\d\.csv$', 0));
     else
         stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+        if isempty(stimProtocol)
+            % if no stimProtocol is provided, just assume 10 mA on all
+            % contacts
+            stimProtocol = -10 * ones(size(settings.Phi_vector));
+        end
     end
 else
     if ~settings.multisource
@@ -222,7 +227,7 @@ else % Multi-Tract connectome
             settings.connectomeTractNames{t} = tractName;
             fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
             conn = load(tract);
-            
+
             if isfield(conn,'patient_specific') && conn.patient_specific == 1
                 % use patient tracts (native)
                 % ToDo: avoid loading the MNI connectome in the first place
