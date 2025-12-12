@@ -40,6 +40,12 @@ function app = ea_prepare_legui(app) %#ok<INUSD>
     app.CTInfo = spm_vol(ctFile);
     app.CTImg = spm_read_vols(app.CTInfo);
 
+%     [MRInfo, MRImg, CTInfo, CTImg] = loadReslicedMRCT(mrFile, ctFile);
+%     app.MRInfo = MRInfo;
+%     app.MRImg  = MRImg;
+%     app.CTInfo = CTInfo;
+%     app.CTImg  = CTImg;
+
     [app.MRImg, MRRng] = normalizeImage(app.MRImg);
     [app.CTImg, app.CTRng] = normalizeImage(app.CTImg);
     
@@ -237,4 +243,71 @@ end
 function [img, rng] = normalizeImage(img)
     rng = prctile(img(:),[1,99,0,100]);
     img = (img-rng(1))/(rng(2)-rng(1));
+end
+
+function [MRInfo, MRImg, CTInfo, CTImg] = loadReslicedMRCT(mrFile, ctFile)
+% Reslice MR and CT to 0.4 x 0.4 x 0.4 mm using SPM & Lead-DBS helpers.
+% Returns resliced volumes + headers, ready to assign to app.MRInfo/app.MRImg/etc.
+
+    % Desired isotropic resolution
+    newRes = [0.4 0.4 0.4];   % mm
+
+    % --- Load MR header
+    Vmr = spm_vol(mrFile);
+
+    % Use Lead-DBS helper to get voxel size robustly
+    niiMr    = ea_load_nii(mrFile);
+    oldResMr = double(niiMr.voxsize(:)');   % 1x3 [dx dy dz]
+
+    % Compute new dimensions so physical FOV is approximately preserved
+    scale  = oldResMr ./ newRes;           % how many more voxels along each axis
+    newDim = ceil(Vmr.dim .* scale);       % new [nx ny nz]
+
+    % --- Build a reference volume with desired geometry (0.4 mm)
+    [mrPath, mrName, mrExt] = fileparts(mrFile);
+    refPath = fullfile(mrPath, [mrName '_ref0p4' mrExt]);
+
+    Vref       = Vmr;
+    Vref.fname = refPath;
+    Vref.mat(1:3,1:3) = diag(newRes);  % set voxel size in affine
+    Vref.dim   = newDim;
+
+    % Create the empty reference NIfTI on disk
+    Vref = spm_create_vol(Vref);
+
+    % --- Set reslice options
+    flags = struct();
+    flags.mask   = 1;
+    flags.mean   = 0;
+    flags.interp = 1;       % trilinear (OK for MR/CT here)
+    flags.which  = 1;       % write resliced image only
+    flags.wrap   = [0 0 0];
+    flags.prefix = 'r_';
+
+    % ============================================================
+    % 1) Reslice MR into the 0.4 mm reference space
+    % ============================================================
+    Pmr = char(refPath, mrFile);   % first row = reference, second = moving
+    spm_reslice(Pmr, flags);
+
+    mrResliced = fullfile(mrPath, ['r_' mrName mrExt]);
+
+    % ============================================================
+    % 2) Reslice CT into the same 0.4 mm reference space
+    %    (assuming CT is already coregistered to MR)
+    % ============================================================
+    [ctPath, ctName, ctExt] = fileparts(ctFile);
+    Pct = char(refPath, ctFile);
+    spm_reslice(Pct, flags);
+
+    ctResliced = fullfile(ctPath, ['r_' ctName ctExt]);
+
+    % ============================================================
+    % 3) Load resliced volumes for use in the app
+    % ============================================================
+    MRInfo = spm_vol(mrResliced);
+    MRImg  = spm_read_vols(MRInfo);
+
+    CTInfo = spm_vol(ctResliced);
+    CTImg  = spm_read_vols(CTInfo);
 end
