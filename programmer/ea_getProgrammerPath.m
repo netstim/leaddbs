@@ -47,8 +47,7 @@ end
 
 function downloadLatestRelease(assets, saveDir)
 
-urlBase = 'https://github.com/netstim/LeadDBSDatabase/releases/latest/download/';
-downloadURL = [urlBase, assets];
+downloadURL = ['https://www.lead-dbs.org/release/download.php?id=programmer_' ea_getarch];
 
 % Create the save directory if it doesn't exist
 if ~isfolder(saveDir)
@@ -61,7 +60,7 @@ destination = fullfile(saveDir, assets);
 try
     % Download the file
     disp('Downloading LeadDBSProgrammer...');
-    websave(destination, downloadURL);
+    websave(destination, downloadURL, weboptions('Timeout', 10, 'ContentType', 'binary'));
     disp('Done.');
 catch ME
     % Handle errors (e.g., 404, network issues)
