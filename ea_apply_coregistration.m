@@ -59,7 +59,20 @@ else
     end
 end
 
+% Extract transformation type from filename
+% Try BIDS format first: desc-XXX.mat
 transformType = upper(regexp(transform, '(?<=desc-)\w+(?=\.mat)', 'match', 'once'));
+
+% If not found, try classic format: _spm.mat, _fsl.mat, _ants.mat, etc.
+% Extract everything between the last underscore and .mat
+if isempty(transformType)
+    [~, fname] = fileparts(transform);
+    % Match: _spm, _fsl, _ants, _brainsfit at the end
+    matches = regexp(fname, '_(spm|fsl|ants|brainsfit|antssyn)$', 'tokens', 'once', 'ignorecase');
+    if ~isempty(matches)
+        transformType = upper(matches{1});
+    end
+end
 
 % nn: NearestNeighbor
 % lbl: Label (for multi-label image, ANTs uses 'GenericLabel' rather than 'NearestNeighbor')

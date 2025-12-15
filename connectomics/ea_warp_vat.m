@@ -72,12 +72,16 @@ if docoreg
         copyfile(wvatspresent{vat},rwvatspresent{vat});
     end
 
-    reference = [directory,'mean',options.prefs.rest];
+    % BIDS FIX: Use helper function for prefix
+    rest_mean = ea_prependFilename(options.prefs.rest, 'mean');
+    anat_r = ea_prependFilename(options.prefs.prenii_unnormalized, 'r');
+    
+    reference = [directory, rest_mean];
     ea_coregimages(options, ...
     	[directory,options.prefs.prenii_unnormalized], ...
         reference, ...
-        [directory,'r',options.prefs.prenii_unnormalized], ...
+        [directory, anat_r], ...
         rwvatspresent,0,[],1);
-    delete([directory,'r',options.prefs.prenii_unnormalized]);
+    delete([directory, anat_r]);
     ea_delete(wvatspresent);
 end
