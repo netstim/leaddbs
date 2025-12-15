@@ -1,6 +1,14 @@
 function transformfiles=ea_gettransformfiles(options)
 
-json = loadjson(options.subj.norm.log.method);
+try
+    json = loadjson(options.subj.norm.log.method);
+catch
+    % Lead-Connectome mode: Use SPM deformation field directly
+    directory = [options.root, options.patientname, filesep];
+    transformfiles.forward = fullfile(directory, 'y_ea_normparams.nii');
+    transformfiles.inverse = fullfile(directory, 'y_ea_inv_normparams.nii');
+    return;
+end
 
 if contains(json.method, 'ANTs')
     if isfield(json, 'custom') && json.custom

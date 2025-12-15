@@ -42,7 +42,10 @@ stringnum=cell(signallength,1);
 for i=1:signallength
     stringnum{i}=num2str(i);
 end
-single_s_files=cellfun(@(x) [directory,'r',restfilename,',',x],stringnum,'Uniformoutput',false);
+
+% BIDS FIX: Use helper function for prefix
+rest_r = ea_prependFilename(options.prefs.rest, 'r');
+single_s_files=cellfun(@(x) [directory, rest_r,',',x],stringnum,'Uniformoutput',false);
 single_s_files=single_s_files';
 
 
@@ -58,7 +61,7 @@ end
 
 
 %% Extract timecourses of complete volume for signal regression..
-rfile=[directory,'r',restfilename];
+rfile=[directory, rest_r];
 alltc=spm_read_vols(spm_vol(rfile));
 
 interpol_tc=interpol_tc';
@@ -79,9 +82,14 @@ end
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
-[~,rf]=fileparts(options.prefs.rest);
-c2=ea_load_nii([directory,'r',rf,'_c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'r',rf,'_c3',options.prefs.prenii_unnormalized]);
+% BIDS FIX: Build paths correctly
+[~, anatBaseName] = fileparts(ea_stripext(options.prefs.prenii_unnormalized));
+rest_r_noext = ea_stripext(rest_r);
+rest_r_c2 = ea_prependFilename(rest_r_noext, '', ['_c2', anatBaseName, '.nii']);
+rest_r_c3 = ea_prependFilename(rest_r_noext, '', ['_c3', anatBaseName, '.nii']);
+
+c2=ea_load_nii(fullfile(directory, rest_r_c2));
+c3=ea_load_nii(fullfile(directory, rest_r_c3));
 
 ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);

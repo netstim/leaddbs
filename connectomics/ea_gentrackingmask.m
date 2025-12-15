@@ -67,7 +67,10 @@ end
 
 if docoreg
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
-    copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
+    % BIDS FIX: Use helper function for prefix
+anat_c2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c2');
+anat_cc2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'cc2');
+copyfile([directory, anat_c2],[directory, anat_cc2]);
     spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[8 8 8]);
     tt=ea_load_nii([directory,'cc2',options.prefs.prenii_unnormalized]);
     tt.img=tt.img>0.1;
@@ -95,7 +98,10 @@ if docoreg
     delete([directory,'c',options.prefs.prenii_unnormalized]);
 else
     % Reuse approved coregistration
-    copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
+    % BIDS FIX: Use helper function for prefix
+anat_c2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c2');
+anat_cc2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'cc2');
+copyfile([directory, anat_c2],[directory, anat_cc2]);
     spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[6 6 6]);
 
     ea_apply_coregistration([directory,options.prefs.b0], [directory,'cc2',options.prefs.prenii_unnormalized], ...

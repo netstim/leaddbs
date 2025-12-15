@@ -49,7 +49,7 @@ end
 
 
 %% build DTD (tensor calculation)
-redo=ea_prepare_dti(options);
+[redo, options]=ea_prepare_dti(options);
 ea_prepare_hardi(options,redo)
 
 %% mask for tracking
