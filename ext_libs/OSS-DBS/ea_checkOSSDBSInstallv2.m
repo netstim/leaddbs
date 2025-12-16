@@ -19,7 +19,7 @@ if ~env.is_up_to_date
 end
 
 % Check NEURON install
-version = '8.2.6';
+version = '8.2.7';
 if ispc
     [status, cmdout] = system('neuron --version');
     if status || ~contains(cmdout, version)
