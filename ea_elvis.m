@@ -147,7 +147,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             else
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
-
+            if isequal(options.reconmethod, 'LeGUI (Davis 2021)')
+                multiplemode = 1;
+            end
             if ~multiplemode
                 side=options.sides(end);
                 d=load(options.subj.recon.recon);
@@ -295,7 +297,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             eleGroupToggleInd = find(isEleGroupToggle);
             otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
             appToggleInd = (1:find(isEleGroupToggle,1)-1)';
-            ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
+%             ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
         end
 
         try
@@ -390,6 +392,11 @@ end
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
+
+% Initialize SEEG Cortex-Button
+corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
+    'TooltipString','SEEG Cortex Visualization',...
+    'ClickedCallback',{@vis_cortex_seeg});
 
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...

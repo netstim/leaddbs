@@ -93,3 +93,27 @@ if isfield(options, 'atlasset')
         ea_cprintf('CmdWinWarnings', 'Specified atlas not found: %s\n', options.atlasset);
     end
 end
+
+if isfield(options, 'reconmethod') && ~isempty(options.reconmethod)
+    % Get the list of strings in the popup
+    reconList = handles.reconmethod.String;
+
+    % Ensure reconList is a cell array of char
+    if isstring(reconList)
+        reconList = cellstr(reconList);
+    elseif ischar(reconList)
+        reconList = cellstr(reconList);
+    end
+
+    % Find the index of the matching method (case-insensitive)
+    idx = find(strcmpi(reconList, options.reconmethod), 1);
+
+    if ~isempty(idx)
+        set(handles.reconmethod, 'Value', idx);
+    else
+        % Option not found — set to first or append warning
+        set(handles.reconmethod, 'Value', 1);
+        ea_cprintf('CmdWinWarnings', ...
+            'Specified reconstruction method not found: %s\n', options.reconmethod);
+    end
+end

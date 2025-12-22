@@ -82,6 +82,18 @@ catch
 end
 
 try
+    options.acpc.do = get(handles.acpc_checkbox, 'Value');
+catch
+    options.acpc.do = 0;
+end
+
+try
+    options.acpc.do = get(handles.resize_checkbox, 'Value');
+catch
+    options.resize.do = 0;
+end
+
+try
     options.coregb0.addSyN = get(handles.addSyN, 'Value');
 end
 

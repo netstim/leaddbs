@@ -209,6 +209,14 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     coregDone = 0;
 
+    if options.acpc.do
+        acpcDone = ea_runacpc(options);
+    end
+
+    if options.resize.do
+        acpcDone = ea_runacpc(options);
+    end
+
     if options.coregmr.do
         % Coregister pre-op MRIs to pre-op anchor image
         % TODO: coreg_fa disabled currently
@@ -337,11 +345,15 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                 case 'Slicer (Manual)' % Manually mark lead head/tail in Slicer 3D
                     [coords_mm,trajectory,markers]=ea_runmanualslicer(poptions);
                     options.native=1;
+                case 'LeGUI (Davis 2021)'
+                    ea_runlegui(poptions);
             end
             options.hybridsave=1;
             options.elside=options.sides(1);
             elmodel=options.elmodel;
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            if ~isequal(options.reconmethod, 'LeGUI (Davis 2021)')
+                ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            end
             if isfield(options,'hybridsave')
                 options=rmfield(options,'hybridsave');
             end
