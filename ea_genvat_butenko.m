@@ -2,10 +2,6 @@ function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS simulations.
 % By Butenko and Li, konstantinmgtu@gmail.com
 
-fprintf("\n\nOSS-DBS v2 by J. Zimmermann, J.P. Payonk and K. Butenko\n")
-fprintf("Please cite 'Butenko et al. (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.'\n")
-fprintf("PLoS Comput Biol 16(7), https://doi.org/10.1371/journal.pcbi.1008023'\n\n\n")
-
 if nargin==2
     S=varargin{1};
     options=varargin{2};
@@ -19,6 +15,11 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{3} = true; % Support estimation in native space
     return
 end
+
+fprintf("\n\nOSS-DBS v2 by J. Zimmermann, J.P. Payonk and K. Butenko\n")
+fprintf("Please cite 'Butenko et al. (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.'\n")
+fprintf("PLoS Comput Biol 16(7), https://doi.org/10.1371/journal.pcbi.1008023'\n\n\n")
+
 % get resultfig handle
 if exist('hFigure', 'var')
     resultfig = getappdata(hFigure,'resultfig');
