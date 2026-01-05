@@ -147,7 +147,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             else
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
-            if isequal(options.reconmethod, 'LeGUI (Davis 2021)')
+            if isfield(options, 'reconmethod') && isequal(options.reconmethod, 'LeGUI (Davis 2021)')
                 multiplemode = 1;
             end
             if ~multiplemode
