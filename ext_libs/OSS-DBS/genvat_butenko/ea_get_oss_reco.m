@@ -9,17 +9,29 @@ end
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
 coords_mm = ea_load_reconstruction(options);
+
+% in unilteral cases, some coords_mm have empty entries for the "missing electrode"
+isMissing = cellfun(@(x) isempty(x) || all(isnan(x)), coords_mm);
+% if the right electrode is "missing", fill it with NaNs
+if isMissing(1)
+    str_inx = 2;
+else
+    str_inx = 1;
+end
+
 settings.contactLocation = coords_mm;
 eleNum = length(coords_mm); % Number of electrodes
 conNum = options.elspec.numContacts; % Number of contacts per electrode
+
+[markersNative, markersMNI] = ea_get_markers(options);
 
 % Save both native and MNI space y and head markers for OSS-DBS
 settings.yMarkerNative = nan(eleNum, 3);
 settings.yMarkerMNI = nan(eleNum, 3);
 settings.headNative = nan(eleNum, 3);
 settings.headMNI = nan(eleNum, 3);
-[markersNative, markersMNI] = ea_get_markers(options);
-for i=1:eleNum
+
+for i=str_inx:eleNum
     if ~isempty(markersNative) && ~isempty(markersNative(i).y)
     	settings.yMarkerNative(i,:) = markersNative(i).y;
     end
@@ -36,7 +48,7 @@ end
 
 % Head
 settings.Implantation_coordinate = nan(eleNum, 3);
-for i=1:eleNum
+for i=str_inx:eleNum
     if ~isempty(coords_mm{i})
         settings.Implantation_coordinate(i,:) = coords_mm{i}(1,:);
     end
@@ -44,7 +56,7 @@ end
 
 % Tail
 settings.Second_coordinate = nan(eleNum, 3);
-for i=1:eleNum
+for i=str_inx:eleNum
     if conNum == 1 % Exception for electrode with only one contact
         if options.native
             settings.Second_coordinate(i,:) = markersNative(i).tail;
