@@ -11,7 +11,7 @@ end
 coords_mm = ea_load_reconstruction(options);
 
 % in unilteral cases, some coords_mm have empty entries for the "missing electrode"
-isMissing = cellfun(@(x) isempty(x) || all(isnan(x)), coords_mm);
+isMissing = cellfun(@isempty, coords_mm);
 % if the right electrode is "missing", fill it with NaNs
 if isMissing(1)
     str_inx = 2;
