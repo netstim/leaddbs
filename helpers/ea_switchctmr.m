@@ -81,7 +81,7 @@ if  ~strcmp(handles.prod, 'anatomy')
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.doreconstruction,'Enable','on');
             set(handles.refinelocalization,'Enable','on');
-            set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)'});
+            set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)', 'LeGUI (Davis 2021)'});
             % default PaCER:
             set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})

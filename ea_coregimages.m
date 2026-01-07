@@ -77,16 +77,16 @@ switch lower(options.coregmr.method)
     case lower({'SPM (Friston 2007)', 'SPM'})
         affinefile = ea_spm_coreg(options,moving,fixed,'nmi',1,otherfiles,writeoutmat,interp);
 
-        [fpth, fname, ext] = ea_niifileparts(moving);
-        spmoutput = [fileparts(fpth), filesep, 'r', fname, ext];
+        [movdir, movname, movext] = fileparts(moving);
+        spmoutput = fullfile(movdir, ['r', movname, movext]);
         if ~strcmp(spmoutput, ofile)
             movefile(spmoutput, ofile);
         end
 
         for ofi=1:length(otherfiles)
-            [fpth, fname, ext] = ea_niifileparts(otherfiles{ofi});
-            spmoutput = [fileparts(fpth), filesep, 'r', fname, ext];
-            movefile(spmoutput, [fpth, ext]);
+            [othdir, othname, othext] = fileparts(otherfiles{ofi});
+            spmoutput = fullfile(othdir, ['r', othname, othext]);
+            movefile(spmoutput, otherfiles{ofi});
         end
     case lower({'ANTs Nonlinear Coregistration', 'ANTsNonLinear'})
         transforms = ea_ants_nonlinear_coreg(fixed, moving, ofile, ...

@@ -81,15 +81,19 @@ switch gdti_trackingparams
 end
 
 directory=[options.root,options.patientname,filesep];
-ea_prepare_dti(options)
+[~, options]=ea_prepare_dti(options);
 
 % create c2 from anat
 if ~exist([directory,'trackingmask.nii'],'file');
     ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
 
+    % BIDS FIX: Use helper function for prefix
+    anat_c2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c2');
+    anat_rc2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'rc2');
+    
     %% coreg anat to b0
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c2',options.prefs.prenii_unnormalized,',1']};
+    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory, anat_c2,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {''};
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
@@ -101,15 +105,20 @@ if ~exist([directory,'trackingmask.nii'],'file');
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch}); clear matlabbatch
 
-    movefile([directory,'rc2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
+    movefile([directory, anat_rc2],[directory,'trackingmask.nii']);
 end
 
 % create c1 from anat
 if ~exist([directory,'gmmask.nii'],'file');
     ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
+    
+    % BIDS FIX: Use helper function for prefix
+    anat_c1 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c1');
+    anat_rc1 = ea_prependFilename(options.prefs.prenii_unnormalized, 'rc1');
+    
     %% coreg anat to b0
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c1',options.prefs.prenii_unnormalized,',1']};
+    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory, anat_c1,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {''};
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
@@ -121,7 +130,7 @@ if ~exist([directory,'gmmask.nii'],'file');
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch}); clear matlabbatch
 
-    movefile([directory,'rc1',options.prefs.prenii_unnormalized],[directory,'gmmask.nii']);
+    movefile([directory, anat_rc1],[directory,'gmmask.nii']);
 end
 
 
