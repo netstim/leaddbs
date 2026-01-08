@@ -21,35 +21,37 @@ end
 % Check NEURON install
 version = '8.2.7';
 if ispc
-    [status, cmdout] = system('neuron --version');
-    if status || ~contains(cmdout, version)
-        ea_cprintf('*Comments', 'Installing NEURON %s for Windows...\n', version);
-        installer = fullfile(ea_prefsdir, 'temp', ['nrn-', version, '.exe']);
-        ea_mkdir(fileparts(installer));
-        try
-            websave(installer, ['https://github.com/neuronsimulator/nrn/releases/download/', version, '/nrn-', version, '.w64-mingw-py-38-39-310-311-312-setup.exe']);
-        catch ME
-            ea_error(['Failed to download NEURON installer for Windows:\n', ME.message], simpleStack=true);
-        end
-        installFolder = fullfile(ea_prefsdir, 'neuron');
-
-        % Clean up previous installation
-        uninstaller = fullfile(installFolder, 'uninstall.exe');
-        if isfile(uninstaller)
-            system([uninstaller ' /S']);
-        else
-            ea_delete(installFolder);
-            [~, ~] = system('reg delete "HKCU\Software\NEURON_Simulator\nrn" /v Install_Dir /f');
-        end
-
-        try
-            system(['start /b /wait "Install NEURON" ', path_helper(installer), ' /S /D=', path_helper(installFolder)]);
-        catch ME
-            ea_error(['Failed to install NEURON for Windows:\n', ME.message], simpleStack=true);
-        end
-        ea_delete(installer);
-        setenv('PATH', [getenv('PATH'), ';', fullfile(installFolder, 'bin')]);
-    end
+    warningMsg = sprintf("Use WSL to run PAM/NEURON on Windows!");
+    ea_warndlg(warningMsg)
+    % [status, cmdout] = system('neuron --version');
+    % if status || ~contains(cmdout, version)
+    %     ea_cprintf('*Comments', 'Installing NEURON %s for Windows...\n', version);
+    %     installer = fullfile(ea_prefsdir, 'temp', ['nrn-', version, '.exe']);
+    %     ea_mkdir(fileparts(installer));
+    %     try
+    %         websave(installer, ['https://github.com/neuronsimulator/nrn/releases/download/', version, '/nrn-', version, '.w64-mingw-py-38-39-310-311-312-setup.exe']);
+    %     catch ME
+    %         ea_error(['Failed to download NEURON installer for Windows:\n', ME.message], simpleStack=true);
+    %     end
+    %     installFolder = fullfile(ea_prefsdir, 'neuron');
+    % 
+    %     % Clean up previous installation
+    %     uninstaller = fullfile(installFolder, 'uninstall.exe');
+    %     if isfile(uninstaller)
+    %         system([uninstaller ' /S']);
+    %     else
+    %         ea_delete(installFolder);
+    %         [~, ~] = system('reg delete "HKCU\Software\NEURON_Simulator\nrn" /v Install_Dir /f');
+    %     end
+    % 
+    %     try
+    %         system(['start /b /wait "Install NEURON" ', path_helper(installer), ' /S /D=', path_helper(installFolder)]);
+    %     catch ME
+    %         ea_error(['Failed to install NEURON for Windows:\n', ME.message], simpleStack=true);
+    %     end
+    %     ea_delete(installer);
+    %     setenv('PATH', [getenv('PATH'), ';', fullfile(installFolder, 'bin')]);
+    % end
 else
     [status, cmdout] = env.system('python -c ''import neuron;print(neuron.__version__)''');
     if status || ~contains(cmdout, version)
