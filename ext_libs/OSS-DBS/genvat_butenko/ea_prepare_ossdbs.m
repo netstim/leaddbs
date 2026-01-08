@@ -9,7 +9,7 @@ arguments
 end
 
 % Check OSS-DBS installation, set env
-if ~isfield(options.prefs,'ext_oss_env') || strcmp(options.prefs.ext_oss_env,'None')
+if (~isfield(options.prefs,'ext_oss_env') || strcmp(options.prefs.ext_oss_env,'None')) && (~isfield(options.prefs,'wsl_env') || ~options.prefs.wsl_env)
     env = ea_conda_env('OSS-DBSv2');
     ea_checkOSSDBSInstallv2(env);
 end
