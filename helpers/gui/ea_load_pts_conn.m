@@ -20,17 +20,10 @@ for i = 1:length(uipatdir)
         % Open BIDS mapper
         try
             % Determine dataset root and subject ID
-            % For non-BIDS data: use parent directory as dataset root
-            [datasetRoot, subjDirName] = fileparts(patdir);
-            
-            % Extract or generate subject ID
-            if startsWith(subjDirName, 'sub-')
-                subjId = regexprep(subjDirName, '^sub-', '');
-            else
-                % Use directory name as subject ID (will be converted to sub-XXX)
-                subjId = subjDirName;
-            end
-            
+            BIDSRoot = ea_getdataset;
+            [~, subjDirName] = fileparts(patdir);
+            subjId = validateSubjId(regexprep(subjDirName, '^sub-', ''));
+
             % For non-BIDS data, gather all NIfTI files from the patient directory
             niiFiles = dir(fullfile(patdir, '*.nii'));
             niiGzFiles = dir(fullfile(patdir, '*.nii.gz'));
@@ -48,7 +41,7 @@ for i = 1:length(uipatdir)
                 
                 % Wrap in try-catch to handle GUI close gracefully
                 try
-                    ea_nifti_to_bids(niiFilePaths, datasetRoot, ['sub-', subjId]);
+                    ea_nifti_to_bids(niiFilePaths, BIDSRoot, ['sub-', subjId]);
                 catch ME
                     % User might have closed the GUI - that's OK
                     fprintf('BIDS mapping GUI closed.\n');
@@ -60,22 +53,14 @@ for i = 1:length(uipatdir)
                 warning('No NIfTI files found in: %s', patdir);
             end
             
-            % After mapping, create derivatives structure and point to it
-            derivDir = fullfile(datasetRoot, 'derivatives', 'leaddbs');
-            newPatdir = fullfile(derivDir, ['sub-', subjId]);
-            
             % Create derivatives folder structure
-            if ~exist(newPatdir, 'dir')
-                fprintf('Creating derivatives structure...\n');
-                mkdir(newPatdir);
-                mkdir(fullfile(newPatdir, 'preprocessing', 'anat'));
-                mkdir(fullfile(newPatdir, 'preprocessing', 'dwi'));
-                mkdir(fullfile(newPatdir, 'preprocessing', 'func'));
-                mkdir(fullfile(newPatdir, 'connectomics'));
-            end
+            derivDir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId]);
+            ea_mkdir(fullfile(derivDir, 'preprocessing', 'dwi'));
+            ea_mkdir(fullfile(derivDir, 'preprocessing', 'func'));
+            ea_mkdir(fullfile(derivDir, 'connectomics'));
             
             % Create participants.tsv if it doesn't exist (required for BIDSFetcher)
-            participantsFile = fullfile(datasetRoot, 'participants.tsv');
+            participantsFile = fullfile(BIDSRoot, 'participants.tsv');
             if ~exist(participantsFile, 'file')
                 fprintf('Creating participants.tsv...\n');
                 fid = fopen(participantsFile, 'w');
@@ -94,29 +79,45 @@ for i = 1:length(uipatdir)
                 end
             end
             
-            if exist(newPatdir, 'dir')
-                fprintf('BIDS structure ready at: %s\n', newPatdir);
-                uipatdir{i} = newPatdir;
+            if isfolder(derivDir)
+                fprintf('BIDS structure ready at: %s\n', derivDir);
+                uipatdir{i} = derivDir;
                 
                 % IMPORTANT: Update the GUI to point to the new BIDS location
                 fprintf('\n*** Patient directory updated to BIDS location ***\n');
-                fprintf('New location: %s\n\n', newPatdir);
+                fprintf('New location: %s\n\n', derivDir);
             else
                 warning('Failed to create BIDS structure at: %s', newPatdir);
             end
         catch ME
-            warning('BIDS mapper failed: %s', ME.message);
+            warning(ME.identifier, 'BIDS mapper failed: %s', ME.message);
             fprintf('Attempting to proceed with classic file structure...\n');
         end
     else
-        fprintf('BIDS-compliant data detected: %s\n', patdir);
+        % Determine dataset root and subject ID
+        BIDSRoot = regexp(patdir, ['.*(?=\',filesep,'(derivatives|derivatives\',filesep,'leaddbs|rawdata|sourcedata))'], 'match', 'once');
+        [~, subjDirName] = fileparts(patdir);
+        subjId = regexprep(subjDirName, '^sub-', '');
+        % Create derivatives folder structure
+        derivDir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId]);
+        ea_mkdir(fullfile(derivDir, 'preprocessing', 'dwi'));
+        ea_mkdir(fullfile(derivDir, 'preprocessing', 'func'));
+        ea_mkdir(fullfile(derivDir, 'connectomics'));
+        fprintf('BIDS-compliant data detected: %s\n', derivDir);
+        uipatdir{i} = derivDir;
     end
+end
+
+if exist('BIDSRoot', 'var')
+    bids = BIDSFetcher(BIDSRoot);
+    setappdata(handles.leadfigure, 'bids', bids);
+    setappdata(handles.leadfigure, 'subjId', subjId);
 end
 
 % Store in appdata for use by other functions
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 
-% Update the patdir choosebox if it exists (Lead-Connectome GUI)
+% Update the patdir choosebox
 if isfield(handles, 'patdir_choosebox')
     if length(uipatdir) > 1
         handles.patdir_choosebox.String = ['Multiple (', num2str(length(uipatdir)), ')'];
@@ -135,4 +136,11 @@ end
 % Update guidata to ensure the new path is used
 guidata(handles.leadfigure, handles);
 
-fprintf('Process done.\n');
+fprintf('Subject loaded.\n\n');
+
+
+function subjId = validateSubjId(subjId)
+if ~isempty(regexp(subjId, '[\W_]', 'once'))
+    subjId = regexprep(subjId, '[\W_]', '');
+    ea_cprintf('CmdWinWarnings', 'It looks like you have special chars in your subj folder name.\nWe will use a cleaned name ''%s'' for the BIDS dataset. Please check manually.\n', subjId);
+end 

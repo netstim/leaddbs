@@ -256,11 +256,6 @@ if strcmp(handles.prod, 'dbs')
     end
 end
 
-% Set up MR/CT popupmenu and status text
-if isfield(handles, 'MRCT')
-    ea_switchctmr(handles);
-end
-
 % Update ui from patient
 if ~ismember(handles.prod, {'mapper'})
     ea_getui(handles);
@@ -272,6 +267,11 @@ else
         handles.patdir_choosebox.String = uipatdir{1};
         handles.patdir_choosebox.TooltipString = uipatdir{1};
     end
+end
+
+% Set up MR/CT popupmenu and status text
+if isfield(handles, 'MRCT')
+    ea_switchctmr(handles);
 end
 
 ea_storeui(handles); % save in pt folder
@@ -355,6 +355,15 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
             end
         end
     end
+end
+
+try
+    handles = ea_attach_electrodes_to_handles(handles, uipatdir{1});
+    if isfield(handles,'leadfigure') && isgraphics(handles.leadfigure)
+        setappdata(handles.leadfigure,'electrodes',handles.currentPatient.electrodes);
+    end
+catch ME
+    warning('Multi‑electrode attach failed: %s');
 end
 
 % add VATs to seeds for connectome mapper or predict case
@@ -484,14 +493,5 @@ function subjId = validateSubjId(subjId)
 if ~isempty(regexp(subjId, '[\W_]', 'once'))
     subjId = regexprep(subjId, '[\W_]', '');
     ea_cprintf('CmdWinWarnings', 'It looks like you have special chars in your subj folder name.\nWe will use a cleaned name ''%s'' for the BIDS dataset. Please check manually.\n', subjId);
-
-try
-    handles = ea_attach_electrodes_to_handles(handles, uipatdir{1});
-    if isfield(handles,'leadfigure') && isgraphics(handles.leadfigure)
-        setappdata(handles.leadfigure,'electrodes',handles.currentPatient.electrodes);
-    end
-catch ME
-    warning('Multi‑electrode attach failed: %s');
-end
 end 
 

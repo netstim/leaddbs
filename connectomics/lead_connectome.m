@@ -664,9 +664,12 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'connectome');
-options.prefs=ea_prefs('');
-ea_getpatients(options,handles);
+uipatdir = ea_getpatients;
+if ~isempty(uipatdir)
+    ea_load_pts_conn(handles, uipatdir);
+end
 ea_busyaction('off',handles.leadfigure,'connectome');
+
 
 % --- Executes on selection change in recentpatients.
 function recentpatients_Callback(hObject, eventdata, handles)
