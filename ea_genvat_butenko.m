@@ -254,7 +254,7 @@ for source_index = first_active_source:4
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
                 
                 if settings.use_wsl 
-                    [~, ~] = vta_runwslcommand(['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)]);
+                    [~, ~] = vta_runwslcommand(options.prefs.ext_oss_env,['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)]);
                 else
                     env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
                 end
@@ -262,7 +262,7 @@ for source_index = first_active_source:4
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
             if settings.use_wsl 
-                [~, ~] = vta_runwslcommand(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
+                [~, ~] = vta_runwslcommand(options.prefs.ext_oss_env,['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
                     ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)]);
             else
                 env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
@@ -273,7 +273,7 @@ for source_index = first_active_source:4
 
             % run OSS-DBS
             if settings.use_wsl 
-                [~,cmdout] = vta_runwslcommand(['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
+                [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
             else
                 [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)]);
             end
@@ -281,9 +281,9 @@ for source_index = first_active_source:4
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
                 if settings.use_wsl 
-                    [~, ~] = vta_runwslcommand(cell2mat(['python3 ' vta_windowspathstowsl(ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py')) ' ', vta_windowspathstowsl(parameterFile_json)]));
+                    [~, ~] = vta_runwslcommand(options.prefs.ext_oss_env,cell2mat(['python3 ' vta_windowspathstowsl(ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py')) ' ', vta_windowspathstowsl(parameterFile_json)]));
                     % run OSS-DBS
-                    [~, ~] = vta_runwslcommand(['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
+                    [~, ~] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
                 else
                     % increase the Bnd_Box dimensions
                     env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
@@ -312,7 +312,7 @@ for source_index = first_active_source:4
 
                 if settings.optimizer
                     if settings.use_wsl 
-                        vta_runwslcommand(['python ', vta_windowspathstowsl(ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py'),' ', settings.PathwayTune_master_dict, ' ', vta_windowspathstowsl(outputPaths.outputDir), ' ', num2str(side), ' ', vta_windowspathstowsl(parameterFile_json), ' ', num2str(scaling)])
+                        vta_runwslcommand(options.prefs.ext_oss_env,['python ', vta_windowspathstowsl(ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py'),' ', settings.PathwayTune_master_dict, ' ', vta_windowspathstowsl(outputPaths.outputDir), ' ', num2str(side), ' ', vta_windowspathstowsl(parameterFile_json), ' ', num2str(scaling)])
                     else
                         env.system('pip3 install pyswarms');
                         env.system('pip3 install pickle5');
@@ -321,13 +321,13 @@ for source_index = first_active_source:4
                 else
                     if settings.prob_PAM
                         if settings.use_wsl
-                            [~,cmdout] = vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                            [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         else
                             env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         end
                     else
                         if settings.use_wsl
-                            vta_runwslcommand(['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                            vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)]);
                         else
                             env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
                         end
