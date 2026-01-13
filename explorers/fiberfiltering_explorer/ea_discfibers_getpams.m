@@ -15,7 +15,7 @@ for sub=1:numPatient % Original VAT E-field
     if isfield(obj.M,'pseudoM')
         for side = 1:2
             pam_result_folder = obj.M.ROI.list{sub,side};
-            if ~isempty(pam_result_folder)
+            if ~strcmp(obj.M.ROI.list{sub,side},"No Stim")
     
                 % we assume that the fiberActivation files are named
                 % according to the BIDS convention
@@ -33,11 +33,11 @@ for sub=1:numPatient % Original VAT E-field
                 if side == 1
                     BIDS_side = 'R';
                     % mirrored
-                    pamlist{sub+numPatient,1} = [obj.M.ROI.list{sub,side}, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
+                    pamlist{sub+numPatient,2} = [obj.M.ROI.list{sub,side}, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
                 else
                     BIDS_side = 'L';
                     % mirrored
-                    pamlist{sub+numPatient,2} = [obj.M.ROI.list{sub,side}, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
+                    pamlist{sub+numPatient,1} = [obj.M.ROI.list{sub,side}, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
                 end
                 pamlist{sub,side} = [obj.M.ROI.list{sub,side}, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-',BIDS_side,'.mat'];
                 disp(pamlist{sub,side})

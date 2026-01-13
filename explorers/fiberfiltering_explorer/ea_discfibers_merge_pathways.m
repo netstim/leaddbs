@@ -109,7 +109,7 @@ for sub=1:numPatient
             % check here if there are PAM_StimSets_* folders 
             % but you need to make sure you don't have irrelevant PAM folders there 
             if isfield(obj.M,'pseudoM')
-                if isempty(obj.M.ROI.list{sub,side})
+                if strcmp(obj.M.ROI.list{sub,side},"No Stim")
                     % no stim at this side
                     C_fibState{k}(:,5) = 0;
                     C_fibState_idx{k} = C_idx{k};
@@ -180,12 +180,9 @@ for sub=1:numPatient
                 continue
             end
 
-            % if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
-            %     disp("==========================================================================")
-            %     disp("WARNING: Activation of this pathway was computed for another connectome!!!")
-            %     disp("==========================================================================")
-            %     continue
-            % end
+            if isfield(fib_state_raw,'connectome_name') & ~strcmp(obj.connectome, fib_state_raw.connectome_name)
+                ea_error("PAM results are for another connectome!!!")
+            end
 
             last_loc_i = 1;
             sub_i = 1;
