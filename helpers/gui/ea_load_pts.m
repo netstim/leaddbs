@@ -363,7 +363,7 @@ try
         setappdata(handles.leadfigure,'electrodes',handles.currentPatient.electrodes);
     end
 catch ME
-    warning('Multi‑electrode attach failed: %s');
+    ea_cprintf('CmdWinWarnings', 'Multi‑electrode attach failed:\n%s\n', ME.message);
 end
 
 % add VATs to seeds for connectome mapper or predict case

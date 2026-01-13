@@ -237,9 +237,9 @@ function e = one_from_struct(s, name, subjDir, trajIdx, srcPath)
     if isfield(s,'side') && ischar(s.side)
         if startsWith(lower(s.side),'l'), e.side='L';
         elseif startsWith(lower(s.side),'r'), e.side='R'; end
-    elseif contains(lower(srcPath), filesep+'lh'+filesep) || contains(lower(srcPath),'left')
+    elseif contains(lower(srcPath), [filesep 'lh' filesep]) || contains(lower(srcPath),'left')
         e.side = 'L';
-    elseif contains(lower(srcPath), filesep+'rh'+filesep) || contains(lower(srcPath),'right')
+    elseif contains(lower(srcPath), [filesep 'rh' filesep]) || contains(lower(srcPath),'right')
         e.side = 'R';
     end
 

@@ -1,0 +1,11 @@
+License:
+
+CC0 at https://springernature.figshare.com/articles/dataset/Metadata_record_for_In_vivo_high-resolution_structural_MRI-based_atlas_of_human_thalamic_nuclei/16601045
+
+Source:
+
+https://springernature.figshare.com/articles/dataset/Metadata_record_for_In_vivo_high-resolution_structural_MRI-based_atlas_of_human_thalamic_nuclei/16601045
+
+Saranathan, M., Iglehart, C., Monti, M., Tourdias, T., Rutt, B. (2021). In vivo high-resolution structural MRI-based atlas of human thalamic nuclei. Sci Data 8, 275.
+
+Vidal, J.P., Danet, L., Péran, P., Pariente, J., Bach Cuadra, M., Zahr, N.M., Barbeau, E.J., Saranathan, M., 2024. Robust thalamic nuclei segmentation from T1-weighted MRI using polynomial intensity transformation. Brain Struct. Funct. Brain Struct Funct. 2024 Jun;229(5):1087-1101.
