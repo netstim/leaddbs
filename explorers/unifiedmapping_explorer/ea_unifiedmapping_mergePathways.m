@@ -67,8 +67,8 @@ end
 
 % store the merged pathways in the leadgroup folder for now
 filepath = fileparts(obj.leadgroup);
-mkdir([filepath,filesep,calcsettings.fibfilt_connectome])
-cfile = [filepath,filesep,calcsettings.fibfilt_connectome,filesep,'merged_pathways.mat'];
+mkdir([filepath,filesep,obj.calcsettings.fibfilt_connectome])
+cfile = [filepath,filesep,obj.calcsettings.fibfilt_connectome,filesep,'merged_pathways.mat'];
 save(cfile, '-struct', 'ftr');
 
 if obj.calcsettings.connectivity_type ~= 2
