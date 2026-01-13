@@ -1,6 +1,5 @@
 function [el_render, el_label, elSide] = ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label)
 % Wrapper function to render lead trajectories based on elstruct
-
 if ~exist('elstruct','var')
     [coords_mm,trajectory,markers] = ea_load_reconstruction(options);
     elstruct(1).coords_mm = coords_mm;
@@ -37,7 +36,7 @@ for side=elSide
     pobj.side = side;
 
     set(0,'CurrentFigure',resultfig);
-    if ~exist('el_render','var') || ~isstruct(el_render)
+    if ~exist('el_render','var') || ~isobject(el_render)
         el_render = struct([]);
     end
     if isfield(options, 'reconmethod') && isequal(options.reconmethod, 'LeGUI (Davis 2021)')
@@ -59,9 +58,9 @@ for side=elSide
     end
     
     if ~exist('el_label','var')
-        if isfield(el_render(end),'ellabel') && ~isempty(el_render(end).ellabel)
+        try
             el_label = el_render(end).ellabel;
-        else
+        catch
             el_label = 'SEEG';
         end
     else
