@@ -48,7 +48,7 @@ for file_i = 1:length(rate_files)
     end
 end
 
-N_scalings = length(activations_over_pathways{pt_counter});
+N_samples = length(activations_over_pathways{pt_counter});
 
 % plot activation curves over the parameter sweep
 if plot_rates
@@ -56,7 +56,7 @@ if plot_rates
     for pt_counter = 1:length(pathways)
         pathway_name = strrep(pathways{pt_counter},'_',' ');
         disp(pathway_name)
-        plot(1:N_scalings,activations_over_pathways{pt_counter},'DisplayName',pathway_name)
+        plot(1:N_samples,activations_over_pathways{pt_counter},'DisplayName',pathway_name)
         ylim([0,100]);
         xlabel('Scaling')
         ylabel('Percent Activation')
@@ -72,9 +72,24 @@ for pt_counter = 1:length(pathways)
     % iterate over scalings (fiber diameters)
     % important: number of compartments can differ based on the fiber
     % diameter / length!
-    for scaling_i = 1:N_scalings
+    for sample_i = 1:N_samples
 
-        Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(scaling_i),'.mat']);
+        % If stimSetMode, extract the index from tractName (but axonState is still checked on the indexed file)
+        if settings.stimSetMode && ~settings.optimizer
+            if startsWith(settings.connectome, 'Multi-Tract: ')
+                stimProt_index = regexp(tractName, '(?<=_)\d+$', 'match', 'once');
+                tractName = regexp(tractName, '.+(?=_\d+$)', 'match', 'once');
+            else
+                stimProt_index = regexp(axonState{f}, '(?<=Axon_state_)\d+(?=\.mat$)', 'match', 'once');
+            end
+
+            % in this case, each sample is in a separate folder
+            Axon_state_gpe2stn_sm_left_0   % without prob
+
+        else
+            Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(sample_i),'.mat']);
+        end
+ 
         load(Axon_state_file, 'fibers','ea_fibformat','connectome_name');
         n_comp = sum(bsxfun(@eq, fibers(:,4), fibers(:,4)'), 2)';
         % the number is the same since these are OSS-DBS axons
@@ -86,7 +101,7 @@ for pt_counter = 1:length(pathways)
 
         % intialize new axon state file with probabilistic activations
         % morphologz defined by the first scaling!
-        if scaling_i == 1
+        if sample_i == 1
             fibers_prob = fibers;
             % unnecessary, but for clarity
             fibers_prob(:,5) = 0;
@@ -106,7 +121,7 @@ for pt_counter = 1:length(pathways)
             % The key line. Probability is estimated as the number of
             % activations across scalings divided by the number of the scalings
             idx_comp_orig = find(fibers_prob(:,4)==fiber_i);
-            fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_scalings;
+            fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_samples;
         end
     end
     ftr.fibers = fibers_prob;

@@ -88,7 +88,7 @@ for side = 1:numSide
                     if rem(pathway_i,2)
                         path_start_counter = obj.map_list(pathway_i+1);
                         if pathway_i == length(obj.map_list)-1
-                            disp("prelast pathway")
+                            %disp("prelast pathway")
                         else
                             path_end_counter = obj.map_list(pathway_i+2) - 1;
                         end

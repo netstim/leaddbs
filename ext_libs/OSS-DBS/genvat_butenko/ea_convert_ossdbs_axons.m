@@ -35,7 +35,7 @@ else
     axonState = ea_regexpdir([outputPaths.HemiSimFolder, filesep, 'Results'], 'Axon_state.*\.mat', 0);
 end   
 
-if ~isempty(axonState) && ~settings.stimSetMode
+if ~isempty(axonState)
     for f=1:length(axonState)
 
         if prob_PAM
@@ -78,13 +78,7 @@ if ~isempty(axonState) && ~settings.stimSetMode
             ftr.connectome_name = settings.connectome;
         end
 
-        if size(ftr.idx,1) ~= size(ind,1)
-            % enforce this condition for now
-            ea_error("Mismatch detected. Perhaps, some axons were not seeded")
-        end
-
-        % this is wrong, because these indices are from different spaces
-        % (when some axons could not be seeded)
+        % fibId is in the space of ftr.idx
         fibers_subset = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
         originalFibID = ftr.fibers(:,5);
 
@@ -121,15 +115,12 @@ if ~isempty(axonState) && ~settings.stimSetMode
 
         % If stimSets, save to a corresponding folder
         if settings.stimSetMode
-            continue
-
-            % under reconstruction
-            resultProtocol = [outputPaths.outputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+            resultProtocol = [settings.connectomeActivations, '_', 'StimProt_', sideStr, '_', stimProt_index];
             ea_mkdir(resultProtocol);
             if startsWith(settings.connectome, 'Multi-Tract: ')
-                fiberActivation = [resultProtocol, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
+                fiberActivation = [resultProtocol, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, source_index, '.mat'];
             else
-                fiberActivation = [resultProtocol, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-', sideLabel,'_prot-', stimProt_index, '.mat'];
+                fiberActivation = [resultProtocol, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, source_index, '.mat'];
             end
         else
             % save to the connectome folder to avoid wrong imports by FF
@@ -175,16 +166,14 @@ if ~isempty(axonState) && ~settings.stimSetMode
 
             % If stimSets, save to a corresponding folder
             if settings.stimSetMode
-                continue
-
-                % under reconstruction
-                resultProtocol = [outputPaths.templateOutputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+                resultProtocol = [settings.connectomeActivationsMNI, '_', 'StimProt_', sideStr, '_', stimProt_index];
                 ea_mkdir(resultProtocol);
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivationMNI = [resultProtocol, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
+                    fiberActivationMNI = [resultProtocol, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, source_index, '.mat'];
                 else
-                    fiberActivationMNI = [resultProtocol, filesep, subSimPrefix, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_prot-', stimProt_index, '.mat'];
+                    fiberActivationMNI = [resultProtocol, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, source_index, '.mat'];
                 end
+
             else
                 if startsWith(settings.connectome, 'Multi-Tract: ')
                     fiberActivationMNI = [settings.connectomeActivationsMNI, filesep, 'sub-', options.subj.subjId, '_sim-', 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, source_index, '.mat'];

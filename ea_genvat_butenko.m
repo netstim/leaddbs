@@ -32,7 +32,7 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
-%options.stimSetMode = 0;
+%options.stimSetMode = 1;
 [settings,S] = ea_prepare_ossdbs(options,S);
 if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env
     disp("Running OSS-DBS via WSL")
@@ -337,6 +337,33 @@ for source_index = first_active_source:4
                 % remove the large file containing the time-domain solution (but not for StimSets!)
                 ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result*'])
             end
+
+            if settings.prob_PAM && settings.stimSetMode    
+                % we need to save the results since both modes use
+                % scaling_index
+                act_files = dir_without_dots([outputPaths.HemiSimFolder,filesep,'Results',filesep,'Pathway_status_*']);
+                mkdir([outputPaths.HemiSimFolder,filesep,'sample_',num2str(i)])
+                for act_file_inx = 1:length(act_files)
+                    % Get the individual filename
+                    fileName = act_files(act_file_inx).name;
+                    
+                    % Skip directories (like '.' and '..')
+                    if ~act_files(act_file_inx).isdir
+                        sourceFile = fullfile(act_files(act_file_inx).folder, fileName);
+                        destFile = fullfile([outputPaths.HemiSimFolder,filesep,'sample_',num2str(i)], fileName);
+                        
+                        % Perform the copy
+                        copyfile(sourceFile, destFile);
+                        fprintf('Copied: %s\n', fileName);
+                    end
+                end
+
+                if i == settings.N_samples && side == 1
+                    [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
+                    return
+                end
+            end
+
         end
 
         %% Postprocessing in Lead-DBS
@@ -347,7 +374,7 @@ for source_index = first_active_source:4
             continue;
         end
 
-        if settings.prob_PAM && all(~multiSourceMode)
+        if settings.prob_PAM && all(~multiSourceMode) && ~settings.stimSetMode
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
             ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,settings,side);
         end
@@ -361,6 +388,12 @@ for source_index = first_active_source:4
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
 
+            if settings.prob_PAM && settings.stimSetMode
+                % TBA: Lead-DBS postprocessing for such case
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'ResultsE*']);
+                continue
+            end
+
             % prepare Lead-DBS BIDS format VATs
             if settings.exportVAT && settings.optimizer
                 % get 4-D unit niftis for the optimizer and exit
@@ -371,7 +404,7 @@ for source_index = first_active_source:4
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
-            if settings.prob_PAM && any(multiSourceMode)
+            if settings.prob_PAM && any(multiSourceMode) && ~settings.stimSetMode
                 % for multisource, we will convert in the external loop
                 % we just need to add the source index to the Axon States
                 axonStateFolder = ea_sourceIndex4AxonStates(outputPaths, side, source_use_index);
