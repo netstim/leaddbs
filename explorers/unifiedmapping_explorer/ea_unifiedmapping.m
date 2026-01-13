@@ -915,7 +915,7 @@ classdef ea_unifiedmapping < handle
                 fibsval = {};
             end
 
-21
+
             % for nested LOO, store some statistics
             if obj.nestedLOO
                 Abs_pred_error = zeros(cvp.NumTestSets, 1);
