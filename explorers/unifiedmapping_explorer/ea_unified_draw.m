@@ -315,7 +315,7 @@ end
 
 % Helper function to find the connectivity file
     function cfile = find_connectivity_file(obj)
-        if obj.multi_pathways == 1
+        if obj.calcsettings.multi_pathways == 1
             cfile = fullfile(fileparts(obj.analysispath), obj.calcsettings.fibfilt_connectome, 'merged_pathways.mat');
         else
             cfile = fullfile(ea_getconnectomebase('dMRI'), obj.calcsettings.fibfilt_connectome, 'data.mat');
