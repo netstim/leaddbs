@@ -231,8 +231,8 @@ else
         for side=1:numel(gval)
             switch obj.threshstrategy
                 case 'Fixed Amount' % here we want to create thresholds for each side separately.
-                    posvals = sort(vals{group,side}(vals{group,side}>0),'descend');
-                    negvals = sort(vals{group,side}(vals{group,side}<0),'ascend');
+                    posvals = sort(unthresholdedVals{group,side}(unthresholdedVals{group,side}>0),'descend');
+                    negvals = sort(unthresholdedVals{group,side}(unthresholdedVals{group,side}<0),'ascend');
 
                 otherwise % in other cases, we want to apply the same threshold to both sides.
                     allvals = vertcat(unthresholdedVals{group,:});
