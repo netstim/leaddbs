@@ -1506,12 +1506,14 @@ classdef ea_unifiedmapping < handle
             if isfield(obj.drawobject,'fiberfiltering')
                 if ~isempty(obj.drawobject.fiberfiltering)
                     for s=1:numel(obj.drawobject.fiberfiltering)
-                        for ins=1:numel(obj.drawobject.fiberfiltering{s})
-                            try delete(obj.drawobject.fiberfiltering{s}{ins}.toggleH); end
-                            try delete(obj.drawobject.fiberfiltering{s}{ins}.patchH); end
+                        surfArray=obj.drawobject.fiberfiltering{s};
+                        for ins=1:numel(surfArray)
+                            try delete(surfArray(ins).toggleH); end
+                            try delete(surfArray(ins).patchH); end
+                            try delete(surfArray(ins)); end
                         end
                     end
-                    try delete(obj.drawobject.fiberfiltering{s}(:)); end
+                    obj.drawobject.fiberfiltering{s} = [];
                 end
             end
             % plot new tracts
