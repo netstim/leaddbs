@@ -1,4 +1,4 @@
-function get_sEEG_field_from_csv(field_in_csv, file2save, phi_field, reslice2segmask, segmaskFile)
+function get_sEEG_field_from_csv(field_in_csv, file2save, phi_field, reslice2segmask, segmaskFile,zipIt)
 % Get nifti of OSS electric fields
 % By Butenko, konstantinmgtu@gmail.com
 
@@ -8,6 +8,7 @@ arguments
     phi_field        % if true, potential is exported
     reslice2segmask  % if true, all VTRs are stored in the same voxel space defined by segmask
     segmaskFile      % path to the nii
+    zipIt {mustBeNumericOrLogical} = true % gzip if true
 end
 
 %ea_dispt('Creating nifti header for export...');
@@ -76,6 +77,8 @@ ROI.pinfo = [1;0;352];
 ROI.dt = [64, endian];
 ROI.n=[1 1];
 ea_write_nii(ROI);
-gzip(ROI.fname)
-ea_delete(ROI.fname)
+if zipIt
+    gzip(ROI.fname)
+    ea_delete(ROI.fname)
+end
 
