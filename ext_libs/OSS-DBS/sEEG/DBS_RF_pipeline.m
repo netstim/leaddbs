@@ -1,13 +1,11 @@
 cd([ea_getearoot, '/ext_libs/OSS-DBS/sEEG'])
 
-
 %% Inputs
-subjs = {'/home/forel/Documents/data/JB_project/JBK/localized_medtronic_rotated/sub017',
-    '/home/forel/Documents/data/JB_project/JBK/localized_medtronic_rotated/sub019'};
-anchor = 'T2';
+subjs = {'/home/forel/Documents/data/JB_project/JBK/localized_medtronic_rotated/sub019'};
+anchor = 'T1';
 removeElectrodeFromRF = true;
 
-space = 'native';
+space = 'mni';
 BIDS_format = false;
 cleanup = true; % otherwise some large .nii files might remain
 
@@ -15,9 +13,14 @@ Segment_SVD = false;
 regenerate_segmask = false;
 
 warp2MNI = true;   % warp from the anchor space to MNI, we assume ANTs
+if strcmp(space,'mni')
+    % not needed in this case
+    warp2MNI = false;
+end
+
 flip_lh2rh = true;
 reslice2ROI = true; % if true, all VTRs are stored in the same voxel space defined by their bounding box thresholded at ROI_RF_threshold
-ROI_RF_threshold = -0.1; % because we solve for -1V
+ROI_RF_threshold = 0.1; % because we solve for -1V
 vox_size = [0.75,0.75,0.75];
 
 % hardcoded for now
@@ -74,15 +77,28 @@ for subj_inx = 1:size(subjs,1)
         % re-order to have T2w and T1w before FLAIR
         images = flipud(images);      
 
-        if strcmp(anchor,'T2') || strcmp(anchor,'t2')
-            idx = find(contains({images.name}, 'anat_t2.nii'));
-        elseif strcmp(anchor,'T1') || strcmp(anchor,'t1')
-            idx = find(contains({images.name}, 'anat_t1.nii'));
-        elseif strcmp(anchor,'FLAIR') || strcmp(anchor,'flair')
-            idx = find(contains({images.name}, 'anat_flair.nii'));  
+        if strcmp(space,'mni')
+            if strcmp(anchor,'T2') || strcmp(anchor,'t2')
+                idx = find(contains({images.name}, 'glanat_t2.nii'));
+            elseif strcmp(anchor,'T1') || strcmp(anchor,'t1')
+                idx = find(contains({images.name}, 'glanat.nii'));
+            elseif strcmp(anchor,'FLAIR') || strcmp(anchor,'flair')
+                idx = find(contains({images.name}, 'glanat_flair.nii'));  
+            else
+                warn_msg = sprintf("The anchor modality %s is not supported, please use T1, T2 or FLAIR",anchor);
+                ea_warndlg(warn_msg)
+            end    
         else
-            warn_msg = sprintf("The anchor modality %s is not supported, please use T1, T2 or FLAIR",anchor);
-            ea_warndlg(warn_msg)
+            if strcmp(anchor,'T2') || strcmp(anchor,'t2')
+                idx = find(contains({images.name}, 'anat_t2.nii'));
+            elseif strcmp(anchor,'T1') || strcmp(anchor,'t1')
+                idx = find(contains({images.name}, 'anat_t1.nii'));
+            elseif strcmp(anchor,'FLAIR') || strcmp(anchor,'flair')
+                idx = find(contains({images.name}, 'anat_flair.nii'));  
+            else
+                warn_msg = sprintf("The anchor modality %s is not supported, please use T1, T2 or FLAIR",anchor);
+                ea_warndlg(warn_msg)
+            end
         end
     end
     anchorImage = fullfile(images(idx).folder,images(idx).name);
@@ -240,7 +256,7 @@ for subj_inx = 1:size(subjs,1)
     fclose(fid);
 
     % run OSS-DBS
-    %env.system(['python ', ea_path_helper(OSS4DBS_RFs_script), ' ', ea_path_helper(DictPath)])
+    env.system(['python ', ea_path_helper(OSS4DBS_RFs_script), ' ', ea_path_helper(DictPath)])
 
     % create niftis from Lattice (.csv)
     if VTR

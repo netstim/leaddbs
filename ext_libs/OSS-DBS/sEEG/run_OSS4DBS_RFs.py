@@ -25,7 +25,7 @@ import h5py
 import json
 from dataclasses import asdict
 
-AMPLITUDE = -1.0 # in mA
+AMPLITUDE = 1.0 # in mA
 HEMI_SUFFIX = ['_rh','_lh']
 
 from ossdbs.electrodes.defaults import default_electrode_parameters
@@ -332,7 +332,7 @@ if __name__ == '__main__':
             # grounding parameters
             if current_controlled:
                 # switch from mA to A
-                grounded_current = -0.001 * np.round(np.sum(stim_protocol), 9)  # could be 0
+                grounded_current = 0.001 * np.round(np.sum(stim_protocol), 9)  # could be 0
                 case_grounding = True # if no current is actually grounded, this is used to reference voltages 
             else:
                 grounded_current = 0.0 # not relevant
