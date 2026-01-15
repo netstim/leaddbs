@@ -318,16 +318,24 @@ classdef ea_unifiedmapping < handle
                 % stimulation folders
                 if ~isempty(obj.results) % something has been calculated
                     if isfield(obj.results,'fiberfiltering')
-                        if (isfield(obj.results.fiberfiltering.(ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome)),'PAM_Ttest') && obj.calcsettings.connectivity_type==2) || ...
-                                (isfield(obj.results.fiberfiltering.(ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome)),'efield_mean') && obj.calcsettings.connectivity_type==1)
-                            answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                            if ~strcmp(answ,'Yes')
-                                return
+                        fname = ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome);
+                        if isfield(obj.results.fiberfiltering, fname)
+                            connField = obj.results.fiberfiltering.(fname);
+                
+                            % now check the specific subfields safely
+                            if (isfield(connField,'PAM_Ttest') && obj.calcsettings.connectivity_type==2) || ...
+                               (isfield(connField,'efield_mean') && obj.calcsettings.connectivity_type==1)
+                
+                                answ = questdlg('This has already been calculated. Are you sure you want to re-calculate everything?', ...
+                                                'Recalculate Results','No','Yes','No');
+                                if ~strcmp(answ,'Yes')
+                                    return
+                                end
                             end
                         end
                     end
                 end
-                if obj.multi_pathways == 1
+                if obj.calcsettings.multi_pathways == 1
                     [cfile, obj.map_list, obj.pathway_list] = ea_unifiedmapping_mergePathways(obj);
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.calcsettings.fibfilt_connectome, filesep, 'data.mat'];
@@ -907,7 +915,7 @@ classdef ea_unifiedmapping < handle
                 fibsval = {};
             end
 
-21
+
             % for nested LOO, store some statistics
             if obj.nestedLOO
                 Abs_pred_error = zeros(cvp.NumTestSets, 1);
@@ -1498,12 +1506,14 @@ classdef ea_unifiedmapping < handle
             if isfield(obj.drawobject,'fiberfiltering')
                 if ~isempty(obj.drawobject.fiberfiltering)
                     for s=1:numel(obj.drawobject.fiberfiltering)
-                        for ins=1:numel(obj.drawobject.fiberfiltering{s})
-                            try delete(obj.drawobject.fiberfiltering{s}{ins}.toggleH); end
-                            try delete(obj.drawobject.fiberfiltering{s}{ins}.patchH); end
+                        surfArray=obj.drawobject.fiberfiltering{s};
+                        for ins=1:numel(surfArray)
+                            try delete(surfArray(ins).toggleH); end
+                            try delete(surfArray(ins).patchH); end
+                            try delete(surfArray(ins)); end
                         end
                     end
-                    try delete(obj.drawobject.fiberfiltering{s}(:)); end
+                    obj.drawobject.fiberfiltering{s} = [];
                 end
             end
             % plot new tracts
