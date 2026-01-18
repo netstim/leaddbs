@@ -61,14 +61,13 @@ settings.Estimate_In_Template = ~options.native;
 settings.stimSetMode = options.stimSetMode;
 
 % advance options
-try
+if isfield(options,'optimizer')
     % check if OSS-DBS is called via ea_OSS_optimizer
     settings.optimizer = options.optimizer;
     if settings.optimizer
         S_true_label = S.label;
         S = ea_set_optimizer(options,[options.subj.stimDir, filesep, ea_nt(options.native), S.label]);
         S.label = S_true_label;
-
         if settings.exportVAT
             % special case of VTA-based optimization
             options.PathwayTune_master_dict = [];
@@ -77,7 +76,7 @@ try
         end
 
     end
-catch
+else
     settings.optimizer = 0;
 end
 
