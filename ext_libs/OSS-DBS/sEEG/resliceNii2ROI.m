@@ -22,7 +22,12 @@ function resliceNii2ROI(images2reslice,threshold,vox_size)
     all_max = [-Inf -Inf -Inf];
     
     for i = 1:length(images2reslice)
-        %gunzip([images2reslice{i},'.gz'])
+        if strcmp(images2reslice{i}(end-2:end),'.gz')
+            %gunzip([images2reslice{i},'.gz'])
+                
+            gunzip(images2reslice{i});
+            images2reslice{i} = images2reslice{i}(1:end-3);
+        end
         V = spm_vol(images2reslice{i});
         img = spm_read_vols(V);
         
