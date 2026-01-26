@@ -132,7 +132,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                     end
                     orig_model_flat = vertcat(orig_model{:});
                 case 'networkmapping'
-                    orig_model_flat = full(obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval);
+                    orig_model_flat = (full(obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval))';
             end
   
         for side=1:size(vals,2)
