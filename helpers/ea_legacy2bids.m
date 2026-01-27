@@ -647,10 +647,10 @@ for patients = 1:length(source)
                     end
                 end
             otherwise
-                %clean up the files to move (anything outside of nii not
+                %clean up the files to move (anything outside of nii, bvec, bval not
                 %accepted)
                 for i=1:length(files_to_move)
-                    if isempty(regexpi(files_to_move{i},'.*\.nii(\.gz)?$','match'))
+                    if isempty(regexpi(files_to_move{i},'.*\.(nii(\.gz)?|bvec|bval)$','match'))
                         files_to_move{i} = [];
                     end
                 end
