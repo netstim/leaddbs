@@ -121,7 +121,7 @@ classdef BIDSFetcher
 
         function rawImages = getRawImages(obj, subjId)
             if isfile(obj.getPrefs(subjId, 'rawimages')) 
-                rawImages = loadjson(obj.getPrefs(subjId, 'rawimages')); % fa choice difference here
+                rawImages = loadjson(obj.getPrefs(subjId, 'rawimages')); 
             else
                 rawImages = ea_genrawimagesjson(obj.datasetDir, subjId);
             end
@@ -358,12 +358,12 @@ classdef BIDSFetcher
             subj.acpc.acpcManual     = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcmanual.fcsv']);
         end
 
-        function preopAnat = getPreopAnat(obj, subjId) % here fa is correct
+        function preopAnat = getPreopAnat(obj, subjId) 
             % Set dirs
             rawDataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
 
             % Get raw images struct
-            rawImages = obj.getRawImages(subjId);  % here is error - in "correct dataset" fa is not read
+            rawImages = obj.getRawImages(subjId);  
 
             % Return in case not found
             if ~isfield(rawImages, 'preop')
@@ -379,7 +379,7 @@ classdef BIDSFetcher
                 preopRawDataDir = preopRawDataDir{1};
             end
             images = fullfile(preopRawDataDir, 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
-            modality = fieldnames(rawImages.preop.anat)'; % fa dir still correct
+            modality = fieldnames(rawImages.preop.anat)';
 
             % Set pre-defined orders
             preniiOrder = obj.settings.prenii_order;
@@ -475,7 +475,7 @@ classdef BIDSFetcher
             end
         end
 
-        function preprocAnat = getPreprocAnat(obj, subjId, preferMRCT) % here fa wrong
+        function preprocAnat = getPreprocAnat(obj, subjId, preferMRCT) 
             % Get pre-op anat images
             preopAnat = obj.getPreopAnat(subjId);
 
@@ -524,14 +524,14 @@ classdef BIDSFetcher
             end
         end
 
-        function coregAnat = getCoregAnat(obj, subjId, preferMRCT) % here fa gets wrong
+        function coregAnat = getCoregAnat(obj, subjId, preferMRCT) 
             if ~exist('preferMRCT', 'var')
                 preferMRCT = obj.settings.preferMRCT;
             end
             preferMRCT = checkModality(obj, subjId, preferMRCT);
             % disp('goes here')
             % Get preprocessed anat images
-            preprocAnat = obj.getPreprocAnat(subjId, preferMRCT); % here fa is fetched wrongly 
+            preprocAnat = obj.getPreprocAnat(subjId, preferMRCT); 
 
             % Get LeadDBS dirs
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
@@ -541,11 +541,6 @@ classdef BIDSFetcher
             for i=1:length(session)
                 modality = fieldnames(preprocAnat.(session{i}));
                 for j=1:length(modality)
-                    % if modality{j} == "fa"
-                    %     anat = '/Users/amygdala/Documents/NetStim/Projects/bidsdmriwurzburg/derivatives/leaddbs/sub-STNPD001/coregistration/anat/sub-STNPD001_ses-preop_space-anchorNative_desc-preproc_fa.nii';
-                    %     coregAnat.(session{i}).(modality{j}) = strrep(anat , ['ses-', session{i}, '_'], ['ses-', session{i}, '_space-', obj.anchorSpace, '_']);
-                    % 
-                    % else
                     anat = strrep(preprocAnat.(session{i}).(modality{j}), LeadDBSDirs.preprocDir, LeadDBSDirs.coregDir);
                     coregAnat.(session{i}).(modality{j}) = strrep(anat , ['ses-', session{i}, '_'], ['ses-', session{i}, '_space-', obj.anchorSpace, '_']);
                     % end
@@ -558,7 +553,7 @@ classdef BIDSFetcher
             end
         end
 
-        function coregTransform = getCoregTransform(obj, subjId, preferMRCT) % here fa gets messed
+        function coregTransform = getCoregTransform(obj, subjId, preferMRCT) 
             if ~exist('preferMRCT', 'var')
                 preferMRCT = obj.settings.preferMRCT;
             end
@@ -572,7 +567,7 @@ classdef BIDSFetcher
             coregAnat = obj.getCoregAnat(subjId, preferMRCT);
 
             % Set pre-coregistration transformation
-            fields = fieldnames(coregAnat.preop); %here: fa right
+            fields = fieldnames(coregAnat.preop); 
             coregTransform.(fields{1}) = [baseName, 'desc-precoreg_', fields{1}, '.mat'];
 
             % Set pre-op MR transformation
@@ -617,7 +612,7 @@ classdef BIDSFetcher
             preferMRCT = checkModality(obj, subjId, preferMRCT);
 
             % Get coregistered anat images
-            coregAnat = obj.getCoregAnat(subjId, preferMRCT); % here: fa already wrong
+            coregAnat = obj.getCoregAnat(subjId, preferMRCT); 
 
             % Remove pre-op anchor anat image
             fields = fieldnames(coregAnat.preop);
