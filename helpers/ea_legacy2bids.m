@@ -1068,6 +1068,60 @@ function generate_rawImagejson(patient_name,dest)
             anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
         end
     end
+    
+    % Copy DWI files from rawdata to preprocessing/dwi
+    raw_dwi_dir = fullfile(raw_data_path,'ses-preop','dwi');
+    preprocessing_dwi_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','dwi');
+    
+    if isfolder(raw_dwi_dir)
+        ea_mkdir(preprocessing_dwi_dir);
+        dwi_files = dir(fullfile(raw_dwi_dir,'*.nii*'));
+        dwi_bval = dir(fullfile(raw_dwi_dir,'*.bval'));
+        dwi_bvec = dir(fullfile(raw_dwi_dir,'*.bvec'));
+        
+        % Copy .nii and .nii.gz files (unzip .nii.gz to .nii)
+        for i=1:length(dwi_files)
+            src_file = fullfile(dwi_files(i).folder, dwi_files(i).name);
+            if endsWith(dwi_files(i).name, '.nii.gz')
+                % Gunzip and save as .nii
+                [~, basename] = fileparts(dwi_files(i).name);
+                dst_file = fullfile(preprocessing_dwi_dir, [basename, '.nii']);
+                if ~exist(dst_file, 'file')
+                    gunzip(src_file, preprocessing_dwi_dir);
+                    % Rename from .nii.gz to .nii if gunzip created .nii.gz
+                    temp_file = fullfile(preprocessing_dwi_dir, dwi_files(i).name);
+                    if exist(temp_file, 'file') && ~strcmp(temp_file, dst_file)
+                        movefile(temp_file, dst_file);
+                    end
+                end
+            else
+                % Copy .nii as is
+                dst_file = fullfile(preprocessing_dwi_dir, dwi_files(i).name);
+                if ~exist(dst_file, 'file')
+                    copyfile(src_file, dst_file);
+                end
+            end
+        end
+        
+        % Copy .bval files
+        for i=1:length(dwi_bval)
+            src_file = fullfile(dwi_bval(i).folder, dwi_bval(i).name);
+            dst_file = fullfile(preprocessing_dwi_dir, dwi_bval(i).name);
+            if ~exist(dst_file, 'file')
+                copyfile(src_file, dst_file);
+            end
+        end
+        
+        % Copy .bvec files
+        for i=1:length(dwi_bvec)
+            src_file = fullfile(dwi_bvec(i).folder, dwi_bvec(i).name);
+            dst_file = fullfile(preprocessing_dwi_dir, dwi_bvec(i).name);
+            if ~exist(dst_file, 'file')
+                copyfile(src_file, dst_file);
+            end
+        end
+    end
+    
     if exist('anat_files_selected','var')
         savejson('',anat_files_selected,opt);
     else
