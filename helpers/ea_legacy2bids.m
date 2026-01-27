@@ -739,6 +739,11 @@ for patients = 1:length(source)
                                             end
                                         end
                                     end
+                                    % Clean up dwi tmp folder after processing
+                                    dwi_tmp_path = fullfile(new_path,'tmp');
+                                    if exist(dwi_tmp_path,'dir')
+                                        ea_delete(dwi_tmp_path);
+                                    end
                                 end
                             end
                             if exist(tmp_path,'dir')
