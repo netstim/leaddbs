@@ -22,14 +22,14 @@ if ~exist('dest','var')
     disp("Please select output directory")
     return
 else
-   if iscell(dest)
-       dest = dest{1};
-   end
+    if iscell(dest)
+        dest = dest{1};
+    end
 
-   if ~isfolder(dest)
-       addpath(dest);
-       mkdir(dest);
-   end
+    if ~isfolder(dest)
+        addpath(dest);
+        mkdir(dest);
+    end
 end
 
 %define names of the new directorey structure
@@ -138,21 +138,21 @@ for patients = 1:length(source)
                 end
             end
         elseif strcmp(dir_names{j},'current_headmodel')
-                %if you have both headmodel and current_headmodel, choose
-                %current_headmodel
+            %if you have both headmodel and current_headmodel, choose
+            %current_headmodel
 
-                if exist(fullfile(source_patient,'headmodel'),'dir') %give precedence to curr_headmodel & stash headmodel into misc folder
-                    misc_dir = fullfile(new_path,'miscellaneous');
-                    ea_mkdir(misc_dir);
-                    copyfile(fullfile(source_patient,'headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous','headmodel'));
-                end
+            if exist(fullfile(source_patient,'headmodel'),'dir') %give precedence to curr_headmodel & stash headmodel into misc folder
+                misc_dir = fullfile(new_path,'miscellaneous');
+                ea_mkdir(misc_dir);
+                copyfile(fullfile(source_patient,'headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous','headmodel'));
+            end
 
-                if ~exist(fullfile(new_path,'headmodel'),'dir')
-                    copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
-                    if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
-                        movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
-                    end
+            if ~exist(fullfile(new_path,'headmodel'),'dir')
+                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
+                if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+                    movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
                 end
+            end
 
         elseif strcmp(dir_names{j},'headmodel')
             if ~exist(fullfile(source_patient,'current_headmodel'),'dir') %if current_headmodel does not exist then this is the headmodel file
@@ -205,7 +205,7 @@ for patients = 1:length(source)
         elseif strcmp(dir_names{j},'fiberfiltering') || strcmp(dir_names{j},'networkmapping') || strcmp(dir_names{j},'sweetspotmapping')
             ea_mkdir(fullfile(dest,'derivatives','leadgroup',patient_name,dir_names{j}));
             copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leadgroup',patient_name,dir_names{j}));
-          %add the .png files to the main cell which contains the files to move
+            %add the .png files to the main cell which contains the files to move
         elseif strcmp(dir_names{j},'checkreg')
             checkreg_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
             files_in_checkreg_folder = {checkreg_folder.name};
@@ -462,9 +462,9 @@ for patients = 1:length(source)
                                 indx_arr = cellfun(@(x)strfind(x,mat_str),coregistration{:,1},'UniformOutput',false);
                                 indx = find(~cellfun(@isempty,indx_arr));
                                 if length(indx) == 1
-                                  bids_name = [patient_name,'_',coregistration{1,2}{indx}];
-                                  copyfile(fullfile(source_path,which_file),op_dir);
-                                  movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
+                                    bids_name = [patient_name,'_',coregistration{1,2}{indx}];
+                                    copyfile(fullfile(source_path,which_file),op_dir);
+                                    movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                                 else
                                     op_dir = fullfile(new_path,'miscellaneous');
                                     ea_mkdir(op_dir);
@@ -647,9 +647,9 @@ for patients = 1:length(source)
                     end
                 end
             otherwise
-                %clean up the files to move (anything outside of nii, bvec, bval not
-                %accepted)
+                %clean up the files to move (anything outside of nii, bvec and bval)
                 for i=1:length(files_to_move)
+                    % if isempty(regexpi(files_to_move{i},'.*\.nii(\.gz)?$','match'))
                     if isempty(regexpi(files_to_move{i},'.*\.(nii(\.gz)?|bvec|bval)$','match'))
                         files_to_move{i} = [];
                     end
@@ -723,10 +723,21 @@ for patients = 1:length(source)
                                     for files = 1:length(files_to_move)
                                         if ~isempty(regexp(files_to_move{files}, '^dti\.(bval|bvec|nii)$', 'once'))
                                             if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                                % Extract original extension to preserve it
+                                                [~,~,orig_ext] = fileparts(files_to_move{files});
                                                 modality_str = strsplit(files_to_move{files},'_');
                                                 modality_str = lower(modality_str{end});
+                                                % Remove extension from modality_str if not bvec or bval
+                                                if ~strcmp(orig_ext, '.bval') && ~strcmp(orig_ext, '.bvec')
+                                                    modality_str = regexprep(modality_str, '\.(nii\.gz|nii)$', '');
+                                                end
                                                 try
-                                                    bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str)];
+                                                    % Add .nii.gz extension if original was .nii or .nii.gz
+                                                    if strcmp(orig_ext, '.nii') || strcmp(orig_ext, '.gz')
+                                                        bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str), '.nii.gz'];
+                                                    else
+                                                        bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str)];
+                                                    end
                                                 catch
                                                     modality_str = strsplit(modality_str,'.');
                                                     modality_str = upper(modality_str{1});
@@ -769,547 +780,547 @@ toc;
 
 
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
-    anat_dir = fullfile(new_path,which_pipeline,'anat');
-    log_dir = fullfile(new_path,which_pipeline,'log');
+anat_dir = fullfile(new_path,which_pipeline,'anat');
+log_dir = fullfile(new_path,which_pipeline,'log');
 
-    checkreg_dir = fullfile(new_path,which_pipeline,'checkreg');
-    transformations_dir = fullfile(new_path,which_pipeline,'transformations');
-    if endsWith(which_file,'.nii')
-        if startsWith(which_file, 'y_ea_') % Transform from SPM normalization
-            new_path = transformations_dir;
-        else
-            new_path = anat_dir;
-        end
-        ea_mkdir(new_path);
-        old_path = fullfile(source_patient_path,which_file);
-
-        if exist(old_path,'file')
-            %first move%
-            copyfile(old_path,new_path);
-            %then rename%
-            disp(['Renaming file ' which_file ' to ' bids_name]);
-            rename_path = fullfile(new_path,which_file);
-            derivatives_cell{end+1,1} = fullfile(old_path);
-            derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-            movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-        end
-
-    elseif endsWith(which_file,'.png')
-        ea_mkdir(checkreg_dir);
-        old_path = fullfile(source_patient_path,which_file);
-        old_path_scrf = fullfile(source_patient_path,'checkreg',which_file);
-        new_path = checkreg_dir;
-
-        if exist(old_path,'file')
-            %first move%
-            copyfile(old_path,new_path);
-            %then rename%
-            % Overwrite the name mapping
-            if ~isempty(ea_regexpdir(anat_dir, '_CT\.nii$', 0, 'f'))
-                if strcmp(which_file, 'scrf.png')
-                    bids_name = 'ses-postop_space-anchorNative_rec-tonemappedbrainshift_desc-preproc_CT.png';
-                elseif strcmp(which_file, 'standard.png')
-                    bids_name = 'ses-postop_space-anchorNative_rec-tonemapped_desc-preproc_CT.png';
-                end
-            elseif ~isempty(ea_regexpdir(anat_dir, '_MRI\.nii$', 0, 'f'))
-                if strcmp(which_file, 'scrf.png')
-                    bids_name = 'ses-postop_space-anchorNative_rec-brainshift_desc-preproc_MRI.png';
-                elseif strcmp(which_file, 'standard.png')
-                    bids_name = 'ses-postop_space-anchorNative_desc-preproc_MRI.png';
-                end
-            end
-            disp(['Renaming file ' which_file ' to ' bids_name]);
-            rename_path = fullfile(new_path,which_file);
-            derivatives_cell{end+1,1} = fullfile(old_path);
-            derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-            movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-
-        elseif exist(old_path_scrf,'file')
-            copyfile(old_path_scrf,new_path);
-            rename_path = fullfile(new_path,which_file);
-            disp(['Renaming file ' which_file ' to ' bids_name]);
-            derivatives_cell{end+1,1} = fullfile(old_path);
-            derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-            movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-        end
-
-    elseif ~isempty(regexp(which_file,'.*(_approved|_applied)\.mat$', 'once'))
-        ea_mkdir(log_dir);
-        % Handle the special case for branshift correction since the json
-        % will be saved under brainshift/log instead of coregistration/log
-        if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
-            coreg_mat = load(fullfile(source_patient_path,'ea_coreg_approved.mat'));
-            if isfield(coreg_mat,'brainshift')
-                brainshift_log_dir = fullfile(new_path,'brainshift','log');
-                ea_mkdir(brainshift_log_dir);
-                opt.FileName = fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']);
-                brainshiftLog.approval = coreg_mat.brainshift;
-                % Set default method to coarse mask
-                brainshiftLog.method = 'Coarse mask (Schönecker 2008)';
-                savejson('',brainshiftLog,opt);
-            end
-        end
-        fname_in = fullfile(source_patient_path,which_file);
-        [~,fname,~] = fileparts(bids_name);
-        fname_out = fullfile(log_dir,[patient_name,'_',fname '.json']);
-        file2json(fname_in,fname_out,derivatives_cell);
-
-    elseif endsWith(which_file,'.mat') || endsWith(which_file,'.gz') || endsWith(which_file,'.h5')
-        ea_mkdir(transformations_dir);
-        old_path = fullfile(source_patient_path,which_file);
+checkreg_dir = fullfile(new_path,which_pipeline,'checkreg');
+transformations_dir = fullfile(new_path,which_pipeline,'transformations');
+if endsWith(which_file,'.nii')
+    if startsWith(which_file, 'y_ea_') % Transform from SPM normalization
         new_path = transformations_dir;
-        coregDir = strrep(transformations_dir,'normalization/transformations','coregistration/anat');
-        if exist(old_path,'file')
-            %first move%
-            copyfile(old_path,new_path);
-            %then rename%
-            if startsWith(which_file,'glanat')  %already renamed
-                coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
-                if isempty(coregfiles)
-                    coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
-                end
-                if contains(which_file,'glanatComposite')
-                    reference = fullfile(ea_space,'t1.nii');
-                    if ~isempty(coregfiles)
-                        generate_pair_ref = fullfile(coregfiles(1).folder,coregfiles(1).name); %this is the reference for the inverse transform. If the forward is available, inverse is needed. 
-                    end
-                elseif contains(which_file,'glanatInverseComposite')
-                    if ~isempty(coregfiles)
-                        reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
-                    end
-                    generate_pair_ref = fullfile(ea_space,'t1.nii'); %this is the reference for the forward transform. If the inverse is available, forward is needed. 
-                end
-                checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,generate_pair_ref)
-                if endsWith(which_file,'.h5')
-                    bids_name = [patient_name,'_',bids_name];
-                    outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
-                    try
-                        ea_conv_antswarps(fullfile(new_path,which_file), reference);
-                        movefile(outfile,fullfile(new_path,bids_name));
-                    catch
-                        bids_h5name = strrep(bids_name,'.nii.gz','.h5');
-                        movefile(fullfile(new_path,which_file),fullfile(new_path,bids_h5name));
-                        if ~exist('reference', 'var')
-                            ea_cprintf('CmdWinWarnings', ['Transform: %s\nCould not convert the transform to *.nii.gz format since anchor image is missing.\n', ...
-                                'Please double check the legacy folder and consider reruning the pipeline to generate necessary files.\n'], fullfile(new_path,bids_h5name));
-                        else
-                            ea_cprintf('CmdWinWarnings', ['Transform: %s\nFailed to convert the transform to *.nii.gz format. ', ...
-                                'File might be corrupted.\n'], fullfile(new_path,bids_h5name));
-                        end
-                    end
+    else
+        new_path = anat_dir;
+    end
+    ea_mkdir(new_path);
+    old_path = fullfile(source_patient_path,which_file);
 
-                else
-                    disp(['Renaming file ' which_file ' to ' bids_name]);
-                    rename_path = fullfile(new_path,which_file);
-                    derivatives_cell{end+1,1} = fullfile(old_path);
-                    derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-                    movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+    if exist(old_path,'file')
+        %first move%
+        copyfile(old_path,new_path);
+        %then rename%
+        disp(['Renaming file ' which_file ' to ' bids_name]);
+        rename_path = fullfile(new_path,which_file);
+        derivatives_cell{end+1,1} = fullfile(old_path);
+        derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+        movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+    end
+
+elseif endsWith(which_file,'.png')
+    ea_mkdir(checkreg_dir);
+    old_path = fullfile(source_patient_path,which_file);
+    old_path_scrf = fullfile(source_patient_path,'checkreg',which_file);
+    new_path = checkreg_dir;
+
+    if exist(old_path,'file')
+        %first move%
+        copyfile(old_path,new_path);
+        %then rename%
+        % Overwrite the name mapping
+        if ~isempty(ea_regexpdir(anat_dir, '_CT\.nii$', 0, 'f'))
+            if strcmp(which_file, 'scrf.png')
+                bids_name = 'ses-postop_space-anchorNative_rec-tonemappedbrainshift_desc-preproc_CT.png';
+            elseif strcmp(which_file, 'standard.png')
+                bids_name = 'ses-postop_space-anchorNative_rec-tonemapped_desc-preproc_CT.png';
+            end
+        elseif ~isempty(ea_regexpdir(anat_dir, '_MRI\.nii$', 0, 'f'))
+            if strcmp(which_file, 'scrf.png')
+                bids_name = 'ses-postop_space-anchorNative_rec-brainshift_desc-preproc_MRI.png';
+            elseif strcmp(which_file, 'standard.png')
+                bids_name = 'ses-postop_space-anchorNative_desc-preproc_MRI.png';
+            end
+        end
+        disp(['Renaming file ' which_file ' to ' bids_name]);
+        rename_path = fullfile(new_path,which_file);
+        derivatives_cell{end+1,1} = fullfile(old_path);
+        derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+        movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+
+    elseif exist(old_path_scrf,'file')
+        copyfile(old_path_scrf,new_path);
+        rename_path = fullfile(new_path,which_file);
+        disp(['Renaming file ' which_file ' to ' bids_name]);
+        derivatives_cell{end+1,1} = fullfile(old_path);
+        derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+        movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+    end
+
+elseif ~isempty(regexp(which_file,'.*(_approved|_applied)\.mat$', 'once'))
+    ea_mkdir(log_dir);
+    % Handle the special case for branshift correction since the json
+    % will be saved under brainshift/log instead of coregistration/log
+    if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
+        coreg_mat = load(fullfile(source_patient_path,'ea_coreg_approved.mat'));
+        if isfield(coreg_mat,'brainshift')
+            brainshift_log_dir = fullfile(new_path,'brainshift','log');
+            ea_mkdir(brainshift_log_dir);
+            opt.FileName = fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']);
+            brainshiftLog.approval = coreg_mat.brainshift;
+            % Set default method to coarse mask
+            brainshiftLog.method = 'Coarse mask (Schönecker 2008)';
+            savejson('',brainshiftLog,opt);
+        end
+    end
+    fname_in = fullfile(source_patient_path,which_file);
+    [~,fname,~] = fileparts(bids_name);
+    fname_out = fullfile(log_dir,[patient_name,'_',fname '.json']);
+    file2json(fname_in,fname_out,derivatives_cell);
+
+elseif endsWith(which_file,'.mat') || endsWith(which_file,'.gz') || endsWith(which_file,'.h5')
+    ea_mkdir(transformations_dir);
+    old_path = fullfile(source_patient_path,which_file);
+    new_path = transformations_dir;
+    coregDir = strrep(transformations_dir,'normalization/transformations','coregistration/anat');
+    if exist(old_path,'file')
+        %first move%
+        copyfile(old_path,new_path);
+        %then rename%
+        if startsWith(which_file,'glanat')  %already renamed
+            coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
+            if isempty(coregfiles)
+                coregfiles = dir(fullfile(source_patient_path,'anat_*.nii'));
+            end
+            if contains(which_file,'glanatComposite')
+                reference = fullfile(ea_space,'t1.nii');
+                if ~isempty(coregfiles)
+                    generate_pair_ref = fullfile(coregfiles(1).folder,coregfiles(1).name); %this is the reference for the inverse transform. If the forward is available, inverse is needed.
                 end
+            elseif contains(which_file,'glanatInverseComposite')
+                if ~isempty(coregfiles)
+                    reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
+                end
+                generate_pair_ref = fullfile(ea_space,'t1.nii'); %this is the reference for the forward transform. If the inverse is available, forward is needed.
+            end
+            checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,generate_pair_ref)
+            if endsWith(which_file,'.h5')
+                bids_name = [patient_name,'_',bids_name];
+                outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
+                try
+                    ea_conv_antswarps(fullfile(new_path,which_file), reference);
+                    movefile(outfile,fullfile(new_path,bids_name));
+                catch
+                    bids_h5name = strrep(bids_name,'.nii.gz','.h5');
+                    movefile(fullfile(new_path,which_file),fullfile(new_path,bids_h5name));
+                    if ~exist('reference', 'var')
+                        ea_cprintf('CmdWinWarnings', ['Transform: %s\nCould not convert the transform to *.nii.gz format since anchor image is missing.\n', ...
+                            'Please double check the legacy folder and consider reruning the pipeline to generate necessary files.\n'], fullfile(new_path,bids_h5name));
+                    else
+                        ea_cprintf('CmdWinWarnings', ['Transform: %s\nFailed to convert the transform to *.nii.gz format. ', ...
+                            'File might be corrupted.\n'], fullfile(new_path,bids_h5name));
+                    end
+                end
+
+            else
+                disp(['Renaming file ' which_file ' to ' bids_name]);
+                rename_path = fullfile(new_path,which_file);
+                derivatives_cell{end+1,1} = fullfile(old_path);
+                derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+                movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
             end
         end
     end
+end
 
 
 function move_raw2bids(source_patient_path,new_path,which_file,bids_name)
-    tmp_path = fullfile(new_path,'tmp');
-    ea_mkdir(tmp_path);
-    if exist(fullfile(source_patient_path,which_file),'file')
-        copyfile(fullfile(source_patient_path,which_file),tmp_path);
-         if endsWith(which_file,'.nii')
-            gzip(fullfile(tmp_path,which_file))
-            ea_delete(fullfile(tmp_path,which_file))
-            which_file = [which_file,'.gz'];
-         end
-        movefile(fullfile(tmp_path,which_file),fullfile(tmp_path,bids_name));
-        copyfile(fullfile(tmp_path,bids_name),new_path);
-
+tmp_path = fullfile(new_path,'tmp');
+ea_mkdir(tmp_path);
+if exist(fullfile(source_patient_path,which_file),'file')
+    copyfile(fullfile(source_patient_path,which_file),tmp_path);
+    if endsWith(which_file,'.nii')
+        gzip(fullfile(tmp_path,which_file))
+        ea_delete(fullfile(tmp_path,which_file))
+        which_file = [which_file,'.gz'];
     end
+    movefile(fullfile(tmp_path,which_file),fullfile(tmp_path,bids_name));
+    copyfile(fullfile(tmp_path,bids_name),new_path);
+
+end
 function move_mni2bids(mni_files,native_files,~,headmodel,which_pipeline,patient_name,new_path)
-    if strcmp(which_pipeline,'headmodel')
-        if ~isempty(mni_files)
-            for headmodel_mni_file = 1:length(mni_files)
-                if ismember(mni_files{headmodel_mni_file},headmodel{:,1})
-                    indx = cellfun(@(x)strcmp(x,mni_files{headmodel_mni_file}),headmodel{:,1});
-                    movefile(fullfile(new_path,which_pipeline,'MNI152NLin2009bAsym',mni_files{headmodel_mni_file}),fullfile(new_path,which_pipeline,'MNI152NLin2009bAsym',[patient_name,'_',headmodel{1,2}{indx}]));
-                end
+if strcmp(which_pipeline,'headmodel')
+    if ~isempty(mni_files)
+        for headmodel_mni_file = 1:length(mni_files)
+            if ismember(mni_files{headmodel_mni_file},headmodel{:,1})
+                indx = cellfun(@(x)strcmp(x,mni_files{headmodel_mni_file}),headmodel{:,1});
+                movefile(fullfile(new_path,which_pipeline,'MNI152NLin2009bAsym',mni_files{headmodel_mni_file}),fullfile(new_path,which_pipeline,'MNI152NLin2009bAsym',[patient_name,'_',headmodel{1,2}{indx}]));
             end
         end
-        if ~isempty(native_files)
-            for headmodel_native_file = 1:length(native_files)
-                if ismember(native_files{headmodel_native_file},headmodel{:,1})
-                    indx = cellfun(@(x)strcmp(x,native_files{headmodel_native_file}),headmodel{:,1});
-                    movefile(fullfile(new_path,which_pipeline,'native',native_files{headmodel_native_file}),fullfile(new_path,which_pipeline,'native',[patient_name,'_',headmodel{1,2}{indx}]));
-                end
-            end
-        end
-
     end
+    if ~isempty(native_files)
+        for headmodel_native_file = 1:length(native_files)
+            if ismember(native_files{headmodel_native_file},headmodel{:,1})
+                indx = cellfun(@(x)strcmp(x,native_files{headmodel_native_file}),headmodel{:,1});
+                movefile(fullfile(new_path,which_pipeline,'native',native_files{headmodel_native_file}),fullfile(new_path,which_pipeline,'native',[patient_name,'_',headmodel{1,2}{indx}]));
+            end
+        end
+    end
+
+end
 
 function generate_rawImagejson(patient_name,dest)
-    %prev inputs: doDcmConv,doOnlyRaw
-    output_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs');
-    ea_mkdir(output_dir);
+%prev inputs: doDcmConv,doOnlyRaw
+output_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs');
+ea_mkdir(output_dir);
 
-    raw_data_path = fullfile(dest,'rawdata',patient_name);
+raw_data_path = fullfile(dest,'rawdata',patient_name);
 
-    coreg_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat');
-    raw_preop_dir = fullfile(raw_data_path,'ses-preop','anat');
-    raw_postop_dir = fullfile(raw_data_path,'ses-postop','anat');
-    preprocessing_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','anat');
-    ea_mkdir(coreg_dir);
-    ea_mkdir(raw_preop_dir);
-    ea_mkdir(raw_postop_dir);
-    ea_mkdir(preprocessing_dir);
+coreg_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat');
+raw_preop_dir = fullfile(raw_data_path,'ses-preop','anat');
+raw_postop_dir = fullfile(raw_data_path,'ses-postop','anat');
+preprocessing_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','anat');
+ea_mkdir(coreg_dir);
+ea_mkdir(raw_preop_dir);
+ea_mkdir(raw_postop_dir);
+ea_mkdir(preprocessing_dir);
 
-    opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
-    %special_case
+opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
+%special_case
 
-    preop_files = dir_without_dots(fullfile(raw_preop_dir,'*.nii.gz'));
-    preop_files = {preop_files.name};
-    preop_modalities = {};
-    for comparing_files = 1:length(preop_files)
-        preop_file = regexprep(preop_files{comparing_files},'\.nii(\.gz)?$','');
-        preop_mod = strsplit(preop_file,'_');
-        preop_mod = preop_mod{end};
-        preop_modalities{end+1} = preop_mod;
-    end
-    coreg_t1 = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*_T1w.nii'));
-    rawdata_t1 = dir(fullfile(raw_preop_dir,'sub-*_ses-preop_acq-*_T1w.nii'));
-    if ~isempty(coreg_t1) && isempty(rawdata_t1)
-        transfer_t1 = 1;
-    else
-        transfer_t1 = 0;
-    end
-    if isempty(preop_files) || transfer_t1
-        %other preop files
-        coreg_preop_files = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
-        coreg_preop_files = {coreg_preop_files.name};
-        coreg_preop_files(endsWith(coreg_preop_files, '_mask.nii')) = [];
-        for coreg_files = 1:length(coreg_preop_files)
-            coreg_file = regexprep(coreg_preop_files{coreg_files}, '\.nii(\.gz)?$', '');
-            coreg_mod = strsplit(coreg_file,'_');
-            coreg_mod = coreg_mod{end};
-            if ~ismember(coreg_mod,preop_modalities) || isempty(preop_modalities)
-                coreg_preproc_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
-                coreg_raw_preop = [strrep(coreg_file,'space-anchorNative_desc-preproc_',''),'.nii'];
-                %change the filename
-                %also copy this file to the preproc folder
-                copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
-                movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_preproc_name));
-                copyfile(fullfile(coreg_dir,[coreg_file,'.nii']),fullfile(raw_preop_dir,[coreg_file,'.nii']));
-                movefile(fullfile(raw_preop_dir,[coreg_file,'.nii']),fullfile(raw_preop_dir,coreg_raw_preop));
-                gzip(fullfile(raw_preop_dir,coreg_raw_preop));
-                ea_delete(fullfile(raw_preop_dir,coreg_raw_preop));
-                preop_files{end+1} = coreg_raw_preop;
-                %preop_files{end+1} = coreg_file;
-
-            end
+preop_files = dir_without_dots(fullfile(raw_preop_dir,'*.nii.gz'));
+preop_files = {preop_files.name};
+preop_modalities = {};
+for comparing_files = 1:length(preop_files)
+    preop_file = regexprep(preop_files{comparing_files},'\.nii(\.gz)?$','');
+    preop_mod = strsplit(preop_file,'_');
+    preop_mod = preop_mod{end};
+    preop_modalities{end+1} = preop_mod;
+end
+coreg_t1 = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*_T1w.nii'));
+rawdata_t1 = dir(fullfile(raw_preop_dir,'sub-*_ses-preop_acq-*_T1w.nii'));
+if ~isempty(coreg_t1) && isempty(rawdata_t1)
+    transfer_t1 = 1;
+else
+    transfer_t1 = 0;
+end
+if isempty(preop_files) || transfer_t1
+    %other preop files
+    coreg_preop_files = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
+    coreg_preop_files = {coreg_preop_files.name};
+    coreg_preop_files(endsWith(coreg_preop_files, '_mask.nii')) = [];
+    for coreg_files = 1:length(coreg_preop_files)
+        coreg_file = regexprep(coreg_preop_files{coreg_files}, '\.nii(\.gz)?$', '');
+        coreg_mod = strsplit(coreg_file,'_');
+        coreg_mod = coreg_mod{end};
+        if ~ismember(coreg_mod,preop_modalities) || isempty(preop_modalities)
+            coreg_preproc_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
+            coreg_raw_preop = [strrep(coreg_file,'space-anchorNative_desc-preproc_',''),'.nii'];
+            %change the filename
+            %also copy this file to the preproc folder
+            copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
+            movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_preproc_name));
+            copyfile(fullfile(coreg_dir,[coreg_file,'.nii']),fullfile(raw_preop_dir,[coreg_file,'.nii']));
+            movefile(fullfile(raw_preop_dir,[coreg_file,'.nii']),fullfile(raw_preop_dir,coreg_raw_preop));
+            gzip(fullfile(raw_preop_dir,coreg_raw_preop));
+            ea_delete(fullfile(raw_preop_dir,coreg_raw_preop));
+            preop_files{end+1} = coreg_raw_preop;
+            %preop_files{end+1} = coreg_file;
 
         end
-    end
-
-    if ~isempty(preop_files)
-        for i=1:length(preop_files)
-            json_val = regexprep(preop_files{i},'\.nii(\.gz)?$','');
-            if contains(preop_files{i},'acq-')
-                temp_tag = strsplit(json_val,'-');
-                modality_str = temp_tag{end};
-                rawdata_fieldname = modality_str;
-                anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
-            else
-                temp_tag = strsplit(json_val,'preop_');
-                rawdata_fieldname = temp_tag{end};
-                anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
-            end
-        end
-    end
-
-    postop_files = dir_without_dots(fullfile(raw_postop_dir,'*.nii.gz'));
-    postop_files = {postop_files.name};
-    postop_modalities = {};
-    for comparing_files = 1:length(postop_files)
-        postop_file = regexprep(postop_files{comparing_files},'\.nii(\.gz)?$','');
-        postop_mod = strsplit(postop_file,'-');
-        postop_mod = postop_mod{end};
-        postop_modalities{end+1} = postop_mod;
-    end
-    if isempty(postop_files)
-        coreg_postop_files = dir(fullfile(coreg_dir,'sub-*_ses-postop_space-anchorNative_desc-preproc_*.nii'));
-        coreg_postop_files = {coreg_postop_files.name};
-        for coreg_files = 1:length(coreg_postop_files)
-            coreg_file = regexprep(coreg_postop_files{coreg_files}, '\.nii(\.gz)?$', '');
-            coreg_mod = strsplit(coreg_file,'-');
-            coreg_mod = coreg_mod{end};
-            if ~ismember(coreg_mod,postop_modalities) || isempty(postop_modalities)
-                coreg_postop_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
-                coreg_raw_postop = [strrep(coreg_file,'space-anchorNative_desc-preproc_',''),'.nii'];
-                %change the filename
-                %also copy this file to the preproc folder
-                copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
-                movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_postop_name));
-                copyfile(fullfile(coreg_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,[coreg_file,'.nii']));
-                movefile(fullfile(raw_postop_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,coreg_raw_postop));
-                gzip(fullfile(raw_postop_dir,coreg_raw_postop));
-                ea_delete(fullfile(raw_postop_dir,coreg_raw_postop));
-                postop_files{end+1} = coreg_raw_postop;
-                %postop_files{end+1} = coreg_file;
-            end
-        end
 
     end
-    for i=1:length(postop_files)
-        json_val = regexprep(postop_files{i},'\.nii(\.gz)?$','');
-        if contains(postop_files{i},'_ct.nii','IgnoreCase',true)
-            rawdata_fieldname = 'CT';
-            anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
-        else
+end
+
+if ~isempty(preop_files)
+    for i=1:length(preop_files)
+        json_val = regexprep(preop_files{i},'\.nii(\.gz)?$','');
+        if contains(preop_files{i},'acq-')
             temp_tag = strsplit(json_val,'-');
+            modality_str = temp_tag{end};
+            rawdata_fieldname = modality_str;
+            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
+        else
+            temp_tag = strsplit(json_val,'preop_');
             rawdata_fieldname = temp_tag{end};
-            anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
         end
     end
-    
-    % Copy DWI files from rawdata to preprocessing/dwi
-    raw_dwi_dir = fullfile(raw_data_path,'ses-preop','dwi');
-    preprocessing_dwi_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','dwi');
-    
-    if isfolder(raw_dwi_dir)
-        ea_mkdir(preprocessing_dwi_dir);
-        dwi_files = dir(fullfile(raw_dwi_dir,'*.nii*'));
-        dwi_bval = dir(fullfile(raw_dwi_dir,'*.bval'));
-        dwi_bvec = dir(fullfile(raw_dwi_dir,'*.bvec'));
-        
-        % Copy .nii and .nii.gz files (unzip .nii.gz to .nii)
-        for i=1:length(dwi_files)
-            src_file = fullfile(dwi_files(i).folder, dwi_files(i).name);
-            if endsWith(dwi_files(i).name, '.nii.gz')
-                % Gunzip and save as .nii
-                [~, basename] = fileparts(dwi_files(i).name);
-                dst_file = fullfile(preprocessing_dwi_dir, [basename, '.nii']);
-                if ~exist(dst_file, 'file')
-                    gunzip(src_file, preprocessing_dwi_dir);
-                    % Rename from .nii.gz to .nii if gunzip created .nii.gz
-                    temp_file = fullfile(preprocessing_dwi_dir, dwi_files(i).name);
-                    if exist(temp_file, 'file') && ~strcmp(temp_file, dst_file)
-                        movefile(temp_file, dst_file);
-                    end
-                end
-            else
-                % Copy .nii as is
-                dst_file = fullfile(preprocessing_dwi_dir, dwi_files(i).name);
-                if ~exist(dst_file, 'file')
-                    copyfile(src_file, dst_file);
-                end
-            end
+end
+
+postop_files = dir_without_dots(fullfile(raw_postop_dir,'*.nii.gz'));
+postop_files = {postop_files.name};
+postop_modalities = {};
+for comparing_files = 1:length(postop_files)
+    postop_file = regexprep(postop_files{comparing_files},'\.nii(\.gz)?$','');
+    postop_mod = strsplit(postop_file,'-');
+    postop_mod = postop_mod{end};
+    postop_modalities{end+1} = postop_mod;
+end
+if isempty(postop_files)
+    coreg_postop_files = dir(fullfile(coreg_dir,'sub-*_ses-postop_space-anchorNative_desc-preproc_*.nii'));
+    coreg_postop_files = {coreg_postop_files.name};
+    for coreg_files = 1:length(coreg_postop_files)
+        coreg_file = regexprep(coreg_postop_files{coreg_files}, '\.nii(\.gz)?$', '');
+        coreg_mod = strsplit(coreg_file,'-');
+        coreg_mod = coreg_mod{end};
+        if ~ismember(coreg_mod,postop_modalities) || isempty(postop_modalities)
+            coreg_postop_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
+            coreg_raw_postop = [strrep(coreg_file,'space-anchorNative_desc-preproc_',''),'.nii'];
+            %change the filename
+            %also copy this file to the preproc folder
+            copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
+            movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_postop_name));
+            copyfile(fullfile(coreg_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,[coreg_file,'.nii']));
+            movefile(fullfile(raw_postop_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,coreg_raw_postop));
+            gzip(fullfile(raw_postop_dir,coreg_raw_postop));
+            ea_delete(fullfile(raw_postop_dir,coreg_raw_postop));
+            postop_files{end+1} = coreg_raw_postop;
+            %postop_files{end+1} = coreg_file;
         end
-        
-        % Copy .bval files
-        for i=1:length(dwi_bval)
-            src_file = fullfile(dwi_bval(i).folder, dwi_bval(i).name);
-            dst_file = fullfile(preprocessing_dwi_dir, dwi_bval(i).name);
-            if ~exist(dst_file, 'file')
-                copyfile(src_file, dst_file);
-            end
-        end
-        
-        % Copy .bvec files
-        for i=1:length(dwi_bvec)
-            src_file = fullfile(dwi_bvec(i).folder, dwi_bvec(i).name);
-            dst_file = fullfile(preprocessing_dwi_dir, dwi_bvec(i).name);
-            if ~exist(dst_file, 'file')
-                copyfile(src_file, dst_file);
-            end
-        end
-    end
-    
-    if exist('anat_files_selected','var')
-        savejson('',anat_files_selected,opt);
-    else
-        ea_cprintf('CmdWinWarnings', 'No rawimages or coregistration files found, therefore no rawimages.json set!\n');
     end
 
+end
+for i=1:length(postop_files)
+    json_val = regexprep(postop_files{i},'\.nii(\.gz)?$','');
+    if contains(postop_files{i},'_ct.nii','IgnoreCase',true)
+        rawdata_fieldname = 'CT';
+        anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+    else
+        temp_tag = strsplit(json_val,'-');
+        rawdata_fieldname = temp_tag{end};
+        anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+    end
+end
+
+
+if exist('anat_files_selected','var')
+    savejson('',anat_files_selected,opt);
+else
+    ea_cprintf('CmdWinWarnings', 'No rawimages or coregistration files found, therefore no rawimages.json set!\n');
+end
+
+% Copy DWI files from rawdata to preprocessing/dwi
+raw_dwi_dir = fullfile(raw_data_path,'ses-preop','dwi');
+preprocessing_dwi_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','dwi');
+
+if isfolder(raw_dwi_dir)
+    ea_mkdir(preprocessing_dwi_dir);
+    dwi_files = dir(fullfile(raw_dwi_dir,'*.nii*'));
+    dwi_bval = dir(fullfile(raw_dwi_dir,'*.bval'));
+    dwi_bvec = dir(fullfile(raw_dwi_dir,'*.bvec'));
+
+    % Copy .nii and .nii.gz files (unzip .nii.gz to .nii)
+    for i=1:length(dwi_files)
+        src_file = fullfile(dwi_files(i).folder, dwi_files(i).name);
+        if endsWith(dwi_files(i).name, '.nii.gz')
+            % Gunzip and save as .nii
+            [~, basename] = fileparts(dwi_files(i).name);
+            dst_file = fullfile(preprocessing_dwi_dir, [basename, '.nii']);
+            if ~exist(dst_file, 'file')
+                gunzip(src_file, preprocessing_dwi_dir);
+                % Rename from .nii.gz to .nii if gunzip created .nii.gz
+                temp_file = fullfile(preprocessing_dwi_dir, dwi_files(i).name);
+                if exist(temp_file, 'file') && ~strcmp(temp_file, dst_file)
+                    movefile(temp_file, dst_file);
+                end
+            end
+        else
+            % Copy .nii as is
+            dst_file = fullfile(preprocessing_dwi_dir, dwi_files(i).name);
+            if ~exist(dst_file, 'file')
+                copyfile(src_file, dst_file);
+            end
+        end
+    end
+
+    % Copy .bval files
+    for i=1:length(dwi_bval)
+        src_file = fullfile(dwi_bval(i).folder, dwi_bval(i).name);
+        dst_file = fullfile(preprocessing_dwi_dir, dwi_bval(i).name);
+        if ~exist(dst_file, 'file')
+            copyfile(src_file, dst_file);
+        end
+    end
+
+    % Copy .bvec files
+    for i=1:length(dwi_bvec)
+        src_file = fullfile(dwi_bvec(i).folder, dwi_bvec(i).name);
+        dst_file = fullfile(preprocessing_dwi_dir, dwi_bvec(i).name);
+        if ~exist(dst_file, 'file')
+            copyfile(src_file, dst_file);
+        end
+    end
+end
 
 
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
-    if contains(try_bids_name, 'acqTag_mod-')
-        bids_mod = regexp(try_bids_name, '(?<=_mod-)[a-zA-Z0-9]+', 'match', 'once');
-    else
-        bids_mod = regexp(try_bids_name, '(?<=acqTag_)[a-zA-Z0-9]+', 'match', 'once');
-    end
-    indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
-    if isempty(find(indx,1))
-        bids_name = strrep(try_bids_name,'acqTag_','');
-    else
-        tag = tag_cell{indx};
-        bids_name = strrep(try_bids_name,'acqTag',['acq-' tag]);
-    end
+if contains(try_bids_name, 'acqTag_mod-')
+    bids_mod = regexp(try_bids_name, '(?<=_mod-)[a-zA-Z0-9]+', 'match', 'once');
+else
+    bids_mod = regexp(try_bids_name, '(?<=acqTag_)[a-zA-Z0-9]+', 'match', 'once');
+end
+indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
+if isempty(find(indx,1))
+    bids_name = strrep(try_bids_name,'acqTag_','');
+else
+    tag = tag_cell{indx};
+    bids_name = strrep(try_bids_name,'acqTag',['acq-' tag]);
+end
 
 
 function bids_name = CheckifAlreadyExists(path,try_bids_name)
-    if contains(try_bids_name,'acq-')
-        if isfile(fullfile(path,try_bids_name))
-            parsed = parseBIDSFilePath(fullfile(path, try_bids_name));
-            suffix = 1;
-            filen_to_check = setBIDSEntity(fullfile(path,try_bids_name), 'acq', [parsed.acq, num2str(suffix)]);
-            while isfile(filen_to_check)
-                suffix = suffix + 1;
-                filen_to_check = setBIDSEntity(filen_to_check, 'acq', [parsed.acq, num2str(suffix)]);
-            end
-            bids_name = erase(filen_to_check, fullfile(path, filesep));
-        else
-            bids_name = try_bids_name;
+if contains(try_bids_name,'acq-')
+    if isfile(fullfile(path,try_bids_name))
+        parsed = parseBIDSFilePath(fullfile(path, try_bids_name));
+        suffix = 1;
+        filen_to_check = setBIDSEntity(fullfile(path,try_bids_name), 'acq', [parsed.acq, num2str(suffix)]);
+        while isfile(filen_to_check)
+            suffix = suffix + 1;
+            filen_to_check = setBIDSEntity(filen_to_check, 'acq', [parsed.acq, num2str(suffix)]);
         end
-
-    elseif endsWith(try_bids_name,'.mat')
-        split_bids_name = strsplit(try_bids_name,'.mat');
-        split_bids_name = split_bids_name{1};
-        if isfile(fullfile(path,try_bids_name))
-            new_bids_name = [split_bids_name,num2str(1),'.mat'];
-            movefile(fullfile(path,try_bids_name),fullfile(path,new_bids_name));
-            bids_name = [split_bids_name,num2str(2),'.mat'];
-        elseif isfile(fullfile(path,[split_bids_name,num2str(1),'.mat']))
-            suffix = 2;
-            filen_to_check = [split_bids_name,num2str(suffix),'.mat'];
-            while exist(fullfile(path,filen_to_check),'file')
-                suffix = suffix + 1;
-                filen_to_check = [split_bids_name,num2str(suffix),'.mat'];
-            end
-            bids_name = filen_to_check;
-        else
-            bids_name = try_bids_name;
-        end
+        bids_name = erase(filen_to_check, fullfile(path, filesep));
     else
         bids_name = try_bids_name;
     end
 
+elseif endsWith(try_bids_name,'.mat')
+    split_bids_name = strsplit(try_bids_name,'.mat');
+    split_bids_name = split_bids_name{1};
+    if isfile(fullfile(path,try_bids_name))
+        new_bids_name = [split_bids_name,num2str(1),'.mat'];
+        movefile(fullfile(path,try_bids_name),fullfile(path,new_bids_name));
+        bids_name = [split_bids_name,num2str(2),'.mat'];
+    elseif isfile(fullfile(path,[split_bids_name,num2str(1),'.mat']))
+        suffix = 2;
+        filen_to_check = [split_bids_name,num2str(suffix),'.mat'];
+        while exist(fullfile(path,filen_to_check),'file')
+            suffix = suffix + 1;
+            filen_to_check = [split_bids_name,num2str(suffix),'.mat'];
+        end
+        bids_name = filen_to_check;
+    else
+        bids_name = try_bids_name;
+    end
+else
+    bids_name = try_bids_name;
+end
+
 
 function [matching_files,noMatch] = match_exact(cell_files,expr)
-    tmp_cell = cellfun(@(x) ~isempty(x) && x(1) == 1,regexpi(cell_files, expr));
-    matching_files = cell_files(tmp_cell);
-    noMatch = cell_files(~tmp_cell);
+tmp_cell = cellfun(@(x) ~isempty(x) && x(1) == 1,regexpi(cell_files, expr));
+matching_files = cell_files(tmp_cell);
+noMatch = cell_files(~tmp_cell);
 
 
 function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
-    to_match = regexprep(to_match, '[\s]', '');
-    for legacy_mod=1:length(legacy_modalities)
-         modality_str = legacy_modalities{legacy_mod};
-         if endsWith(to_match,'.nii') || endsWith(to_match,'.nii.gz')
-             if contains(to_match,modality_str,'IgnoreCase',true)
-                 bids_mod = rawdata_containers(modality_str);
-                 break;
-             elseif legacy_mod == length(legacy_modalities)
-                 bids_mod = regexp(to_match, '(?<=^(raw_)?anat_).*(?=\.nii$)', 'match', 'once'); % file should have a [raw_]anat_ something catch
-                 bids_mod = upper(bids_mod);
-             end
-         elseif endsWith(to_match,'.png')
-             to_match_str = strsplit(to_match,'anat_t1');
-             to_match_mod = to_match_str{1};
-             if contains(to_match_mod,modality_str,'IgnoreCase',true)
-                 bids_mod = rawdata_containers(modality_str);
-                 break;
-             elseif legacy_mod == length(legacy_modalities)
-                 [~,to_match_mod,~] = fileparts(to_match_mod);
-                 try
-                     bids_mod = upper(to_match_mod(end-3:end));
-                     bids_mod = regexprep(bids_mod, '[0-9_]', '');
-                 catch
-                     bids_mod = 'misc';
-                 end
-             end
-         else
-            bids_mod = '';
-          end
-
+to_match = regexprep(to_match, '[\s]', '');
+for legacy_mod=1:length(legacy_modalities)
+    modality_str = legacy_modalities{legacy_mod};
+    if endsWith(to_match,'.nii') || endsWith(to_match,'.nii.gz')
+        if contains(to_match,modality_str,'IgnoreCase',true)
+            bids_mod = rawdata_containers(modality_str);
+            break;
+        elseif legacy_mod == length(legacy_modalities)
+            bids_mod = regexp(to_match, '(?<=^(raw_)?anat_).*(?=\.nii$)', 'match', 'once'); % file should have a [raw_]anat_ something catch
+            bids_mod = upper(bids_mod);
+        end
+    elseif endsWith(to_match,'.png')
+        to_match_str = strsplit(to_match,'anat_t1');
+        to_match_mod = to_match_str{1};
+        if contains(to_match_mod,modality_str,'IgnoreCase',true)
+            bids_mod = rawdata_containers(modality_str);
+            break;
+        elseif legacy_mod == length(legacy_modalities)
+            [~,to_match_mod,~] = fileparts(to_match_mod);
+            try
+                bids_mod = upper(to_match_mod(end-3:end));
+                bids_mod = regexprep(bids_mod, '[0-9_]', '');
+            catch
+                bids_mod = 'misc';
+            end
+        end
+    else
+        bids_mod = '';
     end
+
+end
 
 
 function model_name = add_model(stimFolder)
-    stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
-    if ~isempty(stimParams)
-        S = ea_loadstimulation(stimParams{1});
-        model_name = ea_simModel2Label(S.model);
-    else
-        ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
-        model_name = 'simbio';
-    end
+stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
+if ~isempty(stimParams)
+    S = ea_loadstimulation(stimParams{1});
+    model_name = ea_simModel2Label(S.model);
+else
+    ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
+    model_name = 'simbio';
+end
 
 
 function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
-    %connectome_folder should be the full path of the connectome files,
-    %mni_folder =
-    %fullfile(new_path,pipeline,'MNI152NLinAsym','stimulations',stimulation
-    %name)
-    mapper_output_files = dir_without_dots(connectome_folder);
-    mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
-    ea_mkdir(mni_folder);
+%connectome_folder should be the full path of the connectome files,
+%mni_folder =
+%fullfile(new_path,pipeline,'MNI152NLinAsym','stimulations',stimulation
+%name)
+mapper_output_files = dir_without_dots(connectome_folder);
+mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
+ea_mkdir(mni_folder);
 
-    for mapper_file = 1:length(mapper_output_files)
-        matching_stim_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss_)', '');
-        matching_lm_file = ['_' matching_stim_file];
-        if ismember(matching_lm_file,lead_mapper{:,1})
-            if contains(mapper_output_files{mapper_file},'efield')
-                tag_struct.simtag = 'efield';
-            elseif contains(mapper_output_files{mapper_file},'efield_gauss')
-                tag_struct.simtag = 'efieldgauss';
-            else %doesn't contain either
-                tag_struct.simtag = 'binary';
-            end
-            extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
-
-            indx = cellfun(@(x)strcmp(x,matching_lm_file),lead_mapper{:,1});
-            bids_name = lead_mapper{1,2}{indx};
-            %replace hemidesc tag
-            if strcmp(extract_old_hemisdesc_str{1},'fl')
-                bids_name = strrep(bids_name,'flippedTag','flipped');
-            else
-                bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
-            end
-            %replace sim tag
-            bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
-            %replace model tag
-            bids_name = strrep(bids_name,'modelTag',tag_struct.modeltag);
-            %replace connectome tag
-            bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
-            copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
-            movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
-            fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
-
-        elseif ismember(matching_stim_file,stimulations{:,1})
-             if contains(mapper_output_files{mapper_file},'efield')
-                tag_struct.simtag = 'efield';
-            elseif contains(mapper_output_files{mapper_file},'efield_gauss')
-                tag_struct.simtag = 'efieldgauss';
-            else %doesn't contain either
-                tag_struct.simtag = 'binary';
-            end
-            extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
-
-            indx = cellfun(@(x)strcmp(x,matching_stim_file),stimulations{:,1});
-            bids_name = stimulations{1,2}{indx};
-            %replace hemidesc tag
-            if strcmp(extract_old_hemisdesc_str{1},'fl')
-                bids_name = strrep(bids_name,'flippedTag','flipped');
-            else
-                bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
-            end
-            %replace sim tag
-            bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
-            %replace model tag
-            bids_name = strrep(bids_name,'modelTag',tag_struct.modeltag);
-            %replace connectome tag
-            bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
-            copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
-            movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
-            fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
-        else
-            evalin('base','WARNINGSILENT=1;');
-            ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
+for mapper_file = 1:length(mapper_output_files)
+    matching_stim_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss_)', '');
+    matching_lm_file = ['_' matching_stim_file];
+    if ismember(matching_lm_file,lead_mapper{:,1})
+        if contains(mapper_output_files{mapper_file},'efield')
+            tag_struct.simtag = 'efield';
+        elseif contains(mapper_output_files{mapper_file},'efield_gauss')
+            tag_struct.simtag = 'efieldgauss';
+        else %doesn't contain either
+            tag_struct.simtag = 'binary';
         end
+        extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
 
+        indx = cellfun(@(x)strcmp(x,matching_lm_file),lead_mapper{:,1});
+        bids_name = lead_mapper{1,2}{indx};
+        %replace hemidesc tag
+        if strcmp(extract_old_hemisdesc_str{1},'fl')
+            bids_name = strrep(bids_name,'flippedTag','flipped');
+        else
+            bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
+        end
+        %replace sim tag
+        bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
+        %replace model tag
+        bids_name = strrep(bids_name,'modelTag',tag_struct.modeltag);
+        %replace connectome tag
+        bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
+        copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
+        movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
+        fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
+
+    elseif ismember(matching_stim_file,stimulations{:,1})
+        if contains(mapper_output_files{mapper_file},'efield')
+            tag_struct.simtag = 'efield';
+        elseif contains(mapper_output_files{mapper_file},'efield_gauss')
+            tag_struct.simtag = 'efieldgauss';
+        else %doesn't contain either
+            tag_struct.simtag = 'binary';
+        end
+        extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
+
+        indx = cellfun(@(x)strcmp(x,matching_stim_file),stimulations{:,1});
+        bids_name = stimulations{1,2}{indx};
+        %replace hemidesc tag
+        if strcmp(extract_old_hemisdesc_str{1},'fl')
+            bids_name = strrep(bids_name,'flippedTag','flipped');
+        else
+            bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
+        end
+        %replace sim tag
+        bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
+        %replace model tag
+        bids_name = strrep(bids_name,'modelTag',tag_struct.modeltag);
+        %replace connectome tag
+        bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
+        copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
+        movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
+        fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
+    else
+        evalin('base','WARNINGSILENT=1;');
+        ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
     end
-    %evalin('base','WARNINGSILENT=1;');
-    %ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
-    %ea_delete(fullfile(connectome_folder));
+
+end
+%evalin('base','WARNINGSILENT=1;');
+%ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
+%ea_delete(fullfile(connectome_folder));
 
 
 function files_to_move = reorderfiles(files_to_move)
@@ -1518,47 +1529,47 @@ end
 
 
 function fileList = filterLegacyFiles(fileList)
-    startsWithPattern = {'lpostop', 'lanat', 'ea_pm', 'rc', 'u_rc', 'j_rc', ...
-        'v_rc', 'y_anat_', 'iy_anat_', 'F.', 'DICOMDIR', 'Thumbs', 'Icon'};
-    fileList(startsWith(fileList, startsWithPattern, 'IgnoreCase', true)) = [];
+startsWithPattern = {'lpostop', 'lanat', 'ea_pm', 'rc', 'u_rc', 'j_rc', ...
+    'v_rc', 'y_anat_', 'iy_anat_', 'F.', 'DICOMDIR', 'Thumbs', 'Icon'};
+fileList(startsWith(fileList, startsWithPattern, 'IgnoreCase', true)) = [];
 
-    endsWithPattern = {'.ps'};
-    fileList(endsWith(fileList, endsWithPattern, 'IgnoreCase', true)) = [];
+endsWithPattern = {'.ps'};
+fileList(endsWith(fileList, endsWithPattern, 'IgnoreCase', true)) = [];
 
-    containsPattern = {'tmp', 'temp', 'copy', 'grid', 'seg8', 'ignore', 'backup'};
-    fileList(contains(fileList, containsPattern, 'IgnoreCase', true)) = [];
+containsPattern = {'tmp', 'temp', 'copy', 'grid', 'seg8', 'ignore', 'backup'};
+fileList(contains(fileList, containsPattern, 'IgnoreCase', true)) = [];
 
-    fileList(endsWith(fileList, '.h5') & (~startsWith(fileList, 'glanat') & ~contains(fileList, '_brainsfit'))) = [];
+fileList(endsWith(fileList, '.h5') & (~startsWith(fileList, 'glanat') & ~contains(fileList, '_brainsfit'))) = [];
 
 
 function [modalities, anchorModality] = checkModalities(coregAnatFolder)
-    % In case modalities not found above, check the migrated MRIs
-    [~, subPrefix] = fileparts(fileparts(fileparts(coregAnatFolder)));
-    pattern = [subPrefix, '_ses-(pre|post)op_space-anchorNative_desc-preproc_acq-[^\W_]+_[^\W_]+\.nii$'];
-    coregAnat = ea_regexpdir(coregAnatFolder, pattern, 0, 'f');
-    modalities = unique(regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once'));
-    % Remove anchor modality
-    prefs = ea_prefs;
-    anchorModality = prefs.prenii_order{1}; % Should be T1w by default
-    if ~any(contains(modalities, anchorModality))
-        anchorModality = prefs.prenii_order{2}; % Fallback to T2w in case subj only has anat_t2
-    end
+% In case modalities not found above, check the migrated MRIs
+[~, subPrefix] = fileparts(fileparts(fileparts(coregAnatFolder)));
+pattern = [subPrefix, '_ses-(pre|post)op_space-anchorNative_desc-preproc_acq-[^\W_]+_[^\W_]+\.nii$'];
+coregAnat = ea_regexpdir(coregAnatFolder, pattern, 0, 'f');
+modalities = unique(regexp(coregAnat, '(?<=_acq-).*(?=\.nii$)', 'match', 'once'));
+% Remove anchor modality
+prefs = ea_prefs;
+anchorModality = prefs.prenii_order{1}; % Should be T1w by default
+if ~any(contains(modalities, anchorModality))
+    anchorModality = prefs.prenii_order{2}; % Fallback to T2w in case subj only has anat_t2
+end
 
-    if sum(contains(modalities, anchorModality)) == 1
-        % Only one anchor modality image exists
-        idx = contains(modalities, anchorModality);
-        anchorModality = modalities{idx};
-        modalities(contains(modalities, anchorModality)) = [];
-    elseif sum(contains(modalities, anchorModality)) > 1
-        % Multiple anchor modality images exist, remove the first
-        % one according to the pre-defined order: iso, ax, cor, sag
-        otherModalities = modalities(~contains(modalities, anchorModality));
-        anchorModalities = setdiff(modalities, otherModalities);
-        [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
-        anchorModalities = anchorModalities(ind);
-        anchorModality = anchorModalities{1};
-        modalities = [anchorModalities(2:end); otherModalities];
-    end
+if sum(contains(modalities, anchorModality)) == 1
+    % Only one anchor modality image exists
+    idx = contains(modalities, anchorModality);
+    anchorModality = modalities{idx};
+    modalities(contains(modalities, anchorModality)) = [];
+elseif sum(contains(modalities, anchorModality)) > 1
+    % Multiple anchor modality images exist, remove the first
+    % one according to the pre-defined order: iso, ax, cor, sag
+    otherModalities = modalities(~contains(modalities, anchorModality));
+    anchorModalities = setdiff(modalities, otherModalities);
+    [~, ind] = ea_sortalike(lower(regexp(anchorModalities, '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
+    anchorModalities = anchorModalities(ind);
+    anchorModality = anchorModalities{1};
+    modalities = [anchorModalities(2:end); otherModalities];
+end
 
 function checkAndGeneratePair(which_file,source_patient_path,new_path,patient_name,ref)
 
