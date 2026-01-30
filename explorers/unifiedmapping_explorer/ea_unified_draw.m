@@ -10,7 +10,7 @@ if strcmp(obj.drawTool,'sweetspotmapping')
     end
 elseif strcmp(obj.drawTool,'fiberfiltering')
     flag2tool = 'fiberfiltering';
-    if isempty(obj.drawobject)
+        if isempty(obj.drawobject)
         obj.drawobject.fiberfiltering = struct;
     end
 elseif strcmp(obj.drawTool,'networkmapping')
@@ -26,11 +26,7 @@ if strcmp(obj.drawTool,'fiberfiltering')
 end
 
 export=nan;
-%ea_discfibers_showroi(obj);
-obj.fiberdrawn.fibcell = fibcell;
-obj.fiberdrawn.vals = vals;
-obj.fiberdrawn.usedidx = usedidx;
-% if show connected (white) fibers, also calculate those
+
 
 allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
 if size(vals,2)==2 % can be a single cell in case of custom code (pseudoM setting).
@@ -207,7 +203,7 @@ for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2
             case {'sweetspotmapping','networkmapping'}
                 ea_unified_draw_volumetric(obj,vals,group,side,gradientLevel,fibcmap);
             case 'fiberfiltering'
-                ea_unified_draw_tracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind);
+                ea_unified_draw_tracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind, usedidx);
                 %  obj.activate_tractset; % function to highlight tracts ac
         end
         if domultitract % introduce small jitter for visualization

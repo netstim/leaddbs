@@ -839,9 +839,9 @@ classdef ea_unifiedmapping < handle
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
             if ~exist('Iperm', 'var') || isempty(Iperm)
-                [I, Ihat, ~, val_struct] = crossval(obj, cvp, [], [], silent);
+                [I, Ihat, val_struct] = crossval(obj, cvp, [], [], silent);
             else
-                [I, Ihat, ~, val_struct] = crossval(obj, cvp, Iperm, [], silent);
+                [I, Ihat, val_struct] = crossval(obj, cvp, Iperm, [], silent);
             end
         end
 
