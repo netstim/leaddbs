@@ -15,11 +15,25 @@ end
 modality = cell(size(BIDSFilePath));
 
 for i=1:length(BIDSFilePath)
-    if ~opts.acq || ~isempty(regexp(BIDSFilePath{i}, '_CT\.nii(.gz)?$', 'once')) % Skip plane label
-        modality{i} = regexp(BIDSFilePath{i}, '(?<=_)([^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-    else % Keep plane label
-        modality{i} = regexp(BIDSFilePath{i}, '(?<=_acq-)((ax|sag|cor|iso)\d*_[^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+    % change code here to recognize fa too - adriana
+    parsedStruct = parseBIDSFilePath(BIDSFilePath{1});
+    hasAcq = ~isempty(parsedStruct.acq);
+    hasSuf = ~isempty(parsedStruct.suffix);
+
+    if hasAcq && hasSuf
+        modality{i} = [parsedStruct.acq '_' parsedStruct.suffix];
+    elseif hasSuf
+        modality{i} = parsedStruct.suffix;
+    elseif hasAcq
+        modality{i} = parsedStruct.acq;
     end
+
+    % code older version
+    % if ~opts.acq || ~isempty(regexp(BIDSFilePath{i}, '_CT\.nii(.gz)?$', 'once')) % Skip plane label
+    %     modality{i} = regexp(BIDSFilePath{i}, '(?<=_)([^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+    % else % Keep plane label
+    %     modality{i} = regexp(BIDSFilePath{i}, '(?<=_acq-)((ax|sag|cor|iso)\d*_[^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+    % end
 end
 
 if wasChar
