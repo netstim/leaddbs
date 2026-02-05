@@ -6,7 +6,13 @@ function ea_backuprestore(file)
 space_tag = regexp(file, '(?<=space-).+(?=desc)', 'match', 'once');
 
 backup = strrep(file, [filesep 'coregistration' filesep], [filesep 'preprocessing' filesep]);
-backup = strrep(backup, ['space-' space_tag], '');
+if ~isempty(space_tag)
+    backup = strrep(backup, ['space-' space_tag], '');
+end
+
+if strcmpi(file, backup)
+    return
+end
 
 [~,fname,~] = fileparts(file);
 [~,bu_fname,~] = fileparts(backup);
