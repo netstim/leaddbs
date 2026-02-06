@@ -17,8 +17,8 @@ modality = cell(size(BIDSFilePath));
 for i=1:length(BIDSFilePath)
     % change code here to recognize fa too - adriana
     parsedStruct = parseBIDSFilePath(BIDSFilePath{1});
-    hasAcq = ~isempty(parsedStruct.acq);
-    hasSuf = ~isempty(parsedStruct.suffix);
+    hasAcq  = isfield(parsedStruct, 'acq')    && ~isempty(parsedStruct.acq);
+    hasSuf  = isfield(parsedStruct, 'suffix') && ~isempty(parsedStruct.suffix);
 
     if hasAcq && hasSuf
         modality{i} = [parsedStruct.acq '_' parsedStruct.suffix];
