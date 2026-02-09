@@ -1,0 +1,2899 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[classdef lead_dbs < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        leadfigure                   matlab.ui.Figure
+        sparkbtn                     matlab.ui.control.Button
+        eepush                       matlab.ui.control.Button
+        RunPanel                     matlab.ui.container.Panel
+        overwriteapproved            matlab.ui.control.Switch
+        RetouchoverwriteapprovedresultsLabel  matlab.ui.control.Label
+        viewmanual                   matlab.ui.control.Button
+        openpatientdir               matlab.ui.control.Button
+        exportcode                   matlab.ui.control.Button
+        run_button                   matlab.ui.control.Button
+        vizpanel                     matlab.ui.container.Panel
+        importfs                     matlab.ui.control.Button
+        specify2dwrite               matlab.ui.control.Button
+        writeout2d_checkbox          matlab.ui.control.CheckBox
+        render_checkbox              matlab.ui.control.CheckBox
+        atlassetpopup                matlab.ui.control.DropDown
+        AtlasLabel                   matlab.ui.control.Label
+        vizspacepopup                matlab.ui.control.DropDown
+        SpaceLabel                   matlab.ui.control.Label
+        processtabgroup              matlab.ui.container.TabGroup
+        ImportTab                    matlab.ui.container.Tab
+        RegenerateRawimageJson       matlab.ui.control.Button
+        ImportNifti2BIDS             matlab.ui.control.CheckBox
+        DICOMConvertTool             matlab.ui.control.DropDown
+        DICOMConvertToolLabel        matlab.ui.control.Label
+        ImportDICOM2BIDS             matlab.ui.control.CheckBox
+        RegistrationTab              matlab.ui.container.Tab
+        ACPCCheckBox                 matlab.ui.control.CheckBox
+        refinefit                    matlab.ui.control.CheckBox
+        checkreg                     matlab.ui.control.CheckBox
+        scrfmask                     matlab.ui.control.DropDown
+        scrf                         matlab.ui.control.CheckBox
+        normsettings                 matlab.ui.control.Button
+        normmethod                   matlab.ui.control.DropDown
+        slicer_normalized            matlab.ui.control.Button
+        normalize_checkbox           matlab.ui.control.CheckBox
+        coregmrmethod                matlab.ui.control.DropDown
+        mricoregmethodlabel          matlab.ui.control.Label
+        coregctmethod                matlab.ui.control.DropDown
+        ctcoregmethodlabel           matlab.ui.control.Label
+        slicer_coregistered          matlab.ui.control.Button
+        coreg_checkbox               matlab.ui.control.CheckBox
+        LocalizationTab              matlab.ui.container.Tab
+        refinelocalization_slicer    matlab.ui.control.Button
+        refinelocalization           matlab.ui.control.CheckBox
+        maskwindow_txt               matlab.ui.control.EditField
+        windowsizelabel              matlab.ui.control.Label
+        targetpopup                  matlab.ui.control.DropDown
+        targetlabel                  matlab.ui.control.Label
+        reconmethod                  matlab.ui.control.DropDown
+        reconmethodtxt               matlab.ui.control.Label
+        doreconstruction             matlab.ui.control.CheckBox
+        OptionalTab                  matlab.ui.container.Tab
+        AutoExporttoLeadDBSServerCheckBox  matlab.ui.control.CheckBox
+        openleadconnectome           matlab.ui.control.Button
+        include_lead_connectome_subroutine  matlab.ui.control.CheckBox
+        surfsettings                 matlab.ui.control.Button
+        surfacemethod                matlab.ui.control.DropDown
+        extractsurface               matlab.ui.control.CheckBox
+        ConnectomicsTab              matlab.ui.container.Tab
+        OptionsButton_2              matlab.ui.control.Button
+        OptionsButton                matlab.ui.control.Button
+        FunctionalConnectivityLabel  matlab.ui.control.Label
+        StructuralConnectivityLabel  matlab.ui.control.Label
+        Switch_2                     matlab.ui.control.Switch
+        Switch                       matlab.ui.control.Switch
+        RunButton                    matlab.ui.control.Button
+        UIAxes                       matlab.ui.control.UIAxes
+        statustwo                    matlab.ui.control.Label
+        statusone                    matlab.ui.control.Label
+        patientpanel                 matlab.ui.container.Panel
+        CustomButton                 matlab.ui.control.Button
+        side15                       matlab.ui.control.StateButton
+        side14                       matlab.ui.control.StateButton
+        side13                       matlab.ui.control.StateButton
+        side12                       matlab.ui.control.StateButton
+        side11                       matlab.ui.control.StateButton
+        side10                       matlab.ui.control.StateButton
+        side9                        matlab.ui.control.StateButton
+        side8                        matlab.ui.control.StateButton
+        side7                        matlab.ui.control.StateButton
+        side6                        matlab.ui.control.StateButton
+        side5                        matlab.ui.control.StateButton
+        side4                        matlab.ui.control.StateButton
+        side2                        matlab.ui.control.StateButton
+        side3                        matlab.ui.control.StateButton
+        side1                        matlab.ui.control.StateButton
+        electrode_model_popup        matlab.ui.control.DropDown
+        MRCT                         matlab.ui.control.DropDown
+        PatientList                  matlab.ui.control.Table
+        UpdateNIfTIsButton           matlab.ui.control.Button
+        AddNIfTIsButton              matlab.ui.control.Button
+        AddDICOMsButton              matlab.ui.control.Button
+        RenamePatient                matlab.ui.control.Button
+        DeletePatient                matlab.ui.control.Button
+        AddPatient                   matlab.ui.control.Button
+        RecentPatients               matlab.ui.control.DropDown
+        datasetpanel                 matlab.ui.container.Panel
+        datasetselect                matlab.ui.control.Button
+        RecentDatasets               matlab.ui.control.DropDown
+        StatusImage                  matlab.ui.control.Image
+        updatebutn                   matlab.ui.control.Button
+        versiontxt                   matlab.ui.control.Label
+        medicaluse                   matlab.ui.control.Label
+        Hyperlink                    matlab.ui.control.Hyperlink
+        LogoImage                    matlab.ui.control.Image
+        PatientListContextMenu       matlab.ui.container.ContextMenu
+        DeletePatientMenu            matlab.ui.container.Menu
+        RenamePatientMenu            matlab.ui.container.Menu
+        AddDICOMsMenu                matlab.ui.container.Menu
+        AddNIfTIsMenu                matlab.ui.container.Menu
+        UpdateNIfTIsMenu             matlab.ui.container.Menu
+    end
+
+    
+    methods (Access = private)
+        function DropFcn(app, ~, event, handles)
+            
+            switch event.DropType
+                case 'file'
+                    patdir = event.Data;
+                case 'string'
+                    patdir = {event.Data};
+            end
+            
+            nonexist = cellfun(@(x) ~exist(x, 'dir'), patdir);
+            if any(nonexist)
+                fprintf('\nExcluded non-existent/invalid folder:\n');
+                cellfun(@disp, patdir(nonexist));
+                fprintf('\n');
+                patdir(nonexist) = [];
+            end
+            
+            ea_busyaction('on', handles.busystatus);
+            if ~isempty(patdir)
+                ea_load_pts(handles, patdir);
+            
+                if isfield(handles,'atlassetpopup')
+                    atlasset=get(handles.atlassetpopup,'String');
+                    atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+                    options.prefs=ea_prefs('');
+                    ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+                end
+            end
+            ea_busyaction('off', handles.busystatus);
+        end
+        
+        function axis_std_txt_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to axis_std_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of axis_std_txt as text
+            %        str2double(get(hObject,'String')) returns contents of axis_std_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function axis_std_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to axis_std_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function axiscontrast_txt_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to axiscontrast_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of axiscontrast_txt as text
+            %        str2double(get(hObject,'String')) returns contents of axiscontrast_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function axiscontrast_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to axiscontrast_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function axispopup_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to axispopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns axispopup contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from axispopup
+            ea_storeui(handles);
+        end
+        
+        function axispopup_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to axispopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: popupmenu controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function canatlcheck_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to canatlcheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of canatlcheck
+            ea_storeui(handles);
+        end
+        
+        function cg25check_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to cg25check (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of cg25check
+            ea_storeui(handles);
+        end
+        
+        function cmappushbutton_ButtonDownFcn(app, hObject, eventdata, handles)
+            % hObject    handle to cmappushbutton (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+        end
+        
+        function cmappushbutton_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to cmappushbutton (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            colormapeditor;
+            ea_storeui(handles);
+        end
+        
+        function cor_std_txt_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to cor_std_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of cor_std_txt as text
+            %        str2double(get(hObject,'String')) returns contents of cor_std_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function cor_std_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to cor_std_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function coregct_checkbox_ButtonDownFcn(app, hObject, eventdata, handles)
+            % hObject    handle to coregct_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+        end
+        
+        function coregct_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to coregct_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of coregct_checkbox
+            ea_storeui(handles);
+        end
+        
+        function coregctcheck_ButtonDownFcn(app, hObject, eventdata, handles)
+            % hObject    handle to coregctcheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+        end
+        
+        function coregctcheck_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to coregctcheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of coregctcheck
+            ea_storeui(handles);
+        end
+        
+        function coregmrcheck_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to coregmrcheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of coregmrcheck
+            ea_storeui(handles);
+        end
+        
+        function dcm2niiselect_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to dcm2niiselect (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: popupmenu controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function distance_txt_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to distance_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of distance_txt as text
+            %        str2double(get(hObject,'String')) returns contents of distance_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function distance_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to distance_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function dlgroupc_ButtonDownFcn(app, hObject, eventdata, handles)
+            % hObject    handle to dlgroupc (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+        end
+        
+        function ea_checktargetentry(app, handles)
+            higherelchosen=0;
+            elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+            for el=3:elnum
+                if get(handles.(['side',num2str(el)]),'Value')
+                    higherelchosen=1;
+                end
+            end
+            if higherelchosen
+                set(handles.targetpopup,'Value',3);
+                set(handles.targetpopup,'Enable','off');
+            else
+                if get(handles.reconmethod,'Value')==1
+                    set(handles.targetpopup,'Enable','on');
+                end
+            end
+
+            if length(app.PatientList.Selection) == 1  
+                ea_storeui(handles);
+            else
+                % Get sides
+                elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+                sideLabel = "side" + (1:elnum)';
+                sides = find(cellfun(@(s) handles.(s).Value, sideLabel'));
+
+                % Save sides for patients separately
+                bids = getappdata(handles.leadfigure, 'bids');
+                subjId = getappdata(handles.leadfigure, 'subjId');
+                uiprefsFile = cellfun(@(id) bids.getPrefs(id, 'uiprefs', 'mat'), subjId', 'Uni', 0);
+                ea_cprintf('CmdWinWarnings', 'Set sides to [%s] for multiple patients.\n', num2str(sides));
+                for i = 1:length(uiprefsFile)
+                    save(uiprefsFile{i}, 'sides', '-append');
+                end
+            end
+        end
+        
+        function edit1_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to edit1 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of edit1 as text
+            %        str2double(get(hObject,'String')) returns contents of edit1 as a double
+            ea_storeui(handles);
+        end
+        
+        function edit1_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to edit1 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function endtol_txt_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to endtol_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of endtol_txt as text
+            %        str2double(get(hObject,'String')) returns contents of endtol_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function endtol_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to endtol_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function ft_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to ft_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of ft_checkbox
+            ea_storeui(handles);
+        end
+        
+        function ftmethod_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to ftmethod (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns ftmethod contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from ftmethod
+            ea_storeui(handles);
+        end
+        
+        function ftmethod_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to ftmethod (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: popupmenu controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function left_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to left_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of left_checkbox
+            ea_storeui(handles);
+        end
+        
+        function normcheck_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to normcheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of normcheck
+            ea_storeui(handles);
+        end
+        
+        function normptatlascheck_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to normptatlascheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of normptatlascheck
+            ea_storeui(handles);
+        end
+        
+        function parcellation_atlas_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to parcellation_atlas (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns parcellation_atlas contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from parcellation_atlas
+            ea_storeui(handles);
+        end
+        
+        function parcellation_atlas_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to parcellation_atlas (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: popupmenu controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function patatlcheck_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to patatlcheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of patatlcheck
+            ea_storeui(handles);
+        end
+        
+        function prolong_electrode_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to prolong_electrode_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of prolong_electrode_checkbox
+            ea_storeui(handles);
+        end
+        
+        function refinesteps_txt_Callback(app, ~, eventdata, handles)
+            % hObject    handle to refinesteps_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of refinesteps_txt as text
+            %        str2double(get(hObject,'String')) returns contents of refinesteps_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function refinesteps_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to refinesteps_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function right_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to right_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of right_checkbox
+            ea_storeui(handles);
+        end
+        
+        function showatlases2d_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to showatlases2d_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of showatlases2d_checkbox
+            ea_storeui(handles);
+        end
+        
+        function showatlases_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to showatlases_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of showatlases_checkbox
+            ea_storeui(handles);
+        end
+        
+        function showconnectivities_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to showconnectivities_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of showconnectivities_checkbox
+            ea_storeui(handles);
+        end
+        
+        function showfibers_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to showfibers_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of showfibers_checkbox
+            ea_storeui(handles);
+        end
+        
+        function sidespopup_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to sidespopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns sidespopup contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from sidespopup
+            ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+        end
+        
+        function sidespopup_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to sidespopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: popupmenu controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function slicer_original_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to slicer_original (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            options = ea_handles2options(handles);
+            options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+            bids = getappdata(handles.leadfigure, 'bids');
+            subjId = getappdata(handles.leadfigure, 'subjId');
+            options.subj = bids.getSubj(subjId{1}, options.modality);
+            ea_runslicer(options, 1);
+        end
+        
+        function slowdemo_checkbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to slowdemo_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of slowdemo_checkbox
+            ea_storeui(handles);
+        end
+        
+        function stimcheckbox_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to stimcheckbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of stimcheckbox
+            ea_storeui(handles);
+        end
+        
+        function z_contrast_txt_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to z_contrast_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of z_contrast_txt as text
+            %        str2double(get(hObject,'String')) returns contents of z_contrast_txt as a double
+            ea_storeui(handles);
+        end
+        
+        function z_contrast_txt_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to z_contrast_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: edit controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+        
+        function zpopup_Callback(app, hObject, eventdata, handles)
+            % hObject    handle to zpopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns zpopup contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from zpopup
+            ea_storeui(handles);
+        end
+        
+        function zpopup_CreateFcn(app, hObject, eventdata, handles)
+            % hObject    handle to zpopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    empty - handles not created until after all CreateFcns called
+            
+            % Hint: popupmenu controls usually have a white background on Windows.
+            %       See ISPC and COMPUTER.
+            if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+                set(hObject,'BackgroundColor','white');
+            end
+        end
+
+        function AddDICOMs(app)
+            subjId = app.PatientList.Data.subjId(app.PatientList.Selection);
+            if length(subjId) > 1
+                ea_cprintf('CmdWinWarnings', 'Please select only one patient to add DICOM/NIfTI data!\n');
+                return;
+            end
+
+            subjSourcedataFolder = fullfile(app.datasetselect.Text, 'sourcedata', ['sub-', subjId{1}]);
+            ea_mkdir(subjSourcedataFolder);
+            DICOMFolder = fullfile(subjSourcedataFolder, 'DICOM', ea_generate_uuid);
+            selectedFolder = ea_uigetdir(ea_gethome, 'Please choose patient DICOM folder...');
+            if isempty(selectedFolder)
+                return;
+            end
+            cellfun(@(f) copyfile(f, DICOMFolder), selectedFolder);
+
+            subjRawdataFolder = fullfile(app.datasetselect.Text, 'rawdata', ['sub-', subjId{1}]);
+            subjUnsortedFolder = fullfile(subjRawdataFolder, 'unsorted');
+            ea_dcm_to_nii(DICOMFolder, subjUnsortedFolder, app.DICOMConvertTool.Value);
+
+            preopFiles = ea_regexpdir(fullfile(subjRawdataFolder, 'ses-preop'), '(\.nii\.gz|\.json)$');
+            postopFiles = ea_regexpdir(fullfile(subjRawdataFolder, 'ses-postop'), '(\.nii\.gz|\.json)$');
+            existedFiles = [preopFiles; postopFiles];
+            if ~isempty(existedFiles)
+                backupFiles = strcat(existedFiles, '.bak');
+                cellfun(@(f, b) copyfile(f, b), existedFiles, backupFiles);
+                cellfun(@(f) movefile(f, subjUnsortedFolder), existedFiles);
+            end
+
+            unsortedFiles = ea_regexpdir(subjUnsortedFolder, '.*\.nii(\.gz)?$');
+            if ~isempty(existedFiles)
+                [~, unsortedFileNames] = fileparts(unsortedFiles);
+                if ischar(unsortedFileNames)
+                    unsortedFileNames = {unsortedFileNames};
+                end
+                [~, existedFileNames] = fileparts(existedFiles);
+                if ischar(existedFileNames)
+                    existedFileNames = {existedFileNames};
+                end
+                preset = ismember(unsortedFileNames, existedFileNames);
+            else
+                preset = false(length(unsortedFiles), 1);
+            end
+            [~, returnCode] = ea_nifti_to_bids(unsortedFiles, app.datasetselect.Text, ['sub-', subjId{1}], preset);
+
+            if ~isempty(existedFiles)
+                switch returnCode
+                    case 'okay'
+                        ea_delete(backupFiles);
+                        [~, ~, handles] = ea_convertGUIDEArguments(app);
+                        ea_load_pts(handles, fullfile(app.datasetselect.Text, 'derivatives', 'leaddbs', ['sub-', subjId{1}]));
+                    case {'cancel', 'close'}
+                        cellfun(@(b, f) movefile(b, f), backupFiles, existedFiles);
+                        ea_delete(DICOMFolder);
+                end
+            end
+
+            ea_delete(subjUnsortedFolder);
+
+            app.leadfigure.focus;
+        end
+
+        function AddNIfTIs(app)
+            subjId = app.PatientList.Data.subjId(app.PatientList.Selection);
+            if length(subjId) > 1
+                ea_cprintf('CmdWinWarnings', 'Please select only one patient to add DICOM/NIfTI data!\n');
+                return;
+            end
+
+            subjRawdataFolder = fullfile(app.datasetselect.Text, 'rawdata', ['sub-', subjId{1}]);
+            subjUnsortedFolder = fullfile(subjRawdataFolder, 'unsorted');
+            ea_mkdir(subjUnsortedFolder);
+            [fileNames, filePath, fileExt] = ea_uigetfile(ea_gethome, 'Please choose patient NIfTI files...');
+            if isempty(fileNames)
+                return;
+            end
+            cellfun(@(f) copyfile(f, subjUnsortedFolder), strcat(filePath, filesep, fileNames, fileExt));
+
+            preopFiles = ea_regexpdir(fullfile(subjRawdataFolder, 'ses-preop'), '(\.nii\.gz|\.json)$');
+            postopFiles = ea_regexpdir(fullfile(subjRawdataFolder, 'ses-postop'), '(\.nii\.gz|\.json)$');
+            existedFiles = [preopFiles; postopFiles];
+            if ~isempty(existedFiles)
+                backupFiles = strcat(existedFiles, '.bak');
+                cellfun(@(f, b) copyfile(f, b), existedFiles, backupFiles);
+                cellfun(@(f) movefile(f, subjUnsortedFolder), existedFiles);
+            end
+
+            unsortedFiles = ea_regexpdir(subjUnsortedFolder, '.*\.nii(\.gz)?$', 1, 'f');
+            if ~isempty(existedFiles)
+                [~, unsortedFileNames] = fileparts(unsortedFiles);
+                if ischar(unsortedFileNames)
+                    unsortedFileNames = {unsortedFileNames};
+                end
+                [~, existedFileNames] = fileparts(existedFiles);
+                if ischar(existedFileNames)
+                    existedFileNames = {existedFileNames};
+                end
+                preset = ismember(unsortedFileNames, existedFileNames);
+            else
+                preset = false(length(unsortedFiles), 1);
+            end
+            [~, returnCode] = ea_nifti_to_bids(unsortedFiles, app.datasetselect.Text, ['sub-', subjId{1}], preset);
+
+            if ~isempty(existedFiles)
+                switch returnCode
+                    case 'okay'
+                        ea_delete(backupFiles);
+                        [~, ~, handles] = ea_convertGUIDEArguments(app);
+                        ea_load_pts(handles, fullfile(app.datasetselect.Text, 'derivatives', 'leaddbs', ['sub-', subjId{1}]));
+                    case {'cancel', 'close'}
+                        cellfun(@(b, f) movefile(b, f), backupFiles, existedFiles);
+                end
+            end
+
+            ea_delete(subjUnsortedFolder);
+
+            app.leadfigure.focus;
+        end
+
+        function UpdateNIfTIs(app)
+            subjId = app.PatientList.Data.subjId(app.PatientList.Selection);
+            if length(subjId) > 1
+                ea_cprintf('CmdWinWarnings', 'Please select only one patient to replace/delete NIfTIs!\n');
+                return;
+            end
+
+            bids = getappdata(app.leadfigure, 'bids');
+            subj = bids.getSubj(subjId{1});
+
+            if isfield(subj, 'preopAnat')
+                treeStruct.preopAnat = subj.preopAnat;
+                preopFields = fieldnames(treeStruct.preopAnat);
+                for i=1:length(preopFields)
+                    pipelineFields = fieldnames(treeStruct.preopAnat.(preopFields{i}));
+                    for j=1:length(pipelineFields)
+                        if ~isfile(treeStruct.preopAnat.(preopFields{i}).(pipelineFields{j})) % || ...
+                                % ismember(pipelineFields{j}, {'coreg', 'norm'})
+                            treeStruct.preopAnat.(preopFields{i}) = rmfield(treeStruct.preopAnat.(preopFields{i}), pipelineFields{j});
+                        end
+                    end
+                end
+            end
+
+            if isfield(subj, 'postopAnat')
+                treeStruct.postopAnat = subj.postopAnat;
+                postopFields = fieldnames(treeStruct.postopAnat);
+                for i=1:length(postopFields)
+                    pipelineFields = fieldnames(treeStruct.postopAnat.(postopFields{i}));
+                    for j=1:length(pipelineFields)
+                        if ~isfile(treeStruct.postopAnat.(postopFields{i}).(pipelineFields{j})) % || ...
+                                % ismember(pipelineFields{j}, {'coreg', 'coregTonemap', 'norm', 'normTonemap'})
+                            treeStruct.postopAnat.(postopFields{i}) = rmfield(treeStruct.postopAnat.(postopFields{i}), pipelineFields{j});
+                        end
+                    end
+                end
+            end
+
+            ea_update_pts_nifti(bids, subjId{1}, treeStruct);
+        end
+
+        function tabhighlight(app)
+             
+            % import
+            if (app.ImportDICOM2BIDS.Value==1 || ...
+                    app.ImportNifti2BIDS.Value==1)
+                app.ImportTab.Title='0. # Import';
+            else
+                app.ImportTab.Title='0. Import';
+            end
+                
+            % registration
+            if (app.coreg_checkbox.Value==1 || ...
+                    app.normalize_checkbox.Value==1 || ...
+                    app.scrf.Value==1 || ...
+                    app.checkreg.Value==1 || ...
+                    app.refinefit.Value==1)
+                app.RegistrationTab.Title='1. # Registration';
+            else
+                app.RegistrationTab.Title='1. Registration';
+            end
+
+            % localization
+            if (app.doreconstruction.Value==1 || ...
+                    app.refinelocalization.Value==1)
+                app.LocalizationTab.Title='2. # Localization';
+            else
+                app.LocalizationTab.Title='2. Localization';
+            end
+
+            % optional
+            if (app.extractsurface.Value==1 || ...
+                    app.include_lead_connectome_subroutine.Value==1 || ...
+                    app.AutoExporttoLeadDBSServerCheckBox.Value==1)
+                app.OptionalTab.Title='# Optional';
+            else
+                app.OptionalTab.Title='Optional';
+            end
+
+        end
+
+    end
+    
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Code that executes after component creation
+        function lead_dbs_OpeningFcn(app, varargin)
+            % Ensure that the app appears on screen when run
+            movegui(app.leadfigure, 'onscreen');
+            
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app); %#ok<ASGLU>
+            
+            % This function has no output args, see OutputFcn.
+            % hObject    handle to figure
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            % varargin   command line arguments to lead_dbs (see VARARGIN)
+            
+            earoot=ea_getearoot;
+            
+            handles.prod = 'dbs';
+            
+            % add recent patients...
+            ea_initrecent(handles, 'datasets');
+            ea_initrecent(handles, 'patients');
+            
+            set(handles.vizspacepopup,'String',{[ea_underscore2space(ea_getspace), ' Space'];'Native Patient Space'});
+            
+            ea_dispbn;
+            
+            set(handles.leadfigure,'name','Welcome to LEAD-DBS');
+            
+            spacedef=ea_getspacedef;
+            if isfield(spacedef,'guidef')
+                set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}, {'Auto'}]);
+            end
+            
+            options.prefs=ea_prefs('');
+            
+            ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
+            ea_init_coregctpopup(handles, options.prefs.ctcoreg.default);
+            
+            % load atlassets
+            ea_listatlassets(options,handles,1);
+            
+            set(handles.normalize_checkbox,'Value',0);
+            
+            set(hObject,'Color',[1 1 1]);
+            set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
+            
+            set(0,'CurrentFigure',handles.leadfigure);
+            
+            % get electrode model specs and place in popup
+            set(handles.electrode_model_popup,'String',ea_resolve_elspec);
+            
+            options.earoot=earoot;
+            
+            % Initialize norm methods popupmenu
+            ea_init_normpopup(handles, options.prefs.normalize.default);
+            
+            ea_processguiargs(handles,varargin);
+            
+            %% add tools menu
+            ea_menu_initmenu(handles,{'import','acpc','export','applynorm','leador','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
+            
+            app.processtabgroup.SelectedTab = app.RegistrationTab;
+            
+            ea_firstrun(handles,options);
+            ea_getui(handles);
+            
+%             ea_bind_dragndrop(handles.leadfigure, ...
+%                 @(obj,evt) DropFcn(app, obj,evt,handles), ...
+%                 @(obj,evt) DropFcn(app, obj,evt,handles));
+            
+%             ea_ListBoxRenderer(handles.electrode_model_popup);
+%             ea_ListBoxRenderer(handles.normmethod);
+%             ea_ListBoxRenderer(handles.scrfmask);
+%             ea_ListBoxRenderer(handles.atlassetpopup);
+            
+            % Choose default command line output for lead_dbs
+            handles.output = hObject;
+            
+            % Update handles structure
+            guidata(hObject, handles);
+            
+            % Disable buttons for standalone app
+            if isdeployed
+                set(handles.updatebutn,'Enable','off');
+                set(handles.updatebutn,'Visible','off');
+            end
+        end
+
+        % Value changed function: MRCT
+        function MRCT_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to MRCT (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns MRCT contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from MRCT
+            
+            ea_switchctmr(handles,get(hObject,'Value'));
+            if get(hObject,'Value')==1
+                set(handles.reconmethod,'enable','on');
+                set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
+                set(handles.targetpopup,'enable','on');
+                set(handles.maskwindow_txt,'enable','on');
+            else
+                set(handles.reconmethod,'enable','on');
+                set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
+                set(handles.targetpopup,'enable','off');
+                set(handles.maskwindow_txt,'enable','off');
+            end
+            ea_storeui(handles);
+        end
+
+        % Value changed function: atlassetpopup
+        function atlassetpopup_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to atlassetpopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns atlassetpopup contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
+            ea_storeui(handles);
+        end
+
+        % Value changed function: coreg_checkbox
+        function coreg_checkbox_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to coreg_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of coreg_checkbox
+            app.tabhighlight;
+            ea_storeui(handles);
+        end
+
+        % Value changed function: coregctmethod
+        function coregctmethod_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to coregctmethod (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns coregctmethod contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from coregctmethod
+            methods=getappdata(handles.leadfigure,'coregctmethod');
+            ea_storeui(handles);
+        end
+
+        % Value changed function: doreconstruction
+        function doreconstruction_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to doreconstruction_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of doreconstruction_checkbox
+            
+            if get(handles.reconmethod,'Value')==1 && get(hObject,'Value')==1
+                set(handles.maskwindow_txt,'Enable','on');
+                set(handles.targetpopup,'Enable','on');
+            else
+                set(handles.maskwindow_txt,'Enable','off');
+                set(handles.targetpopup,'Enable','off');
+            end
+            
+            
+            
+            app.tabhighlight;
+            ea_storeui(handles);
+        end
+
+        % Button pushed function: eepush
+        function eepush_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to eepush (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_dispbn('ee');
+        end
+
+        % Button pushed function: exportcode
+        function exportcode_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to exportcode (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            ea_busyaction('on', handles.busystatus);
+            
+            options = ea_handles2options(handles);
+            options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+            
+            options.leadprod = 'dbs';
+            
+            ea_run('export',options);
+            
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Value changed function: AutoExporttoLeadDBSServerCheckBox
+        function exportservercheck_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to exportservercheck (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of exportservercheck
+            app.tabhighlight;
+            ea_storeui(handles);
+        end
+
+        % Button pushed function: importfs
+        function importfs_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to importfs (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_importfs(handles)
+        end
+
+        % Value changed function: refinelocalization
+        function refinelocalization_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to manualheight_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of manualheight_checkbox
+            ea_storeui(handles);
+        end
+
+        % Value changed function: maskwindow_txt
+        function maskwindow_txt_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to maskwindow_txt (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: get(hObject,'String') returns contents of maskwindow_txt as text
+            %        str2double(get(hObject,'String')) returns contents of maskwindow_txt as a double
+            app.tabhighlight;
+            ea_storeui(handles);
+        end
+
+        % Value changed function: normalize_checkbox
+        function normalize_checkbox_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to normalize_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
+            app.tabhighlight;
+            ea_storeui(handles);
+        end
+
+        % Value changed function: normmethod
+        function normmethod_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to normmethod (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from normmethod
+            ea_storeui(handles);
+            ea_normsettings(handles);
+        end
+
+        % Button pushed function: normsettings
+        function normsettings_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to normsettings (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+            feval(normsettingsfunc, handles);
+        end
+
+        % Button pushed function: openleadconnectome
+        function openleadconnectome_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to openleadconnectome (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            lead_connectome('dependent');
+        end
+
+        % Button pushed function: openpatientdir
+        function openpatientdir_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to openpatientdir (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_openpatdir(handles);
+        end
+
+        % Value changed function: overwriteapproved
+        function overwriteapproved_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to overwriteapproved (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of overwriteapproved
+            ea_storeui(handles);
+        end
+
+        % Button pushed function: datasetselect
+        function datasetselect_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to patdir_choosebox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_busyaction('on', handles.busystatus);
+            options.prefs = ea_prefs;
+            ea_getdataset(options, handles);
+            app.leadfigure.focus;
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Value changed function: reconmethod
+        function reconmethod_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to reconmethod (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns reconmethod contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from reconmethod
+            if get(hObject,'Value')<3 % TRAC/CORE
+                set(handles.targetpopup,'enable','on');
+                set(handles.maskwindow_txt,'enable','on');
+            else % PACER
+                set(handles.targetpopup,'enable','off');
+                set(handles.maskwindow_txt,'enable','off');
+            end
+        end
+
+        % Value changed function: render_checkbox
+        function render_checkbox_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to render_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of render_checkbox
+            ea_storeui(handles);
+        end
+
+        % Button pushed function: run_button
+        function run_button_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to run_button (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            ea_busyaction('on', handles.busystatus);
+            
+            options = ea_handles2options(handles);
+            options.uipatdirs = getappdata(handles.leadfigure, 'uipatdir');
+            
+            options.leadprod = 'dbs';
+            
+            setappdata(handles.leadfigure,'handles', handles);
+            options.leadfigure = handles.leadfigure;
+            
+            ea_run('run', options);
+            
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Value changed function: side10
+        function side10_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side10 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side10
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side11
+        function side11_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side11 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side11
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side12
+        function side12_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side12 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side12
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side13
+        function side13_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side13 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side13
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side14
+        function side14_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side14 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side14
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side15
+        function side15_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side15 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side15
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side3
+        function side3_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side3 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side3
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side4
+        function side4_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side4 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side4
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side5
+        function side5_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side5 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side5
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side6
+        function side6_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side6 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side6
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side7
+        function side7_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side7 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side7
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side8
+        function side8_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side8 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side8
+            ea_checktargetentry(app, handles);
+        end
+
+        % Value changed function: side9
+        function side9_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to side9 (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of side9
+            ea_checktargetentry(app, handles);
+        end
+
+        % Button pushed function: refinelocalization_slicer
+        function refinelocalization_slicer_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to slicer_contact (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            options = ea_handles2options(handles);
+            options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+            bids = getappdata(handles.leadfigure, 'bids');
+            subjId = getappdata(handles.leadfigure, 'subjId');
+            options.subj = bids.getSubj(subjId{1}, options.modality);
+            ea_runslicer(options, 4);
+        end
+
+        % Button pushed function: slicer_coregistered
+        function slicer_coregistered_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to slicer_coregistered (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            options = ea_handles2options(handles);
+            options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+            bids = getappdata(handles.leadfigure, 'bids');
+            subjId = getappdata(handles.leadfigure, 'subjId');
+            options.subj = bids.getSubj(subjId{1}, options.modality);
+            ea_runslicer(options, 2);
+        end
+
+        % Button pushed function: slicer_normalized
+        function slicer_normalized_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to slicer_normalized (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            options = ea_handles2options(handles);
+            options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+            bids = getappdata(handles.leadfigure, 'bids');
+            subjId = getappdata(handles.leadfigure, 'subjId');
+            options.subj = bids.getSubj(subjId{1}, options.modality);
+            ea_runslicer(options, 3);
+        end
+
+        % Button pushed function: specify2dwrite
+        function specify2dwrite_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to specify2dwrite (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            options = ea_handles2options(handles);
+            if ~isempty(getappdata(handles.leadfigure,'uipatdir'))
+                bids = getappdata(handles.leadfigure, 'bids');
+                subjId = getappdata(handles.leadfigure, 'subjId');
+                options.subj = bids.getSubj(subjId{1}, options.modality);
+            end
+            ea_spec2dwrite(options);
+        end
+
+        % Value changed function: surfacemethod
+        function surfacemethod_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to surfacemethod (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns surfacemethod contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from surfacemethod
+            if strcmpi(hObject.String{hObject.Value}, 'FreeSurfer')
+                handles.surfsettings.Visible = 'on';
+            else
+                handles.surfsettings.Visible = 'off';
+            end
+        end
+
+        % Button pushed function: surfsettings
+        function surfsettings_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to surfsettings (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            ea_freesurfersetting;
+        end
+
+        % Value changed function: targetpopup
+        function targetpopup_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to targetpopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns targetpopup contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from targetpopup
+            ea_storeui(handles);
+        end
+
+        % Button pushed function: updatebutn
+        function updatebutn_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to updatebutn (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            switch app.updatebutn.Text
+
+                case 'MNI <=> Histo'
+
+                    ea_swanatlas(app.datasetselect.Text);
+                    
+                case 'Submit Results...'
+                    bids = getappdata(handles.leadfigure, 'bids');
+                    ea_querytutor(bids);
+
+                otherwise
+                    ea_update;
+            end
+        end
+
+        % Button pushed function: viewmanual
+        function viewmanual_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to viewmanual (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            web('https://www.lead-dbs.org/?page_id=71', '-browser')
+        end
+
+        % Value changed function: vizspacepopup
+        function vizspacepopup_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to vizspacepopup (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hints: contents = cellstr(get(hObject,'String')) returns vizspacepopup contents as cell array
+            %        contents{get(hObject,'Value')} returns selected item from vizspacepopup
+            
+            % if get(hObject,'Value')==2
+            %    set(handles.writeout2d_checkbox,'Enable','off');
+            %    set(handles.writeout2d_checkbox,'Value',0);
+            % else
+            %    set(handles.writeout2d_checkbox,'Enable','on');
+            %    %set(handles.writeout2d_checkbox,'Value',1);
+            % end
+            atlasset = handles.atlassetpopup.String;
+            if handles.atlassetpopup.Value > length(atlasset)
+                handles.atlassetpopup.Value = length(atlasset);
+            end
+            atlasset = atlasset{handles.atlassetpopup.Value};
+            options.prefs = ea_prefs('');
+            ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+        end
+
+        % Value changed function: writeout2d_checkbox
+        function writeout2d_checkbox_Callback(app, event)
+            % Create GUIDE-style callback args - Added by Migration Tool
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to writeout2d_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of writeout2d_checkbox
+            ea_storeui(handles);
+        end
+
+        % Value changed function: RecentPatients
+        function RecentPatientsValueChanged(app, event)
+            [~, ~, handles] = ea_convertGUIDEArguments(app, event);
+            ea_busyaction('on', handles.busystatus);
+            ea_recentcallback(handles, 'patients');
+            app.RecentPatients.Value = 'Recent patients:';
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Value changed function: RecentDatasets
+        function RecentDatasetsValueChanged(app, event)
+            [~, ~, handles] = ea_convertGUIDEArguments(app, event);
+            ea_busyaction('on', handles.busystatus);
+            ea_recentcallback(handles, 'datasets');
+            app.RecentDatasets.Value = 'Recent datasets:';
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Button pushed function: DeletePatient
+        function DeletePatientButtonPushed(app, event)
+            if isempty(app.PatientList.Data) || isempty(app.PatientList.Selection)
+                return;
+            else
+                ea_busyaction('on', app.StatusImage);
+                BIDSRoot = app.datasetselect.Text;
+                subjId = app.PatientList.Data.subjId(app.PatientList.Selection);
+                waitfor(ea_delete_pts(BIDSRoot, subjId));
+                [~, ~, handles] = ea_convertGUIDEArguments(app, event);
+                ea_load_pts(handles, BIDSRoot);
+                ea_busyaction('off', app.StatusImage);
+            end
+        end
+
+        % Button pushed function: RenamePatient
+        function RenamePatientButtonPushed(app, event)
+            if isempty(app.PatientList.Data) || isempty(app.PatientList.Selection)
+                return;
+            else
+                ea_busyaction('on', app.StatusImage);
+                oldSubjId = app.PatientList.Data.subjId(app.PatientList.Selection);
+                if numel(oldSubjId) == 1
+                    newSubjId = inputdlg({'Enter new patient ID [a-zA-Z0-9]:'}, 'Rename Patient', [1 40], oldSubjId);
+                    if isempty(newSubjId)
+                        return;
+                    end
+                    if ~strcmp(newSubjId, oldSubjId)
+                        ea_rename_pts(app.datasetselect.Text, oldSubjId, newSubjId);
+                    end
+                else
+                    setappdata(groot, 'newSubjId', {});
+                    waitfor(ea_rename_pts_gui(app.datasetselect.Text, oldSubjId));
+                    newSubjId = getappdata(groot, 'newSubjId');
+                    if isempty(newSubjId)
+                        ea_busyaction('off', app.StatusImage);
+                        return;
+                    end
+                end
+                [~, ~, handles] = ea_convertGUIDEArguments(app, event);
+                uipatdir = fullfile(app.datasetselect.Text, 'derivatives', 'leaddbs', strcat('sub-', newSubjId));
+                ea_load_pts(handles, uipatdir);
+                ea_busyaction('off', app.StatusImage);
+            end
+        end
+
+        % Selection changed function: PatientList
+        function PatientListSelectionChanged(app, event)
+            value = app.PatientList.Data.subjId(app.PatientList.Selection);
+            if isempty(value)
+                app.PatientList.Selection = event.PreviousSelection;
+                return;
+            end
+
+            if length(value) == 1
+                app.AddDICOMsButton.Visible = 'on';
+                app.AddNIfTIsButton.Visible = 'on';
+                app.UpdateNIfTIsButton.Visible = 'on';
+            else
+                app.AddDICOMsButton.Visible = 'off';
+                app.AddNIfTIsButton.Visible = 'off';
+                app.UpdateNIfTIsButton.Visible = 'off';
+            end
+
+            [~, ~, handles] = ea_convertGUIDEArguments(app, event);
+            ea_busyaction('on', handles.busystatus);
+            uipatdir = fullfile(app.datasetselect.Text, filesep, 'derivatives', 'leaddbs', strcat('sub-', value'));
+            ea_load_pts(handles, uipatdir);
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Button pushed function: AddPatient
+        function AddPatientButtonPushed(app, event)
+            [~, ~, handles] = ea_convertGUIDEArguments(app, event);
+            ea_busyaction('on', handles.busystatus);
+            options.prefs = ea_prefs;
+            ea_getpatients(options, handles);
+            app.leadfigure.focus;
+            ea_busyaction('off', handles.busystatus);
+        end
+
+        % Menu selected function: AddDICOMsMenu
+        function AddDICOMsMenuSelected(app, event)
+            app.AddDICOMs(event);
+        end
+
+        % Menu selected function: AddNIfTIsMenu
+        function AddNIfTIsMenuSelected(app, event)
+            app.AddNIfTIs(event);
+        end
+
+        % Button pushed function: AddDICOMsButton
+        function AddDICOMsButtonButtonPushed(app, event)
+            app.AddDICOMs;
+        end
+
+        % Button pushed function: AddNIfTIsButton
+        function AddNIfTIsButtonButtonPushed(app, event)
+            app.AddNIfTIs;
+        end
+
+        % Value changed function: ImportDICOM2BIDS
+        function ImportDICOM2BIDSValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Value changed function: ImportNifti2BIDS
+        function ImportNifti2BIDSValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Value changed function: scrf
+        function scrfValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Value changed function: checkreg
+        function checkregValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Value changed function: refinefit
+        function refinefitValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Value changed function: extractsurface
+        function extractsurfaceValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Value changed function: include_lead_connectome_subroutine
+        function include_lead_connectome_subroutineValueChanged(app, event)
+            app.tabhighlight;
+        end
+
+        % Button pushed function: UpdateNIfTIsButton
+        function UpdateNIfTIsButtonPushed(app, event)
+            app.UpdateNIfTIs;
+        end
+
+        % Menu selected function: UpdateNIfTIsMenu
+        function UpdateNIfTIsMenuSelected(app, event)
+            app.UpdateNIfTIs(event);
+        end
+
+        % Menu selected function: DeletePatientMenu
+        function DeletePatientMenuSelected(app, event)
+            app.DeletePatientButtonPushed(event);
+        end
+
+        % Menu selected function: RenamePatientMenu
+        function RenamePatientMenuSelected(app, event)
+            app.RenamePatientButtonPushed(event);
+        end
+
+        % Button pushed function: RegenerateRawimageJson
+        function RegenerateRawimageJsonButtonPushed(app, event)
+            if isempty(app.PatientList.Data) || isempty(app.PatientList.Selection)
+                return;
+            else
+                BIDSRoot = app.datasetselect.Text;
+                subjId = app.PatientList.Data.subjId(app.PatientList.Selection);
+                cellfun(@(id) ea_genrawimagesjson(BIDSRoot, id), subjId);
+            end
+        end
+
+        % Value changed function: electrode_model_popup
+        function electrode_model_popupValueChanged(app, event)
+            if isempty(app.PatientList.Selection)
+                return;
+            end
+
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+
+            % handles.refinelocalization.Value = 1;
+            % handles.overwriteapproved.Value = 1;
+            ea_cprintf('CmdWinWarnings', 'Electrode model updated. Please rerun "Localize DBS electrodes"!\n');
+
+            if length(app.PatientList.Selection) == 1  
+                ea_storeui(handles);
+            else
+                % Save elmode for patients separately
+                bids = getappdata(handles.leadfigure, 'bids');
+                subjId = getappdata(handles.leadfigure, 'subjId');
+                uiprefsFile = cellfun(@(id) bids.getPrefs(id, 'uiprefs', 'mat'), subjId', 'Uni', 0);
+                elmodel = app.electrode_model_popup.Value;
+                elmodeln = handles.electrode_model_popup.Value;
+                ea_cprintf('CmdWinWarnings', 'Set electrode model to "%s" for multiple patients.\n', elmodel);
+                for i = 1:length(uiprefsFile)
+                    save(uiprefsFile{i}, 'elmodel', 'elmodeln', '-append');
+                end
+            end
+        end
+
+        % Button pushed function: sparkbtn
+        function sparkbtn_Callback(app, event)
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            bids = getappdata(handles.leadfigure, 'bids');
+            ea_initialize_programmer(handles, bids, "standalone");
+
+        end
+
+        % Value changed function: ACPCCheckBox
+        function acpc_checkbox_ValueChanged(app, event)
+           [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            
+            % hObject    handle to acpc_checkbox (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            
+            % Hint: get(hObject,'Value') returns toggle state of coreg_checkbox
+            app.tabhighlight;
+            ea_storeui(handles);               
+        end
+
+        % Button pushed function: CustomButton
+        function CustomButtonPushed(app, event)
+            [hObject, eventdata, handles] = ea_convertGUIDEArguments(app, event); %#ok<ASGLU>
+            bids = getappdata(handles.leadfigure, 'bids');
+            ea_multiple_electrodes(handles, bids);
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Get the file path for locating images
+            pathToMLAPP = fileparts(mfilename('fullpath'));
+
+            % Create leadfigure and hide until all components are created
+            app.leadfigure = uifigure('Visible', 'off');
+            app.leadfigure.Color = [1 1 1];
+            colormap(app.leadfigure, 'parula');
+            app.leadfigure.Position = [519 0 818 608];
+            app.leadfigure.Name = 'lead_dbs';
+            app.leadfigure.HandleVisibility = 'callback';
+            app.leadfigure.Tag = 'leadfigure';
+
+            % Create LogoImage
+            app.LogoImage = uiimage(app.leadfigure);
+            app.LogoImage.Tag = 'LogoImage';
+            app.LogoImage.Tooltip = {''};
+            app.LogoImage.Position = [1 540 109 61];
+            app.LogoImage.ImageSource = fullfile(pathToMLAPP, 'icons', 'logo_lead_dbs.png');
+
+            % Create Hyperlink
+            app.Hyperlink = uihyperlink(app.leadfigure);
+            app.Hyperlink.Tooltip = {''};
+            app.Hyperlink.URL = 'https://www.lead-dbs.org';
+            app.Hyperlink.Position = [116 559 78 22];
+            app.Hyperlink.Text = 'lead-dbs.org';
+
+            % Create medicaluse
+            app.medicaluse = uilabel(app.leadfigure);
+            app.medicaluse.Tag = 'medicaluse';
+            app.medicaluse.BackgroundColor = [1 1 1];
+            app.medicaluse.WordWrap = 'on';
+            app.medicaluse.FontColor = [0.850980392156863 0.325490196078431 0.0980392156862745];
+            app.medicaluse.Tooltip = {''};
+            app.medicaluse.Position = [116 579 120 22];
+            app.medicaluse.Text = 'Not for clinical use';
+
+            % Create versiontxt
+            app.versiontxt = uilabel(app.leadfigure);
+            app.versiontxt.Tag = 'versiontxt';
+            app.versiontxt.BackgroundColor = [1 1 1];
+            app.versiontxt.WordWrap = 'on';
+            app.versiontxt.FontColor = [0.501960784313725 0.501960784313725 0.501960784313725];
+            app.versiontxt.Tooltip = {''};
+            app.versiontxt.Position = [116 540 120 22];
+            app.versiontxt.Text = 'v';
+
+            % Create updatebutn
+            app.updatebutn = uibutton(app.leadfigure, 'push');
+            app.updatebutn.ButtonPushedFcn = createCallbackFcn(app, @updatebutn_Callback, true);
+            app.updatebutn.Tag = 'updatebutn';
+            app.updatebutn.FontSize = 10;
+            app.updatebutn.Tooltip = {''};
+            app.updatebutn.Position = [658 558 91 26];
+            app.updatebutn.Text = 'Update';
+
+            % Create StatusImage
+            app.StatusImage = uiimage(app.leadfigure);
+            app.StatusImage.Tag = 'busystatus';
+            app.StatusImage.Visible = 'off';
+            app.StatusImage.Tooltip = {''};
+            app.StatusImage.Position = [771 558 26 26];
+
+            % Create datasetpanel
+            app.datasetpanel = uipanel(app.leadfigure);
+            app.datasetpanel.Tooltip = {''};
+            app.datasetpanel.Title = 'Dataset';
+            app.datasetpanel.BackgroundColor = [1 1 1];
+            app.datasetpanel.Tag = 'gopanel';
+            app.datasetpanel.Position = [10 444 394 83];
+
+            % Create RecentDatasets
+            app.RecentDatasets = uidropdown(app.datasetpanel);
+            app.RecentDatasets.Items = {'Recent datasets...'};
+            app.RecentDatasets.ValueChangedFcn = createCallbackFcn(app, @RecentDatasetsValueChanged, true);
+            app.RecentDatasets.Tag = 'recentdatasets';
+            app.RecentDatasets.Tooltip = {'Quick choose recent dataset'};
+            app.RecentDatasets.BackgroundColor = [1 1 1];
+            app.RecentDatasets.Position = [10 32 374 26];
+            app.RecentDatasets.Value = 'Recent datasets...';
+
+            % Create datasetselect
+            app.datasetselect = uibutton(app.datasetpanel, 'push');
+            app.datasetselect.ButtonPushedFcn = createCallbackFcn(app, @datasetselect_Callback, true);
+            app.datasetselect.Tag = 'datasetselect';
+            app.datasetselect.FontWeight = 'bold';
+            app.datasetselect.Tooltip = {'Dataset directory'};
+            app.datasetselect.Position = [10 5 373 23];
+            app.datasetselect.Text = 'Choose Dataset Directory';
+
+            % Create patientpanel
+            app.patientpanel = uipanel(app.leadfigure);
+            app.patientpanel.Tooltip = {''};
+            app.patientpanel.Title = 'Patient';
+            app.patientpanel.BackgroundColor = [1 1 1];
+            app.patientpanel.Tag = 'gopanel';
+            app.patientpanel.Position = [10 63 394 371];
+
+            % Create RecentPatients
+            app.RecentPatients = uidropdown(app.patientpanel);
+            app.RecentPatients.Items = {'Recent patients...'};
+            app.RecentPatients.ValueChangedFcn = createCallbackFcn(app, @RecentPatientsValueChanged, true);
+            app.RecentPatients.Tag = 'recentpatients';
+            app.RecentPatients.Tooltip = {'Quick choose recent patient'};
+            app.RecentPatients.BackgroundColor = [1 1 1];
+            app.RecentPatients.Position = [10 319 373 26];
+            app.RecentPatients.Value = 'Recent patients...';
+
+            % Create AddPatient
+            app.AddPatient = uibutton(app.patientpanel, 'push');
+            app.AddPatient.ButtonPushedFcn = createCallbackFcn(app, @AddPatientButtonPushed, true);
+            app.AddPatient.Icon = fullfile(pathToMLAPP, 'icons', 'pt_add.svg');
+            app.AddPatient.Tooltip = {'Add patient to dataset'};
+            app.AddPatient.Position = [10 283 30 30];
+            app.AddPatient.Text = '';
+
+            % Create DeletePatient
+            app.DeletePatient = uibutton(app.patientpanel, 'push');
+            app.DeletePatient.ButtonPushedFcn = createCallbackFcn(app, @DeletePatientButtonPushed, true);
+            app.DeletePatient.Icon = fullfile(pathToMLAPP, 'icons', 'pt_remove.svg');
+            app.DeletePatient.Tooltip = {'Clear patient folders or remove patient(s) from dataset'};
+            app.DeletePatient.Position = [10 240 30 30];
+            app.DeletePatient.Text = '';
+
+            % Create RenamePatient
+            app.RenamePatient = uibutton(app.patientpanel, 'push');
+            app.RenamePatient.ButtonPushedFcn = createCallbackFcn(app, @RenamePatientButtonPushed, true);
+            app.RenamePatient.Icon = fullfile(pathToMLAPP, 'icons', 'pt_rename.svg');
+            app.RenamePatient.Tooltip = {'Rename patient(s)'};
+            app.RenamePatient.Position = [10 197 30 30];
+            app.RenamePatient.Text = '';
+
+            % Create AddDICOMsButton
+            app.AddDICOMsButton = uibutton(app.patientpanel, 'push');
+            app.AddDICOMsButton.ButtonPushedFcn = createCallbackFcn(app, @AddDICOMsButtonButtonPushed, true);
+            app.AddDICOMsButton.Tag = 'AddDICOMsButton';
+            app.AddDICOMsButton.Icon = fullfile(pathToMLAPP, 'icons', 'pt_add_dicom.svg');
+            app.AddDICOMsButton.Visible = 'off';
+            app.AddDICOMsButton.Tooltip = {'Add new DICOMs to selected patient'};
+            app.AddDICOMsButton.Position = [10 154 30 30];
+            app.AddDICOMsButton.Text = '';
+
+            % Create AddNIfTIsButton
+            app.AddNIfTIsButton = uibutton(app.patientpanel, 'push');
+            app.AddNIfTIsButton.ButtonPushedFcn = createCallbackFcn(app, @AddNIfTIsButtonButtonPushed, true);
+            app.AddNIfTIsButton.Tag = 'AddNIfTIsButton';
+            app.AddNIfTIsButton.Icon = fullfile(pathToMLAPP, 'icons', 'pt_add_nifti.svg');
+            app.AddNIfTIsButton.Visible = 'off';
+            app.AddNIfTIsButton.Tooltip = {'Add new NIfTIs to selected patient'};
+            app.AddNIfTIsButton.Position = [10 111 30 30];
+            app.AddNIfTIsButton.Text = '';
+
+            % Create UpdateNIfTIsButton
+            app.UpdateNIfTIsButton = uibutton(app.patientpanel, 'push');
+            app.UpdateNIfTIsButton.ButtonPushedFcn = createCallbackFcn(app, @UpdateNIfTIsButtonPushed, true);
+            app.UpdateNIfTIsButton.Tag = 'UpdateNIfTIsButton';
+            app.UpdateNIfTIsButton.Icon = fullfile(pathToMLAPP, 'icons', 'pt_update_nifti.svg');
+            app.UpdateNIfTIsButton.Visible = 'off';
+            app.UpdateNIfTIsButton.Tooltip = {'Replace/delete NIfTIs of selected patient'};
+            app.UpdateNIfTIsButton.Position = [10 69 30 30];
+            app.UpdateNIfTIsButton.Text = '';
+
+            % Create PatientList
+            app.PatientList = uitable(app.patientpanel);
+            app.PatientList.ColumnName = {'Patient ID'};
+            app.PatientList.RowName = {};
+            app.PatientList.SelectionType = 'row';
+            app.PatientList.SelectionChangedFcn = createCallbackFcn(app, @PatientListSelectionChanged, true);
+            app.PatientList.Tooltip = {''};
+            app.PatientList.Tag = 'patientlist';
+            app.PatientList.Position = [49 69 334 244];
+
+            % Create MRCT
+            app.MRCT = uidropdown(app.patientpanel);
+            app.MRCT.Items = {'MR', 'CT', 'None'};
+            app.MRCT.ValueChangedFcn = createCallbackFcn(app, @MRCT_Callback, true);
+            app.MRCT.Tag = 'MRCT';
+            app.MRCT.Enable = 'off';
+            app.MRCT.Tooltip = {'Modality of post-operative image (MR/CT/None) will be automatically detected.'; 'In case both MR and CT images are present, CT will be chosen by default.'; 'You can change this in your preference file by setting "prefs.preferMRCT" (1 for MR and 2 for CT).'};
+            app.MRCT.BackgroundColor = [1 1 1];
+            app.MRCT.Position = [10 36 74 26];
+            app.MRCT.Value = 'CT';
+
+            % Create electrode_model_popup
+            app.electrode_model_popup = uidropdown(app.patientpanel);
+            app.electrode_model_popup.Items = {'Modelspec'};
+            app.electrode_model_popup.ValueChangedFcn = createCallbackFcn(app, @electrode_model_popupValueChanged, true);
+            app.electrode_model_popup.Tag = 'electrode_model_popup';
+            app.electrode_model_popup.Tooltip = {'Specify the electrode implanted in the patient(s)'};
+            app.electrode_model_popup.Position = [92 36 226 26];
+            app.electrode_model_popup.Value = 'Modelspec';
+
+            % Create side1
+            app.side1 = uibutton(app.patientpanel, 'state');
+            app.side1.Tag = 'side1';
+            app.side1.Tooltip = {'Right electrode'};
+            app.side1.Text = 'R';
+            app.side1.Position = [10 7 25 23];
+            app.side1.Value = true;
+
+            % Create side3
+            app.side3 = uibutton(app.patientpanel, 'state');
+            app.side3.ValueChangedFcn = createCallbackFcn(app, @side3_Callback, true);
+            app.side3.Tag = 'side3';
+            app.side3.Tooltip = {'3rd electrode'};
+            app.side3.Text = '3';
+            app.side3.Position = [58 7 25 23];
+
+            % Create side2
+            app.side2 = uibutton(app.patientpanel, 'state');
+            app.side2.Tag = 'side2';
+            app.side2.Tooltip = {'Left electrode'};
+            app.side2.Text = 'L';
+            app.side2.Position = [34 7 25 23];
+            app.side2.Value = true;
+
+            % Create side4
+            app.side4 = uibutton(app.patientpanel, 'state');
+            app.side4.ValueChangedFcn = createCallbackFcn(app, @side4_Callback, true);
+            app.side4.Tag = 'side4';
+            app.side4.Tooltip = {'4th electrode'};
+            app.side4.Text = '4';
+            app.side4.Position = [83 7 25 23];
+
+            % Create side5
+            app.side5 = uibutton(app.patientpanel, 'state');
+            app.side5.ValueChangedFcn = createCallbackFcn(app, @side5_Callback, true);
+            app.side5.Tag = 'side5';
+            app.side5.Tooltip = {'5th electrode'};
+            app.side5.Text = '5';
+            app.side5.Position = [108 7 25 23];
+
+            % Create side6
+            app.side6 = uibutton(app.patientpanel, 'state');
+            app.side6.ValueChangedFcn = createCallbackFcn(app, @side6_Callback, true);
+            app.side6.Tag = 'side6';
+            app.side6.Tooltip = {'6th electrode'};
+            app.side6.Text = '6';
+            app.side6.Position = [133 7 25 23];
+
+            % Create side7
+            app.side7 = uibutton(app.patientpanel, 'state');
+            app.side7.ValueChangedFcn = createCallbackFcn(app, @side7_Callback, true);
+            app.side7.Tag = 'side7';
+            app.side7.Tooltip = {'7th electrode'};
+            app.side7.Text = '7';
+            app.side7.Position = [158 7 25 23];
+
+            % Create side8
+            app.side8 = uibutton(app.patientpanel, 'state');
+            app.side8.ValueChangedFcn = createCallbackFcn(app, @side8_Callback, true);
+            app.side8.Tag = 'side8';
+            app.side8.Tooltip = {'8th electrode'};
+            app.side8.Text = '8';
+            app.side8.Position = [183 7 25 23];
+
+            % Create side9
+            app.side9 = uibutton(app.patientpanel, 'state');
+            app.side9.ValueChangedFcn = createCallbackFcn(app, @side9_Callback, true);
+            app.side9.Tag = 'side9';
+            app.side9.Tooltip = {'9th electrode'};
+            app.side9.Text = '9';
+            app.side9.Position = [208 7 25 23];
+
+            % Create side10
+            app.side10 = uibutton(app.patientpanel, 'state');
+            app.side10.ValueChangedFcn = createCallbackFcn(app, @side10_Callback, true);
+            app.side10.Tag = 'side10';
+            app.side10.Tooltip = {'10th electrode'};
+            app.side10.Text = '10';
+            app.side10.Position = [233 7 25 23];
+
+            % Create side11
+            app.side11 = uibutton(app.patientpanel, 'state');
+            app.side11.ValueChangedFcn = createCallbackFcn(app, @side11_Callback, true);
+            app.side11.Tag = 'side11';
+            app.side11.Tooltip = {'11th electrode'};
+            app.side11.Text = '11';
+            app.side11.Position = [258 7 25 23];
+
+            % Create side12
+            app.side12 = uibutton(app.patientpanel, 'state');
+            app.side12.ValueChangedFcn = createCallbackFcn(app, @side12_Callback, true);
+            app.side12.Tag = 'side12';
+            app.side12.Tooltip = {'12th electrode'};
+            app.side12.Text = '12';
+            app.side12.Position = [283 7 25 23];
+
+            % Create side13
+            app.side13 = uibutton(app.patientpanel, 'state');
+            app.side13.ValueChangedFcn = createCallbackFcn(app, @side13_Callback, true);
+            app.side13.Tag = 'side13';
+            app.side13.Tooltip = {'13th electrode'};
+            app.side13.Text = '13';
+            app.side13.Position = [308 7 25 23];
+
+            % Create side14
+            app.side14 = uibutton(app.patientpanel, 'state');
+            app.side14.ValueChangedFcn = createCallbackFcn(app, @side14_Callback, true);
+            app.side14.Tag = 'side14';
+            app.side14.Tooltip = {'14th electrode'};
+            app.side14.Text = '14';
+            app.side14.Position = [333 7 25 23];
+
+            % Create side15
+            app.side15 = uibutton(app.patientpanel, 'state');
+            app.side15.ValueChangedFcn = createCallbackFcn(app, @side15_Callback, true);
+            app.side15.Tag = 'side15';
+            app.side15.Tooltip = {'15th electrode'};
+            app.side15.Text = '15';
+            app.side15.Position = [358 7 25 23];
+
+            % Create CustomButton
+            app.CustomButton = uibutton(app.patientpanel, 'push');
+            app.CustomButton.ButtonPushedFcn = createCallbackFcn(app, @CustomButtonPushed, true);
+            app.CustomButton.Position = [326 38 57 23];
+            app.CustomButton.Text = 'Custom';
+
+            % Create statusone
+            app.statusone = uilabel(app.leadfigure);
+            app.statusone.Tag = 'statusone';
+            app.statusone.BackgroundColor = [0.8 0.8 0.8];
+            app.statusone.WordWrap = 'on';
+            app.statusone.FontSize = 10;
+            app.statusone.FontWeight = 'bold';
+            app.statusone.Tooltip = {''};
+            app.statusone.Position = [10 31 394 22];
+            app.statusone.Text = '';
+
+            % Create statustwo
+            app.statustwo = uilabel(app.leadfigure);
+            app.statustwo.Tag = 'statustwo';
+            app.statustwo.BackgroundColor = [0.8 0.8 0.8];
+            app.statustwo.WordWrap = 'on';
+            app.statustwo.FontSize = 10;
+            app.statustwo.FontWeight = 'bold';
+            app.statustwo.Tooltip = {''};
+            app.statustwo.Position = [10 6 394 22];
+            app.statustwo.Text = '';
+
+            % Create processtabgroup
+            app.processtabgroup = uitabgroup(app.leadfigure);
+            app.processtabgroup.Tooltip = {''};
+            app.processtabgroup.Tag = 'processtabgroup';
+            app.processtabgroup.Position = [414 282 394 245];
+
+            % Create ImportTab
+            app.ImportTab = uitab(app.processtabgroup);
+            app.ImportTab.Tooltip = {''};
+            app.ImportTab.Title = '0. Import';
+            app.ImportTab.BackgroundColor = [1 1 1];
+            app.ImportTab.Tag = 'importtab';
+
+            % Create ImportDICOM2BIDS
+            app.ImportDICOM2BIDS = uicheckbox(app.ImportTab);
+            app.ImportDICOM2BIDS.ValueChangedFcn = createCallbackFcn(app, @ImportDICOM2BIDSValueChanged, true);
+            app.ImportDICOM2BIDS.Tag = 'dicom2bidscheckbox';
+            app.ImportDICOM2BIDS.Tooltip = {'Check this if you have DICOMs of the patient'};
+            app.ImportDICOM2BIDS.Text = 'Import DICOM to BIDS dataset';
+            app.ImportDICOM2BIDS.Position = [10 189 293 26];
+
+            % Create DICOMConvertToolLabel
+            app.DICOMConvertToolLabel = uilabel(app.ImportTab);
+            app.DICOMConvertToolLabel.Tooltip = {''};
+            app.DICOMConvertToolLabel.Position = [27 153 136 22];
+            app.DICOMConvertToolLabel.Text = 'DICOM conversion tool:';
+
+            % Create DICOMConvertTool
+            app.DICOMConvertTool = uidropdown(app.ImportTab);
+            app.DICOMConvertTool.Items = {'dcm2niix', 'dicm2nii', 'SPM', 'GDCM via Slicer'};
+            app.DICOMConvertTool.Tag = 'dcm2niitool';
+            app.DICOMConvertTool.Tooltip = {'Tools for DICOM to NIfTI conversion'};
+            app.DICOMConvertTool.BackgroundColor = [1 1 1];
+            app.DICOMConvertTool.Position = [168 151 126 26];
+            app.DICOMConvertTool.Value = 'dcm2niix';
+
+            % Create ImportNifti2BIDS
+            app.ImportNifti2BIDS = uicheckbox(app.ImportTab);
+            app.ImportNifti2BIDS.ValueChangedFcn = createCallbackFcn(app, @ImportNifti2BIDSValueChanged, true);
+            app.ImportNifti2BIDS.Tag = 'nifti2bidscheckbox';
+            app.ImportNifti2BIDS.Tooltip = {'Check this if you have NIfTIs of the patient'};
+            app.ImportNifti2BIDS.Text = 'Import NIfTI to BIDS dataset';
+            app.ImportNifti2BIDS.Position = [10 113 293 26];
+
+            % Create RegenerateRawimageJson
+            app.RegenerateRawimageJson = uibutton(app.ImportTab, 'push');
+            app.RegenerateRawimageJson.ButtonPushedFcn = createCallbackFcn(app, @RegenerateRawimageJsonButtonPushed, true);
+            app.RegenerateRawimageJson.Tooltip = {''};
+            app.RegenerateRawimageJson.Position = [10 78 159 23];
+            app.RegenerateRawimageJson.Text = 'Regenerate rawimage.json';
+
+            % Create RegistrationTab
+            app.RegistrationTab = uitab(app.processtabgroup);
+            app.RegistrationTab.Tooltip = {''};
+            app.RegistrationTab.Title = '1. Registration';
+            app.RegistrationTab.BackgroundColor = [1 1 1];
+            app.RegistrationTab.Tag = 'registrationtab';
+
+            % Create coreg_checkbox
+            app.coreg_checkbox = uicheckbox(app.RegistrationTab);
+            app.coreg_checkbox.ValueChangedFcn = createCallbackFcn(app, @coreg_checkbox_Callback, true);
+            app.coreg_checkbox.Tag = 'coreg_checkbox';
+            app.coreg_checkbox.Tooltip = {'Check this to coregister all images within the patient'};
+            app.coreg_checkbox.Text = 'Coregister Volumes';
+            app.coreg_checkbox.FontWeight = 'bold';
+            app.coreg_checkbox.Position = [10 189 136 26];
+
+            % Create slicer_coregistered
+            app.slicer_coregistered = uibutton(app.RegistrationTab, 'push');
+            app.slicer_coregistered.ButtonPushedFcn = createCallbackFcn(app, @slicer_coregistered_Callback, true);
+            app.slicer_coregistered.Tag = 'slicer_coregistered';
+            app.slicer_coregistered.Icon = 'slicer_logo.png';
+            app.slicer_coregistered.IconAlignment = 'center';
+            app.slicer_coregistered.FontSize = 8;
+            app.slicer_coregistered.FontColor = [1 1 1];
+            app.slicer_coregistered.Tooltip = {'Show the coregistered volumes in 3D Slicer'};
+            app.slicer_coregistered.Position = [361 191 22 22];
+            app.slicer_coregistered.Text = '';
+
+            % Create ctcoregmethodlabel
+            app.ctcoregmethodlabel = uilabel(app.RegistrationTab);
+            app.ctcoregmethodlabel.Tag = 'text37';
+            app.ctcoregmethodlabel.BackgroundColor = [1 1 1];
+            app.ctcoregmethodlabel.WordWrap = 'on';
+            app.ctcoregmethodlabel.Tooltip = {''};
+            app.ctcoregmethodlabel.Position = [10 161 111 22];
+            app.ctcoregmethodlabel.Text = 'CT to MRI method:';
+
+            % Create coregctmethod
+            app.coregctmethod = uidropdown(app.RegistrationTab);
+            app.coregctmethod.Items = {'Method'};
+            app.coregctmethod.ValueChangedFcn = createCallbackFcn(app, @coregctmethod_Callback, true);
+            app.coregctmethod.Tag = 'coregctmethod';
+            app.coregctmethod.Tooltip = {'Choose how to coregister postoperative CT to preoperative MRI'};
+            app.coregctmethod.BackgroundColor = [1 1 1];
+            app.coregctmethod.Position = [155 159 227 26];
+            app.coregctmethod.Value = 'Method';
+
+            % Create mricoregmethodlabel
+            app.mricoregmethodlabel = uilabel(app.RegistrationTab);
+            app.mricoregmethodlabel.Tag = 'text38';
+            app.mricoregmethodlabel.BackgroundColor = [1 1 1];
+            app.mricoregmethodlabel.WordWrap = 'on';
+            app.mricoregmethodlabel.Tooltip = {''};
+            app.mricoregmethodlabel.Position = [10 129 111 22];
+            app.mricoregmethodlabel.Text = 'MRI to MRI method:';
+
+            % Create coregmrmethod
+            app.coregmrmethod = uidropdown(app.RegistrationTab);
+            app.coregmrmethod.Items = {'Coreg MRIs: SPM', 'Coreg MRIs: SPM + ReFine', 'Coreg MRIs: FSL', 'Coreg MRIs: ANTs', 'Coreg MRIs: BRAINSFIT', 'Coreg MRIs: Hybrid SPM & ANTs', 'Coreg MRIs: Hybrid SPM & BRAINSFIT', 'Coreg MRIs: Hybrid SPM & FSL', 'Do not coregister MRIs (already coregistered)'};
+            app.coregmrmethod.Tag = 'coregmrmethod';
+            app.coregmrmethod.Tooltip = {'Choose how to coregister any pair of MRIs (within patient)'};
+            app.coregmrmethod.BackgroundColor = [1 1 1];
+            app.coregmrmethod.Position = [155 127 227 26];
+            app.coregmrmethod.Value = 'Coreg MRIs: SPM';
+
+            % Create normalize_checkbox
+            app.normalize_checkbox = uicheckbox(app.RegistrationTab);
+            app.normalize_checkbox.ValueChangedFcn = createCallbackFcn(app, @normalize_checkbox_Callback, true);
+            app.normalize_checkbox.Tag = 'normalize_checkbox';
+            app.normalize_checkbox.Tooltip = {'Check this to normalize patient images into the template space'};
+            app.normalize_checkbox.Text = 'Normalize Volumes';
+            app.normalize_checkbox.FontWeight = 'bold';
+            app.normalize_checkbox.Position = [10 97 136 26];
+
+            % Create slicer_normalized
+            app.slicer_normalized = uibutton(app.RegistrationTab, 'push');
+            app.slicer_normalized.ButtonPushedFcn = createCallbackFcn(app, @slicer_normalized_Callback, true);
+            app.slicer_normalized.Tag = 'slicer_normalized';
+            app.slicer_normalized.Icon = 'slicer_logo.png';
+            app.slicer_normalized.IconAlignment = 'center';
+            app.slicer_normalized.FontSize = 8;
+            app.slicer_normalized.FontColor = [1 1 1];
+            app.slicer_normalized.Tooltip = {'Show the normalized volumes in 3D Slicer'};
+            app.slicer_normalized.Position = [361 99 22 22];
+            app.slicer_normalized.Text = '';
+
+            % Create normmethod
+            app.normmethod = uidropdown(app.RegistrationTab);
+            app.normmethod.Items = {'No normalization routine found. SPM installed?'};
+            app.normmethod.ValueChangedFcn = createCallbackFcn(app, @normmethod_Callback, true);
+            app.normmethod.Tag = 'normmethod';
+            app.normmethod.Tooltip = {'Choose the image normalization scheme'};
+            app.normmethod.BackgroundColor = [1 1 1];
+            app.normmethod.Position = [10 67 261 26];
+            app.normmethod.Value = 'No normalization routine found. SPM installed?';
+
+            % Create normsettings
+            app.normsettings = uibutton(app.RegistrationTab, 'push');
+            app.normsettings.ButtonPushedFcn = createCallbackFcn(app, @normsettings_Callback, true);
+            app.normsettings.Tag = 'normsettings';
+            app.normsettings.Tooltip = {'Specify settings for the selected normalization method'};
+            app.normsettings.Position = [279 67 103 26];
+            app.normsettings.Text = 'Settings';
+
+            % Create scrf
+            app.scrf = uicheckbox(app.RegistrationTab);
+            app.scrf.ValueChangedFcn = createCallbackFcn(app, @scrfValueChanged, true);
+            app.scrf.Tag = 'scrf';
+            app.scrf.Tooltip = {'Check this to apply a subcortical refinement to the post-to-pre coregistration'};
+            app.scrf.Text = 'Brainshift Correction';
+            app.scrf.FontWeight = 'bold';
+            app.scrf.Position = [10 35 142 26];
+
+            % Create scrfmask
+            app.scrfmask = uidropdown(app.RegistrationTab);
+            app.scrfmask.Items = {'No mask', 'Coarse mask (Schönecker 2008)', 'Coarse + Fine mask (Schönecker 2008)'};
+            app.scrfmask.Tag = 'scrfmask';
+            app.scrfmask.Tooltip = {'Choose which mask(s) to use for brainshift correction'};
+            app.scrfmask.BackgroundColor = [1 1 1];
+            app.scrfmask.Position = [155 35 227 26];
+            app.scrfmask.Value = 'Coarse mask (Schönecker 2008)';
+
+            % Create checkreg
+            app.checkreg = uicheckbox(app.RegistrationTab);
+            app.checkreg.ValueChangedFcn = createCallbackFcn(app, @checkregValueChanged, true);
+            app.checkreg.Tag = 'checkreg';
+            app.checkreg.Tooltip = {'Check this to review registration results.'; 'Manually checking results for each patient is highly recommended.'};
+            app.checkreg.Text = 'Check Results';
+            app.checkreg.FontWeight = 'bold';
+            app.checkreg.FontColor = [0.231372549019608 0.443137254901961 0.337254901960784];
+            app.checkreg.Position = [10 4 111 26];
+
+            % Create refinefit
+            app.refinefit = uicheckbox(app.RegistrationTab);
+            app.refinefit.ValueChangedFcn = createCallbackFcn(app, @refinefitValueChanged, true);
+            app.refinefit.Tag = 'refinefit';
+            app.refinefit.Tooltip = {'Check this to refine fit to atlas'};
+            app.refinefit.Text = 'Warp Drive';
+            app.refinefit.FontWeight = 'bold';
+            app.refinefit.FontColor = [0.231372549019608 0.443137254901961 0.337254901960784];
+            app.refinefit.Position = [130 4 141 26];
+
+            % Create ACPCCheckBox
+            app.ACPCCheckBox = uicheckbox(app.RegistrationTab);
+            app.ACPCCheckBox.ValueChangedFcn = createCallbackFcn(app, @acpc_checkbox_ValueChanged, true);
+            app.ACPCCheckBox.Tag = 'acpc_checkbox';
+            app.ACPCCheckBox.Text = 'AC/PC';
+            app.ACPCCheckBox.Position = [282 191 59 22];
+
+            % Create LocalizationTab
+            app.LocalizationTab = uitab(app.processtabgroup);
+            app.LocalizationTab.Tooltip = {''};
+            app.LocalizationTab.Title = '2. Localization';
+            app.LocalizationTab.BackgroundColor = [1 1 1];
+            app.LocalizationTab.Tag = 'localizationtab';
+
+            % Create doreconstruction
+            app.doreconstruction = uicheckbox(app.LocalizationTab);
+            app.doreconstruction.ValueChangedFcn = createCallbackFcn(app, @doreconstruction_Callback, true);
+            app.doreconstruction.Tag = 'doreconstruction';
+            app.doreconstruction.Tooltip = {'Check this to reconstruct the electrode trajectories and contacts'};
+            app.doreconstruction.Text = 'pre-Reconstruct';
+            app.doreconstruction.FontWeight = 'bold';
+            app.doreconstruction.Position = [10 189 116 26];
+
+            % Create reconmethodtxt
+            app.reconmethodtxt = uilabel(app.LocalizationTab);
+            app.reconmethodtxt.Tag = 'reconmethodtxt';
+            app.reconmethodtxt.BackgroundColor = [1 1 1];
+            app.reconmethodtxt.WordWrap = 'on';
+            app.reconmethodtxt.Tooltip = {''};
+            app.reconmethodtxt.Position = [10 166 104 22];
+            app.reconmethodtxt.Text = 'Method:';
+
+            % Create reconmethod
+            app.reconmethod = uidropdown(app.LocalizationTab);
+            app.reconmethod.Items = {'Refined TRAC/CORE', 'TRAC/CORE (Horn 2015)', 'PaCER (Husch 2017)', 'Manual', 'Slicer (Manual)', 'LeGUI (Davis 2021)'};
+            app.reconmethod.ValueChangedFcn = createCallbackFcn(app, @reconmethod_Callback, true);
+            app.reconmethod.Tag = 'reconmethod';
+            app.reconmethod.Tooltip = {'Specify method used for localization'};
+            app.reconmethod.BackgroundColor = [1 1 1];
+            app.reconmethod.Position = [128 164 175 26];
+            app.reconmethod.Value = 'Refined TRAC/CORE';
+
+            % Create targetlabel
+            app.targetlabel = uilabel(app.LocalizationTab);
+            app.targetlabel.Tag = 'text20';
+            app.targetlabel.BackgroundColor = [1 1 1];
+            app.targetlabel.WordWrap = 'on';
+            app.targetlabel.Tooltip = {''};
+            app.targetlabel.Position = [10 134 104 22];
+            app.targetlabel.Text = 'Target:';
+
+            % Create targetpopup
+            app.targetpopup = uidropdown(app.LocalizationTab);
+            app.targetpopup.Items = {'STN, GPi or ViM', 'Cg25', 'Manual', 'Auto'};
+            app.targetpopup.ValueChangedFcn = createCallbackFcn(app, @targetpopup_Callback, true);
+            app.targetpopup.Tag = 'targetpopup';
+            app.targetpopup.Tooltip = {'Specify the target of the electrode.'; 'When set to "Manual", you''ll be prompted to locate the electrode starting point manually.'};
+            app.targetpopup.BackgroundColor = [1 1 1];
+            app.targetpopup.Position = [128 132 175 26];
+            app.targetpopup.Value = 'STN, GPi or ViM';
+
+            % Create windowsizelabel
+            app.windowsizelabel = uilabel(app.LocalizationTab);
+            app.windowsizelabel.Tag = 'text11';
+            app.windowsizelabel.BackgroundColor = [1 1 1];
+            app.windowsizelabel.WordWrap = 'on';
+            app.windowsizelabel.Tooltip = {''};
+            app.windowsizelabel.Position = [10 103 110 22];
+            app.windowsizelabel.Text = 'Mask window size:';
+
+            % Create maskwindow_txt
+            app.maskwindow_txt = uieditfield(app.LocalizationTab, 'text');
+            app.maskwindow_txt.ValueChangedFcn = createCallbackFcn(app, @maskwindow_txt_Callback, true);
+            app.maskwindow_txt.Tag = 'maskwindow_txt';
+            app.maskwindow_txt.HorizontalAlignment = 'center';
+            app.maskwindow_txt.Tooltip = {'Size of the mask used to extract the electrode trajectory.'; 'If the postoperative image has large peri-electrodal edema, try to use a larger mask (e.g. enter 15).'; 'If it''s rather noisy, try smaller values (5-7).'};
+            app.maskwindow_txt.Position = [128 102 175 24];
+            app.maskwindow_txt.Value = 'auto';
+
+            % Create refinelocalization
+            app.refinelocalization = uicheckbox(app.LocalizationTab);
+            app.refinelocalization.ValueChangedFcn = createCallbackFcn(app, @refinelocalization_Callback, true);
+            app.refinelocalization.Tag = 'refinelocalization';
+            app.refinelocalization.Tooltip = {'Check this to review and adjust localization results.'; 'This should be done for each patient since the automatic reconstructions are seldomly perfect.'};
+            app.refinelocalization.Text = 'Localize DBS electrodes';
+            app.refinelocalization.FontWeight = 'bold';
+            app.refinelocalization.FontColor = [0.231372549019608 0.443137254901961 0.337254901960784];
+            app.refinelocalization.Position = [10 73 171 26];
+
+            % Create refinelocalization_slicer
+            app.refinelocalization_slicer = uibutton(app.LocalizationTab, 'push');
+            app.refinelocalization_slicer.ButtonPushedFcn = createCallbackFcn(app, @refinelocalization_slicer_Callback, true);
+            app.refinelocalization_slicer.Tag = 'refinelocalization_slicer';
+            app.refinelocalization_slicer.Icon = fullfile(pathToMLAPP, 'icons', 'slicer_logo.png');
+            app.refinelocalization_slicer.IconAlignment = 'center';
+            app.refinelocalization_slicer.FontSize = 8;
+            app.refinelocalization_slicer.FontColor = [1 1 1];
+            app.refinelocalization_slicer.Tooltip = {'Show the contact locations in 3D Slicer'};
+            app.refinelocalization_slicer.Position = [282 75 22 22];
+            app.refinelocalization_slicer.Text = '';
+
+            % Create OptionalTab
+            app.OptionalTab = uitab(app.processtabgroup);
+            app.OptionalTab.Tooltip = {''};
+            app.OptionalTab.Title = 'Optional';
+            app.OptionalTab.BackgroundColor = [1 1 1];
+            app.OptionalTab.Tag = 'optionaltab';
+
+            % Create extractsurface
+            app.extractsurface = uicheckbox(app.OptionalTab);
+            app.extractsurface.ValueChangedFcn = createCallbackFcn(app, @extractsurfaceValueChanged, true);
+            app.extractsurface.Tag = 'extractsurface';
+            app.extractsurface.Tooltip = {'Check this to reconstruct brain surface'};
+            app.extractsurface.Text = 'Extract Surface';
+            app.extractsurface.FontWeight = 'bold';
+            app.extractsurface.Position = [10 189 136 26];
+
+            % Create surfacemethod
+            app.surfacemethod = uidropdown(app.OptionalTab);
+            app.surfacemethod.Items = {'Computational Anatomy Toolbox (CAT12)', 'FreeSurfer'};
+            app.surfacemethod.ValueChangedFcn = createCallbackFcn(app, @surfacemethod_Callback, true);
+            app.surfacemethod.Tag = 'surfacemethod';
+            app.surfacemethod.Tooltip = {'Specify tool used for surface reconstruction'};
+            app.surfacemethod.BackgroundColor = [1 1 1];
+            app.surfacemethod.Position = [10 154 252 26];
+            app.surfacemethod.Value = 'Computational Anatomy Toolbox (CAT12)';
+
+            % Create surfsettings
+            app.surfsettings = uibutton(app.OptionalTab, 'push');
+            app.surfsettings.ButtonPushedFcn = createCallbackFcn(app, @surfsettings_Callback, true);
+            app.surfsettings.Tag = 'surfsettings';
+            app.surfsettings.Visible = 'off';
+            app.surfsettings.Tooltip = {''};
+            app.surfsettings.Position = [274 154 85 26];
+            app.surfsettings.Text = 'Settings';
+
+            % Create include_lead_connectome_subroutine
+            app.include_lead_connectome_subroutine = uicheckbox(app.OptionalTab);
+            app.include_lead_connectome_subroutine.ValueChangedFcn = createCallbackFcn(app, @include_lead_connectome_subroutineValueChanged, true);
+            app.include_lead_connectome_subroutine.Tag = 'include_lead_connectome_subroutine';
+            app.include_lead_connectome_subroutine.Tooltip = {'Check this to perform subroutines specified in the Lead-Connectome window'};
+            app.include_lead_connectome_subroutine.Text = 'Lead Connectome';
+            app.include_lead_connectome_subroutine.FontWeight = 'bold';
+            app.include_lead_connectome_subroutine.Position = [10 119 136 26];
+
+            % Create openleadconnectome
+            app.openleadconnectome = uibutton(app.OptionalTab, 'push');
+            app.openleadconnectome.ButtonPushedFcn = createCallbackFcn(app, @openleadconnectome_Callback, true);
+            app.openleadconnectome.Tag = 'openleadconnectome';
+            app.openleadconnectome.Tooltip = {'Specify settings for connectivity analysis'};
+            app.openleadconnectome.Position = [178 119 85 26];
+            app.openleadconnectome.Text = 'Settings';
+
+            % Create AutoExporttoLeadDBSServerCheckBox
+            app.AutoExporttoLeadDBSServerCheckBox = uicheckbox(app.OptionalTab);
+            app.AutoExporttoLeadDBSServerCheckBox.ValueChangedFcn = createCallbackFcn(app, @exportservercheck_Callback, true);
+            app.AutoExporttoLeadDBSServerCheckBox.Tag = 'exportservercheck';
+            app.AutoExporttoLeadDBSServerCheckBox.Visible = 'off';
+            app.AutoExporttoLeadDBSServerCheckBox.Tooltip = {''};
+            app.AutoExporttoLeadDBSServerCheckBox.Text = 'Auto Export to LeadDBS-Server';
+            app.AutoExporttoLeadDBSServerCheckBox.FontWeight = 'bold';
+            app.AutoExporttoLeadDBSServerCheckBox.Position = [10 89 204 22];
+
+            % Create ConnectomicsTab
+            app.ConnectomicsTab = uitab(app.processtabgroup);
+            app.ConnectomicsTab.Title = '3. Connectomics';
+            app.ConnectomicsTab.BackgroundColor = [1 1 1];
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.ConnectomicsTab);
+            app.UIAxes.XTick = [];
+            app.UIAxes.YTick = [];
+            app.UIAxes.Position = [11 165 373 4];
+
+            % Create RunButton
+            app.RunButton = uibutton(app.ConnectomicsTab, 'push');
+            app.RunButton.Position = [11 11 362 23];
+            app.RunButton.Text = 'Run';
+
+            % Create Switch
+            app.Switch = uiswitch(app.ConnectomicsTab, 'slider');
+            app.Switch.Position = [172 181 45 20];
+
+            % Create Switch_2
+            app.Switch_2 = uiswitch(app.ConnectomicsTab, 'slider');
+            app.Switch_2.Position = [174 134 45 20];
+
+            % Create StructuralConnectivityLabel
+            app.StructuralConnectivityLabel = uilabel(app.ConnectomicsTab);
+            app.StructuralConnectivityLabel.Position = [11 180 127 22];
+            app.StructuralConnectivityLabel.Text = 'Structural Connectivity';
+
+            % Create FunctionalConnectivityLabel
+            app.FunctionalConnectivityLabel = uilabel(app.ConnectomicsTab);
+            app.FunctionalConnectivityLabel.Position = [11 134 131 22];
+            app.FunctionalConnectivityLabel.Text = 'Functional Connectivity';
+
+            % Create OptionsButton
+            app.OptionsButton = uibutton(app.ConnectomicsTab, 'push');
+            app.OptionsButton.Position = [262 180 100 23];
+            app.OptionsButton.Text = 'Options';
+
+            % Create OptionsButton_2
+            app.OptionsButton_2 = uibutton(app.ConnectomicsTab, 'push');
+            app.OptionsButton_2.Position = [262 133 100 23];
+            app.OptionsButton_2.Text = 'Options';
+
+            % Create vizpanel
+            app.vizpanel = uipanel(app.leadfigure);
+            app.vizpanel.Tooltip = {''};
+            app.vizpanel.Title = '3. Visualization';
+            app.vizpanel.BackgroundColor = [1 1 1];
+            app.vizpanel.Tag = 'vizpanel';
+            app.vizpanel.Position = [414 149 394 123];
+
+            % Create SpaceLabel
+            app.SpaceLabel = uilabel(app.vizpanel);
+            app.SpaceLabel.Tag = 'text37';
+            app.SpaceLabel.BackgroundColor = [1 1 1];
+            app.SpaceLabel.WordWrap = 'on';
+            app.SpaceLabel.Tooltip = {''};
+            app.SpaceLabel.Position = [10 71 72 22];
+            app.SpaceLabel.Text = 'Space:';
+
+            % Create vizspacepopup
+            app.vizspacepopup = uidropdown(app.vizpanel);
+            app.vizspacepopup.Items = {'MNI space', 'Native space'};
+            app.vizspacepopup.ValueChangedFcn = createCallbackFcn(app, @vizspacepopup_Callback, true);
+            app.vizspacepopup.Tag = 'vizspacepopup';
+            app.vizspacepopup.Tooltip = {'Choose space for visualization'};
+            app.vizspacepopup.BackgroundColor = [1 1 1];
+            app.vizspacepopup.Position = [105 69 277 27];
+            app.vizspacepopup.Value = 'MNI space';
+
+            % Create AtlasLabel
+            app.AtlasLabel = uilabel(app.vizpanel);
+            app.AtlasLabel.Tag = 'text38';
+            app.AtlasLabel.BackgroundColor = [1 1 1];
+            app.AtlasLabel.WordWrap = 'on';
+            app.AtlasLabel.Tooltip = {''};
+            app.AtlasLabel.Position = [10 40 72 22];
+            app.AtlasLabel.Text = 'Atlas:';
+
+            % Create atlassetpopup
+            app.atlassetpopup = uidropdown(app.vizpanel);
+            app.atlassetpopup.Items = {'Atlassets'};
+            app.atlassetpopup.ValueChangedFcn = createCallbackFcn(app, @atlassetpopup_Callback, true);
+            app.atlassetpopup.Tag = 'atlassetpopup';
+            app.atlassetpopup.Tooltip = {'Choose atlas used for visualization'};
+            app.atlassetpopup.BackgroundColor = [1 1 1];
+            app.atlassetpopup.Position = [105 38 277 26];
+            app.atlassetpopup.Value = 'Atlassets';
+
+            % Create render_checkbox
+            app.render_checkbox = uicheckbox(app.vizpanel);
+            app.render_checkbox.ValueChangedFcn = createCallbackFcn(app, @render_checkbox_Callback, true);
+            app.render_checkbox.Tag = 'render_checkbox';
+            app.render_checkbox.Tooltip = {'Check this to open the 3D viewer.'; 'More options (e.g. VAT calculation) will show in the menu of the 3D viewer.'};
+            app.render_checkbox.Text = 'Render 3D';
+            app.render_checkbox.FontWeight = 'bold';
+            app.render_checkbox.Position = [10 8 82 26];
+
+            % Create writeout2d_checkbox
+            app.writeout2d_checkbox = uicheckbox(app.vizpanel);
+            app.writeout2d_checkbox.ValueChangedFcn = createCallbackFcn(app, @writeout2d_checkbox_Callback, true);
+            app.writeout2d_checkbox.Tag = 'writeout2d_checkbox';
+            app.writeout2d_checkbox.Tooltip = {'Check this to export 2D slice views from your localizations'};
+            app.writeout2d_checkbox.Text = 'Write out 2D';
+            app.writeout2d_checkbox.FontWeight = 'bold';
+            app.writeout2d_checkbox.Position = [105 8 94 26];
+
+            % Create specify2dwrite
+            app.specify2dwrite = uibutton(app.vizpanel, 'push');
+            app.specify2dwrite.ButtonPushedFcn = createCallbackFcn(app, @specify2dwrite_Callback, true);
+            app.specify2dwrite.Tag = 'specify2dwrite';
+            app.specify2dwrite.Tooltip = {'Specifiy settings for 2D slice export'};
+            app.specify2dwrite.Position = [208 8 80 26];
+            app.specify2dwrite.Text = '2D Settings';
+
+            % Create importfs
+            app.importfs = uibutton(app.vizpanel, 'push');
+            app.importfs.ButtonPushedFcn = createCallbackFcn(app, @importfs_Callback, true);
+            app.importfs.Tag = 'importfs';
+            app.importfs.Tooltip = {'Import Freesurfer cortical reconstruction'};
+            app.importfs.Position = [302 8 80 26];
+            app.importfs.Text = 'Import FS';
+
+            % Create RunPanel
+            app.RunPanel = uipanel(app.leadfigure);
+            app.RunPanel.Tooltip = {''};
+            app.RunPanel.Title = 'Run';
+            app.RunPanel.BackgroundColor = [1 1 1];
+            app.RunPanel.Position = [414 10 394 129];
+
+            % Create run_button
+            app.run_button = uibutton(app.RunPanel, 'push');
+            app.run_button.ButtonPushedFcn = createCallbackFcn(app, @run_button_Callback, true);
+            app.run_button.Tag = 'run_button';
+            app.run_button.FontSize = 16;
+            app.run_button.FontWeight = 'bold';
+            app.run_button.Tooltip = {'Click to run the processing pipeline'};
+            app.run_button.Position = [11 45 187 32];
+            app.run_button.Text = 'Run';
+
+            % Create exportcode
+            app.exportcode = uibutton(app.RunPanel, 'push');
+            app.exportcode.ButtonPushedFcn = createCallbackFcn(app, @exportcode_Callback, true);
+            app.exportcode.Tag = 'exportcode';
+            app.exportcode.FontSize = 16;
+            app.exportcode.Tooltip = {'Click to export script for the processing pipeline'};
+            app.exportcode.Position = [202 45 180 32];
+            app.exportcode.Text = 'Export Code';
+
+            % Create openpatientdir
+            app.openpatientdir = uibutton(app.RunPanel, 'push');
+            app.openpatientdir.ButtonPushedFcn = createCallbackFcn(app, @openpatientdir_Callback, true);
+            app.openpatientdir.Tag = 'openpatientdir';
+            app.openpatientdir.Tooltip = {'Click to open (and switch to) the patient directory'};
+            app.openpatientdir.Position = [11 8 187 32];
+            app.openpatientdir.Text = 'Patient Directory';
+
+            % Create viewmanual
+            app.viewmanual = uibutton(app.RunPanel, 'push');
+            app.viewmanual.ButtonPushedFcn = createCallbackFcn(app, @viewmanual_Callback, true);
+            app.viewmanual.Tag = 'viewmanual';
+            app.viewmanual.Tooltip = {'Click to open Lead-DBS manual in your browser'};
+            app.viewmanual.Position = [202 8 180 32];
+            app.viewmanual.Text = 'Manual';
+
+            % Create RetouchoverwriteapprovedresultsLabel
+            app.RetouchoverwriteapprovedresultsLabel = uilabel(app.RunPanel);
+            app.RetouchoverwriteapprovedresultsLabel.HorizontalAlignment = 'center';
+            app.RetouchoverwriteapprovedresultsLabel.FontWeight = 'bold';
+            app.RetouchoverwriteapprovedresultsLabel.FontColor = [0.851 0.3294 0.102];
+            app.RetouchoverwriteapprovedresultsLabel.Tooltip = {''};
+            app.RetouchoverwriteapprovedresultsLabel.Position = [38 81 215 22];
+            app.RetouchoverwriteapprovedresultsLabel.Text = 'Retouch/overwrite approved results:';
+
+            % Create overwriteapproved
+            app.overwriteapproved = uiswitch(app.RunPanel, 'slider');
+            app.overwriteapproved.Items = {'No', 'Yes'};
+            app.overwriteapproved.ItemsData = [0 1];
+            app.overwriteapproved.ValueChangedFcn = createCallbackFcn(app, @overwriteapproved_Callback, true);
+            app.overwriteapproved.Tag = 'overwriteapproved';
+            app.overwriteapproved.Tooltip = {'Set this to "Yes" if you want to ignore what is already approved/localized and overwrite results.'; 'Also needed if you want to re-check results that have already been approved.'};
+            app.overwriteapproved.FontWeight = 'bold';
+            app.overwriteapproved.FontColor = [0.851 0.3294 0.102];
+            app.overwriteapproved.Position = [291 84 37 16];
+            app.overwriteapproved.Value = 0;
+
+            % Create eepush
+            app.eepush = uibutton(app.leadfigure, 'push');
+            app.eepush.ButtonPushedFcn = createCallbackFcn(app, @eepush_Callback, true);
+            app.eepush.Tag = 'eepush';
+            app.eepush.FontSize = 9.99999999999967;
+            app.eepush.Visible = 'off';
+            app.eepush.Tooltip = {''};
+            app.eepush.Position = [405 597 10 10];
+            app.eepush.Text = '';
+
+            % Create sparkbtn
+            app.sparkbtn = uibutton(app.leadfigure, 'push');
+            app.sparkbtn.ButtonPushedFcn = createCallbackFcn(app, @sparkbtn_Callback, true);
+            app.sparkbtn.Tag = 'spark';
+            app.sparkbtn.Position = [592 557 53 27];
+            app.sparkbtn.Text = 'SPARK';
+
+            % Create PatientListContextMenu
+            app.PatientListContextMenu = uicontextmenu(app.leadfigure);
+
+            % Create DeletePatientMenu
+            app.DeletePatientMenu = uimenu(app.PatientListContextMenu);
+            app.DeletePatientMenu.MenuSelectedFcn = createCallbackFcn(app, @DeletePatientMenuSelected, true);
+            app.DeletePatientMenu.Text = 'Delete Patient';
+
+            % Create RenamePatientMenu
+            app.RenamePatientMenu = uimenu(app.PatientListContextMenu);
+            app.RenamePatientMenu.MenuSelectedFcn = createCallbackFcn(app, @RenamePatientMenuSelected, true);
+            app.RenamePatientMenu.Text = 'Rename Patient';
+
+            % Create AddDICOMsMenu
+            app.AddDICOMsMenu = uimenu(app.PatientListContextMenu);
+            app.AddDICOMsMenu.MenuSelectedFcn = createCallbackFcn(app, @AddDICOMsMenuSelected, true);
+            app.AddDICOMsMenu.Tooltip = {''};
+            app.AddDICOMsMenu.Visible = 'off';
+            app.AddDICOMsMenu.Text = 'Add DICOMs';
+            app.AddDICOMsMenu.Tag = 'AddDICOMsMenu';
+
+            % Create AddNIfTIsMenu
+            app.AddNIfTIsMenu = uimenu(app.PatientListContextMenu);
+            app.AddNIfTIsMenu.MenuSelectedFcn = createCallbackFcn(app, @AddNIfTIsMenuSelected, true);
+            app.AddNIfTIsMenu.Tooltip = {''};
+            app.AddNIfTIsMenu.Visible = 'off';
+            app.AddNIfTIsMenu.Text = 'Add NIfTIs';
+            app.AddNIfTIsMenu.Tag = 'AddNIfTIsMenu';
+
+            % Create UpdateNIfTIsMenu
+            app.UpdateNIfTIsMenu = uimenu(app.PatientListContextMenu);
+            app.UpdateNIfTIsMenu.MenuSelectedFcn = createCallbackFcn(app, @UpdateNIfTIsMenuSelected, true);
+            app.UpdateNIfTIsMenu.Text = 'Update NIfTIs';
+            app.UpdateNIfTIsMenu.Tag = 'UpdateNIfTIsMenu';
+            
+            % Assign app.PatientListContextMenu
+            app.PatientList.ContextMenu = app.PatientListContextMenu;
+
+            % Show the figure after all components are created
+            app.leadfigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = lead_dbs(varargin)
+
+            runningApp = getRunningApp(app);
+
+            % Check for running singleton app
+            if isempty(runningApp)
+
+                % Create UIFigure and components
+                createComponents(app)
+
+                % Register the app with App Designer
+                registerApp(app, app.leadfigure)
+
+                % Execute the startup function
+                runStartupFcn(app, @(app)lead_dbs_OpeningFcn(app, varargin{:}))
+            else
+
+                % Focus the running singleton app
+                figure(runningApp.leadfigure)
+
+                app = runningApp;
+            end
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.leadfigure)
+        end
+    end
+end]]></w:t></w:r></w:p></w:body></w:document>
