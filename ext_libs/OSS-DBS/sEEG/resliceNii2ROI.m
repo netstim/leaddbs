@@ -22,11 +22,17 @@ function resliceNii2ROI(images2reslice,threshold,vox_size)
     all_max = [-Inf -Inf -Inf];
     
     for i = 1:length(images2reslice)
+        if strcmp(images2reslice{i}(end-2:end),'.gz')
+            %gunzip([images2reslice{i},'.gz'])
+                
+            gunzip(images2reslice{i});
+            images2reslice{i} = images2reslice{i}(1:end-3);
+        end
         V = spm_vol(images2reslice{i});
         img = spm_read_vols(V);
         
         % Find coordinates of voxels exceeding threshold
-        idx = find(img < threshold);
+        idx = find(img >= threshold);
         if isempty(idx), continue; end
         
         [r, c, s] = ind2sub(size(img), idx);
@@ -68,7 +74,7 @@ function resliceNii2ROI(images2reslice,threshold,vox_size)
         nii_rescliced.img(isnan(nii_rescliced.img)) = 0.0;
         nii_rescliced.fname = [nii_rescliced.fname,'.gz'];
         ea_write_nii(nii_rescliced);
-        ea_delete(images2reslice{i})
+        %ea_delete(images2reslice{i})
 
     end
     %fprintf('All images resliced to the same voxel space.\n'); 
