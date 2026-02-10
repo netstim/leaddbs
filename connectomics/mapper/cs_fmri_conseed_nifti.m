@@ -91,7 +91,11 @@ for tmpt = 1:signallength
     interpol_tc(:,tmpt) = thisvol(:);
 end
 
-load([directory,'TR.mat']);
+trPath = fullfile(directory, 'prefs', 'TR.mat');
+if ~isfile(trPath)
+    trPath = fullfile(directory, 'TR.mat');
+end
+load(trPath);
 
 %% Data corrections steps
 disp('Calculating C2 and CSF-signals for signal regression...');
