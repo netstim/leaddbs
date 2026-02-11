@@ -188,7 +188,7 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
             options.prefs.b0 = fullfile('preprocessing', 'dwi', [dwiBaseName, '_b0.nii']);
             options.prefs.fa = fullfile('preprocessing', 'dwi', [dwiBaseName, '_fa.nii']);
             options.prefs.FTR_unnormalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
-            options.prefs.FTR_normalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
+            options.prefs.FTR_normalized   = fullfile('connectomics', 'dMRI', 'FTR_normalized.mat');
         elseif ~isempty(rawDwiFiles)
             % Use first DWI run found
             rawDwiPath = fullfile(rawDwiFiles(1).folder, rawDwiFiles(1).name);
@@ -235,10 +235,10 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
                 options.prefs.fa = fullfile('preprocessing', 'dwi', [dwiBaseName, '_fa.nii']);
                 % Fiber tracking output (BIDS: stored in connectomics/dMRI/)
                 options.prefs.FTR_unnormalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
-                options.prefs.FTR_normalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
+                options.prefs.FTR_normalized   = fullfile('connectomics', 'dMRI', 'FTR_normalized.mat');
             end
         end
-        
+
         % Anatomical anchor: Copy from rawdata to preprocessing/anat if not present
         % Ensure preprocessing/anat exists
         if ~isfolder(preprocAnatDir)

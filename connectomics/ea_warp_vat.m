@@ -54,7 +54,8 @@ if donorm
                 1,'','','nn');
         otherwise
 
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+            normDir = ea_connectome_normparams_dir(directory);
+            matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
             matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = vatspresent;
             matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
             matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;

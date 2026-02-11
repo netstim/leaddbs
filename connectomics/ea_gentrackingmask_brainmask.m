@@ -258,9 +258,11 @@ if threshold
     tr.img=tr.img>0.1;
     tr.fname=fullfile(maskDir, 'ttrackingmask.nii');
     ea_write_nii(tr);
-    % ALSO save in root for DSI Studio compatibility
-    tr.fname=[directory,'ttrackingmask.nii'];
-    ea_write_nii(tr);
+    % Legacy: also save in root for DSI Studio when not BIDS
+    if ~contains(directory, 'derivatives') && ~contains(directory, 'leaddbs')
+        tr.fname = [directory, 'ttrackingmask.nii'];
+        ea_write_nii(tr);
+    end
 end
 
 % Transform anat to b0 to generate checkreg image (BIDS: place in coregistration/dwi/)

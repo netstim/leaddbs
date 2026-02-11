@@ -54,7 +54,13 @@ voxelmask.vals(todel)=[];
 
 %% set some initial parameters here:
 TR=options.lc.func.prefs.TR;
-save([directory,'TR.mat'],'TR');
+if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
+    prefsDir = fullfile(directory, 'prefs');
+    if ~isfolder(prefsDir), mkdir(prefsDir); end
+    save(fullfile(prefsDir, 'TR.mat'), 'TR');
+else
+    save([directory, 'TR.mat'], 'TR');
+end
 
 
 %% Extract timecourses of specified ROI

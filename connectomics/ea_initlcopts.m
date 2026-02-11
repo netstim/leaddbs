@@ -29,6 +29,8 @@ else
     lc.struc.ft.method='ea_ft_gqi_yeh';
     lc.struc.ft.dsistudio.fiber_count=200000;
     lc.struc.ft.normalize=0;
+    lc.struc.ft.upsample.factor=1;
+    lc.struc.ft.upsample.how=0;
 end
 lc.nbs.adv.method=1;
 lc.nbs.adv.compsize=1;

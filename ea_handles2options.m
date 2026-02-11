@@ -263,10 +263,20 @@ options.fiberthresh=10;
 options.writeoutstats=1;
 
 options.colormap='parula(64)'; % default colormap, use this explicitly rather than 'colormap' to avoid popup window.
-try % not working when calling from lead_anatomy
-    options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
+
+% Lead Connectome: when Connectome tab exists, use it as single source of truth (no Optional checkbox needed)
+try
+    if isfield(handles, 'parcellation') && isvalid(handles.parcellation)
+        options.lc = ea_handles2lc(handles);
+        ea_setprefs('lc', options.lc);  % persist for next time tab is opened
+        % Run connectome if user selected at least one action in the tab
+        options.dolc = (options.lc.struc.ft.do || options.lc.struc.compute_CM || options.lc.struc.compute_GM ...
+            || options.lc.func.compute_CM || options.lc.func.compute_GM);
+    else
+        options.dolc = 0;
+    end
 catch
-    options.dolc=0;
+    options.dolc = 0;
 end
 
 % lead connectome mapper options:
