@@ -9,7 +9,17 @@ elseif strcmp(obj.drawTool,'networkmapping')
         % For functional connectome, should use the spacedef provided by the connectome itself
         res = obj.results.networkmapping.(ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome)).space;
     else
-        res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+        switch obj.calcsettings.structuralresolution  % or functionalresolution if relevant
+            case '2 mm'
+                outspace = '222';
+            case '1 mm'
+                outspace = '111';
+            case '0.5 mm'
+                outspace = '555';
+            otherwise
+                error('Unsupported resolution: %s', obj.calcsettings.structuralresolution);
+        end
+        res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,outspace,'.nii.gz']);
     end
     res.dt(1) = 16;
 
