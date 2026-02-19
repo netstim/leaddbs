@@ -16,8 +16,12 @@ try
 	end
 end
 
-% BIDS FIX: Check if normalization exists - if not, run SPM12 normalization
-normFile = fullfile(directory, 'y_ea_inv_normparams.nii');
+% BIDS: store norm params in normalization/transformations; legacy: subject root
+normDir = ea_connectome_normparams_dir(directory);
+if ~isfolder(normDir)
+    mkdir(normDir);
+end
+normFile = fullfile(normDir, 'y_ea_inv_normparams.nii');
 if ~exist(normFile, 'file')
     fprintf('\nNo normalization found for fiber normalization. Running SPM12 normalization...\n');
     
@@ -42,11 +46,27 @@ if ~exist(normFile, 'file')
     spm_jobman('run', {matlabbatch});
     clear matlabbatch
     
-    % Rename output to Lead-DBS convention
+    % SPM normalise.estwrite outputs the *forward* deformation (template -> subject).
+    % For mapping subject coords to MNI we need the *inverse* (subject -> template)
+    % in subject space. Create it via spm.util.defs and save as y_ea_inv_normparams.nii.
     [anatDir, anatName] = fileparts(anatFile);
     spmNormFile = fullfile(anatDir, ['y_', anatName, '.nii']);
+    forwardFile = fullfile(normDir, 'y_ea_normparams.nii');
     if exist(spmNormFile, 'file')
-        movefile(spmNormFile, normFile);
+        movefile(spmNormFile, forwardFile);
+        % Create inverse deformation (subject -> MNI) in subject space for ea_map_coords.
+        % SPM "Image to base inverse on" (inv.space) must point to an existing file;
+        % use path that actually exists (.nii or .nii.gz) and no ",1" (SPM validates by file count).
+        anatForInv = ea_niigz(anatFile);
+        if ~exist(anatForInv, 'file')
+            ea_error('Anatomical image not found for inverse deformation: %s', anatForInv);
+        end
+        matlabbatch{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {forwardFile};
+        matlabbatch{1}.spm.util.defs.comp{1}.inv.space = {anatForInv};
+        matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams';
+        matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {normDir};
+        spm_jobman('run', {matlabbatch});
+        clear matlabbatch
     end
     
     fprintf('Normalization complete.\n\n');
@@ -368,7 +388,8 @@ directory=[options.root,options.patientname,filesep];
 
 % BIDS FIX: If no method detected but y_ea_inv_normparams.nii exists, assume SPM12
 if isempty(whichnormmethod)
-    normFile = fullfile(directory, 'y_ea_inv_normparams.nii');
+    normDir = ea_connectome_normparams_dir(directory);
+    normFile = fullfile(normDir, 'y_ea_inv_normparams.nii');
     if exist(normFile, 'file')
         fprintf('Normalization file found, assuming SPM12 method...\n');
         whichnormmethod = 'SPM12';
@@ -381,8 +402,49 @@ if isempty(whichnormmethod)
 end
 
 % determine the refimage for b0 and anat space visualization
-refb0=[directory,options.prefs.b0];
-refanat=[directory,options.prefs.prenii_unnormalized];
+% Primary definition (classic Lead-DBS behaviour)
+refb0 = [directory, options.prefs.b0];
+refanat = [directory, options.prefs.prenii_unnormalized];
+
+% BIDS fix: if the expected b0 image in the subject root does not exist,
+% search common preprocessing/coregistration locations for a suitable b0.
+if ~exist(refb0, 'file')
+    % Candidate search directories (ordered by preference)
+    searchDirs = {
+        fullfile(directory, 'preprocessing', 'dwi')
+        fullfile(directory, 'coregistration', 'dwi')
+        directory
+    };
+    foundB0 = '';
+    for iDir = 1:numel(searchDirs)
+        if ~exist(searchDirs{iDir}, 'dir')
+            continue;
+        end
+        % Typical Lead-DBS/BIDS naming: contains "b0" in filename
+        files = dir(fullfile(searchDirs{iDir}, '*b0*.nii*'));
+        if ~isempty(files)
+            % Take the last match (often the most recent / most specific)
+            foundB0 = fullfile(searchDirs{iDir}, files(end).name);
+            break;
+        end
+    end
+    if ~isempty(foundB0)
+        fprintf('INFO ea_checktransform: Using fallback b0 image: %s\n', foundB0);
+        refb0 = foundB0;
+    else
+        % No existing b0 found anywhere. At this point the main pipeline
+        % (ea_autocoord) should already have run the DWI preparation step
+        % (ea_prepare_dti_bids/ea_exportb0) whenever any structural
+        % Lead-Connectome option is enabled. If we still do not find a b0
+        % image here, this indicates that DWI data have not been prepared
+        % correctly and we should stop with a clear error instead of
+        % silently trying to re-run preprocessing from within this helper.
+        ea_error(['No b0 image found in expected locations. ', ...
+                  'Please ensure that DWI preparation has been run ', ...
+                  '(via structural Lead-Connectome options in the main GUI) ', ...
+                  'before fiber normalization.']);
+    end
+end
 
 % determine the template for fiber normalization and visualization
 if ismember(whichnormmethod,{'ea_normalize_spmshoot','ea_normalize_spmdartel','ea_normalize_spmnewseg'})

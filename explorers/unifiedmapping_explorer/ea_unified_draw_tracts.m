@@ -1,4 +1,4 @@
-function ea_unified_draw_tracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind)
+function ea_unified_draw_tracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind,usedidx)
 % Plot fibers if any survived
 if ~isempty(fibcell{group,side})
     prefs = ea_prefs;
@@ -14,6 +14,9 @@ if ~isempty(fibcell{group,side})
     [obj.drawobject.fiberfiltering{group,side}.FaceColor]=fibcolor{:};
     [obj.drawobject.fiberfiltering{group,side}.FaceAlpha]=fibalpha{:};
     obj.drawvals{group,side} = vals{group,side};
+    obj.fiberdrawn.fibcell = fibcell;
+    obj.fiberdrawn.vals = vals;
+    obj.fiberdrawn.usedidx = usedidx;
 else
     obj.drawobject.fiberfiltering{group,side} = {};
     obj.drawvals{group,side} = {};

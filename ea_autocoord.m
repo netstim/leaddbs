@@ -399,6 +399,72 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.dolc % perform lead connectome subroutine..
+        % Ensure lc options exist (GUI → options mapping)
+        if ~isfield(options, 'lc') || isempty(options.lc)
+            if isfield(options, 'leadfigure') && ~isempty(options.leadfigure)
+                options.lc = ea_initlcopts(options.leadfigure);
+            else
+                options.lc = ea_initlcopts([]);
+            end
+        end
+
+        % If at least one *structural* Lead-Connectome option is enabled,
+        % prepare DWI data (copy from rawdata, set prefs, export b0) before
+        % entering the main Lead-Connectome routine. This mirrors the
+        % intended "old" pipeline behaviour but integrates it cleanly into
+        % the main GUI.
+        try
+            doStrucLC = false;
+            if isfield(options, 'lc') && isfield(options.lc, 'struc')
+                s = options.lc.struc;
+                if (isfield(s, 'ft') && isfield(s.ft, 'do') && s.ft.do) || ...
+                   (isfield(s, 'ft') && isfield(s.ft, 'normalize') && s.ft.normalize) || ...
+                   (isfield(s, 'compute_CM') && s.compute_CM) || ...
+                   (isfield(s, 'compute_GM') && s.compute_GM)
+                    doStrucLC = true;
+                end
+            end
+
+            if doStrucLC
+                directory = [options.root, options.patientname, filesep];
+
+                % For BIDS-style datasets in derivatives/leaddbs, copy DWI
+                % from rawdata into preprocessing/dwi and set prefs.*.
+                if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
+                    options = ea_prepare_dti_bids(options);
+                end
+
+                % Ensure a b0 image exists at options.prefs.b0 (or its BIDS
+                % variant) before fiber tracking / normalization. This will
+                % create preprocessing/dwi/*_b0.nii if it is still missing.
+                try
+                    ea_exportb0(options);
+                catch MEb0
+                    warning('Lead-Connectome DWI preparation: automatic b0 export failed (%s). Proceeding with existing configuration.', MEb0.message);
+                end
+
+                % Ensure that a B0->T1 coregistration transform exists so
+                % that warped parcellations (b0wAtlas) and fiber
+                % normalization share a consistent affine relationship
+                % between diffusion space and anatomy.
+                try
+                    options = ea_ensure_b0_coreg(options);
+                catch MEcoreg
+                    warning('Lead-Connectome DWI preparation: automatic B0->T1 coreg failed (%s). Proceeding with existing configuration.', MEcoreg.message);
+                end
+
+                % Create FA from DWI and FA coregistered to anat in coregistration/anat
+                try
+                    options = ea_ensure_fa_and_fa2anat(options);
+                catch MEfa
+                    warning('Lead-Connectome: FA creation / FA->anat coregistration failed (%s). Proceeding.', MEfa.message);
+                end
+            end
+        catch MEprep
+            warning('Lead-Connectome DWI preparation step failed (%s). Continuing with existing options.', MEprep.message);
+        end
+
+        % Now run the main Lead-Connectome routine (structural + functional)
         ea_perform_lc(options);
     end
 

@@ -16,12 +16,19 @@ directory=[options.root,options.patientname,filesep];
 vizz=0;
 
 % build white matter mask
-% Check both classic location (root) and BIDS location (preprocessing/dwi/)
-maskClassic = [directory,'ttrackingmask.nii'];
+% BIDS: preprocessing/dwi/ttrackingmask.nii; legacy: subject root
 maskBIDS = fullfile(directory, 'preprocessing', 'dwi', 'ttrackingmask.nii');
-if (~isfile(maskClassic) && ~isfile(maskBIDS)) || redo || ...
+maskClassic = [directory,'ttrackingmask.nii'];
+maskPath = maskClassic;
+if isfile(maskBIDS)
+    maskPath = maskBIDS;
+elseif isfile(maskClassic)
+    maskPath = maskClassic;
+end
+if ~isfile(maskPath) || redo || ...
         (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     ea_gentrackingmask_brainmask(options,1)
+    if isfile(maskBIDS), maskPath = maskBIDS; else, maskPath = maskClassic; end
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
@@ -36,7 +43,7 @@ if ~isfile(fibFile) || redo || ...
         (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     disp('Estimating ODF / preparing GQI...');
 
-    ea_prepare_fib_gqi(DSISTUDIO,options);
+    ea_prepare_fib_gqi(DSISTUDIO, options, maskPath);
 
     disp('Done.');
 else
@@ -47,7 +54,7 @@ end
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
     ' --source=',ea_path_helper(fullfile(connectomicsDir, [ftrbase,'.fz'])),...
-    ' --seed=',ea_path_helper([directory,'ttrackingmask.nii']),...
+    ' --seed=',ea_path_helper(maskPath),...
     ' --tract_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
     ' --output=',ea_path_helper(fullfile(connectomicsDir, [ftrbase,'.mat'])),...
     ' --dt_threshold=0.2',...
@@ -124,14 +131,16 @@ if vizz
     plot3(xx,yy,zz,'g.')
 end
 
-% BIDS FIX: Save fibers as [N x 3] matrix, not [N x 4]
-% The fiber index is stored separately in 'idx'
+% Store fibers in voxel space of the B0 image (classic Lead-Connectome
+% behaviour). The affine of the FTR is kept equal to the B0 affine so that
+% downstream code can choose between voxel and mm interpretation
+% explicitly.
 ftr.ea_fibformat = '1.0';
-ftr.fourindex = 0;  % No 4th column
-ftr.fibers = fibers(:, 1:3);  % Only X, Y, Z
-ftr.idx = idx;
-ftr.voxmm = 'vox';
-ftr.mat = b0.mat;
+ftr.fourindex    = 0;               % No 4th column
+ftr.fibers       = fibers(:,1:3);   % voxel coordinates after flip + 1-based
+ftr.idx          = idx;
+ftr.voxmm        = 'vox';
+ftr.mat          = b0.mat;
 
 % BIDS: Save fibers in connectomics/dMRI/
 connectomicsDir = fullfile(directory, 'connectomics', 'dMRI');
@@ -147,7 +156,7 @@ fprintf('\nGenerating trk in b0 space...\n');
 ea_ftr2trk(fullfile(connectomicsDir, [ftrbase, '.mat']), [directory, options.prefs.b0])
 
 
-function ea_prepare_fib_gqi(DSISTUDIO,options)
+function ea_prepare_fib_gqi(DSISTUDIO, options, maskPath)
 directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
@@ -174,7 +183,7 @@ end
 fibFile = fullfile(connectomicsDir, [ftrbase, '.fz']);
 cmd = [DSISTUDIO,' --action=rec --source=',ea_path_helper(srcFile),...
        ' --dti_ignore_high_b=1',...
-       ' --mask=',ea_path_helper([directory,'ttrackingmask.nii']),...
+       ' --mask=',ea_path_helper(maskPath),...
        ' --method=4',...
        ' --param=1.25',...
        ' --check_btable=0',...
