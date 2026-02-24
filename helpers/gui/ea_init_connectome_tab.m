@@ -112,6 +112,7 @@ end
 % Apply defaults via handles (so lc2handles can set all checkboxes/edits)
 if use_app
     [~, ~, handles] = ea_convertGUIDEArguments(app);
+    lc.lc.struc.ft.do = 0;
     ea_lc2handles(lc, handles);
     % Fiber Count visibility: show only for GQI (Yeh); set on app so it isn't lost (adapters may not support Visible)
     ftFunctions = getappdata(leadfig, 'ftFunctions');
