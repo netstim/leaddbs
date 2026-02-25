@@ -10,24 +10,40 @@ if ~iscell(object)
     object = {object};
 end
 
-for i=1:numel(object)
-    if isfile(object{i})
-        delete(object{i});
-    elseif isfolder(object{i})
-        rmdir(object{i},'s');
-    elseif contains(object{i}, '*') && ~isempty(dir(object{i}))
-        contents = dir(object{i});
+for i = 1:numel(object)
+    obj = object{i};
+    if ~(ischar(obj) || isstring(obj))
+        continue;
+    else
+        obj = ea_strip(char(obj));
+    end
+
+    % Global safety-guard: do not delete empty or pure wildcards
+    % without path definitions
+    if isempty(obj) || strcmp(obj, '*')
+        % optional: warning('ea_delete: refusing to delete "%s".', obj);
+        continue;
+    end
+
+    % go on
+    if isfile(obj)
+        delete(obj);
+    elseif isfolder(obj)
+        rmdir(obj, 's');
+    elseif contains(obj, '*') && ~isempty(dir(obj))
+        contents = dir(obj);
         contents = contents(~ismember({contents.name}, {'.', '..'}));
-        for c=1:length(contents)
+        for c = 1:length(contents)
             fd = [contents(c).folder, filesep, contents(c).name];
             if isfile(fd)
                 delete(fd);
             elseif isfolder(fd)
-                rmdir(fd,'s');
+                rmdir(fd, 's');
             end
         end
     elseif warn
-        warning([object{i}, ' does not exist!'])
+        warning([obj, ' does not exist!'])
     end
 end
+
 warning('on');
