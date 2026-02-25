@@ -12,30 +12,24 @@ end
 
 for i = 1:numel(object)
     obj = object{i};
+    if ~(ischar(obj) || isstring(obj))
+        continue;
+    else
+        obj = strip(char(obj));
+    end
 
     % Global safety-guard: do not delete empty or pure wildcards
     % without path definitions
-
-    if isempty(obj)
-        continue;
-    end
-    if isstring(obj)
-        obj = char(obj);
-    end
-    if ~ischar(obj)
-        continue;
-    end
-    obj = strtrim(obj);
     if isempty(obj) || strcmp(obj, '*')
         % optional: warning('ea_delete: refusing to delete "%s".', obj);
         continue;
     end
 
-    % go on as before but with obj instead of object{i}
+    % go on
     if isfile(obj)
         delete(obj);
     elseif isfolder(obj)
-        rmdir(obj,'s');
+        rmdir(obj, 's');
     elseif contains(obj, '*') && ~isempty(dir(obj))
         contents = dir(obj);
         contents = contents(~ismember({contents.name}, {'.', '..'}));
@@ -44,7 +38,7 @@ for i = 1:numel(object)
             if isfile(fd)
                 delete(fd);
             elseif isfolder(fd)
-                rmdir(fd,'s');
+                rmdir(fd, 's');
             end
         end
     elseif warn
