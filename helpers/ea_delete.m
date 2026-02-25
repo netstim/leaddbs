@@ -15,7 +15,7 @@ for i = 1:numel(object)
     if ~(ischar(obj) || isstring(obj))
         continue;
     else
-        obj = strip(char(obj));
+        obj = ea_strip(char(obj));
     end
 
     % Global safety-guard: do not delete empty or pure wildcards
