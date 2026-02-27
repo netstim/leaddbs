@@ -757,6 +757,38 @@ if ~isempty(img_idx)
 
     img = imgs{img_idx, 1};
 
+    % Reorient img and hdr to RAS orientation (only for the viewer)
+    if img.p.nii.hdr.sform_code
+        M = img.p.nii.hdr.sform_mat(1:3, 1:3)./img.p.pixdim(1:3); % Normalized M
+    elseif img.p.nii.hdr.qform_code
+        M = img.p.nii.hdr.qform_mat(1:3, 1:3)./img.p.pixdim(1:3); % Normalized M
+    else % Fall back, suppose RAS
+        M = eye(3);
+    end
+    [~, p] = max(abs(M), [], 2); % Calculate permute vector
+    reorient_code = p';
+    if img.p.nii.hdr.dim(1) > 3 % 4D image compatibility
+        permute_vec = [p', 4:img.p.nii.hdr.dim(1)];
+    else
+        permute_vec = p';
+    end
+    img.p.nii.img = permute(img.p.nii.img, permute_vec);
+    M_permuted = M(:, p);
+    for i = 1:3
+        if M_permuted(i, i) < 0 % Flip when necessary
+            img.p.nii.img = flip(img.p.nii.img, i);
+            reorient_code(i) = -reorient_code(i);
+        end
+    end
+    img.dim(1:3) = img.dim(p');
+    img.p.nii.hdr.dim(2:4) = img.p.nii.hdr.dim(p'+1);
+    img.p.pixdim(1:3) = img.p.pixdim(p');
+    if ~all(reorient_code == [1 2 3]) % Add additional info in the bottom right panel
+        reorient_code = sprintf('[%d %d %d]', reorient_code);
+    else
+        reorient_code = 'N/A';
+    end
+    
     % update info area
     try
         time_and_date_ugly = img.p.nii.ext.edata_decoded.AcquisitionDateTime;
@@ -771,13 +803,14 @@ if ~isempty(img_idx)
         'Acquistion date:\t%s\n', ...
         'Intensity range:\t[%.0f, %.0f]\n', ...
         'Histogram range:\t[%.0f, %.0f]\n', ...
-        'Flip:\t\t\t\t[%d %d %d]'], ...
+        'Flip:\t\t\t\t[%d %d %d]\n', ...
+        'RAS reorient code:\t%s'], ...
         num2str(img.p.nii.hdr.dim(2)),num2str(img.p.nii.hdr.dim(3)), num2str(img.p.nii.hdr.dim(4)), num2str(img.p.nii.hdr.dim(5)), ...
         img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
         time_and_date_pretty, ...
         min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
         min(img.img_thresholded), max(img.img_thresholded), ...
-        img.p.flip(1), img.p.flip(2), img.p.flip(3));
+        img.p.flip(1), img.p.flip(2), img.p.flip(3), reorient_code);
 
     % if .json has been found, insert this into the info string as well
     if img.json_found == 1
@@ -815,7 +848,7 @@ if ~isempty(img_idx)
     uiapp.axes_cor.YLabel.Color = 'w';
     uiapp.axes_cor.YLabel.Rotation = 0;
     uiapp.axes_cor.YLabel.Position(2) = img.dim(3)/2 + uiapp.axes_cor.YLabel.Extent(4)/2;
-    uiapp.axes_cor.YLabel.Position(1) = -3;
+    uiapp.axes_cor.YLabel.Position(1) = -4;
 
     uiapp.axes_cor.Title.String = 'S';
     uiapp.axes_cor.Title.Color = 'w';
@@ -833,7 +866,7 @@ if ~isempty(img_idx)
     uiapp.axes_sag.YLabel.Color = 'w';
     uiapp.axes_sag.YLabel.Rotation = 0;
     uiapp.axes_sag.YLabel.Position(2) = img.dim(3)/2 + uiapp.axes_sag.YLabel.Extent(4)/2;
-    uiapp.axes_sag.YLabel.Position(1) = -3;
+    uiapp.axes_sag.YLabel.Position(1) = -4;
 
     uiapp.axes_sag.Title.String = 'S';
     uiapp.axes_sag.Title.Color = 'w';
