@@ -158,7 +158,7 @@ hs = guidata(obj.UserData);
 vnam = hs.series.String;
 if iscell(vnam) && numel(vnam)>1, vnam = vnam{1}; end
 vnam = hs.subj.String+"_"+hs.series.UserData+hs.instnc.String+"_"+vnam;
-vnam = genvarname("err_"+vnam);
+vnam = matlab.lang.makeValidName("err_"+vnam);
 eval(vnam +" = evt;");
 fnam = hs.logDir+"errorLog.mat";
 if isfile(fnam), save(fnam, vnam, '-append'); else, save(fnam, vnam); end
@@ -177,14 +177,15 @@ nam = dir([bNam '000001_*.dcm']);
 if isempty(nam), return; end
 s = dicm_hdr_wait(nam, []);
 if isempty(s), return; end % non-image dicom, skip series
-if size(hs.table.Data,1)<1 && datetime-datetime(nam.date)<minutes(5)
+if size(hs.table.Data,1)<1 && datetime-nam.date<minutes(5)
     save([hs.rootDir '/hdr_' hs.subj.String], 's'); % as new subj flag
 end
 
-hs.fig.WindowState = 'maximized';
 L0 = java.awt.MouseInfo.getPointerInfo().getLocation();
 java.awt.Robot().mouseMove(L0.getX+9, L0.getY+9); % wake up screen
 pause(0.1); java.awt.Robot().mouseMove(L0.getX, L0.getY);
+! gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false
+hs.fig.WindowState = 'maximized';
 
 if hs.derived.Checked=="on" && contains(s.ImageType, 'DERIVED'), return; end
 if hs.SBRef.Checked=="on" && endsWith(s.SeriesDescription, '_SBRef'), return; end
@@ -268,7 +269,6 @@ for i = 2:nTR
     set_img(hs.img, img); hs.instnc.String = num2str(i);
     hs.slider.Value = i; % show progress
     if isDTI, continue; end % give up for now
-    
 
     p.F.Values = smooth_mc(img, p.sz);
     [m6(2,:), R1] = moco_estim(p, R1);
@@ -325,20 +325,14 @@ for i = numel(fs):-1:1
     new = true; return;
 end
 if ~isfile([hs.rootDir 'dClock']); return; end % rest only for RTMM computer
+try EyelinkStart(hs.rootDir); end
 QC_report(hs.subj);
-
-% Backup subj folder around 3AM
-if ~isfolder(hs.backupDir) || abs(datetime-datetime('today')-hours(3))>seconds(9); return; end
-fs = fs(datetime-datetime({fs.date})>days(2));
-for i = 1:numel(fs)
-    if isfolder([hs.backupDir fs(i).name]), continue; end
-    movefile([hs.rootDir fs(i).name], hs.backupDir);
-end
+houseKeeping(hs);
 
 %% Initialize GUI for a new series
 function init_series(hs, s, nTR)
 fid = fopen([hs.rootDir 'currentSeries.txt'], 'w');
-fprintf(fid, '%s_%s_%s', s.PatientName, asc_header(s, 'tProtocolName'), s.AcquisitionDateTime(3:12));
+fprintf(fid, '%s_%s_%s', s.PatientID, asc_header(s, 'tProtocolName'), s.AcquisitionDateTime(3:12));
 fclose(fid);
 
 set(hs.slider, 'Max', nTR, 'Value', 1, 'UserData', seriesBase(s.Filename));
@@ -614,7 +608,7 @@ end
 d = size(in);
 I = {1:d(1) 1:d(2) 1:d(3)};
 n = sz/3;
-if numel(n)==1, n = n*[1 1 1]; end
+if isscalar(n), n = n*[1 1 1]; end
 J = {1:n(1):d(1) 1:n(2):d(2) 1:n(3):d(3)};
 intp = 'linear';
 F = griddedInterpolant(I, out, intp);
@@ -666,14 +660,8 @@ tEnd = datetime + seconds(2); % wait till file ready
 nam = [nam.folder '/' nam.name];
 while 1
     s = dicm_hdr(nam, dict);
-    try
-        if s.PixelData.Start+s.PixelData.Bytes<=s.FileSize || datetime>tEnd
-            return;
-        end
-    catch me
-        if datetime>tEnd, fprintf(2,'%s\n', nam); rethrow(me); end % give up
-    end
-    pause(0.1);
+    try if s.PixelData.Start+s.PixelData.Bytes <= s.FileSize, return; end; end
+    if datetime>tEnd, return; else, pause(0.1); end
 end
 
 %% User closing GUI: stop and delete timer
@@ -845,8 +833,8 @@ if nargin>1 % calling from menu
     subj = hs.subj.String;
 else
     nam = dir([hs.rootDir 'closed_*']);
-    if isempty(nam) || datetime-datetime(nam(1).date)<seconds(1) || ...
-            isfile([hs.rootDir 'EyelinkRecording.mat']); return; end
+    if isempty(nam) || datetime-nam(1).date<seconds(1), return; end
+    EyelinkStop([hs.rootDir 'EyelinkStarted']);
     nam = [hs.rootDir nam(1).name];
     done = onCleanup(@()movefile(nam, strrep(nam, 'closed_', 'done_')));
     subj = regexp(nam, '(?<=closed_)\d{4,6}\w{2}$', 'match', 'once');
@@ -930,6 +918,7 @@ for i = 1:numel(uDat.hdr)
             t0 = seconds(timeofday(dicmDT(s)));
             [mi, j] = min(abs(EL.tg - t0));
             if mi<5 % recording started late if mi too large
+                try
                 TR = asc_header(s, 'alTR[0]')*1e-6;
                 while j>1 && abs(diff(EL.tg([j-1 j]))-TR)<0.1, j = j-1; end
                 % fprintf('%4.2f\n', EL.tg(j)-t0); % normally <1
@@ -941,6 +930,9 @@ for i = 1:numel(uDat.hdr)
                 plot(ax0, el{end}{1}, 'b');
                 set(ax0, 'XLim', [1 nP], 'XTick', []);
                 ylabel(ax0, 'Pupil Size', 'Color', 'b');
+                catch, y = y - 0.32; clear ax0;
+                end
+            else, y = y - 0.32; clear ax0;
             end
         else, y = y - 0.32; clear ax0;
         end
@@ -1025,5 +1017,32 @@ end
 function dt = dicmDT(s, fmt)
 dt = datetime(s.AcquisitionDateTime, 'InputFormat', 'yyyyMMddHHmmss.SSSSSS');
 if nargin>1, dt.Format = fmt; dt = char(dt); end
+
+%% Start pupil area recording if requested by EyelinkRecordStart
+function EyelinkStart(f)
+nam = [f 'EyelinkRecordStart'];
+if ~isfile(nam), return; end
+try if Eyelink('IsConnected'), return; end; catch, return; end
+if Eyelink('Initialize'), error('Eyelink connection failed.'); end
+Eyelink('Openfile', 'tmp.edf'); % overwrite
+Eyelink('Command', 'sample_rate = 250'); % low rate: small file size
+Eyelink('Command', 'file_sample_data = AREA,BUTTON'); % add HREF? 
+Eyelink('Command', 'file_event_filter = MESSAGE'); % not sure needed
+Eyelink('StartRecording', 1, 0, 0, 0); % file_samples/events link_samples/events
+DICM_secs = load([f 'dClock'], '-ascii') + seconds(datetime('now')-datetime('today'));
+Eyelink('Message', sprintf('DICM_secs=%.3f', DICM_secs));
+movefile([f 'EyelinkRecordStart'], [f 'EyelinkStarted']);
+
+%% Stop Eyelink recording if EyelinkStarted exists
+function EyelinkStop(nam)
+if ~isfile(nam); return; end
+if ~Eyelink('IsConnected'), Eyelink('Initialize'); end
+fnam = [fileparts(nam) '/RTMM_log/' fileread(nam) char(datetime('now', 'Format', '_HHmmss')) '.edf'];
+Eyelink('StopRecording');
+Eyelink('CloseFile');
+Eyelink('Command', 'sample_rate = 1000');
+Eyelink('ReceiveFile', 'tmp.edf', fnam);
+Eyelink('Shutdown');
+delete(nam);
 
 %%

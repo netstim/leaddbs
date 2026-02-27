@@ -246,7 +246,7 @@ else
     a = handle(findall(0, 'Type', 'figure', 'Tag', 'nii_viewer'));
     if isempty(a)
         fn = 'ni' * 256.^(1:2)'; % start with a big number for figure
-    elseif numel(a) == 1
+    elseif isscalar(a)
         fn = get(a, 'Number') + 1; % this needs handle() to work
         if isempty(fn), fn = 'ni' * 256.^(1:2)'; end
     else
@@ -734,7 +734,7 @@ switch cmd
             if isempty(hdr)
                 errordlg('No known extension for the selected NIfTI'); 
                 return;
-            elseif numel(hdr) == 1, hdr = hdr{1};
+            elseif isscalar(hdr), hdr = hdr{1};
             end
         elseif strcmp(cmd, 'essential')
             hdr = nii_essential(p);
@@ -982,7 +982,7 @@ switch cmd
             try, p.map = str2num(char(p.map'));
             catch, errordlg('Unrecognized LUT file'); return;
             end
-            if max(p.map(:)>1), p.map = single(p.map) / 255; end
+            if any(p.map(:)>1), p.map = single(p.map) / 255; end
         else
             p.map = reshape(p.map, [], 3);
             p.map = single(p.map) / 255;
@@ -1163,11 +1163,12 @@ switch cmd
             errordlg(me.message);
         end
     case 'MP4' % save slices as movie
-        str = {'Which view to slide? 1:Sag; 2:Cor; 3:Tra'};
-        a = inputdlg(str, 'Export Movie', 1);
+        str = {'Which view to slice? 1:Sag; 2:Cor; 3:Tra', 'One view only?'};
+        a = inputdlg(str, 'Export Movie', 1, {'3' 'No'});
         if isempty(a), return; end
-        d = str2double(strtrim(a));
+        d = str2double(strtrim(a{1}));
         if ~any(d==1:3), errordlg('Input must be 1, 2 or 3'); return; end
+        oneView = strcmpi('y', a{2}(1));
         str = {'Slice range (default all)' 'Movie frames per second'};
         a = inputdlg(str, 'Export Movie', 1, {['1:' num2str(hs.dim(d))] '4'});
         if isempty(a), return; end
@@ -1175,13 +1176,15 @@ switch cmd
         fps = str2double(a{2});
         p = get_para(hs);
         pName = fileparts(p.nii.hdr.file_name);
-        [fname, pName] = uiputfile([pName '/*.mp4'], ...
-            'Input file name to save the movie');
+        [fname, pName] = uiputfile([pName '/*.mp4'], 'Input file name to save the movie');
         if ~ischar(fname), return; end
         fname = fullfile(pName, fname);
         
-        rect = [2 2 fh.Position(3:4)-[3 hs.params.Position(4)+1]];
-        vw = mp4_video(fname, fps, fix(rect/2)*2);
+        if oneView, rect = round(getpixelposition(hs.ax(d)));
+        else, rect = [2 2 fh.Position(3:4)-[3 hs.params.Position(4)+1]];
+        end
+        rect(3:4) = fix(rect(3:4)/2) * 2;
+        vw = mp4_video(fname, fps, rect);
         for i = rg
             hs.ijk(d).Value = i;
             vw.addFrame(fh);
@@ -1516,12 +1519,12 @@ if nv>1 && numel(p.nii.img)>1e7 % load all or a single volume
             a = strtrim(a{1});
             if ~isstrprop(a, 'digit'), break; end
             a = str2num(a);
-            if isequal(a,1:nv) || (numel(a)==1 && a>=1 && a<=nv && mod(a,1)==0)
+            if isequal(a,1:nv) || (isscalar(a) && a>=1 && a<=nv && mod(a,1)==0)
                 break;
             end
         end
     end
-    if isnumeric(a) && numel(a)==1
+    if isnumeric(a) && isscalar(a)
     	singleVol = a;
         p.nii.img = p.nii.img(:,:,:,a);
         if isfield(p.nii, 'cii')
@@ -1700,7 +1703,7 @@ if isempty(f) || ~strncmp(hdr.magic, 'n', 1) % treat it as Analyze
     return;
 end
 
-if numel(f)==1 || nargin<2 || isempty(ask_code) % only 1 avail or no ask_code
+if isscalar(f) || nargin<2 || isempty(ask_code) % only 1 avail or no ask_code
     frm = f;
 else % numel(f) is 2, numel(ask_code) can be 1 or 2
     frm = f(f == ask_code(1));
@@ -3312,7 +3315,7 @@ for i = find(flp), nii.img = flip(nii.img, i); end
 function tf = ischar(A)
 tf = builtin('ischar', A);
 if tf, return; end
-if exist('strings', 'builtin'), tf = isstring(A) && numel(A)==1; end
+if exist('strings', 'builtin'), tf = isstring(A) && isscalar(A); end
 
 %% manual alignment GUI
 function d = manual_align(h, ~)

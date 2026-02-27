@@ -197,7 +197,15 @@ for nb = [0 2e6 fSize] % if not enough, read more till all read
         tg = char([00 86 32 0]); % SpectroscopyData, VR = 'OF'
         if p.be, tg = tg([2 1 4 3]); end
         i = strfind(char(b8), tg); i = i(mod(i,2)==1);
+        if ~isempty(i), p.VR = 'OF'; end
     end
+    if isempty(i) && feof(fid)
+        tg = char([225 127 16 16]); % Siemens SpectroscopyData
+        if p.be, tg = tg([2 1 4 3]); end
+        i = strfind(char(b8), tg); i = i(mod(i,2)==1);
+        if ~isempty(i), p.VR = 'OF'; end
+    end
+
     for k = i(end:-1:1) % last is likely real PixelData
         p.iPixelData = k + p.expl*4 + 7; % s.PixelData.Start: 0-based
         if numel(b8)<p.iPixelData, b8 = [b8 fread(fid, 12, '*uint8')']; end %#ok
@@ -301,6 +309,7 @@ while ~toSearch
     end
     iPre = i; % back it up for PixelData
     [dat, name, info, i, tg] = read_item(b8, i, p);
+    % fprintf('(%04x,%04x) %s\n', flip(typecast(uint32(tg), 'uint16')), name);
     if ~isempty(info), break; end
     if tg>=2621697 && ~isfield(p, 'nFrames') % BitsAllocated
         p = get_nFrames(s, p, b8); % only make code here cleaner
@@ -548,7 +557,7 @@ end
 function p = get_nFrames(s, p, ch)
 if isfield(s, 'NumberOfFrames')
     p.nFrames = s.NumberOfFrames; % useful for PerFrameSQ
-elseif all(isfield(s, {'Columns' 'Rows' 'BitsAllocated'})) && p.bytes<4294967295
+elseif all(isfield(s, {'Columns' 'Rows' 'BitsAllocated'})) && isfield(p, 'bytes') && p.bytes<4294967295
     if isfield(s, 'SamplesPerPixel'), spp = double(s.SamplesPerPixel);
     else, spp = 1;
     end
@@ -598,8 +607,9 @@ try % in case of error, we return the original csa
         if ~isNum
             dat(cellfun(@isempty, dat)) = []; %#ok
             if isempty(dat), continue; end
-            if numel(dat)==1, dat = dat{1}; end
+            if isscalar(dat), dat = dat{1}; end
         end
+        if ~isvarname(nam), nam = matlab.lang.makeValidName(nam); end
         rst.(nam) = dat;
     end
     csa = rst;
@@ -823,7 +833,7 @@ for i = 1:numel(a)
     ind(imgType==a(i)) = i+4;
     typ{i+4} = sprintf('image_type%g', a(i));
 end
-if numel(iVol) == 1
+if isscalar(iVol)
     s.ComplexImageComponent = typ{ind(1)};
 elseif any(diff(ind) ~= 0) % more than 1 type of image
     s.(fld) = 'MIXED';
@@ -1414,7 +1424,7 @@ a = cellfun(@(c) ~any(startsWith(typ, c)), imgType);
 if any(a), typ = [typ imgType(a)]; end
 for i = 1:numel(imgType), imgType{i} = find(strncmpi(typ, imgType{i}, 1), 1); end
 imgType = cell2mat(imgType);
-if numel(iVol) == 1
+if isscalar(iVol)
     s.ComplexImageComponent = typ{imgType(1)};
 elseif any(diff(imgType) ~= 0) % more than 1 type of image
     s.ComplexImageComponent = 'MIXED';
@@ -1559,7 +1569,7 @@ end
 n = max(id); id = id(:, n>1); n = n(n>1); % now only useful columns
 i = find(cumprod(n) > nFrame/nSL-prod(n(2:end)), 1); % not 100% safe
 [~, ind] = sortrows([sl(:,2:end) id(:,1:i) sl(:,1)]); % idea is from julienbesle
-if sum(id(:,1)==n(1)) < sum(id(:,1)==1) % last vol incomplete?
+if sum(id(:,1)==n(1)) < sum(id(:,1)==1) %#ok last vol incomplete?
     ind(id(ind,1)==n(1)) = [];
 end
 iR(iR+1) = 1:nFrame;

@@ -1,4 +1,4 @@
-# DICOM to NIfTI conversion, DICOM and NIfTI tools, NIfTI visualization (version 2024.06.06)
+# DICOM to NIfTI conversion, DICOM and NIfTI tools, NIfTI visualization (version 2025.08.21)
 [![View xiangruili/dicm2nii on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/42997-xiangruili-dicm2nii)
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=xiangruili/dicm2nii)
 

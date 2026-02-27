@@ -114,7 +114,7 @@ if any(strcmp(tsUID, {'1.2.840.10008.1.2.1' '1.2.840.10008.1.2.2' '1.2.840.10008
 else % compressed dicom: rely on imread for decompression
     b = fread(fid, inf, '*uint8'); % read all as bytes
     del = uint8([254 255 0 224]); % delimeter in LE
-    if ~isequal(b(1:4)', del), error('%s is not compressed dicom', s.Filename); end
+    if ~isequal(b(1:4)', del), error('%s is not supported compressed dicom', s.Filename); end
     nEnd = numel(b)-8; % 8 for terminator 0xFFFE E0DD and its zero length
     len = typecast(b(5:8), 'uint32'); % length of offset table
     if len>0
