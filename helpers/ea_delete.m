@@ -1,11 +1,18 @@
-function ea_delete(object, warn)
-% wrapper for file/dir deleting, check existence beforehand
+function ea_delete(object, opts)
+% Enhanced file/folder deletion function
 
-if nargin < 2
-    warn = 0;
-    warning('off');
+arguments
+    object % Files/folders to be deleted
+    opts.warn {mustBeNumericOrLogical} = 0 % Show warning or not
+    opts.recycle {mustBeMember(opts.recycle, {'', 'off', 'on'})} = '' % Use recycle or not
 end
 
+% Update the recycle status
+previousState = recycle;
+if ~isempty(opts.recycle)
+    recycle(opts.recycle);
+end
+    
 if ~iscell(object)
     object = {object};
 end
@@ -21,7 +28,9 @@ for i = 1:numel(object)
     % Global safety-guard: do not delete empty or pure wildcards
     % without path definitions
     if isempty(obj) || strcmp(obj, '*')
-        % optional: warning('ea_delete: refusing to delete "%s".', obj);
+        if opts.warn
+            ea_cprintf('CmdWinWarnings', 'ea_delete: skip deleting "%s".\n', obj);
+        end
         continue;
     end
 
@@ -41,9 +50,12 @@ for i = 1:numel(object)
                 rmdir(fd, 's');
             end
         end
-    elseif warn
-        warning([obj, ' does not exist!'])
+    elseif opts.warn
+        ea_cprintf('CmdWinWarnings', '"%s" does not exist!\n', obj);
     end
 end
 
-warning('on');
+% Restore recycle status in user preference
+if ~isempty(opts.recycle)
+    recycle(previousState);
+end
