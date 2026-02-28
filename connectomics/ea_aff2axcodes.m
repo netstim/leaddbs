@@ -19,7 +19,11 @@ function axcodes = ea_aff2axcodes(affine, tol, labels)
 
 %% Orientation of input axes in terms of output axes for 'affine'
 % extract the underlying rotation, zoom, shear matrix
-RZS = affine(1:size(affine,1)-1,1:size(affine,2)-1);
+if all(size(affine) == [3,3])  % Already a 3x3 RZS
+    RZS = affine;
+else
+    RZS = affine(1:3,1:3);
+end
 zooms = sqrt(sum(RZS.*RZS));
 % Zooms can be zero, in which case all elements in the column are zero, and
 % we can leave them as they are
@@ -39,8 +43,8 @@ R = P(:,diag(S)'>tol) * Qs(diag(S)'>tol,:)';
 % row index of abs max R(:,N), is the output axis changing most as input
 % axis N changes.  In case there are ties, we choose the axes iteratively,
 % removing used axes from consideration as we go.
-ornt = nan(size(affine,2)-1,2);
-for in_ax=1:size(affine,2)-1
+ornt = nan(3,2);
+for in_ax=1:3
     col = R(:,in_ax);
     if ~ea_allclose(col ,0)
         out_ax = find(abs(col) == max(abs(col)));
