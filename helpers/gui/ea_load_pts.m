@@ -218,7 +218,7 @@ if strcmp(handles.prod, 'dbs')
             arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
 
             handles.processtabgroup.SelectedTab = handles.importtab;
-            if any(subjDataOverview.hasSourcedata(subjNotImported))
+            if any(subjDataOverview.hasSourcedata(subjNotImported) & ~subjDataOverview.hasUnsortedRawdata(subjNotImported))
                 handles.dicom2bidscheckbox.Value = 1;
             else
                 handles.dicom2bidscheckbox.Value = 0;
