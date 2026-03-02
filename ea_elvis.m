@@ -19,19 +19,6 @@ if ~isfield(options, 'leadprod')
     options.leadprod = '';
 end
 
-if nargin>2
-    stimparams=varargin{3};
-else
-    stimparams=nan;
-end
-
-if nargin==4
-    fiberthresh=varargin{4};
-else
-
-    fiberthresh=options.fiberthresh;
-end
-
 % Initialize figure
 
 titlePrefix = erase(options.patientname, 'sub-');
@@ -116,14 +103,26 @@ prefs=ea_prefs;
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if nargin>1 || isfield(options.subj, 'recon') && isfile(options.subj.recon.recon)
         if nargin>1
-            multiplemode=1;
+            multiplemode=1; % i.e. call from lead group
 
             % mer development
             % if isstruct(varargin{2})
             %     elstruct=varargin{2}.elstruct;
             %     merstruct=varargin{2}.merstruct;
             % else
-            elstruct=varargin{2};
+            elstruct = varargin{2};
+            if nargin > 2
+                ptidx = varargin{3};
+                % Only keep elstruct and isomatrix entries from selected patients
+                elstruct = elstruct(ptidx);
+                if ~isempty(options.d3.isomatrix)
+                    for side=options.sides
+                        % idx = setdiff(1:size(options.d3.isomatrix{1}{side},1), ptidx);
+                        % options.d3.isomatrix{1}{side}(idx,:)=nan;
+                        options.d3.isomatrix{1}{side} = options.d3.isomatrix{1}{side}(ptidx,:);
+                    end
+                end
+            end
             % end
 
             if options.d3.mirrorsides
@@ -148,7 +147,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             else
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
-
+            if isfield(options, 'reconmethod') && isequal(options.reconmethod, 'LeGUI (Davis 2021)')
+                multiplemode = 1;
+            end
             if ~multiplemode
                 side=options.sides(end);
                 d=load(options.subj.recon.recon);
@@ -170,6 +171,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
 
             end
+
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                 % this part for brainbrowser support.
                 vizstruct=struct('faces',[],'vertices',[],'colors',[]);
@@ -246,7 +248,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'ClickedCallback', {@ea_add_sweetspot,fullfile(options.groupdir,'sweetspots',di(d).name),resultfig});
             end
 
-
             % add discriminative fiber explorer button.
             discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
                 'TooltipString', ['Add fiber filtering analysis'],...
@@ -274,6 +275,19 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Explore DBS network mapping analysis ',ea_stripext(di(d).name)],...
                     'ClickedCallback', {@ea_add_networkmapping,fullfile(options.groupdir,'networkmapping',di(d).name),resultfig});
             end
+             % add unified explorer button.
+            dbsmapping = uipushtool(ht, 'CData', ea_get_icn('unifiedmapping_add'),...
+                'TooltipString', 'Add DBS mapping analysis',...
+                'Tag', 'Add DBS mapping analysis',...
+                'ClickedCallback', {@ea_add_unifiedmapping,ea_getGroupAnalysisFile(options.groupdir),resultfig});
+
+            di=dir([options.root,options.patientname,filesep,'UnifiedMappingExplorer',filesep,'*.explorer']);
+            for d=1:length(di)
+                uipushtool(ht, 'CData', ea_get_icn('unifiedmapping'),...
+                    'TooltipString', ['Explore DBS mapping analysis ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore DBS mapping analysis ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_unifiedmapping,fullfile(options.groupdir,'UnifiedMappingExplorer',di(d).name),resultfig});
+            end
 
 
             % Move the group toggles and app toggles forward
@@ -283,7 +297,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             eleGroupToggleInd = find(isEleGroupToggle);
             otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
             appToggleInd = (1:find(isEleGroupToggle,1)-1)';
-            ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
+%             ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
         end
 
         try
@@ -344,12 +358,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString','Stimulation Control Figure',...
                 'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
         end
-        if ~strcmp(options.leadprod, 'group') ...
-                && options.prefs.env.dev ...
-                && isfile(fullfile(options.earoot, 'programmer', 'app', 'release', ['LeadDBSProgrammer_', ea_getarch, '.zip']))
+        if ~strcmp(options.leadprod, 'group') && options.prefs.env.dev
             stimbutton = uipushtool(ht,'CData',ea_get_icn('programmer'),...
                 'TooltipString','Lead Programmer',...
-                'ClickedCallback',{@leadprogrammer,elstruct,resultfig,options});
+                'ClickedCallback',{@(~,~) leadprogrammer(elstruct,resultfig,options)});
         end
 
     else
@@ -370,7 +382,7 @@ if ~strcmp(options.leadprod, 'group')
 end
 
 % Initialize Convis-Button
-if ~strcmp(options.leadprod,'group') 
+if ~strcmp(options.leadprod,'group')
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
@@ -380,6 +392,11 @@ end
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
+
+% Initialize SEEG Cortex-Button
+corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
+    'TooltipString','SEEG Cortex Visualization',...
+    'ClickedCallback',{@vis_cortex_seeg});
 
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...
@@ -618,82 +635,32 @@ while true
 end
 
 
-function leadprogrammer(hobj, ev, elstruct, resultfig, options)
-[input_file_path, releaseDir] = ea_input_programmer(options, length(elstruct.markers));
-currentOS = ea_getarch;
-if isfolder(releaseDir)
-    zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
-    if ismac
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
-        if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer'));
-            system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer.app'))]);
-            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-        end
-    elseif isunix
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
-        if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
-            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-        end
+function leadprogrammer(elstruct, resultfig, options)
+handles = getappdata(options.leadfigure, 'handles');
+ea_initialize_programmer(handles, options.bids, 'stimulate');
+input_file_path = ea_input_programmer(options, length(elstruct.markers));
+system([ea_getProgrammerPath, ' ', ea_path_helper(input_file_path)]);
+[S] = ea_process_programmer(options);
+if isfield(S, 'message')
+    disp([S.message]);
+    return;
+else
+    options.orignative = options.native;
+    if options.orignative % Force native space calculation when elvis opened in native space
+        ea_setprefs('vatsettings.estimateInTemplate', 0);
     else
-        appFile = fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
-        if ~isfile(appFile)
-            unzip(zipFile, fullfile(ea_prefsdir, 'Programmer', 'LeadDBSProgrammer'));
-            savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'Programmer', 'Preferences.json'));
-        end
+        ea_setprefs('vatsettings.estimateInTemplate', S.estimateInTemplate);
+        options.native = ~S.estimateInTemplate;
     end
 
-    system([appFile, ' ', ea_path_helper(input_file_path)]);
-    [S] = ea_process_programmer(options);
-    if isfield(S, 'message')
-        disp([S.message]);
-        return;
-    else
-        options.orignative = options.native;
-        if options.orignative % Force native space calculation when elvis opened in native space
-            ea_setprefs('vatsettings.estimateInTemplate', 0);
-        else
-            ea_setprefs('vatsettings.estimateInTemplate', S.estimateInTemplate);
-            options.native = ~S.estimateInTemplate;
-        end
-        S = rmfield(S, 'estimateInTemplate');
-        stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
-        ea_mkdir(stimFolder);
-        stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
-        save(stimParams, 'S');
-    end
-
-    ea_visprogrammer(resultfig, options, S, elstruct);
-
-    % system([appDir, ' &']);
-    % [status, cmdout] = system([appDir, ' &']);
-    % [status, cmdout] = system([appDir, ' & echo $!']);
-    % pid = str2double(cmdout);
-    % f = parfeval(backgroundPool, @runApp, 0, appDir);   
+    S = rmfield(S, 'estimateInTemplate');
+    stimFolder = fullfile(options.subj.stimDir, ea_nt(options), S.label);
+    ea_mkdir(stimFolder);
+    stimParams = fullfile(stimFolder, [options.patientname, '_desc-stimparameters.mat']);
+    save(stimParams, 'S');
 end
 
-% while true
-%     % Check if the file_path is empty
-%     pause(5);
-%     data = fileread(file_path);
-%     status_data = fileread(status_path);
-% %     [status, cmdout] = system(['ps -p ', num2str(pid)]);
-% %     if contains(cmdout, 'defunct')
-% %         disp('Application has terminated. Exiting loop.');
-% %         break;
-% %     end
-%     if status_data == '0'
-%         break;
-%     end
-%     if ~isempty(data)
-%         % If file_path is not empty, run the following code
-%         [S] = ea_process_programmer(file_path);
-%         ea_visprogrammer(resultfig, options, S, elstruct);
-%     end
-%     
-%     % Pause for 5 seconds before checking again
-% end
+ea_visprogrammer(resultfig, options, S, elstruct);
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)

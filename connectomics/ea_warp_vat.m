@@ -54,7 +54,8 @@ if donorm
                 1,'','','nn');
         otherwise
 
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+            normDir = ea_connectome_normparams_dir(directory);
+            matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
             matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = vatspresent;
             matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
             matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
@@ -72,12 +73,16 @@ if docoreg
         copyfile(wvatspresent{vat},rwvatspresent{vat});
     end
 
-    reference = [directory,'mean',options.prefs.rest];
+    % BIDS FIX: Use helper function for prefix
+    rest_mean = ea_prependFilename(options.prefs.rest, 'mean');
+    anat_r = ea_prependFilename(options.prefs.prenii_unnormalized, 'r');
+    
+    reference = [directory, rest_mean];
     ea_coregimages(options, ...
     	[directory,options.prefs.prenii_unnormalized], ...
         reference, ...
-        [directory,'r',options.prefs.prenii_unnormalized], ...
+        [directory, anat_r], ...
         rwvatspresent,0,[],1);
-    delete([directory,'r',options.prefs.prenii_unnormalized]);
+    delete([directory, anat_r]);
     ea_delete(wvatspresent);
 end

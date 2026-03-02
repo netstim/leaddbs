@@ -23,7 +23,7 @@ if iscell(stimVector) % stimSetMode, stimProtocol (cell of csv files) provided
     if size(stimProtocol,2) == 1
         disp("StimProtocol exists only for one side")
         N_contacts = size(stimProtocol{1,1},2);
-        [~,SetName,~] = fileparts(S);
+        [~,SetName,~] = fileparts(stimVector{1,1});
         if strcmp(SetName, 'Current_protocols_0')
             N_contacts = size(stimProtocol{1,1},2);
             stimProtocol{1,2} = zeros(1,N_contacts);
@@ -175,7 +175,7 @@ function r = kuncel08_eq1(U)
 % stimulation settings U (Kuncel 2008).
 
 r = 0;
-if U
+if any(U)
     k = 0.22;
     Uo = 0.1;
     U(U<0.1) = 0.1;  % fix for algorithm-based protocols
@@ -191,7 +191,7 @@ function r = maedler12_eq3(U)
 Im = 1000;
 
 r = 0;
-if U
+if any(U)
     k1 =-1.0473;
     k3 = 0.2786;
     k4 = 0.0009856;

@@ -11,6 +11,7 @@ dependencies:
     - fhir.resources>=8.0.0
     - pandas>=2.2.3
     - requests>=2.32.3
+    - git+https://github.com/El-Sam/uuid_shortener.git
 
 variables:
-  env_version: '20250213'
+  env_version: '20250518'

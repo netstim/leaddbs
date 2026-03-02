@@ -61,14 +61,85 @@ for side = 1:numSide
 
         % Map mm connectome fibers into VAT voxel space
         [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
-        fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
+
+        % older less performant code line:
+        %       tic  fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID); 
+
+        % replaced with new more performant code:
+        % --- Vectorized mm -> voxel linear indices for ALL points ---
+        
+
+        Pmm = trimmedFiber(:,1:3);
+        nP  = size(Pmm,1);
+
+        % --- mm -> vox indices (vectorized) ---
+        % Precompute once outside this function if you can:
+        % MinvT = inv(vat.mat)';   % or better: MinvT = vat.mat \ eye(4); MinvT = MinvT';
+        MinvT = inv(vat.mat).';    % simplest, but move it out of any loop
+
+        V = [Pmm, ones(nP,1)] * MinvT;    % faster than "/ vat.mat.'"
+        V = round(V(:,1:3));
+
+        sz = size(vat.img);
+        in = V(:,1)>=1 & V(:,1)<=sz(1) & ...
+            V(:,2)>=1 & V(:,2)<=sz(2) & ...
+            V(:,3)>=1 & V(:,3)<=sz(3);
+
+        % --- drop fibers that have ANY out-of-bounds point (matches your NaN logic) ---
+        % Determine per-point fiber id (must be positive integers for accumarray; if not, remap)
+        fid = trimmedFiberID(:);
+
+        % If fid is not 1..K contiguous, remap once:
+        % [fid,~,fid] = unique(fid,'stable');
+
+        badFib = accumarray(fid, ~in, [], @any, false);  % logical per fiber
+        goodPoint = in & ~badFib(fid);
+
+        % Keep only good points
+        fid = fid(goodPoint);
+        V   = V(goodPoint,:);
+
+        % Also keep consistent trimming index list
+        % (trimmedFiberInd is per fiber, so remove bad fibers there)
+        trimmedFiberInd(badFib) = [];
+
+        % Compute linear indices (int32 is fine; uint32 also ok)
+        lin = sub2ind(sz, V(:,1), V(:,2), V(:,3));
+        lin = uint32(lin);
+
+        % --- one global sort by (fiber, lin) ---
+        [~,ord] = sortrows([double(fid), double(lin)], [1 2]);  % double only for sort keys
+        fid = fid(ord);
+        lin = lin(ord);
+
+        % --- remove duplicates WITHIN each fiber (replaces per-fiber unique) ---
+        sameAsPrev = [false; (fid(2:end)==fid(1:end-1)) & (lin(2:end)==lin(1:end-1))];
+        fid = fid(~sameAsPrev);
+        lin = lin(~sameAsPrev);
+
+        % --- split to cell array without splitapply ---
+        % Find fiber boundaries in the sorted fid list
+        isNew = [true; fid(2:end)~=fid(1:end-1)];
+        startIdx = find(isNew);
+        endIdx   = [startIdx(2:end)-1; numel(fid)];
+
+        fibVoxInd = arrayfun(@(s,e) lin(s:e), startIdx, endIdx, 'UniformOutput', false);
+        % end replacement
 
         % Remove outliers
         fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
         trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
 
         % Find connected fibers
-        connected = cellfun(@(fib) any(ismember(fib, vatInd)), fibVoxInd);
+        % old less performant code
+        %tic; connected = cellfun(@(fib) any(ismember(fib, vatInd)), fibVoxInd); toc
+
+        % replaced with more performant code:
+        mask = false(numel(vat.img),1);
+        mask(vatInd) = true;
+
+        connected = cellfun(@(fib) any(mask(fib)), fibVoxInd);
+        % end replace
 
         % Generate binary fibsval for the T-test method
         fibsvalBin{side}(trimmedFiberInd(connected), pt)=1;

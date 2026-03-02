@@ -79,10 +79,11 @@ for k = 1:length(myFiles)
         % Remove outliers
         fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
         trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
-      
-        trimmedIdx = ftr_full.idx(trimmedFiberInd,:);
+        connected = cellfun(@(fib) any(ismember(fib, ROI_Ind)), fibVoxInd);
+        
+        trimmedIdx = ftr_full.idx(trimmedFiberInd(connected),:);
         % restore complete trimmed fibers
-        trimmedFiber = ftr_full.fibers(ismember(ftr_full.fibers(:,4), trimmedFiberInd), :);
+        trimmedFiber = ftr_full.fibers(ismember(ftr_full.fibers(:,4), trimmedFiberInd(connected)), :);
     else
         trimmedFiber = ftr_full.fibers;
         trimmedIdx = ftr_full.idx;

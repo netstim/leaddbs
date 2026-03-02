@@ -139,15 +139,16 @@ class ResultPAM:
         """
 
         if ActivProfileDict:
-            with open(ActivProfileDict, 'r') as fp:
-                self.target_profiles = json.load(fp)
-            fp.close()
+            self.target_profiles = ActivProfileDict
+            #with open(ActivProfileDict, 'r') as fp:
+            #    self.target_profiles = json.load(fp)
+            #fp.close()
         else:
             from TractSymptomLibrary import get_disease_profiles
             self.target_profiles = get_disease_profiles(disease)
 
-        # copy to NB/ in stim folder for the reference
-        shutil.copyfile(ActivProfileDict,os.path.join(self.stim_dir,'NB' + self.side_suffix,'target_profiles.json'))
+        ## copy to NB/ in stim folder for the reference
+        #shutil.copyfile(ActivProfileDict,os.path.join(self.stim_dir,'NB' + self.side_suffix,'target_profiles.json'))
 
 
     def load_AP_from_OSSDBS(self,inters_as_stim=False):
@@ -319,6 +320,7 @@ class ResultPAM:
 
             target_rates = []
             predicted_rates = []
+            rate_above_thresh = []
 
             activ_target_profile = list(SE_threshold_profile[key].keys())
 
@@ -338,10 +340,16 @@ class ResultPAM:
                 # check if above the threshold
                 if predicted_rates[-1] > target_rates[-1]:
                     SE_threshold_profile_side[key]["predicted"] = 1
-                    SE_threshold_profile_side[key]["rate"] = predicted_rates[-1]
-                    break
+                    
+                    rate_above_thresh.append(predicted_rates[-1])
+                    
+                    #SE_threshold_profile_side[key]["rate"] = predicted_rates[-1]
+                    #break
                 else:
                     SE_threshold_profile_side[key]["predicted"] = 0
+                    
+            if rate_above_thresh:
+                SE_threshold_profile_side[key]["avg_rate_above_thresh"] = sum(rate_above_thresh) / len(rate_above_thresh)
 
         return SE_threshold_profile_side
 
@@ -501,7 +509,7 @@ class ResultPAM:
                                                                                                  fixed_symptom_weights)
 
         results = np.vstack((symp_dist,null_symp_dist,max_symp_dist,I_hat[:,0])).T
-        metrics = ['Distances', 'Null Distances', 'Max Distances', 'I_hat']
+        metrics = ['Distances', 'Null Act. Distances', 'Max Distances', 'I_hat']
         print(pd.DataFrame(results,self.symptom_list,metrics))
 
         # save json
@@ -632,7 +640,7 @@ class ResultPAM:
                     format='png',
                     dpi=500)
 
-    def make_prediction(self, score_symptom_metric, ActivProfileDict=None, fixed_symptoms_dict=None, plot_results=True, disease='spontaneous human combustion'):
+    def make_prediction(self, score_symptom_metric, ActivProfileDict=None, fixed_symptom_weights=None, plot_results=True, disease='spontaneous human combustion'):
 
         """ Predict symptom-profile improvement for a given activation profile based on the target activation profiles
             fixed symptom dictionary is only needed for weight optimization
@@ -640,20 +648,16 @@ class ResultPAM:
         Parameters
         ----------
         score_symptom_metric: str, metric to compute distances in symptom space
-        ActivProfileDict: str, optional, path to Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
-        fixed_symptoms_dict: str, optional, path to dictionary with fixed weights in network blending
+        ActivProfileDict: dict, optional,Activation Profile Dictionary from Fiber Filtering, otherwise uses a pre-defined dictionary from TractSymptomLibrary
+        fixed_symptoms_weights: dict, optional, fixed weights in network blending
         plot_results: bool, true to generate activation profile and symptom profile plots
         disease: str, optional, key to retrieve Activation Profile Dictionary from TractSymptomLibrary
 
         """
 
         # load fixed weights (they play role only for network blending, not simple prediction)
-        if fixed_symptoms_dict == 0:
+        if fixed_symptom_weights == None:
             fixed_symptom_weights = []  # placeholder
-        else:
-            with open(fixed_symptoms_dict, 'r') as fp:
-                fixed_symptom_weights = json.load(fp)
-            fp.close()
 
         self.get_target_profiles(ActivProfileDict,disease)
 
@@ -674,11 +678,18 @@ if __name__ == '__main__':
     # called from MATLAB
     # sys.argv[1] - stim folder
     # sys.argv[2] - side
-    # sys.argv[3] - Activation Profile Dictionary based on Fiber Filtering
-    # sys.argv[4] - Fixed Symptoms Dictionary
-    # sys.argv[5] - Score Symptom Metric
+    # sys.argv[3] - master_dict
 
     stim_dir = sys.argv[1]
 
+    with open(sys.argv[3], 'r') as fp:
+        master_settings = json.load(fp)
+    fp.close()
+    target_profiles = master_settings['target_profiles']
+    fixed_symptom_weights = master_settings['fixed_symptom_weights']
+    optim_settings = master_settings['netblendict']
+
     stim_result = ResultPAM(int(sys.argv[2]),sys.argv[1])
-    stim_result.make_prediction(sys.argv[5], sys.argv[3], sys.argv[4])
+    stim_result.make_prediction(optim_settings['similarity_metric'], target_profiles, fixed_symptom_weights)
+    
+

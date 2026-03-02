@@ -13,6 +13,7 @@ function options = ea_get_OSS_DBS_options(patientPath, N_tracts, ConnectomeName,
     options.orignative = 1;
     options.prefs.machine.vatsettings.butenko_interactive = 0;
     options.prefs.machine.vatsettings.butenko_calcAxonActivation = 1;
+    options.prefs.machine.vatsettings.butenko_calcPAM = 1;
     %options.prefs.machine.vatsettings.butenko_connectome = ['Multi-Tract: ', ConnectomeName];
 
     % default settings for axons 

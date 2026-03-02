@@ -144,7 +144,7 @@ g.set_names('x',labels{2},'y',labels{3});
 g.set_text_options('base_size',22);
 g.no_legend();
 
-h=figure('Position',[100 100 550 550]);
+h=figure('Position',[100 100 550 550],'NumberTitle','off','Name',labels{1});
 g.draw();
 
 if ~isempty(group2) && ~isempty(group1)

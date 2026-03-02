@@ -5,7 +5,15 @@ function ea_perform_ft_proxy(options)
 % function ea_ft_gqi_yeh
 
 eval([options.lc.struc.ft.method,'(options)']); % triggers the fibertracking function and passes the options struct to it.
-try load([options.root,options.patientname,filesep,'ea_ftmethod_applied']); end
+
+% BIDS: Save method log in connectomics/log/
+directory=[options.root,options.patientname,filesep];
+logDir = fullfile(directory, 'connectomics', 'log');
+if ~exist(logDir, 'dir')
+    mkdir(logDir);
+end
+
+try load(fullfile(logDir, 'ea_ftmethod_applied.mat')); end
 if exist('ft_method_applied','var')
     try
         ft_method_applied{end+1}=options.lc.struc.ft.method;
@@ -17,6 +25,5 @@ else
     ft_method_applied{1}=options.lc.struc.ft.method;
 end
 ft_method_applied=options.lc.struc.ft.method;
-directory=[options.root,options.patientname,filesep];
 
-save([directory,'ea_ftmethod_applied'],'ft_method_applied');
+save(fullfile(logDir, 'ea_ftmethod_applied.mat'),'ft_method_applied');

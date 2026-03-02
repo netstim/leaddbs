@@ -97,13 +97,26 @@ classdef ea_conda_env
             end
 
             disp(['Creating environment ' obj.name '...'])
-            [status, cmdout] = system([obj.mamba_path ' env create -f ' ea_path_helper(obj.yml)]);
+
+            [status, cmdout] = system([obj.mamba_path ' env create --yes --file ' ea_path_helper(obj.yml)]);
+            if status && contains(cmdout, 'unrecognized arguments')
+                [status, cmdout] = system([obj.mamba_path ' env create --file ' ea_path_helper(obj.yml)]);
+            end
+            
             if status
                 ea_delete(obj.path);
                 fprintf('%s\n', strtrim(cmdout));
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name);
             else
                 system([obj.mamba_path ' clean -tpyq']);
+                if isempty(obj.installed_version)
+                    stateFile = fullfile(obj.path, 'conda-meta', 'state');
+                    if isfile(stateFile)
+                        state = loadjson(stateFile);
+                    end
+                    state.env_vars.env_version = str2double(obj.latest_version);
+                    savejson('', state, stateFile);
+                end
             end
         end
 

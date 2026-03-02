@@ -3,12 +3,20 @@ function [gmtc,interpol_tc,voxelmask]=ea_extract_timecourses(options)
 
 %% prepare voxelmask:
 directory=[options.root,options.patientname,filesep];
-ea_warp_parcellation(['r', options.prefs.rest], options);
+
+% BIDS FIX: Add prefix to filename only
+rest_r = ea_prependFilename(options.prefs.rest, 'r');
+ea_warp_parcellation(rest_r, options);
 vizz=0;
 
 %% create voxelmask
 [~,rrf]=fileparts(options.prefs.rest);
-Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'r',rrf,'w',options.lc.general.parcellation,'.nii']);
+
+% BIDS FIX: For fMRI parcellations, use short name 'rest' instead of full BIDS name
+% This matches the naming in ea_warp_parcellation
+parcBaseName = 'rest';  % Always use 'rest' for fMRI-based parcellations
+
+Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,parcBaseName,'w',options.lc.general.parcellation,'.nii']);
 Xatl=spm_read_vols(Vatl);
 Xatl(isnan(Xatl))=0;
 nonzeros=find(Xatl(:));
@@ -46,7 +54,13 @@ voxelmask.vals(todel)=[];
 
 %% set some initial parameters here:
 TR=options.lc.func.prefs.TR;
-save([directory,'TR.mat'],'TR');
+if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
+    prefsDir = fullfile(directory, 'prefs');
+    if ~isfolder(prefsDir), mkdir(prefsDir); end
+    save(fullfile(prefsDir, 'TR.mat'), 'TR');
+else
+    save([directory, 'TR.mat'], 'TR');
+end
 
 
 %% Extract timecourses of specified ROI
@@ -149,9 +163,16 @@ disp('Calculating Global, WM and CSF-signals for signal regression...');
 
 [~,rf]=fileparts(options.prefs.rest);
 % regression steps
-c1=ea_load_nii([directory,'r',rf,'_c1',options.prefs.prenii_unnormalized]);
-c2=ea_load_nii([directory,'r',rf,'_c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'r',rf,'_c3',options.prefs.prenii_unnormalized]);
+% BIDS FIX: Build paths correctly
+[~, anatBaseName] = fileparts(ea_stripext(options.prefs.prenii_unnormalized));
+rest_r_noext = ea_stripext(rest_r);
+rest_r_c1 = ea_prependFilename(rest_r_noext, '', ['_c1', anatBaseName, '.nii']);
+rest_r_c2 = ea_prependFilename(rest_r_noext, '', ['_c2', anatBaseName, '.nii']);
+rest_r_c3 = ea_prependFilename(rest_r_noext, '', ['_c3', anatBaseName, '.nii']);
+
+c1=ea_load_nii(fullfile(directory, rest_r_c1));
+c2=ea_load_nii(fullfile(directory, rest_r_c2));
+c3=ea_load_nii(fullfile(directory, rest_r_c3));
 
 globmap=logical((c1.img>0.5)+(c2.img)>0.5+(c3.img>0.5));
 ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
@@ -163,11 +184,12 @@ GlobTimecourse=zeros(signallength,1);
 parfor tmpt = 1:signallength
     OneTimePoint=alltc(:,:,:,tmpt);
     try
-        GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
-        WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
-        CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
-    catch
-        keyboard
+        % Use mean with 'omitnan' instead of nanmean for parfor compatibility
+        GlobTimecourse(tmpt)=squeeze(mean(OneTimePoint(globmap(:)), 'omitnan'));
+        WMTimecourse(tmpt)=squeeze(mean(OneTimePoint(ec2map(:)), 'omitnan'));
+        CSFTimecourse(tmpt)=squeeze(mean(OneTimePoint(ec3map(:)), 'omitnan'));
+    catch ME
+        warning('Failed to extract timecourse at timepoint %d: %s', tmpt, ME.message);
     end
 end
 
@@ -179,7 +201,10 @@ if vizz
 end
 
 % regress out movement parameters
-rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
+% BIDS FIX: Motion parameters file is in the same directory as the rest file
+[rest_dir, ~] = fileparts([directory, options.prefs.rest]);
+rp_file = fullfile(rest_dir, ['rp_', rf, '.txt']);
+rp_rest = load(rp_file); % rigid body motion parameters.
 X1(:,1)=ones(signallength,1);
 X1(:,2)=rp_rest(1:signallength,1);
 X1(:,3)=rp_rest(1:signallength,2);
@@ -328,7 +353,7 @@ dimensionality=length(atlas_lgnd{1}); % how many ROI.
 gmtc=nan(size(interpol_tc,2),dimensionality);
 cnt=1;
 for c=double(atlas_lgnd{1}')
-    gmtc(:,cnt)=nanmean(interpol_tc(voxelmask.vals==c,:),1);
+    gmtc(:,cnt)=mean(interpol_tc(voxelmask.vals==c,:),1,'omitnan');
     cnt=cnt+1;
 end
 

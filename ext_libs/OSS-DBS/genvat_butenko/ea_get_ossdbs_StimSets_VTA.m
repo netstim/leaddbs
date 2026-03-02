@@ -20,6 +20,7 @@ e_field_superimposed.img(:) = e_field_superimposed.img(:) * stim_vector(1,1);
 for contact_i = 2:length(stim_vector)
     e_field_superimposed.img(:) = e_field_superimposed.img(:) + efield_contact_solutions{contact_i,1}.img(:) * stim_vector(1,contact_i);
 end
+till_save_nii([e_field_superimposed,e_field_superimposed,e_field_superimposed],e_field_superimposed.img);
 
 
 % also save 3-D nifti with magnitude
@@ -40,4 +41,6 @@ emagn.dim = e_field_superimposed.dim;
 emagn.dt  = [4, endian];
 emagn.n=[1 1];
 emagn.descrip='oss-dbs-v2 - StimSets Magn';
+emagn.fname = [efield_contact_solutions{1,1}.fname(1:end-6),'_protocol_',num2str(stim_i),'_magn.nii'];
+ea_write_nii(emagn);
 return

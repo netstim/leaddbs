@@ -15,14 +15,16 @@ classdef (Abstract) ea_conda
             else
                 % Set installation path
                 path = fullfile(ea_prefsdir, 'miniforge');
-                answer = questdlg(sprintf('Confirm Conda installation folder:\n%s', path), '', 'Yes', 'Custom', 'Yes');
-                if strcmp(answer, 'Custom')
-                    custompath = uigetdir(path, 'Specify Conda installation folder');
-                    if ischar(custompath)
-                        if ~endsWith(custompath, {'conda', 'condaforge', 'miniforge', 'mambaforge'}, 'IgnoreCase', true)
-                            path = fullfile(custompath, 'miniforge');
-                        else
-                            path = custompath;
+                if feature('ShowFigureWindows')
+                    answer = questdlg(sprintf('Confirm Conda installation folder:\n%s', path), '', 'Yes', 'Custom', 'Yes');
+                    if strcmp(answer, 'Custom')
+                        custompath = uigetdir(path, 'Specify Conda installation folder');
+                        if ischar(custompath)
+                            if ~endsWith(custompath, {'conda', 'condaforge', 'miniforge', 'mambaforge'}, 'IgnoreCase', true)
+                                path = fullfile(custompath, 'miniforge');
+                            else
+                                path = custompath;
+                            end
                         end
                     end
                 end
@@ -88,9 +90,9 @@ classdef (Abstract) ea_conda
                 ea_conda.run('conda config --set ssl_verify false');
             end
 
-            [~, cmdout] = ea_conda.run('conda config --get auto_activate_base');
+            [~, cmdout] = ea_conda.run('conda config --get auto_activate');
             if isempty(cmdout)
-                ea_conda.run('conda config --set auto_activate_base false');
+                ea_conda.run('conda config --set auto_activate false');
             end
 
             ea_cprintf('*Comments', 'Please run ''ea_conda_setproxy'' if you are behind a proxy.\n');

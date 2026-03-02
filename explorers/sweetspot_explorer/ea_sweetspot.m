@@ -10,7 +10,9 @@ classdef ea_sweetspot < handle
         negvisible = 0 % sourspot visible
 
         efieldthreshold = 200
-        statlevel = 'VTAs' % stats metric to use, 1 = active coordinates, 2 = efields, 3 = vtas
+        nanthreshold = 0 % all values below this threshold are discarded when calculating stats
+        resolution = 0.5 % resolution of sweetspot in mm
+        statlevel = 'VTAs' % stats metric to use
         stattest = 'T-Test';
         stat0hypothesis = 'Zero';
         statimpthreshold = 0;
@@ -136,7 +138,10 @@ classdef ea_sweetspot < handle
             if ~isempty(obj.results) % vtas already gathered in
                 return
             end
-
+            
+            res=inputdlg('Specify voxel resolution of sweetspot [mm]','Resolution',1,{num2str(obj.resolution)});
+            obj.resolution=str2double(res{1});
+            
             if isfield(obj.M,'pseudoM')
                 vatlist = obj.M.ROI.list;
             else
@@ -146,13 +151,16 @@ classdef ea_sweetspot < handle
 
             obj.results.efield = AllX;
             obj.results.space = space;
-
             if ~isfield(obj.M,'pseudoM')
                 % get active coordinates, as well
                 for pt=1:length(obj.M.patient.list)
                     for side=1:2
+                        try
                         obj.results.activecnt{side}(pt,:)=...
                             mean(obj.M.elstruct(pt).coords_mm{side}(find(obj.M.S(pt).activecontacts{side}),:),1); %#ok<FNDSB> % find is necessary here
+                        catch
+                            obj.results.activecnt{side}(pt,:)=nan;
+                        end
                     end
                 end
                 for side=1:2

@@ -734,7 +734,7 @@ if ~strcmp(whichelmodel,'Patient specified')
     [M.elstruct(ptidx).elmodel]=arcell{:};
 end
 
-resultfig=ea_elvis(options,M.elstruct(ptidx));
+resultfig=ea_elvis(options, M.elstruct, ptidx);
 
 try % zoom on coordinates.
     coords={M.elstruct(:).coords_mm};
@@ -1300,9 +1300,13 @@ function setstimparamsbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Display a dialog box with options
-choice = questdlg('Select a programmer:', ...
-                  '', ...
-                  'Old Programmer', 'New Programmer', 'Old Programmer');
+options = getappdata(handles.leadfigure, 'options');
+if options.prefs.env.dev ...
+    && isfile(fullfile(options.earoot, 'programmer', 'app', 'release', ['LeadDBSProgrammer_', ea_getarch, '.zip']))
+    choice = questdlg('Select a programmer:', '', 'Old Programmer', 'New Programmer', 'Old Programmer');
+else
+    choice = 'Old Programmer';
+end
 
 % Handle user's response
 switch choice
@@ -1323,63 +1327,43 @@ switch choice
         options.leadprod = 'group';
         options.groupid = M.guid;
         options.native = 0;
-        ea_refresh_lg(handles);
-
-        % Temporary solution to reload M
+        % ea_refresh_lg(handles);
+        
         currentM = load(ea_getGroupAnalysisFile(M.root));
         M.S = currentM.M.S;
 
-        [file_path, releaseDir, input_file_path] = ea_input_programmer_group(options, M);
-        currentOS = ea_getarch;
+        [file_path, input_file_path] = ea_input_programmer_group(options, M);
 
-        if isfolder(releaseDir)
-            zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
-            if ismac
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.app', 'Contents', 'MacOS', 'LeadDBSProgrammer');
-                if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup'));
-                    system(['xattr -cr ', ea_path_helper(fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer.app'))]);
-                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
-                end
-            elseif isunix
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer', 'LeadDBSProgrammer');
-                if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer'));
-                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
-                end
-            else
-                appFile = fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer', 'LeadDBSProgrammer.exe');
-                if ~isfile(appFile)
-                    unzip(zipFile, fullfile(ea_prefsdir, 'ProgrammerGroup', 'LeadDBSProgrammer'));
-                    savejson('', struct('LeadDBS_Path', ea_getearoot), fullfile(ea_prefsdir, 'ProgrammerGroup', 'Preferences.json'));
-                end
-            end
-
-            system([appFile, ' ', ea_path_helper(input_file_path)]);
-
-            % Loading output from programmer
+        system([ea_getProgrammerPath, ' ', ea_path_helper(input_file_path)]);
+        try
             importedS = loadjson(file_path);
-
-            ea_delete(fullfile(M.root, 'data.json'));
-            ea_delete(fullfile(M.root, 'inputData.json'));
-            if isfield(importedS, 'message')
-                disp([importedS.message]);
-                return;
-            end
-
-            tmpM = struct();
-            for i = 1:length(importedS)
-                [S] = ea_process_programmer_group(cell2mat(importedS(i)));
-                tmpM.S(i) = S;
-            end
-            M.S = tmpM.S;
-            setappdata(handles.leadfigure, 'M', M);
-
-            save(ea_getGroupAnalysisFile(M.root), 'M');
+        catch
+            disp('Stimulation parameters not saved');
+            return;
         end
+        tmpM = struct();
+        for i = 1:length(importedS)
+            [S] = ea_process_programmer(importedS{i}, 'leadgroup');
+            tmpM.S(i) = S;
+        end
+       
+        M.S = tmpM.S;
+        % Force all patients to have same model for now, though have
+        % multiple option in programmer
+        M.vatmodel = M.S(1).model;
 
+        setappdata(handles.leadfigure, 'M', M);
+        save(ea_getGroupAnalysisFile(M.root), 'M');
+
+        for i = 1:length(M.patient.list)
+            patientStimFolder = fullfile(M.patient.list{i}, 'stimulations', ea_getspace(), ['gs_', M.guid]); 
+            ea_mkdir(patientStimFolder);
+            patientStimFile = fullfile(patientStimFolder, [M.elstruct(i).name, '_desc-stimparameters.mat']); 
+            S = M.S(i);
+            save(patientStimFile, 'S');
+        end
+        
     otherwise
-        % User canceled the dialog or closed it
         disp('Dialog canceled or closed.');
 end
 

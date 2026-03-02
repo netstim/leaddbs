@@ -27,14 +27,26 @@ if isfield(options, 'leadfigure')
 else % Exported code
     if ~isempty(options.uipatdirs{options.subjInd})
         datasetDir = regexp(options.uipatdirs{options.subjInd}, ['.*(?=\' filesep 'derivatives\' filesep 'leaddbs\' filesep 'sub-)'], 'match', 'once');
-        bids = BIDSFetcher(datasetDir);
-        options.bids = bids;
-    
-        subjId = erase(options.uipatdirs, fullfile(datasetDir, 'derivatives', 'leaddbs', 'sub-'));
-        if isfield(options, 'modality')
-            options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
+
+        % BIDS FIX: Only initialize BIDSFetcher if dataset root exists
+        if ~isempty(datasetDir) && isfolder(datasetDir)
+            try
+                bids = BIDSFetcher(datasetDir);
+                options.bids = bids;
+
+                subjId = erase(options.uipatdirs, fullfile(datasetDir, 'derivatives', 'leaddbs', 'sub-'));
+                if isfield(options, 'modality')
+                    options.subj = bids.getSubj(subjId{options.subjInd}, options.modality);
+                else
+                    options.subj = bids.getSubj(subjId{options.subjInd});
+                end
+            catch ME
+                ea_cprintf('CmdWinWarnings', 'BIDSFetcher initialization failed:\n%s\nContinuing with direct file access.\n', ME.message);
+                % For Lead-Connectome, we use ea_getptopts instead
+            end
         else
-            options.subj = bids.getSubj(subjId{options.subjInd});
+            % No valid BIDS dataset root found - use direct file access (Lead-Connectome mode)
+            ea_cprintf('Comments', 'BIDSFetcher skipped - using direct file access for Lead-Connectome.\n');
         end
     end
 end
@@ -79,14 +91,20 @@ end
 
 % only 3D-rendering viewer can be opened if no patient is selected.
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
-    if isfile(fullfile(options.bids.datasetDir, 'miniset.json'))
-        isMiniset = 1;
-    else
+    % BIDS FIX: Check if options.bids exists (Lead-DBS mode)
+    if ~isfield(options, 'bids')
+        % Lead-Connectome mode: no miniset
         isMiniset = 0;
+    else
+        if isfile(fullfile(options.bids.datasetDir, 'miniset.json'))
+            isMiniset = 1;
+        else
+            isMiniset = 0;
+        end
     end
 
     % Copy post-op images to preprocessing folder, no preproc is done for now
-    if  isMiniset || ~isfield(options.subj, 'postopAnat')
+    if  isMiniset || ~isfield(options, 'subj') || ~isfield(options.subj, 'postopAnat')
         fields = {};
     else
         fields = fieldnames(options.subj.postopAnat);
@@ -108,7 +126,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     % Preprocessing pre-op images
     preprocessing = 0;
-    if isMiniset || ~isfield(options.subj, 'preopAnat')
+    if isMiniset || ~isfield(options, 'subj') || ~isfield(options.subj, 'preopAnat')
         fields = {};
     else
         fields = fieldnames(options.subj.preopAnat);
@@ -148,6 +166,18 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         fprintf('\nPreprocessing finished.\n\n');
     end
 
+    % BIDS FIX: For Lead-Connectome, check if we have full BIDS metadata
+    % If options.subj exists but doesn't have AnchorModality, it's from ea_getptopts (Lead-Connectome mode)
+    % If options.subj has AnchorModality, it's from BIDSFetcher (Lead-DBS mode)
+    hasFullBIDS = isfield(options, 'subj') && isfield(options.subj, 'AnchorModality');
+
+    if options.dolc && ~hasFullBIDS
+        ea_cprintf('*Comments', '*** Lead-Connectome mode (direct file access) ***\n');
+        ea_cprintf('Comments', 'Proceeding with connectomics pipeline (preprocessing will be done as needed)...\n');
+        ea_perform_lc(options);
+        return;
+    end
+
     % Set primary template
     subjAnchor = regexprep(options.subj.AnchorModality, '[^\W_]+_', '');
     if ismember(subjAnchor, fieldnames(bids.spacedef.norm_mapping))
@@ -178,6 +208,14 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     coregDone = 0;
+
+    if options.acpc.do
+        acpcDone = ea_runacpc(options);
+    end
+
+    if options.resize.do
+        acpcDone = ea_runacpc(options);
+    end
 
     if options.coregmr.do
         % Coregister pre-op MRIs to pre-op anchor image
@@ -307,11 +345,15 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                 case 'Slicer (Manual)' % Manually mark lead head/tail in Slicer 3D
                     [coords_mm,trajectory,markers]=ea_runmanualslicer(poptions);
                     options.native=1;
+                case 'LeGUI (Davis 2021)'
+                    ea_runlegui(poptions);
             end
             options.hybridsave=1;
             options.elside=options.sides(1);
             elmodel=options.elmodel;
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            if ~isequal(options.reconmethod, 'LeGUI (Davis 2021)')
+                ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            end
             if isfield(options,'hybridsave')
                 options=rmfield(options,'hybridsave');
             end
@@ -357,6 +399,72 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.dolc % perform lead connectome subroutine..
+        % Ensure lc options exist (GUI → options mapping)
+        if ~isfield(options, 'lc') || isempty(options.lc)
+            if isfield(options, 'leadfigure') && ~isempty(options.leadfigure)
+                options.lc = ea_initlcopts(options.leadfigure);
+            else
+                options.lc = ea_initlcopts([]);
+            end
+        end
+
+        % If at least one *structural* Lead-Connectome option is enabled,
+        % prepare DWI data (copy from rawdata, set prefs, export b0) before
+        % entering the main Lead-Connectome routine. This mirrors the
+        % intended "old" pipeline behaviour but integrates it cleanly into
+        % the main GUI.
+        try
+            doStrucLC = false;
+            if isfield(options, 'lc') && isfield(options.lc, 'struc')
+                s = options.lc.struc;
+                if (isfield(s, 'ft') && isfield(s.ft, 'do') && s.ft.do) || ...
+                   (isfield(s, 'ft') && isfield(s.ft, 'normalize') && s.ft.normalize) || ...
+                   (isfield(s, 'compute_CM') && s.compute_CM) || ...
+                   (isfield(s, 'compute_GM') && s.compute_GM)
+                    doStrucLC = true;
+                end
+            end
+
+            if doStrucLC
+                directory = [options.root, options.patientname, filesep];
+
+                % For BIDS-style datasets in derivatives/leaddbs, copy DWI
+                % from rawdata into preprocessing/dwi and set prefs.*.
+                if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
+                    options = ea_prepare_dti_bids(options);
+                end
+
+                % Ensure a b0 image exists at options.prefs.b0 (or its BIDS
+                % variant) before fiber tracking / normalization. This will
+                % create preprocessing/dwi/*_b0.nii if it is still missing.
+                try
+                    ea_exportb0(options);
+                catch MEb0
+                    warning('Lead-Connectome DWI preparation: automatic b0 export failed (%s). Proceeding with existing configuration.', MEb0.message);
+                end
+
+                % Ensure that a B0->T1 coregistration transform exists so
+                % that warped parcellations (b0wAtlas) and fiber
+                % normalization share a consistent affine relationship
+                % between diffusion space and anatomy.
+                try
+                    options = ea_ensure_b0_coreg(options);
+                catch MEcoreg
+                    warning('Lead-Connectome DWI preparation: automatic B0->T1 coreg failed (%s). Proceeding with existing configuration.', MEcoreg.message);
+                end
+
+                % Create FA from DWI and FA coregistered to anat in coregistration/anat
+                try
+                    options = ea_ensure_fa_and_fa2anat(options);
+                catch MEfa
+                    warning('Lead-Connectome: FA creation / FA->anat coregistration failed (%s). Proceeding.', MEfa.message);
+                end
+            end
+        catch MEprep
+            warning('Lead-Connectome DWI preparation step failed (%s). Continuing with existing options.', MEprep.message);
+        end
+
+        % Now run the main Lead-Connectome routine (structural + functional)
         ea_perform_lc(options);
     end
 

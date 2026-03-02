@@ -209,9 +209,6 @@ for side=options.sides
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
 
-
-
-
             elrender(cnt).Tag = [nameprefix, 'Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
@@ -297,7 +294,7 @@ for side=options.sides
         % draw contacts
         try
             normalisomatrix{side}=options.d3.isomatrix{1}{side};
-            normalisomatrix{side}(:)=ea_normal(normalisomatrix{side}(:));
+            normalisomatrix{side}(:)=ea_contrast(normalisomatrix{side}(:),4);
             minval=ea_nanmin(normalisomatrix{side}(:));
             maxval=ea_nanmax(normalisomatrix{side}(:));
             %minval=-1;

@@ -1,4 +1,4 @@
-function [fibers, idx] = ea_trk2ftr(trkFile, ref, outputFile)
+function [fibers, idx] = ea_trk2ftr(trkFile, ref, saveFTR)
 % Convert trk to ftr (fibers format in Lead-DBS)
 %
 % ref can be:
@@ -6,6 +6,8 @@ function [fibers, idx] = ea_trk2ftr(trkFile, ref, outputFile)
 %   2        - Choose a reference NIfTI file
 %   3        - Interactively select ref type (1 or 2 above)
 %   [string] - Path of a NIfTI file defining the reference space
+%
+% saveFTR: whether to save FTR data to file using the same filename
 
 if ~exist('ref', 'var')
     ref = 'mni';
@@ -15,8 +17,8 @@ if isnumeric(ref)
     ref = num2str(ref);
 end
 
-if ~exist('outputFile', 'var')
-    outputFile = 0;
+if ~exist('saveFTR', 'var')
+    saveFTR = 0;
 end
 
 % read .trk file
@@ -94,20 +96,21 @@ fibers(:, 1:3) = ea_vox2mm(fibers(:, 1:3), affine);
 fibers = single(fibers);
 
 % Optionally save ftr mat
-if outputFile
-    outputFile = replace(erase(trkFile, '.gz'), '.trk', '.mat');
-    if isfile(outputFile)
+if saveFTR
+    FTRFile = replace(erase(trkFile, '.gz'), '.trk', '.mat');
+
+    if isfile(FTRFile)
         answer = questdlg('File already exists!', '', 'Overwrite', 'Specify a New Name', 'Overwrite');
         if isempty(answer)
             return;
         elseif strcmp(answer, 'Specify a New Name')
-            [fname, pathname] = uiputfile({'*.mat'}, 'Choose a reference NIfTI file', outputFile);
-            outputFile = fullfile(pathname, fname);
+            [fname, pathname] = uiputfile({'*.mat'}, 'Choose a reference NIfTI file', FTRFile);
+            FTRFile = fullfile(pathname, fname);
         end
     end
 
     ea_fibformat = '1.0';
     fourindex = 1;
     voxmm = 'mm';
-    save(outputFile, 'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
+    save(FTRFile, 'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
 end

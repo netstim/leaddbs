@@ -14,11 +14,16 @@ directory=[options.root,options.patientname,filesep];
 ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
 
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
+% BIDS FIX: Use helper function for prefix
+anat_c1 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c1');
+anat_c2 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c2');
+anat_c3 = ea_prependFilename(options.prefs.prenii_unnormalized, 'c3');
+
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,options.prefs.prenii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized,',1'];
-                                                   [directory,'c2',options.prefs.prenii_unnormalized,',1'];
-                                                   [directory,'c3',options.prefs.prenii_unnormalized,',1']};
+matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory, anat_c1,',1'];
+                                                   [directory, anat_c2,',1'];
+                                                   [directory, anat_c3,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];

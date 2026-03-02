@@ -17,7 +17,12 @@ if ~isempty(ants_transforms) % prior ANTs transform found.
     end
     switch ants_usepreexisting
         case 1 % ask
-            answ = questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
+            if feature('ShowFigureWindows')
+                answ = questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
+            else
+                ea_cprintf('CmdWinWarnings', 'MATLAB nodisplay mode detected. Automatically selecting "Start from scratch" for ANTs normalization.\n');
+                answ = 'start from scratch';
+            end
         case 2 % reuse
             answ = 'refine';
         case 3 % overwrite

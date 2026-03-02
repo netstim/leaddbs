@@ -177,7 +177,7 @@ end
 
 ea_busyaction('on',handles.leadfigure,'connectome');
 if ~isempty(patdir)
-    ea_load_pts(handles, patdir);
+    ea_load_pts_conn(handles, patdir);
 
     if isfield(handles,'atlassetpopup')
         atlasset=get(handles.atlassetpopup,'String');
@@ -358,6 +358,17 @@ ea_busyaction('on', handles.leadfigure, 'connectome');
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
+% BIDS FIX: Extract patientname and root from uipatdirs for Lead-Connectome
+if ~isempty(options.uipatdirs)
+    [options.root, options.patientname] = fileparts(options.uipatdirs{1});
+    options.root = [options.root, filesep];
+end
+
+% BIDS fix: Update prefs with correct BIDS paths if in derivatives folder
+if ~isempty(options.uipatdirs) && contains(options.uipatdirs{1}, 'derivatives')
+    options = ea_getptopts(options.uipatdirs{1}, options);
+end
+
 isindependent = getappdata(handles.leadfigure,'isindependent');
 ea_savelcopts(handles)
 
@@ -425,66 +436,8 @@ function compute_GM_struc_Callback(hObject, eventdata, handles)
 
 
 function handles=lc2handles(lc,handles)
-
-% General settings
-parcellations = get(handles.parcellation,'String');
-if ~isfield(lc.general, 'parcellation')
-    options.prefs = ea_prefs;
-    defaultParc = options.prefs.lc.defaultParcellation;
-    set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
-else
-    parcIdx = find(ismember(parcellations, lc.general.parcellation), 1);
-    if ~isempty(parcIdx)
-        set(handles.parcellation,'Value',parcIdx);
-    else
-        options.prefs = ea_prefs;
-        parc = find(ismember(parcellations, options.prefs.lc.defaultParcellation));
-        if ~isempty(parc)
-            set(handles.parcellation,'Value',parc);
-        end
-    end
-end
-
-% Graph options:
-try set(handles.struc_func_sim,'Value',lc.graph.struc_func_sim); end
-try set(handles.nodal_efficiency,'Value',lc.graph.nodal_efficiency); end
-try set(handles.eigenvector_centrality,'Value',lc.graph.eigenvector_centrality); end
-try set(handles.degree_centrality,'Value',lc.graph.degree_centrality); end
-try set(handles.fthresh,'String',num2str(lc.graph.fthresh)); end
-try set(handles.sthresh,'String',num2str(lc.graph.sthresh)); end
-
-
-% functional options:
-try set(handles.compute_CM_func,'Value',lc.func.compute_CM); end
-try set(handles.compute_GM_func,'Value',lc.func.compute_GM); end
-try set(handles.TR,'String',num2str(lc.func.prefs.TR)); end
-
-
-% structural options:
-try set(handles.compute_CM_struc,'Value',lc.struc.compute_CM); end
-try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
-ftFunctions = getappdata(handles.leadfigure, 'ftFunctions');
-ftMethodIdx = find(ismember(ftFunctions, lc.struc.ft.method));
-if ~isempty(ftMethodIdx)
-    set(handles.ftmethod,'Value',ftMethodIdx);
-else
-    options.prefs = ea_prefs;
-    defaultftMethod = options.prefs.machine.lc.struc.ft.method;
-    set(handles.ftmethod,'Value',find(ismember(ftFunctions, defaultftMethod)));
-end
-
-if strcmp(lc.struc.ft.method, 'ea_ft_gqi_yeh')
-    try set(handles.fiber_count, 'Visible', 'on'); end
-    try set(handles.fiber_count_txt, 'Visible', 'on'); end
-else
-    try set(handles.fiber_count, 'Visible', 'off'); end
-    try set(handles.fiber_count_txt, 'Visible', 'off'); end
-end
-
-try set(handles.fiber_count, 'String', num2str(lc.struc.ft.dsistudio.fiber_count)); end
-
-try set(handles.normalize_fibers,'Value',lc.struc.ft.normalize); end
-try set(handles.perf_ft,'Value',lc.struc.ft.do); end
+% Delegate to shared implementation (used by lead_dbs Connectome tab as well).
+handles = ea_lc2handles(lc, handles);
 
 
 % --- Executes on button press in normalize_fibers.
@@ -653,9 +606,12 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'connectome');
-options.prefs=ea_prefs('');
-ea_getpatients(options,handles);
+uipatdir = ea_getpatients;
+if ~isempty(uipatdir)
+    ea_load_pts_conn(handles, uipatdir);
+end
 ea_busyaction('off',handles.leadfigure,'connectome');
+
 
 % --- Executes on selection change in recentpatients.
 function recentpatients_Callback(hObject, eventdata, handles)
@@ -829,7 +785,7 @@ elseif isempty(uipatdir)
         return
     end
 
-    ea_load_pts(handles,recentfolders);
+    ea_load_pts_conn(handles,recentfolders);
     return
 end
 
@@ -852,7 +808,7 @@ else
     nuix=ix;
 end
 
-ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+ea_load_pts_conn(handles,{[pth,filesep,pts{nuix}]});
 if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');
@@ -883,7 +839,7 @@ elseif isempty(uipatdir)
         return
     end
 
-    ea_load_pts(handles,recentfolders);
+    ea_load_pts_conn(handles,recentfolders);
     return
     %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
 end
@@ -907,7 +863,7 @@ if length(pts)>ix
 else
     nuix=ix;
 end
-ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+ea_load_pts_conn(handles,{[pth,filesep,pts{nuix}]});
 if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');

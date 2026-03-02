@@ -11,38 +11,52 @@ end
 
 directory=[options.root,options.patientname,filesep];
 
-redo=ea_prepare_dti(options);
+[redo, options]=ea_prepare_dti(options);
 
 vizz=0;
 
 % build white matter mask
-if ~isfile([directory,'ttrackingmask.nii']) || redo || ...
+% BIDS: preprocessing/dwi/ttrackingmask.nii; legacy: subject root
+maskBIDS = fullfile(directory, 'preprocessing', 'dwi', 'ttrackingmask.nii');
+maskClassic = [directory,'ttrackingmask.nii'];
+maskPath = maskClassic;
+if isfile(maskBIDS)
+    maskPath = maskBIDS;
+elseif isfile(maskClassic)
+    maskPath = maskClassic;
+end
+if ~isfile(maskPath) || redo || ...
         (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     ea_gentrackingmask_brainmask(options,1)
+    if isfile(maskBIDS), maskPath = maskBIDS; else, maskPath = maskClassic; end
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
-DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], escapePath = 1);
+DSISTUDIO = ea_getExec([basedir, 'dsi_studio'], 'escapePath', 1);
 
 % build .fz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-if ~isfile([directory,ftrbase,'.fz']) || redo || ...
+% BIDS: Check for .fz file in connectomics/dMRI/
+connectomicsDir = fullfile(directory, 'connectomics', 'dMRI');
+fibFile = fullfile(connectomicsDir, [ftrbase, '.fz']);
+if ~isfile(fibFile) || redo || ...
         (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     disp('Estimating ODF / preparing GQI...');
 
-    ea_prepare_fib_gqi(DSISTUDIO,options);
+    ea_prepare_fib_gqi(DSISTUDIO, options, maskPath);
 
     disp('Done.');
 else
     disp('.fz file found, no need to rebuild.');
 end
 
+% BIDS: Use paths from connectomics/dMRI/ for FIB and output
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
-    ' --source=',ea_path_helper([directory,ftrbase,'.fz']),...
-    ' --seed=',ea_path_helper([directory,'ttrackingmask.nii']),...
-    ' --fiber_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
-    ' --output=',ea_path_helper([directory,ftrbase,'.mat']),...
+    ' --source=',ea_path_helper(fullfile(connectomicsDir, [ftrbase,'.fz'])),...
+    ' --seed=',ea_path_helper(maskPath),...
+    ' --tract_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
+    ' --output=',ea_path_helper(fullfile(connectomicsDir, [ftrbase,'.mat'])),...
     ' --dt_threshold=0.2',...
     ' --max_length=300.0',...
     ' --min_length=10.0',...
@@ -59,12 +73,27 @@ end
 ea_delete([directory,'ttrackingmask.txt']);
 % now store tract in lead-dbs format
 disp('Converting fibers...');
-fibinfo = load([directory,ftrbase,'.mat']);
+fibinfo = load(fullfile(connectomicsDir, [ftrbase,'.mat']));
+
+% DEBUG: Check DSI Studio raw output
+fprintf('\n=== DEBUG: DSI Studio RAW OUTPUT ===\n');
+fprintf('Fields: %s\n', strjoin(fieldnames(fibinfo), ', '));
+fprintf('tracts size: [%d, %d]\n', size(fibinfo.tracts, 1), size(fibinfo.tracts, 2));
+fprintf('tracts range (DSI format, 0-based):\n');
+fprintf('  X: [%.2f, %.2f]\n', min(fibinfo.tracts(:,1)), max(fibinfo.tracts(:,1)));
+fprintf('  Y: [%.2f, %.2f]\n', min(fibinfo.tracts(:,2)), max(fibinfo.tracts(:,2)));
+fprintf('  Z: [%.2f, %.2f]\n', min(fibinfo.tracts(:,3)), max(fibinfo.tracts(:,3)));
+
 fibers = fibinfo.tracts';
 idx = double(fibinfo.length)';
-fibers = [fibers, repelem(1:numel(idx), idx)'];
 clear fibinfo
 b0 = spm_vol([directory,options.prefs.b0]);
+
+fprintf('\nTransposed fibers size: [%d, %d]\n', size(fibers, 1), size(fibers, 2));
+fprintf('b0.dim = [%d, %d, %d]\n', b0.dim(1), b0.dim(2), b0.dim(3));
+
+fprintf('DSI output range (0-based): X=[%.2f, %.2f], Y=[%.2f, %.2f], Z=[%.2f, %.2f]\n', ...
+    min(fibers(:,1)), max(fibers(:,1)), min(fibers(:,2)), max(fibers(:,2)), min(fibers(:,3)), max(fibers(:,3)));
 
 % Default orientation in DSI-Studio and TrackVis is LPS. Flip the
 % coordinates to make the orientation in the MAT file inline with b0 image.
@@ -87,6 +116,11 @@ end
 % Change ZERO-BASED indexing to ONE-BASED indexing.
 fibers(:,1:3) = fibers(:,1:3) + 1;
 
+fprintf('After flip and 1-based conversion:\n');
+fprintf('  X: [%.2f, %.2f] (expected: [1, %d])\n', min(fibers(:,1)), max(fibers(:,1)), b0.dim(1));
+fprintf('  Y: [%.2f, %.2f] (expected: [1, %d])\n', min(fibers(:,2)), max(fibers(:,2)), b0.dim(2));
+fprintf('  Z: [%.2f, %.2f] (expected: [1, %d])\n', min(fibers(:,3)), max(fibers(:,3)), b0.dim(3));
+
 if vizz
     figure
     thresh=700; % set to a good grey value.
@@ -97,25 +131,32 @@ if vizz
     plot3(xx,yy,zz,'g.')
 end
 
-% Add index column
-fibers(:,4) = repelem(1:length(idx), idx)';
-
+% Store fibers in voxel space of the B0 image (classic Lead-Connectome
+% behaviour). The affine of the FTR is kept equal to the B0 affine so that
+% downstream code can choose between voxel and mm interpretation
+% explicitly.
 ftr.ea_fibformat = '1.0';
-ftr.fourindex = 1;
-ftr.fibers = fibers;
-ftr.idx = idx;
-ftr.voxmm = 'vox';
-ftr.mat = b0.mat;
+ftr.fourindex    = 0;               % No 4th column
+ftr.fibers       = fibers(:,1:3);   % voxel coordinates after flip + 1-based
+ftr.idx          = idx;
+ftr.voxmm        = 'vox';
+ftr.mat          = b0.mat;
+
+% BIDS: Save fibers in connectomics/dMRI/
+connectomicsDir = fullfile(directory, 'connectomics', 'dMRI');
+if ~exist(connectomicsDir, 'dir')
+    mkdir(connectomicsDir);
+end
 
 disp('Saving fibers...');
-save([directory,ftrbase,'.mat'],'-struct','ftr','-v7.3');
+save(fullfile(connectomicsDir, [ftrbase, '.mat']), '-struct', 'ftr', '-v7.3');
 disp('Done.');
 
 fprintf('\nGenerating trk in b0 space...\n');
-ea_ftr2trk([directory,ftrbase,'.mat'], [directory,options.prefs.b0])
+ea_ftr2trk(fullfile(connectomicsDir, [ftrbase, '.mat']), [directory, options.prefs.b0])
 
 
-function ea_prepare_fib_gqi(DSISTUDIO,options)
+function ea_prepare_fib_gqi(DSISTUDIO, options, maskPath)
 directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
@@ -134,13 +175,20 @@ if err || ~isfile(srcFile)
     ea_error('DSI studio failed to generate the SRC file!', simpleStack=1);
 end
 
-% Create FIB file
-fibFile = [directory,ftrbase,'.fz'];
+% Create FIB file (BIDS: save in connectomics/dMRI/)
+connectomicsDir = fullfile(directory, 'connectomics', 'dMRI');
+if ~exist(connectomicsDir, 'dir')
+    mkdir(connectomicsDir);
+end
+fibFile = fullfile(connectomicsDir, [ftrbase, '.fz']);
 cmd = [DSISTUDIO,' --action=rec --source=',ea_path_helper(srcFile),...
-       ' --dti_no_high_b=1',...
-       ' --mask=',ea_path_helper([directory,'ttrackingmask.nii']),...
+       ' --dti_ignore_high_b=1',...
+       ' --mask=',ea_path_helper(maskPath),...
        ' --method=4',...
-       ' --param0=1.25',...
+       ' --param=1.25',...
+       ' --check_btable=0',...
+       ' --make_isotropic=0',...
+       ' --other_output=fa,rd,iso,rdi',...
        ' --output=',ea_path_helper(fibFile)];
 
 err = ea_runcmd(cmd);

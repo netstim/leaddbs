@@ -7,7 +7,7 @@ arguments
 end
 
 % Check docker image
-dockerImage = 'anagrammarian/thomasmerged:latest';
+dockerImage = 'anagrammarian/sthomas:latest';
 ea_checkDocker(dockerImage);
 
 % Prepare parameters for docker run
@@ -22,43 +22,74 @@ else
 end
 
 %% Run segmentation via docker
-fprintf('\nRunning THOMAS segmentation...\n\n');
-system(['docker run ', ...
-        '--volume ', ea_path_helper(imageFolder), ':/thomas '...
-        '--workdir /thomas '...
-        '--rm -t ', dockerImage, ' ', ...
-        'bash -c "hipsthomas_csh -i ', imageName, ' ', typeParam, '"']);
+ea_cprintf('*Comments', 'Running THOMAS segmentation...\n\n');
+if isunix && ~ismac
+    userParam = '-u $(id -u):$(id -g) ';
+else
+    userParam = '';
+end
+system(['docker run -it --rm --name sthomas ', ...
+        '-v ', ea_path_helper(imageFolder), ':/data '...
+        '-w /data ', ...
+        userParam, ...
+        '-t ', dockerImage, ' ', ...
+        'hipsthomas.sh -i ', imageName, ' -v ', typeParam, '']);
 
 % Clean up output folder
+ea_delete(fullfile(imageFolder, 'sthomas_LR_labels.nii.gz'));
+ea_delete(fullfile(imageFolder, 'sthomas_LR_labels.png'));
 ea_delete(fullfile(imageFolder, 'temp*'));
-ea_delete(fullfile(imageFolder, 'left', 'MV'));
-ea_delete(fullfile(imageFolder, 'left', 'jf5-VLa.nii.gz'));
-ea_delete(fullfile(imageFolder, 'left', 'san_6-VLP.nii.gz'));
-ea_delete(fullfile(imageFolder, 'right', 'MV'));
-ea_delete(fullfile(imageFolder, 'right', 'jf5-VLa.nii.gz'));
-ea_delete(fullfile(imageFolder, 'right', 'san_6-VLP.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', 'EXTRAS'));
+ea_delete(fullfile(imageFolder, 'left', '1-THALAMUS.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', '4567-VL.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', 'CL_L.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', 'crop_*.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', '33-GP.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', 'nucleiVols.txt'));
+ea_delete(fullfile(imageFolder, 'left', 'ocrop_*.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', 'regn_L.nii.gz'));
+ea_delete(fullfile(imageFolder, 'left', 'VLP.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', 'EXTRAS'));
+ea_delete(fullfile(imageFolder, 'right', '1-THALAMUS.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', '4567-VL.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', 'CL_R.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', 'crop_*.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', '33-GP.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', 'nucleiVols.txt'));
+ea_delete(fullfile(imageFolder, 'right', 'ocrop_*.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', 'regn_R.nii.gz'));
+ea_delete(fullfile(imageFolder, 'right', 'VLP.nii.gz'));
 
 %% Build combined parcellation
-leftParc = fullfile(imageFolder, 'left', 'thomasfull.nii.gz');
-rightParc = fullfile(imageFolder, 'right', 'thomasrfull.nii.gz');
-if isfile(leftParc) && isfile(rightParc)
-    fprintf('\nBuilding THOMAS parcellation...\n\n');
-    leftParc = ea_load_nii(leftParc);
-    rightParc = ea_load_nii(rightParc);
+leftParcPath = fullfile(imageFolder, 'left', 'thomasfull_L.nii.gz');
+leftAmyPath = fullfile(imageFolder, 'left', '34-Amy.nii.gz');
+rightParcPath = fullfile(imageFolder, 'right', 'thomasfull_R.nii.gz');
+rightAmyPath = fullfile(imageFolder, 'right', '34-Amy.nii.gz');
 
-    rightParc.img(rightParc.img>0) = rightParc.img(rightParc.img>0) + 100;
-    leftParc.img = leftParc.img + rightParc.img;
+ea_cprintf('*Comments', 'Building THOMAS parcellation...\n\n');
+leftParcNii = ea_load_nii(leftParcPath);
+ea_delete(leftParcPath);
+rightParcNii = ea_load_nii(rightParcPath);
+ea_delete(rightParcPath);
+rightParcNii.img(rightParcNii.img>0) = rightParcNii.img(rightParcNii.img>0) + 100;
+leftParcNii.img = leftParcNii.img + rightParcNii.img;
 
-    ea_mkdir(fullfile(imageFolder, 'labeling'));
-    leftParc.fname = fullfile(imageFolder, 'labeling', 'THOMAS (Su 2019).nii');
-    leftParc.dt(1) = 2; % uint8
+leftAmyNii = ea_load_nii(leftAmyPath);
+rightAmyNii = ea_load_nii(rightAmyPath);
+leftAmyNii.img(leftAmyNii.img==1) = 34;
+rightAmyNii.img(rightAmyNii.img==1) = 134;
+leftParcNii.img = leftParcNii.img + leftAmyNii.img;
+leftParcNii.img = leftParcNii.img + rightAmyNii.img;
 
-    ea_write_nii(leftParc);
-    copyfile(fullfile(ea_getearoot, 'ext_libs', 'THOMAS', 'THOMAS (Su 2019).txt'), fullfile(imageFolder, 'labeling'));
-end
+ea_mkdir(fullfile(imageFolder, 'labeling'));
+leftParcNii.fname = fullfile(imageFolder, 'labeling', 'THOMAS (Su 2019).nii');
+leftParcNii.dt(1) = 2; % uint8
+
+ea_write_nii(leftParcNii);
+copyfile(fullfile(ea_getearoot, 'ext_libs', 'THOMAS', 'THOMAS (Su 2019).txt'), fullfile(imageFolder, 'labeling'));
 
 %% Build atlas
-fprintf('\Building THOMAS atlas...\n\n');
+ea_cprintf('*Comments', 'Building THOMAS atlas...\n\n');
 ea_mkdir(fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)', 'lh'));
 ea_mkdir(fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)', 'rh'));
 
@@ -70,6 +101,9 @@ rightNucleusNewPath = replace(rightNucleus, fullfile(imageFolder, 'right'), full
 rightNucleusNewPath = replace(rightNucleusNewPath, regexpPattern(['\' filesep '\d+[-_]']), filesep);
 cellfun(@(src, dst) copyfile(src, dst), leftNucleus, leftNucleusNewPath);
 cellfun(@(src, dst) copyfile(src, dst), rightNucleus, rightNucleusNewPath);
+
+ea_delete(fullfile(imageFolder, 'left'));
+ea_delete(fullfile(imageFolder, 'right'));
 
 % Crop nucleus
 nucleus = ea_regexpdir(fullfile(imageFolder, 'atlases', 'HIPS-THOMAS Segmentation (Vidal 2024)'), '.*\.nii\.gz$');
@@ -102,15 +136,36 @@ if ~exist('atlases', 'var') || length(names) ~= length(atlases.names) || ~all(st
     atlases.types = ones(size(atlases.names)) * 3;
     atlases.threshold.type='relative_intensity';
     atlases.threshold.value=0.5;
-    atlases.colormap = ea_color_wes('all', length(atlases.names));
+    % atlases.colormap = ea_color_wes('all', length(atlases.names));
+    atlases.colormap = [48 18 59
+                        232 213 56
+                        142 10 1
+                        81 249 121
+                        249 186 56
+                        254 152 44
+                        247 113 27
+                        232 75 12
+                        172 250 55
+                        23 217 199
+                        132 254 80
+                        36 236 166
+                        255 237 45
+                        38 189 233
+                        210 48 5
+                        180 27 1
+                        61 55 145
+                        69 91 206
+                        90 165 244
+                        90 205 244
+                        60 157 253]/255;
 
     atlases.citation.name = 'HIPS-THOMAS Segmentation (Vidal 2024)';
     atlases.citation.short = 'Vidal et al. 2024';
     atlases.citation.long = {'Vidal, J. P., Danet, L., Péran, P., Pariente, J., Bach Cuadra, M., Zahr, N. M., Barbeau, E. J., & Saranathan, M. (2024). Robust thalamic nuclei segmentation from T1-weighted MRI using polynomial intensity transformation. Brain Structure and Function. https://doi.org/10.1007/s00429-024-02777-5'};
 
     atlases.presets(1).label = 'Default';
-    atlases.presets(1).hide = find(ismember(names, {'THALAMUS.nii.gz', 'VL.nii.gz', 'VLP.nii.gz'})); % Hide thalamus, VL and VLP, only show sub-regions
-    atlases.presets(1).show = setdiff(1:length(names), atlases.presets(1).hide);
+    atlases.presets(1).hide = [];
+    atlases.presets(1).show = 1:length(names);
     atlases.presets(1).default = 'relative';
     atlases.defautset = 1;
 

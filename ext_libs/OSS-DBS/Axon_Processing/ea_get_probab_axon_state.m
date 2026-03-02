@@ -1,12 +1,13 @@
-function ea_get_probab_axon_state(results_folder,plot_rates,damaged_as_activated)
+function ea_get_probab_axon_state(results_folder,plot_rates,settings,side)
 % Estimate probability of axon activation based on a sweep of parameters
 % (e.g. fiber diameters).
 % By Butenko and Li, konstantinmgtu@gmail.com
 
 arguments
-    results_folder          % path to save the output
-    plot_rates              {mustBeNumericOrLogical} = 0  % if true, plot activation rates over parameter sweep
-    damaged_as_activated    {mustBeNumericOrLogical} = 0  % if true, interpret axons intersected with the electrode (damaged) as activated
+    results_folder      % path to save the output
+    plot_rates          {mustBeNumericOrLogical}% if true, plot activation rates over parameter sweep
+    settings            % parameters for OSS-DBS simulation
+    side                {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
 end
 
 % check which pathways were simulated and their percent activations
@@ -47,7 +48,7 @@ for file_i = 1:length(rate_files)
     end
 end
 
-N_scalings = length(activations_over_pathways{pt_counter});
+N_samples = length(activations_over_pathways{pt_counter});
 
 % plot activation curves over the parameter sweep
 if plot_rates
@@ -55,7 +56,7 @@ if plot_rates
     for pt_counter = 1:length(pathways)
         pathway_name = strrep(pathways{pt_counter},'_',' ');
         disp(pathway_name)
-        plot(1:N_scalings,activations_over_pathways{pt_counter},'DisplayName',pathway_name)
+        plot(1:N_samples,activations_over_pathways{pt_counter},'DisplayName',pathway_name)
         ylim([0,100]);
         xlabel('Scaling')
         ylabel('Percent Activation')
@@ -71,14 +72,36 @@ for pt_counter = 1:length(pathways)
     % iterate over scalings (fiber diameters)
     % important: number of compartments can differ based on the fiber
     % diameter / length!
-    for scaling_i = 1:N_scalings
+    for sample_i = 1:N_samples
 
-        Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(scaling_i),'.mat']);
+        % If stimSetMode, extract the index from tractName (but axonState is still checked on the indexed file)
+        if settings.stimSetMode && ~settings.optimizer
+            if startsWith(settings.connectome, 'Multi-Tract: ')
+                stimProt_index = regexp(tractName, '(?<=_)\d+$', 'match', 'once');
+                tractName = regexp(tractName, '.+(?=_\d+$)', 'match', 'once');
+            else
+                stimProt_index = regexp(axonState{f}, '(?<=Axon_state_)\d+(?=\.mat$)', 'match', 'once');
+            end
+
+            % in this case, each sample is in a separate folder
+            Axon_state_gpe2stn_sm_left_0   % without prob
+
+        else
+            Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(sample_i),'.mat']);
+        end
+ 
         load(Axon_state_file, 'fibers','ea_fibformat','connectome_name');
+        n_comp = sum(bsxfun(@eq, fibers(:,4), fibers(:,4)'), 2)';
+        % the number is the same since these are OSS-DBS axons
+        idx = n_comp(1) * ones(length(unique(fibers(:,4))),1);
+
+        if strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+            fibers = OSS_DBS_Damaged2Activated(settings,fibers,idx,side+1);
+        end
 
         % intialize new axon state file with probabilistic activations
         % morphologz defined by the first scaling!
-        if scaling_i == 1
+        if sample_i == 1
             fibers_prob = fibers;
             % unnecessary, but for clarity
             fibers_prob(:,5) = 0;
@@ -91,14 +114,14 @@ for pt_counter = 1:length(pathways)
             % here we only count really activated ones
             fibers_state(fiber_i) = (fibers(idx_comp(1),5) == 1);
             % can also add damaged
-            if fibers_state(fiber_i) == 0 && damaged_as_activated
+            if fibers_state(fiber_i) == 0 && strcmp(settings.butenko_intersectStatus,'activated')
                 fibers_state(fiber_i) = (fibers(idx_comp(1),5) == -1 || fibers(idx_comp(1),5) == -3);
             end
 
-            % key line. Probability is estimated as number of success
-            % across scaling divided by the number of scalings
+            % The key line. Probability is estimated as the number of
+            % activations across scalings divided by the number of the scalings
             idx_comp_orig = find(fibers_prob(:,4)==fiber_i);
-            fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_scalings;
+            fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_samples;
         end
     end
     ftr.fibers = fibers_prob;

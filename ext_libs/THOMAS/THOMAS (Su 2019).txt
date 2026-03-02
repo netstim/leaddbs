@@ -10,6 +10,14 @@
 12		MD-Pf_L
 13		Hb_L
 14		MTT_L
+26		Acc_L
+27		Cau_L
+28		Cla_L
+29		GPe_L
+30		GPi_L
+31		Put_L
+32		RN_L
+34		Amy_L
 102		AV_R
 104		VA_R
 105		VLa_R
@@ -22,3 +30,11 @@
 112     MD-Pf_R
 113     Hb_R
 114     MTT_R
+126		Acc_R
+127		Cau_R
+128		Cla_R
+129		GPe_R
+130		GPi_R
+131		Put_R
+132		RN_R
+134		Amy_R

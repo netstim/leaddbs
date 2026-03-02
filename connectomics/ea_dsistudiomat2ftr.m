@@ -9,7 +9,7 @@ if isempty(directory)
     directory = '.';
 end
 
-if ~exist('outputname', 'var') || isempty(outputName)
+if ~exist('outputName', 'var') || isempty(outputName)
     outputName = matName;
 else
     outputName = strrep(outputName, '.mat', '');

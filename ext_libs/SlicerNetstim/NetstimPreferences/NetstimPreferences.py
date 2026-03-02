@@ -67,11 +67,14 @@ class NetstimPreferencesSettingsUI:
       layout.addRow("Use smooth atlases: ", self.useSmoothAtlasCheckBox)
 
       # initial set-up
+      previousLeadDBSPath = LeadDBSPath().getValue()
+      if os.path.isdir(previousLeadDBSPath):
+        self.leadDBSPathButton.directory = previousLeadDBSPath
+
       previousSpace = LeadDBSSpace().getValue()
       if previousSpace:
         self.leadDBSSpaceComboBox.addItems([previousSpace])
         self.leadDBSSpaceComboBox.setCurrentText(previousSpace)
-      self.leadDBSPathButton.directory = LeadDBSPath().getValue()
 
   def onLeadDBSPathChanged(self):
     newDir = self.leadDBSPathButton.directory

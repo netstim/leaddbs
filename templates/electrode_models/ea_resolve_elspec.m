@@ -13,7 +13,7 @@ if ~nargin
         'Abbott ActiveTip (6146-6149)','Abbott ActiveTip (6142-6145)', ...
         'Abbott Directed 6172 (short)','Abbott Directed 6173 (long)', ...
         'PINS Medical L301', 'PINS Medical L302', 'PINS Medical L303', .....
-        'SceneRay SR1200', 'SceneRay SR1210', 'SceneRay SR1211', 'SceneRay SR1242', ...
+        'SceneRay SR1200', 'SceneRay SR1202','SceneRay SR1210', 'SceneRay SR1211', 'SceneRay SR1212', 'SceneRay SR1242', ...
         'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
         'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S14', 'SDE-08 S16', ...
         'PMT 2102-04-091', 'PMT 2102-06-091', 'PMT 2102-08-091', 'PMT 2102-10-091', 'PMT 2102-12-091', 'PMT 2102-14-091', 'PMT 2102-16-091', ...
@@ -32,7 +32,7 @@ if ~nargin
         'abbott_activetip_2mm','abbott_activetip_3mm', ...
         'abbott_directed_05','abbott_directed_15', ...
         'pins_l301', 'pins_l302', 'pins_l303', ...
-        'sceneray_sr1200', 'sceneray_sr1210', 'sceneray_sr1211', 'sceneray_sr1242', ...
+        'sceneray_sr1200', 'sceneray_sr1202', 'sceneray_sr1210', 'sceneray_sr1211', 'sceneray_sr1212', 'sceneray_sr1242', ...
         'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
         'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s14', 'sde_08_s16', ...
         'pmt_2102_04_091', 'pmt_2102_06_091', 'pmt_2102_08_091', 'pmt_2102_10_091', 'pmt_2102_12_091', 'pmt_2102_14_091', 'pmt_2102_16_091', ...
@@ -348,6 +348,25 @@ switch elmodel
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
+    case 'SceneRay SR1202'
+        elspec.matfname='sceneray_sr1202';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+        elspec.contact_spacing=0.5;
+        elspec.numContacts=8;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
+        elspec.forstimulation=1;    
     case 'SceneRay SR1210'
         elspec.matfname='sceneray_sr1210';
         elspec.lead_diameter=1.27;
@@ -381,6 +400,25 @@ switch elmodel
         elspec.numContacts=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numContacts);
+        elspec.forstimulation=1;
+    case 'SceneRay SR1212'
+        elspec.matfname='sceneray_sr1212';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+        elspec.contact_spacing=1.5;
+        elspec.numContacts=8;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);

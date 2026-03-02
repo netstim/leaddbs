@@ -48,7 +48,7 @@ for s = sides
     else
         set(cortex{s},'FaceVertexCData',repmat([0.65, 0.65, 0.65], length(cortex{s}.Vertices), 1));
     end
-    set(cortex{s},'FaceVertexAlphaData',annot(s).adat,'FaceAlpha','interp');
+    set(cortex{s},'FaceVertexAlphaData',annot(s).adat,'FaceAlpha','interp','AlphaDataMapping','none');
 
 end
     setappdata(resultfig,'cortex',cortex);

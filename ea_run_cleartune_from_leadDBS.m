@@ -38,6 +38,9 @@ function ea_run_cleartune_from_leadDBS(~,~,handles, file)
         end
     end
 
+    % Generate new stimulation folder name for the patient
+    config.stimulationID = char(datetime('now'), 'yyyyMMddHHmmss');
+
     % run cleartune
     app = ea_cleartune(config);
 

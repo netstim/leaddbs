@@ -105,12 +105,52 @@ for sub=1:numPatient
                 BIDS_side_merged = '_model-ossdbs_hemi-L';
             end
 
-            % BIDS notation
-            [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
-            subSimPrefix = [subj_tag, '_sim-'];
-            fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
-            pam_result_folder = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-                ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM'];
+
+            % check here if there are PAM_StimSets_* folders 
+            % but you need to make sure you don't have irrelevant PAM folders there 
+            if isfield(obj.M,'pseudoM')
+                if strcmp(obj.M.ROI.list{sub,side},"No Stim")
+                    % no stim at this side
+                    C_fibState{k}(:,5) = 0;
+                    C_fibState_idx{k} = C_idx{k};
+                    continue
+                end
+
+                pam_result_folder = obj.M.ROI.list{sub,side};
+                if ~isfolder(pam_result_folder)
+                    ea_warndlg("PAM folder not found")
+                    warningMsg = sprintf("%s not found, exiting...",string(obj.M.ROI.list{sub,side}));
+                    ea_warndlg(warningMsg);
+                    return
+                    % C_fibState{k}(:,5) = 0;
+                    % C_fibState_idx{k} = C_idx{k};
+                    % continue
+                end
+
+                % we assume that the fiberActivation files are named
+                % according to the BIDS convention
+                fileList = dir_without_dots(fullfile(pam_result_folder, ['*', myFiles(k).name]));
+                % Check if any files were found
+                if isempty(fileList)
+                    fprintf('No files found ending with "%s".\n', myFiles(k).name);
+                    C_fibState{k}(:,5) = 0;
+                    C_fibState_idx{k} = C_idx{k};
+                    continue
+                else
+                    fiberActivation_file = fileList(1).name;
+                    parts = split(fiberActivation_file, '_');
+                    subj_tag = parts{1};
+                end
+
+            else
+                % BIDS notation
+                [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
+                subSimPrefix = [subj_tag, '_sim-'];
+                fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
+                pam_result_folder = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
+                    ea_nt(0), 'gs_',obj.M.guid, filesep, obj.connectome, filesep, 'PAM'];
+            end
+
             pam_file = [pam_result_folder, filesep, fiberActivation_file];
 
             % temp crutch to look in the old location
@@ -140,12 +180,9 @@ for sub=1:numPatient
                 continue
             end
 
-            % if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
-            %     disp("==========================================================================")
-            %     disp("WARNING: Activation of this pathway was computed for another connectome!!!")
-            %     disp("==========================================================================")
-            %     continue
-            % end
+            if isfield(fib_state_raw,'connectome_name') & ~strcmp(obj.connectome, fib_state_raw.connectome_name)
+                ea_error("PAM results are for another connectome!!!")
+            end
 
             last_loc_i = 1;
             sub_i = 1;
@@ -183,7 +220,6 @@ for sub=1:numPatient
             % store as fiberActivation_side.mat in the corresp. stim folder
             [filepath,~,~] = fileparts(pam_file);
             %BIDS notation
-            [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
             subSimPrefix = [subj_tag, '_sim-'];
             fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
             save(fiberActivation_merged, '-struct', 'ftr2');

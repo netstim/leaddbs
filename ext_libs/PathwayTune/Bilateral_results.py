@@ -1,11 +1,10 @@
-
 import numpy as np
 import json
 import os
 import sys
 import copy
 
-def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights_json):
+def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights):
 
     """ Find bilateral symptoms and estimate bilateral weights accounting for possible asymmetry in fiber values
 
@@ -14,7 +13,7 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles
     estim_w_rh_json: str, path to dict with estimated weights for right hemisphere stim
     estim_w_lh_json: str, path to dict with estimated weights for left hemisphere stim
     target_profiles: dict, Activation Profile Dictionary
-    fixed_symptom_weights_json: str, path to dict with fixed weights in network blending
+    fixed_symptom_weights: dict, fixed weights in network blending
 
     """
 
@@ -58,10 +57,6 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles
         estim_w_lh = json.load(fp)
     fp.close()
 
-    with open(fixed_symptom_weights_json, 'r') as fp:
-        fixed_symptom_weights = json.load(fp)
-    fp.close()
-
     final_weights = {}
 
     total_weight_count = 0.0
@@ -98,7 +93,7 @@ def estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles
     #for key in final_weights:
     #    final_weights[key] = final_weights[key] / total_weight_count
 
-    with open(os.environ['STIMDIR'] + '/Estim_weights_bilateral_norm.json', 'w') as save_as_dict:
+    with open(stim_dir + '/Estim_weights_bilateral_norm.json', 'w') as save_as_dict:
         json.dump(final_weights, save_as_dict)
 
 
@@ -184,7 +179,7 @@ def estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_
                 final_imp[key[:-3]] = 1.0
                 print("capped")
 
-    with open(os.environ['STIMDIR'] + '/Estim_improvement_bilateral_capped.json', 'w') as save_as_dict:
+    with open(stim_dir + '/Estim_improvement_bilateral_capped.json', 'w') as save_as_dict:
         json.dump(final_imp, save_as_dict)
 
 
@@ -195,25 +190,27 @@ if __name__ == '__main__':
     # sys.argv[1] - stim folder
     # sys.argv[2] - reconcile_mode ('weights' or 'improvement')
 
-    os.environ['STIMDIR'] = sys.argv[1]
+    stim_dir = sys.argv[1]
     reconcile_mode = sys.argv[2]  # 'weights' or 'improvement'
 
     # load previously approved symptom-specific profiles
     # side is not relevant here, should be the same for bilateral
-    with open(os.environ['STIMDIR'] + '/NB_rh' + '/target_profiles.json', 'r') as fp:
-        target_profiles = json.load(fp)
-    fixed_symptom_weights_json = os.environ['STIMDIR'] + '/Fixed_symptoms.json'
-
+    with open(os.path.join(stim_dir,'master_dict.json'), 'r') as fp:
+        master_settings = json.load(fp)
+    fp.close()
+    target_profiles = master_settings['target_profiles']
+    fixed_symptom_weights = master_settings['fixed_symptom_weights']
+    
     if reconcile_mode == 'improvement':
         # estimated improvements were stored in json
-        estim_imp_rh_json = os.environ['STIMDIR'] + '/NB_rh' + '/Estim_symp_improv_rh.json'
-        estim_imp_lh_json = os.environ['STIMDIR'] + '/NB_lh' + '/Estim_symp_improv_lh.json'
+        estim_imp_rh_json = stim_dir + '/NB_rh' + '/Estim_symp_improv_rh.json'
+        estim_imp_lh_json = stim_dir + '/NB_lh' + '/Estim_symp_improv_lh.json'
         fp.close()
         estimate_bilateral_improvement(estim_imp_rh_json, estim_imp_lh_json, target_profiles)
     elif reconcile_mode == 'weights':
         # estimated weights were stored in json
-        estim_w_rh_json = os.environ['STIMDIR'] + '/NB_rh' + '/Estim_weights_rh.json'
-        estim_w_lh_json = os.environ['STIMDIR'] + '/NB_lh' + '/Estim_weights_lh.json'
-        estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights_json)
+        estim_w_rh_json = stim_dir + '/NB_rh' + '/Estim_weights_rh.json'
+        estim_w_lh_json = stim_dir + '/NB_lh' + '/Estim_weights_lh.json'
+        estimate_bilateral_weights(estim_w_rh_json, estim_w_lh_json, target_profiles, fixed_symptom_weights)
 
 

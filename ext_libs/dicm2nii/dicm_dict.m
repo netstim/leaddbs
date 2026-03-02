@@ -508,7 +508,6 @@ C = {
     '2050' '0020' 'CS' 'PresentationLUTShape'
     '5200' '9229' 'SQ' 'SharedFunctionalGroupsSequence'
     '5200' '9230' 'SQ' 'PerFrameFunctionalGroupsSequence'
-    '5600' '0020' 'OF' 'PixelData' % SpectroscopyData
     '7FE0' '0010' 'OW' 'PixelData' }; % can be OB
 
 % Following add vendor specific tags

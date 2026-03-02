@@ -32,10 +32,18 @@ header.pad1 = repmat(char(0), 1, 2);
 if ~exist('specs','var') || isempty(specs) % Use MNI T1 as reference space by default.
     disp('Header from space template ...');
     spacedef = ea_getspacedef;
-    refhdr = ea_fslhd([ea_space, spacedef.templates{1}, '.nii']);
+    
+    % BIDS FIX: Try t1.nii first, fall back to brainmask.nii.gz
+    templateFile = [ea_space, spacedef.templates{1}, '.nii'];
+    if ~exist(templateFile, 'file')
+        fprintf('Template t1.nii not found, using brainmask.nii.gz...\n');
+        templateFile = [ea_space, 'brainmask.nii.gz'];
+    end
+    
+    refhdr = ea_fslhd(templateFile);
     specs.origin = [0,0,0];
     specs.dim = [refhdr.dim1, refhdr.dim2, refhdr.dim3];
-    specs.affine = ea_get_affine([ea_space, spacedef.templates{1}, '.nii'], 0);
+    specs.affine = ea_get_affine(templateFile, 0);
     header.pad2 = ['RAS', char(0)];
 elseif isstruct(specs)
     % Suppose that the affine matrix is from SPM

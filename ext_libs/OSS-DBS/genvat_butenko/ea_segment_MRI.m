@@ -17,7 +17,12 @@ settings.GM_index = 1;
 settings.WM_index = 2;
 settings.CSF_index = 3;
 settings.default_material = 'GM'; % GM, WM or CSF
-settings.MRI_data_name = [outputPaths.outputDir, filesep, segmaskName];
+
+if settings.use_wsl
+    settings.MRI_data_name =  vta_windowspathstowsl([outputPaths.outputDir, filesep, segmaskName]);
+else
+     settings.MRI_data_name = [outputPaths.outputDir, filesep, segmaskName];
+end
 
 if options.native
     anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
@@ -90,6 +95,13 @@ switch settings.butenko_segmAlg
             if WM_vol < 100.0 || GM_vol < 100.0
                 warningMsg = sprintf("Brain segmentation with SPM failed for sub-%s", options.subj.subjId);
                 ea_warndlg(warningMsg);
+
+                if settings.use_wsl
+                    warningMsg = sprintf("Atropos fallback cannot be used with WSL, consider Atlas based segmentation model");
+                    ea_warndlg(warningMsg);
+                    return
+                end
+
                 % check if atropos segmentation was already done 
                 % TBD: we can store atropos segmask_raw in coregistration
                 % instead of stim folder
@@ -137,31 +149,66 @@ switch settings.butenko_segmAlg
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
         end
     case 'SynthSeg'
-        % IMPORTANT: SynthSeg is not properly trained for typical PD brain
-        % atrophies! This might lead to both segmentation and normalization
-        % errors!
+        if settings.segment_SVD
+            segmenter = 'SynthSeg';
+            [anchorImageDir, ~] = fileparts(anchorImage);
+            segmaskPath = [anchorImageDir, filesep, 'segmask_SVD.nii'];
+            if ~isfile(segmaskPath)
+                alg4Lacunes = 'TeamTea'; 
+                alg4PVS = 'TeamTea';
+                alg4WMH = 'segcsvd';
+                only_segmask = false;
+                subj = options.subj.subjId;
+    
+                % get T1, T2 and FLAIR
+                all_images = dir_without_dots(anchorImageDir);
+                allNames = {all_images.name};
+                logicalIndex = contains(allNames, 'T2starw.nii') | contains(allNames, 'T1w.nii') | contains(allNames, 'T2w.nii') | contains(allNames, 'FLAIR.nii');
+                images = all_images(logicalIndex);
+                % re-order to have T2w and T1w before FLAIR
+                images = flipud(images);
 
-        if options.native
-            [anchorImageDir, anchorImageName] = fileparts(anchorImage);
-            ImageDir = [anchorImageDir, filesep];
-            ImageName = [anchorImageName, '.nii'];
-        else
-            normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
-            [normImageDir, normImageName] = fileparts(normImage);
-            ImageDir = [normImageDir, filesep];
-            ImageName = [normImageName, '.nii'];
-        end
+                if any(contains(allNames, 'T2starw.nii'))
+                    alg4MB = 'TeamTea';
+                else
+                    alg4MB = 'None';
+                end
 
-        segMaskPath = [ImageDir, ImageName(1:end-4),'-synthseg_raw.nii'];
-        if ~isfile(segMaskPath)
-            env = ea_conda_env('SynthSeg');
-            if ~env.is_up_to_date
-                env.force_create;
+                env = ea_conda_env('SynthSeg');
+                if ~env.is_up_to_date
+                    env.force_create;
+                end
+                
+                ea_svd_segmentation(images, anchorImage, segmenter, segmaskPath, alg4PVS,alg4WMH,alg4Lacunes,subj,only_segmask,alg4MB)
             end
-            ea_synthseg([ImageDir,ImageName], segMaskPath)
-        end
+            copyfile(segmaskPath, [outputPaths.outputDir, filesep, segmaskName]);
+        else
+            % IMPORTANT: SynthSeg is not properly trained for typical PD brain
+            % atrophies! This might lead to both segmentation and normalization
+            % errors!
+    
+            if options.native
+                [anchorImageDir, anchorImageName] = fileparts(anchorImage);
+                ImageDir = [anchorImageDir, filesep];
+                ImageName = [anchorImageName, '.nii'];
+            else
+                normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
+                [normImageDir, normImageName] = fileparts(normImage);
+                ImageDir = [normImageDir, filesep];
+                ImageName = [normImageName, '.nii'];
+            end
 
-        % always convert to make sure the chosen algorithm was used
-        ea_convert_synthSeg2segmask((segMaskPath), ([outputPaths.outputDir, filesep, segmaskName]));
+            segMaskPath = [ImageDir, ImageName(1:end-4),'-synthseg_raw.nii'];
+            if ~isfile(segMaskPath)
+                env = ea_conda_env('SynthSeg');
+                if ~env.is_up_to_date
+                    env.force_create;
+                end
+                ea_synthseg([ImageDir,ImageName], segMaskPath)
+            end
+
+            % always convert to make sure the chosen algorithm was used
+            ea_convert_synthSeg2segmask((segMaskPath), ([outputPaths.outputDir, filesep, segmaskName]));
+        end
         env = ea_conda_env('OSS-DBSv2');
 end
