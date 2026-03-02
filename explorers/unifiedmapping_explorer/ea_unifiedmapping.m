@@ -292,6 +292,13 @@ classdef ea_unifiedmapping < handle
 
 
                 [AllX,space] = ea_unifiedmapping_exportefieldmap(vatlist,obj);
+                % Apply threshold: set all values below nanthreshold to
+                % NaN, like in fiberfiltering
+                for i = 1:numel(AllX)
+                    if ~isempty(AllX{i})
+                        AllX{i}(AllX{i} < obj.calcsettings.calcthreshold) = nan;
+                    end
+                end
 
                 obj.results.sweetspotmapping.efield = AllX;
                 

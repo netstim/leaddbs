@@ -96,7 +96,7 @@ for group = groups
                         Nmap=ea_nansum(gval{side}(:,gpatsel),2);
                         gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                     otherwise
-                        gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
+                        % gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
                         Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
                         gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                 end
