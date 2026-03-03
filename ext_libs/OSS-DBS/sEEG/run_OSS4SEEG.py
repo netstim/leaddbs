@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 3:
         Electrode_ID = int(sys.argv[3])
-        SEEG_recos_df = SEEG_recos_df[SEEG_recos_df['Electrode_ID'] == Electrode_ID]
+        SEEG_recos_df = SEEG_recos_df[SEEG_recos_df['group'] == Electrode_ID]
         Electrode_ID_given = True
     else:
         Electrode_ID_given = False
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         oss_electrode = check_electrode_availability(SEEG_recos_df['electrode'][cnt_i])  
         if not Electrode_ID_given:
             # definition from the reconstruction sheet
-            Electrode_ID = SEEG_recos_df['Electrode_ID'][cnt_i]
+            Electrode_ID = SEEG_recos_df['group'][cnt_i]
     
         ''' determine two contacts (active and adjacent) to build the trajctory '''
         cnt_ID = contacts2simulate[cnt_i]  # actual label
@@ -254,7 +254,7 @@ if __name__ == '__main__':
                         "CollapseVTA": True,  # questionable
                     }
                 },
-                "OutputPath": os.path.join(os.path.dirname(SEEG_recos),'Results_VTR_E' + str(Electrode_ID) + '_1V_' + cnt_ID),
+                "OutputPath": os.path.join(os.path.dirname(SEEG_recos),'Results_VTR_' + str(Electrode_ID) + '_1V_' + cnt_ID),
                 "SaveImpedance": False,
                 "ExportVTK": True,
                 "TemplateSpace": False,
