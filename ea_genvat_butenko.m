@@ -2,10 +2,6 @@ function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS simulations.
 % By Butenko and Li, konstantinmgtu@gmail.com
 
-fprintf("\n\nOSS-DBS v2 by J. Zimmermann, J.P. Payonk and K. Butenko\n")
-fprintf("Please cite 'Butenko et al. (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.'\n")
-fprintf("PLoS Comput Biol 16(7), https://doi.org/10.1371/journal.pcbi.1008023'\n\n\n")
-
 if nargin==2
     S=varargin{1};
     options=varargin{2};
@@ -19,6 +15,11 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{3} = true; % Support estimation in native space
     return
 end
+
+fprintf("\n\nOSS-DBS v2 by J. Zimmermann, J.P. Payonk and K. Butenko\n")
+fprintf("Please cite 'Butenko et al. (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.'\n")
+fprintf("PLoS Comput Biol 16(7), https://doi.org/10.1371/journal.pcbi.1008023'\n\n\n")
+
 % get resultfig handle
 if exist('hFigure', 'var')
     resultfig = getappdata(hFigure,'resultfig');
@@ -31,7 +32,7 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
-%options.stimSetMode = 0;
+%options.stimSetMode = 1;
 [settings,S] = ea_prepare_ossdbs(options,S);
 if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env
     disp("Running OSS-DBS via WSL")
@@ -253,7 +254,7 @@ for source_index = first_active_source:4
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
                 
                 if settings.use_wsl 
-                    [~, ~] = vta_runwslcommand(['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)]);
+                    [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)])
                 else
                     env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
                 end
@@ -261,8 +262,8 @@ for source_index = first_active_source:4
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
             if settings.use_wsl 
-                [~, ~] = vta_runwslcommand(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
-                    ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)]);
+                [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
+                    ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)])
             else
                 env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
                     ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
@@ -272,7 +273,7 @@ for source_index = first_active_source:4
 
             % run OSS-DBS
             if settings.use_wsl 
-                [~,cmdout] = vta_runwslcommand(['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
+                [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
             else
                 [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)]);
             end
@@ -280,9 +281,9 @@ for source_index = first_active_source:4
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
                 if settings.use_wsl 
-                    [~, ~] = vta_runwslcommand(cell2mat(['python3 ' vta_windowspathstowsl(ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py')) ' ', vta_windowspathstowsl(parameterFile_json)]));
+                    [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,cell2mat(['python3 ' vta_windowspathstowsl(ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py')) ' ', vta_windowspathstowsl(parameterFile_json)]))
                     % run OSS-DBS
-                    [~, ~] = vta_runwslcommand(['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
+                    [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
                 else
                     % increase the Bnd_Box dimensions
                     env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
@@ -311,7 +312,7 @@ for source_index = first_active_source:4
 
                 if settings.optimizer
                     if settings.use_wsl 
-                        vta_runwslcommand(['python ', vta_windowspathstowsl(ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py'),' ', settings.PathwayTune_master_dict, ' ', vta_windowspathstowsl(outputPaths.outputDir), ' ', num2str(side), ' ', vta_windowspathstowsl(parameterFile_json), ' ', num2str(scaling)])
+                        vta_runwslcommand(options.prefs.ext_oss_env,['python ', vta_windowspathstowsl(ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py'),' ', settings.PathwayTune_master_dict, ' ', vta_windowspathstowsl(outputPaths.outputDir), ' ', num2str(side), ' ', vta_windowspathstowsl(parameterFile_json), ' ', num2str(scaling)])
                     else
                         env.system('pip3 install pyswarms');
                         env.system('pip3 install pickle5');
@@ -320,13 +321,13 @@ for source_index = first_active_source:4
                 else
                     if settings.prob_PAM
                         if settings.use_wsl
-                            [~,cmdout] = vta_runwslcommand(['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                            [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)])
                         else
                             env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
                         end
                     else
                         if settings.use_wsl
-                            vta_runwslcommand(['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                            [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)])
                         else
                             env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
                         end
@@ -336,6 +337,33 @@ for source_index = first_active_source:4
                 % remove the large file containing the time-domain solution (but not for StimSets!)
                 ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result*'])
             end
+
+            if settings.prob_PAM && settings.stimSetMode    
+                % we need to save the results since both modes use
+                % scaling_index
+                act_files = dir_without_dots([outputPaths.HemiSimFolder,filesep,'Results',filesep,'Pathway_status_*']);
+                mkdir([outputPaths.HemiSimFolder,filesep,'sample_',num2str(i)])
+                for act_file_inx = 1:length(act_files)
+                    % Get the individual filename
+                    fileName = act_files(act_file_inx).name;
+                    
+                    % Skip directories (like '.' and '..')
+                    if ~act_files(act_file_inx).isdir
+                        sourceFile = fullfile(act_files(act_file_inx).folder, fileName);
+                        destFile = fullfile([outputPaths.HemiSimFolder,filesep,'sample_',num2str(i)], fileName);
+                        
+                        % Perform the copy
+                        copyfile(sourceFile, destFile);
+                        fprintf('Copied: %s\n', fileName);
+                    end
+                end
+
+                if i == settings.N_samples && side == 1
+                    [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
+                    return
+                end
+            end
+
         end
 
         %% Postprocessing in Lead-DBS
@@ -346,7 +374,7 @@ for source_index = first_active_source:4
             continue;
         end
 
-        if settings.prob_PAM && all(~multiSourceMode)
+        if settings.prob_PAM && all(~multiSourceMode) && ~settings.stimSetMode
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
             ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,settings,side);
         end
@@ -360,6 +388,12 @@ for source_index = first_active_source:4
             runStatusMultiSource(source_index,side+1) = 1;
             fprintf('\nOSS-DBS calculation succeeded!\n\n')
 
+            if settings.prob_PAM && settings.stimSetMode
+                % TBA: Lead-DBS postprocessing for such case
+                ea_delete([outputPaths.HemiSimFolder, filesep, 'ResultsE*']);
+                continue
+            end
+
             % prepare Lead-DBS BIDS format VATs
             if settings.exportVAT && settings.optimizer
                 % get 4-D unit niftis for the optimizer and exit
@@ -370,7 +404,7 @@ for source_index = first_active_source:4
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
-            if settings.prob_PAM && any(multiSourceMode)
+            if settings.prob_PAM && any(multiSourceMode) && ~settings.stimSetMode
                 % for multisource, we will convert in the external loop
                 % we just need to add the source index to the Axon States
                 axonStateFolder = ea_sourceIndex4AxonStates(outputPaths, side, source_use_index);

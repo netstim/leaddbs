@@ -247,10 +247,31 @@ if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph met
         fs(end+1)=2;
     end
 
+    % Ensure required CM files exist before graph metrics
+    missing = {};
+    for mode = 1:length(modes)
+        cmPath = [expfolder, finas{mode}, '_CM.mat'];
+        if ~exist(cmPath, 'file')
+            missing{end+1} = cmPath;
+        end
+    end
+    if options.lc.graph.struc_func_sim
+        dtiPath = [expfolder, 'DTI_CM.mat'];
+        if ~exist(dtiPath, 'file')
+            missing{end+1} = dtiPath;
+        end
+    end
+    if ~isempty(missing)
+        ea_error(['Connectivity matrix file(s) not found. Enable "Compute connectivity matrix" for the relevant modality (structural and/or functional) and run again.\nMissing: ', strjoin(missing, '\n       ')]);
+    end
+
     try
         ea_computeGM(options,modes,finas,threshs,fs);
-    catch
-        ea_error('Please export connectivity matrices first.');
+    catch ME
+        if contains(ME.message, 'Unable to read')
+            ea_error('Connectivity matrix file(s) not found or unreadable. Enable "Compute connectivity matrix" (structural and/or functional) and run again.\nOriginal: %s', ME.message);
+        end
+        rethrow(ME);
     end
 end
 

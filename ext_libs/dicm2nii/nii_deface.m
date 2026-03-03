@@ -31,7 +31,7 @@ if nargin<1 || isempty(in)
     if isnumeric(in), return; end
 end
 
-f = fileparts(which('nii_viewer'));
+f = char(fileparts(which('nii_viewer')));
 niiT1 = nii_tool('load', [f '/templates/MNI_2mm_T1.nii']);
 niiT2 = nii_tool('load', [f '/templates/MNI_2mm_T2.nii']);
 msk = load([f '/example_data.mat'], 'MNI_2mm_deface_mask');

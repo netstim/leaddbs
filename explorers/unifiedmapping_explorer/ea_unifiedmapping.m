@@ -105,7 +105,7 @@ classdef ea_unifiedmapping < handle
         poscolor = [0.9176,0.2000,0.1373] % positive peak color
         negBaseColor = [1,1,1] % negative main color
         negcolor = [0.2824,0.6157,0.9725] % negative peak color
-
+        hasResults = false; % results check
       
     end 
 
@@ -138,10 +138,11 @@ classdef ea_unifiedmapping < handle
             obj.statsettings.stattest = 'Spearman';
             obj.statsettings.H0 = 'Average';
             obj.calcsettings.selectedTool = 1; %1 = sweetspotmapping, 2 = fiberfiltering, 3 = networkmapping;
-            obj.calcsettings.calcthreshold = 200;
+            obj.calcsettings.calcthreshold = 100;
             obj.calcsettings.switch_connectivity = 1;
             obj.calcsettings.connectivity_type = 1; %1 = vta, 2 = PAM
-            obj.calcsettings.resolution = '2 mm'; 
+            obj.calcsettings.functionalresolution = '2 mm'; 
+            obj.calcsettings.structuralresolution = '2 mm';
             obj.calcsettings.calcmethod = 1; %1 = e-field based method, 2 = fiber based method
             obj.calcsettings.calcspace = 1; %0 = native space, 1 = MNI space
             obj.calcsettings.netmap_connectome = '';
@@ -291,6 +292,13 @@ classdef ea_unifiedmapping < handle
 
 
                 [AllX,space] = ea_unifiedmapping_exportefieldmap(vatlist,obj);
+                % Apply threshold: set all values below nanthreshold to
+                % NaN, like in fiberfiltering
+                for i = 1:numel(AllX)
+                    if ~isempty(AllX{i})
+                        AllX{i}(AllX{i} < obj.calcsettings.calcthreshold) = nan;
+                    end
+                end
 
                 obj.results.sweetspotmapping.efield = AllX;
                 
@@ -318,16 +326,24 @@ classdef ea_unifiedmapping < handle
                 % stimulation folders
                 if ~isempty(obj.results) % something has been calculated
                     if isfield(obj.results,'fiberfiltering')
-                        if (isfield(obj.results.fiberfiltering.(ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome)),'PAM_Ttest') && obj.calcsettings.connectivity_type==2) || ...
-                                (isfield(obj.results.fiberfiltering.(ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome)),'efield_mean') && obj.calcsettings.connectivity_type==1)
-                            answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                            if ~strcmp(answ,'Yes')
-                                return
+                        fname = ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome);
+                        if isfield(obj.results.fiberfiltering, fname)
+                            connField = obj.results.fiberfiltering.(fname);
+                
+                            % now check the specific subfields safely
+                            if (isfield(connField,'PAM_Ttest') && obj.calcsettings.connectivity_type==2) || ...
+                               (isfield(connField,'efield_mean') && obj.calcsettings.connectivity_type==1)
+                
+                                answ = questdlg('This has already been calculated. Are you sure you want to re-calculate everything?', ...
+                                                'Recalculate Results','No','Yes','No');
+                                if ~strcmp(answ,'Yes')
+                                    return
+                                end
                             end
                         end
                     end
                 end
-                if obj.multi_pathways == 1
+                if obj.calcsettings.multi_pathways == 1
                     [cfile, obj.map_list, obj.pathway_list] = ea_unifiedmapping_mergePathways(obj);
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.calcsettings.fibfilt_connectome, filesep, 'data.mat'];
@@ -401,6 +417,7 @@ classdef ea_unifiedmapping < handle
                     end
                 end
             end
+            obj.hasResults = true;
         end
 
 
@@ -580,6 +597,43 @@ classdef ea_unifiedmapping < handle
                 obj.results.fiberfiltering.(connid).connFiberInd_VAT = obj.results.fiberfiltering.(ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome)).('efield_proj').connFiberInd_VAT;
             end
 
+        end
+
+        function recalculate_fiberfiltering_threshold(obj)
+            % Recomputes fiber connectivity with current obj.calcsettings.calcthreshold.
+            % Call this after changing the E-field threshold so results and drawing use
+            % the new threshold. Applies when Fiber Filtering is selected and E-field
+            % (voxel-based) or Fiber-based method is used.
+            % After calling, the GUI should refresh stats and redraw (e.g. obj.draw()).
+            if obj.calcsettings.selectedTool ~= 2
+                ea_cprintf('CmdWinWarnings', 'recalculate_fiberfiltering_threshold: Fiber Filtering is not selected. No action.\n');
+                return;
+            end
+            connid = ea_unifiedmapping_conn2connid(obj.calcsettings.fibfilt_connectome);
+            if ~isfield(obj.results,'fiberfiltering') || ~isfield(obj.results.fiberfiltering, connid)
+                ea_cprintf('CmdWinWarnings', 'No prior fiberfiltering results for current connectome. Run Calculate first.\n');
+                return;
+            end
+            if obj.calcsettings.multi_pathways == 1
+                [cfile, obj.map_list, obj.pathway_list] = ea_unifiedmapping_mergePathways(obj);
+            else
+                cfile = [ea_getconnectomebase('dMRI'), obj.calcsettings.fibfilt_connectome, filesep, 'data.mat'];
+            end
+            FilesExist = check_stimvols(obj);
+            if ~all(FilesExist(:))
+                ea_cprintf('CmdWinWarnings', 'Not all stimulation volumes exist. Recalculation aborted.\n');
+                return;
+            end
+            switch obj.calcsettings.calcmethod
+                case 1
+                    fprintf('Recalculating fiber connectivity with E-field threshold %g ...\n', obj.calcsettings.calcthreshold);
+                    calculate_on_efield(obj, cfile);
+                case 2
+                    fprintf('Recalculating fiber connectivity (fiber-based) with E-field threshold %g ...\n', obj.calcsettings.calcthreshold);
+                    calculate_on_fibers(obj, cfile);
+                otherwise
+                    ea_cprintf('CmdWinWarnings', 'recalculate_fiberfiltering_threshold: unsupported calcmethod. No action.\n');
+            end
         end
         
         function  results = calc_biophysical(obj,options,filesToCalc)
@@ -831,9 +885,9 @@ classdef ea_unifiedmapping < handle
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
             if ~exist('Iperm', 'var') || isempty(Iperm)
-                [I, Ihat, ~, val_struct] = crossval(obj, cvp, [], [], silent);
+                [I, Ihat, val_struct] = crossval(obj, cvp, [], [], silent);
             else
-                [I, Ihat, ~, val_struct] = crossval(obj, cvp, Iperm, [], silent);
+                [I, Ihat, val_struct] = crossval(obj, cvp, Iperm, [], silent);
             end
         end
 
@@ -907,7 +961,7 @@ classdef ea_unifiedmapping < handle
                 fibsval = {};
             end
 
-21
+
             % for nested LOO, store some statistics
             if obj.nestedLOO
                 Abs_pred_error = zeros(cvp.NumTestSets, 1);
@@ -1498,12 +1552,14 @@ classdef ea_unifiedmapping < handle
             if isfield(obj.drawobject,'fiberfiltering')
                 if ~isempty(obj.drawobject.fiberfiltering)
                     for s=1:numel(obj.drawobject.fiberfiltering)
-                        for ins=1:numel(obj.drawobject.fiberfiltering{s})
-                            try delete(obj.drawobject.fiberfiltering{s}{ins}.toggleH); end
-                            try delete(obj.drawobject.fiberfiltering{s}{ins}.patchH); end
+                        surfArray=obj.drawobject.fiberfiltering{s};
+                        for ins=1:numel(surfArray)
+                            try delete(surfArray(ins).toggleH); end
+                            try delete(surfArray(ins).patchH); end
+                            try delete(surfArray(ins)); end
                         end
                     end
-                    try delete(obj.drawobject.fiberfiltering{s}(:)); end
+                    obj.drawobject.fiberfiltering{s} = [];
                 end
             end
             % plot new tracts

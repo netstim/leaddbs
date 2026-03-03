@@ -237,7 +237,8 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
             options.prefs.b0 = fullfile('preprocessing', 'dwi', [dwiBaseName, '_b0.nii']);
             options.prefs.fa = fullfile('preprocessing', 'dwi', [dwiBaseName, '_fa.nii']);
             options.prefs.FTR_unnormalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
-            options.prefs.FTR_normalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
+            
+            options.prefs.FTR_normalized   = fullfile('connectomics', 'dMRI', 'FTR_normalized.mat');
 
             % --- Store in options.subj.preproc.dwi as well ---
             options.subj.preproc.dwi.dwi = dwiPath;
@@ -296,7 +297,7 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
                 options.prefs.fa = fullfile('preprocessing', 'dwi', [dwiBaseName, '_fa.nii']);
                 % Fiber tracking output (BIDS: stored in connectomics/dMRI/)
                 options.prefs.FTR_unnormalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
-                options.prefs.FTR_normalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
+                options.prefs.FTR_normalized   = fullfile('connectomics', 'dMRI', 'FTR_normalized.mat');
             end
         end
 

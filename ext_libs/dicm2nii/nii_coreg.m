@@ -32,6 +32,7 @@ function [M, mss] = nii_coreg(niiT, niiM, varargin)
 %     delta: the stop criterion used for iterations, default 1e-4.
 %        It may help to reduce it if the result is very off.
 %     res: resolution to take samples from niiT, default 3 mm
+%     nTry: number of tries in case of coregistration failure. Default 4.
 % 
 % Output:
 %   M: transformation matrix, so that
@@ -48,7 +49,7 @@ function [M, mss] = nii_coreg(niiT, niiM, varargin)
 
 % deal with different input argument
 opts = struct('DoF', 12, 'FWHM', [0 6], 'mask', '', 'init', [], 'disp', 0, ...
-    'delta', 1e-4, 'res', 3);
+    'delta', 1e-4, 'res', 3, 'nTry', 4);
 tkDir = fileparts(which('nii_viewer.m'));
 if isequal(niiT, 'mni_T1')
     niiT = [tkDir '/templates/MNI_2mm_T1.nii'];
@@ -109,6 +110,8 @@ F = griddedInterpolant(imgM, 'linear', 'none');
 
 niiM.hdr.sform_code = niiT.hdr.sform_code;
 RM = [niiM.hdr.sform_mat; 0 0 0 1] * [eye(4,3) [-1 -1 -1 1]'];
+dB2 = opts.delta * opts.DoF;
+
 M = opts.init;
 if isempty(M)
     cog = nii_viewer('func_handle', 'img_cog');
@@ -121,40 +124,54 @@ elseif isequal(size(M), [3 4])
 elseif ~isequal(size(M), [4 4])
     error('Invalid init value for M.');
 end
+opts.init = M;
 
-dB2 = opts.delta * opts.DoF;
-for iter = 1:256
-    IM = M * RM \ XT;
-    vM = F(IM(1,:), IM(2,:), IM(3,:));
-    ind = ~isnan(vM);
-    a = [vM(ind); dT(:,ind)];
-    b = (a * a') \ (a * vT(ind)');
-    M = affine_mat(p0+b(2:end)) * M;
+for reDo = 1:opts.nTry % try different init if max iteration reaches
+    for nIter = 1:256
+        IM = M * RM \ XT;
+        vM = F(IM(1,:), IM(2,:), IM(3,:));
+        ind = ~isnan(vM);
+        a = [vM(ind); dT(:,ind)];
+        b = (a * a') \ (a * vT(ind)');
+        M = affine_mat(p0+b(2:end)) * M;
 
-    if b(2:end)'*b(2:end) < dB2 % stop if little change
-        if isempty(opts.mask), break; end % masked align done or not needed
-        imgT(~logical(opts.mask.img)) = 0; % keep only brain
-        [vT, dT, XT] = sampleT(niiT.hdr, imgT, res, opts.DoF);
-        R1 = M * [niiM.hdr.sform_mat; 0 0 0 1];
-        hdr = niiM.hdr; hdr.sform_mat = R1(1:3,:);
-        msk = nii_xform(opts.mask, hdr);
-        F.Values(~logical(msk.img)) = 0; % mask niiM based on current M
-        opts.mask = '';
+        if b(2:end)'*b(2:end) < dB2 % stop if little change
+            if isempty(opts.mask), break; end % masked align done or not needed
+            imgT(~logical(opts.mask.img)) = 0; % keep only brain
+            [vT, dT, XT] = sampleT(niiT.hdr, imgT, res, opts.DoF);
+            R1 = M * [niiM.hdr.sform_mat; 0 0 0 1];
+            hdr = niiM.hdr; hdr.sform_mat = R1(1:3,:);
+            msk = nii_xform(opts.mask, hdr);
+            F.Values(~logical(msk.img)) = 0; % mask niiM based on current M
+            opts.mask = '';
+        end
+
+        if opts.disp < 3, continue; end
+        if ~exist('hsI', 'var') || ~isvalid(hsI(1))
+            nii0 = nii_viewer('LocalFunc', 'nii_reorient', niiM, false, 1);
+            hs = guidata(nii_viewer(niiT, nii0));
+            hsI = findobj(hs.ax(1), 'Type', 'image');
+        end
+        hsI(1).UserData.Ri = inv(M*[nii0.hdr.sform_mat; 0 0 0 1]);
+        nii_viewer('LocalFunc', 'set_cdata', hs); drawnow;
     end
-    
-    if opts.disp < 3, continue; end
-    if ~exist('hsI', 'var') || ~isvalid(hsI(1))
-        nii0 = nii_viewer('LocalFunc', 'nii_reorient', niiM, false, 1);
-        hs = guidata(nii_viewer(niiT, nii0));
-        hsI = findobj(hs.ax(1), 'Type', 'image');
+
+    if nIter<256 && ~any(isnan(M(:))), break; end
+    if reDo == 1 % first try Z trans due to too much neck tissue?
+        p1 = p0; p1(3) = -20;
+        M = affine_mat(p1) * opts.init;
+    elseif reDo == 2 % then try X rot of 20 deg (arbituray)
+        p1 = p0; p1(4) = 20;
+        M = affine_mat(p1) * opts.init;
+    elseif reDo == 3 && opts.DoF>7
+        M = nii_coreg(niiT, niiM, 'DoF', 7, 'mask', '', 'nTry', 3);
     end
-    hsI(1).UserData.Ri = inv(M*[nii0.hdr.sform_mat; 0 0 0 1]);
-    nii_viewer('LocalFunc', 'set_cdata', hs); drawnow;
 end
-if iter>255, warning('nii_coreg:IterExceed', 'Max iterations reached.'); end
+
+if nIter>255, warning('nii_coreg:IterExceed', 'Max iterations reached.'); end
 mss = std(vT(ind)-vM(ind)*b(1), 1) / muT; % make it independent of img intensity
 if opts.disp > 0
-    fprintf('iter=%i mss=%4.2f overlap=%.2g\n', iter, mss, mean(ind));
+    fprintf('iter=%i mss=%4.2f overlap=%.2g\n', nIter, mss, mean(ind));
 end
 if opts.disp == 2
     nii_viewer(niiT, nii_tool('update', niiM, M*[niiM.hdr.sform_mat; 0 0 0 1]));

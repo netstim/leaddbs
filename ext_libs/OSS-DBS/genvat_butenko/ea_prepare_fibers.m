@@ -19,6 +19,11 @@ if settings.stimSetMode
         stimProtocol{2,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_lh'], '^Current_protocols_\d\.csv$', 0));
     else
         stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+        if isempty(stimProtocol)
+            % if no stimProtocol is provided, just assume 10 mA on all
+            % contacts
+            stimProtocol = -10 * ones(size(settings.Phi_vector));
+        end
     end
 else
     if ~settings.multisource
@@ -61,6 +66,8 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         if source_i == 1
             if exist(settings.connectomeActivations,'dir')
                 ea_delete(settings.connectomeActivations);
+                % remove all PAM folders
+                ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
     
@@ -93,7 +100,7 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         end
     
         % Filter fibers based on the minimal length
-        inlay = 2.0;
+        inlay = 0.5;
         fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength+inlay);
     
         % Move original fiber id to the 5th column, the 4th column will be 1:N
@@ -125,6 +132,8 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         if source_i == 1
             if exist(settings.connectomeActivations,'dir')
                 ea_delete(settings.connectomeActivations);
+                % remove all PAM folders
+                ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
         end
@@ -168,6 +177,8 @@ else % Multi-Tract connectome
         if source_i == 1
             if exist(settings.connectomeActivations,'dir')
                 ea_delete(settings.connectomeActivations);
+                % remove all PAM folders
+                ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
     
@@ -197,6 +208,8 @@ else % Multi-Tract connectome
         if source_i == 1
             if exist(settings.connectomeActivations,'dir')
                 ea_delete(settings.connectomeActivations);
+                % remove all PAM folders
+                ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
     
@@ -222,7 +235,7 @@ else % Multi-Tract connectome
             settings.connectomeTractNames{t} = tractName;
             fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
             conn = load(tract);
-            
+
             if isfield(conn,'patient_specific') && conn.patient_specific == 1
                 % use patient tracts (native)
                 % ToDo: avoid loading the MNI connectome in the first place
@@ -238,7 +251,7 @@ else % Multi-Tract connectome
             end
     
             % Filter fibers based on the minimal length
-            inlay = 2.0;
+            inlay = 0.5;
             fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t)+inlay);
     
             % Move original fiber id to the 5th column, the 4th column will be 1:N

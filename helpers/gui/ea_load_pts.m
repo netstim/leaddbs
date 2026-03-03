@@ -81,7 +81,7 @@ elseif isBIDSSubjFolder(uipatdir{1})
         end
     end
 elseif isBIDSFolder(uipatdir{1})
-    % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
+    % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder
     [~, BIDSRoot, subjId] = isBIDSFolder(uipatdir{1});
 else % NIfTI or DICOM folder
     % Check if dataset has already been loaded
@@ -96,7 +96,7 @@ else % NIfTI or DICOM folder
 
         BIDSRoot = handles.datasetselect.String;
         subjId = cell(length(uipatdir) ,1);
-        
+
         for i = 1:length(uipatdir)
             if isNIfTIFolder(uipatdir{i})
                 [~, subjId{i}] = isNIfTIFolder(uipatdir{i});
@@ -128,7 +128,7 @@ else % NIfTI or DICOM folder
                 end
             end
         end
-        
+
         subjId = subjId(~cellfun(@isempty, subjId));
     end
 end
@@ -186,7 +186,17 @@ if strcmp(handles.prod, 'dbs')
     end
 
     if isempty(bids.subjId)
-        handles.patientlist.Data = table("", 'VariableNames', {'subjId'});
+        handles.patientlist.Data = [];
+        handles.DeletePatient.Visible = 'off';
+        handles.RenamePatient.Visible = 'off';
+        handles.AddDICOMsButton.Visible = 'off';
+        handles.AddNIfTIsButton.Visible = 'off';
+        handles.UpdateNIfTIsButton.Visible = 'off';
+        handles.DeletePatientMenu.Visible = 'off';
+        handles.RenamePatientMenu.Visible = 'off';
+        handles.AddDICOMsMenu.Visible = 'off';
+        handles.AddNIfTIsMenu.Visible = 'off';
+        handles.UpdateNIfTIsMenu.Visible = 'off';
         ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
         return;
     else
@@ -208,7 +218,7 @@ if strcmp(handles.prod, 'dbs')
             arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
 
             handles.processtabgroup.SelectedTab = handles.importtab;
-            if any(subjDataOverview.hasSourcedata(subjNotImported))
+            if any(subjDataOverview.hasSourcedata(subjNotImported) & ~subjDataOverview.hasUnsortedRawdata(subjNotImported))
                 handles.dicom2bidscheckbox.Value = 1;
             else
                 handles.dicom2bidscheckbox.Value = 0;
@@ -233,6 +243,10 @@ if strcmp(handles.prod, 'dbs')
         end
 
         % Set Add DICOMs/NIfTIs Menu/Button Visibility
+        handles.DeletePatient.Visible = 'on';
+        handles.RenamePatient.Visible = 'on';
+        handles.DeletePatientMenu.Visible = 'on';
+        handles.RenamePatientMenu.Visible = 'on';
         if isscalar(handles.patientlist.Selection)
             handles.AddDICOMsButton.Visible = 'on';
             handles.AddNIfTIsButton.Visible = 'on';
@@ -286,12 +300,12 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
         if isfile(recon.recon)
             load(recon.recon);
             elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
-    
+
             % Reset electrode button status
             for el=1:elnum
                 set(handles.(['side',num2str(el)]), 'Value', 0);
             end
-    
+
             % Set electrode button status
             if isfield(reco, 'native')
                 recoType = 'native';
@@ -304,7 +318,11 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
             if ~isempty(recoType)
                 for el=1:length(reco.(recoType).markers)
                     if ~isempty(reco.(recoType).markers(el).head)
-                        set(handles.(['side',num2str(el)]), 'Value', 1);
+%                         set(handles.(['side',num2str(el)]), 'Value', 1);
+                        sf = ['side', num2str(el)];
+                        if isfield(handles, sf) %&& isgraphics(handles.(sf))
+                            set(handles.(sf), 'Value', 1);
+                        end
                     end
                 end
             end
@@ -324,7 +342,7 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
                             ['Chosen electrode in the uiprefs (%s) for patient "%s" doesn''t match the stored reconstruction (%s)!\n', ...
                             'Reset to model in the stored recontruction now. Please rerun "Localize DBS electrodes" in case it''s not the correct model.\n'], ...
                             uiprefs.elmodel, subjId{1}, elmodel);
-    
+
                         try
                             handles.electrode_model_popup.Value = find(ismember(handles.electrode_model_popup.String, elmodel));
                         catch
@@ -332,10 +350,10 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
                                  ['The stored electrode model (%s) for patient "%s" seems not compatible in the current release of LeadDBS.\n', ...
                                  'Please double check and choose a correct model.\n'], elmodel, subjId{1});
                         end
-    
+
                         uiprefs.elmodel = elmodel;
                         save(uiprefsFile, '-struct', 'uiprefs');
-    
+
                         handles.processtabgroup.SelectedTab = handles.localizationtab;
                         % uialert(handles.leadfigure, ...
                         %     sprintf(['Chosen electrode (%s) for patient "%s" doesn''t match stored reconstruction (%s)! ', ...
@@ -351,6 +369,15 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
             end
         end
     end
+end
+
+try
+    handles = ea_attach_electrodes_to_handles(handles, uipatdir{1});
+    if isfield(handles,'leadfigure') && isgraphics(handles.leadfigure)
+        setappdata(handles.leadfigure,'electrodes',handles.currentPatient.electrodes);
+    end
+catch ME
+    ea_cprintf('CmdWinWarnings', 'Multi‑electrode attach failed:\n%s\n', ME.message);
 end
 
 % add VATs to seeds for connectome mapper or predict case
@@ -392,12 +419,11 @@ end
 
 function checkFlag = isLegacyFolder(inputFolder)
 
-checkFlag = isfile(fullfile(inputFolder, 'ea_ui.mat')) || isfile(fullfile(inputFolder, 'glanat.nii')) ...
-    || isfile(fullfile(inputFolder, 'ea_reconstruction.mat')); % Sometimes reconstruction file is not available
+checkFlag = isfile(fullfile(inputFolder, 'ea_ui.mat')) || isfile(fullfile(inputFolder, 'ea_reconstruction.mat'));
 
 
 function [checkFlag, BIDSRoot, subjId] = isBIDSFolder(inputFolder)
-% Check if input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
+% Check if input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder
 
 inputFolder = erase(inputFolder, filesep + textBoundary('end'));
 
@@ -427,7 +453,7 @@ end
 
 
 function [checkFlag, BIDSRoot, subjId] = isBIDSSubjFolder(inputFolder)
-% Check if input folder is subj folder with in BIDS derivatives folder, rawdata folder or sourcedata folder 
+% Check if input folder is subj folder with in BIDS derivatives folder, rawdata folder or sourcedata folder
 
 if ischar(inputFolder)
     inputFolder = {inputFolder};
@@ -481,4 +507,5 @@ function subjId = validateSubjId(subjId)
 if ~isempty(regexp(subjId, '[\W_]', 'once'))
     subjId = regexprep(subjId, '[\W_]', '');
     ea_cprintf('CmdWinWarnings', 'It looks like you have special chars in your subj folder name.\nWe will use a cleaned name ''%s'' for the BIDS dataset. Please check manually.\n', subjId);
-end 
+end
+

@@ -6,7 +6,7 @@ releaseDir = fullfile(ea_getearoot, 'programmer', 'app', 'release');
 currentOS = ea_getarch;
 zipFile = fullfile(releaseDir, ['LeadDBSProgrammer_', currentOS, '.zip']);
 
-latestVersion = '1.1.0';
+latestVersion = '0.1.1';
 try
     installedVersion = loadjson(fullfile(ea_prefsdir, 'Programmer', 'version.json')).version;
 catch

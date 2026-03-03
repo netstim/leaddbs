@@ -96,7 +96,7 @@ for group = groups
                         Nmap=ea_nansum(gval{side}(:,gpatsel),2);
                         gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                     otherwise
-                        gval{side}(gval{side}<=obj.statsettings.efieldthreshold) = nan;
+                        % gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
                         Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
                         gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                 end
@@ -231,8 +231,8 @@ else
         for side=1:numel(gval)
             switch obj.threshstrategy
                 case 'Fixed Amount' % here we want to create thresholds for each side separately.
-                    posvals = sort(vals{group,side}(vals{group,side}>0),'descend');
-                    negvals = sort(vals{group,side}(vals{group,side}<0),'ascend');
+                    posvals = sort(unthresholdedVals{group,side}(unthresholdedVals{group,side}>0),'descend');
+                    negvals = sort(unthresholdedVals{group,side}(unthresholdedVals{group,side}<0),'ascend');
 
                 otherwise % in other cases, we want to apply the same threshold to both sides.
                     allvals = vertcat(unthresholdedVals{group,:});
@@ -316,7 +316,7 @@ end
 try
     AllX=obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval;
 catch
-    [AllX] = ea_networkmapping_recalcvals_sk(obj,addchar);
+    [AllX] = ea_unified_networkmapping_recalcvals_sk(obj,addchar);
     obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval=AllX;
 end
 

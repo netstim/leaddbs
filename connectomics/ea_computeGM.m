@@ -4,8 +4,17 @@ expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,optio
 for mode=1:length(modes)
     load([expfolder,finas{mode},'_CM.mat']);
     X=eval([modes{mode},'_CM']);
-    if ~isnan(threshs{mode}) % apply threshold.
-        X(X<threshs(mode))=0;
+    % Ensure threshold is a scalar double (GUI may pass cell or string)
+    threshVal = threshs{mode};
+    if iscell(threshVal), threshVal = threshVal{1}; end
+    if ischar(threshVal) || isstring(threshVal), threshVal = str2double(threshVal); end
+    threshVal = double(threshVal);
+    if ~isnan(threshVal) % apply threshold.
+        X(X<threshVal)=0;
+    end
+    % Treat NaN as no connection (logical() cannot convert NaN)
+    X(isnan(X))=0;
+    if ~isnan(threshVal)
         X=logical(X);
     end
     clear([modes{mode},'_CM']);

@@ -9,7 +9,8 @@ else
 end
 
 % BIDS FIX: Check if normalization has been run - if not, run SPM12 normalization
-normFile = fullfile(directory, 'y_ea_inv_normparams.nii');
+normDir = ea_connectome_normparams_dir(directory);
+normFile = fullfile(normDir, 'y_ea_inv_normparams.nii');
 if ~exist(normFile, 'file')
     disp('No normalization found. Running SPM12 normalization...');
     
@@ -79,7 +80,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep, ...
         otherwise
             switch spm('ver')
                 case 'SPM8'
-                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
                     matlabbatch{1}.spm.util.defs.ofname = '';
                     matlabbatch{1}.spm.util.defs.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii,1']};
                     matlabbatch{1}.spm.util.defs.savedir.saveusr = {[directory,'templates',filesep,'labeling',filesep]};
@@ -87,7 +88,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep, ...
                     spm_jobman('run',{matlabbatch});
                     clear matlabbatch
                 case 'SPM12'
-                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'templates',filesep,'labeling',filesep]};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
@@ -132,9 +133,13 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
         options.lc.general.parcellation,'.nii'],'file') ...
         || overwrite
 
-    if exist([directory,'ea_coregmrmethod_applied.mat'], 'file')
+    coregLogFile = fullfile(directory, 'coregistration', 'log', 'ea_coregmrmethod_applied.mat');
+    if ~isfile(coregLogFile)
+        coregLogFile = fullfile(directory, 'ea_coregmrmethod_applied.mat');
+    end
+    if exist(coregLogFile, 'file')
         % Check coreg method used
-        coregmrmethod = load([directory,'ea_coregmrmethod_applied.mat']);
+        coregmrmethod = load(coregLogFile);
         images = fieldnames(coregmrmethod);
         if any(contains(images, refname))
             options.coregmr.method = coregmrmethod.(images{contains(images, refname)});
@@ -150,7 +155,9 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
             fieldName = fieldName(1:63);
         end
         coregmrmethod.(fieldName) = checkCoregMethod(options);
-        save([directory,'ea_coregmrmethod_applied.mat'],'-struct','coregmrmethod');
+        coregLogDir = fullfile(directory, 'coregistration', 'log');
+        if ~isfolder(coregLogDir), mkdir(coregLogDir); end
+        save(fullfile(coregLogDir, 'ea_coregmrmethod_applied.mat'), '-struct', 'coregmrmethod');
     end
 
     % Disable Hybrid coregistration

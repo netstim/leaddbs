@@ -132,7 +132,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                     end
                     orig_model_flat = vertcat(orig_model{:});
                 case 'networkmapping'
-                    orig_model_flat = full(obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval);
+                    orig_model_flat = (full(obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval))';
             end
   
         for side=1:size(vals,2)
@@ -263,7 +263,8 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    % allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx = testidx(~nansum(orig_model_flat(:,test)));
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
 

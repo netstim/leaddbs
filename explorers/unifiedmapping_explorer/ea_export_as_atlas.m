@@ -39,7 +39,7 @@ else
 end
 
 if nm_val
-    network = app.draw;
+    network=app.explorer.networkdrawn;
 else
     network = {};
 end

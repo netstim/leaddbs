@@ -67,8 +67,11 @@ end
 
 % store the merged pathways in the leadgroup folder for now
 filepath = fileparts(obj.leadgroup);
-mkdir([filepath,filesep,calcsettings.fibfilt_connectome])
-cfile = [filepath,filesep,calcsettings.fibfilt_connectome,filesep,'merged_pathways.mat'];
+mkdir([filepath,filesep,'UnifiedMappingExplorer',filesep,obj.calcsettings.fibfilt_connectome])
+cfile = [filepath,filesep,'UnifiedMappingExplorer',filesep,obj.calcsettings.fibfilt_connectome,filesep,'merged_pathways.mat'];
+if exist(cfile, 'file')
+    warning('File already exists and will be overwritten: %s', cfile)
+end
 save(cfile, '-struct', 'ftr');
 
 if obj.calcsettings.connectivity_type ~= 2
