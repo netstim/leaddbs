@@ -1,36 +1,51 @@
 classdef (Abstract) ea_conda
 
-    methods (Static)
-        function path = install_path(custompath)
-            if exist('custompath', 'var') && ~isempty(custompath)
-                % custom installation path
-                path = custompath;
-                ea_setprefs('conda.install_path', path, 'user');
-                return;
-            end
-            prefs = ea_prefs;
-            if ~isempty(prefs.conda.install_path)
-                % Installation path already set in prefs
-                path = prefs.conda.install_path;
-            else
-                % Set installation path
-                path = fullfile(ea_prefsdir, 'miniforge');
-                if feature('ShowFigureWindows')
-                    answer = questdlg(sprintf('Confirm Conda installation folder:\n%s', path), '', 'Yes', 'Custom', 'Yes');
-                    if strcmp(answer, 'Custom')
-                        custompath = uigetdir(path, 'Specify Conda installation folder');
-                        if ischar(custompath)
-                            if ~endsWith(custompath, {'conda', 'condaforge', 'miniforge', 'mambaforge'}, 'IgnoreCase', true)
-                                path = fullfile(custompath, 'miniforge');
-                            else
-                                path = custompath;
-                            end
+methods (Static)
+    function path = install_path(custompath)
+
+        % Cache to avoid repeated ea_prefs calls during startup/menu building
+        persistent cachedPath
+
+        % If user passes a custom path, always honor it and refresh cache
+        if exist('custompath', 'var') && ~isempty(custompath)
+            path = custompath;
+            ea_setprefs('conda.install_path', path, 'user');
+            cachedPath = path;
+            return;
+        end
+
+        % Return cached value if available
+        if ~isempty(cachedPath)
+            path = cachedPath;
+            return;
+        end
+
+        prefs = ea_prefs;
+        if ~isempty(prefs.conda.install_path)
+            % Installation path already set in prefs
+            path = prefs.conda.install_path;
+        else
+            % Set installation path
+            path = fullfile(ea_prefsdir, 'miniforge');
+            if feature('ShowFigureWindows')
+                answer = questdlg(sprintf('Confirm Conda installation folder:\n%s', path), '', 'Yes', 'Custom', 'Yes');
+                if strcmp(answer, 'Custom')
+                    custompath = uigetdir(path, 'Specify Conda installation folder');
+                    if ischar(custompath)
+                        if ~endsWith(custompath, {'conda','condaforge','miniforge','mambaforge'}, 'IgnoreCase', true)
+                            path = fullfile(custompath, 'miniforge');
+                        else
+                            path = custompath;
                         end
                     end
                 end
-                ea_setprefs('conda.install_path', path, 'user');
             end
+            ea_setprefs('conda.install_path', path, 'user');
         end
+
+        % Store in cache
+        cachedPath = path;
+    end
 
         function path = mamba_path
             if isunix
