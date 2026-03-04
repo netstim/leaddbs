@@ -54,25 +54,35 @@ b0Name  = regexprep(b0Name, '\.nii(\.gz)?$', '');
 anatName = regexprep(anatName, '\.nii(\.gz)?$', '');
 
 % Search for existing transform B0->T1
-searchDirs = {
-    fullfile(directory, 'coregistration', 'transformations')
-    fullfile(directory, 'preprocessing', 'anat')
-    directory
-};
-pattern = [b0Name, '2', anatName]; % B0 -> T1
-for iDir = 1:numel(searchDirs)
-    cdir = searchDirs{iDir};
-    if ~isfolder(cdir), continue; end
-    mfiles = dir(fullfile(cdir, '*.mat'));
-    for k = 1:numel(mfiles)
-        if contains(mfiles(k).name, pattern)
-            fprintf('ea_ensure_b0_coreg: Found existing B0->T1 transform: %s (in %s)\n', ...
-                mfiles(k).name, cdir);
-            return;
-        end
-    end
-end
+% searchDirs = {
+%     fullfile(directory, 'coregistration', 'transformations')
+%     fullfile(directory, 'preprocessing', 'anat')
+%     directory
+% };
+% pattern = [b0Name, '2', anatName]; % B0 -> T1
+% for iDir = 1:numel(searchDirs)
+%     cdir = searchDirs{iDir};
+%     if ~isfolder(cdir), continue; end
+%     mfiles = dir(fullfile(cdir, '*.mat'));
+%     for k = 1:numel(mfiles)
+%         if contains(mfiles(k).name, pattern)
+%             fprintf('ea_ensure_b0_coreg: Found existing B0->T1 transform: %s (in %s)\n', ...
+%                 mfiles(k).name, cdir);
+%             return;
+%         end
+%     end
+% end
 
+% -------------------------------------------------------------------------
+% Search for existing B0<->T1 transform (robust detection)
+% -------------------------------------------------------------------------
+
+hit = ea_find_b0_t1_transform(directory, options.coregmr.method);
+
+if ~isempty(hit)
+    fprintf('ea_ensure_b0_coreg: Found existing B0<->T1 transform: %s\n', hit);
+    return;
+end
 % No existing transform found -> run coregistration once
 fprintf('ea_ensure_b0_coreg: No B0->T1 transform found. Running coregistration now...\n');
 
@@ -93,3 +103,86 @@ catch ME
     warning('ea_ensure_b0_coreg: Coregistration B0->T1 failed: %s', ME.message);
 end
 
+function hit = ea_find_b0_t1_transform(directory, methodHint)
+% Return fullpath to a plausible B0<->T1 transform, or '' if none found.
+
+if nargin < 2 || isempty(methodHint), methodHint = ''; end
+methodHint = lower(methodHint);
+
+searchDirs = {
+    fullfile(directory,'coregistration')
+    fullfile(directory,'coregistration','transformations')
+    fullfile(directory,'coregistration','dwi')
+    fullfile(directory,'preprocessing')
+    fullfile(directory,'preprocessing','anat')
+    fullfile(directory,'preprocessing','dwi')
+    directory
+};
+
+% gather candidates recursively
+exts = {'*.mat','*.h5','*.txt'};
+cands = {};
+
+for i=1:numel(searchDirs)
+    if ~isfolder(searchDirs{i}), continue; end
+    for e=1:numel(exts)
+        d = dir(fullfile(searchDirs{i},'**',exts{e}));
+        for k=1:numel(d)
+            cands{end+1} = fullfile(d(k).folder,d(k).name); %#ok<AGROW>
+        end
+    end
+end
+
+if isempty(cands), hit = ''; return; end
+
+% scoring: prefer files that mention both b0 and t1/anat, and the method
+bestScore = -Inf;
+hit = '';
+
+for i=1:numel(cands)
+    [~,name,ext] = fileparts(cands{i});
+    fname = lower([name ext]);
+
+    score = 0;
+
+    % must mention b0-ish and t1/anat-ish
+    if contains(fname,'b0') || contains(fname,'meanb0') || contains(fname,'dwi')
+        score = score + 2;
+    end
+    if contains(fname,'t1') || contains(fname,'t1w') || contains(fname,'anat')
+        score = score + 2;
+    end
+
+    % method hint bonus
+    if ~isempty(methodHint) && contains(fname, methodHint)
+        score = score + 1;
+    end
+
+    % canonical SPM names get extra weight
+    if strcmp(fname,'b02anat_t1_spm.mat') || strcmp(fname,'anat_t12b0_spm.mat')
+        score = score + 5;
+    end
+
+    % quick sanity check for .mat: has 4x4 numeric matrix somewhere
+    if strcmp(ext,'.mat') && score >= 4
+        try
+            S = load(cands{i});
+            has4x4 = any(structfun(@(v) isnumeric(v) && isequal(size(v),[4 4]), S));
+            if has4x4
+                score = score + 1;
+            end
+        catch
+            score = score - 2; % unreadable .mat, penalize
+        end
+    end
+
+    if score > bestScore
+        bestScore = score;
+        hit = cands{i};
+    end
+end
+
+% require minimal confidence
+if bestScore < 4
+    hit = '';
+end
