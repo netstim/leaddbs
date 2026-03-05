@@ -25,25 +25,45 @@ if ischar(options) % return name of method.
     return
 end
 
-usefa = options.prefs.machine.normsettings.ants_usefa;
+% usefa = options.prefs.machine.normsettings.ants_usefa;
+existsFA = isfile(fullfile(options.subj.subjDir,options.prefs.fa));
+fa2anatPath = isfile(fullfile(options.subj.subjDir,options.prefs.fa2anat));
 usebrainmask=0;
 
 cnt=1;
 
 % TODO: Take care of FA
 spacedef = options.bids.spacedef;
-if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
-    if exist([options.prefs.fa2anat],'file') % recheck if now is present.
+bprfx = options.subj.subjDir;
+if existsFA && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
+    if isfile(fullfile(bprfx,options.prefs.fa2anat)) % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
-        template{cnt} = [ea_space(options),'fa.nii'];
-        moving{cnt} = [bprfx,options.prefs.fa2anat];
+        template{cnt} = fullfile(ea_space(options),'fa.nii');
+        moving{cnt} = fullfile(bprfx,options.prefs.fa2anat);
         weights(cnt) = 0.5;
         cnt = cnt+1;
-    elseif exist([options.prefs.fa],'file') % recheck if now is present.
+    elseif isfile(fullfile(bprfx, options.prefs.fa)) % recheck if now is present.
         disp('Including FA information for white-matter normalization (weight = 0.5).');
-        ea_coregimages(options,[bprfx,options.prefs.fa],[anatpresent{1}],[bprfx,options.prefs.fa2anat],{},0,[],1);
-        template{cnt} = [ea_space(options),'fa.nii'];
-        moving{cnt} = [bprfx,options.prefs.fa2anat];
+        % Anatomical reference
+        anatPath = fullfile(bprfx, options.prefs.prenii_unnormalized);
+        if ~isfile(anatPath)
+            % Try preprocessing/anat or coregistration/anat
+            for subdir = {'preprocessing/anat', 'coregistration/anat'}
+                d = dir(fullfile(bprfx, subdir{1}, '*T1w.nii'));
+                if isempty(d), d = dir(fullfile(bprfx, subdir{1}, '*T2w.nii')); end
+                if ~isempty(d)
+                    anatPath = fullfile(d(1).folder, d(1).name);
+                    break;
+                end
+            end
+        end
+        if ~isfile(anatPath)
+            warning('ea_normalize_ants: Anatomical reference not found. Skipping FA->anat coregistration.');
+            return;
+        end
+        ea_coregimages(options,fullfile(bprfx, options.prefs.fa),anatPath,fullfile(bprfx,options.prefs.fa2anat),{},0,[],1);
+        template{cnt} = fullfile(ea_space(options),'fa.nii');
+        moving{cnt} = fullfile(bprfx,options.prefs.fa2anat);
         weights(cnt) = 0.5;
         cnt = cnt+1;
     end
