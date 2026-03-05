@@ -236,6 +236,7 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
             options.prefs.bvec = fullfile('preprocessing', 'dwi', [dwiBaseName, '.bvec']);
             options.prefs.b0 = fullfile('preprocessing', 'dwi', [dwiBaseName, '_b0.nii']);
             options.prefs.fa = fullfile('preprocessing', 'dwi', [dwiBaseName, '_fa.nii']);
+            options.prefs.fa2anat = fullfile('coregistration', 'anat', [options.patientname, '_space-anchorNative_dwi_fa.nii']);
             options.prefs.FTR_unnormalized = fullfile('connectomics', 'dMRI', 'FTR.mat');
             
             options.prefs.FTR_normalized   = fullfile('connectomics', 'dMRI', 'FTR_normalized.mat');
