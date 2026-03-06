@@ -282,10 +282,14 @@ class AnalysisReporter:
             
             return True
         
-        if find_key_recursively(target_profiles['SE_dict'], pathway) or find_key_recursively(target_profiles['Soft_SE_dict'], pathway):
+        if 'SE_dict' in target_profiles and find_key_recursively(target_profiles['SE_dict'], pathway):
             if not _check_single_pathway_error(pathway, SE_err_threshold):
-               return False
-           
+                return False
+            
+        if 'Soft_SE_dict' in target_profiles and find_key_recursively(target_profiles['Soft_SE_dict'], pathway):
+            if not _check_single_pathway_error(pathway, SE_err_threshold):
+                return False
+
         if find_key_recursively(target_profiles['profile_dict'], pathway):
             return _check_single_pathway_error(pathway, err_threshold)
                                            
