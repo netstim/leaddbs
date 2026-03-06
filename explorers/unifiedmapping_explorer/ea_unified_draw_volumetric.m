@@ -27,6 +27,12 @@ elseif strcmp(obj.drawTool,'networkmapping')
 end
 %plot based on vizmode
 if strcmp(obj.drawTool,'sweetspotmapping') || strcmp(obj.vizmode,'Regions')
+    if strcmp(obj.drawTool,'sweetspotmapping')
+        subfield = 'sweetspotmapping';
+    else
+        subfield = 'networkmapping';
+    end
+
     % Plot voxels if any survived
     if obj.posvisible
         % plot positives:
@@ -44,7 +50,7 @@ if strcmp(obj.drawTool,'sweetspotmapping') || strcmp(obj.vizmode,'Regions')
         pobj.smooth=10;
         pobj.hullsimplify=0.5;
         pobj.threshold=0;
-        obj.drawobject.sweetspotmapping{group,side}{1}=ea_roi('Positive.nii',pobj);
+        obj.drawobject.(subfield){group,side}{1}=ea_roi('Positive.nii',pobj);
 
         res=posvox; % keep copy for export
     end
@@ -65,7 +71,7 @@ if strcmp(obj.drawTool,'sweetspotmapping') || strcmp(obj.vizmode,'Regions')
         pobj.smooth=10;
         pobj.hullsimplify=0.5;
         pobj.threshold=0;
-        obj.drawobject.sweetspotmapping{group,side}{2}=ea_roi('Negative.nii',pobj);
+        obj.drawobject.(subfield){group,side}{2}=ea_roi('Negative.nii',pobj);
 
         res.img(:)=nansum([res.img(:),-negvox.img(:)],2); % keep copy for export.
     end
@@ -81,13 +87,19 @@ if strcmp(obj.drawTool,'sweetspotmapping') || strcmp(obj.vizmode,'Regions')
 
 elseif strcmp(obj.vizmode,'Surface (Elvis)')
 
-    sides=1:2;
-    sides=sides([obj.NMviz.modelRH,obj.NMviz.modelLH]);
+    % sides=1:2;
+    % keep=sides([obj.NMviz.modelRH,obj.NMviz.modelLH]);
+    % sides = keep.*sides;
+    sides = find([obj.NMviz.modelRH, obj.NMviz.modelLH]);  % gives indices of sides to keep
 
     % Check cmap
     if exist('voxcmap','var') && ~isempty(voxcmap{group})
-        defaultColor = [1 1 1]; % Default color for nan values
-        cmap = [voxcmap{group}; defaultColor];
+        % defaultColor = [1 1 1]; % Default color for nan values
+        % cmap = [voxcmap{group}; defaultColor];
+        cmap = prep_voxel_colormap(voxcmap{group});
+        if isempty(cmap)
+            return
+        end
     else
         warning('Colormap not defined!')
         return
@@ -97,10 +109,18 @@ elseif strcmp(obj.vizmode,'Surface (Elvis)')
         res.cifti.cdata(res.inidx)=vals{group}(res.outidx);
     end
     h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
-    if ismember(sides,1)
+    % if ismember(sides,1)
+    %     obj.drawobject.networkmapping{group}{1} = h{1};
+    % end
+    % if ismember(sides,2)
+    %     obj.drawobject.networkmapping{group}{2} = h{2};
+    % end
+    if obj.NMviz.modelRH && obj.NMviz.modelLH
         obj.drawobject.networkmapping{group}{1} = h{1};
-    end
-    if ismember(sides,2)
+        obj.drawobject.networkmapping{group}{2} = h{2};
+    elseif obj.NMviz.modelRH
+        obj.drawobject.networkmapping{group}{1} = h{1};
+    elseif obj.NMviz.modelLH
         obj.drawobject.networkmapping{group}{2} = h{2};
     end
 
@@ -173,4 +193,16 @@ if strcmp(obj.drawTool,'networkmapping')
     res.img(:)=vals{group};
     obj.networkdrawn = res;
 end
+
+    function cmap = prep_voxel_colormap(voxcmap_group)
+        % Always prepend white as neutral
+        if isempty(voxcmap_group)
+            warning('Colormap not defined!');
+            cmap = [];
+            return;
+        end
+        neutralColor = [1 1 1];
+        cmap = [neutralColor; voxcmap_group];
+    end
+
 end

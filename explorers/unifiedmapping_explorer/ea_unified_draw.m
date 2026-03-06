@@ -127,7 +127,8 @@ for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2
         end
     end
     colormap(gray);
-    gradientLevel = 1024;
+    % gradientLevel = 1024;
+    gradientLevel = length(gray);
     cmapShiftRatio = 0.5;
     shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
     shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
