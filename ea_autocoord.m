@@ -247,7 +247,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         elseif normlock == 1 % Both pre-op images coreg and norm were approved.
             doit = false;
         elseif normlock == 0.5 % Pre-op images coreg changed, rerun when using multispectral norm method.
-            [~, ~, ~, doit] = eval([options.normalize.method,'(''prompt'')']);
+            doit = questdlg('Coregistration changed. Redo normalization?', ...
+                'Normalization', 'Yes', 'No', 'Yes');
+            doit = strcmp(doit, 'Yes');
         else
             doit = true;
         end
