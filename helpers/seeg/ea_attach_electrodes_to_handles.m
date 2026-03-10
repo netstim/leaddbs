@@ -1,8 +1,4 @@
-% ===============================
-% File: ea_attach_electrodes_to_handles.m
-% Purpose: Drop-in utility to attach an arbitrary number of electrodes to
-% the Lead-DBS GUI handles, replacing hard-coded left/right assumptions.
-% ===============================
+
 function handles = ea_attach_electrodes_to_handles(handles, subjDir)
     electrodes = ea_list_electrodes(subjDir);
     handles.currentPatient = struct();
@@ -30,16 +26,3 @@ function handles = ea_attach_electrodes_to_handles(handles, subjDir)
         end
     end
 end
-
-
-% % ===============================
-% % PATCH SNIPPET for ea_load_pts.m
-% % (Insert near where the patient directory is finalized and UI is updated.)
-% % ===============================
-% % --- begin PATCH: multi‑electrode support ---
-% try
-%     handles = ea_attach_electrodes_to_handles(handles, uipatdir{1});
-% catch ME
-%     warning('Multi‑electrode attach failed: %s', ME.message);
-% end
-% % --- end PATCH ---
