@@ -270,7 +270,7 @@ try
         options.lc = ea_handles2lc(handles);
         ea_setprefs('lc', options.lc);  % persist for next time tab is opened
         % Run connectome if user selected at least one action in the tab
-        options.dolc = (options.lc.struc.ft.do || options.lc.struc.compute_CM || options.lc.struc.compute_GM ...
+        options.dolc = (options.lc.struc.ft.do || options.lc.struc.ft.normalize || options.lc.struc.compute_CM || options.lc.struc.compute_GM ...
             || options.lc.func.compute_CM || options.lc.func.compute_GM);
     else
         options.dolc = 0;
