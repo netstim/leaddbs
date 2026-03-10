@@ -69,6 +69,7 @@ def check_electrode_availability(reco_electrode):
         "PMT 2102-12-094": "PMTsEEG2102_12",
         "PMT 2102-14-094": "PMTsEEG2102_14",
         "PMT 2102-16-094": "PMTsEEG2102_16",
+        "Behnke-Fried-1.8-3.5-1.6": "BehnkeFried_sEEG_8",   
     }
 
     for lead in electrode_names.keys():
@@ -169,8 +170,8 @@ if __name__ == '__main__':
     SEEG_recos = sys.argv[1]
     _,extension = os.path.splitext(SEEG_recos)
     if extension == '.tsv':
-        # either we get reco from tsv (Clemens' format)
-        SEEG_recos_df = pd.read_csv(SEEG_recos, sep='\t')
+        # either we get reco from tsv (BIDS format)
+        SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
         print("Lead-DBS reconstruction files are currently not supported")
         raise SystemExit()
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     # stimulations in any case from .csv
     # separate file for each electrode!
     SEEG_stim = sys.argv[2]
-    SEEG_stim_df = pd.read_csv(SEEG_stim, sep=',')
+    SEEG_stim_df = pd.read_csv(SEEG_stim)
     SEEG_stim_df = SEEG_stim_df.replace('None', np.nan)
     SEEG_stim_array = SEEG_stim_df.to_numpy()     
     
@@ -290,8 +291,12 @@ if __name__ == '__main__':
         elec_params = default_electrode_parameters[oss_electrode]
         # first_contact = first_active_coords - active_index * (spacing) * unit_direction
         # this might be wrong if the first contact (active tip) has a different length
-        imp_coords = np.array([contact_coords[0][0].values[0],contact_coords[0][1].values[0],contact_coords[0][2].values[0]]) - cnt_active_idx[0] * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions
-
+        if 'BehnkeFried_sEEG' in oss_electrode:
+            # first contact spacing is different
+            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - (cnt_active_idx[0] * (elec_params.contact_length + elec_params.contact_spacing) + bool(cnt_active_idx[0]) * (elec_params.first_contact_spacing-elec_params.contact_spacing)) * unit_directions  
+        else:
+            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - cnt_active_idx[0] * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions         
+ 
         # offset = from tip to the center of the first contact 
         offset = elec_params.get_center_first_contact() * 1.0
         tip_position = imp_coords - offset * unit_directions

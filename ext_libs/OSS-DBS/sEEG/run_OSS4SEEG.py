@@ -25,8 +25,8 @@ if __name__ == '__main__':
     SEEG_recos = sys.argv[1]
     _,extension = os.path.splitext(SEEG_recos)
     if extension == '.tsv':
-        # either we get reco from tsv (Clemens' format)
-        SEEG_recos_df = pd.read_csv(SEEG_recos, sep='\t')
+        # either we get reco from tsv (BIDS format)
+        SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
         print("Lead-DBS reconstruction files are currently not supported")
         raise SystemExit()
@@ -47,7 +47,6 @@ if __name__ == '__main__':
         Electrode_ID_given = True
     else:
         Electrode_ID_given = False
-
 
     # some auto-definitions
     stim_folder = os.path.dirname(SEEG_recos)
@@ -105,7 +104,11 @@ if __name__ == '__main__':
  
         elec_params = default_electrode_parameters[oss_electrode]
         # this might be wrong if the first contact (active tip) has a different length
-        imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - index_on_electrode * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions  
+        if 'BehnkeFried_sEEG' in oss_electrode:
+            # first contact spacing is different
+            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - (index_on_electrode * (elec_params.contact_length + elec_params.contact_spacing) + bool(index_on_electrode) * (elec_params.first_contact_spacing-elec_params.contact_spacing)) * unit_directions  
+        else:
+            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - index_on_electrode * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions         
         
         # offset = from tip to the center of the first contact 
         offset = elec_params.get_center_first_contact() * 1.0
