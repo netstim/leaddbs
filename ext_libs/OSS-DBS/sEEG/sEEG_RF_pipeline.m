@@ -1,25 +1,30 @@
+% Compute Stimulation/Recording Fields for sEEG electrodes
+% By K.Butenko, konstantinmgtu@gmail.com
 
 % Inputs
-sEEG_table = '/home/interscan/Documents/data/EM1271/sub-EM1271_ses-implantation-01_two_electrodes.tsv';
-sEEG_stim_protocols = {'/home/interscan/Documents/data/EM1271/sub-EM1271_ses-stimulations-01_electrodes.csv'};
-anchor = '/home/interscan/Documents/data/EM1271/anat_t2.nii';
+subject_folder = '/home/forel/Documents/data/JohnDoe';
+sEEG_table = fullfile(subject_folder,'sub-JD_ses-implantation-01_electrodes.tsv');
+VTR = true;             % if true, computes recording fields (aka volume of tissue recorded)
+Stim_Mode = 'CC';       % CC - current-controlled, VC - voltage-controlled
+sEEG_stim_protocols = {fullfile(subject_folder,'sub-JD_ses-stimulations-01_LFI-ANT.csv')
+                        fullfile(subject_folder,'sub-JD_ses-stimulations-01_LH.csv')};
+sEEG_stim_electrodes = {'LFI-ANT','LH'};
+
+anchor = fullfile(subject_folder,'anat_t2.nii.gz');
 reslice2segmask = true; % if true, all VTRs are stored in the same voxel space defined by segmask
                         % this is handy when voxelwise operations are used
                         % but each VTR nii is > 100 MBs
-VTR = true;             % if true, computes recording fields (aka volume of tissue recorded)
-Stim_Mode = 'VC';       % CC - current-controlled, VC - voltage-controlled
+
 warp2MNI = false;   % warp from the anchor space to MNI
-transform = 'JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative-ANTS.nii.gz';      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
-                                                                                 % IMPORTANT: make sure ants is mentioned in the name and use single quote
-
-Segment_SVD = true;
-images = dir_without_dots('/home/interscan/Documents/data/EM1271/anat_*');
-
-
-% autopath
-segmaskFile = '/home/forel/Documents/data/SEEG/tst/segmask.nii';
+transform = '/home/forel/Documents/data/JohnDoe/JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative-ANTS.nii.gz';      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
+                                                                                 % IMPORTANT: make sure ants is mentioned in the name and use single quote                                                                                 % expect the Lead-DBS BIDS format in the subject's folder
+Segment_SVD = false;
+if Segment_SVD
+    images = dir_without_dots('/home/forel/Documents/data/JohnDoe/anat_*');
+end
 
 % auto-definitions
+segmaskFile =  fullfile(subject_folder,'segmask.nii');
 [basepath,~,~] = fileparts(sEEG_table);
 if VTR
     OSS_sEEG_script = [ea_getearoot, '/ext_libs/OSS-DBS/sEEG/run_OSS4SEEG.py'];
@@ -52,7 +57,7 @@ if VTR
 else
     % each electrode has a separate sitm protocol sheet
     for elec = 1:size(sEEG_stim_protocols,1)
-        env.system(['python ', ea_path_helper(OSS_sEEG_script), ' ', ea_path_helper(sEEG_table), ' ',ea_path_helper(sEEG_stim_protocols{elec,1}),  ' ',Stim_Mode, ' ', num2str(elec)])
+        env.system(['python ', ea_path_helper(OSS_sEEG_script), ' ', ea_path_helper(sEEG_table), ' ',ea_path_helper(sEEG_stim_protocols{elec,1}),  ' ',Stim_Mode, ' ', sEEG_stim_electrodes{1,elec}])
     end
 end
 
