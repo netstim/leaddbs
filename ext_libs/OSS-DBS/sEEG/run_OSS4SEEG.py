@@ -14,6 +14,8 @@ import re
 from run_OSS4SEEG_Stim_no_shift import check_electrode_availability, get_geom_definitions, extract_index
 from ossdbs.electrodes.defaults import default_electrode_parameters
 
+MAX_RF_CONTACT_INDEX = 2   # for single contact RFs, do not go above the 3rd contact for simulation to avoid extremelely large VCMs (but the lead location is adjusted to match the actual contact coordinate) 
+
 if __name__ == '__main__':
 
     # called from MATLAB
@@ -103,12 +105,18 @@ if __name__ == '__main__':
             unit_directions = unit_directions * -1.0
  
         elec_params = default_electrode_parameters[oss_electrode]
+        if index_on_electrode > MAX_RF_CONTACT_INDEX:
+            # "shift" the lead to avoid large VCMs
+            simulated_contact_index = MAX_RF_CONTACT_INDEX
+        else:
+            simulated_contact_index = index_on_electrode
+            
         # this might be wrong if the first contact (active tip) has a different length
         if 'BehnkeFried_sEEG' in oss_electrode:
             # first contact spacing is different
-            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - (index_on_electrode * (elec_params.contact_length + elec_params.contact_spacing) + bool(index_on_electrode) * (elec_params.first_contact_spacing-elec_params.contact_spacing)) * unit_directions  
+            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - (simulated_contact_index * (elec_params.contact_length + elec_params.contact_spacing) + bool(simulated_contact_index) * (elec_params.first_contact_spacing-elec_params.contact_spacing)) * unit_directions  
         else:
-            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - index_on_electrode * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions         
+            imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - simulated_contact_index * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions         
         
         # offset = from tip to the center of the first contact 
         offset = elec_params.get_center_first_contact() * 1.0
@@ -148,7 +156,7 @@ if __name__ == '__main__':
                       },
                       "Contacts": [         # we need only one contact! Move the forth one for now!
                         {
-                          "Contact_ID": index_on_electrode+1,
+                          "Contact_ID": simulated_contact_index + 1,
                           "Active": True,
                           "Current[A]": False,
                           "Voltage[V]": amp,
