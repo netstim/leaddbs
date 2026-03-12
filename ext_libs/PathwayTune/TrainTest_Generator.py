@@ -165,11 +165,13 @@ def create_Training_Test_sets(stim_folder, electrode_model, conc_threshold, segm
 
     if predefined_trainset:
         # just load training from external
-        currents_training = np.genfromtxt(predefined_trainset, delimiter=',', skip_header=True)         
+        currents_training = np.genfromtxt(predefined_trainset, delimiter=',', skip_header=True)      
+        currents_training = np.nan_to_num(currents_training) # legacy datasets
         trainSize = currents_training.shape[0]
 
     if predefined_testset:
-        currents_test = np.genfromtxt(predefined_testset, delimiter=',', skip_header=True)                
+        currents_test = np.genfromtxt(predefined_testset, delimiter=',', skip_header=True)        
+        currents_test = np.nan_to_num(currents_test) # legacy datasets        
 
     if predefined_trainset and predefined_testset:
         samples = np.concatenate((currents_training,currents_test))
@@ -332,7 +334,10 @@ if __name__ == '__main__':
     # sys.argv[6:] - min cylind, max cylind, min segm, max_segm
 
     #predefined_trainset = '/home/interscan/Documents/GitHub/leaddbs/ext_libs/PathwayTune/Training_Current_protocols_LHS_L1_7_50perc.csv'
-    #predefined_testset = None
+    #predefined_testset = '/home/interscan/Documents/data/CapsuleWBG/MonopolarProtocols_7mA.csv'
+    
+    predefined_trainset = None
+    predefined_testset = None
 
     create_Training_Test_sets(sys.argv[1], sys.argv[2], [float(sys.argv[4]), float(sys.argv[5])],
-                              [float(sys.argv[6]), float(sys.argv[7])], int(sys.argv[3]))
+                              [float(sys.argv[6]), float(sys.argv[7])], int(sys.argv[3]),predefined_trainset=predefined_trainset,predefined_testset=predefined_testset)

@@ -123,7 +123,7 @@ class AnalysisReporter:
         
         return error_ANN, error_ANN_bi, error_ANN_mono
 
-    def analyze_and_plot_ann_errors(self, pathway_filtered: List[str], X_test: np.ndarray, 
+    def analyze_and_plot_ann_errors(self, pathway_filtered: List[str], X_test: np.ndarray, y_test: np.ndarray,
                                     error_ann: np.ndarray, error_ann_bi: Optional[np.ndarray], 
                                     error_ann_mono: Optional[np.ndarray], check_trivial: bool):
         """Generates various plots for error analysis."""
@@ -181,7 +181,7 @@ class AnalysisReporter:
         # --- Plotting KDE of absolute errors for each pathway ---
         plt.figure()
         pathways_max_errors: Dict[str, Union[float, List]] = {}
-        error_filename_base = f"{pathway_name}_ANN_abs_errors"
+        error_filename_base = f"{pathway_name}_ANN_errors"
 
         for i, pathway in enumerate(pathway_filtered):
             error_data = error_ann[:, i]
@@ -202,18 +202,48 @@ class AnalysisReporter:
             json.dump(pathways_max_errors, save_as_dict, indent=4)
 
         plt.legend()
-        plt.title('Absolute Errors for ANN on Test')
+        #plt.title('Errors for ANN on Test')
         # Setting xlim based on typical error range (0-25) in original code
         plt.xlim([-25.0, 25.0]) 
-        plt.xlabel("Absolute Error of Percent Activation")
+        plt.xlabel("Error of Percent Activation (Actual - Predicted)")
         filename_kde_test = f"{error_filename_base}_on_Test{hemi_idx_label}.png"
-        plt.savefig(os.path.join(self.nb_hemi_idx_folder, filename_kde_test), format='png', dpi=1000)
+        plt.savefig(os.path.join(self.nb_hemi_idx_folder, filename_kde_test), format='png', dpi=500)
         plt.close()
 
         # --- Trivial protocol error plots (Bipolar and Monopolar) ---
         if check_trivial:
             self._plot_trivial_errors(pathway_filtered, error_filename_base, hemi_idx_label, error_ann_bi, 'Bipolar')
             self._plot_trivial_errors(pathway_filtered, error_filename_base, hemi_idx_label, error_ann_mono, 'Monopolar')
+            
+            
+        # correlation of percent activation and error
+        for i, pathway in enumerate(pathway_filtered):
+        
+            # correlation of percent activations and errors
+            print(y_test.shape, error_ann[:, i].shape)
+            pearson_r2, pearson_p2 = pearsonr(y_test[:,0], abs(error_ann[:, i]))
+            print(pearson_r2, pearson_p2)
+    
+            # 4. Create the scatter plot
+            plt.scatter(y_test*100, error_ann[:, i], color='blue', alpha=0.6, edgecolors='w')
+            
+            # Add a horizontal line at 0 to indicate zero error
+            plt.axhline(0, color='red', linestyle='--', linewidth=1)
+            
+            # Add labels and title using LaTeX formatting
+            plt.xlabel("Percent Activation")
+            plt.ylabel("Error of Percent Activation (Actual - Predicted)")
+            
+            # Add grid for readability
+            plt.grid(True, linestyle=':', alpha=0.7)
+            
+            plt.text(0.05, 0.85, f"Abs. Error vs PA R = {pearson_r2:.2f}, p = {pearson_p2:.5f}",
+                     transform=plt.gca().transAxes, fontsize=10)
+            
+            # 5. Save the plot
+            filename_PA_error = f"{error_filename_base}_versus_PA_on_Test{hemi_idx_label}.png"
+            plt.savefig(os.path.join(self.nb_hemi_idx_folder, filename_PA_error), format='png', dpi=500)
+            plt.close()
 
     def _plot_trivial_errors(self, pathway_filtered: List[str], error_filename_base: str, 
                              hemi_idx_label: str, error_array: Optional[np.ndarray], protocol_type: str):
@@ -230,10 +260,10 @@ class AnalysisReporter:
 
         plt.text(0.05, 0.80, f"MAE = {mae:.2f}", transform=plt.gca().transAxes, fontsize=10)
         plt.legend()
-        plt.title(f'Absolute Errors for ANN on {protocol_type}')
+        #plt.title(f'Absolute Errors for ANN on {protocol_type}')
         # Dynamic xlim based on data range
         plt.xlim(np.min(error_array), np.max(error_array)) 
-        plt.xlabel("Absolute Error of Percent Activation")
+        plt.xlabel("Error of Percent Activation (Actual - Predicted)")
         filename = f"{error_filename_base}_on_{protocol_type}{hemi_idx_label}.png"
         plt.savefig(os.path.join(self.nb_hemi_idx_folder, filename), format='png', dpi=500)
         plt.close()
@@ -282,10 +312,14 @@ class AnalysisReporter:
             
             return True
         
-        if find_key_recursively(target_profiles['SE_dict'], pathway) or find_key_recursively(target_profiles['Soft_SE_dict'], pathway):
+        if 'SE_dict' in target_profiles and find_key_recursively(target_profiles['SE_dict'], pathway):
             if not _check_single_pathway_error(pathway, SE_err_threshold):
-               return False
-           
+                return False
+            
+        if 'Soft_SE_dict' in target_profiles and find_key_recursively(target_profiles['Soft_SE_dict'], pathway):
+            if not _check_single_pathway_error(pathway, SE_err_threshold):
+                return False
+
         if find_key_recursively(target_profiles['profile_dict'], pathway):
             return _check_single_pathway_error(pathway, err_threshold)
                                            
