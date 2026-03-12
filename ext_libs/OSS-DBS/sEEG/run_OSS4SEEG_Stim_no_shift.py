@@ -69,7 +69,12 @@ def check_electrode_availability(reco_electrode):
         "PMT 2102-12-094": "PMTsEEG2102_12",
         "PMT 2102-14-094": "PMTsEEG2102_14",
         "PMT 2102-16-094": "PMTsEEG2102_16",
-        "Behnke-Fried-1.8-3.5-1.6": "BehnkeFried_sEEG_8",   
+        "BF08R-SP21X-0C3": "BF08R_SP21X_0C3",
+        "BF10R-SP21X-0C3": "BF10R_SP21X_0C3",
+        "BF12R-SP21X-0C3": "BF12R_SP21X_0C3",
+        "BF08R-SP05X-0BH": "BF08R_SP05X_0BH",
+        "BF10R-SP05X-0BH": "BF10R_SP05X_0BH",
+        "BF12R-SP05X-0BH": "BF12R_SP05X_0BH",
     }
 
     for lead in electrode_names.keys():
@@ -291,8 +296,8 @@ if __name__ == '__main__':
         elec_params = default_electrode_parameters[oss_electrode]
         # first_contact = first_active_coords - active_index * (spacing) * unit_direction
         # this might be wrong if the first contact (active tip) has a different length
-        if 'BehnkeFried_sEEG' in oss_electrode:
-            # first contact spacing is different
+        if 'BF' in oss_electrode:
+            # first contact spacing might be different
             imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - (cnt_active_idx[0] * (elec_params.contact_length + elec_params.contact_spacing) + bool(cnt_active_idx[0]) * (elec_params.first_contact_spacing-elec_params.contact_spacing)) * unit_directions  
         else:
             imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - cnt_active_idx[0] * (elec_params.contact_length + elec_params.contact_spacing) * unit_directions         
@@ -426,7 +431,7 @@ if __name__ == '__main__':
                         "y[mm]": grid_center[1][0],
                         "z[mm]": grid_center[2][0]
                     },
-                    "Shape": {"x": 51, "y": 51, "z": 51},
+                    "Shape": {"x": 71, "y": 71, "z": 71},
                     "Direction": {
                         "x[mm]": 0,
                         "y[mm]": 0,

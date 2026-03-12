@@ -112,7 +112,7 @@ if __name__ == '__main__':
             simulated_contact_index = index_on_electrode
             
         # this might be wrong if the first contact (active tip) has a different length
-        if 'BehnkeFried_sEEG' in oss_electrode:
+        if 'BF' in oss_electrode:
             # first contact spacing is different
             imp_coords = np.array([contact_coords[0][0],contact_coords[0][1],contact_coords[0][2]]) - (simulated_contact_index * (elec_params.contact_length + elec_params.contact_spacing) + bool(simulated_contact_index) * (elec_params.first_contact_spacing-elec_params.contact_spacing)) * unit_directions  
         else:
@@ -255,7 +255,7 @@ if __name__ == '__main__':
                             "y[mm]": grid_center[1],
                             "z[mm]": grid_center[2]
                         },
-                        "Shape": {"x": 51, "y": 51, "z": 51},
+                        "Shape": {"x": 71, "y": 71, "z": 71},
                         "Direction": {
                             "x[mm]": 0,
                             "y[mm]": 0,
