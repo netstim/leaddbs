@@ -203,7 +203,7 @@ class ANNModel:
     def create_and_compile(self):
         """Defines and compiles the Keras model."""
         model = Sequential(name="PathwayANN")
-        model.add(Dense(128, input_shape=(self.input_shape,), activation='linear', use_bias=True))
+        model.add(Dense(256, input_shape=(self.input_shape,), activation='linear', use_bias=True))
         # Using LeakyReLU with alpha -1.25 as in original code
         model.add(Dense(1024, activation=tf.keras.layers.LeakyReLU(alpha=-1.25), use_bias=True))
         
@@ -212,7 +212,7 @@ class ANNModel:
         model.add(Dense(self.total_axons, activation='sigmoid', use_bias=True))
         
         # Final output layer
-        model.add(Dense(self.output_shape, activation='sigmoid', use_bias=True))
+        model.add(Dense(self.output_shape, activation='sigmoid', use_bias=False))
 
         adam = optimizers.Adamax(learning_rate=LEARN_RATE)
         model.compile(optimizer=adam, loss='mean_squared_error', metrics=['mse'])
@@ -273,31 +273,25 @@ class PathwayApproximator:
         """Executes the training and testing workflow."""
 
         # 1. Load, filter, and segment data
-        #X_train, X_test, y_train_filtered, y_test_filtered, pathway_filtered, axons_in_path = self.data_processor.load_data(self.pathway)
+        X_train, X_test, y_train_filtered, y_test_filtered, pathway_filtered, axons_in_path = self.data_processor.load_data(self.pathway)
 
         # store in a single file
-        #pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_' + str(X_train.shape[0]) + '_' + str(X_test.shape[0]))
-        #np.savez(pathway_activation_file, X_train=X_train, X_test=X_test, y_train_filtered=y_train_filtered, y_test_filtered=y_test_filtered, pathway_filtered=pathway_filtered, axons_in_path=axons_in_path)
+        pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_' + str(X_train.shape[0]) + '_' + str(X_test.shape[0]))
+        np.savez(pathway_activation_file, X_train=X_train, X_test=X_test, y_train_filtered=y_train_filtered, y_test_filtered=y_test_filtered, pathway_filtered=pathway_filtered, axons_in_path=axons_in_path)
         
-        # altermatively, load from a single file
-        pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_8000_8032.npz')        
-        pathway_act_dict = np.load(pathway_activation_file)
-        X_train, X_test, y_train_filtered, y_test_filtered, pathway_filtered, axons_in_path = pathway_act_dict['X_train'], pathway_act_dict['X_test'], pathway_act_dict['y_train_filtered'], pathway_act_dict['y_test_filtered'], pathway_act_dict['pathway_filtered'], pathway_act_dict['axons_in_path']
+        # # altermatively, load from a single file
+        # pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_8000_8032.npz')        
+        # pathway_act_dict = np.load(pathway_activation_file)
+        # X_train, X_test, y_train_filtered, y_test_filtered, pathway_filtered, axons_in_path = pathway_act_dict['X_train'], pathway_act_dict['X_test'], pathway_act_dict['y_train_filtered'], pathway_act_dict['y_test_filtered'], pathway_act_dict['pathway_filtered'], pathway_act_dict['axons_in_path']
 
         if not pathway_filtered:
             print(f"Low activation levels for {self.pathway}. Skipping ANN training.")
             return None
 
-        # 2. Augment training data
-        X_train = np.concatenate((X_train,X_test))
-        y_train_filtered = np.concatenate((y_train_filtered,y_test_filtered))
+        # 2. Augment training data by null-protocols and, optionally, duplicated training protocols
         X_train_augmented, y_train_augmented = self.data_processor.augment_data(X_train, y_train_filtered)
         
-        #X_train = np.concatenate((X_train,X_test[-32:,:]))
-        #y_train_filtered = np.concatenate((y_train_filtered,y_test_filtered[-32:]))
-        #X_train_augmented, y_train_augmented = self.data_processor.augment_data(X_train, y_train_filtered,extra_training_protocols=range(8000,8032))
-        
-        # Ensure only one pathway is being trained (as per original code's check)
+        # Ensure only one pathway is being trained
         if y_train_augmented.shape[1] > 1:
             print("Multiple pathways detected after filtering. Refactor logic expects single pathway output.")
             return None
