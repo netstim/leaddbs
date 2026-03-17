@@ -241,7 +241,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(~ea_nansum(orig_model_flat(:,test)));
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -253,7 +253,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                                     Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman');
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(~ea_nansum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
                                     Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman');
                                 end
@@ -264,7 +264,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     testidx=find(test);
                                     % allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
-                                    allzerotestidx = testidx(~nansum(orig_model_flat(:,test)));
+                                    allzerotestidx = testidx(~ea_nansum(orig_model_flat(:,test)));
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
 
