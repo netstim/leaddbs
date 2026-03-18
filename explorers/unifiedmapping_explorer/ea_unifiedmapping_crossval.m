@@ -19,7 +19,7 @@ switch explorer.multitractmode
                 explorer.patientselection=allptsel(is);
                 [I{g},Ihat{g},cvs,sel,val_struct{g}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
                 if viz
-                    ea_unifiedmapping_crossval_visualize(explorer,I{g},Ihat{g},cvs,posthoccorrect,sel,usedgroups(g));
+                    ea_unifiedmapping_crossval_visualize(explorer,I{g},Ihat{g},cvs,posthoccorrect,sel,usedgroups(g), toolUsed);
                 end
             end
         catch
@@ -34,7 +34,8 @@ switch explorer.multitractmode
             explorer.drawTool='sweetspotmapping';
             [I{cnt},Ihat{cnt},cvs{cnt},sel{cnt},val_struct{cnt}{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
             if viz
-                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt});
+                toolUsed=1;
+                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt}, [], toolUsed);
             end
         end
         if strcmp(explorer.activated.fiberfiltering,'On')
@@ -42,7 +43,8 @@ switch explorer.multitractmode
             explorer.drawTool='fiberfiltering';
             [I{cnt},Ihat{cnt},cvs{cnt},sel{cnt},val_struct{cnt}{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
             if viz
-                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt});
+                toolUsed = 2;
+                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt}, [], toolUsed);
             end
         end
         if strcmp(explorer.activated.networkmapping,'On')
@@ -50,7 +52,8 @@ switch explorer.multitractmode
             explorer.drawTool='networkmapping';
             [I{cnt},Ihat{cnt},cvs{cnt},sel{cnt},val_struct{cnt}{1}]=ea_unifiedmapping_crossval_do(~viz,explorer,strategy,iterations,customconfig);
             if viz
-                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt});
+                toolUsed = 3;
+                ea_unifiedmapping_crossval_visualize(explorer,I{cnt},Ihat{cnt},cvs{cnt},posthoccorrect,sel{cnt}, [], toolUsed);
             end            
         end
 
