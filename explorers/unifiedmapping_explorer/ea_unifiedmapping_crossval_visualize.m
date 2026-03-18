@@ -1,4 +1,4 @@
-function ea_unifiedmapping_crossval_visualize(explorer,I,Ihat,cvs,posthoccorrectforgroup,sel,group)
+function ea_unifiedmapping_crossval_visualize(explorer,I,Ihat,cvs,posthoccorrectforgroup,sel,group,toolUsed)
 
 if ~exist('group','var')
     group=nan;
@@ -70,10 +70,22 @@ if iscell(I)
 
 else
     if isnan(group)
-        title=['Disc. Fiber prediction ',upper(cvs)];
+        if toolUsed == 1
+            title=['Sweet Spot prediction', upper(cvs)];
+        elseif toolUsed == 2
+            title=['Disc. Fiber prediction ',upper(cvs)];
+        else
+            title=['Network prediction', upper(cvs)];
+        end
         groupsuffx='';
     else
-        title=['Group ',num2str(group),': Disc. Fiber prediction ',upper(cvs)];
+        if toolUsed == 1
+            title=['Group ',num2str(group),': Sweet Spot prediction ',upper(cvs)];
+        elseif toolUsed == 2
+            title=['Group ',num2str(group),': Disc. Fiber prediction ',upper(cvs)];
+        else
+            title=['Group ',num2str(group),': Network prediction ',upper(cvs)];
+        end
         groupsuffx=['_group_',num2str(group)];
     end
     if exist('pperm', 'var')
