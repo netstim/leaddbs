@@ -485,9 +485,6 @@ if __name__ == '__main__':
     
     for pathway in all_pathways:
         # it is more efficient to train separate ANNs for each pathway
-        
-        if pathway != 'tracts_capsule_lower_rh':
-            continue
 
         # Create and run the approximator for each pathway
         approximator = PathwayApproximator(
