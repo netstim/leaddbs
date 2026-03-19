@@ -69,12 +69,12 @@ def check_electrode_availability(reco_electrode):
         "PMT 2102-12-094": "PMTsEEG2102_12",
         "PMT 2102-14-094": "PMTsEEG2102_14",
         "PMT 2102-16-094": "PMTsEEG2102_16",
-        "BF08R-SP21X-0C3": "BF08R_SP21X_0C3",
-        "BF10R-SP21X-0C3": "BF10R_SP21X_0C3",
-        "BF12R-SP21X-0C3": "BF12R_SP21X_0C3",
-        "BF08R-SP05X-0BH": "BF08R_SP05X_0BH",
-        "BF10R-SP05X-0BH": "BF10R_SP05X_0BH",
-        "BF12R-SP05X-0BH": "BF12R_SP05X_0BH",
+        "AdTech BF08R-SP21X": "BF08R_SP21X_0C3",
+        "AdTech BF10R-SP21X": "BF10R_SP21X_0C3",
+        "AdTech BF12R-SP21X": "BF12R_SP21X_0C3",
+        "AdTech BF08R-SP05X": "BF08R_SP05X_0BH",
+        "AdTech BF10R-SP05X": "BF10R_SP05X_0BH",
+        "AdTech BF12R-SP05X": "BF12R_SP05X_0BH",
     }
 
     for lead in electrode_names.keys():
