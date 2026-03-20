@@ -1,6 +1,6 @@
 '''
     By K. Butenko
-    This script trains (over different configs), validates and tests an ANN model to approximate pathway activation for a given electrode position
+    This script trains and tests an ANN model to approximate pathway activation for a given electrode position
 '''
 
 import matplotlib
@@ -274,30 +274,30 @@ class PathwayApproximator:
         """Executes the training and testing workflow."""
 
         # #1. Load, filter, and segment data
-        X_train, X_validation_test, y_train_filtered, y_validation_test_filtered, pathway_filtered, axons_in_path = self.data_processor.load_data(self.pathway)
+        X_train_validation, X_test, y_train_validation, y_test, pathway_filtered, axons_in_path = self.data_processor.load_data(self.pathway)
         
-        ## store in a single file
-        #pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_' + str(X_train.shape[0]) + '_' + str(X_test.shape[0]))
-        #np.savez(pathway_activation_file, X_train=X_train, X_test=X_test, y_train_filtered=y_train_filtered, y_test_filtered=y_test_filtered, pathway_filtered=pathway_filtered, axons_in_path=axons_in_path)
+        # store in a single file
+        pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_' + str(X_train_validation.shape[0]) + '_' + str(X_test.shape[0]))
+        np.savez(pathway_activation_file, X_train_validation=X_train_validation, X_test=X_test, y_train_validation=y_train_validation, y_test=y_test, pathway_filtered=pathway_filtered, axons_in_path=axons_in_path)
         
-        # # # alternatively, load from a single file
+        # # # # alternatively, load from a single file
         # pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_5000_32.npz')        
         # if os.path.isfile(pathway_activation_file):
         #     pathway_act_dict = np.load(pathway_activation_file)
-        #     X_train, X_validation_test, y_train_filtered, y_validation_test_filtered, pathway_filtered, axons_in_path = pathway_act_dict['X_train'], pathway_act_dict['X_test'], pathway_act_dict['y_train_filtered'], pathway_act_dict['y_test_filtered'], pathway_act_dict['pathway_filtered'], pathway_act_dict['axons_in_path']
+        #     X_train_validation, X_test, y_train_filtered, y_train_validation, pathway_filtered, axons_in_path = pathway_act_dict['X_train_validation'], pathway_act_dict['X_test'], pathway_act_dict['y_train_validation'], pathway_act_dict['y_test'], pathway_act_dict['pathway_filtered'], pathway_act_dict['axons_in_path']
         # else:
         #     return None
         
         # split validation and test
-        X_validation, X_test = X_validation_test[:int(X_validation_test.shape[0]/2),:], X_validation_test[int(X_validation_test.shape[0]/2):,:]
-        y_validation, y_test_filtered = y_validation_test_filtered[:int(X_validation_test.shape[0]/2),:], y_validation_test_filtered[int(X_validation_test.shape[0]/2):,:]
+        X_train, X_validation = X_train_validation[:int(X_train_validation.shape[0]*0.8),:], X_train_validation[int(X_train_validation.shape[0]*0.8):,:]
+        y_train, y_validation = y_train_validation[:int(X_train_validation.shape[0]*0.8),:], y_train_validation[int(X_train_validation.shape[0]*0.8):,:]
 
         if not pathway_filtered:
             print(f"Low activation levels for {self.pathway}. Skipping ANN training.")
             return None
 
         # 2. Augment training data
-        X_train_augmented, y_train_augmented = self.data_processor.augment_data(X_train, y_train_filtered)
+        X_train_augmented, y_train_augmented = self.data_processor.augment_data(X_train, y_train)
 
         # Ensure only one pathway is being trained
         if y_train_augmented.shape[1] > 1:
@@ -352,7 +352,7 @@ class PathwayApproximator:
                 epochs_list.append(median_value + (i - num_values // 2) * 10)  # Linear distribution
             return epochs_list
     
-        # Define a set of parameter configurations to test
+        # # Define a set of parameter configurations to test
         learning_rates = [0.005,0.0025,0.001]
         num_layers = 1
         neurons_options = [64, 128, 256, 512, 1024]
@@ -388,7 +388,7 @@ class PathwayApproximator:
         csv_filename = os.path.join(self.stim_dir,'NB' + HEMI_SUFFIX[self.hemi_idx], "ann_performance_summary_" + self.pathway + ".csv")
         
         # Prepare the header row for the CSV file
-        header = ['model_name', 'input_neurons', 'hidden_layers', 'learning_rate', 'epochs', 'dropout', 'test_samples_above_5_percent_error']
+        header = ['model_name', 'input_neurons', 'hidden_layers', 'learning_rate', 'epochs', 'dropout', 'valid_samples_above_5_percent_error']
         
         # just initialization for now
         performance_best = X_validation.shape[0] 
@@ -407,7 +407,7 @@ class PathwayApproximator:
             
                 print(f"Training and evaluating model: {config['name']}")
                 model = create_model(config)
-                model.fit(X_train, y_train_filtered, epochs=config['epochs'], verbose=0)
+                model.fit(X_train, y_train, epochs=config['epochs'], verbose=0)
                 performance = evaluate_performance(model, X_validation, y_validation, error_threshold=0.05)
                 row = [
                     config['name'],
@@ -433,16 +433,16 @@ class PathwayApproximator:
 
         # validate the best configuration
         model = create_model(best_config)
-        model.fit(X_train, y_train_filtered, epochs=best_config['epochs'], verbose=0)
+        model.fit(X_train, y_train, epochs=best_config['epochs'], verbose=0)
 
         y_predicted = model.predict(X_test)
         
         error_ANN, error_ANN_bi, error_ANN_mono = self.reporter.calculate_errors(
-            X_test, y_test_filtered, y_predicted, self.check_trivial
+            X_test, y_test, y_predicted, self.check_trivial
         )
 
         self.reporter.analyze_and_plot_ann_errors(
-            pathway_filtered, X_test, y_test_filtered, error_ANN, error_ANN_bi, error_ANN_mono, self.check_trivial
+            pathway_filtered, X_test, y_test, error_ANN, error_ANN_bi, error_ANN_mono, self.check_trivial
         )
 
         # 5. Check Error Thresholds
