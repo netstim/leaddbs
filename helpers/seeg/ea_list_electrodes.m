@@ -1,9 +1,3 @@
-% ===============================
-% File: ea_list_electrodes.m
-% Purpose: Generic discovery of ANY number of electrodes for a patient,
-% across models/hemispheres/trajectories. Returns a struct array that the
-% GUI (ea_load_pts) can consume without assuming exactly two electrodes.
-% ===============================
 function electrodes = ea_list_electrodes(subjDir)
 % EA_LIST_ELECTRODES  Enumerate electrodes for a given patient directory.
 %
@@ -47,7 +41,6 @@ function electrodes = ea_list_electrodes(subjDir)
 
     cand = cand(cellfun(@isfolder,cand));
 
-    % Heuristics: JSON/ MAT with markers and model, contact CSV/TXT, etc.
     files = {};
     for i = 1:numel(cand)
         ff = dir(fullfile(cand{i},'**','*.*')); %#ok<DIRND>

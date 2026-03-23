@@ -11,7 +11,7 @@ end
 
 if ff_val
     disctract = app.explorer.fiberdrawn;
-    disctract.info.Connectome = app.explorer.calcsettings.connectome;
+    disctract.info.Connectome = app.explorer.calcsettings.fibfilt_connectome;
 
     if app.ShowPositiveCheckBox.Value
         disctract.info.PosAmount = sum(app.explorer.stats.pos.shown);
