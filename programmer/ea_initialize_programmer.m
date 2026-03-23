@@ -8,7 +8,8 @@ function ea_initialize_programmer(handles, bids, action)
     preparePLYReconstructions(groupFolderPath, groupOptions, handles);
     
     %% Prepare Reconstruction JSON Files
-    if isfield(handles, 'reconmethod') && handles.reconmethod == 6
+    if isfield(handles, 'reconmethod') ...
+            && contains(handles.reconmethod.String{handles.reconmethod.Value}, 'LeGUI')
         prepareReconstructionSeeg(groupFolderPath, groupOptions);
     else
         prepareReconstructionJSON(groupFolderPath, groupOptions);
@@ -22,7 +23,7 @@ function ea_initialize_programmer(handles, bids, action)
     %% Conditionally launch application
     if (action == "standalone")
         prepareStimulations(groupFolderPath, groupOptions);
-        
+
         % prepare_ossdbs(groupOptions, handles);
         system([ea_getProgrammerPath, ' ', groupFolderPath, ' > /dev/null 2>&1 &']);
     end
