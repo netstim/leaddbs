@@ -7,6 +7,20 @@ load(fullfile(options.root, options.patientname, 'reconstruction', ...
 c_labels  = cellfun(@(x) regexprep(x, '\d+$', ''), ElecMapRaw(:,1), 'UniformOutput', false);
 c_numbers = cellfun(@(x) str2double(regexp(x, '\d+', 'match')), ElecMapRaw(:,1));
 el_names  = unique(c_labels(DepthElecRaw)); % only depth electrodes (SEEG)
+contact_counts = cellfun(@(name) sum(strcmp(c_labels, name)), el_names);
+skip_mask = contact_counts < 4;
+
+for idx = find(skip_mask)
+    fprintf('Skipping electrode %s: only %d contacts found (<4); treating as artifact.\n', ...
+        el_names{idx}, contact_counts(idx));
+end
+
+el_names = el_names(~skip_mask);
+
+if isempty(el_names)
+    ea_warning('No electrodes with at least four contacts were found. Reconstruction was not updated.')
+    return;
+end
 
 % --- Determine reconstruction path and check for existing file -----------
 reco_dir      = fullfile(options.root, options.patientname, 'reconstruction');
@@ -124,8 +138,12 @@ for ii = 1:length(el_names)
     [xunitv, yunitv] = ea_calcxy(reco.mni.markers(ii).head, reco.mni.markers(ii).tail);
     reco.mni.markers(ii).x = reco.mni.markers(ii).head + xunitv*(options.elspec.lead_diameter/2);
     reco.mni.markers(ii).y = reco.mni.markers(ii).head + yunitv*(options.elspec.lead_diameter/2);
-%     reco.mni.trajectory(ii) = struct();
-%     [~, reco.mni.trajectory(ii), ~] = ea_resolvecoords(reco.mni.markers(ii), elmodel);
+%     try
+%         reco.mni.trajectory(ii) = struct();
+%         [~, reco.mni.trajectory(ii), ~] = ea_resolvecoords(reco.mni.markers(ii), elmodel);
+%     catch
+%         disp('Error building electrode trajectory');
+%     end
 end
 
 % --- Save reconstruction ---------------------------------------------------

@@ -1,12 +1,9 @@
 function input_file_path = ea_input_programmer(options, numElectrodes)
-% Prepare input for programmer
 
-%% Convert stimparameters.mat to json, handle inputData.json
 inputStruct.patientname = options.patientname;
 inputStruct.numElectrodes = numElectrodes;
 inputStruct.electrodeModels = options.elmodel;
 
-% stimDir = fullfile(options.subj.stimDir, ea_getspace);
 stimDir = fullfile(options.subj.stimDir, ea_nt(options));
 ea_mkdir(stimDir);
 
