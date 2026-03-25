@@ -122,11 +122,11 @@ def get_geom_definitions(contact_locations):
     unit_directions = unit_directions.flatten()
     
     Dimensions = {
-                "x[mm]": 100.0
+                "x[mm]": 70.0
                 + np.abs(unit_directions[0]) * actual_span * 2.0,
-                "y[mm]": 100.0
+                "y[mm]": 70.0
                 + np.abs(unit_directions[1]) * actual_span * 2.0,
-                "z[mm]": 100.0
+                "z[mm]": 70.0
                 + np.abs(unit_directions[2]) * actual_span * 2.0,
             }
     
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     ''' input processing '''
     SEEG_recos = sys.argv[1]
     _,extension = os.path.splitext(SEEG_recos)
-    if extension == '.tsv':
+    if extension == '.tsv' or extension == '.csv':
         # either we get reco from tsv (BIDS format)
         SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
@@ -449,7 +449,8 @@ if __name__ == '__main__':
             "CalcAxonActivation": False,
             "ActivationThresholdVTA[V-per-m]": 200.0,
             "FailFlag": 'rh',
-            "OutOfCore": False
+            "OutOfCore": False,
+            "TruncateAfterActivePartRatio": None
         }
             
         # contact dictionary is specified separately
