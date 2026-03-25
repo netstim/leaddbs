@@ -26,7 +26,7 @@ if __name__ == '__main__':
     ''' input processing '''
     SEEG_recos = sys.argv[1]
     _,extension = os.path.splitext(SEEG_recos)
-    if extension == '.tsv':
+    if extension == '.tsv' or extension == '.csv':
         # either we get reco from tsv (BIDS format)
         SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
@@ -273,7 +273,8 @@ if __name__ == '__main__':
                 "CalcAxonActivation": False,
                 "ActivationThresholdVTA[V-per-m]": 200.0,
                 "FailFlag": 'rh',
-                "OutOfCore": False
+                "OutOfCore": False,
+                "TruncateAfterActivePartRatio": None
             }
     
             # save the settings

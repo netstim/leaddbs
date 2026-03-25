@@ -69,12 +69,12 @@ def check_electrode_availability(reco_electrode):
         "PMT 2102-12-094": "PMTsEEG2102_12",
         "PMT 2102-14-094": "PMTsEEG2102_14",
         "PMT 2102-16-094": "PMTsEEG2102_16",
-        "BF08R-SP21X-0C3": "BF08R_SP21X_0C3",
-        "BF10R-SP21X-0C3": "BF10R_SP21X_0C3",
-        "BF12R-SP21X-0C3": "BF12R_SP21X_0C3",
-        "BF08R-SP05X-0BH": "BF08R_SP05X_0BH",
-        "BF10R-SP05X-0BH": "BF10R_SP05X_0BH",
-        "BF12R-SP05X-0BH": "BF12R_SP05X_0BH",
+        "AdTech BF08R-SP21X": "BF08R_SP21X_0C3",
+        "AdTech BF10R-SP21X": "BF10R_SP21X_0C3",
+        "AdTech BF12R-SP21X": "BF12R_SP21X_0C3",
+        "AdTech BF08R-SP05X": "BF08R_SP05X_0BH",
+        "AdTech BF10R-SP05X": "BF10R_SP05X_0BH",
+        "AdTech BF12R-SP05X": "BF12R_SP05X_0BH",
     }
 
     for lead in electrode_names.keys():
@@ -122,11 +122,11 @@ def get_geom_definitions(contact_locations):
     unit_directions = unit_directions.flatten()
     
     Dimensions = {
-                "x[mm]": 100.0
+                "x[mm]": 70.0
                 + np.abs(unit_directions[0]) * actual_span * 2.0,
-                "y[mm]": 100.0
+                "y[mm]": 70.0
                 + np.abs(unit_directions[1]) * actual_span * 2.0,
-                "z[mm]": 100.0
+                "z[mm]": 70.0
                 + np.abs(unit_directions[2]) * actual_span * 2.0,
             }
     
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     ''' input processing '''
     SEEG_recos = sys.argv[1]
     _,extension = os.path.splitext(SEEG_recos)
-    if extension == '.tsv':
+    if extension == '.tsv' or extension == '.csv':
         # either we get reco from tsv (BIDS format)
         SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
@@ -449,7 +449,8 @@ if __name__ == '__main__':
             "CalcAxonActivation": False,
             "ActivationThresholdVTA[V-per-m]": 200.0,
             "FailFlag": 'rh',
-            "OutOfCore": False
+            "OutOfCore": False,
+            "TruncateAfterActivePartRatio": None
         }
             
         # contact dictionary is specified separately
