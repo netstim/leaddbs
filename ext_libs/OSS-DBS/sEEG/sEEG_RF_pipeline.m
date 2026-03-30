@@ -65,6 +65,7 @@ end
 % create niftis from Lattice (.csv)
 if VTR
     Result_folders = dir_without_dots([basepath,filesep,'Results_VTR*']);
+    ea_mkdir([basepath,filesep,'RFs']);   
 else
     Result_folders = dir_without_dots([basepath,filesep,'Results_VTA*']);
 end
@@ -77,8 +78,8 @@ for vtr_i = 1:size(Result_folders,1)
         %file2save_MNI = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_potential_MNI.nii'];  % can be adjusted as you wish, this is just an output
 
         sim_labels = strsplit(Result_folders(vtr_i).name,'_');
-        file2save = [Result_folders(vtr_i).folder,filesep,'1V_c',sim_labels{1,5},'_phi_wb.nii'];  % can be adjusted as you wish, this is just an output
-        file2save_MNI = [Result_folders(vtr_i).folder,filesep,'1V_c',sim_labels{1,5},'_phi_wb_MNI.nii'];  % can be adjusted as you wish, this is just an output
+        file2save = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1V_c',sim_labels{1,5},'_phi_wb.nii'];  % can be adjusted as you wish, this is just an output
+        file2save_MNI = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1V_c',sim_labels{1,5},'_phi_wb_MNI.nii'];  % can be adjusted as you wish, this is just an output
         field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'oss_potentials_Lattice.csv'];
     else
         file2save = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_efield.nii'];
