@@ -32,7 +32,7 @@ timezone = time.TimeZone;
 setenv('TZ', timezone);
 
 % import settings from Lead-DBS GUI
-options.optimizer = 1;
+%options.stimSetMode = 1;
 %options.trainANN = 1;
 [settings,S] = ea_prepare_ossdbs(options,S);
 if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env

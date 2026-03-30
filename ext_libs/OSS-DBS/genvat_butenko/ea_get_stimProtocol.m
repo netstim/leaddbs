@@ -84,12 +84,8 @@ if ~settings.stimSetMode
     end
 else
     % StimSets
-    for side = 1:2
-        % estimate center of VAT grid
-        if ~isnan(activeSources(side,source_index))
-            settings.stim_center(side,:) = mean(settings.contactLocation{side});
-        end
-    end
+    settings.stim_center(1,:) = mean(settings.contactLocation{1});
+    settings.stim_center(2,:) = mean(settings.contactLocation{2});
     settings.Phi_vector = 1000./conNum * ones(2, conNum);
     settings.Case_grounding = 1;
     if settings.exportVAT
