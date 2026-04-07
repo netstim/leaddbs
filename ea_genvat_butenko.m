@@ -31,46 +31,27 @@ time = datetime('now', 'TimeZone', 'local');
 timezone = time.TimeZone;
 setenv('TZ', timezone);
 
+%% Setup
 % import settings from Lead-DBS GUI
 %options.stimSetMode = 1;
 %options.trainANN = 1;
-[settings,S] = ea_prepare_ossdbs(options,S);
-if isfield(options.prefs,'wsl_env') && options.prefs.wsl_env
-    disp("Running OSS-DBS via WSL")
-    disp("Lead-DBS conda packages cannot be used (e.g. SynthSeg and Tensorflow)")
-    settings.use_wsl = true;
-    if strcmp(settings.butenko_segmAlg,'SynthSeg')
-        warningMsg = sprintf("SynthSeg segmentation cannot be used with WSL");
-        ea_warndlg(warningMsg);
-        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
-        return
-    elseif settings.optimizer
-        warningMsg = sprintf("Optimizer cannot be currently used with WSL");
-        ea_warndlg(warningMsg);
-        [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
-        return
-    end
-else
-    settings.use_wsl = false;
-    if isfield(options.prefs,'ext_oss_env') && ~strcmp(options.prefs.ext_oss_env,'None')
-        % use external environment
-        env = ea_ext_env(options.prefs.ext_oss_env);
-        disp("Using the external OSS-DBS environment")
-    else
-        env = ea_conda_env('OSS-DBSv2');
-    end
+
+[settings,S,env] = ea_prepare_ossdbs(options,S);
+if islogical(settings) && ~settings
+    % if settings were not configured correctly, exit
+    [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
+    return
 end
 
 % some hardcoded parameters, can be added to the GUI later
 settings.reuse_warped_connectome = 0;  % set to 1 if the connectome was already processed for the given stim. settings
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
-settings.outOfCore = 0; % set to 1 if RAM capacity is exceeded during PAM
-settings.segment_SVD = 0; % requires SynthSeg and certain Docker containers (see ea_svd_segmentation)
 
 % set outputs
 outputPaths = ea_get_oss_outputPaths(options,S);
 
+%% Image Processing
 % segment MRI image
 settings = ea_segment_MRI(options, settings, outputPaths);
 
@@ -307,7 +288,7 @@ for source_index = first_active_source:4
                 % check if the time domain results is available
                 timeDomainSolution = [outputPaths.HemiSimFolder,filesep,'Results', filesep, 'oss_time_result_PAM.h5'];
                 if ~isfile(timeDomainSolution) && ~settings.stimSetMode
-                    ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, set settings.outOfCore to 1')
+                    ea_warndlg('OSS-DBS failed to prepare a time domain solution. If RAM consumption exceeded the hardware limit, in Preferences add prefs.outOfCore = true')
                     return
                 end
 
