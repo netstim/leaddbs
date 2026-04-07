@@ -1,15 +1,15 @@
-function [settings,S] = ea_prepare_ossdbs(options,S)
+function [settings,S,env] = ea_prepare_ossdbs(options,S)
 % Import settings from Lead-DBS.
 % For StimSets also add a dummy S
 % By Butenko and Li, konstantinmgtu@gmail.com
 
 arguments
     options % Lead-DBS options for electrode reconstruction and stimulation
-    S       % lead-dbs stimulation settings
+    S       % Lead-dbs stimulation settings
 end
 
 % Check OSS-DBS installation, set env
-if (~isfield(options.prefs,'ext_oss_env') || strcmp(options.prefs.ext_oss_env,'None')) && (~isfield(options.prefs,'wsl_env') || ~options.prefs.wsl_env)
+if (~isfield(options.prefs,'ext_oss_env') || strcmp(options.prefs.ext_oss_env,'None')) && (~isfield(options.prefs,'use_wsl') || ~options.prefs.use_wsl)
     env = ea_conda_env('OSS-DBSv2');
     ea_checkOSSDBSInstallv2(env);
 end
@@ -107,8 +107,56 @@ if settings.stimSetMode
     settings.current_control = [1;1];
 end
 
-%% Lead-DBS hardwired parameters
+%% Lead-DBS parameters
 
 % Set patient folder
 settings.Patient_folder = options.subj.subjDir;
 settings.Electrode_type = options.elmodel;
+
+% From Preferences File
+if isfield(options.prefs,'use_wsl') && options.prefs.use_wsl
+    disp("Running OSS-DBS via WSL")
+    disp("Lead-DBS conda packages cannot be used (e.g. SynthSeg and Tensorflow)")
+    settings.use_wsl = true;
+    env = NaN; % wsl calls prefs.ext_oss_env directly
+    if strcmp(settings.butenko_segmAlg,'SynthSeg')
+        warningMsg = sprintf("SynthSeg segmentation cannot be used with WSL");
+        ea_warndlg(warningMsg);
+        settings = false;
+        return
+    elseif settings.optimizer
+        warningMsg = sprintf("Optimizer cannot be currently used with WSL");
+        ea_warndlg(warningMsg);
+        settings = false;
+        return
+    end
+else
+    settings.use_wsl = false;
+    if isfield(options.prefs,'ext_oss_env') && ~strcmp(options.prefs.ext_oss_env,'None')
+        % use external environment
+        env = ea_ext_env(options.prefs.ext_oss_env);
+        disp("Using the external OSS-DBS environment")
+    else
+        env = ea_conda_env('OSS-DBSv2');
+    end
+end
+
+if isfield(options.prefs,'segment_SVD') && options.prefs.segment_SVD
+    % requires SynthSeg and certain Docker containers (see ea_svd_segmentation)
+    if ~options.native
+        ea_warndlg("SVD segmentation is only sensible in native space!")
+        settings = false;
+        return
+    else
+        settings.segment_SVD = true;
+    end
+else
+    settings.segment_SVD = false;
+end
+
+if isfield(options.prefs,'outOfCore') && options.prefs.outOfCore
+    % requires SynthSeg and certain Docker containers (see ea_svd_segmentation)
+    settings.outOfCore = true;
+else
+    settings.outOfCore = false;
+end

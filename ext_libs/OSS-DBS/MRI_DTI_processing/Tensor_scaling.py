@@ -1,258 +1,339 @@
-
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 29 12:11:41 2020
-@author: scaling algorithms by A.Andree, parallelization by K.Butenko
+Tensor scaling algorithms by A. Andree, parallelization by K. Butenko.
+Refactored for Windows compatibility (spawn-based multiprocessing).
 """
 
 import os
-import nibabel as nib
-
-from multiprocessing import sharedctypes,cpu_count,Pool
+import sys
+import ctypes
+import itertools
 from functools import partial
+from multiprocessing import RawArray, Pool, cpu_count
+from typing import Optional
 
 import numpy as np
-import itertools
+import nibabel as nib
 
-import sys
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+_EPS = 1e-12
 
-eps = 1e-12
-def theta_star(w12, w13):
-   """
-   Nonlinear analytic expression to approximate the mapping of eigenvalues
-   based on Howell_McIntyre_2016 for load preservation method.
-   """
-   v1 = 2.15
-   u1 = 1.21
-   m = 8e-1
-   v2 = 1.85
-   u2 = 1.12
-   n = 8e-1
-   
-   theta = (v1/(np.power(u1/(w12+eps),m)+1))*\
-           (v2/(np.power(u2/(w13+eps),n)+1))
-   
-   return np.round(theta, -int(np.log10(eps))) # to supress round-off
-   
-def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,affine,affine_inv,args):
-    i,j=args
-    tmp = np.ctypeslib.as_array(shared_array)
-    #tmp_DTITK = np.ctypeslib.as_array(shared_array_DTITK)
-
-    data_reshape=np.zeros((DTI_data.shape[0],DTI_data.shape[1],DTI_data.shape[2],6),float)
-
-
-
-
-    for k in z_ind_vector:
-
-        if len(DTI_data.shape)>4:
-            data_reshape[i,j,k,:]=DTI_data[i,j,k,0,:]
-        elif len(DTI_data.shape)==4:
-            data_reshape[i,j,k,:]=DTI_data[i,j,k,:]
-
-
-
-        if np.all(data_reshape[i,j,k,:]==0.0):
-            tmp[i,j,k,:]=np.array([1.0,0.0,0.0,1.0,0.0,1.0])
-        else:
-            if tensor_order=="NIFTI":
-                matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,1],data_reshape[i,j,k,3]],   #if tensor is ordered xx,yx,yy,zx,zy,zz (NIFTI standard)
-                                            [data_reshape[i,j,k,1],data_reshape[i,j,k,2],data_reshape[i,j,k,4]],
-                                            [data_reshape[i,j,k,3],data_reshape[i,j,k,4],data_reshape[i,j,k,5]]])
-            elif tensor_order=="DSI_studio":
-                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,3],data_reshape[i,j,k,4]],   #if tensor is ordered xx,yy,zz,yx,zx,zy (DSI Studio)
-                                             [data_reshape[i,j,k,3],data_reshape[i,j,k,1],data_reshape[i,j,k,5]],
-                                             [data_reshape[i,j,k,4],data_reshape[i,j,k,5],data_reshape[i,j,k,2]]])
-            elif tensor_order=="FSL":
-                 matrix_from_array=np.array([[data_reshape[i,j,k,0],data_reshape[i,j,k,1],data_reshape[i,j,k,2]],   #if tensor is ordered xx,yx,zx,yy,zy,zz (FSL)
-                                             [data_reshape[i,j,k,1],data_reshape[i,j,k,3],data_reshape[i,j,k,4]],
-                                             [data_reshape[i,j,k,2],data_reshape[i,j,k,4],data_reshape[i,j,k,5]]])
-            elif tensor_order=="Johnson_Wistar":
-                 matrix_from_array=np.array([[data_reshape[i,j,k,3],data_reshape[i,j,k,1],data_reshape[i,j,k,2]],   #if tensor is ordered yy,yx,zy,xx,zx,zz (Johnson Wistar)
-                                             [data_reshape[i,j,k,1],data_reshape[i,j,k,0],data_reshape[i,j,k,4]],
-                                             [data_reshape[i,j,k,2],data_reshape[i,j,k,4],data_reshape[i,j,k,5]]])
-
-            #compute eigenvalues and eigenvectors
-            eigVals,eigVecs = np.linalg.eig(matrix_from_array)
-            if np.any(eigVals<0):
-                 print("Warning, no negative eigenvalues should be present for DTI voxels by definition, taking an absolute value. But check your DTI data!")
-                 #raise SystemExit
-                 eigVals=abs(eigVals)
-
-            # ein einfacher Weg um zu überprüfen, ob die Umrechnugen stimmen, ist sich den max Wert von data (Diffusion=0.003 mm²/s)und data_reshape (Conductivity=2.5 S/m) für CSF anzusehen
-
-            if scaling_method=='Tuch':
-                #CRP approach as in Tuch el al. 2001 linear fit
-                k_DTI=0.844e3 #S*s/mm³ Umrechnung in (S/m)*(s/mm²) daher e3
-                d_epsilon=0.124e-3 #micrometer^2/ms extracellular diffusivity Umrechnung in mm²/s daher e-3
-                eigVals_scaled=k_DTI*(eigVals-d_epsilon)
+# Supported tensor storage orders and the corresponding (row, col) index
+# mapping for the six unique components stored as a flat 6-element vector.
 #
-#            elif scaling_method=='Nordin':
-#                #CRP Nordin approach as in Nordin el al. 2019 BUT Do Not Use EigenValues that is wrong use Dxx Dyy Dzz
-#                eigVals_scaled=eigVals/((data_reshape[i,j,k,0]+data_reshape[i,j,k,2]+data_reshape[i,j,k,5])/3)
-#                
+#   NIFTI         : [xx, yx, yy, zx, zy, zz]  →  indices 0–5
+#   DSI_studio    : [xx, yy, zz, yx, zx, zy]  →  indices 0–5
+#   FSL           : [xx, yx, zx, yy, zy, zz]  →  indices 0–5
+#   Johnson_Wistar: [yy, yx, zy, xx, zx, zz]  →  indices 0–5
+#
+# Each entry maps (flat_index) → position in the symmetric 3×3 matrix.
+_TENSOR_LAYOUTS = {
+    "NIFTI": [
+        (0, 0), (1, 0), (1, 1), (2, 0), (2, 1), (2, 2)
+    ],
+    "DSI_studio": [
+        (0, 0), (1, 1), (2, 2), (1, 0), (2, 0), (2, 1)
+    ],
+    "FSL": [
+        (0, 0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2)
+    ],
+    "Johnson_Wistar": [
+        (1, 1), (1, 0), (2, 1), (0, 0), (2, 0), (2, 2)
+    ],
+}
 
-            elif scaling_method=='NormMapping':
-            ##Normalized MAPPING approach as in Güllmar et al./Schmidt el al.
-                eigVals_scaled=eigVals/(eigVals[0]*eigVals[1]*eigVals[2])**(1/3.0)
-
-            ##Load preservation method as in Howell, B., McIntyre, C.C., 2016.
-            elif scaling_method=='LoadPreservation':
-                w12 = eigVals[0]/(eigVals[1]+eps)
-                w13 = eigVals[0]/(eigVals[1]+eps)
-                theta = theta_star(w12, w13)
-                eigVals_scaled = np.array([1., 1./(w12+eps), 1./(w13+eps)])*theta
-
-            if np.any(eigVals_scaled<=0): # if there are still negative eigenvalues put eigVals<=0.0000001
-                print("Error, no negative eigenvalues are allowed by definition!")
-                raise SystemExit
-            #Using eigendecomposition of an SPD tensor (A=Q*lambda*Qtransposed)
-            #A is the SPD tensor, which here is the diffusion tensor (which is scaled to become the conductivity tensor)
-            #Q is an orthogonal matrix whose columns are eigenvectors of A
-            #lambda is the diagonal matrix with the eigenvalues as entries
-
-            elif scaling_method=='Nordin':
-                #CRP Nordin approach as in Nordin el al. 2019
-                tensor=matrix_from_array/((data_reshape[i,j,k,0]+data_reshape[i,j,k,2]+data_reshape[i,j,k,5])/3)
-            else:
-                eigVals_matrix=np.diag(eigVals_scaled) #HAS TO BE COMMENTED FOR CRP AS IN ASTROEM!
-                tensor=eigVecs.dot(eigVals_matrix).dot(eigVecs.T) #HAS TO BE COMMENTED FOR CRP AS IN ASTROEM!
+# Lower conductivity boundary: WM value from Gabriel et al. at 10 Hz [S/m]
+_SIGMA_ISO_LOW = 0.027512
+_SIGMA_ISO_LOWER_BOUNDARY = _SIGMA_ISO_LOW / 20.0
 
 
-
-            eigVals_tensor,eigVecs_tensor = np.linalg.eig(tensor)
-            if np.any(eigVals_tensor<=0): # if there are still negative eigenvalues put eigVals<=0.0000001
-                 print("Error, no negative eigenvalues are allowed by definition!")
-                 raise SystemExit
-
-            # define a lower boundary for the used conductivity (mean value for all tissues in the brain):
-#                Sigma_iso_low=1.28e-1 # 1.28e-1 [S/m] IT'IS data base for low frequency conductivities; WM across fibers mean value
-#                Sigma_iso_low=1.1e-1 # 1.1e-1 [S/m] IT'IS data base for low frequency conductivities; Brain minimum value
-            Sigma_iso_low=0.027512 # 0.027512 [S/m] Gabriel et al. for 10 Hz, WM
-            Sigma_iso_lowerBoundary=Sigma_iso_low/20 # 10% of sigma_iso
-#                Sigma_iso_lowerBoundary=0.000025
-
-            #define a lower boundary for the eigenvalues:
-            if np.any(eigVals_tensor*Sigma_iso_low<Sigma_iso_lowerBoundary):
-#                if np.any((eigVals*Sigma_iso_low)<Sigma_iso_lowerBoundary):
-                print("Error, lower boundary detected at Voxel:")
-                print(i,j,k)
-                raise SystemExit
+# ---------------------------------------------------------------------------
+# Worker-process state (set once per process via Pool initializer)
+# ---------------------------------------------------------------------------
+_worker_shared_out: Optional[np.ndarray] = None  # shaped output array (mx, my, mz, 6)
+_worker_dti_flat: Optional[np.ndarray] = None    # shaped read-only DTI array
+_worker_dti_shape: Optional[tuple] = None
 
 
-            # re-orient to the world axes
-            tensor_complete = np.array([[tensor[0][0],tensor[1][0],tensor[2][0],0],[tensor[1][0],tensor[1][1],tensor[2][1],0],[tensor[2][0],tensor[1][2],tensor[2][2],0],[0,0,0,1]])
-            tensor_WA = np.matmul(np.matmul(affine, tensor_complete), affine_inv)
-            tmp[i,j,k,:]=np.array([tensor_WA[0][0],tensor_WA[1][0],tensor_WA[2][0],tensor_WA[1][1],tensor_WA[2][1],tensor_WA[2][2]]) #we need to have it as xx,yx,zx,yy,zy,zz (which is FSL standard saving procedure of DTI)
+def _init_worker(
+    shared_out: RawArray,
+    out_shape: tuple,
+    dti_flat: RawArray,
+    dti_shape: tuple,
+) -> None:
+    """Pool initializer — runs once in each spawned worker process."""
+    global _worker_shared_out, _worker_dti_flat, _worker_dti_shape
+    # Both frombuffer calls produce shaped, multi-dimensional views of the
+    # underlying shared memory — no copy is made.
+    _worker_shared_out = np.frombuffer(shared_out, dtype=np.float64).reshape(out_shape)
+    _worker_dti_flat   = np.frombuffer(dti_flat,   dtype=np.float64).reshape(dti_shape)
+    _worker_dti_shape  = dti_shape
 
 
-            #tmp[i,j,k,:]=np.array([tensor[0][0],tensor[1][0],tensor[2][0],tensor[1][1],tensor[2][1],tensor[2][2]]) #we need to have it as xx,yx,zx,yy,zy,zz (which is FSL standard saving procedure of DTI)
-            #for visualization with DTI TK
-            #tmp_DTITK[i_ind,j_ind,z_ind,:]=np.array([tensor[0][0],tensor[1][0],tensor[1][1],tensor[2][0],tensor[2][1],tensor[2][2]]) #we need to have it as xx,yx,yy,zx,zy,zz (NIFTI standard)
+# ---------------------------------------------------------------------------
+# Scaling helpers
+# ---------------------------------------------------------------------------
+def _theta_star(w12: float, w13: float) -> float:
+    """
+    Nonlinear analytic mapping for eigenvalue scaling (load preservation).
+    Based on Howell & McIntyre, 2016.
+    """
+    v1, u1, m = 2.15, 1.21, 8e-1
+    v2, u2, n = 1.85, 1.12, 8e-1
 
-    #%%
+    theta = (
+        (v1 / (np.power(u1 / (w12 + _EPS), m) + 1))
+        * (v2 / (np.power(u2 / (w13 + _EPS), n) + 1))
+    )
+    return np.round(theta, -int(np.log10(_EPS)))  # suppress round-off
 
-def main_part(tensor_order,scaling_method, affine):
-    global shared_array
-    #global shared_array_DTITK #visulazation with DTI TK
 
-    if affine[0,0] < 0.0 or affine[1,1] < 0.0 or affine[2,2] < 0.0:
-        print("Reverse order of axes is not allowed, please flip!")
-        raise SystemExit
+def _flat_to_matrix(components: np.ndarray, tensor_order: str) -> np.ndarray:
+    """Reconstruct the symmetric 3×3 diffusion tensor from six stored values."""
+    layout = _TENSOR_LAYOUTS[tensor_order]
+    mat = np.zeros((3, 3), dtype=float)
+    for value, (row, col) in zip(components, layout):
+        mat[row, col] = value
+        mat[col, row] = value  # enforce symmetry
+    return mat
+
+
+def _scale_eigenvalues(
+    eigvals: np.ndarray,
+    matrix: np.ndarray,
+    scaling_method: str,
+    diagonal_sum: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Return (scaled_tensor, eigvals_of_scaled_tensor).
+
+    For the 'Nordin' method the tensor is returned directly (no eigenvalue
+    decomposition needed); for all others a new tensor is reconstructed from
+    the scaled eigenvalues and the original eigenvectors.
+    """
+    eigvecs = np.linalg.eig(matrix)[1]  # eigvecs already computed upstream
+
+    if scaling_method == "Tuch":
+        k_dti = 0.844e3      # S·s/mm³  (converts to S/m · s/mm²)
+        d_eps = 0.124e-3     # mm²/s  (extracellular diffusivity)
+        scaled = k_dti * (eigvals - d_eps)
+
+    elif scaling_method == "NormMapping":
+        det_cbrt = (eigvals[0] * eigvals[1] * eigvals[2]) ** (1.0 / 3.0)
+        scaled = eigvals / det_cbrt
+
+    elif scaling_method == "LoadPreservation":
+        w12 = eigvals[0] / (eigvals[1] + _EPS)
+        w13 = eigvals[0] / (eigvals[2] + _EPS)   # ← was eigvals[1] (bug fix)
+        theta = _theta_star(w12, w13)
+        scaled = np.array([1.0, 1.0 / (w12 + _EPS), 1.0 / (w13 + _EPS)]) * theta
+
+    elif scaling_method == "Nordin":
+        # Direct tensor scaling — no eigenvalue manipulation
+        tensor = matrix / (diagonal_sum / 3.0)
+        return tensor, np.linalg.eigvalsh(tensor)
+
+    else:
+        raise ValueError(f"Unknown scaling method: {scaling_method!r}")
+
+    if np.any(scaled <= 0):
+        raise RuntimeError("Scaled eigenvalues must be strictly positive.")
+
+    tensor = eigvecs @ np.diag(scaled) @ eigvecs.T
+    return tensor, np.linalg.eigvalsh(tensor)
+
+
+# ---------------------------------------------------------------------------
+# Per-voxel processing (one (i, j) column, all k)
+# ---------------------------------------------------------------------------
+def _process_column(
+    k_vector: np.ndarray,
+    tensor_order: str,
+    scaling_method: str,
+    affine: np.ndarray,
+    affine_inv: np.ndarray,
+    ij: tuple[int, int],
+) -> None:
+    """
+    Process all voxels in column (i, j) across z.  Writes results into the
+    shared output array.  Designed to be called by a multiprocessing Pool.
+    """
+    i, j = ij
+    out = _worker_shared_out   # already a shaped (mx, my, mz, 6) ndarray
+    dti = _worker_dti_flat
+
+    for k in k_vector:
+        # ---- extract the six tensor components --------------------------------
+        if dti.ndim == 5:
+            components = dti[i, j, k, 0, :]
+        else:
+            components = dti[i, j, k, :]
+
+        # Background / zero voxel → identity-like placeholder
+        if np.all(components == 0.0):
+            out[i, j, k, :] = [1.0, 0.0, 0.0, 1.0, 0.0, 1.0]
+            continue
+
+        # ---- build symmetric 3×3 matrix --------------------------------------
+        mat = _flat_to_matrix(components, tensor_order)
+
+        eigvals, _ = np.linalg.eig(mat)
+        if np.any(eigvals < 0):
+            print(
+                "Warning: negative eigenvalue encountered; "
+                "taking absolute value.  Check your DTI data!"
+            )
+            eigvals = np.abs(eigvals)
+
+        # ---- scale -----------------------------------------------------------
+        diag_sum = float(components[0] + components[2] + components[5])
+        tensor, eigvals_tensor = _scale_eigenvalues(
+            eigvals, mat, scaling_method, diag_sum
+        )
+
+        if np.any(eigvals_tensor <= 0):
+            raise RuntimeError(
+                f"Non-positive eigenvalue after scaling at voxel ({i},{j},{k})."
+            )
+
+        if np.any(eigvals_tensor * _SIGMA_ISO_LOW < _SIGMA_ISO_LOWER_BOUNDARY):
+            raise RuntimeError(
+                f"Conductivity below lower boundary at voxel ({i},{j},{k})."
+            )
+
+        # ---- re-orient to world axes -----------------------------------------
+        # Build 4×4 homogeneous rotation block from the 3×3 symmetric tensor
+        tc = np.zeros((4, 4), dtype=float)
+        tc[:3, :3] = tensor
+        tc[3, 3] = 1.0
+        tensor_wa = affine @ tc @ affine_inv
+
+        # Store as FSL order: [xx, yx, zx, yy, zy, zz]
+        out[i, j, k, :] = [
+            tensor_wa[0, 0],
+            tensor_wa[1, 0],
+            tensor_wa[2, 0],
+            tensor_wa[1, 1],
+            tensor_wa[2, 1],
+            tensor_wa[2, 2],
+        ]
+
+
+# ---------------------------------------------------------------------------
+# Orchestration
+# ---------------------------------------------------------------------------
+def _run_parallel(
+    dti_data: np.ndarray,
+    tensor_order: str,
+    scaling_method: str,
+    affine: np.ndarray,
+) -> np.ndarray:
+    """
+    Distribute voxel processing across CPU cores.
+
+    Uses shared memory for both the read-only DTI input and the write-only
+    conductivity output so that no large array copies are made per task.
+    The Pool initializer makes these shared buffers available as module-level
+    globals inside each worker — the only pattern that works under Windows'
+    spawn-based process start method.
+    """
+    if np.any(np.diag(affine[:3, :3]) < 0.0):
+        raise ValueError(
+            "Negative diagonal in affine matrix — "
+            "reverse-ordered axes are not supported.  Please flip the image."
+        )
 
     affine_inv = np.linalg.inv(affine)
-   
-    Mx,My,Mz=(DTI_data.shape[0],DTI_data.shape[1],DTI_data.shape[2])
+    mx, my, mz = dti_data.shape[:3]
 
-    normalized_DTI=np.ctypeslib.as_ctypes(np.zeros((Mx,My,Mz,6),float))
-    #normalized_DTITK=np.ctypeslib.as_ctypes(np.zeros((Mx,My,Mz,6),float)) #visulazation with DTI TK
-    #np.ctypeslib.as_ctypes = Create and return a ctypes object from a numpy array. Actually anything that exposes the __array_interface__ is accepted.
-    shared_array = sharedctypes.RawArray(normalized_DTI._type_, normalized_DTI)
-    #shared_array_DTITK = sharedctypes.RawArray(normalized_DTITK._type_, normalized_DTITK) #visulazation with DTI TK
-    # multiprocessing.sharedctypes.RawArray(typecode_or_type, size_or_initializer) = Returns a ctypes array allocated from shared memory.
+    # ---- shared output buffer (zeros → workers write into this) --------------
+    out_np = np.zeros((mx, my, mz, 6), dtype=np.float64)
+    out_shape = out_np.shape
+    shared_out = RawArray(ctypes.c_double, out_np.size)
 
-    #i_vector=np.arange(Mx)
-    #j_vector=np.arange(My)
-    k_vector=np.arange(Mz)
+    # ---- shared read-only input buffer ---------------------------------------
+    dti_flat_np = np.ascontiguousarray(dti_data, dtype=np.float64)
+    shared_in = RawArray(ctypes.c_double, dti_flat_np.size)
+    # copy DTI data into the shared buffer once
+    np.frombuffer(shared_in, dtype=np.float64)[:] = dti_flat_np.flatten()
 
-    # we will iterate over z inside the parallelized function
-    # this will create all combinations of x,y indices
-    window_idxs = [(i, j) for i, j in
-               itertools.product(range(0, Mx),    #Combinatoric iterators: product() = cartesian product, equivalent to a nested for-loop [(0,0),(0,1),..,(0,len(My)),..(len(Mx),len(My))]
-                                 range(0, My))]
-    p = Pool(cpu_count()-1)
-    p.map(partial(fill_out_in_parallel,k_vector,tensor_order,scaling_method,affine,affine_inv),window_idxs)
-    #p.map =  map(func, iterable[, chunksize]) This method chops the iterable into a number of chunks which it submits to the process pool as separate tasks.
-    #The (approximate) size of these chunks can be specified by setting chunksize to a positive integer.
-    #partial(func,/,*args,**keywords)
-    p.terminate()
-    normalized_DTI = np.ctypeslib.as_array(shared_array)
+    dti_shape = dti_flat_np.shape
+
+    # ---- iterate over (i, j) columns, parallelised ---------------------------
+    k_vector = np.arange(mz)
+    ij_pairs = list(itertools.product(range(mx), range(my)))
+
+    n_workers = max(1, cpu_count() - 1)
+    with Pool(
+        processes=n_workers,
+        initializer=_init_worker,
+        initargs=(shared_out, out_shape, shared_in, dti_shape),
+    ) as pool:
+        pool.map(
+            partial(
+                _process_column,
+                k_vector,
+                tensor_order,
+                scaling_method,
+                affine,
+                affine_inv,
+            ),
+            ij_pairs,
+        )
+
+    return np.frombuffer(shared_out, dtype=np.float64).reshape(out_shape)
 
 
-def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order='NIFTI'):
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+def scale_tensor_data(
+    tensor_data_name: str,
+    scaling_method: str = "NormMapping",
+    tensor_order: str = "NIFTI",
+) -> None:
+    """
+    Load a NIfTI diffusion tensor image, scale it to a conductivity tensor,
+    and save the result alongside the original file.
 
-    global DTI_data
-    #DTI_data=np.zeros((18,21,18,6),float)
-    #load DTI data
+    Parameters
+    ----------
+    tensor_data_name:
+        Path to the input NIfTI file.
+    scaling_method:
+        One of ``'Tuch'``, ``'NormMapping'``, ``'LoadPreservation'``,
+        ``'Nordin'``.
+    tensor_order:
+        Storage convention of the six tensor components:
+        ``'NIFTI'``, ``'DSI_studio'``, ``'FSL'``, or ``'Johnson_Wistar'``.
+    """
+    if tensor_order not in _TENSOR_LAYOUTS:
+        raise ValueError(
+            f"Unknown tensor_order {tensor_order!r}. "
+            f"Choose from {list(_TENSOR_LAYOUTS)}."
+        )
+
     filepath = os.path.realpath(tensor_data_name)
     img = nib.load(filepath)
-    # img.shape
-    DTI_data = img.get_fdata()
-    if np.any(np.isnan(DTI_data)):
-        print("NaN detected in the DTI, please remove them!")
-        raise SystemExit
+    dti_data = img.get_fdata()
 
-#    #plot DTI data as test
-#    fig = plt.figure()
-#    a = fig.add_subplot(1, 3, 1)
-#    img_ax = np.rot90(DTI_data[..., 90,0,0])
-#    imgplot = plt.imshow(img_ax)
-#    a.axis('off')
-#    a.set_title('Axial_org')
-#    a = fig.add_subplot(1, 3, 2)
-#    img_cor = np.rot90(DTI_data[:, 100, :,0,0])
-#    imgplot = plt.imshow(img_cor)
-#    a.axis('off')
-#    a.set_title('Coronal_org')
-#    a = fig.add_subplot(1, 3, 3)
-#    img_cor = np.rot90(DTI_data[90, :, :,0,0])
-#    imgplot = plt.imshow(img_cor)
-#    a.axis('off')
-#    a.set_title('Sagittal_org')
+    if np.any(np.isnan(dti_data)):
+        raise ValueError("NaN values detected in the DTI data — please remove them.")
 
-    main_part(tensor_order,scaling_method,img.affine)
-    normalized_DTI=np.ctypeslib.as_array(shared_array)
-    #normalized_DTITK=np.ctypeslib.as_array(shared_array_DTITK)
+    normalized = _run_parallel(dti_data, tensor_order, scaling_method, img.affine)
+
+    stem = nib.filename_parser.splitext_addext(filepath)[0]
+    out_path = f"{stem}_{scaling_method}.nii.gz"
+    nib.save(nib.Nifti1Image(normalized, img.affine), out_path)
+    print(f"Saved: {out_path}")
 
 
-    #save data
-    img3 = nib.Nifti1Image(normalized_DTI, img.affine)
-    nib.save(img3, nib.filename_parser.splitext_addext(filepath)[0]+'_'+scaling_method+'.nii.gz')          #Has to be changed either _CRPTuch2.nii.gz or _CRPTuch1.nii.gz or _CRPAstroem.nii.gz or _CRPNordin.nii.gz or _normalizedMapping.nii.gz _loadPreservation.nii.gz
-    #nib.save(img3, tensor_data_name+'_'+scaling_method+'.nii.gz')
-
-    # save for visualization with DTI TK
-    #img4 = nib.Nifti1Image(normalized_DTITK, img.affine)
-    #nib.save(img4, 'DTI_TK_IIT3mean_tensor_normalizedMapping.nii.gz')          #Has to be changed either _CRP.nii.gz or _CRPAstroem.nii.gz or _CRPNordin.nii.gz or _normalizedMapping.nii.gz _loadPreservation.nii.gz
-
-
-    #test plot
-#    fig = plt.figure()
-#    a = fig.add_subplot(1, 3, 1)
-#    img_ax = np.rot90(normalized_DTI[..., 90,0])
-#    imgplot = plt.imshow(img_ax)
-#    a.axis('off')
-#    a.set_title('Axial_norm')
-#    a = fig.add_subplot(1, 3, 2)
-#    img_cor = np.rot90(normalized_DTI[:, 100, :,0])
-#    imgplot = plt.imshow(img_cor)
-#    a.axis('off')
-#    a.set_title('Coronal_norm')
-#    a = fig.add_subplot(1, 3, 3)
-#    img_cor = np.rot90(normalized_DTI[90, :, :,0])
-#    imgplot = plt.imshow(img_cor)
-#    a.axis('off')
-#    a.set_title('Sagittal_norm')
-
-if __name__ == '__main__':
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    # The `if __name__ == "__main__"` guard is required on Windows so that
+    # spawned worker processes do not re-execute the top-level script.
     scale_tensor_data(*sys.argv[1:])
