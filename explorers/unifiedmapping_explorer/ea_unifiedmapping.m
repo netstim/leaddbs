@@ -129,7 +129,7 @@ classdef ea_unifiedmapping < handle
             obj.statsettings.doFibers = 1;
             obj.statsettings.outcometype = 'gradual';
             obj.statsettings.stimulationmodel = 'Electric Field';
-            obj.statsettings.efieldmetric = 'Peak'; % if statmetric == ;Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
+            obj.statsettings.efieldmetric = 'Sum'; % if statmetric == ;Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
             obj.statsettings.efieldthreshold = 200;
             obj.statsettings.nanthreshold = 0; % set values below this number to nan on the fly when calculating sweetspot statistics
             obj.statsettings.sweetspotresolution = 0.5; % resolution of sweetspot in mm
@@ -1428,7 +1428,7 @@ classdef ea_unifiedmapping < handle
         function save(obj)
             % Create a temporary object with only the required fields
             explorer = ea_unifiedmapping;
-            Incprops = {'results','calcsettings','leadgroup','ID','M'};
+            Incprops = {'results','calcsettings','statsettings','leadgroup','ID','M'};
             for i = 1:length(Incprops)
                explorer.(Incprops{i}) = obj.(Incprops{i});
             end

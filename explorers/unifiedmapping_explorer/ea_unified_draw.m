@@ -20,9 +20,13 @@ elseif strcmp(obj.drawTool,'networkmapping')
     end
 end
 [vals,fibcell,usedidx] = ea_unifiedmapping_calcstats(obj);
-if strcmp(obj.drawTool,'fiberfiltering')
-    ea_updatePAM_VAT(obj);
+% if strcmp(obj.drawTool,'fiberfiltering')
+%     ea_updatePAM_VAT(obj);
+% 
+% end
 
+if strcmp(obj.drawTool,'fiberfiltering') && obj.calcsettings.connectivity_type == 2
+    ea_updatePAM_VAT(obj);
 end
 
 export=nan;
