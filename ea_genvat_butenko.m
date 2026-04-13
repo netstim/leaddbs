@@ -257,7 +257,7 @@ for source_index = first_active_source:4
             if settings.use_wsl 
                 [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
             else
-                [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)]);
+                [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
             end
             % detec error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
@@ -305,13 +305,13 @@ for source_index = first_active_source:4
                         if settings.use_wsl
                             [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)])
                         else
-                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)])
                         end
                     else
                         if settings.use_wsl
                             [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)])
                         else
-                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)])
                         end
                     end
                 end
