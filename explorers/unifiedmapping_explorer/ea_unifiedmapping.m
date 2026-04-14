@@ -1487,7 +1487,11 @@ classdef ea_unifiedmapping < handle
             % Convert object to a struct (including nested objects)
             
             voxtractsettings = objectToStruct(obj);
-            
+
+            % % % force setselection to be stored as a cell array otherwise json will get
+            % % % it wrong
+            % % voxtractsettings.setselections = struct('type','celllogical', ...
+            % %     'data',{obj.setselections});            
             % Convert struct to JSON
             jsonStr = jsonencode(voxtractsettings, 'PrettyPrint', true);
             %define filepaths
