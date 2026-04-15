@@ -46,6 +46,9 @@ end
 movingmat = spm_get_space(moving);
 fixedmat = spm_get_space(fixed);
 
+% Reset SPM's job manager state before every run to prevent silent job 
+% (SPM can skip a job if it recognises the same config from a previous call in the same session, producing no output and no error).
+spm_jobman('initcfg');
 if doreslice
     % backup moving image
     movingbackup = ea_niifileparts(moving);
