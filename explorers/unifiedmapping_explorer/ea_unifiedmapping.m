@@ -106,6 +106,7 @@ classdef ea_unifiedmapping < handle
         negBaseColor = [1,1,1] % negative main color
         negcolor = [0.2824,0.6157,0.9725] % negative peak color
         hasResults = false; % results check
+        AdditionalSettingsSavePath = [];
       
     end 
 
@@ -1513,7 +1514,37 @@ classdef ea_unifiedmapping < handle
             if ~isfolder(DBSMappingfolder)
                 ea_mkdir(DBSMappingfolder)
             end
-            jsonPath=[DBSMappingfolder,filesep,'Settings-',obj.ID,'_conn-',conn_val,'.json'];
+
+            % check for custom save path
+            if isprop(obj, 'AdditionalSettingsSavePath') && ...
+                    ~isempty(obj.AdditionalSettingsSavePath)
+                customPath = obj.AdditionalSettingsSavePath;
+                % enforce .json extension
+                [folder, name, ext] = fileparts(customPath);
+                name = ['Settings-', name];
+                if isempty(ext)
+                    ext = '.json';
+                end
+            
+                if ~strcmpi(ext, '.json')
+                    error('AdditionalSettingsSavePath must point to a .json file');
+                end
+
+                % if no folder provided, use DBSMappingfolder
+                if isempty(folder)
+                    folder = DBSMappingfolder;
+                end
+            
+                jsonPath = fullfile(folder, [name ext]);
+            
+            else
+                % default behavior
+                jsonPath = fullfile(DBSMappingfolder, ...
+                    ['Settings-', obj.ID, '.json']);
+            end
+
+            % jsonPath=[DBSMappingfolder,filesep,'Settings-',obj.ID,'_conn-',conn_val,'.json'];
+            % 
             % Write JSON to a file
             fileID = fopen(jsonPath, 'w');
             if fileID == -1
