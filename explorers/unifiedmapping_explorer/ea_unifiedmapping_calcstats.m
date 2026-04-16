@@ -96,36 +96,27 @@ for group = groups
                         Nmap=ea_nansum(gval{side}(:,gpatsel),2);
                         gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                     otherwise
+                        % old method; only if variable in workspace exists
                         if evalin('base','exist(''threshold_method'',''var'')')
                             threshold_method = evalin('base','threshold_method');
-                            if obj.statsettings.efieldthreshold > 100
-                                obj.statsettings.efieldthreshold = 50;
-                            end
                             switch threshold_method
-                                case 'global_pct'
-                                    % compute global percentile across all selected patients
-                                    allVals = gval{side}(:, gpatsel);  % extract the submatrix
-                                    allVals(allVals == 0) = NaN;
-                                    thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
-                                    % mask fibers above threshold
-                                    Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
-                                    % apply connection threshold
-                                    gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
-                                case 'patient_pct'
-                                    %apply percentile mask instead of absolute
-                                    %e-field, pct based on patients max
-                                    allVals = gval{side}(:,gpatsel);
-                                    allVals(allVals == 0) = NaN;
-                                    Nmap = ea_nansum(allVals >= prctile(allVals, obj.statsettings.efieldthreshold, 1), 2);
-                                    gval{side}(Nmap < round((obj.statsettings.connthreshold/100)*length(gpatsel)), gpatsel) = nan;
+                                case 'old_method' % as was implemented in lead dbs v3.2.1
+                                    gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
+                                    Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
+                                    gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                             end
-
-                        else %here we use the old method
-                            gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
-                            Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
-                            gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
-                        end         
+                        else %here we use the new percentile method
+                            % compute global percentile across all selected patients
+                            allVals = gval{side}(:, gpatsel);  % extract the submatrix
+                            allVals(allVals == 0) = NaN;
+                            thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
+                            % mask fibers above threshold
+                            Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
+                            % apply connection threshold
+                            gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
+                        end  
                 end
+                
                 %initialize vals and pvals if necessary
 
                 %rules for removing nonempty values, since there are many nans in
@@ -139,29 +130,20 @@ for group = groups
                 if evalin('base','exist(''threshold_method'',''var'')')
                     threshold_method = evalin('base','threshold_method');
                         switch threshold_method
-                            case 'global_pct'
-                                % compute global percentile across all patients
-                                allVals = gval{side}(:, gpatsel);  % extract the submatrix
-                                % allVals(allVals == 0) = NaN;
-                                thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
-                                % mask voxels above threshold
-                                Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
-                                gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
-                                valsin = gval{side}(:, gpatsel);
-                            case 'patient_pct'
-                                %apply percentile mask instead of absolute
-                                %e-field, pct based on patients max
-                                allVals = gval{side}(:,gpatsel);
-                                % allVals(allVals == 0) = NaN;
-                                Nmap = ea_nansum((allVals > prctile(allVals, obj.statsettings.efieldthreshold)), 2);
-                                gval{side}(Nmap < round ((obj.statsettings.connthreshold/100)*length(gpatsel)), gpatsel) = nan;
-                                valsin = gval{side}(:, gpatsel);
-                    end
+                            case 'old_method'
+                                valsin = gval{side}(:,gpatsel);
+                        end
 
                 else %here we use the old method
-                    valsin = gval{side}(:,gpatsel);
-                end
-               
+                        % compute global percentile across all patients
+                        allVals = gval{side}(:, gpatsel);  % extract the submatrix
+                        % allVals(allVals == 0) = NaN;
+                        thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
+                        % mask voxels above threshold
+                        Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
+                        gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
+                        valsin = gval{side}(:, gpatsel);
+                end  
         end
 
         
