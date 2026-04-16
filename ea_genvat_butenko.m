@@ -238,7 +238,11 @@ for source_index = first_active_source:4
                 if settings.use_wsl 
                     [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)])
                 else
-                    env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)]);
+                    if settings.use_binaries
+                        system([options.prefs.oss_bin_path,filesep,'prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)])
+                    else
+                        env.system(['prepareaxonmodel ',ea_path_helper(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', ea_path_helper(parameterFile)])
+                    end
                 end
             end
 
@@ -247,8 +251,13 @@ for source_index = first_active_source:4
                 [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
                     ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)])
             else
-                env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
-                    ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
+                if settings.use_binaries
+                    system([options.prefs.oss_bin_path,filesep,'leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
+                        ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)])
+                else
+                    env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
+                        ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
+                end
             end
             [~,input_name,~] = fileparts(parameterFile);
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
@@ -257,7 +266,11 @@ for source_index = first_active_source:4
             if settings.use_wsl 
                 [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
             else
-                [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)]);
+                if settings.use_binaries
+                    [~, cmdout] = system([options.prefs.oss_bin_path,filesep,'ossdbs ', ea_path_helper(parameterFile_json)])
+                else
+                    [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
+                end
             end
             % detec error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
@@ -267,10 +280,15 @@ for source_index = first_active_source:4
                     % run OSS-DBS
                     [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
                 else
-                    % increase the Bnd_Box dimensions
-                    env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
+                    % increase the Bnd_Box dimensions and re-run
                     % run OSS-DBS
-                    env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
+                    if settings.use_binaries
+                        system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
+                        system([options.prefs.oss_bin_path,filesep,'ossdbs ', ea_path_helper(parameterFile_json)])
+                    else
+                        env.system(cell2mat(['python ' ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py') ' ', ea_path_helper(parameterFile_json)]));
+                        env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
+                    end
                 end
             end
 
@@ -305,13 +323,21 @@ for source_index = first_active_source:4
                         if settings.use_wsl
                             [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ', vta_windowspathstowsl(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)])
                         else
-                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)]);
+                            if settings.use_binaries
+                                system([options.prefs.oss_bin_path,filesep,'run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)])
+                            else
+                                env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling_index ', num2str(i), ' --scaling ', num2str(scaling)])
+                            end
                         end
                     else
                         if settings.use_wsl
                             [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['run_pathway_activation ',vta_windowspathstowsl(parameterFile_json), ' --scaling ', num2str(scaling)])
                         else
-                            env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)]);
+                            if settings.use_binaries
+                                system([options.prefs.oss_bin_path,filesep,'run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)])
+                            else
+                                env.system(['run_pathway_activation ', ea_path_helper(parameterFile_json), ' --scaling ', num2str(scaling)])
+                            end
                         end
                     end
                 end
