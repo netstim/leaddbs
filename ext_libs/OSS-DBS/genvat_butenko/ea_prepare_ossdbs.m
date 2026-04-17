@@ -8,12 +8,6 @@ arguments
     S       % Lead-dbs stimulation settings
 end
 
-% Check OSS-DBS installation, set env
-if (~isfield(options.prefs,'ext_oss_env') || strcmp(options.prefs.ext_oss_env,'None')) && (~isfield(options.prefs,'use_wsl') || ~options.prefs.use_wsl)
-    env = ea_conda_env('OSS-DBSv2');
-    ea_checkOSSDBSInstallv2(env);
-end
-
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
     ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], simpleStack = 1);
@@ -113,7 +107,7 @@ end
 settings.Patient_folder = options.subj.subjDir;
 settings.Electrode_type = options.elmodel;
 
-% From Preferences File
+% Check OSS-DBS installation, set env
 if isfield(options.prefs,'use_wsl') && options.prefs.use_wsl
     disp("Running OSS-DBS via WSL")
     disp("Lead-DBS conda packages cannot be used (e.g. SynthSeg and Tensorflow)")
@@ -155,6 +149,7 @@ else
         disp("Using the external OSS-DBS environment")
     else
         env = ea_conda_env('OSS-DBSv2');
+        ea_checkOSSDBSInstallv2(env)
     end
 end
 
