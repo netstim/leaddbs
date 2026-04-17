@@ -249,11 +249,11 @@ for source_index = first_active_source:4
             % prepare OSS-DBS input as oss-dbs_parameters.json
             if settings.use_wsl 
                 [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
-                    ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)])
+                    ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)]);
             else
                 if settings.use_binaries
                     system([options.prefs.oss_bin_path,filesep,'leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
-                        ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)])
+                        ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
                 else
                     env.system(['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', ea_path_helper(parameterFile), ...
                         ' --output_path ', ea_path_helper(outputPaths.HemiSimFolder)]);
