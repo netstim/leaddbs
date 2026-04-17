@@ -408,6 +408,16 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             end
         end
 
+        % Restrict BIDS/path enrichment to the connectome pipeline.
+        directory = [options.root, options.patientname, filesep];
+        if contains(directory, ['derivatives', filesep, 'leaddbs'])
+            try
+                options = ea_getptopts(directory, options);
+            catch MEptopts
+                warning('Lead-Connectome option enrichment failed (%s). Continuing with existing options.', MEptopts.message);
+            end
+        end
+
         % If at least one *structural* Lead-Connectome option is enabled,
         % prepare DWI data (copy from rawdata, set prefs, export b0) before
         % entering the main Lead-Connectome routine. This mirrors the
@@ -426,8 +436,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             end
 
             if doStrucLC
-                directory = [options.root, options.patientname, filesep];
-
                 % For BIDS-style datasets in derivatives/leaddbs, copy DWI
                 % from rawdata into preprocessing/dwi and set prefs.*.
                 if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
