@@ -101,11 +101,6 @@ else
                     end
                 end
 
-                % BIDS fix: Update prefs with correct BIDS paths if in derivatives folder
-                if contains(uipatdirs{i}, ['derivatives', filesep, 'leaddbs', filesep])
-                    options = ea_getptopts(uipatdirs{i}, options);
-                end
-
                 options.subjInd=i;
                 % run main function
                 if length(uipatdirs) > 1 % multi mode. Dont stop at errors.

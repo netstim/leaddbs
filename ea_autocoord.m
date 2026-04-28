@@ -426,11 +426,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             end
 
             if doStrucLC
-                directory = [options.root, options.patientname, filesep];
-
                 % For BIDS-style datasets in derivatives/leaddbs, copy DWI
                 % from rawdata into preprocessing/dwi and set prefs.*.
-                if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
+                if contains([options.root, options.patientname], {'derivatives', 'leaddbs'})
                     options = ea_prepare_dti_bids(options);
                 end
 
