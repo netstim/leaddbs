@@ -18,7 +18,12 @@ function ea_visprogrammer(resultfig, options, S, elstruct)
 
     if isequal(S.model, 'OSS-DBS (Butenko 2020)') 
         options.stimSetMode = 0;
-        [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
+        if options.prefs.machine.vatsettings.butenko_calcPAM
+            ea_genvat_butenko(S, options, resultfig);
+            return
+        else
+            [~, stimparams] = ea_genvat_butenko(S, options, resultfig);
+        end
     else
         if options.native % Reload native space coordinates
             coords = ea_load_reconstruction(options);

@@ -18,7 +18,7 @@ function ea_initialize_programmer(handles, bids, action)
     % prepareAtlasesForExport();
 
     %% Prepare participants json file
-     writeParticipantsJson(bids);
+    writeParticipantsJson(bids);
 
     %% Conditionally launch application
     if (action == "standalone")
@@ -30,27 +30,27 @@ function ea_initialize_programmer(handles, bids, action)
 end
 
 
-function prepare_ossdbs(groupOptions, handles)
-    ptID = groupOptions.subjId{1};
-    BidsID = strcat('sub-', ptID);
-    groupFolderPath = groupOptions.datasetDir;
-    patientFolderPath = fullfile(groupFolderPath, 'derivatives', 'leaddbs', BidsID);
-    options = ea_getptopts(patientFolderPath);
-    S = ea_initializeS('initialize', options);
-    options.stimSetMode = 0;
-    S.Ls1.k1.perc = 100;
-    S.Ls1.k1.pol = 1;
-    S.Ls1.amp = 2;
-    S.Rs1.k1.perc = 100;
-    S.Rs1.k1.pol = 1;
-    S.Rs1.amp = 1;
-    S.activecontacts{1} = [1,0,0,0,0,0,0,0];
-    S.activecontacts{2} = S.activecontacts{1};
-    S.amplitude{1} = [2,0,0,0];
-    S.amplitude{2} = S.amplitude{1};
-    options.optimizer = 1;
-    ea_genvat_butenko(S, options);
-end
+% function prepare_ossdbs(groupOptions, handles)
+%     ptID = groupOptions.subjId{1};
+%     BidsID = strcat('sub-', ptID);
+%     groupFolderPath = groupOptions.datasetDir;
+%     patientFolderPath = fullfile(groupFolderPath, 'derivatives', 'leaddbs', BidsID);
+%     options = ea_getptopts(patientFolderPath);
+%     S = ea_initializeS('initialize', options);
+%     options.stimSetMode = 0;
+%     S.Ls1.k1.perc = 100;
+%     S.Ls1.k1.pol = 1;
+%     S.Ls1.amp = 2;
+%     S.Rs1.k1.perc = 100;
+%     S.Rs1.k1.pol = 1;
+%     S.Rs1.amp = 1;
+%     S.activecontacts{1} = [1,0,0,0,0,0,0,0];
+%     S.activecontacts{2} = S.activecontacts{1};
+%     S.amplitude{1} = [2,0,0,0];
+%     S.amplitude{2} = S.amplitude{1};
+%     options.optimizer = 1;
+%     ea_genvat_butenko(S, options);
+% end
 
 
 %% Helper Functions
