@@ -6,6 +6,16 @@ end
 
 ea_mkdir(fileparts(outFilePath));
 
+if ~exist(outFilePath,"file")
+
+else
+    load(outFilePath,'reco')
+    % reco = rmfield(reco,'angles')
+    if ~isfield(reco,'angles')
+        reco.angles = ea_diode_emptyorientation(numel(reco.props));
+    end
+end
+
 for side=options.sides
     reco.props(side).elmodel=elmodel;
     reco.props(side).manually_corrected=manually_corrected;
@@ -69,6 +79,45 @@ else
         end
     end
 end
+
+%% recalculate angles after ea_save_reconstruction has completed
+load(outFilePath,'reco')
+if isfield(reco,'mni')
+    for i = 1:numel(reco.mni.markers)
+        if ~isempty(reco.mni.markers(i).head) && ~isempty(reco.mni.markers(i).tail)
+            angles = ea_diode_trajectoryToYawPitchPolar(reco.mni.markers(i).head,reco.mni.markers(i).tail);
+            reco.angles.mni(i).yaw = angles.deg.yaw;
+            reco.angles.mni(i).pitch = angles.deg.pitch;
+            reco.angles.mni(i).polar = angles.deg.polar;
+            clear angles
+            angles = ea_diode_recomputeRoll(reco.mni.markers(i).head,reco.mni.markers(i).tail,reco.mni.markers(i).y);            
+            reco.angles.mni(i).roll = angles.deg.roll;
+            clear angles
+            angles = ea_diode_recomputeOrientation(reco.mni.markers(i).head,reco.mni.markers(i).tail,reco.mni.markers(i).y);
+            reco.angles.mni(i).orientation = angles.deg.orientation;
+            clear angles
+        end
+    end
+end
+if isfield(reco,'native')
+    for i = 1:numel(reco.native.markers)
+        if ~isempty(reco.native.markers(i).head) && ~isempty(reco.native.markers(i).tail)
+            angles = ea_diode_trajectoryToYawPitchPolar(reco.native.markers(i).head,reco.native.markers(i).tail);
+            reco.angles.native(i).yaw = angles.deg.yaw;
+            reco.angles.native(i).pitch = angles.deg.pitch;
+            reco.angles.native(i).polar = angles.deg.polar;
+            clear angles
+            angles = ea_diode_recomputeRoll(reco.native.markers(i).head,reco.native.markers(i).tail,reco.native.markers(i).y);
+            reco.angles.native(i).roll = angles.deg.roll;
+            clear angles
+            angles = ea_diode_recomputeOrientation(reco.native.markers(i).head,reco.native.markers(i).tail,reco.native.markers(i).y);
+            reco.angles.native(i).orientation = angles.deg.orientation;
+            clear angles
+        end
+    end
+end
+save(outFilePath,'reco')
+
 
 
 function [reco,corrected]=ea_checkswap_lr(reco,options)
