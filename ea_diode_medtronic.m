@@ -364,124 +364,17 @@ end
 yvec_mm = M * [0;1;0];
 xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
 clear M
+
 extract_width = 10; % in mm
 samplingres = .1;
-Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
-Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
+zshift = 7.5; % in mm
+Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + zshift * unitvector_mm(1);
+Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + zshift * unitvector_mm(2);
 Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
 finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
 finalslice = finalslice';
 finalslice = flipdim(finalslice,2);
-
-% if rad2deg(roll) < 90 && rad2deg(roll) > -90
-%     finalslice = flipdim(finalslice,2);
-% end
-%% darkstar method
-% checkslices = [-2:0.5:2]; % check neighboring slices for marker
-% 
-% % solution 1
-% count = 1;
-% myroll = roll;
-% for x = checkslices
-%     checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
-%     checklocation_vx = round(tmat_vx2mm\checklocation_mm);
-%     artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
-%     if ct.mat(1,1) < 0
-%         artifact_tmp = flip(artifact_tmp,1);
-%     end
-%     if ct.mat(2,2) < 0
-%         artifact_tmp = flip(artifact_tmp,2);
-%     end
-%     center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
-%     radius = 8;
-% 
-%     [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
-%     %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
-%     for k = 1:61
-%         roll_shift = k-31;
-%         rolltemp = myroll + deg2rad(roll_shift);
-%         dirnew_angles = ea_diode_darkstar(rolltemp,solution.rad.pitch,solution.rad.yaw,checklocation_mm,radius);
-%         [sumintensitynew{1}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
-%         %                     rollangles{1}(count,k) = rolltemp;
-%         rollangles{1}(count,k) = deg2rad(roll_shift);
-%     end
-%     count = count +1;
-% end
-% [~,darkstarangle(1)] = min(min(sumintensitynew{1},[],1));
-% [~,darkstarslice(1)] = min(min(sumintensitynew{1},[],2));
-% 
-% clear myroll roll_shift rolltemp dirnew_angles count
-% 
-% % solution 2
-% count = 1;
-% myroll = roll + pi;
-% for x = checkslices
-%     checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
-%     checklocation_vx = round(tmat_vx2mm\checklocation_mm);
-%     artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
-%     if ct.mat(1,1) < 0
-%         artifact_tmp = flip(artifact_tmp,1);
-%     end
-%     if ct.mat(2,2) < 0
-%         artifact_tmp = flip(artifact_tmp,2);
-%     end
-%     center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
-%     radius = 8;
-% 
-%     [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
-%     %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
-%     for k = 1:61
-%         roll_shift = k-31;
-%         rolltemp = myroll + pi + deg2rad(roll_shift);
-%         dirnew_angles = ea_diode_darkstar(rolltemp,solution.rad.pitch,solution.rad.yaw,checklocation_mm,radius);
-%         [sumintensitynew{2}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
-%         %                     rollangles{2}(count,k) = rolltemp;
-%         rollangles{2}(count,k) = deg2rad(roll_shift);
-%     end
-%     count = count +1;
-% end
-% [~,darkstarangle(2)] = min(min(sumintensitynew{2},[],1));
-% [~,darkstarslice(2)] = min(min(sumintensitynew{2},[],2));
-% 
-% clear myroll roll_shift rolltemp dirnew_angles count
-% 
-% % choose best slices and darkstar solution according to minimum
-% % of sum intensity profile
-% 
-% for k = 1:2
-%     sumintensitynew{k} = sumintensitynew{k}(darkstarslice(k),:);
-%     rollangles{k} = rollangles{k}(darkstarslice(k),:);
-% end
-% 
-% if min(sumintensitynew{1}(:)) < min(sumintensitynew{2}(:))
-%     disp(['Darkstar decides for peak 1'])
-%     solution.Darkstar = 1;
-% else
-%     disp(['Darkstar decides for peak 2'])
-%     solution.Darkstar = 2;
-% end
-% 
-% %% Take peak
-% peakangle(side) = rad2deg(roll);
-% realsolution = 1;
-% 
-% dirlevelnew_mm = dirlevelnew_mm + (unitvector_mm * checkslices(darkstarslice(realsolution)));
-% dirlevelnew_vx = round(tmat_vx2mm\dirlevelnew_mm);
-% 
-% artifact_dirnew = ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
-% if ct.mat(1,1) < 0
-%     artifact_dirnew = flip(artifact_dirnew,1);
-% end
-% if ct.mat(2,2) < 0
-%     artifact_dirnew = flip(artifact_dirnew,2);
-% end
-% center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
-% [anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
-% 
-% rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
-% dirnew_angles = ea_diode_darkstar(rollnew,solution.rad.pitch,solution.rad.yaw,dirlevelnew_mm,radius);
-% dirnew_valleys = round(rad2deg(dirnew_angles) +1);
-% dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
+finalslicemarker = [(size(finalslice,1)./4),(size(finalslice,2)./2 + ((markercenterRelative+2-zshift)./samplingres))];
 
 %% final figure
 fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w','Toolbar','none');
@@ -659,16 +552,14 @@ zoom(2)
 ax3 = subplot(3,3,3);
 hold on
 title(ax3,'Sagittal View','FontWeight','bold')
-
 imagesc(finalslice(:,round(size(finalslice,2)./4):3*round(size(finalslice,2)./4)+1));
+scatter(ax3,finalslicemarker(1),finalslicemarker(2),[],[0 0.4470 0.7410],'filled')
+quiver(ax3,finalslicemarker(1), finalslicemarker(2),-15, 0,2,'LineWidth',1,'Color','g','MaxHeadSize',2)
+plot(ax3,[round(size(finalslice,2)/4), round(size(finalslice,2)/4)], [round(size(finalslice,2)/2)-(zshift/resolution), size(finalslice,2)],'LineStyle','--','Color',[0 0.4470 0.7410])
 axis equal
 axis off
 caxis([1500 3000])
 
-    quiver(round(size(finalslice,2)/4), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/16), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-
-scatter(ax3,round(size(finalslice,2)/4),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
-plot(ax3,[round(size(finalslice,2)/4), round(size(finalslice,2)/4)], [round(size(finalslice,2)/2)-75, round(size(finalslice,2)/2)+100],'LineStyle','--','Color',[0 0.4470 0.7410])
 xlimit = get(ax3,'Xlim');
 ylimit = get(ax3,'Ylim');
 % text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')

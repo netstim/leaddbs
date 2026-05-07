@@ -445,16 +445,18 @@ dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 36
 [M,~,~,~] = ea_diode_rollpitchyaw(rollnew,solution.rad.pitch,solution.rad.yaw);
 yvec_mm = M * [0;1;0];
 xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
-
+clear M
 
 extract_width = 10; % in mm
+zshift = 7.5; % in mm
 samplingres = .1;
-Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
-Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
+Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + zshift * unitvector_mm(1);
+Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + zshift * unitvector_mm(2);
 Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
 finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
 finalslice = finalslice';
 finalslice = flipdim(finalslice,2);
+finalslicemarker = [(size(finalslice,1)./2),(size(finalslice,2)./2 + ((markercenterRelative-zshift)./samplingres))];
 % if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
 %     finalslice = flipdim(finalslice,2);
 % end
@@ -609,6 +611,8 @@ ax3 = subplot(3,3,3);
 hold on
 title(ax3,'Sagittal View','FontWeight','bold')
 imagesc(ax3,finalslice)
+scatter(ax3,finalslicemarker(1), finalslicemarker(2),[],[0 0.4470 0.7410],'filled');
+quiver(ax3,finalslicemarker(1), finalslicemarker(2),-20, 0,2,'LineWidth',1,'Color','g','MaxHeadSize',2)
 axis equal
 axis off
 caxis([1500 3000])
@@ -690,20 +694,20 @@ for k = 1:length(electrode.contacts)
     patch('Faces',electrode.contacts(k).faces,'Vertices',electrode.contacts(k).vertices,'Edgecolor','none','Facecolor',[electrode.contact_color electrode.contact_color electrode.contact_color]);
 end
 
-view(180,0)
+view(-90,0)
 ylim([-1 1])
 xlim([-1 1])
 zlim([0 max(electrode.insulation(end-1).vertices(:,3))])
 axis off
 axis equal
 
-camorbit(-rad2deg(tempangle),0)
-tempvec = [0; 1; 0];
-temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
-tempvec = temp3x3 * tempvec;
+% camorbit(-rad2deg(tempangle),0)
+% tempvec = [0; 1; 0];
+% temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
+% tempvec = temp3x3 * tempvec;
 clear tempangle
 
-set(ax_elec,'Position',[-0.16 0.38 0.43 0.45])
+set(ax_elec,'Position',[-0.16 0.43 0.43 0.37])
 
 %% get results
 if round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))) <= -200
