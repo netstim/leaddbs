@@ -15,7 +15,7 @@ end
 % fiber values can be sigmoid transform
 switch obj.statsettings.stimulationmodel
     case 'Sigmoid Field'
-        if obj.connectivity_type == 2
+        if obj.calcsettings.connectivity_type == 2
             fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
         else
             fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
@@ -25,7 +25,11 @@ switch obj.statsettings.stimulationmodel
             end
         end
     otherwise
-        fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+        if obj.calcsettings.connectivity_type == 2
+            fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
+        else
+            fibsval = cellfun(@full, obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval, 'Uni', 0);
+        end
 end
 
 if size(I,2)==1 % 1 entry per patient, not per electrode

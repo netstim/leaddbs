@@ -52,19 +52,20 @@ switch obj.drawTool
         end
 
     case 'fiberfiltering' %fiberfiltering
-        switch obj.statsettings.stimulationmodel
-            case 'Sigmoid Field'
-                if obj.connectivity_type == 2
-                    init_val = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).('PAM_probA').fibsval;
-                else
-                    fibsval_raw = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).(ea_unifiedmapping_method2methodid(obj)).fibsval;
+        connid = ea_conn2connid(obj.calcsettings.fibfilt_connectome);
+        if obj.calcsettings.connectivity_type == 2
+            init_val = obj.results.fiberfiltering.(connid).('PAM_probA').fibsval;
+        else
+            switch obj.statsettings.stimulationmodel
+                case 'Sigmoid Field'
+                    fibsval_raw = obj.results.fiberfiltering.(connid).(ea_unifiedmapping_method2methodid(obj)).fibsval;
                     init_val = fibsval_raw;  % initialize
                     for side = 1:size(fibsval_raw,2)
                         init_val{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
                     end
-                end
-            otherwise
-                init_val = cellfun(@full, obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).(ea_unifiedmapping_method2methodid(obj)).fibsval, 'Uni', 0);
+                otherwise
+                    init_val = cellfun(@full, obj.results.fiberfiltering.(connid).(ea_unifiedmapping_method2methodid(obj)).fibsval, 'Uni', 0);
+            end
         end
 
     case 'networkmapping' %networkmapping
