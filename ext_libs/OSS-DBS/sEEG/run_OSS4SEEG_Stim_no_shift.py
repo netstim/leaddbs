@@ -176,7 +176,7 @@ if __name__ == '__main__':
     _,extension = os.path.splitext(SEEG_recos)
     if extension == '.tsv' or extension == '.csv':
         # either we get reco from tsv (BIDS format)
-        SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
+        SEEG_recos_df = pd.read_csv(SEEG_recos, sep=None, engine='python')  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
         print("Lead-DBS reconstruction files are currently not supported")
         raise SystemExit()
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     # stimulations in any case from .csv
     # separate file for each electrode!
     SEEG_stim = sys.argv[2]
-    SEEG_stim_df = pd.read_csv(SEEG_stim)
+    SEEG_stim_df = pd.read_csv(SEEG_stim, sep=None, engine='python')
     SEEG_stim_df = SEEG_stim_df.replace('None', np.nan)
     SEEG_stim_array = SEEG_stim_df.to_numpy()     
     

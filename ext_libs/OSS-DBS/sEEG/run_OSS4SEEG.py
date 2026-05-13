@@ -28,7 +28,7 @@ if __name__ == '__main__':
     _,extension = os.path.splitext(SEEG_recos)
     if extension == '.tsv' or extension == '.csv':
         # either we get reco from tsv (BIDS format)
-        SEEG_recos_df = pd.read_csv(SEEG_recos)  # make sure that contact numbering in the ascending order
+        SEEG_recos_df = pd.read_csv(SEEG_recos, sep=None, engine='python')  # make sure that contact numbering in the ascending order
     elif extension == '.mat':
         print("Lead-DBS reconstruction files are currently not supported")
         raise SystemExit()
