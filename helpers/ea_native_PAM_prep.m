@@ -50,8 +50,8 @@ for tr_i = 1:size(native_tracts,1)
 
     ftr.fibers = conn.fibers;
     ftr.idx = conn.idx;
-    ftr.ea_fibformat = conn.ea_fibformat;
-    ftr.fourindex = conn.fourindex;
+    ftr.ea_fibformat = '1.0';
+    ftr.fourindex = 1;
     % store metadata
     ftr.orig_connectome = connectome_name;
     ftr.patient_specific = 1;

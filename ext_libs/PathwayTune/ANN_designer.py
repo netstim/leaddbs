@@ -284,7 +284,7 @@ class PathwayApproximator:
         # pathway_activation_file = os.path.join(self.stim_dir,self.pathway + '_percent_activations_Current_protocols'+ HEMI_SUFFIX[self.hemi_idx] + '_5000_32.npz')        
         # if os.path.isfile(pathway_activation_file):
         #     pathway_act_dict = np.load(pathway_activation_file)
-        #     X_train_validation, X_test, y_train_filtered, y_train_validation, pathway_filtered, axons_in_path = pathway_act_dict['X_train_validation'], pathway_act_dict['X_test'], pathway_act_dict['y_train_validation'], pathway_act_dict['y_test'], pathway_act_dict['pathway_filtered'], pathway_act_dict['axons_in_path']
+        #     X_train_validation, X_test, y_train_validation, y_test, pathway_filtered, axons_in_path = pathway_act_dict['X_train_validation'], pathway_act_dict['X_test'], pathway_act_dict['y_train_validation'], pathway_act_dict['y_test'], pathway_act_dict['pathway_filtered'], pathway_act_dict['axons_in_path']
         # else:
         #     return None
         
@@ -339,7 +339,7 @@ class PathwayApproximator:
             absolute_errors = np.abs(predictions - y_test)
             relative_errors = np.abs((predictions - y_test) / y_test) * 100
             above_threshold_count = np.sum(absolute_errors > error_threshold)
-            return above_threshold_count
+            return 100.0*above_threshold_count/absolute_errors.shape[0]
     
         # Generate a list of epochs where the median is 250
         def generate_epochs_list(num_values, median_value):
@@ -388,7 +388,7 @@ class PathwayApproximator:
         csv_filename = os.path.join(self.stim_dir,'NB' + HEMI_SUFFIX[self.hemi_idx], "ann_performance_summary_" + self.pathway + ".csv")
         
         # Prepare the header row for the CSV file
-        header = ['model_name', 'input_neurons', 'hidden_layers', 'learning_rate', 'epochs', 'dropout', 'valid_samples_above_5_percent_error']
+        header = ['model_name', 'input_neurons', 'hidden_layers', 'learning_rate', 'epochs', 'dropout', 'percent_samples_above_5_percent_error']
         
         # just initialization for now
         performance_best = X_validation.shape[0] 
@@ -424,8 +424,13 @@ class PathwayApproximator:
     
                 if performance < performance_best:
                     # the less the value, the better
+                    performance_best = performance
                     best_config = config
     
+                if performance == 0:
+                    print(f"Model '{config['name']}' reached null error\n")
+                    break
+                
         print("Best Configuration:")
         print(best_config)
         print(f"\n--- Summary of Results stored in '{csv_filename}' --- \n")
@@ -453,7 +458,7 @@ class PathwayApproximator:
         if errors_acceptable:
             pathway_to_save = pathway_filtered[0]
             save_path = os.path.join(self.stim_dir, 'NB' + HEMI_SUFFIX[self.hemi_idx], f'ANN_approved_model_{pathway_to_save}')
-            self.model.save_model(save_path)
+            model.save_model(save_path)
             return pathway_filtered
         else:
             print(f"ANN model for {self.pathway} failed error threshold check.")
