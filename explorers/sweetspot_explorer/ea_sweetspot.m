@@ -244,7 +244,7 @@ classdef ea_sweetspot < handle
         end
 
         function [I, Ihat] = lococv(obj)
-            if length(unique(obj.M.patient.group(obj.patientselection))) == 1
+            if isscalar(unique(obj.M.patient.group(obj.patientselection)))
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
                     'Leave-One-Cohort-Out cross-validation not possible.']));
             end
