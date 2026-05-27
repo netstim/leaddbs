@@ -158,6 +158,11 @@ classdef ea_disctract < handle
                     end
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
+                    datasetFolder = regexp(obj.leadgroup, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
+                    for i = 1:size(obj.M.patient.list,1)
+                        patient_tag = regexp(obj.M.patient.list{i}, '[^\\/]+$', 'match', 'once');
+                        obj.M.patient.list{i} = fullfile(datasetFolder, 'derivatives', 'leaddbs', patient_tag);
+                    end
                     obj.allpatients = obj.M.patient.list;
                     obj.patientselection = obj.M.ui.listselect;
                 end
