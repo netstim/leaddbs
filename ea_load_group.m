@@ -15,7 +15,7 @@ M = ea_checkStimParams(analysisFile);
 datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
 if isfile(fullfile(datasetFolder, 'miniset.json'))
     for i = 1:size(M.patient.list,1)
-        [~, patient_tag] = fileparts(M.patient.list{i});
+        patient_tag = regexp(M.patient.list{i}, '[^\\/]+$', 'match', 'once');
         M.patient.list{i} = fullfile(datasetFolder, 'derivatives', 'leaddbs', patient_tag);
     end
     M.root = fullfile(groupdir, filesep);
