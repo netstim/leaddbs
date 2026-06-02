@@ -94,10 +94,6 @@ if ~isempty(axonState)
             ftr.fibers(ftr.fibers(:,4)==fibId(fib),5) = fibState(fib);
         end
 
-        % Extract state of original conn fiber, needed in case
-        % calculation is  done in native space
-        connFibState = ftr.fibers(idx, 5);
-
         %% Reset original fiber id as in the connectome
         ftr.fibers(:,4) = originalFibID;
 
@@ -110,6 +106,10 @@ if ~isempty(axonState)
                 ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
             end
         end 
+
+        % Extract state of original conn fiber, needed in case
+        % calculation is  done in native space
+        connFibState = ftr.fibers(idx, 5);
 
         % Save result for visualization
 
