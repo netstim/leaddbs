@@ -146,6 +146,9 @@ switch settings.butenko_segmAlg
             % save directly to stim folder
             segMaskPath = [outputPaths.outputDir,filesep,'segmask.nii'];
             atlas_gm_mask_path = [ea_space,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
+            if ~isfile(atlas_gm_mask_path)
+                ea_warndlg("Visualize the 'conductivity' atlas in the MNI electrode scene")
+            end
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
         end
     case 'SynthSeg'

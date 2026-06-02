@@ -103,6 +103,10 @@ if ~isempty(axonState)
                 ftr.fibers(ftr.fibers(:,5) == -1,5) = 1;
                 ftr.fibers(ftr.fibers(:,5) == -3,5) = 1;
             elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+            	% if settings.stimSetMode
+                %     stimProt_index
+                %     % you need to update settings.Phi_vector here
+                % end
                 ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
             end
         end 

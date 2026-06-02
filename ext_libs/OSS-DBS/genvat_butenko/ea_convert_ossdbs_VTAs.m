@@ -41,11 +41,19 @@ if settings.removeElectrode
 else
     % convert original OSS-DBS VTAs to BIDS in the corresponding space
     if ~multiSourceMode(side+1)
-        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']));
-        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_solution_Lattice.nii.gz']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii.gz']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'VTA_solution_Lattice.nii.gz']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii.gz']));
+        gunzip(fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii.gz']));
+        gunzip(fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii.gz']));
+        delete(fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii.gz']));
+        delete(fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii.gz']));
     else
-        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
-        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'VTA_solution_Lattice.nii']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'E_field_solution_Lattice.nii.gz']), fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii.gz']));
+        copyfile(fullfile([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'VTA_solution_Lattice.nii.gz']), fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii.gz']));
+        gunzip(fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii.gz']));
+        gunzip(fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii.gz']));
+        delete(fullfile([outputPaths.outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii.gz']));
+        delete(fullfile([outputPaths.outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel,'_S',num2str(source_use_index), '.nii.gz']));
     end
     %ea_autocrop([outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);
     %ea_autocrop([outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'], margin=10);

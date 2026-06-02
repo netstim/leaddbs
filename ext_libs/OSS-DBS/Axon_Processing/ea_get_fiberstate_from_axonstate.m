@@ -1,5 +1,7 @@
 function ea_get_fiberstate_from_axonstate(ConnectomeName,ID_no_sub,stimdir,side,stimSetMode,native,convert_to_MNI,prob_PAM)
 
+    settings.butenko_intersectStatus = 'damaged'; % or "activated"
+
     options.subj.subjID = ID_no_sub;
     options.native = native;
     %settings.connectome = ConnectomeName;
@@ -88,21 +90,21 @@ function ea_get_fiberstate_from_axonstate(ConnectomeName,ID_no_sub,stimdir,side,
                 ftr.fibers(ftr.fibers(:,4)==fibId(fib),5) = fibState(fib);
             end
 
-            % Extract state of original conn fiber, needed in case
-            % calculation is  done in native space
-            connFibState = ftr.fibers(idx, 5);
-
             % Reset original fiber id as in the connectome
             ftr.fibers(:,4) = originalFibID;
 
-            % if ~prob_PAM
-            %     if strcmp(settings.butenko_intersectStatus,'activated')
-            %         ftr.fibers(ftr.fibers(:,5) == -1,5) = 1;
-            %         ftr.fibers(ftr.fibers(:,5) == -3,5) = 1;
-            %     elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
-            %         ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
-            %     end
-            % end
+            if ~prob_PAM
+                if strcmp(settings.butenko_intersectStatus,'activated')
+                    ftr.fibers(ftr.fibers(:,5) == -1,5) = 1;
+                    ftr.fibers(ftr.fibers(:,5) == -3,5) = 1;
+                elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
+                    ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
+                end
+            end
+
+            % Extract state of original conn fiber, needed in case
+            % calculation is  done in native space
+            connFibState = ftr.fibers(idx, 5);
 
             % Save result for visualization
 
