@@ -31,6 +31,8 @@ if ~isfield(options.prefs.machine.vatsettings,'butenko_cond_model')
     settings.cond_model = 'ColeCole4';
 elseif strcmp(options.prefs.machine.vatsettings.butenko_cond_model,'Homogeneous')
     settings.cond_model = 'Constant';
+    % to avoid CSF filtering altogether
+    settings.butenko_segmAlg = 'Atlas Based';
 else
     settings.cond_model = options.prefs.machine.vatsettings.butenko_cond_model;
 end

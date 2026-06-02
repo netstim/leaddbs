@@ -272,7 +272,7 @@ for source_index = first_active_source:4
                     [~, cmdout] = env.system(['ossdbs ', ea_path_helper(parameterFile_json)])
                 end
             end
-            % detec error related to Bnd_Box
+            % detect error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
                 if settings.use_wsl 
