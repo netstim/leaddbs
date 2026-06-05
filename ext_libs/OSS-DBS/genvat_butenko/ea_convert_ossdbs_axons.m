@@ -35,6 +35,16 @@ else
     axonState = ea_regexpdir([outputPaths.HemiSimFolder, filesep, 'Results'], 'Axon_state.*\.mat', 0);
 end   
 
+if settings.stimSetMode
+    if settings.optimizer || settings.trainANN
+        stimProtocol{1,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_rh'], '^Current_protocols_\d\.csv$', 0));
+        stimProtocol{2,1} = string(ea_regexpdir([outputPaths.outputDir,filesep,'NB_lh'], '^Current_protocols_\d\.csv$', 0));
+    else
+        stimProtocol = ea_regexpdir(outputPaths.outputDir, '^Current_protocols_\d\.csv$', 0);
+    end
+    stimSetTables = cellfun(@(f) table2array(readtable(f, ReadVariableNames=false)), stimProtocol, 'Uni', 0)';
+end
+
 if ~isempty(axonState)
     for f=1:length(axonState)
 
@@ -103,10 +113,16 @@ if ~isempty(axonState)
                 ftr.fibers(ftr.fibers(:,5) == -1,5) = 1;
                 ftr.fibers(ftr.fibers(:,5) == -3,5) = 1;
             elseif strcmp(settings.butenko_intersectStatus,'activated_at_active_contacts')
-            	% if settings.stimSetMode
-                %     stimProt_index
-                %     % you need to update settings.Phi_vector here
-                % end
+            	if settings.stimSetMode
+                    % we will not use the actual values, just relative, so
+                    % no scaling needed
+                    stimProt_inx = str2num(stimProt_index)+1;
+                    loc_inx = side + 1;
+                    if size(stimSetTables,2) == 1 && side == 1
+                        loc_inx = 1;
+                    end
+                    settings.Phi_vector(side+1,:) = stimSetTables{1,loc_inx}(stimProt_inx,:);
+                end
                 ftr.fibers = OSS_DBS_Damaged2Activated(settings,ftr.fibers,ftr.idx,side+1);
             end
         end 
