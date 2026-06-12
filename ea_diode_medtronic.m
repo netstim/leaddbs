@@ -555,7 +555,7 @@ title(ax3,'Sagittal View','FontWeight','bold')
 imagesc(finalslice(:,round(size(finalslice,2)./4):3*round(size(finalslice,2)./4)+1));
 scatter(ax3,finalslicemarker(1),finalslicemarker(2),[],[0 0.4470 0.7410],'filled')
 quiver(ax3,finalslicemarker(1), finalslicemarker(2),-15, 0,2,'LineWidth',1,'Color','g','MaxHeadSize',2)
-plot(ax3,[round(size(finalslice,2)/4), round(size(finalslice,2)/4)], [round(size(finalslice,2)/2)-(zshift/resolution), size(finalslice,2)],'LineStyle','--','Color',[0 0.4470 0.7410])
+plot(ax3,[round(size(finalslice,2)/4), round(size(finalslice,2)/4)], [round(size(finalslice,2)/2)-(zshift/samplingres), size(finalslice,2)],'LineStyle','--','Color',[0 0.4470 0.7410])
 axis equal
 axis off
 caxis([1500 3000])
