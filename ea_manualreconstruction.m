@@ -657,11 +657,13 @@ ea_diode_main(options);
 figure(mcfig);
 ea_mancor_updatescene([],[],mcfig);
 
+
 function ea_manualrotate(hobj,ev,ccw,mcfig)
 options = getappdata(gcf,'options');
 ea_diode_manual_main(options);
 figure(mcfig);
 ea_mancor_updatescene([],[],mcfig);
+
 
 function setcontrast(hobj,ev,key,modifier,mcfig)
 % c_lims=getappdata(gcf,'c_lims');

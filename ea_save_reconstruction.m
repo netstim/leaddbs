@@ -6,16 +6,6 @@ end
 
 ea_mkdir(fileparts(outFilePath));
 
-if ~exist(outFilePath,"file")
-
-else
-    load(outFilePath,'reco')
-    % reco = rmfield(reco,'angles')
-    if ~isfield(reco,'angles')
-        reco.angles = ea_diode_emptyorientation(numel(reco.props));
-    end
-end
-
 for side=options.sides
     reco.props(side).elmodel=elmodel;
     reco.props(side).manually_corrected=manually_corrected;
@@ -81,7 +71,10 @@ else
 end
 
 %% recalculate angles after ea_save_reconstruction has completed
-load(outFilePath,'reco')
+load(outFilePath, 'reco');
+if ~isfield(reco, 'angles')
+    reco.angles = ea_diode_emptyorientation(numel(reco.props));
+end
 if isfield(reco,'mni')
     for i = 1:numel(reco.mni.markers)
         if ~isempty(reco.mni.markers(i).head) && ~isempty(reco.mni.markers(i).tail)
@@ -116,7 +109,7 @@ if isfield(reco,'native')
         end
     end
 end
-save(outFilePath,'reco')
+save(outFilePath, 'reco')
 
 
 

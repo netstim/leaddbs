@@ -50,8 +50,9 @@ end
 
 setappdata(mcfig,'options',options);
 [~,~,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+
 %% load orientation/roll angles
-load(options.subj.recon.recon,'reco');
+load(options.subj.recon.recon, 'reco');
 if isfield(reco,'angles')
     rollangle = reco.angles.native(options.elside).roll;
     orientationangle = reco.angles.native(options.elside).orientation; 
@@ -60,6 +61,7 @@ else
     orientationangle = NaN;
 end
 clear reco
+
 %%
 if isempty(firstrun) && ~manually_corrected % resize electrode to default spacing.
     [~,trajectory,markers]=ea_resolvecoords(markers,options,1);
