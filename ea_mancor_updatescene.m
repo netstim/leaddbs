@@ -53,13 +53,11 @@ setappdata(mcfig,'options',options);
 
 %% load orientation/roll angles
 load(options.subj.recon.recon, 'reco');
-if isfield(reco,'angles')
-    rollangle = reco.angles.native(options.elside).roll;
-    orientationangle = reco.angles.native(options.elside).orientation; 
-else
-    rollangle = NaN;
-    orientationangle = NaN;
+if ~isfield(reco, 'angles')
+    reco = ea_recalc_angles(options.subj.recon.recon);
 end
+rollangle = reco.angles.native(options.elside).roll;
+orientationangle = reco.angles.native(options.elside).orientation; 
 clear reco
 
 %%
@@ -69,36 +67,6 @@ if isempty(firstrun) && ~manually_corrected % resize electrode to default spacin
 else
     [~,trajectory,markers]=ea_resolvecoords(markers,options,0);
 end
-
-%% rotation functionality
-% rotation is measured with respect to the y-axis ([0 1 0]) of native space
-% rotation=getappdata(gcf,'rotation');
-% if isempty(rotation)
-%     rotation = cell(max(options.sides),1);
-% end
-% 
-% for side=options.sides
-%     if manually_corrected == 1 && isempty(rotation{side}) % rotation angles are determined from y-marker
-%         initialrotation = ea_calc_rotation(markers(side).y, markers(side).head);
-%         rotation{side} = initialrotation;
-%         setappdata(gcf,'rotation',rotation);
-%     elseif manually_corrected == 0 && isempty(rotation{side})
-%         rotation{side} = 0;
-%         setappdata(gcf,'rotation',rotation);
-%     end
-% end
-
-% for side=options.elside
-%     rotation=getappdata(gcf,'rotation');
-% 
-%     yvec(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
-%     yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
-%     yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
-% 
-%     [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, yvec);
-%     markers(side).x = markers(side).head + (xunitv * (options.elspec.lead_diameter/2));
-%     markers(side).y = markers(side).head + (yunitv * (options.elspec.lead_diameter/2));
-% end
 
 trajvector = diff([markers(options.elside).head; markers(options.elside).tail]);
 normtrajvector = trajvector/norm(trajvector);
@@ -256,12 +224,15 @@ ca=mcfig.CurrentAxes;
 f=subplot(3,6,18);
 axis off
 [~,elnum]=ismember(options.elside,options.sides);
-spacetext=text(0.5,0.5,0.5,{['Electrode ',num2str(elnum),' of ',num2str(length(options.sides))],...
+textblock = {['Electrode ',num2str(elnum),' of ',num2str(length(options.sides))],...
     ['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm'],...
-    ['Electrode ',num2str(options.elside),'/',num2str(length(options.sides))],...
+    ['Electrode ',num2str(options.elside),'/',num2str(length(options.sides))]};
+if options.elspec.isdirected
+    textblock = [textblock, ...
     ['Roll-Angle: ',num2str(round(rollangle)),'°'],...
-    ['Orientation-Angle: ',num2str(round(orientationangle)),'°'],...
-    },'Color','w','BackgroundColor','k','HorizontalAlignment','center','VerticalAlignment','middle');
+    ['Orientation-Angle: ',num2str(round(orientationangle)),'°']];
+end
+spacetext=text(0.5,0.5,0.5,textblock,'Color','w','BackgroundColor','k','HorizontalAlignment','center','VerticalAlignment','middle');
 set(spacetext,'visible',ea_bool2onoff(options.visible));
 set(mcfig,'CurrentAxes',ca);
 set(mcfig,'name',[options.patientname,', Electrode ',num2str(options.elside),'/',num2str(length(options.sides)),', Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm.']);
