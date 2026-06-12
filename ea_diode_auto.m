@@ -120,12 +120,9 @@ dirlevelnew_mm = mean([dirlevel1_mm,dirlevel2_mm]')';
 dirlevelnew_vx = round(tmat_vx2mm\dirlevelnew_mm);
 
 % calculate lead yaw and pitch angles for correction at the end
-yaw = asin(unitvector_mm(1));
-pitch = asin(unitvector_mm(2)/cos(yaw));
-solution.polar1 = rad2deg(atan2(norm(cross([0;0;1],unitvector_mm(1:3))),dot([0;0;1],unitvector_mm(1:3))));
-solution.polar2 = -rad2deg(atan2(unitvector_mm(2),unitvector_mm(1))) + 90;
+solution = ea_diode_trajectoryToYawPitchPolar(head_mm,tail_mm);
 
-if solution.polar1 > 40 || solution.polar2 > 40
+if solution.deg.polar > 40 %|| solution.polar2 > 40
     disp(['Warning: Polar Angle > 40 deg - Determining orientation might be inaccurate!'])
 end
 
@@ -182,11 +179,11 @@ radius = 4;
 valley = ea_diode_intensitypeaksFFT(-intensity,2);
 
 %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)
-valley_roll = ea_diode_angle2roll(angle(valley(1)),yaw,pitch);
-marker_angles = ea_diode_lightmarker(valley_roll,pitch,yaw,marker_mm);
+valley_roll = ea_diode_angle2roll(angle(valley(1)),solution.rad.yaw,solution.rad.pitch);
+marker_angles = ea_diode_lightmarker(valley_roll,solution.rad.pitch,solution.rad.yaw,marker_mm);
 
 solution.peaks = peak;
-solution.rolls_rad = [ea_diode_angle2roll(angle(peak(1)),yaw,pitch),ea_diode_angle2roll(angle(peak(2)),yaw,pitch)];
+solution.rolls_rad = [ea_diode_angle2roll(angle(peak(1)),solution.rad.yaw,solution.rad.pitch),ea_diode_angle2roll(angle(peak(2)),solution.rad.yaw,solution.rad.pitch)];
 solution.rolls_deg = rad2deg(solution.rolls_rad);
 solution.rolls_streak_deg = rad2deg(marker_angles);
 
@@ -236,8 +233,8 @@ end
 % first, to orthogonal vectors, yvec which is the unitvector
 % pointing in the direction of peak(1) and x_vec, perpendicular
 % to it and unitvector are generated
-rolltmp = ea_diode_angle2roll(angle(peak(1)),yaw,pitch);
-[M,~,~,~] = ea_diode_rollpitchyaw(rolltmp,pitch,yaw);
+rolltmp = ea_diode_angle2roll(angle(peak(1)),solution.rad.yaw,solution.rad.pitch);
+[M,~,~,~] = ea_diode_rollpitchyaw(rolltmp,solution.rad.pitch,solution.rad.yaw);
 yvec_mm = M * [0;1;0];
 xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
 clear M
@@ -334,7 +331,7 @@ checkslices = [-2:0.5:2]; % check neighboring slices for marker
 
 % solution 1
 count = 1;
-myroll = ea_diode_angle2roll(angle(peak(1)),yaw,pitch);
+myroll = ea_diode_angle2roll(angle(peak(1)),solution.rad.yaw,solution.rad.pitch);
 for x = checkslices
     checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
     checklocation_vx = round(tmat_vx2mm\checklocation_mm);
@@ -353,7 +350,7 @@ for x = checkslices
     for k = 1:61
         roll_shift = k-31;
         rolltemp = myroll + deg2rad(roll_shift);
-        dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
+        dirnew_angles = ea_diode_darkstar(rolltemp,solution.rad.pitch,solution.rad.yaw,checklocation_mm,radius);
         [sumintensitynew{1}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
         %                     rollangles{1}(count,k) = rolltemp;
         rollangles{1}(count,k) = deg2rad(roll_shift);
@@ -367,7 +364,7 @@ clear myroll roll_shift rolltemp dirnew_angles count
 
 % solution 2
 count = 1;
-myroll = ea_diode_angle2roll(angle(peak(2)),yaw,pitch);
+myroll = ea_diode_angle2roll(angle(peak(2)),solution.rad.yaw,solution.rad.pitch);
 for x = checkslices
     checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
     checklocation_vx = round(tmat_vx2mm\checklocation_mm);
@@ -386,7 +383,7 @@ for x = checkslices
     for k = 1:61
         roll_shift = k-31;
         rolltemp = myroll + deg2rad(roll_shift);
-        dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
+        dirnew_angles = ea_diode_darkstar(rolltemp,solution.rad.pitch,solution.rad.yaw,checklocation_mm,radius);
         [sumintensitynew{2}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
         %                     rollangles{2}(count,k) = rolltemp;
         rollangles{2}(count,k) = deg2rad(roll_shift);
@@ -418,7 +415,7 @@ end
 finalpeak(side) = peak(solution.COGtrans);
 
 peakangle(side) = angle(finalpeak(side));
-roll = ea_diode_angle2roll(peakangle(side),yaw,pitch);
+roll = ea_diode_angle2roll(peakangle(side),solution.rad.yaw,solution.rad.pitch);
 
 realsolution = solution.COGtrans;
 
@@ -436,7 +433,7 @@ center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
 [anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
 
 rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
-dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
+dirnew_angles = ea_diode_darkstar(rollnew,solution.rad.pitch,solution.rad.yaw,dirlevelnew_mm,radius);
 dirnew_valleys = round(rad2deg(dirnew_angles) +1);
 dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
 
@@ -445,19 +442,21 @@ dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 36
 % through the lead and through the marker center and oriented
 % in the direction of y-vec and unitvector for later
 % visualization
-[M,~,~,~] = ea_diode_rollpitchyaw(rollnew,pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(rollnew,solution.rad.pitch,solution.rad.yaw);
 yvec_mm = M * [0;1;0];
 xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
-
+clear M
 
 extract_width = 10; % in mm
+zshift = 7.5; % in mm
 samplingres = .1;
-Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + 7.5 * unitvector_mm(1);
-Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + 7.5 * unitvector_mm(2);
+Xslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + head_mm(1) + zshift * unitvector_mm(1);
+Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + head_mm(2) + zshift * unitvector_mm(2);
 Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
 finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
 finalslice = finalslice';
 finalslice = flipdim(finalslice,2);
+finalslicemarker = [(size(finalslice,1)./2),(size(finalslice,2)./2 + ((markercenterRelative-zshift)./samplingres))];
 % if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
 %     finalslice = flipdim(finalslice,2);
 % end
@@ -518,17 +517,17 @@ fig(side).txt9 = uicontrol('style','text','units','pixels','Background','w',...
     'ASM Solution is: ' num2str(round(solution.rolls_deg(solution.ASM),1)) ' deg\n' ...
     ]));
 
-if abs(solution.polar1) <= 40
+if abs(solution.deg.polar) <= 40
     txtcolor = [34 177 75]./255;
-elseif abs(solution.polar1) > 40 && abs(solution.polar1) <= 55
+elseif abs(solution.deg.polar) > 40 && abs(solution.deg.polar) <= 55
     txtcolor = [255 128 0]./255;
-elseif abs(solution.polar1) > 55
+elseif abs(solution.deg.polar) > 55
     txtcolor = 'r';
 end
 fig(side).txt10 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
     'position',[100,170,720,20],'FontSize',12,'HorizontalAlignment','left',...
     'string',sprintf([...
-    'Polar Angle is: ' num2str(round(abs(solution.polar1))) ' deg\n' ...
+    'Polar Angle is: ' num2str(round(abs(solution.deg.polar))) ' deg\n' ...
     ]));
 
 if max(ct.voxsize) < 1
@@ -546,7 +545,7 @@ fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[60,60,720,40],'FontSize',12,'HorizontalAlignment','left',...
     'string',sprintf(['Use the checkboxes if the algorithm accurately detected the artifacts of the directional levels and if you want to use them to correct the marker angle. Then accept, manually refine, or discard the results.']));
 
-if abs(solution.polar1) > 40
+if abs(solution.deg.polar) > 40
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
@@ -612,6 +611,8 @@ ax3 = subplot(3,3,3);
 hold on
 title(ax3,'Sagittal View','FontWeight','bold')
 imagesc(ax3,finalslice)
+scatter(ax3,finalslicemarker(1), finalslicemarker(2),[],[0 0.4470 0.7410],'filled');
+quiver(ax3,finalslicemarker(1), finalslicemarker(2),-20, 0,2,'LineWidth',1,'Color','g','MaxHeadSize',2)
 axis equal
 axis off
 caxis([1500 3000])
@@ -693,20 +694,20 @@ for k = 1:length(electrode.contacts)
     patch('Faces',electrode.contacts(k).faces,'Vertices',electrode.contacts(k).vertices,'Edgecolor','none','Facecolor',[electrode.contact_color electrode.contact_color electrode.contact_color]);
 end
 
-view(180,0)
+view(-90,0)
 ylim([-1 1])
 xlim([-1 1])
 zlim([0 max(electrode.insulation(end-1).vertices(:,3))])
 axis off
 axis equal
 
-camorbit(-rad2deg(tempangle),0)
-tempvec = [0; 1; 0];
-temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
-tempvec = temp3x3 * tempvec;
+% camorbit(-rad2deg(tempangle),0)
+% tempvec = [0; 1; 0];
+% temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
+% tempvec = temp3x3 * tempvec;
 clear tempangle
 
-set(ax_elec,'Position',[-0.16 0.38 0.43 0.45])
+set(ax_elec,'Position',[-0.16 0.43 0.43 0.37])
 
 %% get results
 if round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))) <= -200
@@ -742,11 +743,16 @@ if savestate == 1
         disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(rollnew)) ' deg'])
     end
     %% calculate y
-    [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,solution.rad.pitch,solution.rad.yaw);
     y = M * [0;1;0];
     head = head_mm(1:3);
     y = head + y;
     y(4) = 1;
+    %% calculate "orientation"
+    tmpangles = ea_diode_recomputeOrientation(head_mm(1:3),tail_mm(1:3),y(1:3));
+    solution.deg.orientation = tmpangles.deg.orientation;
+    solution.rad.orientation = tmpangles.rad.orientation;
+    clear tmpangles
 elseif retrystate == 0
     disp(['Changes to rotation not saved'])
     roll_y = [];
@@ -756,6 +762,9 @@ elseif retrystate == 1
     roll_y = roll_y_retry;
     y = y_retry;
 end
+solution.rad.roll = roll_y;
+solution.deg.roll = rad2deg(roll_y);
+
 close(fig(side).figure)
 end
 

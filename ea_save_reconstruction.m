@@ -70,6 +70,9 @@ else
     end
 end
 
+% recalculate angles after ea_save_reconstruction has completed
+ea_recalc_angles(outFilePath);
+
 
 function [reco,corrected]=ea_checkswap_lr(reco,options)
 options.native=0; % this can only be done in MNI space.

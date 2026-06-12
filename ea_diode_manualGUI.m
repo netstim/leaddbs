@@ -80,7 +80,6 @@ other_mm = [predict(xmdl,10),predict(ymdl,10),predict(zmdl,10),1]';
 unitvector_mm = (other_mm - head_mm)/norm(other_mm - head_mm);
 clear tmpcent newcentervector_vx newcentervector_mm samplingvector_vx samplingvector_mm new k other_mm
 
-
 % calculate locations of markers and directional levels
 tail_mm = head_mm + (6 * unitvector_mm);
 % marker_mm = head_mm + (markercenterRelative .* unitvector_mm);
@@ -88,19 +87,10 @@ tail_mm = head_mm + (6 * unitvector_mm);
 % marker_vx = tmat_vx2mm\marker_mm;
 
 % calculate lead yaw and pitch angles for correction at the end
-yaw = asin(unitvector_mm(1));
-pitch = asin(unitvector_mm(2)/cos(yaw));
-solution.polar1 = rad2deg(atan2(norm(cross([0;0;1],unitvector_mm(1:3))),dot([0;0;1],unitvector_mm(1:3))));
-solution.polar2 = -rad2deg(atan2(unitvector_mm(2),unitvector_mm(1))) + 90;
+solution = ea_diode_trajectoryToYawPitchPolar(head_mm,tail_mm);
 
-if rad2deg(abs(pitch)) > 40
-    disp(['Warning: Pitch > 40 deg - Determining orientation might be inaccurate!'])
-end
-if rad2deg(abs(yaw)) > 40
-    disp(['Warning: Yaw > 40 deg - Determining orientation might be inaccurate!'])
-end
-if solution.polar1 > 40 || solution.polar2 > 40
-    disp(['Warning: Polar > 40 deg - Determining orientation might be inaccurate!'])
+if solution.deg.polar > 40 %|| solution.polar2 > 40
+    disp(['Warning: Polar Angle > 40 deg - Determining orientation might be inaccurate!'])
 end
 
 
@@ -110,10 +100,10 @@ end
 % first, two orthogonal vectors, yvec which is the unitvector
 % pointing in the direction of 0 and x_vec, perpendicular
 % to it and unitvector are generated
-%     rolltmp = ea_diode_angle2roll(0,yaw,pitch);
+%     rolltmp = ea_diode_angle2roll(0,solution.rad.yaw,solution.rad.pitch);
 
 rolltmp = 0;
-[M,~,~,~] = ea_diode_rollpitchyaw(rolltmp,pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(rolltmp,solution.rad.pitch,solution.rad.yaw);
 yvec_mm = M * [0;1;0];
 xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
 clear M
@@ -204,7 +194,7 @@ sagittal_trajmodifier = (extract_height - sagittal_shift + 15)  ./ samplingres;
 for k = 1:length(allrolls)
     disp(['Calculating parallel Slices ' num2str(k) '/360'])
     roll_act = allrolls(k);
-    [M,~,~,~] = ea_diode_rollpitchyaw(roll_act,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(roll_act,solution.rad.pitch,solution.rad.yaw);
     yvec_mm = M * [0;1;0];
     xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
     clear M
@@ -220,7 +210,7 @@ end
 extract_width = 10;
 myslices = [sagittal_shift-extract_height:samplingres:sagittal_shift+extract_height-samplingres];
 roll_act = 0;
-[M,~,~,~] = ea_diode_rollpitchyaw(roll_act,pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(roll_act,solution.rad.pitch,solution.rad.yaw);
 yvec_mm = M * [0;1;0];
 xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
 for k = 1:length(myslices)
@@ -346,16 +336,24 @@ if savestate == 1
     clear x y
     roll_y = deg2rad(RotationSlider.Value);
     %% calculate y
-    [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,solution.rad.pitch,solution.rad.yaw);
     y = M * [0;1;0];
     head = head_mm(1:3);
     y = head + y;
     y(4) = 1;
+    %% calculate "orientation"
+    tmpangles = ea_diode_recomputeOrientation(head_mm(1:3),tail_mm(1:3),y(1:3));
+    solution.deg.orientation = tmpangles.deg.orientation;
+    solution.rad.orientation = tmpangles.rad.orientation;
+    clear tmpangles
 elseif retrystate == 0
     disp(['Changes to rotation not saved'])
     roll_y = [];
     y = [];
 end
+solution.rad.roll = roll_y;
+solution.deg.roll = rad2deg(roll_y);
+
 close(fig(side).figure)
 end
 

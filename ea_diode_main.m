@@ -1,4 +1,4 @@
-function [roll_out] = ea_diode_main(options)
+function ea_diode_main(options)
 %% Determine Orientation for BSCI directed leads from postoperative CT
 % has an unsupervised and a supervised version
 
@@ -103,9 +103,9 @@ for side = options.elside
             'Boston Scientific Vercise Cartesia X', ...
             'Abbott Directed 6172 (short)', ...
             'Abbott Directed 6173 (long)'})
-        [roll_y,y,~] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
+        [roll_y,y,solution] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     elseif ismember(options.elmodel, {'Medtronic B33005', 'Medtronic B33015'})
-        [roll_y,y,~] = ea_diode_medtronic(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
+        [roll_y,y,solution] = ea_diode_medtronic(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     else  % check for electrode type and postoperative imaging
         msg = sprintf(['No Valid Directional Lead Selected!']);
         choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
@@ -138,16 +138,22 @@ for side = options.elside
         %% for direct saving into manual reconstruction
         [coords,trajectory,markers]=ea_resolvecoords(reco.native.markers,options);
         ea_save_reconstruction(coords,trajectory,markers,options.elmodel,1,options)
+        %% save DiODe results in reco
+        load(options.subj.recon.recon,'reco')
+        reco.angles.orientationmethod{options.elside} = 'DiODe';
+        reco.angles.postop(options.elside) = solution.deg;
+        save(options.subj.recon.recon,'reco')
+        disp(sprintf(['Transformation of angles from postop-image to native space:\n',...
+             'Postop roll = ',num2str(round(reco.angles.postop(options.elside).roll)),'° --> native roll = ',num2str(round(reco.angles.native(options.elside).roll)),'°\n',...
+             'Postop orientation = ',num2str(round(reco.angles.postop(options.elside).orientation)),'° --> native orientation = ',num2str(round(reco.angles.native(options.elside).orientation)),'°']));
 
         % %% for transfering to ea_manualreconstruction
-        yunitv(3) = 0;
-        roll_out = rad2deg(atan2(norm(cross([0 1 0],yunitv)),dot([0 1 0],yunitv)));
-        if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
-            roll_out = - roll_out;
-        end
-        disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
-    else
-        roll_out = [];
+        % yunitv(3) = 0;
+        % roll_out = rad2deg(atan2(norm(cross([0 1 0],yunitv)),dot([0 1 0],yunitv)));
+        % if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
+            % roll_out = - roll_out;
+        % end
+        % disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])    
     end
     %% methods dump:
     ea_methods(options,...
