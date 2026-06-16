@@ -15,8 +15,14 @@ spacingMm = estimateSpacingAutoName(coords);
 shafts = detectShaftsAutoName(coords, spacingMm);
 shafts = attachRemainingContactsAutoName(coords, shafts, spacingMm);
 shafts = addSingletonShaftsAutoName(coords, shafts);
-shafts = finalizeShaftsAutoName(coords, dispCoords, shafts, getSurfaceVerticesAutoName(app));
+%shafts = finalizeShaftsAutoName(coords, dispCoords, shafts, getSurfaceVerticesAutoName(app));
+%EG added this
+surfaceVerts = getSurfaceVerticesAutoName(app);
 
+shafts = finalizeShaftsAutoName(coords, dispCoords, shafts, surfaceVerts);
+
+shafts = forceAllShaftsDistalToProximalAutoName(coords, shafts, surfaceVerts);
+%end
 nShafts = numel(shafts);
 counts = arrayfun(@(x) numel(x.indices), shafts);
 maxContacts = max(counts);
@@ -78,14 +84,24 @@ end
 end
 
 function verts = getSurfaceVerticesAutoName(app)
+
 verts = [];
-if ~((isobject(app) && isprop(app, 'ProjSurfRaw')) || (isstruct(app) && isfield(app, 'ProjSurfRaw')))
-    return;
+
+surfaceFields = {'ProjSurfRaw', 'BrainSurfRaw'};
+
+for k = 1:numel(surfaceFields)
+    fld = surfaceFields{k};
+
+    if (isobject(app) && isprop(app, fld)) || (isstruct(app) && isfield(app, fld))
+        surf = app.(fld);
+
+        if isstruct(surf) && isfield(surf, 'vertices') && size(surf.vertices, 2) == 3
+            verts = double(surf.vertices);
+            return;
+        end
+    end
 end
-surf = app.ProjSurfRaw;
-if isstruct(surf) && isfield(surf, 'vertices') && size(surf.vertices, 2) == 3
-    verts = double(surf.vertices);
-end
+
 end
 
 function spacingMm = estimateSpacingAutoName(coords)
@@ -376,4 +392,31 @@ end
 function shafts = emptyShaftsAutoName()
 shafts = struct('indices', {}, 'dir', {}, 'mu', {}, 'tRange', {}, ...
     'span', {}, 'sortKey', {});
+end
+%EG added this function
+function shafts = forceAllShaftsDistalToProximalAutoName(coords, shafts, surfaceVerts)
+
+for s = 1:numel(shafts)
+
+    idx = shafts(s).indices(:);
+
+    if numel(idx) < 2
+        continue;
+    end
+
+    p1 = coords(idx(1), :);
+    p2 = coords(idx(end), :);
+
+    d1 = norm(p1);  % distance of first contact from [0 0 0]
+    d2 = norm(p2);  % distance of last contact from [0 0 0]
+
+    % Distal should be closer to MNI origin.
+    % If the first contact is farther from origin than the last contact,
+    % flip this shaft only.
+    if d1 > d2
+        shafts(s).indices = flipud(idx);
+    end
+
+end
+
 end
