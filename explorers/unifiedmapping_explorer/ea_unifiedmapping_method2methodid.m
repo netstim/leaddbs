@@ -35,7 +35,7 @@ switch obj.calcsettings.connectivity_type
                             id = 'VAT_Ttest';
                         end
                 end
-            case {'Electric Field','Sigmoid Field'}  % E-fields
+            case 'Electric Field'  % E-fields
                 id='efield';
                 if strcmp(obj.e_field_metric,'Projection')
                     switch efm
@@ -60,5 +60,12 @@ switch obj.calcsettings.connectivity_type
                             id=[id,'_5peak'];
                     end
                 end
+            case 'Sigmoid Field'
+                if strcmp(obj.e_field_metric,'Projection')
+                    id = 'efield_proj_peak';
+                else
+                    id = 'efield_peak';
+                end
+
         end
 end
