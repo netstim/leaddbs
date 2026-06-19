@@ -61,7 +61,7 @@ switch obj.drawTool
                     fibsval_raw = obj.results.fiberfiltering.(connid).(ea_unifiedmapping_method2methodid(obj)).fibsval;
                     init_val = fibsval_raw;  % initialize
                     for side = 1:size(fibsval_raw,2)
-                        init_val{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+                        init_val{1,side}(:,:) = ea_unified_probabilityActivationFunction(fibsval_raw{1,side}(:,:));
                     end
                 otherwise
                     init_val = cellfun(@full, obj.results.fiberfiltering.(connid).(ea_unifiedmapping_method2methodid(obj)).fibsval, 'Uni', 0);
