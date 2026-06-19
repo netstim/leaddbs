@@ -336,6 +336,21 @@ else
 
 end
 function AllX=ea_get_AllX(obj)
+connid = ea_conn2connid(obj.calcsettings.netmap_connectome);
+basefield = 'connval';
+cacheRoot = obj.results.networkmapping.(connid);
+if isprop(obj, 'mask_vta_fp') && obj.mask_vta_fp
+    if isfield(cacheRoot, 'connval_vtamasked')
+        basefield = 'connval_vtamasked';
+        cachefield = 'vtamasked';
+    else
+        warning('VTA-masked network fingerprints were requested, but connval_vtamasked is missing. Falling back to unmasked fingerprints.');
+        cachefield = '';
+    end
+else
+    cachefield = '';
+end
+
 addchar='';
 if obj.smooth_fp
     addchar=[addchar,'s'];
@@ -344,14 +359,22 @@ if obj.normalize_fp
     addchar=[addchar,'k'];
 end
 if isempty(addchar) % no s, no k
-    AllX=obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval;
+    AllX=cacheRoot.(basefield);
     return
 end
 try
-    AllX=obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval;
+    if isempty(cachefield)
+        AllX=obj.results.networkmapping.(connid).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval;
+    else
+        AllX=obj.results.networkmapping.(connid).(cachefield).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval;
+    end
 catch
-    [AllX] = ea_unified_networkmapping_recalcvals_sk(obj,addchar);
-    obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval=AllX;
+    [AllX] = ea_unified_networkmapping_recalcvals_sk(obj, addchar, basefield);
+    if isempty(cachefield)
+        obj.results.networkmapping.(connid).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval=AllX;
+    else
+        obj.results.networkmapping.(connid).(cachefield).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval=AllX;
+    end
 end
 
 function fibValThreshold = ea_fibValThresh(threshstrategy, vals, threshold)

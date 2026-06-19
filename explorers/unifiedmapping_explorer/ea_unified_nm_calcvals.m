@@ -1,4 +1,8 @@
-function [AllX] = ea_unified_nm_calcvals(vatlist,cfile)
+function [AllX, AllXVTAMasked] = ea_unified_nm_calcvals(vatlist, cfile, warnIfVTAMaskedUnavailable)
+
+if ~exist('warnIfVTAMaskedUnavailable', 'var') || isempty(warnIfVTAMaskedUnavailable)
+    warnIfVTAMaskedUnavailable = false;
+end
 
 %% Run Lead Mapper:
 % --------------------------------------
@@ -8,6 +12,13 @@ options.lcm.seeds = vatlist(:);
 % determine whether connectome of use is structural or functional:
 [mdl,sf]=ea_genmodlist;
 [~,ix]=ismember(cfile,mdl);
+maskVTAFingerprint = sf(ix)==2;
+if ~maskVTAFingerprint
+    AllXVTAMasked = [];
+end
+if warnIfVTAMaskedUnavailable && ~maskVTAFingerprint
+    warning('VTA-masked network fingerprints are only available for functional connectomes. Structural fingerprints will be saved unmasked.');
+end
 
 options.lcm.seeddef = 'manual';
 options.lcm.odir = [];
@@ -43,8 +54,38 @@ for s=1:size(vatlist,1)
     nii = ea_load_nii(ea_niigz(fingerprint));
     if ~exist('AllX','var')
        AllX = zeros(size(vatlist,1),numel(nii.img));
+       if maskVTAFingerprint
+           AllXVTAMasked = zeros(size(vatlist,1),numel(nii.img));
+       end
     end
     AllX(s,:) = nii.img(:);
+
+    if maskVTAFingerprint
+        maskedNii = nii;
+        vtaNii = ea_load_nii(ea_niigz(vatlist{s}));
+        if numel(vtaNii.img) == numel(maskedNii.img)
+            vtaMask = vtaNii.img(:) > 0;
+            maskedImg = maskedNii.img(:);
+            maskedImg(vtaMask) = NaN;
+            maskedNii.img = reshape(maskedImg, size(maskedNii.img));
+            maskedNii.dt(1) = 16;
+            AllXVTAMasked(s,:) = maskedImg;
+            maskedNii.fname = get_vta_masked_fingerprint(vatlist{s}, cfile);
+            ea_write_nii(maskedNii);
+        else
+            warning('Skipping VTA masking for %s because VTA and fingerprint dimensions differ.', vatlist{s});
+            AllXVTAMasked(s,:) = nii.img(:);
+        end
+    end
+end
+
+
+function fingerprint = get_vta_masked_fingerprint(vta, cfile)
+connLabel = ea_getConnLabel(cfile);
+if isBIDSFileName(vta)
+    fingerprint = setBIDSEntity(vta, 'conn', connLabel, 'desc', 'AvgRFzVTAMasked', 'suffix', 'funcmap');
+else
+    fingerprint = strrep(vta, '.nii', ['_conn-', connLabel, '_desc-AvgRFzVTAMasked_funcmap.nii']);
 end
 
 

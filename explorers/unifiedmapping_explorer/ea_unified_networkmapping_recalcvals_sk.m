@@ -1,6 +1,10 @@
-function [AllX] = ea_unified_networkmapping_recalcvals_sk(obj,sk)
+function [AllX] = ea_unified_networkmapping_recalcvals_sk(obj, sk, basefield)
 
-AllX=obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).connval;
+if ~exist('basefield', 'var') || isempty(basefield)
+    basefield = 'connval';
+end
+
+AllX=obj.results.networkmapping.(ea_conn2connid(obj.calcsettings.netmap_connectome)).(basefield);
 
 td=ea_getleadtempdir;
 % get nifti space
@@ -21,4 +25,3 @@ for s=1:size(AllX,1)
     [X]=ea_genX({space.fname},[],[],ea_unified_getobjmask(obj),sk);    
     AllX(s,:) = X;
 end
-

@@ -25,6 +25,9 @@ function new_tractset = ea_unifiedmapping_update_settings(explorer,new_settings)
     explorer.basepredictionon = new_settings.basepredictionon;
     explorer.mirrorsides = new_settings.mirrorsides;
     explorer.modelNormalization = new_settings.modelNormalization;
+    if isfield(new_settings, 'mask_vta_fp')
+        explorer.mask_vta_fp = new_settings.mask_vta_fp;
+    end
     explorer.numBins = new_settings.numBins;
     explorer.Nperm = new_settings.Nperm;
     explorer.kfold = new_settings.kfold;
