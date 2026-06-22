@@ -52,6 +52,7 @@ if headermod
     sp.img = eval([class(tr.img),'(tr.img);']); % make sure to save data in same class as used before
     sp.hdr.dime.bitpix = tr.hdr.dime.bitpix;
     sp.hdr.dime.scl_slope = tr.hdr.dime.scl_slope;
+    sp.hdr.dime.scl_inter = tr.hdr.dime.scl_inter;
     sp.hdr.dime.datatype = tr.hdr.dime.datatype; % keep datatype of original image.
     ea_save_untouch_nii(sp, toreslicefn);
 end
