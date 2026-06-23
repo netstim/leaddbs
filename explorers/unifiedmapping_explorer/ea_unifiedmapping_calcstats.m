@@ -91,7 +91,7 @@ for group = groups
             pvals{group,side}=vals{group,side};
         end
         switch obj.drawTool
-            case {'sweetspotmapping','fiberfiltering'}
+            case 'sweetspotmapping'
                 switch obj.statsettings.stimulationmodel
                     case 'VTA'
                         Nmap=ea_nansum(gval{side}(:,gpatsel),2);
@@ -117,6 +117,46 @@ for group = groups
                             gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
                         end  
                 end
+                %initialize vals and pvals if necessary
+
+                %rules for removing nonempty values, since there are many nans in
+                %the voxel wise analysis we can choose two different ways of
+                %dealing with the vals
+
+                nonempty = sum(gval{side}(:,gpatsel),2,'omitnan')>0;
+                nonemptyidx=find(nonempty);
+                valsin=gval{side}(nonempty,gpatsel);
+            case 'fiberfiltering'
+                    switch obj.statsettings.stimulationmodel
+                    case 'VTA'
+                        Nmap=ea_nansum(gval{side}(:,gpatsel),2);
+                        gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+                    case 'Sigmoid Field'
+                        pafThreshold = obj.statsettings.efieldthreshold;
+                        gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
+                        Nmap=ea_nansum((gval{side}(:,gpatsel)>pafThreshold),2);
+                        gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
+                    otherwise
+                        % old method; only if variable in workspace exists
+                        if evalin('base','exist(''threshold_method'',''var'')')
+                            threshold_method = evalin('base','threshold_method');
+                            switch threshold_method
+                                case 'old_method' % as was implemented in lead dbs v3.2.1
+                                    gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
+                                    Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold),2);
+                                    gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
+                            end
+                        else %here we use the new percentile method
+                            % compute global percentile across all selected patients
+                            allVals = gval{side}(:, gpatsel);  % extract the submatrix
+                            allVals(allVals == 0) = NaN;
+                            thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
+                            % mask fibers above threshold
+                            Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
+                            % apply connection threshold
+                            gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
+                        end  
+                    end
                 
                 %initialize vals and pvals if necessary
 
@@ -136,13 +176,42 @@ for group = groups
                         end
 
                 else %here we use the old method
-                        % compute global percentile across all patients
+                        % % compute global percentile across all patients
                         allVals = gval{side}(:, gpatsel);  % extract the submatrix
-                        % allVals(allVals == 0) = NaN;
-                        thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
-                        % mask voxels above threshold
-                        Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
-                        gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
+                        % % allVals(allVals == 0) = NaN;
+                        % thr = prctile(allVals(:), obj.statsettings.efieldthreshold);  % flatten and compute percentile
+                        % % mask voxels above threshold
+                        % Nmap = ea_nansum(gval{side}(:,gpatsel) >= thr, 2);
+                        % gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
+                        % valsin = gval{side}(:, gpatsel);
+                        % 
+                        % allVals = gval{side}(:, gpatsel);
+
+                        % Separate signed network values. Direction matters here, so do not
+                        % threshold positives and negatives together.
+                        posVals = allVals(allVals > 0);
+                        negVals = allVals(allVals < 0);
+                
+                        posMask = false(size(allVals));
+                        negMask = false(size(allVals));
+                
+                        if ~isempty(posVals)
+                            posThr = prctile(posVals, obj.statsettings.efieldthreshold);
+                            posMask = allVals >= posThr;
+                        end
+                
+                        if ~isempty(negVals)
+                            negThr = prctile(negVals, 100 - obj.statsettings.efieldthreshold);
+                            negMask = allVals <= negThr;
+                        end
+                
+                        NmapPos = ea_nansum(posMask, 2);
+                        NmapNeg = ea_nansum(negMask, 2);
+                
+                        minN = round((obj.statsettings.connthreshold/100) * length(gpatsel));
+                        keep = NmapPos >= minN | NmapNeg >= minN;
+                
+                        gval{side}(~keep, gpatsel) = nan;
                         valsin = gval{side}(:, gpatsel);
                 end  
         end
