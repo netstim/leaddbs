@@ -46,6 +46,7 @@ classdef ea_unifiedmapping < handle
         vizmode
         smooth_fp = 0; %for networkmapping, smooth fingerprints
         normalize_fp = 0; %for networkmapping, normalize fingerprints
+        mask_vta_fp = 0; %for networkmapping, remove VTA voxels from fingerprints
         cvmask = 'Gray Matter';
         model='Smoothed'; %for networkmapping
         drawobject = struct % actual streamtube handle
@@ -176,6 +177,7 @@ classdef ea_unifiedmapping < handle
             obj.model = 'Smoothed';
             obj.smooth_fp = 0;
             obj.normalize_fp = 0;
+            obj.mask_vta_fp = 0;
             obj.cvmask = 'Gray Matter';
             obj.fileformatversion=1.2; % new current version with settings to harmonize stats.
             datapath = GetFullPath(datapath);
@@ -406,9 +408,14 @@ classdef ea_unifiedmapping < handle
                     vatlist = ea_unified_nm_getvats(obj); 
                 end
                 %TODO:I have removed this from the networkmapping explorer folder and added it to the unified mapping explorer. Please adjust based on the future of the tool. I refrained from making a copy since the name of this script makes sense and would be redundant to change the name
-                [AllX] = ea_unified_nm_calcvals(vatlist, obj.calcsettings.netmap_connectome);
+                [AllX, AllXVTAMasked] = ea_unified_nm_calcvals(vatlist, obj.calcsettings.netmap_connectome, obj.mask_vta_fp);
 
                 obj.results.networkmapping.(ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome)).connval = AllX;
+                if ~isempty(AllXVTAMasked)
+                    obj.results.networkmapping.(ea_unifiedmapping_conn2connid(obj.calcsettings.netmap_connectome)).connval_vtamasked = AllXVTAMasked;
+                elseif obj.mask_vta_fp
+                    obj.mask_vta_fp = 0;
+                end
 
                 % Functional connectome, add spacedef to results
                 if contains(obj.calcsettings.netmap_connectome, ' > ')
@@ -1781,4 +1788,3 @@ for id=idx'
 end
 fibers=[fibers,idxv];
 end
-
