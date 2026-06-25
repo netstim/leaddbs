@@ -44,8 +44,10 @@ if islogical(settings) && ~settings
 end
 
 % some hardcoded parameters, can be added to the GUI later
-settings.reuse_warped_connectome = 0;  % set to 1 if the connectome was already processed for the given stim. settings
 prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
+postprocess_cluster = 0; % set to 1 if OSS-DBS was already run externally (e.g. on a cluster) and you only want Lead-DBS postprocessing. Mutually exclusive with prepFiles_cluster.
+settings.reuse_warped_connectome = postprocess_cluster;  % always reuse when postprocessing cluster results to preserve fiber-ID consistency with Axon_state_*.mat
+settings.postprocess_cluster = postprocess_cluster;  % gates destructive cleanup in ea_prepare_fibers and ea_save_ossdbs_settings (cluster output must not be wiped)
 true_VTA = 0; % set to 1 to compute classic VAT using axonal grids
 
 % set outputs
@@ -124,7 +126,7 @@ for source_index = first_active_source:4
         parameterFile = ea_save_ossdbs_settings(options, S, settings, outputPaths);
     end
 
-    if prepFiles_cluster == 1
+    if prepFiles_cluster == 1 && ~postprocess_cluster
         % now you can run OSS-DBS externally
         [varargout{1}, varargout{2}] = ea_exit_genvat_butenko();
         return
@@ -145,8 +147,11 @@ for source_index = first_active_source:4
         % hemisphere specific data is stored in this subfolder
         outputPaths.HemiSimFolder = [outputPaths.outputDir, filesep, 'OSS_sim_files_', sideCode];
 
-        if ~multiSourceMode(side+1)
-            % not relevant in this case, terminate after one iteration;
+        if ~multiSourceMode(side+1) || settings.postprocess_cluster
+            % not relevant in this case, terminate after one iteration.
+            % For postprocess_cluster, we collapse multisource to single-source
+            % semantics (cluster only ran source 1), so the BIDS filename should
+            % follow single-source convention (no _<source_index> suffix).
             source_use_index = 5;
         else
             source_use_index = source_index;
@@ -213,6 +218,12 @@ for source_index = first_active_source:4
         end
 
         %% OSS-DBS part (using the corresponding conda environment)
+        if postprocess_cluster
+            % OSS-DBS was already run externally; skip the simulation loop
+            % and go straight to Lead-DBS postprocessing.
+            i = 1;
+            parameterFile_json = [outputPaths.HemiSimFolder, filesep, 'oss-dbs_parameters.json'];
+        else
         for i = 1:settings.N_samples  % mutiple samples if probablistic PAM is used, otherwise 1
 
             if settings.calcAxonActivation
@@ -234,8 +245,8 @@ for source_index = first_active_source:4
 
                 % allocate computational axons on fibers
                 %system(['python ', ea_getearoot, 'ext_libs/OSS-DBS/Axon_Processing/axon_allocation.py ', outputPaths.outputDir,' ', num2str(side), ' ', parameterFile]);
-                
-                if settings.use_wsl 
+
+                if settings.use_wsl
                     [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['prepareaxonmodel ',vta_windowspathstowsl(outputPaths.outputDir),' --hemi_side ',num2str(side),' --description_file ', vta_windowspathstowsl(parameterFile)])
                 else
                     if settings.use_binaries
@@ -247,7 +258,7 @@ for source_index = first_active_source:4
             end
 
             % prepare OSS-DBS input as oss-dbs_parameters.json
-            if settings.use_wsl 
+            if settings.use_wsl
                 [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['leaddbs2ossdbs --hemi_side ', num2str(side), ' ', vta_windowspathstowsl(parameterFile), ...
                     ' --output_path ', vta_windowspathstowsl(outputPaths.HemiSimFolder)]);
             else
@@ -263,7 +274,7 @@ for source_index = first_active_source:4
             parameterFile_json = [outputPaths.HemiSimFolder, filesep, input_name, '.json'];
 
             % run OSS-DBS
-            if settings.use_wsl 
+            if settings.use_wsl
                 [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
             else
                 if settings.use_binaries
@@ -275,7 +286,7 @@ for source_index = first_active_source:4
             % detect error related to Bnd_Box
             if contains(cmdout, 'Bnd_Box is void')
                 disp ('Error "Bnd_Box is void" detected, increasing the dimensions ...');
-                if settings.use_wsl 
+                if settings.use_wsl
                     [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,cell2mat(['python3 ' vta_windowspathstowsl(ea_regexpdir(ea_getearoot, 'BndBoxDimensionsEdits.py')) ' ', vta_windowspathstowsl(parameterFile_json)]))
                     % run OSS-DBS
                     [~,cmdout] = vta_runwslcommand(options.prefs.ext_oss_env,['ossdbs ', vta_windowspathstowsl(parameterFile_json)])
@@ -311,7 +322,7 @@ for source_index = first_active_source:4
                 end
 
                 if settings.optimizer
-                    if settings.use_wsl 
+                    if settings.use_wsl
                         vta_runwslcommand(options.prefs.ext_oss_env,['python ', vta_windowspathstowsl(ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'pam_optimizer.py'),' ', settings.PathwayTune_master_dict, ' ', vta_windowspathstowsl(outputPaths.outputDir), ' ', num2str(side), ' ', vta_windowspathstowsl(parameterFile_json), ' ', num2str(scaling)])
                     else
                         env.system('pip3 install pyswarms');
@@ -346,7 +357,7 @@ for source_index = first_active_source:4
                 ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep,'oss_time_result*'])
             end
 
-            if settings.prob_PAM && settings.stimSetMode    
+            if settings.prob_PAM && settings.stimSetMode
                 % we need to save the results since both modes use
                 % scaling_index
                 act_files = dir_without_dots([outputPaths.HemiSimFolder,filesep,'Results',filesep,'Pathway_status_*']);
@@ -354,12 +365,12 @@ for source_index = first_active_source:4
                 for act_file_inx = 1:length(act_files)
                     % Get the individual filename
                     fileName = act_files(act_file_inx).name;
-                    
+
                     % Skip directories (like '.' and '..')
                     if ~act_files(act_file_inx).isdir
                         sourceFile = fullfile(act_files(act_file_inx).folder, fileName);
                         destFile = fullfile([outputPaths.HemiSimFolder,filesep,'sample_',num2str(i)], fileName);
-                        
+
                         % Perform the copy
                         copyfile(sourceFile, destFile);
                         fprintf('Copied: %s\n', fileName);
@@ -373,17 +384,23 @@ for source_index = first_active_source:4
             end
 
         end
+        end % end of "if postprocess_cluster ... else ... end"
 
         %% Postprocessing in Lead-DBS
 
         % Check if OSS-DBS calculation is finished
-        while ~isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt']) ...
-                && ~isfile([outputPaths.HemiSimFolder, filesep, 'fail_', sideCode, '.txt'])
-            continue;
+        if ~postprocess_cluster
+            while ~isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt']) ...
+                    && ~isfile([outputPaths.HemiSimFolder, filesep, 'fail_', sideCode, '.txt'])
+                continue;
+            end
         end
 
-        if settings.prob_PAM && all(~multiSourceMode) && ~settings.stimSetMode
+        if settings.prob_PAM && (all(~multiSourceMode) || settings.postprocess_cluster) && ~settings.stimSetMode
             % convert binary PAM status over uncertain parameter to "probabilistic activations"
+            % NOTE: for postprocess_cluster, we force the single-source aggregator even when
+            % multisource is configured -- the cluster only ran source 1, so multisource OR-merging
+            % is meaningless (and the multisource pipeline destructively consumes Axon_state files).
             ea_get_probab_axon_state([outputPaths.HemiSimFolder,filesep,'Results'],1,settings,side);
         end
 
@@ -392,9 +409,13 @@ for source_index = first_active_source:4
             ea_delete([outputPaths.HemiSimFolder, filesep, 'Results', filesep, 'oss_freq_domain_tmp_PAM.hdf5']);
         end
 
-        if isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt'])
+        if isfile([outputPaths.HemiSimFolder, filesep, 'success_', sideCode, '.txt']) || postprocess_cluster
             runStatusMultiSource(source_index,side+1) = 1;
-            fprintf('\nOSS-DBS calculation succeeded!\n\n')
+            if postprocess_cluster
+                fprintf('\nRunning Lead-DBS postprocessing on existing OSS-DBS results...\n\n')
+            else
+                fprintf('\nOSS-DBS calculation succeeded!\n\n')
+            end
 
             if settings.prob_PAM && settings.stimSetMode
                 % TBA: Lead-DBS postprocessing for such case
@@ -412,7 +433,7 @@ for source_index = first_active_source:4
                 [stimparams(side+1).VAT.VAT,stimparams(side+1).volume,source_efields{side+1,source_use_index},source_vtas{side+1,source_use_index}] = ea_convert_ossdbs_VTAs(options,settings,side,multiSourceMode,source_use_index,outputPaths);
             end
 
-            if settings.prob_PAM && any(multiSourceMode) && ~settings.stimSetMode
+            if settings.prob_PAM && any(multiSourceMode) && ~settings.stimSetMode && ~settings.postprocess_cluster
                 % for multisource, we will convert in the external loop
                 % we just need to add the source index to the Axon States
                 axonStateFolder = ea_sourceIndex4AxonStates(outputPaths, side, source_use_index);
@@ -443,7 +464,8 @@ for source_index = first_active_source:4
     end
 
     % check only the first source for PAM
-    if all(~multiSourceMode)
+    % (also break for postprocess_cluster -- cluster only ran source 1)
+    if all(~multiSourceMode) || settings.postprocess_cluster
         runStatusMultiSource(2:end,:) = 1;
         break
     end
@@ -463,7 +485,8 @@ for side = 0:1
 end
 
 % special case for multisource probabilistic PAM
-if any(multiSourceMode) && settings.prob_PAM
+% (skipped when postprocessing cluster results -- handled via the single-source path above)
+if any(multiSourceMode) && settings.prob_PAM && ~settings.postprocess_cluster
     ea_get_prob_fiber_states_for_multisource(options,settings,outputPaths,axonStateFolder,resultfig)
 end
 

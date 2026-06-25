@@ -64,16 +64,18 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         % also create a folder for PAM results
         % clean up for the first source only
         if source_i == 1
-            if exist(settings.connectomeActivations,'dir')
+            % Skip destructive cleanup if we're only postprocessing cluster results.
+            postprocess_cluster = isfield(settings,'postprocess_cluster') && settings.postprocess_cluster;
+            if exist(settings.connectomeActivations,'dir') && ~postprocess_cluster
                 ea_delete(settings.connectomeActivations);
                 % remove all PAM folders
                 ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
-    
+
             if options.native
                 settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, settings.connectome];
-                if exist(settings.connectomePathMNI,'dir')
+                if exist(settings.connectomePathMNI,'dir') && ~postprocess_cluster
                     ea_delete(settings.connectomePathMNI);
                 end
                 ea_mkdir(settings.connectomePathMNI);
@@ -175,16 +177,18 @@ else % Multi-Tract connectome
         % also create a folder for PAM results
         % clean up for the first source only
         if source_i == 1
-            if exist(settings.connectomeActivations,'dir')
+            % Skip destructive cleanup if we're only postprocessing cluster results.
+            postprocess_cluster = isfield(settings,'postprocess_cluster') && settings.postprocess_cluster;
+            if exist(settings.connectomeActivations,'dir') && ~postprocess_cluster
                 ea_delete(settings.connectomeActivations);
                 % remove all PAM folders
                 ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
-    
+
             if options.native
                 settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, connName];
-                if exist(settings.connectomePathMNI,'dir')
+                if exist(settings.connectomePathMNI,'dir') && ~postprocess_cluster
                     ea_delete(settings.connectomePathMNI);
                 end
                 ea_mkdir(settings.connectomePathMNI);
