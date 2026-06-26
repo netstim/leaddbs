@@ -108,6 +108,17 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         inlay = 0.5;
         if ~options.native || patient_specific
             fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength+inlay);
+        else
+            % Length filter is deferred to native space (after the warp).
+            % ea_filterfiber_len would also normalize empty hemispheres into a
+            % struct with empty .fibers/.idx; ea_filterfiber_stim leaves them
+            % as a bare []. Replicate that normalization so downstream code can
+            % dot-index every element safely.
+            for fi = 1:numel(fiberFiltered)
+                if ~isstruct(fiberFiltered{fi})
+                    fiberFiltered{fi} = struct('fibers', [], 'idx', []);
+                end
+            end
         end
 
         % Move original fiber id to the 5th column, the 4th column will be 1:N
@@ -274,6 +285,17 @@ else % Multi-Tract connectome
             inlay = 0.5;
             if ~options.native || patient_specific
                 fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t)+inlay);
+            else
+                % Length filter is deferred to native space (after the warp).
+                % ea_filterfiber_len would also normalize empty hemispheres into
+                % a struct with empty .fibers/.idx; ea_filterfiber_stim leaves
+                % them as a bare []. Replicate that normalization so downstream
+                % code can dot-index every element safely.
+                for fi = 1:numel(fiberFiltered)
+                    if ~isstruct(fiberFiltered{fi})
+                        fiberFiltered{fi} = struct('fibers', [], 'idx', []);
+                    end
+                end
             end
 
             % Move original fiber id to the 5th column, the 4th column will be 1:N
