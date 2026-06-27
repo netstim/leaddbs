@@ -12,6 +12,19 @@ end
 
 % check which pathways were simulated and their percent activations
 rate_files = dir([results_folder,filesep,'Pathway_status*']);
+
+% Keep only numbered per-sample files; drop stale unnumbered files.
+if ~isempty(rate_files)
+    isNumbered = ~cellfun(@isempty, regexp({rate_files.name}, '_\d+\.json$', 'once'));
+    rate_files = rate_files(isNumbered);
+end
+if isempty(rate_files)
+    ea_cprintf('CmdWinWarnings', ...
+        '[prob-PAM] No probabilistic Pathway_status_*_<i>.json files in %s. Skipping aggregation.\n', ...
+        results_folder);
+    return
+end
+
 pathways = {};
 activations_over_pathways = {};
 pt_counter = 0;
@@ -32,10 +45,15 @@ for file_i = 1:length(rate_files)
     end
     rate_file = fullfile(rate_files(file_i).folder, ['Pathway_status_',pathway_name_orig,'_',num2str(scaling_counter),'.json']);
     scaling_counter = scaling_counter + 1;
+    if ~isfile(rate_file)
+        % Fallback: expected per-sample file missing; skip instead of crashing.
+        ea_cprintf('CmdWinWarnings', '[prob-PAM] Expected sample file not found, skipping: %s\n', rate_file);
+        continue;
+    end
     jsonText = fileread(rate_file);
     disp(rate_file)
-    % Convert JSON formatted text to MATLAB data types 
-    jsonDict = jsondecode(jsonText); 
+    % Convert JSON formatted text to MATLAB data types
+    jsonDict = jsondecode(jsonText);
     %pathway_name = strrep(pathway_name_orig,'_',' ');
     index = rate_files(file_i).name(end-5);
     if ~any(strcmp(pathways,pathway_name_orig))
@@ -60,7 +78,7 @@ if plot_rates
         ylim([0,100]);
         xlabel('Scaling')
         ylabel('Percent Activation')
-        hold on 
+        hold on
     end
     legend('Location','eastoutside')
 end
