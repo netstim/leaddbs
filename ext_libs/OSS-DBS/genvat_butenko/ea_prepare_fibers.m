@@ -64,16 +64,18 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         % also create a folder for PAM results
         % clean up for the first source only
         if source_i == 1
-            if exist(settings.connectomeActivations,'dir')
+            % Skip destructive cleanup if we're only postprocessing cluster results.
+            postprocess_cluster = isfield(settings,'postprocess_cluster') && settings.postprocess_cluster;
+            if exist(settings.connectomeActivations,'dir') && ~postprocess_cluster
                 ea_delete(settings.connectomeActivations);
                 % remove all PAM folders
                 ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
-    
+
             if options.native
                 settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, settings.connectome];
-                if exist(settings.connectomePathMNI,'dir')
+                if exist(settings.connectomePathMNI,'dir') && ~postprocess_cluster
                     ea_delete(settings.connectomePathMNI);
                 end
                 ea_mkdir(settings.connectomePathMNI);
@@ -99,15 +101,31 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
             patient_specific = 0;
         end
     
-        % Filter fibers based on the minimal length
+        % Filter fibers based on the minimal length.
+        % In native space the length filter is deferred to AFTER the warp
+        % below, because the non-rigid warp into native space can shorten
+        % fibers below the threshold.
         inlay = 0.5;
-        fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength+inlay);
-    
+        if ~options.native || patient_specific
+            fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength+inlay);
+        else
+            % Length filter is deferred to native space (after the warp).
+            % ea_filterfiber_len would also normalize empty hemispheres into a
+            % struct with empty .fibers/.idx; ea_filterfiber_stim leaves them
+            % as a bare []. Replicate that normalization so downstream code can
+            % dot-index every element safely.
+            for fi = 1:numel(fiberFiltered)
+                if ~isstruct(fiberFiltered{fi})
+                    fiberFiltered{fi} = struct('fibers', [], 'idx', []);
+                end
+            end
+        end
+
         % Move original fiber id to the 5th column, the 4th column will be 1:N
         fibersFound = zeros(size(fiberFiltered));
         for i=1:length(fiberFiltered)
             if ~isempty(fiberFiltered{i}.fibers)
-    
+
                 % Convert connectome fibers from MNI space to anchor space
                 if options.native && patient_specific == 0
                     fprintf('Convert connectome into native space...\n\n');
@@ -116,13 +134,21 @@ if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
                         [ea_space, options.primarytemplate, '.nii'], ...
                         [options.subj.subjDir, filesep, 'forwardTransform'], ...
                         preopAnchor)';
+
+                    % Re-filter by length in native space (the warp may have
+                    % shortened fibers below the threshold)
+                    fiberFiltered(i) = ea_filterfiber_len(fiberFiltered{i}, settings.axonLength+inlay);
                 end
 
-                fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
-                fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
-                fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
-                fiberFiltered{i}.fibers = fibers;
-                fibersFound(i) = 1;
+                % The native-space length filter above may have emptied this
+                % element, so re-check before rearranging columns.
+                if ~isempty(fiberFiltered{i}.fibers)
+                    fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
+                    fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
+                    fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
+                    fiberFiltered{i}.fibers = fibers;
+                    fibersFound(i) = 1;
+                end
             end
         end
     
@@ -175,16 +201,18 @@ else % Multi-Tract connectome
         % also create a folder for PAM results
         % clean up for the first source only
         if source_i == 1
-            if exist(settings.connectomeActivations,'dir')
+            % Skip destructive cleanup if we're only postprocessing cluster results.
+            postprocess_cluster = isfield(settings,'postprocess_cluster') && settings.postprocess_cluster;
+            if exist(settings.connectomeActivations,'dir') && ~postprocess_cluster
                 ea_delete(settings.connectomeActivations);
                 % remove all PAM folders
                 ea_delete([settings.connectomePath,filesep,'PAM*']);
             end
             ea_mkdir(settings.connectomeActivations);
-    
+
             if options.native
                 settings.connectomePathMNI = [outputPaths.templateOutputDir, filesep, connName];
-                if exist(settings.connectomePathMNI,'dir')
+                if exist(settings.connectomePathMNI,'dir') && ~postprocess_cluster
                     ea_delete(settings.connectomePathMNI);
                 end
                 ea_mkdir(settings.connectomePathMNI);
@@ -250,14 +278,30 @@ else % Multi-Tract connectome
                 patient_specific = 0;
             end
     
-            % Filter fibers based on the minimal length
+            % Filter fibers based on the minimal length.
+            % In native space the length filter is deferred to AFTER the warp
+            % below, because the non-rigid warp into native space can shorten
+            % fibers below the threshold.
             inlay = 0.5;
-            fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t)+inlay);
-    
+            if ~options.native || patient_specific
+                fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t)+inlay);
+            else
+                % Length filter is deferred to native space (after the warp).
+                % ea_filterfiber_len would also normalize empty hemispheres into
+                % a struct with empty .fibers/.idx; ea_filterfiber_stim leaves
+                % them as a bare []. Replicate that normalization so downstream
+                % code can dot-index every element safely.
+                for fi = 1:numel(fiberFiltered)
+                    if ~isstruct(fiberFiltered{fi})
+                        fiberFiltered{fi} = struct('fibers', [], 'idx', []);
+                    end
+                end
+            end
+
             % Move original fiber id to the 5th column, the 4th column will be 1:N
             for i=1:length(fiberFiltered)
                 if ~isempty(fiberFiltered{i}.fibers)
-    
+
                     % Convert connectome fibers from MNI space to anchor space
                     if options.native && patient_specific == 0
                         fprintf('Convert connectome into native space...\n\n');
@@ -266,20 +310,28 @@ else % Multi-Tract connectome
                             [ea_space, options.primarytemplate, '.nii'], ...
                             [options.subj.subjDir, filesep, 'forwardTransform'], ...
                             preopAnchor)';
+
+                        % Re-filter by length in native space (the warp may have
+                        % shortened fibers below the threshold)
+                        fiberFiltered(i) = ea_filterfiber_len(fiberFiltered{i}, settings.axonLength(t)+inlay);
                     end
-    
-                    fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
-                    fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
-                    fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
-                    fiberFiltered{i}.fibers = fibers;
-    
-                    % store the original number of fibers
-                    % to compute percent activation
-                    fiberFiltered{i}.origNum = size(conn.idx,1);
-    
-                    fibersFound(t,i) = 1;
+
+                    % The native-space length filter above may have emptied this
+                    % element, so re-check before rearranging columns.
+                    if ~isempty(fiberFiltered{i}.fibers)
+                        fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
+                        fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
+                        fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
+                        fiberFiltered{i}.fibers = fibers;
+
+                        % store the original number of fibers
+                        % to compute percent activation
+                        fiberFiltered{i}.origNum = size(conn.idx,1);
+
+                        fibersFound(t,i) = 1;
+                    end
                 end
-    
+
                 if i == 1
                     data1.(tractName) = fiberFiltered{1};
                 else

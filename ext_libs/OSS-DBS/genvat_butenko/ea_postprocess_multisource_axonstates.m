@@ -15,6 +15,11 @@ end
 
 % get all fiberActivations (make sure you don't have merged once before running it!)
 axonActivations = dir([axonStateFolder,filesep,'Axon_state_*']);
+if isempty(axonActivations)
+    ea_cprintf('CmdWinWarnings', ...
+        '[multisource-merge] Nothing to merge: %s has no Axon_state_* files.\n', axonStateFolder);
+    return
+end
 
 already_merged_index = [];
 for pam_idx = 1:size(axonActivations,1)
