@@ -11,6 +11,12 @@ end
 
 % check which pathways were simulated and their percent activations
 axon_state_files = dir([results_folder,filesep,'Axon_state_*']);
+if isempty(axon_state_files)
+    ea_cprintf('CmdWinWarnings', ...
+        '[multisource-prob] No Axon_state_* files in %s. Skipping probabilistic aggregation.\n', ...
+        results_folder);
+    return
+end
 pathways = {};
 activations_over_pathways = {};
 pt_counter = 0;
@@ -39,19 +45,42 @@ for file_i = 1:length(axon_state_files)
     end
 end
 
+if pt_counter == 0
+    ea_cprintf('CmdWinWarnings', ...
+        '[multisource-prob] %d files found but no pathway names recovered. Skipping.\n', ...
+        numel(axon_state_files));
+    return
+end
+
 N_scalings = length(activations_over_pathways{pt_counter});
 
 % now let's compute activation probabilty for each fiber
 % we compute probabilities for the filtered fibers and will map to global
 % indices later in ea_genvat_butenko
 for pt_counter = 1:length(pathways)
+    skip_pathway = false;
     % iterate over scalings (fiber diameters)
     % important: number of compartments can differ based on the fiber
     % diameter / length!
     for scaling_i = 1:N_scalings
 
         Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(scaling_i),'.mat']);
+        if ~isfile(Axon_state_file)
+            fprintf('[multisource-prob] Missing sample file (skipping pathway %s): %s\n', ...
+                pathways{pt_counter}, Axon_state_file);
+            skip_pathway = true;
+            break;
+        end
         load(Axon_state_file, 'fibers','ea_fibformat','connectome_name');
+        if isempty(fibers)
+            % No axons survived for this pathway (e.g. all pre-filtered by
+            % Kuncel VTA). Skip the whole pathway -- downstream merge code
+            % treats a missing *_prob.mat as zero activation.
+            fprintf('[multisource-prob] Skipping pathway %s: empty fibers in sample %d.\n', ...
+                pathways{pt_counter}, scaling_i);
+            skip_pathway = true;
+            break;
+        end
 
         % intialize new axon state file with probabilistic activations
         % morphologz defined by the first scaling!
@@ -78,6 +107,10 @@ for pt_counter = 1:length(pathways)
             fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_scalings;
         end
         ea_delete(Axon_state_file);
+    end
+    if skip_pathway
+        % no axons survived for any sample -> nothing to write
+        continue;
     end
     ftr.fibers = fibers_prob;
     ftr.ea_fibformat = ea_fibformat;

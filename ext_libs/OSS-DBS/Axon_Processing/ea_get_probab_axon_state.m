@@ -12,6 +12,19 @@ end
 
 % check which pathways were simulated and their percent activations
 rate_files = dir([results_folder,filesep,'Pathway_status*']);
+
+% Keep only numbered per-sample files; drop stale unnumbered files.
+if ~isempty(rate_files)
+    isNumbered = ~cellfun(@isempty, regexp({rate_files.name}, '_\d+\.json$', 'once'));
+    rate_files = rate_files(isNumbered);
+end
+if isempty(rate_files)
+    ea_cprintf('CmdWinWarnings', ...
+        '[prob-PAM] No probabilistic Pathway_status_*_<i>.json files in %s. Skipping aggregation.\n', ...
+        results_folder);
+    return
+end
+
 pathways = {};
 activations_over_pathways = {};
 pt_counter = 0;
@@ -32,10 +45,15 @@ for file_i = 1:length(rate_files)
     end
     rate_file = fullfile(rate_files(file_i).folder, ['Pathway_status_',pathway_name_orig,'_',num2str(scaling_counter),'.json']);
     scaling_counter = scaling_counter + 1;
+    if ~isfile(rate_file)
+        % Fallback: expected per-sample file missing; skip instead of crashing.
+        ea_cprintf('CmdWinWarnings', '[prob-PAM] Expected sample file not found, skipping: %s\n', rate_file);
+        continue;
+    end
     jsonText = fileread(rate_file);
     disp(rate_file)
-    % Convert JSON formatted text to MATLAB data types 
-    jsonDict = jsondecode(jsonText); 
+    % Convert JSON formatted text to MATLAB data types
+    jsonDict = jsondecode(jsonText);
     %pathway_name = strrep(pathway_name_orig,'_',' ');
     index = rate_files(file_i).name(end-5);
     if ~any(strcmp(pathways,pathway_name_orig))
@@ -60,7 +78,7 @@ if plot_rates
         ylim([0,100]);
         xlabel('Scaling')
         ylabel('Percent Activation')
-        hold on 
+        hold on
     end
     legend('Location','eastoutside')
 end
@@ -69,6 +87,7 @@ end
 % we compute probabilities for the filtered fibers and will map to global
 % indices later in ea_genvat_butenko
 for pt_counter = 1:length(pathways)
+    skip_pathway = false;
     % iterate over scalings (fiber diameters)
     % important: number of compartments can differ based on the fiber
     % diameter / length!
@@ -89,8 +108,27 @@ for pt_counter = 1:length(pathways)
         else
             Axon_state_file = fullfile(results_folder, ['Axon_state_',pathways{pt_counter},'_',num2str(sample_i),'.mat']);
         end
- 
-        load(Axon_state_file, 'fibers','ea_fibformat','connectome_name');
+
+        try
+            load(Axon_state_file, 'fibers','ea_fibformat','connectome_name');
+        catch ME
+            % Corrupt / non-MAT cluster output for this pathway. Skip rather
+            % than crash -- downstream merge code treats a missing *_prob.mat
+            % as zero activation.
+            fprintf('Skipping pathway %s: failed to load sample %d (%s).\n     file: %s\n', ...
+                pathways{pt_counter}, sample_i, ME.message, Axon_state_file);
+            skip_pathway = true;
+            break;
+        end
+        if isempty(fibers)
+            % No axons survived for this pathway (e.g. all pre-filtered by
+            % Kuncel VTA). Skip the whole pathway -- downstream merge code
+            % treats a missing *_prob.mat as zero activation.
+            fprintf('Skipping pathway %s: empty fibers in sample %d (no *_prob.mat will be written).\n', ...
+                pathways{pt_counter}, sample_i);
+            skip_pathway = true;
+            break;
+        end
         n_comp = sum(bsxfun(@eq, fibers(:,4), fibers(:,4)'), 2)';
         % the number is the same since these are OSS-DBS axons
         idx = n_comp(1) * ones(length(unique(fibers(:,4))),1);
@@ -123,6 +161,10 @@ for pt_counter = 1:length(pathways)
             idx_comp_orig = find(fibers_prob(:,4)==fiber_i);
             fibers_prob(idx_comp_orig,5) = fibers_prob(idx_comp_orig,5) + fibers_state(fiber_i) / N_samples;
         end
+    end
+    if skip_pathway
+        % no axons survived for any sample -> nothing to write
+        continue;
     end
     ftr.fibers = fibers_prob;
     ftr.ea_fibformat = ea_fibformat;
