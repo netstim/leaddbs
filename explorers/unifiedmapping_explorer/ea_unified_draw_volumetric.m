@@ -1,4 +1,8 @@
 function ea_unified_draw_volumetric(obj,vals,group,side,gradientLevel,voxcmap)
+if ismethod(obj, 'repair_loaded_explorer')
+    obj.repair_loaded_explorer;
+end
+
 if strcmp(obj.drawTool,'sweetspotmapping')
     % Plot voxels if any survived
     res=obj.results.sweetspotmapping.space{side};
