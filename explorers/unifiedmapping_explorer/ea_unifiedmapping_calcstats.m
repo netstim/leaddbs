@@ -1,5 +1,9 @@
 function [vals,fibcell,usedidx] = ea_unifiedmapping_calcstats(obj,patsel,Iperm)
 
+if ismethod(obj, 'repair_loaded_explorer')
+    obj.repair_loaded_explorer;
+end
+
 %No fibcell and usedidx for sweetspotmapping or networkmapping
 switch obj.drawTool
     case {'sweetspotmapping','networkmapping'}
@@ -133,7 +137,6 @@ for group = groups
                         gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                     case 'Sigmoid Field'
                         pafThreshold = obj.statsettings.efieldthreshold;
-                        gval{side}(gval{side}<=obj.statsettings.nanthreshold) = nan;
                         Nmap=ea_nansum((gval{side}(:,gpatsel)>pafThreshold),2);
                         gval{side}(Nmap < round((obj.statsettings.connthreshold/100) * length(gpatsel)), gpatsel) = nan;
                     otherwise

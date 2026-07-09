@@ -46,7 +46,7 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
     % fiber values can be sigmoid transform
     if strcmp(obj.statsettings.stimulationmodel, 'Sigmoid Field')
         if obj.calcsettings.connectivity_type == 2
-            fibsval = obj.results.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).('PAM_probA').fibsval;
+            fibsval = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).('PAM_probA').fibsval;
         else
             fibsval_raw = fibsval;
             for side = 1:size(fibsval_raw,2)
