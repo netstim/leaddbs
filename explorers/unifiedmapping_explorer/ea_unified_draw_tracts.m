@@ -1,5 +1,9 @@
 function ea_unified_draw_tracts(obj,vals,group,side,alphaind,fibcell,fibcmap,cmapind,usedidx)
 % Plot fibers if any survived
+if ~iscell(obj.drawvals)
+    obj.drawvals = {};
+end
+
 if ~isempty(fibcell{group,side})
     prefs = ea_prefs;
     obj.drawobject.fiberfiltering{group,side} = streamtube(fibcell{group,side}, prefs.d3.fiberwidth);

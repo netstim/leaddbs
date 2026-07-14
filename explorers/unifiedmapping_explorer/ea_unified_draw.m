@@ -3,6 +3,10 @@ function ea_unified_draw(obj,vals,fibcell,usedidx) %for cv live visualize
 % re-define plainconn (since we do not store it)
 %this is all based on which tool is selected
 %match draw tool with field name
+if ismethod(obj, 'repair_loaded_explorer')
+    obj.repair_loaded_explorer;
+end
+
 if strcmp(obj.drawTool,'sweetspotmapping')
     flag2tool = 'sweetspotmapping';
     if isempty(obj.drawobject)
@@ -25,9 +29,9 @@ end
 % 
 % end
 
-if strcmp(obj.drawTool,'fiberfiltering') && obj.calcsettings.connectivity_type == 2
-    ea_updatePAM_VAT(obj);
-end
+% if strcmp(obj.drawTool,'fiberfiltering') && obj.calcsettings.connectivity_type == 2
+%     ea_updatePAM_VAT(obj);
+% end
 
 export=nan;
 
@@ -139,7 +143,7 @@ for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2
     shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
     shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
 
-    if obj.subscore.special_case || ~domultitract
+    if ~domultitract || obj.subscore.special_case
         pos_active = obj.posvisible;
         neg_active = obj.negvisible;
     else
