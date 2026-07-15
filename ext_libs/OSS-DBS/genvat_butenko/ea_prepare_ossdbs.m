@@ -142,6 +142,11 @@ elseif  isfield(options.prefs, 'oss_bin_path') && ~strcmp(options.prefs.oss_bin_
         ea_warndlg(warningMsg);
         settings = false;
         return
+    elseif strcmp(settings.butenko_segmAlg,'SynthSeg')
+        warningMsg = sprintf("SynthSeg segmentation cannot be used with pre-compiled OSS-DBS");
+        ea_warndlg(warningMsg);
+        settings = false;
+        return
     end
 else
     settings.use_wsl = false;

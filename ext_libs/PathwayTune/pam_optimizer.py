@@ -215,9 +215,6 @@ class PamOptimizer:
         
         run_PAM(input_settings)
 
-        # the original solution for 10 mA
-        # so scale by 100
-
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)
         stim_result.make_prediction(self.optim_settings['similarity_metric'], self.target_profiles, self.fixed_symptom_weights, plot_results=False)
