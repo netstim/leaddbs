@@ -44,7 +44,11 @@ if islogical(settings) && ~settings
 end
 
 % some hardcoded parameters, can be added to the GUI later
-prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
+if isfield(options,'prepFiles_cluster')
+    prepFiles_cluster = options.prepFiles_cluster;
+else
+    prepFiles_cluster = 0; % set to 1 if you only want to prep files for cluster comp.
+end
 postprocess_cluster = 0; % set to 1 if OSS-DBS was already run externally (e.g. on a cluster) and you only want Lead-DBS postprocessing. Mutually exclusive with prepFiles_cluster.
 settings.reuse_warped_connectome = postprocess_cluster;  % always reuse when postprocessing cluster results to preserve fiber-ID consistency with Axon_state_*.mat
 settings.postprocess_cluster = postprocess_cluster;  % gates destructive cleanup in ea_prepare_fibers and ea_save_ossdbs_settings (cluster output must not be wiped)
