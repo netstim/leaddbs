@@ -8,10 +8,14 @@ from scipy.optimize import dual_annealing
 from Improvement4Protocol import ResultPAM
 from ossdbs.api import run_PAM
 
-TOTAL_CURRENT = 5.0
-ABS_TOTAL_CURRENT = 5.0
+TOTAL_CURRENT = 8.0
+ABS_TOTAL_CURRENT = 8.0
 CURRENT_EXCESS_LIMIT = 3.0
 
+# class EvaluationLimitReached(Exception):
+#     def __init__(self, x, fun):
+#         self.x = x
+#         self.fun = fun
 
 class PamOptimizer:
 
@@ -39,6 +43,8 @@ class PamOptimizer:
         self.input_dict = input_dict
         self.scaling = scaling
 
+        self.eval_count = 0 # actual PAM evaluations, bounded by self.optim_settings['num_iterations']
+
         if self.side == 0:
             self.side_suffix = '_rh'
         else:
@@ -63,18 +69,19 @@ class PamOptimizer:
         self.target_profiles = optim_settings['target_profiles']
         self.fixed_symptom_weights = optim_settings['fixed_symptom_weights']
 
+        
         if self.optim_settings['optim_alg'] == 'Dual Annealing':
 
             if os.path.isfile(os.path.join(self.results_folder,'Best_scaling_yet.csv')):
                 initial_scaling = np.genfromtxt(os.path.join(self.results_folder,'Best_scaling_yet.csv'), delimiter=' ')
                 optimized_current = dual_annealing(self.compute_global_score,
                                      bounds=list(zip(self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])),
-                                     x0=initial_scaling, maxfun=self.optim_settings['num_iterations'], seed=42, visit=2.62,
+                                     x0=initial_scaling, maxfun=1e6, seed=42, visit=2.62,
                                      no_local_search=True)
             else:
                 optimized_current = dual_annealing(self.compute_global_score,
                                      bounds=list(zip(self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])),
-                                     maxfun=self.optim_settings['num_iterations'], seed=42, visit=2.62,
+                                     maxfun=1e6, seed=42, visit=2.62,
                                      no_local_search=True)
         elif self.optim_settings['optim_alg'] == 'PSO':
 
@@ -83,7 +90,7 @@ class PamOptimizer:
             options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
             nParticles = 10
             optimizer = GlobalBestPSO(n_particles=nParticles, dimensions=len(self.optim_settings['min_bound_per_contact']), options=options, bounds=bounds)
-            cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=int(self.optim_settings['num_iterations'] / nParticles))
+            cost, optimized_current = optimizer.optimize(self.prepare_swarm, iters=1e6)
 
 
     def store_iteration_results(self, S_vector, global_score, symptoms_list, estim_Ihat, SE_dict={}):
@@ -201,11 +208,12 @@ class PamOptimizer:
             print("CURRENT_EXCESS_LIMIT violation")
             # this iteration will not be stored
             return 1e3 + total_current_penalty
+        else:
+            self.eval_count += 1  # actual PAM iteration   
+            if self.eval_count > self.optim_settings['num_iterations']:
+                sys.exit("The limit of PAM iterations has been reached.")
         
         run_PAM(input_settings)
-
-        # the original solution for 10 mA
-        # so scale by 100
 
         # make a prediction
         stim_result = ResultPAM(self.side, self.stim_folder)

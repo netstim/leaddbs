@@ -127,10 +127,7 @@ switch settings.butenko_segmAlg
             % always copy to make sure the chosen algorithm was used
             copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
         end
-
-
     case 'Atlas Based'
-
         % always overwrite in this case
         if isfile([outputPaths.outputDir, filesep, segmaskName])
             ea_delete([outputPaths.outputDir, filesep, segmaskName])
@@ -152,6 +149,10 @@ switch settings.butenko_segmAlg
             ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
         end
     case 'SynthSeg'
+
+        % check if there are slabs
+        %anchorBrainMask = ea_load_nii(options.subj.recon.anchorNativeMask);
+
         if settings.segment_SVD
             segmenter = 'SynthSeg';
             [anchorImageDir, ~] = fileparts(anchorImage);
@@ -211,7 +212,43 @@ switch settings.butenko_segmAlg
             end
 
             % always convert to make sure the chosen algorithm was used
-            ea_convert_synthSeg2segmask((segMaskPath), ([outputPaths.outputDir, filesep, segmaskName]));
+            segmaskFile = [outputPaths.outputDir, filesep, segmaskName];
+            ea_convert_synthSeg2segmask(segMaskPath, segmaskFile);
+
+            % check if the segmentation worked
+            segmask_nifti = ea_load_nii(segmaskFile);
+            if nnz(segmask_nifti.img) == 0
+                % segmentation failed
+                warningMsg = sprintf("SynthSeg could not segment the anchor modality, falling back to the Atlas-based approach");
+                ea_warndlg(warningMsg);
+                
+                % always overwrite in this case
+                if isfile([outputPaths.outputDir, filesep, segmaskName])
+                    ea_delete([outputPaths.outputDir, filesep, segmaskName])
+                end
+
+                if strcmp(options.atlasset,'Use none')
+                    warningMsg = sprintf("Visualize the 'conductivity' atlas in the MNI electrode scene");
+                    ea_warndlg(warningMsg);
+                    return
+                end
+
+                if options.native
+                    segMaskPath = [options.subj.atlasDir,filesep,options.atlasset,filesep,'segmask_atlas.nii'];
+                    ea_ptspecific_atl(options);
+                    atlas_gm_mask_path = [options.subj.atlasDir,filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
+                    ea_convert_atlas2segmask(atlas_gm_mask_path, segMaskPath, 0.5)
+                    copyfile(segMaskPath, [outputPaths.outputDir, filesep, segmaskName]);
+                else
+                    % save directly to stim folder
+                    segMaskPath = [outputPaths.outputDir,filesep,'segmask.nii'];
+                    atlas_gm_mask_path = [ea_space,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz'];
+                    if ~isfile(atlas_gm_mask_path)
+                        ea_warndlg("Visualize the 'conductivity' atlas in the MNI electrode scene")
+                    end
+                    ea_convert_atlas2segmask(atlas_gm_mask_path, [outputPaths.outputDir, filesep, segmaskName], 0.5)
+                end
+            end
         end
         env = ea_conda_env('OSS-DBSv2');
 end
