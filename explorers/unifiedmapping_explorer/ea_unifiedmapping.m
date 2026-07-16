@@ -132,7 +132,9 @@ classdef ea_unifiedmapping < handle
             obj.statsettings.outcometype = 'gradual';
             obj.statsettings.stimulationmodel = 'Electric Field';
             obj.statsettings.efieldmetric = 'Sum'; % if statmetric == ;Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
-            obj.statsettings.efieldthreshold = 200;
+            obj.statsettings.efieldthreshold_spot = 200;
+            obj.statsettings.efieldthreshold_tract = 200;
+            obj.statsettings.efieldthreshold_network = 50;
             obj.statsettings.nanthreshold = 0; % set values below this number to nan on the fly when calculating sweetspot statistics
             obj.statsettings.sweetspotresolution = 0.5; % resolution of sweetspot in mm
             obj.statsettings.connthreshold = 20;
@@ -815,9 +817,23 @@ classdef ea_unifiedmapping < handle
             if ~isfield(obj.statsettings,'efieldmetric') || isempty(obj.statsettings.efieldmetric)
                 obj.statsettings.efieldmetric = 'Sum';
             end
-            if ~isfield(obj.statsettings,'efieldthreshold') || isempty(obj.statsettings.efieldthreshold)
-                obj.statsettings.efieldthreshold = 200;
+            if isfield(obj.statsettings, 'efieldthreshold') && ~isempty(obj.statsettings.efieldthreshold)
+                legacyThreshold = obj.statsettings.efieldthreshold;
+            else
+                 legacyThreshold = 200;
             end
+            if ~isfield(obj.statsettings, 'efieldthreshold_spot') || isempty(obj.statsettings.efieldthreshold_spot)
+                obj.statsettings.efieldthreshold_spot = legacyThreshold;
+            end
+
+            if ~isfield(obj.statsettings,'efieldthreshold_tract') || isempty(obj.statsettings.efieldthreshold_tract)
+                obj.statsettings.efieldthreshold_tract = legacyThreshold;
+            end
+
+            if ~isfield(obj.statsettings,'efieldthreshold_network') || isempty(obj.statsettings.efieldthreshold_network)
+                obj.statsettings.efieldthreshold_network = 50;
+            end
+            
             if ~isfield(obj.statsettings,'nanthreshold') || isempty(obj.statsettings.nanthreshold)
                 obj.statsettings.nanthreshold = 0;
             end

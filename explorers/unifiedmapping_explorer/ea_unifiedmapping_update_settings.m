@@ -8,7 +8,9 @@ function new_tractset = ea_unifiedmapping_update_settings(explorer,new_settings)
     explorer.showposamount = new_settings.showposamount;
     explorer.shownegamount = new_settings.shownegamount;
     explorer.statsettings.connthreshold = new_settings.connthreshold;
-    explorer.statsettings.efieldthreshold = new_settings.efieldthreshold;
+    explorer.statsettings.efieldthreshold_spot = new_settings.efieldthreshold_spot;
+    explorer.statsettings.efieldthreshold_tract = new_settings.efieldthreshold_tract;
+    explorer.statsettings.efieldthreshold_network = new_settings.efieldthreshold_network;
     explorer.statsettings.statmetric = new_settings.statmetric;
     if isfield(new_settings, 'stimulationmodel')
         explorer.statsettings.stimulationmodel = new_settings.stimulationmodel;
