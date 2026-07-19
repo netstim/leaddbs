@@ -17,7 +17,7 @@ for side=1:size(vatlist,2)
     if ~isfield(obj.M,'pseudoM')
         ea_create_threshold_union_ref_nii(fname, vatlist(isfile(vatlist(:,side)),side), prefs.explorer.efieldlowfilter, repmat(obj.statsettings.sweetspotresolution,1,3)); % at least one efield should have a value of 150 for this to be included
     else
-        ea_create_union_ref_nii([outdir, 'efield_bb.nii'], vatlist(isfile(vatlist(:,side)),side), obj.roithresh, repmat(obj.statsettings.sweetspotresolution,1,3));
+        ea_create_union_ref_nii(fname, vatlist(isfile(vatlist(:,side)),side), repmat(obj.statsettings.sweetspotresolution,1,3));
         ea_cprintf('CmdWinWarnings', "PseudoM VTAs are used, low field filtering disabled! This can result in a large RAM consumption.\n");
     end
     nii=ea_load_nii(fname); % reload for space function.
