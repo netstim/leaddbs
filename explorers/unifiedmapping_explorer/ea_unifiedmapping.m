@@ -288,7 +288,7 @@ classdef ea_unifiedmapping < handle
                     vatlist = ea_sweetspotmapping_getvats(obj);
                 end
                 for vat=1:length(vatlist)
-                    for side = 1:2
+                    for side = 1:size(vatlist,2)
                         vta_nii = ea_load_nii(vatlist{vat,side});
                         obj.results.roi{vat,side} = vta_nii;
                     end
