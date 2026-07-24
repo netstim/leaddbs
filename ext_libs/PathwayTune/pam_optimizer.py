@@ -73,7 +73,8 @@ class PamOptimizer:
         if self.optim_settings['optim_alg'] == 'Dual Annealing':
 
             if os.path.isfile(os.path.join(self.results_folder,'Best_scaling_yet.csv')):
-                initial_scaling = np.genfromtxt(os.path.join(self.results_folder,'Best_scaling_yet.csv'), delimiter=' ')
+                initial_scaling = np.genfromtxt(os.path.join(self.results_folder,'Best_scaling_yet.csv'), delimiter=',', skip_header=True)
+                initial_scaling = initial_scaling * 0.001
                 optimized_current = dual_annealing(self.compute_global_score,
                                      bounds=list(zip(self.optim_settings['min_bound_per_contact'], self.optim_settings['max_bound_per_contact'])),
                                      x0=initial_scaling, maxfun=1e6, seed=42, visit=2.62,
@@ -266,7 +267,6 @@ class PamOptimizer:
                 if stim_result.SE_dict[key]["predicted"]:
                     # assign large penalty based on the activation rate of the side-effect pathway
                     # this is a suboptimal approach if multiple side-effect pathways / symptoms are consdered
-                    print(key,stim_result.SE_dict[key]["avg_rate_above_thresh"])
                     return 1e3 * stim_result.SE_dict[key]["avg_rate_above_thresh"] + total_current_penalty
 
         return -1 * global_score + total_current_penalty
