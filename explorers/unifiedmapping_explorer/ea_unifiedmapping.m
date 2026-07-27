@@ -586,10 +586,10 @@ classdef ea_unifiedmapping < handle
 
             % define space again
             switch obj.calcsettings.calcspace
-                case 0
-                    space = 'native';
                 case 1
                     space = 'MNI';
+                case 0
+                    space = 'native';
             end
 
             % load e-field projection metrics             

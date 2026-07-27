@@ -56,7 +56,20 @@ switch obj.drawTool
         end
 
     case 'fiberfiltering' %fiberfiltering
-        connid = ea_conn2connid(obj.calcsettings.fibfilt_connectome);
+        connid = ea_conn2connid(obj.calcsettings.fibfilt_connectome);        
+        if obj.calcsettings.connectivity_type == 2
+            selectedFibcell = ...
+                obj.results.fiberfiltering.(connid).pam_fibers.fibcell;
+        
+        elseif strcmp(obj.e_field_metric, 'Projection')
+            selectedFibcell = ...
+                obj.results.fiberfiltering.(connid).efield_proj.fibcell;
+        
+        else
+            selectedFibcell = ...
+                obj.results.fiberfiltering.(connid).efield_fibers.fibcell;
+        end
+
         if obj.calcsettings.connectivity_type == 2
             init_val = obj.results.fiberfiltering.(connid).('PAM_probA').fibsval;
         else
@@ -219,7 +232,7 @@ if strcmp(obj.threshstrategy,'Unthresholded')
     if strcmp(obj.drawTool,'fiberfiltering')
         for side=1:numel(gval)
             usedidx{group,side} = find(isfinite(vals{group,side}));
-            fibcell{group,side} = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).fibcell{side}(usedidx{group,side});
+            fibcell{group,side} = selectedFibcell{side}(usedidx{group,side});            
             vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
             if exist('pvals','var')
                 pvals{group,side} = pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
@@ -258,8 +271,7 @@ else
         for group=groups
             for side=1:numel(gval)
                 usedidx{group,side} = find(isfinite(vals{group,side}));
-                fibcell{group,side} = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).fibcell{side}(usedidx{group,side});
-                vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
+                fibcell{group,side} = selectedFibcell{side}(usedidx{group,side});                vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
                 if exist('pvals','var')
                     pvals{group,side} = pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
                 end
