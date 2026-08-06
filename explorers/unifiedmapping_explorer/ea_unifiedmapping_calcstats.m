@@ -117,6 +117,15 @@ for group = groups
             case 'sweetspotmapping'
                 switch obj.statsettings.stimulationmodel
                     case 'VTA'
+                        % Sweet-spot calculation stores the thresholded input
+                        % maps for all stimulation models. Convert retained
+                        % voxels to a binary VTA here so two-sample tests see
+                        % explicit connected (1) and unconnected (0) groups.
+                        vtaValues = gval{side}(:,gpatsel);
+                        missingValues = isnan(vtaValues);
+                        vtaValues = double(vtaValues > 0);
+                        vtaValues(missingValues) = nan;
+                        gval{side}(:,gpatsel) = vtaValues;
                         Nmap=ea_nansum(gval{side}(:,gpatsel),2);
                         gval{side}(Nmap<((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                     case 'Electric Field'
