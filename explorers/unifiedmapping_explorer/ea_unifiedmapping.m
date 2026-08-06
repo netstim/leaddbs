@@ -135,14 +135,17 @@ classdef ea_unifiedmapping < handle
             obj.statsettings.efieldthreshold_spot = 200;
             obj.statsettings.efieldthreshold_tract = 200;
             obj.statsettings.efieldthreshold_network = 50;
-            obj.statsettings.nanthreshold = 0; % set values below this number to nan on the fly when calculating sweetspot statistics
+            % Optional legacy sweetspot behavior. When empty, subthreshold
+            % values remain explicit zeros rather than being treated as
+            % missing observations.
+            obj.statsettings.nanthreshold = [];
             obj.statsettings.sweetspotresolution = 0.5; % resolution of sweetspot in mm
             obj.statsettings.connthreshold = 20;
             obj.statsettings.statfamily = 'Correlations'; % the
             obj.statsettings.stattest = 'Spearman';
             obj.statsettings.H0 = 'Average';
             obj.calcsettings.selectedTool = 1; %1 = sweetspotmapping, 2 = fiberfiltering, 3 = networkmapping;
-            obj.calcsettings.calcthreshold = 100;
+            obj.calcsettings.calcthreshold = 50;
             obj.calcsettings.switch_connectivity = 1;
             obj.calcsettings.connectivity_type = 1; %1 = vta, 2 = PAM
             obj.calcsettings.functionalresolution = '2 mm'; 
@@ -310,11 +313,11 @@ classdef ea_unifiedmapping < handle
 
 
                 [AllX,space] = ea_unifiedmapping_exportefieldmap(vatlist,obj);
-                % Apply threshold: set all values below nanthreshold to
-                % NaN, like in fiberfiltering
+                % Apply the calculation threshold while preserving
+                % subthreshold observations as explicit zeros.
                 for i = 1:numel(AllX)
                     if ~isempty(AllX{i})
-                        AllX{i}(AllX{i} < obj.calcsettings.calcthreshold) = nan;
+                        AllX{i}(AllX{i} < obj.calcsettings.calcthreshold) = 0;
                     end
                 end
 
@@ -834,8 +837,8 @@ classdef ea_unifiedmapping < handle
                 obj.statsettings.efieldthreshold_network = 50;
             end
             
-            if ~isfield(obj.statsettings,'nanthreshold') || isempty(obj.statsettings.nanthreshold)
-                obj.statsettings.nanthreshold = 0;
+            if ~isfield(obj.statsettings,'nanthreshold')
+                obj.statsettings.nanthreshold = [];
             end
             if ~isfield(obj.statsettings,'sweetspotresolution') || isempty(obj.statsettings.sweetspotresolution)
                 obj.statsettings.sweetspotresolution = 0.5;
@@ -860,7 +863,7 @@ classdef ea_unifiedmapping < handle
                 obj.calcsettings.selectedTool = 1;
             end
             if ~isfield(obj.calcsettings,'calcthreshold') || isempty(obj.calcsettings.calcthreshold)
-                obj.calcsettings.calcthreshold = 100;
+                obj.calcsettings.calcthreshold = 50;
             end
             if ~isfield(obj.calcsettings,'switch_connectivity') || isempty(obj.calcsettings.switch_connectivity)
                 obj.calcsettings.switch_connectivity = 1;
