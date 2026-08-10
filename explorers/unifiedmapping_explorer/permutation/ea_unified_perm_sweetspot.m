@@ -40,6 +40,21 @@ if ~exist('maxWorkers','var') || isempty(maxWorkers)
     maxWorkers = 3;
 end
 
+% This feature only supports sweetspotmapping today. Checked explicitly
+% (not inferred from obj.drawTool) because obj.drawTool reflects whatever
+% is currently displayed/active in the GUI, not necessarily what the
+% caller means to test -- an object can have sweetspot AND fiberfiltering/
+% networkmapping results computed at once, with drawTool currently pointed
+% at one of the others. ea_unified_perm_sweetspot_calcstats.m unconditionally
+% reads obj.results.sweetspotmapping.efield regardless of drawTool, so
+% without this check a caller could silently get a valid-looking sweetspot
+% permutation test while believing they tested a different tool entirely.
+if ~isfield(obj.results, 'sweetspotmapping')
+    ea_error(['permtest currently only supports sweetspotmapping (fiberfiltering/networkmapping ', ...
+        'are not yet implemented). obj.results.sweetspotmapping was not found -- compute ', ...
+        'sweetspot results for this object first.']);
+end
+
 if ~strcmp(obj.statsettings.statfamily, 'Correlations') || ...
         ~ismember(obj.statsettings.stimulationmodel, {'Electric Field','Sigmoid Field'})
     ea_error(['permtest is currently only implemented for statsettings.statfamily = ''Correlations'' ', ...

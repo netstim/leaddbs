@@ -32,6 +32,16 @@ function predresults = ea_unified_perm_sweetspot_predict(obj, trainPermtestFile,
 %             Default 250; lower it further on tighter-memory machines, at
 %             the cost of more, smaller disk reads.
 
+% This feature only supports sweetspotmapping today -- see the matching
+% check and rationale in ea_unified_perm_sweetspot.m (obj.drawTool reflects
+% GUI display state, not necessarily what the caller means to test; this
+% object could have fiberfiltering/networkmapping results too).
+if ~isfield(obj.results, 'sweetspotmapping')
+    ea_error(['predpermtest currently only supports sweetspotmapping (fiberfiltering/networkmapping ', ...
+        'are not yet implemented). obj.results.sweetspotmapping was not found -- compute ', ...
+        'sweetspot results for this (test) object first.']);
+end
+
 if size(obj.responsevar, 2) > 1
     ea_error('Hemiscore responsevar (2 columns) is not yet supported for permutation testing.');
 end

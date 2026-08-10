@@ -150,8 +150,8 @@ for side = 1:nsides
     for vStart = 1:chunkSize:Nvox
         vEnd = min(vStart+chunkSize-1, Nvox);
         vIdx = vStart:vEnd;
-        countPos = sum(maxPosPerm >= tfceEmpPos(vIdx), 1);
-        countNeg = sum(maxNegPerm >= tfceEmpNeg(vIdx), 1);
+        countPos = sum(maxPosPerm >= tfceEmpPos(vIdx)', 1); % transpose: indexing a column vector (tfceEmpPos) keeps its column orientation regardless of vIdx's shape, but maxPosPerm >= ... needs a row here to broadcast into an NpermTFCE x chunkSize comparison
+        countNeg = sum(maxNegPerm >= tfceEmpNeg(vIdx)', 1);
         pTfcePos(vIdx) = (countPos + 1) / (NpermTFCE + 1);
         pTfceNeg(vIdx) = (countNeg + 1) / (NpermTFCE + 1);
     end
