@@ -282,6 +282,33 @@ if obj.showsignificantonly
 end
 
 if strcmp(obj.threshstrategy,'Unthresholded')
+    % Unthresholded means no magnitude/rank threshold, but the selected
+    % sign visibility still defines which values belong to the model. This
+    % mask is also used by cross-validation through the returned vals.
+    for group = groups
+        for side = 1:numel(gval)
+            if dosubscores || dogroups
+                if obj.subscore.special_case
+                    showPositive = obj.posvisible;
+                    showNegative = obj.negvisible;
+                else
+                    showPositive = obj.subscore.posvisible(group);
+                    showNegative = obj.subscore.negvisible(group);
+                end
+            else
+                showPositive = obj.posvisible;
+                showNegative = obj.negvisible;
+            end
+
+            if ~showPositive
+                vals{group,side}(vals{group,side} > 0) = nan;
+            end
+            if ~showNegative
+                vals{group,side}(vals{group,side} < 0) = nan;
+            end
+        end
+    end
+
     if strcmp(obj.drawTool,'fiberfiltering')
         for side=1:numel(gval)
             usedidx{group,side} = find(isfinite(vals{group,side}));
