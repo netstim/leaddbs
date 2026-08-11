@@ -277,6 +277,10 @@ for group = groups
     end
 end
 
+if obj.showsignificantonly
+    vals=ea_corrsignan(vals,pvals,obj);
+end
+
 if strcmp(obj.threshstrategy,'Unthresholded')
     if strcmp(obj.drawTool,'fiberfiltering')
         for side=1:numel(gval)
