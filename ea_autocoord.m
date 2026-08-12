@@ -353,6 +353,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             elmodel=options.elmodel;
             if ~isequal(options.reconmethod, 'LeGUI (Davis 2021)')
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+                % start with a clean slate of angles
+                load(options.subj.recon.recon,'reco')
+                reco.angles = ea_diode_emptyorientation(numel(reco.props));
+                save(options.subj.recon.recon,'reco')
+                clear reco
             end
             if isfield(options,'hybridsave')
                 options=rmfield(options,'hybridsave');
