@@ -20,7 +20,7 @@ end
 
 % allow mirroring only for mirrored connectomes
 if exist('mirrored','var')
-    if mirrored && obj.multi_pathways
+    if mirrored && obj.calcsettings.multi_pathways
         numPatient = length(obj.allpatients)*2; 
     else
         numPatient = length(obj.allpatients);  % no mirroring
@@ -76,7 +76,7 @@ for side = 1:numSide
             E_proj_folder = [obj.allpatients{pt},filesep,'connectomes',filesep,'dMRI',filesep,obj.calcsettings.fibfilt_connectome,filesep,'gs_', obj.M.guid,side_tag];
             if isfile([E_proj_folder,filesep,space,'E_metrics.mat'])
     
-                load([E_proj_folder,filesep,space,'E_metrics.mat']);
+                load([E_proj_folder,filesep, space,'E_metrics.mat']);
     
                 % no mirroring allowed atm
             else

@@ -124,6 +124,16 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                     if size(obj.results.sweetspotmapping.efield,1)==2
                         orig_model{2} = obj.results.sweetspotmapping.efield{2}';
                     end
+                    % Training statistics use sigmoid-transformed E-fields,
+                    % so prediction must use the same representation.
+                    if strcmp(obj.statsettings.stimulationmodel, 'Sigmoid Field')
+                        for modelSide = 1:numel(orig_model)
+                            if ~isempty(orig_model{modelSide})
+                                orig_model{modelSide} = ...
+                                    ea_SigmoidFromEfield(orig_model{modelSide});
+                            end
+                        end
+                    end
                     orig_model_flat = vertcat(orig_model{:});
                 case 'fiberfiltering'
                     orig_model{1} = fibsval{1,1}(usedidx{voter,1},patientsel);
@@ -263,7 +273,6 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    % allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
                                     allzerotestidx = testidx(~ea_nansum(orig_model_flat(:,test)));
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 

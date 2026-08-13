@@ -4,6 +4,17 @@ if ~exist('outfname', 'var')
     outFilePath = options.subj.recon.recon;
 end
 
+% Maintain postop DiODe results if present
+if exist(outFilePath,"file")
+    load(outFilePath)
+    if isfield(reco,"angles") && isfield(reco.angles,"postop")
+        postopangles = reco.angles.postop;
+    else
+        postopangles = [];
+    end
+    clear reco
+end
+
 ea_mkdir(fileparts(outFilePath));
 
 for side=options.sides
@@ -72,6 +83,13 @@ end
 
 % recalculate angles after ea_save_reconstruction has completed
 ea_recalc_angles(outFilePath);
+% re-enter DiODe post-op angles if present
+if ~isempty(postopangles)
+    load(outFilePath)
+    reco.angles.postop = postopangles;
+    save(outFilePath,'reco')
+end
+
 
 
 function [reco,corrected]=ea_checkswap_lr(reco,options)
