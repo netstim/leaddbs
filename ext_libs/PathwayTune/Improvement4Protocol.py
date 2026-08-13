@@ -323,6 +323,7 @@ class ResultPAM:
             rate_above_thresh = []
 
             activ_target_profile = list(SE_threshold_profile[key].keys())
+            SE_threshold_profile_side[key]["predicted"] = 0
 
             for i in range(len(activ_target_profile)):
 
@@ -339,14 +340,8 @@ class ResultPAM:
 
                 # check if above the threshold
                 if predicted_rates[-1] > target_rates[-1]:
-                    SE_threshold_profile_side[key]["predicted"] = 1
-                    
                     rate_above_thresh.append(predicted_rates[-1])
-                    
-                    #SE_threshold_profile_side[key]["rate"] = predicted_rates[-1]
-                    #break
-                else:
-                    SE_threshold_profile_side[key]["predicted"] = 0
+                    SE_threshold_profile_side[key]["predicted"] = 1
                     
             if rate_above_thresh:
                 SE_threshold_profile_side[key]["avg_rate_above_thresh"] = sum(rate_above_thresh) / len(rate_above_thresh)

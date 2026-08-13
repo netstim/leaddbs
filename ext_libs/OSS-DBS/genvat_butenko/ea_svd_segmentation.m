@@ -452,7 +452,7 @@ function [segmask_nifti,synth_fn] = get_SynthSeg_segmask(workingDir,image2segmen
     if ~isfile(multisegment)
         ea_synthseg(image2segment, multisegment) 
     end
-    convert_synthSeg2segmask(multisegment, segmaskFile);
+    ea_convert_synthSeg2segmask(multisegment, segmaskFile);
 
     % reslice segmask to AnchorImage space
     % does not matter which image, they are all co-registered
@@ -467,7 +467,7 @@ function [segmask_nifti,synth_fn] = get_SynthSeg_segmask(workingDir,image2segmen
     %     gunzip(anchorImage);
     %     anchorNii = [anchorImage(1:end-3)];
     % end
-    ea_conformspaceto(anchorNii,segmaskFile)
+    ea_conformspaceto(anchorNii,segmaskFile,0)
     segmask_nifti = ea_load_nii(segmaskFile);
 end
 
