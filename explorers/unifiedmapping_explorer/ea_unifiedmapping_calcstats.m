@@ -140,6 +140,11 @@ for group = groups
                         Nmap=ea_nansum((gval{side}(:,gpatsel)>obj.statsettings.efieldthreshold_spot),2);
                         gval{side}(Nmap<round((obj.statsettings.connthreshold/100)*length(gpatsel)),gpatsel)=nan;
                     case 'Sigmoid Field'
+                        if isfield(obj.statsettings, 'nanthreshold') && ...
+                                ~isempty(obj.statsettings.nanthreshold)
+                            gval{side}(gval{side} <= ...
+                                obj.statsettings.nanthreshold) = nan;
+                        end
                         gval{side}(:, gpatsel) = ea_SigmoidFromEfield(gval{side}(:, gpatsel));
                         Nmap = ea_nansum( gval{side}(:, gpatsel) > obj.statsettings.efieldthreshold_spot, 2);
                         minN = round((obj.statsettings.connthreshold / 100) * length(gpatsel)); 
@@ -351,7 +356,8 @@ else
         for group=groups
             for side=1:numel(gval)
                 usedidx{group,side} = find(isfinite(vals{group,side}));
-                fibcell{group,side} = selectedFibcell{side}(usedidx{group,side});                vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
+                fibcell{group,side} = selectedFibcell{side}(usedidx{group,side});                
+                vals{group,side} = vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
                 if exist('pvals','var')
                     pvals{group,side} = pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
                 end
