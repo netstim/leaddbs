@@ -1,8 +1,8 @@
-function [isbinary,minmax]=ea_discfibers_checkcustomNii(vatlist)
+function [isbinary,minmax]=ea_unifiedmapping_checkcustomNii(vatlist)
 % small function to check whether input custom ROI (pseudoM case) are
 % binary and/or return their min/max values
 
-for v=1:length(vatlist)
+for v=1:numel(vatlist)
 
     nii=ea_load_nii(vatlist{v});
 
@@ -12,7 +12,6 @@ end
 
 isbinary=all(isbinary);
 minmax=[ea_nanmin(minmax(:,1)),ea_nanmax(minmax(:,2))];
-
 
 
 

@@ -202,12 +202,32 @@ classdef ea_unifiedmapping < handle
                 obj.resultfig = resultfig;
 
                 if isfield(obj.M,'pseudoM')
-                    obj.allpatients = obj.M.ROI.list;
-                    obj.patientselection = 1:length(obj.M.ROI.list);
+                    roiList = obj.M.ROI.list;
+                    % Accept pseudoM lists saved as {rightList, leftList}
+                    % and normalize them to the canonical N-patient-by-side
+                    % cell array used by the mapping calculations.
+                    if isrow(roiList) && all(cellfun(@iscell, roiList))
+                        sideLengths = cellfun(@numel, roiList);
+                        if numel(unique(sideLengths)) ~= 1
+                            ea_error(['The nested pseudoM ROI side lists ', ...
+                                'must contain the same number of patients.']);
+                        end
+                        normalizedRoiList = cell(sideLengths(1), numel(roiList));
+                        for side = 1:numel(roiList)
+                            normalizedRoiList(:,side) = roiList{side}(:);
+                        end
+                        obj.M.ROI.list = normalizedRoiList;
+                    end
+
+                    % Rows represent patients; columns represent input sides.
+                    % Keep the patient list one-dimensional even when pseudoM
+                    % supplies separate right/left NIfTIs.
+                    obj.allpatients = obj.M.ROI.list(:,1);
+                    obj.patientselection = 1:size(obj.M.ROI.list,1);
                     obj.M.root = [fileparts(datapath),filesep];
-                    obj.M.patient.list = cell(size(obj.M.ROI.list,1), 1);
+                    obj.M.patient.list = cell(1, size(obj.M.ROI.list,1));
                     for i = 1:size(obj.M.ROI.list,1)
-                        obj.M.patient.list{i,1} = obj.M.ROI.list{i,1};
+                        obj.M.patient.list{1,i} = obj.M.ROI.list{i,1};
                     end
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
@@ -290,7 +310,7 @@ classdef ea_unifiedmapping < handle
                 else
                     vatlist = ea_sweetspotmapping_getvats(obj);
                 end
-                for vat=1:length(vatlist)
+                for vat=1:size(vatlist,1)
                     for side = 1:size(vatlist,2)
                         vta_nii = ea_load_nii(vatlist{vat,side});
                         obj.results.roi{vat,side} = vta_nii;
@@ -482,7 +502,8 @@ classdef ea_unifiedmapping < handle
                         [~,FilesExist] = ea_unifiedmapping_getlattice(obj);
                     else
                         if isfield(obj.M,'pseudoM')
-                            for entry=1:length(obj.M.ROI.list)
+                            FilesExist = false(size(obj.M.ROI.list));
+                            for entry=1:numel(obj.M.ROI.list)
                                 FilesExist(entry)=exist(obj.M.ROI.list{entry},'file');
                             end
                         else
@@ -973,6 +994,12 @@ classdef ea_unifiedmapping < handle
             end
 
             hasM = isstruct(obj.M);
+
+            if hasM && isfield(obj.M,'pseudoM') && ...
+                    isfield(obj.M,'ROI') && isfield(obj.M.ROI,'list')
+                % allpatients tracks patients, not side-specific files.
+                obj.allpatients = obj.M.ROI.list(:,1);
+            end
 
             if isempty(obj.patientselection) && hasM
                 if isfield(obj.M,'ui') && isfield(obj.M.ui,'listselect') && ~isempty(obj.M.ui.listselect)

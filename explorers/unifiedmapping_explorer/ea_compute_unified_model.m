@@ -124,6 +124,21 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                     if size(obj.results.sweetspotmapping.efield,1)==2
                         orig_model{2} = obj.results.sweetspotmapping.efield{2}';
                     end
+                    % Apply the training sweet spot's missing-value threshold
+                    % to raw E-fields before any sigmoid transformation.
+                    if ismember(obj.statsettings.stimulationmodel, ...
+                            {'Electric Field', 'Sigmoid Field'}) && ...
+                            isfield(obj.statsettings, 'nanthreshold') && ...
+                            ~isempty(obj.statsettings.nanthreshold)
+                        for modelSide = 1:numel(orig_model)
+                            if ~isempty(orig_model{modelSide})
+                                orig_model{modelSide}( ...
+                                    orig_model{modelSide} <= ...
+                                    obj.statsettings.nanthreshold) = nan;
+                            end
+                        end
+                    end
+
                     % Training statistics use sigmoid-transformed E-fields,
                     % so prediction must use the same representation.
                     if strcmp(obj.statsettings.stimulationmodel, 'Sigmoid Field')
@@ -148,35 +163,58 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
         for side=1:size(vals,2)
             % if not lateral, compute Ihat for both hemispheres at the same time
             if ~isempty(vals{voter,side})
+                % Sweet spots are scored per hemisphere and combined later
+                % by the caller. All other mapping modes retain their
+                % original lateral/non-lateral behavior.
+                if strcmp(obj.drawTool, 'sweetspotmapping')
+                    side_model = orig_model{side}(:,patientsel);
+                    Ihat(test,side,voter) = ...
+                        sweetspotSidePrediction( ...
+                            vals{voter,side}, side_model(:,test), obj);
+                    Ihat_train_global(numTestIt,training,side,voter) = ...
+                        sweetspotSidePrediction( ...
+                            vals{voter,side}, side_model(:,training), obj);
+                    continue
+                elseif strcmp(obj.drawTool, 'fiberfiltering')
+                    combine_sides_before_prediction = ...
+                        lateral_score == false;
+                    side_model = fibsval{1,side}( ...
+                        usedidx{voter,side},patientsel);
+                else
+                    combine_sides_before_prediction = ...
+                        lateral_score == false;
+                    side_model = [];
+                end
+
                 switch obj.statsettings.stimulationmodel % also differentiate between methods in the prediction part.
                     case {'VTA'} % VTAs
                         switch lower(obj.basepredictionon)
                             case 'mean of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_nanmean(vals_flat.*orig_model_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*side_model(:,test),1);
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*side_model(:,training),1);
                                 end
 
                             case 'sum of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_nansum(vals_flat.*orig_model_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -184,21 +222,21 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*side_model(:,test),1);
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*side_model(:,training),1);
                                  
                                 end
 
                             case 'peak of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*orig_model_flat, obj.posvisible, obj.negvisible, 'peak');
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -208,22 +246,22 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
+                                    Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*side_model(:,test), obj.posvisible, obj.negvisible, 'peak');
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*side_model(:,training), obj.posvisible, obj.negvisible, 'peak');
                                    
                                 end
                             case 'peak 5% of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*orig_model_flat, obj.posvisible, obj.negvisible, 'peak5');
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -233,11 +271,17 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
+                                    if strcmp(obj.drawTool, 'sweetspotmapping')
+                                        ihatvals=vals{voter,side}.*side_model;
+                                    else
+                                        % Preserve the existing VTA fiber-filtering
+                                        % behavior for multi-voter models.
+                                        ihatvals=vals{1,side}.*side_model;
+                                    end
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(ihatvals(test), obj.posvisible, obj.negvisible, 'peak5');
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
                                     
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(ihatvals(training), obj.posvisible, obj.negvisible, 'peak5');
@@ -246,12 +290,12 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
                     case {'Electric Field', 'Sigmoid Field'} % efields
                         switch lower(obj.basepredictionon)
                             case 'profile of scores: spearman'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = corr(vals_flat,orig_model_flat,'rows','pairwise','type','spearman');
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~ea_nansum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -260,20 +304,20 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman');
+                                    Ihat(test,side,voter) = corr(vals{voter,side},side_model(:,test),'rows','pairwise','type','spearman');
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~ea_nansum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
-                                    Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman');
+                                    Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},side_model(:,training),'rows','pairwise','type','spearman');
                                 end
                             case 'profile of scores: pearson'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = corr(vals_flat,orig_model_flat,'rows','pairwise','type','pearson');
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx = testidx(~ea_nansum(orig_model_flat(:,test)));
+                                    allzerotestidx = testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
 
@@ -283,21 +327,21 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','pearson');
+                                    Ihat(test,side,voter) = corr(vals{voter,side},side_model(:,test),'rows','pairwise','type','pearson');
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
-                                    Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','pearson');
+                                    Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},side_model(:,training),'rows','pairwise','type','pearson');
                                 end
                             case 'profile of scores: bend'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_bendcorr(vals_flat,orig_model_flat);
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -306,21 +350,21 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)));
+                                    Ihat(test,side,voter) = ea_bendcorr(vals{voter,side},side_model(:,test));
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
                                     
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)));
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_bendcorr(vals{voter,side},side_model(:,training));
                                     
                                 end
                             case 'mean of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_nanmean(vals_flat.*orig_model_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~nansum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
@@ -328,19 +372,19 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*side_model(:,test),1);
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*side_model(:,training),1);
                                 end
                             case 'sum of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_nansum(vals_flat.*orig_model_flat,1);
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -349,22 +393,22 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*side_model(:,test),1);
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*side_model(:,training),1);
                                    
                                 end
                             case 'peak of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*orig_model_flat, obj.posvisible, obj.negvisible, 'peak');
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -373,21 +417,21 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
+                                    Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*side_model(:,test), obj.posvisible, obj.negvisible, 'peak');
                                    
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*side_model(:,training), obj.posvisible, obj.negvisible, 'peak');
                                 end
                             case 'peak 5% of scores'
-                                if lateral_score == false
+                                if combine_sides_before_prediction
                                     Ihat_all = ea_discfibers_getpeak(vals_flat.*orig_model_flat, obj.posvisible, obj.negvisible, 'peak5');
                                     Ihat(test,1, voter) = Ihat_all(test);
 
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(orig_model_flat(:,test)));
+                                    allzerotestidx=testidx(sum(orig_model_flat(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,1, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -397,11 +441,11 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 
                                     break % both sides are already filled out!
                                 else
-                                    ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
+                                    ihatvals=vals{voter,side}.*side_model;
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(ihatvals(test), obj.posvisible, obj.negvisible, 'peak5');
                                     
                                     testidx=find(test);
-                                    allzerotestidx=testidx(~sum(fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                    allzerotestidx=testidx(sum(side_model(:,test),1,'omitnan') == 0);
                                     Ihat(allzerotestidx,side, voter) = nan; % set Ihats to nan if there is no overlap with even a single VTA
 
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(ihatvals(training), obj.posvisible, obj.negvisible, 'peak5');
@@ -417,4 +461,31 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 try    
     val_struct.fibcell=fibcell; end % fibcell not always supplied.
 
+end
+
+function prediction = sweetspotSidePrediction(vals, efield, obj)
+% Score one sweet-spot hemisphere without fiber-specific overlap handling.
+
+switch lower(obj.basepredictionon)
+    case 'profile of scores: spearman'
+        prediction = corr(vals, efield, ...
+            'rows', 'pairwise', 'type', 'spearman');
+    case 'profile of scores: pearson'
+        prediction = corr(vals, efield, ...
+            'rows', 'pairwise', 'type', 'pearson');
+    case 'profile of scores: bend'
+        prediction = ea_bendcorr(vals, efield);
+    case 'mean of scores'
+        prediction = ea_nanmean(vals .* efield, 1);
+    case 'sum of scores'
+        prediction = ea_nansum(vals .* efield, 1);
+    case 'peak of scores'
+        prediction = ea_discfibers_getpeak( ...
+            vals .* efield, obj.posvisible, obj.negvisible, 'peak');
+    case 'peak 5% of scores'
+        prediction = ea_discfibers_getpeak( ...
+            vals .* efield, obj.posvisible, obj.negvisible, 'peak5');
+    otherwise
+        error('Unknown prediction method: %s', obj.basepredictionon);
+end
 end
