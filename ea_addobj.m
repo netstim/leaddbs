@@ -4,7 +4,7 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
     if all(cellfun(@numel, regexp(obj, '\.mat$', 'match', 'once'))) % tract/reco
         for i=1:length(obj)
             vars = whos('-file', obj{i});
-            if any(ismember({'fibsin', 'fibers'}, {vars.name}))
+            if any(ismember({'fibsin', 'fibers', 'fibcell'}, {vars.name}))
                 addfibertract(obj{i}, resultfig, [], 0, options);
             elseif ismember('reco', {vars.name})
                 addReco(obj{i}, resultfig, options);
@@ -265,6 +265,88 @@ if ischar(obj) % addobj
         if exist('fibsin', 'var')
             fibers = fibsin;
             clear fibsin
+        elseif exist('fibcolor', 'var')
+            allvals = vertcat(vals{:});
+
+            % Contruct colormap
+            gradientLevel = 1024;
+            cmapShiftRatio = 0.4;
+            shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
+            shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
+
+            if all(allvals>0)
+                disp(['Fiber colors: Positive (T = ',num2str(min(allvals(allvals>0))),' ~ ',num2str(max(allvals(allvals>0))), ').']);
+            else
+                disp(['Fiber colors: Positive (T = ',num2str(min(allvals(allvals>0))),' ~ ',num2str(max(allvals(allvals>0))), ...
+                  '); Negative (T = ',num2str(max(allvals(allvals<0))),' ~ ',num2str(min(allvals(allvals<0))),').']);
+            end
+            cmap = ea_colorgradient(gradientLevel/2, fibcolor(1,:), [1,1,1]);
+            cmapLeft = ea_colorgradient(gradientLevel/2, fibcolor(1,:), cmap(shiftedCmapLeftEnd,:));
+            cmap = ea_colorgradient(gradientLevel/2, [1,1,1], fibcolor(2,:));
+            cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), fibcolor(2,:));
+            fibcmap = [cmapLeft;cmapRight];
+            cmapind = ones(size(allvals))*gradientLevel/2;
+            cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
+            cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
+            alphaind = ones(size(allvals));
+
+            cmapind = mat2cell(cmapind, cellfun(@numel, vals))';
+            alphaind = mat2cell(alphaind, cellfun(@numel, vals))';
+
+            for fibside=1:length(fibcell)
+                if isempty(fibcell{fibside}) || isempty(vals{fibside})
+                    continue;
+                end
+
+                % Plot fibers
+                h = streamtube(fibcell{fibside}, options.prefs.d3.fiberwidth);
+
+                for fib=1:length(h)
+                    if vals{fibside}(fib)>0
+                        h(fib).Tag = 'PositiveFiber';
+                    elseif vals{fibside}(fib)<0
+                        h(fib).Tag = 'NegativeFiber';
+                    end
+                end
+
+                nones = repmat({'none'},size(fibcell{fibside}));
+                [h.EdgeColor] = nones{:};
+
+                % Calulate fiber colors alpha values
+                fibcolor = mat2cell(fibcmap(cmapind{fibside},:), ones(size(fibcell{fibside})));
+                fibalpha = mat2cell(alphaind{fibside},ones(size(fibcell{fibside})));
+
+                % Set fiber colors and alphas
+                [h.FaceColor] = fibcolor{:};
+                [h.FaceAlpha] = fibalpha{:};
+
+                if size(vals,2)==2 && fibside == 1
+                    sideStr = ', Right side';
+                elseif size(vals,2)==2 && fibside == 2
+                    sideStr = ', Left side';
+                else
+                    sideStr = '';
+                end
+                
+                tractName = ea_stripext(obj);
+                uitoggletool(addht, 'CData', ea_get_icn('discfiber'),...
+                    'TooltipString', ['Discriminative fibertract: ', tractName, sideStr],...
+                    'Tag', ['Discriminative fibertract: ', tractName, sideStr],...
+                    'OnCallback', @(~,~) arrayfun(@(f) set(f, 'Visible', 'on'), h),...
+                    'OffCallback', @(~,~) arrayfun(@(f) set(f, 'Visible', 'off'), h), 'State', 'on');
+
+                set(0,'CurrentFigure',resultfig)
+            end
+
+            % Plot colorbar
+            % tick = [1, length(fibcmap)];
+            % poscbvals = sort(allvals(allvals>0));
+            % negcbvals = sort(allvals(allvals<0));
+            % ticklabel = [negcbvals(1), poscbvals(end)];
+            % ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+            % ea_plot_colorbar(fibcmap, [], 'h', '', tick, ticklabel, axes(figure));
+
+            return;
         end
 
         if exist('fibers', 'var')
