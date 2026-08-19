@@ -5,6 +5,8 @@ LEAD-DBS is ***NOT*** intended for clinical use!
 
 ## About Lead-DBS
 
+Lead‑DBS is research software intended for retrospective scientific analysis of neuroimaging data, electrode locations and group-level associations in research studies. It is not intended for diagnosis, treatment planning, surgical targeting, DBS programming, patient management, or any other clinical decision concerning an individual patient. Outputs must not be used as a basis for clinical care.
+
 LEAD-DBS is a MATLAB toolbox facilitating the:
 
 - reconstruction of deep-brain-stimulation (DBS) electrodes in the human brain on basis of postoperative MRI and/or CT imaging
