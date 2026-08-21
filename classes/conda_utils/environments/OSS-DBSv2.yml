@@ -7,7 +7,7 @@ dependencies:
   - python=3.11
   - pip=23.3.1
   - pip:
-    - git+https://github.com/SFB-ELAINE/OSS-DBSv2.git@v0.5.7
+    - git+https://github.com/SFB-ELAINE/OSS-DBSv2.git@v0.5.8
 
 variables:
-  env_version: '20260731'
+  env_version: '20260821'
