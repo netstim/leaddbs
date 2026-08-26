@@ -55,21 +55,15 @@ if isfile(fa2anatPath)
     return;
 end
 
-% Anatomical reference
-anatPath = fullfile(directory, options.prefs.prenii_unnormalized);
-if ~isfile(anatPath)
-    % Try preprocessing/anat or coregistration/anat
-    for subdir = {'preprocessing/anat', 'coregistration/anat'}
-        d = dir(fullfile(directory, subdir{1}, '*T1w.nii'));
-        if isempty(d), d = dir(fullfile(directory, subdir{1}, '*T2w.nii')); end
-        if ~isempty(d)
-            anatPath = fullfile(d(1).folder, d(1).name);
-            break;
-        end
-    end
-end
-if ~isfile(anatPath)
+% Anatomical reference (LC-only resolver; ignores SPM/coreg intermediates)
+[options, anatRel] = ea_lc_resolve_anat_anchor(options);
+if isempty(anatRel)
     warning('ea_ensure_fa_and_fa2anat: Anatomical reference not found. Skipping FA->anat coregistration.');
+    return;
+end
+anatPath = fullfile(directory, anatRel);
+if ~isfile(anatPath)
+    warning('ea_ensure_fa_and_fa2anat: Anatomical reference not found (%s). Skipping FA->anat coregistration.', anatPath);
     return;
 end
 
