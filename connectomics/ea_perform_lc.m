@@ -16,6 +16,8 @@ if contains(directory, 'derivatives') || contains(directory, 'leaddbs')
         warning('Could not load BIDS paths via ea_getptopts, attempting manual path construction');
     end
 end
+% LC-only: correct anatomical anchor in-memory (do not change ea_getptopts)
+options = ea_lc_resolve_anat_anchor(options);
 
 %% structural parts
 disp('*** Performing structural parts of LEAD-Connectome...');
@@ -35,6 +37,8 @@ if options.lc.struc.ft.normalize % normalize fibertracts ? for now these should 
             warning('Could not refresh BIDS paths before normalization');
         end
     end
+    % LC-only: re-resolve anatomical anchor after getptopts refresh
+    options = ea_lc_resolve_anat_anchor(options);
     ea_normalize_fibers(options);
 end
 
@@ -62,6 +66,8 @@ if options.lc.struc.compute_CM
                     warning('Could not refresh BIDS paths after fiber tracking');
                 end
             end
+            % LC-only: re-resolve anatomical anchor after getptopts refresh
+            options = ea_lc_resolve_anat_anchor(options);
         end
         DTI_CM=ea_createCM_dti(options);
         cm=ea_export_CM_png(DTI_CM,'DTI Connectivity matrix',options,[0 mean(DTI_CM(:))+2*std(DTI_CM(:))]);

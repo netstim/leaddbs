@@ -3,7 +3,9 @@ function options = ea_ensure_b0_coreg(options)
 % 
 % This helper is intended to be called from the main pipeline (ea_autocoord)
 % before any Lead-Connectome structural steps run. It is read-only with
-% respect to options except for potential updates to options.coregmr.method.
+% respect to options except for potential updates to options.coregmr.method
+% and an in-memory LC-only correction of options.prefs.prenii_unnormalized
+% via ea_lc_resolve_anat_anchor.
 %
 % Behaviour:
 %   1. If a B0 image or preprocessed T1 cannot be found, the function
@@ -28,46 +30,45 @@ if ~isfile(b0Path)
     b0Path = fullfile(d(1).folder, d(1).name);
 end
 
-% Locate preprocessed T1
-anatDir = fullfile(directory, 'preprocessing', 'anat');
-if ~isfolder(anatDir)
-    fprintf('ea_ensure_b0_coreg: preprocessing/anat directory not found, skipping.\n');
+% Locate anatomical anchor (LC-only resolver; ignores SPM/coreg intermediates)
+[options, anatRel, anatName] = ea_lc_resolve_anat_anchor(options);
+if isempty(anatRel)
+    fprintf('ea_ensure_b0_coreg: No valid anatomical anchor found, skipping.\n');
     return;
 end
-cand = dir(fullfile(anatDir, '*desc-preproc*_T1w.nii'));
-if isempty(cand)
-    cand = dir(fullfile(anatDir, '*acq-iso_T1w.nii'));
-end
-if isempty(cand)
-    cand = dir(fullfile(anatDir, '*T1w.nii'));
-end
-if isempty(cand)
-    fprintf('ea_ensure_b0_coreg: No preprocessed T1 found in %s, skipping.\n', anatDir);
+anatPath = fullfile(directory, anatRel);
+if ~isfile(anatPath)
+    fprintf('ea_ensure_b0_coreg: Anatomical file missing (%s), skipping.\n', anatPath);
     return;
 end
-anatPath = fullfile(cand(1).folder, cand(1).name);
 
 % Derive short names for pattern matching
 [~, b0Name] = fileparts(b0Path);
-[~, anatName] = fileparts(anatPath);
 b0Name  = regexprep(b0Name, '\.nii(\.gz)?$', '');
 anatName = regexprep(anatName, '\.nii(\.gz)?$', '');
 
-% Search for existing transform B0->T1
+% Search for existing transform B0->T1 (include preprocessing/dwi where SPM often writes)
 searchDirs = {
     fullfile(directory, 'coregistration', 'transformations')
     fullfile(directory, 'preprocessing', 'anat')
+    fullfile(directory, 'preprocessing', 'dwi')
     directory
 };
-pattern = [b0Name, '2', anatName]; % B0 -> T1
+fwdPrefix = [b0Name, '2', anatName, '_'];
+fwdAnts = [b0Name, '2', anatName, 'Composite'];
 for iDir = 1:numel(searchDirs)
     cdir = searchDirs{iDir};
     if ~isfolder(cdir), continue; end
-    mfiles = dir(fullfile(cdir, '*.mat'));
+    mfiles = [dir(fullfile(cdir, '*.mat')); dir(fullfile(cdir, '*.h5')); dir(fullfile(cdir, '*Composite*.nii.gz'))];
     for k = 1:numel(mfiles)
-        if contains(mfiles(k).name, pattern)
-            fprintf('ea_ensure_b0_coreg: Found existing B0->T1 transform: %s (in %s)\n', ...
-                mfiles(k).name, cdir);
+        nm = mfiles(k).name;
+        if startsWith(nm, fwdAnts)
+            fprintf('ea_ensure_b0_coreg: Found existing B0->T1 transform: %s (in %s)\n', nm, cdir);
+            return;
+        end
+        if startsWith(nm, fwdPrefix) && ~contains(nm, '_seg8') && ...
+                (contains(nm, '_spm') || contains(lower(nm), 'ants') || contains(nm, 'Composite') || endsWith(nm, '.h5'))
+            fprintf('ea_ensure_b0_coreg: Found existing B0->T1 transform: %s (in %s)\n', nm, cdir);
             return;
         end
     end
@@ -77,7 +78,8 @@ end
 fprintf('ea_ensure_b0_coreg: No B0->T1 transform found. Running coregistration now...\n');
 
 % Build output filename in preprocessing/anat
-outName = sprintf('%s2%s_%s.mat', b0Name, anatName, lower(regexp(options.coregmr.method, '^[^\s\(]+', 'match', 'once')));
+methodTok = regexp(options.coregmr.method, '^[^\s\(]+', 'match', 'once');
+if isempty(methodTok), methodTok = 'spm'; end
 outDir  = fullfile(directory, 'preprocessing', 'anat');
 if ~isfolder(outDir), outDir = directory; end
 ofile   = fullfile(outDir, [b0Name, '2', anatName, '.nii']);
@@ -92,4 +94,3 @@ try
 catch ME
     warning('ea_ensure_b0_coreg: Coregistration B0->T1 failed: %s', ME.message);
 end
-

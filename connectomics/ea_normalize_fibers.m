@@ -138,18 +138,32 @@ fprintf('\nNormalizing fibers...\n');
 
 %% map from b0 voxel space to anat mm and voxel space
 fprintf('\nMapping from b0 to anat...\n');
+
+% LC-only: resolve real anatomical anchor (ignore SPM/coreg intermediates)
+prefsAnatBefore = '';
+if isfield(options.prefs, 'prenii_unnormalized')
+    prefsAnatBefore = options.prefs.prenii_unnormalized;
+end
+[options, ~, anatNameResolved] = ea_lc_resolve_anat_anchor(options);
+if isempty(anatNameResolved)
+    ea_error('Anatomical anchor not found for fiber normalization. Please ensure a preprocessed T1/T2 exists.');
+end
+
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
+[~, b0Name] = ea_niifileparts(options.prefs.b0);
+anatName = anatNameResolved;
+
+searchDirs = {
+    fullfile(directory, 'preprocessing', 'anat')
+    fullfile(directory, 'preprocessing', 'dwi')
+    fullfile(directory, 'coregistration', 'transformations')
+    directory
+};
 
 % For BIDS: search in coregistration/transformations and preprocessing dirs
 if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
     % BIDS FIX: Use dir() instead of ea_regexpdir for ANTs files
-    searchDirs = {
-        fullfile(directory, 'coregistration', 'transformations')
-        fullfile(directory, 'preprocessing', 'anat')
-        directory
-    };
-    
     transform = {};
     for iDir = 1:length(searchDirs)
         if exist(searchDirs{iDir}, 'dir')
@@ -175,31 +189,52 @@ else
     end
     options.coregmr.method = coregmethod;
     
-    % BIDS FIX: Use simpler search with dir() instead of ea_regexpdir
-    % Search for b0→anat transformation file
-    [~, b0Name] = ea_niifileparts(options.prefs.b0);
-    [~, anatName] = ea_niifileparts(options.prefs.prenii_unnormalized);
-    
     fprintf('DEBUG ea_normalize_fibers: Searching for transformation...\n');
     fprintf('  b0Name: %s\n', b0Name);
-    fprintf('  anatName: %s\n', anatName);
+    fprintf('  anatName (resolved): %s\n', anatName);
+    if ~isempty(prefsAnatBefore)
+        fprintf('  prefs.prenii_unnormalized (before resolve): %s\n', prefsAnatBefore);
+    end
     fprintf('  coregmethod: %s\n', lower(coregmethod));
     
-    % Try preprocessing/anat first
-    searchDirs = {fullfile(directory, 'preprocessing', 'anat'), directory};
     transform = {};
+    patternExact = [b0Name, '2', anatName, '_', lower(coregmethod), '*.mat'];
     
     for iDir = 1:length(searchDirs)
-        if exist(searchDirs{iDir}, 'dir')
-            % Search for files matching pattern: b0Name2anatName_method.mat
-            pattern = [b0Name, '2', anatName, '_', lower(coregmethod), '*.mat'];
-            fprintf('  Searching in: %s\n', searchDirs{iDir});
-            fprintf('  Pattern: %s\n', pattern);
-            files = dir(fullfile(searchDirs{iDir}, pattern));
-            fprintf('  Found %d files\n', length(files));
-            if ~isempty(files)
-                transform = {fullfile(searchDirs{iDir}, files(end).name)};
-                fprintf('  Using: %s\n', transform{1});
+        if ~exist(searchDirs{iDir}, 'dir')
+            continue;
+        end
+        fprintf('  Searching in: %s\n', searchDirs{iDir});
+        fprintf('  Pattern: %s\n', patternExact);
+        files = dir(fullfile(searchDirs{iDir}, patternExact));
+        fprintf('  Found %d files\n', length(files));
+        if ~isempty(files)
+            transform = {fullfile(searchDirs{iDir}, files(end).name)};
+            fprintf('  Using: %s\n', transform{1});
+            break;
+        end
+    end
+    
+    % Fallback: forward mats starting with b0Name2anatName_ + method token
+    if isempty(transform)
+        fprintf('  Exact pattern missed; trying fallback prefix-search...\n');
+        fwdPrefix = [b0Name, '2', anatName, '_'];
+        for iDir = 1:length(searchDirs)
+            if ~exist(searchDirs{iDir}, 'dir')
+                continue;
+            end
+            files = dir(fullfile(searchDirs{iDir}, '*.mat'));
+            hits = {};
+            for iFile = 1:length(files)
+                nm = files(iFile).name;
+                if startsWith(nm, fwdPrefix) && ~contains(nm, '_seg8') && ...
+                        (contains(nm, ['_', lower(coregmethod)]) || contains(nm, 'Composite'))
+                    hits{end+1} = fullfile(searchDirs{iDir}, nm); %#ok<AGROW>
+                end
+            end
+            if ~isempty(hits)
+                transform = hits(end);
+                fprintf('  Fallback using: %s\n', transform{1});
                 break;
             end
         end
@@ -211,6 +246,13 @@ if isempty(transform)
     fprintf('Available files in preprocessing/anat:\n');
     if exist(fullfile(directory, 'preprocessing', 'anat'), 'dir')
         allFiles = dir(fullfile(directory, 'preprocessing', 'anat', '*.mat'));
+        for i = 1:length(allFiles)
+            fprintf('  %s\n', allFiles(i).name);
+        end
+    end
+    fprintf('Available files in preprocessing/dwi:\n');
+    if exist(fullfile(directory, 'preprocessing', 'dwi'), 'dir')
+        allFiles = dir(fullfile(directory, 'preprocessing', 'dwi', '*.mat'));
         for i = 1:length(allFiles)
             fprintf('  %s\n', allFiles(i).name);
         end
