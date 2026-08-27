@@ -105,6 +105,7 @@ for iside=1:length(options.sides)
                 colormap(custom_cmap);
             end
 
+            showBothSide = 0;
             switch tracor
                 case 1 % transversal images
                     if manualtracor
@@ -138,7 +139,6 @@ for iside=1:length(options.sides)
                     else
                         V=Vsag;
                     end
-                    showBothSide = 0;
             end
 
             [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=ea_getdims(tracor,side);
