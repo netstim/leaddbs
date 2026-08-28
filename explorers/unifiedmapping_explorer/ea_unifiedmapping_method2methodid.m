@@ -62,9 +62,9 @@ switch obj.calcsettings.connectivity_type
                 end
             case 'Sigmoid Field'
                 if strcmp(obj.e_field_metric,'Projection')
-                    id = 'efield_proj_peak';
+                    id = 'efield_proj_sigmoid_peak';
                 else
-                    id = 'efield_peak';
+                    id = 'efield_sigmoid_peak';
                 end
 
         end

@@ -43,15 +43,11 @@ function [Ihat,Ihat_train_global,val_struct] = ea_compute_unified_model(numTestI
 %         end
 %     end
 
-    % fiber values can be sigmoid transform
+    % Sigmoid fiber values are calculated and stored with the connectivity
+    % results. Do not transform conventional E-field fiber values here.
     if strcmp(obj.statsettings.stimulationmodel, 'Sigmoid Field')
         if obj.calcsettings.connectivity_type == 2
             fibsval = obj.results.fiberfiltering.(ea_conn2connid(obj.calcsettings.fibfilt_connectome)).('PAM_probA').fibsval;
-        else
-            fibsval_raw = fibsval;
-            for side = 1:size(fibsval_raw,2)
-                fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
-            end
         end
     end
 

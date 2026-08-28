@@ -12,17 +12,29 @@ if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.p
     patsel=obj.patientselection;
 end
 
-% fiber values can be sigmoid transform
+% Select the fiber values calculated for the requested stimulation model.
 switch obj.statsettings.stimulationmodel
     case 'Sigmoid Field'
         if obj.calcsettings.connectivity_type == 2
             fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_probA').fibsval;
         else
-            fibsval_raw = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-            fibsval = fibsval_raw;  % initialize
-            for side = 1:size(fibsval_raw,2)
-                fibsval{1,side}(:,:) = ea_SigmoidFromEfield(fibsval_raw{1,side}(:,:));
+            connid = ea_conn2connid(obj.connectome);
+            if strcmp(obj.e_field_metric, 'Projection')
+                resultField = 'efield_proj_sigmoid_peak';
+            else
+                resultField = 'efield_sigmoid_peak';
             end
+            if ~isfield(obj.results.(connid), resultField) || ...
+                    ~isfield(obj.results.(connid).(resultField), 'fibsval')
+                message = [ ...
+                    'Stored sigmoid fiber activation values are not ', ...
+                    'available. Recalculate Fiber Filtering to create them.'];
+                ea_warndlg(message);
+                error('UnifiedMapping:MissingSigmoidFiberValues', ...
+                    '%s', message);
+            end
+            fibsval = cellfun(@full, ...
+                obj.results.(connid).(resultField).fibsval, 'Uni', 0);
         end
     otherwise
         if obj.calcsettings.connectivity_type == 2

@@ -158,17 +158,17 @@ switch statsettings.stimulationmodel
              ' ', sliderState.tract.unitLabel]};
 
     case 'Sigmoid Field'
-        probabilityLowerLimit = round( ...
-            ea_SigmoidFromEfield(calcsettings.calcthreshold), 2);
-        probabilityLowerLimit = min( ...
-            max(probabilityLowerLimit, 0), 0.99);
-        probabilityLimits = [probabilityLowerLimit, 1];
+        % Stored sigmoid fiber values are probabilities. Keep the analysis
+        % threshold in probability units and do not derive its lower limit
+        % from the raw E-field calculation threshold.
+        probabilityLimits = [0, 1];
 
         %% Sweet spot
         spotThreshold = getSetting( ...
             statsettings, 'efieldthreshold_spot', 200);
         if spotThreshold > 1
-            spotThreshold = ea_SigmoidFromEfield(spotThreshold);
+            spotThreshold = ...
+                ea_unified_probabilityActivationFunction(spotThreshold);
         end
         spotThreshold = clampValue(spotThreshold, probabilityLimits);
         statsettings.efieldthreshold_spot = spotThreshold;
@@ -187,7 +187,8 @@ switch statsettings.stimulationmodel
         tractThreshold = getSetting( ...
             statsettings, 'efieldthreshold_tract', 200);
         if tractThreshold > 1
-            tractThreshold = ea_SigmoidFromEfield(tractThreshold);
+            tractThreshold = ...
+                ea_unified_probabilityActivationFunction(tractThreshold);
         end
         tractThreshold = clampValue(tractThreshold, probabilityLimits);
         statsettings.efieldthreshold_tract = tractThreshold;

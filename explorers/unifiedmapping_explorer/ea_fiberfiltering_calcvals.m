@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_fiberfiltering_calcvals(vatlist, cfile, thresh)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibsvalSigmoidPeak, fibcell, connFiberInd, totalFibers] = ea_fiberfiltering_calcvals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
@@ -15,6 +15,7 @@ fibsvalSum = cell(1, numSide);
 fibsvalMean = cell(1, numSide);
 fibsvalPeak = cell(1, numSide);
 fibsval5Peak = cell(1, numSide);
+fibsvalSigmoidPeak = cell(1, numSide);
 
 fibcell = cell(1, numSide);
 connFiberInd = cell(1, numSide);
@@ -27,6 +28,7 @@ for side = 1:numSide
     fibsvalMean{side} = zeros(length(idx), numPatient);
     fibsvalPeak{side} = zeros(length(idx), numPatient);
     fibsval5Peak{side} = zeros(length(idx), numPatient);
+    fibsvalSigmoidPeak{side} = zeros(length(idx), numPatient);
 
     disp(['Calculate for side ', num2str(side), ':']);
     for pt = 1:numPatient
@@ -81,6 +83,15 @@ for side = 1:numSide
         fibsvalMean{side}(trimmedFiberInd(connected), pt) = cellfun(@mean, vals);
         fibsvalPeak{side}(trimmedFiberInd(connected), pt) = cellfun(@max, vals);
         fibsval5Peak{side}(trimmedFiberInd(connected), pt) = cellfun(@(x) mean(maxk(x,ceil(0.05*numel(x)))), vals);
+
+        % Store peak activation probability as a separate result. The
+        % transform is applied only to suprathreshold intersecting voxels;
+        % fiber-patient pairs without an intersection retain their
+        % preallocated structural zero.
+        sigmoidVals = cellfun( ...
+            @ea_unified_probabilityActivationFunction, vals, 'Uni', 0);
+        fibsvalSigmoidPeak{side}(trimmedFiberInd(connected), pt) = ...
+            cellfun(@max, sigmoidVals);
     end
 
     % Remove values for not connected fibers, convert to sparse matrix
@@ -90,6 +101,8 @@ for side = 1:numSide
     fibsvalMean{side} = sparse(fibsvalMean{side}(fibIsConnected, :));
     fibsvalPeak{side} = sparse(fibsvalPeak{side}(fibIsConnected, :));
     fibsval5Peak{side} = sparse(fibsval5Peak{side}(fibIsConnected, :));
+    fibsvalSigmoidPeak{side} = sparse( ...
+        fibsvalSigmoidPeak{side}(fibIsConnected, :));
 
     % Extract connected fiber cell
     connFiberInd{side} = find(fibIsConnected);

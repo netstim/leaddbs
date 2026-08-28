@@ -1,0 +1,16 @@
+function [available, resultField] = ...
+        ea_unifiedmapping_hassigmoidfiberfibsval(obj, connid)
+% Check whether calculated sigmoid peak fiber values are available.
+
+if strcmp(obj.e_field_metric, 'Projection')
+    resultField = 'efield_proj_sigmoid_peak';
+else
+    resultField = 'efield_sigmoid_peak';
+end
+
+available = isfield(obj.results, 'fiberfiltering') && ...
+    isfield(obj.results.fiberfiltering, connid) && ...
+    isfield(obj.results.fiberfiltering.(connid), resultField) && ...
+    isfield(obj.results.fiberfiltering.(connid).(resultField), 'fibsval') && ...
+    ~isempty(obj.results.fiberfiltering.(connid).(resultField).fibsval);
+end
