@@ -84,7 +84,7 @@ end
 % recalculate angles after ea_save_reconstruction has completed
 ea_recalc_angles(outFilePath);
 % re-enter DiODe post-op angles if present
-if ~isempty(postopangles)
+if  exist('postopangles', 'var') && ~isempty(postopangles)
     load(outFilePath)
     reco.angles.postop = postopangles;
     save(outFilePath,'reco')
