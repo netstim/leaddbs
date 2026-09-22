@@ -53,12 +53,12 @@ if isfile(src)
     moved = moved + 1;
 end
 
-% FA in anat: rename old _desc-FA_dwi.nii to _dwi_fa.nii
+% FA in anat: rename old _desc-FA_dwi.nii to _fa.nii
 coregAnatDir = fullfile(subjectDir, 'coregistration', 'anat');
 oldFa = dir(fullfile(coregAnatDir, '*_space-anchorNative_desc-FA_dwi.nii'));
 for i = 1:numel(oldFa)
     src = fullfile(oldFa(i).folder, oldFa(i).name);
-    newName = strrep(oldFa(i).name, '_desc-FA_dwi.nii', '_dwi_fa.nii');
+    newName = strrep(oldFa(i).name, '_desc-FA_dwi.nii', '_fa.nii');
     if ~strcmp(oldFa(i).name, newName)
         movefile(src, fullfile(oldFa(i).folder, newName));
         fprintf('Renamed %s -> %s\n', oldFa(i).name, newName);
