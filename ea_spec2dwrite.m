@@ -101,7 +101,7 @@ catch
     set(handles.seegRenderMode, 'Value', 1);
 end
 
-set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
+set(handles.ea_spec2dwrite,'Name','Visualization Options');
 
 ea_ListBoxRenderer(handles.tdbackdrop);
 
