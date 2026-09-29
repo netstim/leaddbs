@@ -142,71 +142,54 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
-
-    isSEEG = isfield(options, 'seeg') && logical(options.seeg);
-
-    if isSEEG
-        % SEEG / LeGUI-specific rendering
-        if exist('el_render','var')
-            [el_render, el_label, elSide{pt}] = ...
-                ea_renderelstruct_seeg( ...
-                    options, resultfig, elstruct, pt, ...
-                    el_render, el_label);
-        else
-            [el_render, el_label, elSide{pt}] = ...
-                ea_renderelstruct_seeg( ...
-                    options, resultfig, elstruct, pt);
-        end
-
-    else
-        % Completely original Lead-DBS rendering
-        if exist('el_render','var')
-            [el_render, el_label, elSide{pt}] = ...
-                ea_renderelstruct( ...
-                    options, resultfig, elstruct, pt, ...
-                    el_render, el_label);
-        else
-            [el_render, el_label, elSide{pt}] = ...
-                ea_renderelstruct( ...
-                    options, resultfig, elstruct, pt);
-        end
-    end
+            isSEEG = isfield(options, 'seeg') && logical(options.seeg);
+        
+            if isSEEG
+                % SEEG / LeGUI-specific rendering
+                if exist('el_render','var')
+                    [el_render, el_label, elSide{pt}] = ...
+                        ea_renderelstruct_seeg( ...
+                            options, resultfig, elstruct, pt, ...
+                            el_render, el_label);
+                else
+                    [el_render, el_label, elSide{pt}] = ...
+                        ea_renderelstruct_seeg( ...
+                            options, resultfig, elstruct, pt);
+                end
+        
+            else
+                % Completely original Lead-DBS rendering
+                if exist('el_render','var')
+                    [el_render, el_label, elSide{pt}] = ea_renderelstruct(options, resultfig, elstruct, pt, el_render, el_label);
+                else
+                    [el_render, el_label, elSide{pt}] = ea_renderelstruct(options, resultfig, elstruct, pt);
+                end
+            end
             if isfield(options, 'reconmethod') && isequal(options.reconmethod, 'LeGUI (Davis 2021)')
                 multiplemode = 1;
             end
             if ~multiplemode
-    side = options.sides(end);
-    d = load(options.subj.recon.recon);
+                side = options.sides(end);
+                d = load(options.subj.recon.recon);
+            
+                % Planned-electrode handling only applies to standard DBS reco files
+                if isfield(d, 'reco') && isfield(d.reco, 'electrode') && ~isempty(d.reco.electrode)
+                    plans = d.reco.electrode(side+1:end);
+            
+                    if ~isempty(plans) && isfield(plans, 'plan')
+                        for plan = 1:length(plans)
+                            pobj = ea_load_electrode(options.subj.recon.recon, side + plan);
+                            ea_add_trajectory([], [], options, pobj, side + plan);
+                        end
+                    end
+                end
 
-    % Planned-electrode handling only applies to standard DBS reco files
-    if isfield(d, 'reco') && ...
-            isfield(d.reco, 'electrode') && ...
-            ~isempty(d.reco.electrode)
-
-        plans = d.reco.electrode(side+1:end);
-
-        if ~isempty(plans) && isfield(plans, 'plan')
-            for plan = 1:length(plans)
-                pobj = ea_load_electrode( ...
-                    options.subj.recon.recon, side + plan);
-
-                ea_add_trajectory( ...
-                    [], [], options, pobj, side + plan);
-            end
-        end
-    end
-
-    eltext = getappdata(resultfig, 'eltext');
-
-    % Keep the remaining original code below this point
-                eltext=getappdata(resultfig,'eltext');
-
+                % Keep the remaining original code below this point
+                eltext = getappdata(resultfig, 'eltext');
                 eltexttoggle=uitoggletool(ht, 'CData', ea_get_icn('electrode_segment'),...
                     'TooltipString', 'Contact Labels',...
                     'OnCallback', {@objvisible,eltext},...
                     'OffCallback', {@objinvisible,eltext}, 'State','off');
-
-
             end
 
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
