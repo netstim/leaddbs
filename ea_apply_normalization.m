@@ -5,13 +5,15 @@ function ea_apply_normalization(options)
 % Andreas Horn
 
 json = loadjson(options.subj.norm.log.method);
+if contains(json.method, 'SPM')
+    ea_convert_spm_warps(options.subj);
+end
 
 if contains(json.method, {'ANTs', 'EasyReg', 'SynthMorph', 'SPM'})
     ea_ants_apply_transforms(options);
 elseif contains(json.method, 'FNIRT')
     ea_fsl_apply_normalization(options);
-elseif contains(json.method, 'SPM')
-    % Convert SPM deformation field to ITK format when necessary
-    ea_convert_spm_warps(options.subj);
-    ea_ants_apply_transforms(options);
+
 end
+% Keep one active normalization pair; retain retired fields with the log.
+ea_cleanup_normtransforms(options);

@@ -71,7 +71,7 @@ end
 if exist('directory','var') && ~isempty(directory)
     % check if pat-specific fibertracts are present:
     if checkdmri
-        if isfile(fullfile(directory, 'connectomes', 'dMRI', options.prefs.FTR_normalized))
+        if ~isempty(ea_resolvepatientfibertract(directory, false, options.prefs))
             modlist{cnt}='Patient''s fiber tracts';
             type(cnt)=1;
             cnt=cnt+1;

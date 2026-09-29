@@ -91,3 +91,4 @@ catch ME
     warning('Failed to correct b0 header: %s', ME.message);
 end
 
+t

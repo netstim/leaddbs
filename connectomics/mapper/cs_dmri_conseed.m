@@ -3,6 +3,8 @@ function cs_dmri_conseed(connBaseFolder, options)
 connName = options.lcm.struc.connectome;
 sfile = ea_handleseeds(options.lcm.seeds');
 cmd = ea_lcm_resolvecmd(options.lcm.cmd);
+isPatientConnectome = strcmp(connBaseFolder, 'Patient''s fiber tracts');
+useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
 
 switch options.lcm.struc.espace
     case 1
@@ -25,7 +27,11 @@ else
     elseif ~strcmp(outputfolder(end),filesep)
         outputfolder = [outputfolder, filesep];
     end
-    connLabel = ea_getConnLabel(connName);
+    if isPatientConnectome
+        connLabel = 'PatientFiberTracts';
+    else
+        connLabel = ea_getConnLabel(connName);
+    end
 end
 
 disp(['Command: ',cmd]);
@@ -33,14 +39,35 @@ switch cmd
     case 'seed'
         cs_dmri_conseed_map(connBaseFolder,connName,sfile,cmd,space,options)
     case {'matrix', 'pmatrix'}
+        if isPatientConnectome
+            if ~isfield(options, 'uivatdirs') || isempty(options.uivatdirs)
+                ea_error('A patient directory is required for patient-specific matrix mapping.');
+            end
+            patientDirs = options.uivatdirs;
+            if ~iscell(patientDirs)
+                patientDirs = {patientDirs};
+            end
+            if ~isscalar(patientDirs)
+                ea_error(['Patient-specific matrix mapping requires exactly one patient. ', ...
+                    'Run each patient separately because their fiber indices are unrelated.']);
+            end
+        end
         for s=1:length(sfile)
-            if strcmp(connBaseFolder, 'Patient''s fiber tracts')
-                if strcmp(connName, options.prefs.FTR_normalized) % patient specific fibertracts
-                    cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
-                    [fibers,fidx]=ea_loadfibertracts(cfile);
+            if isPatientConnectome
+                if s == 1
+                    [fibers, fidx, voxmm, fiberMat] = ea_loadpatientfibertract( ...
+                        patientDirs{1}, useNativeSeed, options.prefs);
+                    if strcmp(voxmm, 'vox')
+                        if isempty(fiberMat)
+                            patoptions = ea_getptopts(patientDirs{1});
+                            fiberMat = ea_get_affine(fullfile(patientDirs{1}, ...
+                                patoptions.prefs.prenii_unnormalized));
+                        end
+                        fibers(:,1:3) = ea_vox2mm(fibers(:,1:3), fiberMat);
+                    end
                     redotree=1;
-                else % connectome type not supported
-                    ea_error(['Connectome file (',options.prefs.FTR_normalized,') vanished or not supported!']);
+                else
+                    redotree=0;
                 end
             else
                 cfile=[connBaseFolder,'dMRI',filesep,connName];

@@ -1,7 +1,33 @@
 function cs_dmri_conseed_map(connBaseFolder,connName,sfile,cmd,space,options)
 
 useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
+isPatientConnectome = strcmp(connBaseFolder, 'Patient''s fiber tracts');
+if isPatientConnectome || useNativeSeed
+    if ~isfield(options, 'uivatdirs') || isempty(options.uivatdirs)
+        ea_error('A patient directory is required for patient-specific seed mapping.');
+    end
+    patientDirs = options.uivatdirs;
+    if ~iscell(patientDirs)
+        patientDirs = {patientDirs};
+    end
+    if ~(isscalar(patientDirs) || numel(patientDirs) == numel(sfile))
+        ea_error(['Patient-specific seed mapping requires either one patient for all seeds ', ...
+            'or one patient per seed.']);
+    end
+end
+if isPatientConnectome
+    connLabel = 'PatientFiberTracts';
+else
+    connLabel = ea_getConnLabel(connName);
+end
 for s=1:length(sfile)
+    if isPatientConnectome || useNativeSeed
+        if isscalar(patientDirs)
+            patientDir = patientDirs{1};
+        else
+            patientDir = patientDirs{s};
+        end
+    end
     if useNativeSeed
         vatdir = [fileparts(sfile{s}),filesep];
         copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]),vatdir);
@@ -9,7 +35,7 @@ for s=1:length(sfile)
         ea_delete([vatdir,space,'.gz']);
 
         % Warp mask from MNI space to patient T1 space
-        ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
+        ea_apply_normalization_tofile(ea_getptopts(patientDir),...
             {[vatdir,space]},...
             {[vatdir,space]}, 1, 0);
         map=ea_load_nii([vatdir,space]);
@@ -17,27 +43,18 @@ for s=1:length(sfile)
         map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
     end
 
-    if strcmp(connBaseFolder, 'Patient''s fiber tracts')
-        if useNativeSeed
-            cfile=[options.uivatdirs{s},filesep,connName];
-        else
-            cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,connName];
-        end
-
-        if exist(cfile, 'file')
-            [fibers,fidx,voxmm,mat]=ea_loadfibertracts(cfile);
-            if strcmp(voxmm, 'vox')
-                if isempty(mat)
-                    patoptions = ea_getptopts(options.uivatdirs{s});
-                    mat = ea_get_affine([options.uivatdirs{s}, filesep, patoptions.prefs.prenii_unnormalized]);
-                end
-                fibers(:,1:3) = ea_vox2mm(fibers(:,1:3), mat);
+    if isPatientConnectome
+        [fibers, fidx, voxmm, mat] = ea_loadpatientfibertract( ...
+            patientDir, useNativeSeed, options.prefs);
+        if strcmp(voxmm, 'vox')
+            if isempty(mat)
+                patoptions = ea_getptopts(patientDir);
+                mat = ea_get_affine(fullfile(patientDir, patoptions.prefs.prenii_unnormalized));
             end
-            redotree=1;
-            ctype='mat';
-        else % connectome type not supported
-            ea_error(['Connectome file (',connName,') not found!']);
+            fibers(:,1:3) = ea_vox2mm(fibers(:,1:3), mat);
         end
+        redotree=1;
+        ctype='mat';
     else
         cfile=[connBaseFolder,'dMRI',filesep,connName];
         if exist([cfile,filesep,'data.mat'],'file') % regular mat file
@@ -157,7 +174,6 @@ for s=1:length(sfile)
             map.img(utopaint)=c;
         end
 
-        connLabel = ea_getConnLabel(connName);
         if ~isBIDSFileName(sfile{s})
             [outputfolder, fname] = fileparts(sfile{s});
             mapFile = fullfile(outputfolder, [fname, '_conn-', connLabel, '_strucmap.nii']);
@@ -176,7 +192,7 @@ for s=1:length(sfile)
             mniMap = strrep(mapFile, [filesep,ea_nt(1)], [filesep,ea_nt(0)]);
             ea_mkdir(fileparts(mniMap));
             % Warp map from patient T1 space to MNI space
-            ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
+            ea_apply_normalization_tofile(ea_getptopts(patientDir),...
                 {map.fname},...
                 {mniMap}, 0, 1, ...
                 ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]));

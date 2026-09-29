@@ -5,75 +5,32 @@ vizz=1; % turn this value to 1 to visualize fiber normalization (option for debu
 cleanse_fibers=0; % deletes everything outside the white matter of the template.
 directory=[options.root,options.patientname,filesep];
 
+record = ea_lc_coreg_record(options);
+nativeB0 = record.moving;
+options.prefs.b0 = erase(record.moving, directory);
+options.prefs.prenii_unnormalized = erase(record.anchor, directory);
+
 % create unnormalized trackvis version
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 connectomicsDir = fullfile(directory, 'connectomics', 'dMRI');
 try
 	if ~exist(fullfile(connectomicsDir, [ftrfname, '.trk']), 'file')
         fprintf('\nExporting unnormalized fibers to TrackVis...\n');
-        ea_ftr2trk(fullfile(connectomicsDir, [ftrfname, '.mat']), [directory, options.prefs.b0]);
+        ea_ftr2trk(fullfile(connectomicsDir, [ftrfname, '.mat']), nativeB0);
         disp('Done.');
 	end
 end
 
-% BIDS: store norm params in normalization/transformations; legacy: subject root
-normDir = ea_connectome_normparams_dir(directory);
-if ~isfolder(normDir)
-    mkdir(normDir);
-end
-normFile = fullfile(normDir, 'y_ea_inv_normparams.nii');
-if ~exist(normFile, 'file')
-    fprintf('\nNo normalization found for fiber normalization. Running SPM12 normalization...\n');
-    
-    % Get anatomical image
-    anatFile = fullfile(directory, options.prefs.prenii_unnormalized);
-    
-    % Run SPM12 normalization (quick estimate)
-    matlabbatch{1}.spm.spatial.normalise.estwrite.subj.vol = {[anatFile, ',1']};
-    matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[anatFile, ',1']};
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.biasreg = 0.0001;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.biasfwhm = 60;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.tpm = {[spm('Dir'), '/tpm/TPM.nii']};
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.affreg = 'mni';
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.reg = [0 0.001 0.5 0.05 0.2];
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.fwhm = 0;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.samp = 3;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.bb = [-78 -112 -70; 78 76 85];
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.vox = [1 1 1];
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.interp = 4;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.prefix = 'w';
-    
-    spm_jobman('run', {matlabbatch});
-    clear matlabbatch
-    
-    % SPM normalise.estwrite outputs the *forward* deformation (template -> subject).
-    % For mapping subject coords to MNI we need the *inverse* (subject -> template)
-    % in subject space. Create it via spm.util.defs and save as y_ea_inv_normparams.nii.
-    [anatDir, anatName] = fileparts(anatFile);
-    spmNormFile = fullfile(anatDir, ['y_', anatName, '.nii']);
-    forwardFile = fullfile(normDir, 'y_ea_normparams.nii');
-    if exist(spmNormFile, 'file')
-        movefile(spmNormFile, forwardFile);
-        % Create inverse deformation (subject -> MNI) in subject space for ea_map_coords.
-        % SPM "Image to base inverse on" (inv.space) must point to an existing file;
-        % use path that actually exists (.nii or .nii.gz) and no ",1" (SPM validates by file count).
-        anatForInv = ea_niigz(anatFile);
-        if ~exist(anatForInv, 'file')
-            ea_error('Anatomical image not found for inverse deformation: %s', anatForInv);
-        end
-        matlabbatch{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {forwardFile};
-        matlabbatch{1}.spm.util.defs.comp{1}.inv.space = {anatForInv};
-        matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams';
-        matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {normDir};
-        spm_jobman('run', {matlabbatch});
-        clear matlabbatch
-    end
-    
-    fprintf('Normalization complete.\n\n');
+% Require the active normalization protocol. Never estimate a second warp here.
+transformfiles = ea_gettransformfiles(options);
+if ~isfile(transformfiles.forward) || ~isfile(transformfiles.inverse)
+    error('LeadDBS:MissingNormalization', 'Run anatomical normalization before normalizing fibers.');
 end
 
 % get transform from b0 to anat and affine matrix of anat
 [refb0,refanat,refnorm,whichnormmethod]=ea_checktransform(options);
+refb0 = record.moving;
+refanat = record.anchor;
 
 % plot reference volumes
 if vizz
@@ -139,161 +96,18 @@ fprintf('\nNormalizing fibers...\n');
 %% map from b0 voxel space to anat mm and voxel space
 fprintf('\nMapping from b0 to anat...\n');
 
-% LC-only: resolve real anatomical anchor (ignore SPM/coreg intermediates)
-prefsAnatBefore = '';
-if isfield(options.prefs, 'prenii_unnormalized')
-    prefsAnatBefore = options.prefs.prenii_unnormalized;
-end
-[options, ~, anatNameResolved] = ea_lc_resolve_anat_anchor(options);
-if isempty(anatNameResolved)
-    ea_error('Anatomical anchor not found for fiber normalization. Please ensure a preprocessed T1/T2 exists.');
-end
-
-[~, mov] = fileparts(options.prefs.b0);
-[~, fix] = fileparts(options.prefs.prenii_unnormalized);
-[~, b0Name] = ea_niifileparts(options.prefs.b0);
-anatName = anatNameResolved;
-
-searchDirs = {
-    fullfile(directory, 'preprocessing', 'anat')
-    fullfile(directory, 'preprocessing', 'dwi')
-    fullfile(directory, 'coregistration', 'transformations')
-    directory
-};
-
-% For BIDS: search in coregistration/transformations and preprocessing dirs
-if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
-    % BIDS FIX: Use dir() instead of ea_regexpdir for ANTs files
-    transform = {};
-    for iDir = 1:length(searchDirs)
-        if exist(searchDirs{iDir}, 'dir')
-            % Search for ANTs composite files
-            pattern = [mov, '2', fix, '*Composite.nii.gz'];
-            files = dir(fullfile(searchDirs{iDir}, pattern));
-            if ~isempty(files)
-                % Return both forward and inverse if they exist
-                for iFile = 1:length(files)
-                    transform{end+1} = fullfile(searchDirs{iDir}, files(iFile).name);
-                end
-                break;
-            end
-        end
-    end
+% Use the recorded transform and its source grid.
+fprintf('Using recorded B0-to-anatomy transform: %s (%s)\n', record.forward, record.method);
+if record.nonlinear
+    mappedMM = ea_map_coords(fibers(:,1:3)', record.moving, ...
+        record.inverse, record.fixed, 'ANTs', 0);
 else
-    % Extract just the method name without version/citation info
-    coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
-    % Remove everything after and including the first space or parenthesis
-    coregmethod = regexp(coregmethod, '^[^\s\(]+', 'match', 'once');
-    if isempty(coregmethod)
-        coregmethod = 'spm'; % fallback
-    end
-    options.coregmr.method = coregmethod;
-    
-    fprintf('DEBUG ea_normalize_fibers: Searching for transformation...\n');
-    fprintf('  b0Name: %s\n', b0Name);
-    fprintf('  anatName (resolved): %s\n', anatName);
-    if ~isempty(prefsAnatBefore)
-        fprintf('  prefs.prenii_unnormalized (before resolve): %s\n', prefsAnatBefore);
-    end
-    fprintf('  coregmethod: %s\n', lower(coregmethod));
-    
-    transform = {};
-    patternExact = [b0Name, '2', anatName, '_', lower(coregmethod), '*.mat'];
-    
-    for iDir = 1:length(searchDirs)
-        if ~exist(searchDirs{iDir}, 'dir')
-            continue;
-        end
-        fprintf('  Searching in: %s\n', searchDirs{iDir});
-        fprintf('  Pattern: %s\n', patternExact);
-        files = dir(fullfile(searchDirs{iDir}, patternExact));
-        fprintf('  Found %d files\n', length(files));
-        if ~isempty(files)
-            transform = {fullfile(searchDirs{iDir}, files(end).name)};
-            fprintf('  Using: %s\n', transform{1});
-            break;
-        end
-    end
-    
-    % Fallback: forward mats starting with b0Name2anatName_ + method token
-    if isempty(transform)
-        fprintf('  Exact pattern missed; trying fallback prefix-search...\n');
-        fwdPrefix = [b0Name, '2', anatName, '_'];
-        for iDir = 1:length(searchDirs)
-            if ~exist(searchDirs{iDir}, 'dir')
-                continue;
-            end
-            files = dir(fullfile(searchDirs{iDir}, '*.mat'));
-            hits = {};
-            for iFile = 1:length(files)
-                nm = files(iFile).name;
-                if startsWith(nm, fwdPrefix) && ~contains(nm, '_seg8') && ...
-                        (contains(nm, ['_', lower(coregmethod)]) || contains(nm, 'Composite'))
-                    hits{end+1} = fullfile(searchDirs{iDir}, nm); %#ok<AGROW>
-                end
-            end
-            if ~isempty(hits)
-                transform = hits(end);
-                fprintf('  Fallback using: %s\n', transform{1});
-                break;
-            end
-        end
-    end
+    mappedMM = ea_map_coords(fibers(:,1:3)', record.moving, ...
+        record.forward, record.fixed, record.method);
 end
-
-if isempty(transform)
-    fprintf('ERROR: No transformation found!\n');
-    fprintf('Available files in preprocessing/anat:\n');
-    if exist(fullfile(directory, 'preprocessing', 'anat'), 'dir')
-        allFiles = dir(fullfile(directory, 'preprocessing', 'anat', '*.mat'));
-        for i = 1:length(allFiles)
-            fprintf('  %s\n', allFiles(i).name);
-        end
-    end
-    fprintf('Available files in preprocessing/dwi:\n');
-    if exist(fullfile(directory, 'preprocessing', 'dwi'), 'dir')
-        allFiles = dir(fullfile(directory, 'preprocessing', 'dwi', '*.mat'));
-        for i = 1:length(allFiles)
-            fprintf('  %s\n', allFiles(i).name);
-        end
-    end
-    ea_error('Coregistration transformation not found. Please ensure coregistration between b0 and anatomical has been completed before running fiber normalization.');
-end
-
-if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
-    % For ANTs: use the transform we found
-    if ~isempty(transform)
-        xfmPath = transform{1};
-        % Find the InverseComposite version
-        xfmPath = regexprep(xfmPath, 'Composite', 'InverseComposite');
-        if ~exist(xfmPath, 'file')
-            % If InverseComposite doesn't exist, construct the path
-            xfmDir = fullfile(directory, 'coregistration', 'transformations');
-            xfmPath = fullfile(xfmDir, [mov, '2', fix, 'InverseComposite.nii.gz']);
-        end
-    else
-        % Fallback: construct expected path
-        xfmDir = fullfile(directory, 'coregistration', 'transformations');
-        xfmPath = fullfile(xfmDir, [mov, '2', fix, 'InverseComposite.nii.gz']);
-    end
-    [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
-                                       refb0, ...
-                                       xfmPath, ...
-                                       refanat, 'ANTs');
-else
-    % For SPM/FSL: use .mat file
-    if ~isempty(transform)
-        xfmPath = transform{1};
-    else
-        % Fallback: construct expected path in preprocessing/anat
-        xfmPath = fullfile(directory, 'preprocessing', 'anat', [mov, '2', fix, '.mat']);
-    end
-    [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
-                                       refb0, ...
-                                       xfmPath, ...
-                                       refanat, ...
-                                       options.coregmr.method);
-end
+% Alternate fixed anatomy is already in anchorNative world space.
+wfibsvox_anat = ea_get_affine(refanat) \ [mappedMM; ones(1, size(mappedMM,2))];
+wfibsvox_anat = wfibsvox_anat(1:3,:);
 
 wfibsvox_anat = wfibsvox_anat';
 
@@ -330,34 +144,8 @@ end
 %% map from anat voxel space to mni mm and voxel space
 fprintf('\nMapping from anat to mni...\n');
 
-% Get BIDS-compliant transformation files
-transformfiles = ea_gettransformfiles(options);
-
-% Use inverse transform (from native to MNI)
-% Note: ea_map_coords will add the appropriate extension if needed
-if exist(transformfiles.inverse, 'file')
-    inverseTransform = transformfiles.inverse;
-else
-    % Fallback to classic naming (ea_map_coords will add extension)
-    inverseTransform = [directory,'inverseTransform'];
-end
-
-% Determine transformation method from whichnormmethod
-if contains(whichnormmethod, 'ANTs', 'IgnoreCase', true)
-    transformmethod = 'ANTs';
-elseif contains(whichnormmethod, 'SPM', 'IgnoreCase', true)
-    transformmethod = 'SPM';
-elseif contains(whichnormmethod, 'FNIRT', 'IgnoreCase', true)
-    transformmethod = 'FSL';
-else
-    transformmethod = 'ANTs'; % default
-end
-
-[wfibsmm_mni, wfibsvox_mni] = ea_map_coords(wfibsvox_anat', ...
-                                            refanat, ...
-                                            inverseTransform, ...
-                                            refnorm, ...
-                                            transformmethod);
+[wfibsmm_mni, wfibsvox_mni] = ea_lc_anat_to_mni(options, ...
+    wfibsvox_anat', refanat, refnorm);
 
 wfibsmm_mni = wfibsmm_mni';
 wfibsvox_mni = wfibsvox_mni';
@@ -428,65 +216,14 @@ directory=[options.root,options.patientname,filesep];
 % check normalization routine used, determine template
 [whichnormmethod,refnorm]=ea_whichnormmethod(directory);
 
-% BIDS FIX: If no method detected but y_ea_inv_normparams.nii exists, assume SPM12
 if isempty(whichnormmethod)
-    normDir = ea_connectome_normparams_dir(directory);
-    normFile = fullfile(normDir, 'y_ea_inv_normparams.nii');
-    if exist(normFile, 'file')
-        fprintf('Normalization file found, assuming SPM12 method...\n');
-        whichnormmethod = 'SPM12';
-        % Use default template
-        spacedef = ea_getspacedef;
-        refnorm = [ea_space, spacedef.templates{1}, '.nii'];
-    else
-        ea_error('Please run normalization for this subject first.');
-    end
+    error('LeadDBS:MissingNormalization', 'The active normalization method must be recorded.');
 end
 
 % determine the refimage for b0 and anat space visualization
 % Primary definition (classic Lead-DBS behaviour)
 refb0 = [directory, options.prefs.b0];
 refanat = [directory, options.prefs.prenii_unnormalized];
-
-% BIDS fix: if the expected b0 image in the subject root does not exist,
-% search common preprocessing/coregistration locations for a suitable b0.
-if ~exist(refb0, 'file')
-    % Candidate search directories (ordered by preference)
-    searchDirs = {
-        fullfile(directory, 'preprocessing', 'dwi')
-        fullfile(directory, 'coregistration', 'dwi')
-        directory
-    };
-    foundB0 = '';
-    for iDir = 1:numel(searchDirs)
-        if ~exist(searchDirs{iDir}, 'dir')
-            continue;
-        end
-        % Typical Lead-DBS/BIDS naming: contains "b0" in filename
-        files = dir(fullfile(searchDirs{iDir}, '*b0*.nii*'));
-        if ~isempty(files)
-            % Take the last match (often the most recent / most specific)
-            foundB0 = fullfile(searchDirs{iDir}, files(end).name);
-            break;
-        end
-    end
-    if ~isempty(foundB0)
-        fprintf('INFO ea_checktransform: Using fallback b0 image: %s\n', foundB0);
-        refb0 = foundB0;
-    else
-        % No existing b0 found anywhere. At this point the main pipeline
-        % (ea_autocoord) should already have run the DWI preparation step
-        % (ea_prepare_dti_bids/ea_exportb0) whenever any structural
-        % Lead-Connectome option is enabled. If we still do not find a b0
-        % image here, this indicates that DWI data have not been prepared
-        % correctly and we should stop with a clear error instead of
-        % silently trying to re-run preprocessing from within this helper.
-        ea_error(['No b0 image found in expected locations. ', ...
-                  'Please ensure that DWI preparation has been run ', ...
-                  '(via structural Lead-Connectome options in the main GUI) ', ...
-                  'before fiber normalization.']);
-    end
-end
 
 % determine the template for fiber normalization and visualization
 if ismember(whichnormmethod,{'ea_normalize_spmshoot','ea_normalize_spmdartel','ea_normalize_spmnewseg'})

@@ -37,35 +37,7 @@ end
 
 if donorm
     %% warp vat into pre_tra-space:
-    whichnormmethod=ea_whichnormmethod([directory]);
-    switch whichnormmethod
-        case ea_getantsnormfuns
-
-            ea_ants_apply_transforms(options, ...
-                vatspresent, ...
-                wvatspresent,...
-                1,'','','NearestNeighbor');
-
-        case ea_getfslnormfuns
-
-            ea_fsl_apply_normalization(options, ...
-                vatspresent, ...
-                wvatspresent,...
-                1,'','','nn');
-        otherwise
-
-            normDir = ea_connectome_normparams_dir(directory);
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
-            matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = vatspresent;
-            matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
-            matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
-            matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
-            matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-
-            % execute batch
-            spm_jobman('run',{matlabbatch});
-            clear matlabbatch
-    end
+    ea_apply_normalization_tofile(options, vatspresent, wvatspresent, 1, 0);
 end
 
 if docoreg

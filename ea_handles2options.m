@@ -45,18 +45,6 @@ catch
     options.checkreg=0;
 end
 
-try % also open up checkreg in case of dMRI check registrations
-    if get(handles.checkregdmri,'Value')
-        options.checkreg=1;
-    end
-end
-
-try % also open up checkreg in case of dMRI check registrations
-    if get(handles.checkregfmri,'Value')
-        options.checkreg=1;
-    end
-end
-
 options.normalize.refine=0;
 try
     options.normalize.refine=get(handles.refinefit,'Value');

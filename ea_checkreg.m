@@ -86,6 +86,24 @@ end
 checkregImages = [preopCoregImages; postopCoregImages; preopNormImage; brainshiftImage];
 checkregImages = checkregImages(cellfun(@(f) ea_reglocked(options, f)~=1 & isfile(f), checkregImages));
 
+% Add BIDS Lead-Connectome registrations to the normal review queue.
+lcPairs = struct('moving', {}, 'fixed', {}, 'tag', {});
+directory = fullfile(options.root, options.patientname);
+if contains(directory, [filesep, 'derivatives', filesep, 'leaddbs', filesep])
+    try
+        options = ea_getptopts(directory, options);
+        [options, anatRel] = ea_lc_resolve_anat_anchor(options);
+        if ~isempty(anatRel)
+            lcPairs = ea_lc_checkreg_pairs(options, true, true);
+            lcPairs = lcPairs(~arrayfun(@(p) ea_lc_pair_approved(options, p), lcPairs));
+            checkregImages = [checkregImages; {lcPairs.moving}'];
+        end
+    catch ME
+        warning('LeadDBS:ConnectomeCheckRegistrationDiscoveryFailed', ...
+            'Could not add Connectome registrations to the review queue: %s', ME.message);
+    end
+end
+
 % fMRI
 restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
 options.prefs.n_rest = numel(restfiles);
@@ -121,6 +139,7 @@ options.overwriteapproved = 0;
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 setappdata(handles.leadfigure, 'checkregImages', checkregImages)
 setappdata(handles.leadfigure, 'b0restanchor', b0restanchor)
+setappdata(handles.leadfigure, 'lcPairs', lcPairs)
 setappdata(handles.leadfigure, 'activevolume', 1);
 setappdata(handles.leadfigure, 'options', options);
 
@@ -154,6 +173,12 @@ else
 end
 
 currvol = checkregImages{activevolume};
+
+lcPair = ea_get_lc_pair(handles, currvol);
+if ~isempty(lcPair)
+    ea_mrcview_lc(handles, options, lcPair);
+    return
+end
 
 % Brain shift corrected image
 if isfield(options.subj, 'brainshift') && strcmp(currvol, options.subj.brainshift.anat.scrf)
@@ -309,6 +334,173 @@ for fi=1:length(checkregImages)
 end
 
 
+function pair = ea_get_lc_pair(handles, imagePath)
+pairs = getappdata(handles.leadfigure, 'lcPairs');
+idx = find(strcmp({pairs.moving}, imagePath), 1);
+if isempty(idx)
+    pair = [];
+else
+    pair = pairs(idx);
+end
+
+
+function ea_mrcview_lc(handles, options, pair)
+checkregFig = ea_lc_checkreg_figure(options, pair);
+if ~isfile(checkregFig)
+    ea_gencheckregpair(pair.moving, pair.fixed, checkregFig);
+end
+if ~isfile(checkregFig)
+    checkregFig = fullfile(ea_getearoot, 'helpers', 'gui', 'coreg_msg.png');
+end
+
+[~, fixedName] = ea_niifileparts(pair.fixed);
+[~, movingName] = ea_niifileparts(pair.moving);
+set(handles.checkatl, 'Visible', 'off');
+set(handles.normsettings, 'Visible', 'off');
+set(handles.recomputebutn, 'Enable', 'on');
+set(handles.recomputebutn, 'String', '(Re-) compute coregistration using...');
+set(handles.coregmrmethod, 'Enable', 'on');
+defaultMethod = options.prefs.mrcoreg.default;
+if isfield(options, 'coregmr') && isfield(options.coregmr, 'method') ...
+        && ~isempty(options.coregmr.method)
+    defaultMethod = options.coregmr.method;
+end
+ea_init_coregmrpopup(handles, defaultMethod);
+methods = cellstr(get(handles.coregmrmethod, 'String'));
+if ~ismember('ANTs Nonlinear Coregistration', methods)
+    methods{end+1} = 'ANTs Nonlinear Coregistration';
+    set(handles.coregmrmethod, 'String', methods);
+end
+
+if contains(pair.tag, 'dMRI')
+    fixedCandidates = ea_lc_fixed_candidates(options, pair.fixed);
+    setappdata(handles.leadfigure, 'lcFixedCandidates', fixedCandidates);
+    set(handles.substitute, 'Visible', 'on');
+    set(handles.substitute, 'String', {fixedCandidates.label});
+    set(handles.substitute, 'Value', 1);
+else
+    setappdata(handles.leadfigure, 'lcFixedCandidates', []);
+    set(handles.substitute, 'Visible', 'off');
+end
+set(handles.anchortxt, 'String', 'Reference image (red wires):');
+set(handles.anchormod, 'String', fixedName);
+set(handles.coregresultstxt, 'String', 'Connectome coregistration results');
+set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Coregistration']);
+set(handles.imgfn, 'Visible', 'on');
+set(handles.imgfn, 'String', strrep(checkregFig, ...
+    [fileparts(options.subj.subjDir), filesep], ''));
+set(handles.imgfn, 'TooltipString', checkregFig);
+set(handles.depvolume, 'String', [movingName, '.nii']);
+set(handles.depvolume, 'Tooltip', pair.moving);
+
+im = imread(checkregFig);
+set(0, 'CurrentFigure', handles.leadfigure);
+set(handles.leadfigure, 'CurrentAxes', handles.standardax);
+imagesc(im);
+axis off
+axis equal
+
+
+function path = ea_lc_checkreg_figure(options, pair)
+[~, movingName] = ea_niifileparts(pair.moving);
+path = fullfile(options.subj.coregDir, 'checkreg', ...
+    [movingName, '_desc-connectomeCheck.png']);
+
+
+function ea_recompute_lc_pair(options, pair, registrationFixed)
+directory = fullfile(options.root, options.patientname);
+[options, anatRel] = ea_lc_resolve_anat_anchor(options);
+if isempty(anatRel)
+    error('LeadDBS:ConnectomeAnatomicalAnchorNotFound', ...
+        'No anatomical anchor could be resolved for recomputation.');
+end
+anat = fullfile(directory, anatRel);
+
+if contains(pair.tag, 'dMRI')
+    [options, ~, b0] = ea_lc_resolve_b0(options);
+    if ~isfile(b0)
+        error('LeadDBS:ConnectomeB0NotFound', ...
+            'The B0 reference image does not exist: %s', b0);
+    end
+    fprintf('\nRecomputing Lead-Connectome B0-to-anatomy coregistration using %s...\n', ...
+        options.coregmr.method);
+    ea_coregimages(options, b0, registrationFixed, pair.moving, {}, 1, [], 1);
+else
+    fprintf('\nRecomputing Lead-Connectome anatomy-to-fMRI coregistration using %s...\n', ...
+        options.coregmr.method);
+    ea_coregimages(options, anat, pair.fixed, pair.moving, {}, 1, [], 1);
+end
+
+if ~isfile(pair.moving)
+    error('LeadDBS:ConnectomeCoregistrationOutputNotFound', ...
+        'Coregistration did not create the expected output: %s', pair.moving);
+end
+
+
+function candidates = ea_lc_fixed_candidates(options, anchor)
+paths = {anchor};
+if isfield(options.subj, 'coreg') && isfield(options.subj.coreg, 'anat') ...
+        && isfield(options.subj.coreg.anat, 'preop')
+    paths = [paths; struct2cell(options.subj.coreg.anat.preop)];
+end
+paths = paths(cellfun(@isfile, paths));
+[~, uniqueIdx] = unique(paths, 'stable');
+paths = paths(sort(uniqueIdx));
+candidates = struct('path', paths, 'label', cell(size(paths)));
+for i = 1:numel(paths)
+    [~, name] = ea_niifileparts(paths{i});
+    modality = ea_getmodality(paths{i});
+    if isempty(modality)
+        candidates(i).label = ['Use "', name, '" for recomputation'];
+    else
+        candidates(i).label = ['Use "', modality, '" for recomputation'];
+    end
+end
+
+
+function approved = ea_lc_pair_approved(options, pair)
+approved = false;
+if isfield(options, 'overwriteapproved') && options.overwriteapproved
+    return
+end
+approvalFile = fullfile(options.root, options.patientname, 'ea_coreg_approved.mat');
+if isfile(approvalFile)
+    approvals = load(approvalFile);
+    key = ea_lc_pair_key(pair);
+    if isfield(approvals, key)
+        approved = logical(approvals.(key));
+    end
+end
+
+
+function ea_set_lc_pair_approval(options, pair, approved)
+approvalFile = fullfile(options.root, options.patientname, 'ea_coreg_approved.mat');
+if isfile(approvalFile)
+    approvals = load(approvalFile);
+else
+    approvals = struct;
+end
+approvals.(ea_lc_pair_key(pair)) = approved;
+save(approvalFile, '-struct', 'approvals');
+
+
+function key = ea_lc_pair_key(pair)
+[~, movingName] = ea_niifileparts(pair.moving);
+[~, fixedName] = ea_niifileparts(pair.fixed);
+key = matlab.lang.makeValidName(['connectome_', movingName, '_to_', fixedName]);
+
+
+function ea_advance_checkreg(handles)
+checkregImages = getappdata(handles.leadfigure, 'checkregImages');
+activevolume = getappdata(handles.leadfigure, 'activevolume');
+if activevolume == numel(checkregImages)
+    close(handles.leadfigure);
+    return
+end
+setappdata(handles.leadfigure, 'activevolume', activevolume + 1);
+ea_mrcview(handles);
+
+
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_checkreg_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -356,6 +548,35 @@ options.overwriteapproved = 1;
 checkregImages = getappdata(handles.leadfigure, 'checkregImages');
 activevolume = getappdata(handles.leadfigure, 'activevolume');
 currvol = checkregImages{activevolume};
+
+lcPair = ea_get_lc_pair(handles, currvol);
+if ~isempty(lcPair)
+    methods = get(handles.coregmrmethod, 'String');
+    if iscell(methods)
+        options.coregmr.method = methods{get(handles.coregmrmethod, 'Value')};
+    else
+        options.coregmr.method = methods;
+    end
+    registrationFixed = lcPair.fixed;
+    if contains(lcPair.tag, 'dMRI')
+        fixedCandidates = getappdata(handles.leadfigure, 'lcFixedCandidates');
+        selected = get(handles.substitute, 'Value');
+        if ~isempty(fixedCandidates) && selected <= numel(fixedCandidates)
+            registrationFixed = fixedCandidates(selected).path;
+        end
+    end
+    try
+        ea_recompute_lc_pair(options, lcPair, registrationFixed);
+        ea_set_lc_pair_approval(options, lcPair, false);
+        ea_delete(ea_lc_checkreg_figure(options, lcPair));
+        ea_mrcview(handles);
+    catch ME
+        ea_busyaction('off', handles.leadfigure, 'coreg');
+        rethrow(ME);
+    end
+    ea_busyaction('off', handles.leadfigure, 'coreg');
+    return
+end
 
 anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
 
@@ -558,6 +779,12 @@ options = getappdata(handles.leadfigure, 'options');
 checkregImages = getappdata(handles.leadfigure, 'checkregImages');
 activevolume = getappdata(handles.leadfigure, 'activevolume');
 currvol = checkregImages{activevolume};
+lcPair = ea_get_lc_pair(handles, currvol);
+if ~isempty(lcPair)
+    ea_set_lc_pair_approval(options, lcPair, true);
+    ea_advance_checkreg(handles);
+    return
+end
 
 % Get coregistered pre-op images (except for the anchor image)
 preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
@@ -687,6 +914,15 @@ activevolume = getappdata(handles.leadfigure,'activevolume');
 b0restanchor = getappdata(handles.leadfigure,'b0restanchor');
 
 currvol = checkregImages{activevolume};
+
+lcPair = ea_get_lc_pair(handles, currvol);
+if ~isempty(lcPair)
+    options.moving = lcPair.moving;
+    options.fixed = lcPair.fixed;
+    options.tag = lcPair.tag;
+    ea_show_coregistration(options);
+    return
+end
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
 	ea_show_normalization(options);
 else
@@ -727,6 +963,13 @@ options = getappdata(handles.leadfigure,'options');
 checkregImages = getappdata(handles.leadfigure,'checkregImages');
 activevolume = getappdata(handles.leadfigure,'activevolume');
 currvol = checkregImages{activevolume};
+
+lcPair = ea_get_lc_pair(handles, currvol);
+if ~isempty(lcPair)
+    ea_set_lc_pair_approval(options, lcPair, false);
+    ea_advance_checkreg(handles);
+    return
+end
 
 % Get coregistered pre-op images (except for the anchor image)
 preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
@@ -849,6 +1092,15 @@ checkregImages = getappdata(handles.leadfigure, 'checkregImages');
 activevolume = getappdata(handles.leadfigure, 'activevolume');
 currvol = checkregImages{activevolume};
 
+lcPair = ea_get_lc_pair(handles, currvol);
+if ~isempty(lcPair)
+    checkregFig = ea_lc_checkreg_figure(options, lcPair);
+    ea_delete(checkregFig);
+    ea_mrcview(handles);
+    ea_busyaction('off', handles.leadfigure, 'coreg');
+    return
+end
+
 anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
 
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
@@ -915,9 +1167,3 @@ function substitute_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to substitute (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end

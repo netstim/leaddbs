@@ -8,42 +8,8 @@ else
     overwrite = 0;
 end
 
-% BIDS FIX: Check if normalization has been run - if not, run SPM12 normalization
-normDir = ea_connectome_normparams_dir(directory);
-normFile = fullfile(normDir, 'y_ea_inv_normparams.nii');
-if ~exist(normFile, 'file')
-    disp('No normalization found. Running SPM12 normalization...');
-    
-    % Get anatomical image
-    anatFile = fullfile(directory, options.prefs.prenii_unnormalized);
-    
-    % Run SPM12 normalization (quick estimate)
-    matlabbatch{1}.spm.spatial.normalise.estwrite.subj.vol = {[anatFile, ',1']};
-    matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[anatFile, ',1']};
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.biasreg = 0.0001;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.biasfwhm = 60;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.tpm = {[spm('Dir'), '/tpm/TPM.nii']};
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.affreg = 'mni';
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.reg = [0 0.001 0.5 0.05 0.2];
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.fwhm = 0;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.samp = 3;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.bb = [-78 -112 -70; 78 76 85];
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.vox = [1 1 1];
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.interp = 4;
-    matlabbatch{1}.spm.spatial.normalise.estwrite.woptions.prefix = 'w';
-    
-    spm_jobman('run', {matlabbatch});
-    clear matlabbatch
-    
-    % Rename output to Lead-DBS convention
-    [anatDir, anatName] = fileparts(anatFile);
-    spmNormFile = fullfile(anatDir, ['y_', anatName, '.nii']);
-    if exist(spmNormFile, 'file')
-        movefile(spmNormFile, normFile);
-    end
-    
-    disp('Done.');
-end
+% Require the subject's active normalization; do not estimate a second one.
+ea_gettransformfiles(options);
 
 if ~exist([directory,'templates',filesep,'labeling',filesep, ...
         'w',options.lc.general.parcellation,'.nii'],'file') ...
@@ -57,47 +23,10 @@ if ~exist([directory,'templates',filesep,'labeling',filesep, ...
         mkdir([directory,'templates',filesep,'labeling']);
     end
 
-    whichnormmethod=ea_whichnormmethod([directory]);
-    switch whichnormmethod
-        case ea_getantsnormfuns
-            useinterp='GenericLabel';
-            parc=ea_load_nii([ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']);
-            if length(unique(parc.img(:)))>500
-                useinterp='NearestNeighbor'; % both GenericLabel and MultiLabel take ages on high dimensional parcellations.
-            end
-            ea_ants_apply_transforms(options, ...
-                {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
-                {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
-                1,'','',useinterp);
-
-        case ea_getfslnormfuns
-
-            ea_fsl_apply_normalization(options, ...
-                {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
-                {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
-                1,'','','nn');
-
-        otherwise
-            switch spm('ver')
-                case 'SPM8'
-                    matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
-                    matlabbatch{1}.spm.util.defs.ofname = '';
-                    matlabbatch{1}.spm.util.defs.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii,1']};
-                    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[directory,'templates',filesep,'labeling',filesep]};
-                    matlabbatch{1}.spm.util.defs.interp = 0;
-                    spm_jobman('run',{matlabbatch});
-                    clear matlabbatch
-                case 'SPM12'
-                    matlabbatch{1}.spm.util.defs.comp{1}.def = {fullfile(normDir, 'y_ea_inv_normparams.nii')};
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']};
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'templates',filesep,'labeling',filesep]};
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-                    spm_jobman('run',{matlabbatch});
-                    clear matlabbatch
-            end
-    end
+    ea_apply_normalization_tofile(options, ...
+        {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
+        {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']}, ...
+        1, 0);
 end
 
 [~,refname]=fileparts(reference);

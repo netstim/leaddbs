@@ -20,6 +20,9 @@ if ~exist('ref', 'var')
 end
 
 json = loadjson(options.subj.norm.log.method);
+if contains(json.method, 'SPM')
+    ea_convert_spm_warps(options.subj);
+end
 
 if ischar(interp)
     if strcmp(interp,'auto') % only works if one image supplied
@@ -38,10 +41,7 @@ elseif contains(json.method, 'FNIRT')
         end
     end
     ea_fsl_apply_normalization(options, from,to, useinverse, ref, '', interp);
-elseif contains(json.method, 'SPM')
-    % Convert SPM deformation field to ITK format when necessary
-    ea_convert_spm_warps(options.subj);
-    ea_ants_apply_transforms(options, from, to, useinverse, ref, '', interp);
+
 end
 
 
@@ -72,6 +72,3 @@ if length(outs)<100 % likely labeling file
         end
     end
 end
-
-
-

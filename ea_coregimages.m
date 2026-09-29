@@ -33,6 +33,16 @@ if ~exist('interp','var') || isempty(interp)
     interp = 4;
 end
 
+[~, movingBase] = ea_niifileparts(moving);
+isB0 = endsWith(movingBase, '_b0') || strcmp(movingBase, 'b0');
+if isB0 && writeoutmat && ~any(strcmpi(options.coregmr.method, ...
+        {'ANTs (Avants 2008)', 'ANTs', 'SPM (Friston 2007)', 'SPM', ...
+         'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT', ...
+         'ANTs Nonlinear Coregistration', 'ANTsNonLinear'}))
+    error('LeadDBS:UnsupportedB0Coreg', ...
+        'Select SPM, ANTs, FLIRT, or ANTs nonlinear for B0 registration.');
+end
+
 switch lower(options.coregmr.method)
     case lower({'ANTs (Avants 2008)', 'ANTs'})
         affinefile = ea_ants_linear(fixed,...
@@ -91,7 +101,11 @@ switch lower(options.coregmr.method)
     case lower({'ANTs Nonlinear Coregistration', 'ANTsNonLinear'})
         transforms = ea_ants_nonlinear_coreg(fixed, moving, ofile, ...
             options.prefs.machine.normsettings, 'NULL', 'NULL', 'ea_antspreset_ants_wiki');
-        ea_delete(transforms);
+        if writeoutmat
+            affinefile = transforms;
+        else
+            ea_delete(transforms);
+        end
     otherwise
         warning('Coregistrion method not recognized...');
         return;
@@ -102,4 +116,11 @@ V1 = ea_open_vol(fixed);
 V2 = ea_open_vol(ofile);
 if ~isequal(V1.mat, V2.mat)
     ea_conformspaceto(fixed, ofile, 1);
+end
+
+% Publish after the registered image has been created successfully.
+if isB0 && writeoutmat
+    ea_lc_store_coreg(options, moving, fixed, ofile, affinefile);
+    record = ea_lc_coreg_record(options);
+    affinefile = {record.forward; record.inverse};
 end

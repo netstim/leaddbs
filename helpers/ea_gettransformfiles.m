@@ -1,15 +1,7 @@
 function transformfiles=ea_gettransformfiles(options)
 
-try
-    json = loadjson(options.subj.norm.log.method);
-catch
-    % Lead-Connectome mode: Use SPM deformation field (BIDS: normalization/transformations)
-    directory = [options.root, options.patientname, filesep];
-    normDir = ea_connectome_normparams_dir(directory);
-    transformfiles.forward = fullfile(normDir, 'y_ea_normparams.nii');
-    transformfiles.inverse = fullfile(normDir, 'y_ea_inv_normparams.nii');
-    return;
-end
+% The current method protocol determines the filenames.
+json = loadjson(options.subj.norm.log.method);
 
 if contains(json.method, 'ANTs')
     if isfield(json, 'custom') && json.custom
@@ -24,13 +16,15 @@ if contains(json.method, 'ANTs')
 elseif contains(json.method, 'FNIRT')
     warpSuffix='fnirt.nii.gz'; % correct?
 elseif contains(json.method, 'SPM')
-    warpSuffix='spm.nii';
+    ea_convert_spm_warps(options.subj);
+    warpSuffix='ants.nii.gz';
 elseif contains(json.method, 'EasyReg')
     warpSuffix='ants.nii.gz';
 elseif contains(json.method, 'SynthMorph')
     warpSuffix='ants.nii.gz';
+else
+    error('LeadDBS:UnknownNormalization', 'Unrecognized normalization method: %s', json.method);
 end
 
 transformfiles.forward=[options.subj.norm.transform.forwardBaseName,warpSuffix];
 transformfiles.inverse=[options.subj.norm.transform.inverseBaseName,warpSuffix];
-

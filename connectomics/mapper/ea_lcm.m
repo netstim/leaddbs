@@ -153,9 +153,7 @@ switch modality
                 bbfile = [ea_space,'bb.nii'];
             end
 
-            stimParams = ea_regexpdir(vatdir, 'stimparameters\.mat$', 0);
-            S = ea_loadstimulation(stimParams{1});
-            modelLabel = ea_simModel2Label(S.model);
+            modelLabel = ea_lcm_resolvevatmodel(vatdir, subPrefix, vtaType);
 
             seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_seed-dMRI.nii'];
             if ~isfile(seedFile)
@@ -218,9 +216,7 @@ switch modality
                 seedLabel = 'fMRI';
             end
 
-            stimParams = ea_regexpdir(vatdir, 'stimparameters\.mat$', 0);
-            S = ea_loadstimulation(stimParams{1});
-            modelLabel = ea_simModel2Label(S.model);
+            modelLabel = ea_lcm_resolvevatmodel(vatdir, subPrefix, vtaType);
 
             seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_seed-', seedLabel, '.nii'];
             % if ~isfile(seedFile)

@@ -9,6 +9,10 @@ use_app = isobject(app_or_handles) && isprop(app_or_handles, 'DropDown');
 if use_app
     app = app_or_handles;
     leadfig = app.leadfigure;
+    % Review these together with all other registrations using the normal
+    % Registration-tab "Check Results" control.
+    app.CheckRegistrationsCheckBox_2.Visible = 'off';
+    app.CheckRegistrationsCheckBox.Visible = 'off';
 else
     handles = app_or_handles;
     if ~isfield(handles, 'parcellation') || ~isvalid(handles.parcellation)
