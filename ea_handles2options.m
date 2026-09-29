@@ -221,7 +221,9 @@ catch
 end
 
 options.d3.expdf=0;
+
 % Electrode model / SEEG
+options.seeg = false;
 try
     isSEEG = logical(handles.SEEGCheckBox.Value);
 catch
@@ -229,17 +231,13 @@ catch
 end
 
 if isSEEG
-
     options.seeg = true;
     options.elmodel = 'SEEG';
 
     [elmodels, ~] = ea_resolve_elspec;
     options.elmodeln = find(strcmp(elmodels, 'SEEG'), 1);
-
 else
-
     options.seeg = false;
-
     try
         options.elmodeln = handles.electrode_model_popup.Value;
         options.elmodel = ...
@@ -251,6 +249,7 @@ else
     end
 
 end
+
 if isSEEG
     options.numcontacts = NaN;
 else

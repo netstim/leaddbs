@@ -78,7 +78,6 @@ else
 end
 
 if isfield(options, 'elmodel')
-
     if strcmpi(options.elmodel, 'SEEG')
         % SEEG does not use the DBS electrode-model dropdown
 
@@ -113,7 +112,7 @@ try
     bids = getappdata(handles.leadfigure, 'bids');
     subjId = getappdata(handles.leadfigure, 'subjId');
 
-    if numel(subjId) == 1
+    if isscalar(subjId)
         uiprefsFile = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
 
         if isfile(uiprefsFile)
@@ -129,7 +128,6 @@ end
 app = handles.leadfigure.RunningAppInstance;
 
 if isSEEG
-
     % Saved SEEG patient: LeGUI only
     set(handles.SEEGCheckBox, 'Value', 1);
 
@@ -146,9 +144,9 @@ if isSEEG
     set(handles.refinelocalization, 'Enable', 'off');
 
 else
-
+    set(handles.SEEGCheckBox, 'Value', 0);
     % NORMAL Lead-DBS: restore full method list only if previous patient was SEEG
-    if numel(app.reconmethod.Items) == 1
+    if isscalar(app.reconmethod.Items)
         app.reconmethod.Items = { ...
             'Refined TRAC/CORE', ...
             'TRAC/CORE (Horn 2015)', ...
@@ -181,4 +179,13 @@ else
                 options.reconmethod);
         end
     end
+
+    set(handles.electrode_model_popup, 'Enable', 'on');
+
+    for i = 1:15
+        set(handles.(['side', num2str(i)]), 'Enable', 'on');
+    end
+
+    set(handles.refinelocalization, 'Value', 0);
+    set(handles.refinelocalization, 'Enable', 'on');
 end
