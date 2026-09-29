@@ -64,7 +64,6 @@ if isfield(options, 'sides')
     end
 end
 
-
 if isfield(options, 'automask') && options.automask
     set(handles.maskwindow_txt,'String','auto')
 elseif isfield(options, 'maskwindow') && ~isempty(options.maskwindow)
@@ -88,9 +87,7 @@ if isfield(options, 'elmodel')
         if ~isempty(value)
             set(handles.electrode_model_popup, 'Value', value);
         else
-            ea_cprintf('CmdWinWarnings', ...
-                'Specified electrode not found: %s\n', ...
-                options.elmodel);
+            ea_cprintf('CmdWinWarnings', 'Specified electrode not found: %s\n', options.elmodel);
         end
     end
 end
@@ -125,67 +122,11 @@ try
     end
 end
 
-app = handles.leadfigure.RunningAppInstance;
-
 if isSEEG
     % Saved SEEG patient: LeGUI only
     set(handles.SEEGCheckBox, 'Value', 1);
-
-    app.reconmethod.Value = 'LeGUI (Davis 2021)';
-    app.reconmethod.Items = {'LeGUI (Davis 2021)'};
-
-    set(handles.electrode_model_popup, 'Enable', 'off');
-
-    for i = 1:15
-        set(handles.(['side', num2str(i)]), 'Enable', 'off');
-    end
-
-    set(handles.refinelocalization, 'Value', 0);
-    set(handles.refinelocalization, 'Enable', 'off');
-
 else
     set(handles.SEEGCheckBox, 'Value', 0);
-    % NORMAL Lead-DBS: restore full method list only if previous patient was SEEG
-    if isscalar(app.reconmethod.Items)
-        app.reconmethod.Items = { ...
-            'Refined TRAC/CORE', ...
-            'TRAC/CORE (Horn 2015)', ...
-            'PaCER (Husch 2017)', ...
-            'Manual', ...
-            'Slicer (Manual)', ...
-            'LeGUI (Davis 2021)'};
-    end
-
-    if isfield(options, 'reconmethod') && ~isempty(options.reconmethod)
-        % Get the list of strings in the popup
-        reconList = handles.reconmethod.String;
-
-        % Ensure reconList is a cell array of char
-        if isstring(reconList)
-            reconList = cellstr(reconList);
-        elseif ischar(reconList)
-            reconList = cellstr(reconList);
-        end
-
-        % Find the index of the matching method (case-insensitive)
-        idx = find(strcmpi(reconList, options.reconmethod), 1);
-
-        if ~isempty(idx)
-            set(handles.reconmethod, 'Value', idx);
-        else
-            set(handles.reconmethod, 'Value', 1);
-            ea_cprintf('CmdWinWarnings', ...
-                'Specified reconstruction method not found: %s\n', ...
-                options.reconmethod);
-        end
-    end
-
-    set(handles.electrode_model_popup, 'Enable', 'on');
-
-    for i = 1:15
-        set(handles.(['side', num2str(i)]), 'Enable', 'on');
-    end
-
-    set(handles.refinelocalization, 'Value', 0);
-    set(handles.refinelocalization, 'Enable', 'on');
 end
+
+% Setup of recon related controls goes to ea_switchctmr

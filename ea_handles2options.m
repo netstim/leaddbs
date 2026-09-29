@@ -222,38 +222,33 @@ end
 
 options.d3.expdf=0;
 
-% Electrode model / SEEG
-options.seeg = false;
 try
-    isSEEG = logical(handles.SEEGCheckBox.Value);
-catch
-    isSEEG = false;
+    options.reconmethod = handles.reconmethod.String{handles.reconmethod.Value};
 end
 
-if isSEEG
-    options.seeg = true;
+if handles.SEEGCheckBox.Value
+    options.seeg = 1;
+else
+    options.seeg = 0;
+end
+
+if contains(options.reconmethod, 'LeGUI')
     options.elmodel = 'SEEG';
 
     [elmodels, ~] = ea_resolve_elspec;
     options.elmodeln = find(strcmp(elmodels, 'SEEG'), 1);
-else
-    options.seeg = false;
-    try
-        options.elmodeln = handles.electrode_model_popup.Value;
-        options.elmodel = ...
-            handles.electrode_model_popup.String{options.elmodeln};
-    catch
-        elms = ea_resolve_elspec;
-        options.elmodel = elms{1};
-        options.elmodeln = 1;
-    end
-
-end
-
-if isSEEG
     options.numcontacts = NaN;
 else
-    options.numcontacts = 4;
+    try
+        options.elmodeln = handles.electrode_model_popup.Value;
+        options.elmodel = handles.electrode_model_popup.String{options.elmodeln};
+    catch
+        elms = ea_resolve_elspec;
+        options.elmodeln = 1;
+        options.elmodel = elms{1};
+    end
+    opt = ea_resolve_elspec(options);
+    options.numcontacts = opt.elspec.numContacts;
 end
 
 try
@@ -268,15 +263,6 @@ try
     else
         options.d3.writeatlases=1;
         options.d2.writeatlases=1;
-    end
-end
-
-if isSEEG
-    options.reconmethod = 'LeGUI (Davis 2021)';
-else
-    try
-        options.reconmethod=get(handles.reconmethod,'String');
-        options.reconmethod=options.reconmethod{get(handles.reconmethod,'Value')};
     end
 end
 

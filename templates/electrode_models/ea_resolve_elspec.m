@@ -1515,7 +1515,7 @@ switch elmodel
         elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
 
-        case 'SEEG'
+    case 'SEEG'
         % Generic compatibility specification for the SEEG workflow.
         %
         % IMPORTANT:

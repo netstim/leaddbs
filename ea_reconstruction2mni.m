@@ -81,6 +81,7 @@ end
 
 save(options.subj.recon.recon,'reco');
 
+
 function c = ea_warpcoord(c,nii,options)
 c = [c,ones(size(c,1),1)]';
 c = nii(1).mat\c;
