@@ -82,15 +82,15 @@ catch
 end
 
 try
-    options.acpc.do = get(handles.acpc_checkbox, 'Value');
+    options.acpc.do = logical(get(handles.acpc_checkbox, 'Value'));
 catch
-    options.acpc.do = 0;
+    options.acpc.do = false;
 end
 
 try
-    options.acpc.do = get(handles.resize_checkbox, 'Value');
+    options.resize.do = logical(get(handles.resize_checkbox, 'Value'));
 catch
-    options.resize.do = 0;
+    options.resize.do = false;
 end
 
 try
@@ -119,6 +119,7 @@ try
 catch
     options.sides=1:2;
 end
+
 try
     options.doreconstruction=(get(handles.doreconstruction,'Value') == get(handles.doreconstruction,'Max'));
     if strcmp(get(handles.maskwindow_txt,'String'),'auto')
@@ -220,21 +221,34 @@ catch
 end
 
 options.d3.expdf=0;
-options.numcontacts=4;
 
 try
-    options.entrypointn = handles.targetpopup.Value;
-    options.entrypoint = handles.targetpopup.String{options.entrypointn};
+    options.reconmethod = handles.reconmethod.String{handles.reconmethod.Value};
 end
 
-options.writeoutpm = 0;
+if handles.SEEGCheckBox.Value
+    options.seeg = 1;
+else
+    options.seeg = 0;
+end
 
-try
-    options.elmodeln = handles.electrode_model_popup.Value;
-    options.elmodel = handles.electrode_model_popup.String{options.elmodeln};
-catch
-    elms = ea_resolve_elspec;
-    options.elmodel = elms{1};
+if contains(options.reconmethod, 'LeGUI')
+    options.elmodel = 'SEEG';
+
+    [elmodels, ~] = ea_resolve_elspec;
+    options.elmodeln = find(strcmp(elmodels, 'SEEG'), 1);
+    options.numcontacts = NaN;
+else
+    try
+        options.elmodeln = handles.electrode_model_popup.Value;
+        options.elmodel = handles.electrode_model_popup.String{options.elmodeln};
+    catch
+        elms = ea_resolve_elspec;
+        options.elmodeln = 1;
+        options.elmodel = elms{1};
+    end
+    opt = ea_resolve_elspec(options);
+    options.numcontacts = opt.elspec.numContacts;
 end
 
 try
@@ -250,11 +264,6 @@ try
         options.d3.writeatlases=1;
         options.d2.writeatlases=1;
     end
-end
-
-try
-    options.reconmethod=get(handles.reconmethod,'String');
-    options.reconmethod=options.reconmethod{get(handles.reconmethod,'Value')};
 end
 
 options.expstatvat.do=0;
@@ -363,25 +372,25 @@ try
     if ~iscell(handles.fmripopup.String)
         options.predict.fMRIcon{1}=handles.fmripopup.String;
     else
-    	options.predict.fMRIcon=handles.fmripopup.String;
+        options.predict.fMRIcon=handles.fmripopup.String;
     end
     options.predict.fMRIcon=options.predict.fMRIcon{handles.fmripopup.Value};
 
     % Chosen prediction model
     mfiles=getappdata(handles.predictionmodel,'mfiles');
     if ~iscell(handles.predictionmodel.String)
-    	options.predict.model{1}=handles.predictionmodel.String;
+        options.predict.model{1}=handles.predictionmodel.String;
     else
-    	options.predict.model=handles.predictionmodel.String;
+        options.predict.model=handles.predictionmodel.String;
     end
     options.predict.model=options.predict.model{handles.predictionmodel.Value};
     options.predict.model_mfile=mfiles{handles.predictionmodel.Value};
 
     % Chosen stimulation name
     if ~iscell(handles.seeddefpopup.String)
-    	options.predict.stimulation{1}=handles.seeddefpopup.String;
+        options.predict.stimulation{1}=handles.seeddefpopup.String;
     else
-    	options.predict.stimulation=handles.seeddefpopup.String;
+        options.predict.stimulation=handles.seeddefpopup.String;
     end
     options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
 end

@@ -467,6 +467,9 @@ end
 function openPNG(varargin)
 fH = figure('menubar','none','name','Example');
 aH = axes('parent',fH);
+
+iconDir = fullfile(fileparts(which('LeG_msgbox')), 'icons');
+
 if isdeployed
     switch varargin{3}
         case 'ACPCGUI'
@@ -477,9 +480,12 @@ if isdeployed
 else
     switch varargin{3}
         case 'ACPCGUI'
-            imshow('./icons/ACPCGUIExample.png','border','tight','interpolation','bilinear','parent',aH);
+            imshow(fullfile(iconDir,'ACPCGUIExample.png'), ...
+                'border','tight','interpolation','bilinear','parent',aH);
+
         case 'AssignElectrodesGUI'
-            imshow('./icons/AssignElectrodesExample.png','border','tight','interpolation','bilinear','parent',aH);
+            imshow(fullfile(iconDir,'AssignElectrodesExample.png'), ...
+                'border','tight','interpolation','bilinear','parent',aH);
     end
 end
 end

@@ -318,7 +318,7 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
             if ~isempty(recoType)
                 for el=1:length(reco.(recoType).markers)
                     if ~isempty(reco.(recoType).markers(el).head)
-%                         set(handles.(['side',num2str(el)]), 'Value', 1);
+                        % set(handles.(['side',num2str(el)]), 'Value', 1);
                         sf = ['side', num2str(el)];
                         if isfield(handles, sf) %&& isgraphics(handles.(sf))
                             set(handles.(sf), 'Value', 1);
@@ -331,7 +331,10 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
                 elmodel = ea_get_first_notempty_elmodel(reco.props);
                 uiprefsFile = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
                 uiprefs = load(uiprefsFile);
-                if ~strcmp(uiprefs.elmodel, elmodel)
+
+                isSEEG = isfield(uiprefs, 'seeg') && logical(uiprefs.seeg);
+
+                if ~isSEEG && ~strcmp(uiprefs.elmodel, elmodel)
                     if handles.refinelocalization.Value
                         ea_cprintf('CmdWinWarnings', ...
                             ['Chosen electrode in the uiprefs (%s) for patient "%s" doesn''t match the stored reconstruction (%s)!\n', ...
@@ -359,7 +362,7 @@ if isscalar(uipatdir) && isfield(handles, 'side1')
                         %     sprintf(['Chosen electrode (%s) for patient "%s" doesn''t match stored reconstruction (%s)! ', ...
                         %     'Please rerun "Localize DBS electrodes".\n'], uiprefs.elmodel, subjId{1}, elmodel), "Warning");
                     end
-                else
+                elseif ~isSEEG
                     [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
                     set(handles.electrode_model_popup, 'Value', locb);
                     clear locb

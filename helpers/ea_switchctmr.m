@@ -61,36 +61,84 @@ end
 if  ~strcmp(handles.prod, 'anatomy')
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'on');
+
     switch postopModality
         case 1 % MR
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.coregctmethod,'Enable','off');
             set(handles.doreconstruction,'Enable','on');
-            set(handles.refinelocalization,'Enable','on');
+            set(handles.reconmethod, 'Value', 1);
             set(handles.reconmethod,'String',{'TRAC/CORE (Horn 2015)','Manual', 'Slicer (Manual)'});
-            % default TRAC/CORE:
+            % Set recon method
             set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
                 set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, 'Manual')));
             else
-                set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.MRI))); % set to TRAC/CORE algorithm.
+                if exist('uiprefs', 'var')
+                    % Find the index of the matching method (case-insensitive)
+                    idx = find(strcmpi(handles.reconmethod.String, uiprefs.reconmethod), 1);
+                    if ~isempty(idx)
+                        set(handles.reconmethod, 'Value', idx);
+                    else
+                        set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.MRI))); % set to TRAC/CORE algorithm.
+                    end
+                else
+                    set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.MRI))); % set to TRAC/CORE algorithm.
+                end
             end
-            set(handles.targetpopup,'Enable','on');
-            set(handles.maskwindow_txt,'Enable','on');
+            if contains(handles.reconmethod.String{handles.reconmethod.Value}, 'TRAC')
+                set(handles.targetpopup,'Enable','on');
+                set(handles.maskwindow_txt,'Enable','on');
+            else
+                set(handles.targetpopup,'Enable','off');
+                set(handles.maskwindow_txt,'Enable','off');
+            end
         case 2 % CT
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.doreconstruction,'Enable','on');
-            set(handles.refinelocalization,'Enable','on');
-            set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)', 'LeGUI (Davis 2021)'});
-            % default PaCER:
+            set(handles.reconmethod, 'Value', 1);
+            if ~handles.SEEGCheckBox.Value
+                set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)'});
+            else
+                set(handles.reconmethod,'String',{'LeGUI (Davis 2021)','Manual','Slicer (Manual)'});
+            end
+            % Set recon method
             set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
                 set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, 'Manual')));
+            elseif handles.SEEGCheckBox.Value
+                if exist('uiprefs', 'var')
+                    % Find the index of the matching method (case-insensitive)
+                    idx = find(strcmpi(handles.reconmethod.String, uiprefs.reconmethod), 1);
+                    if ~isempty(idx)
+                        set(handles.reconmethod, 'Value', idx);
+                    else
+                        set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, 'LeGUI (Davis 2021)'))); % set to LeGUI algorithm.
+                    end
+                else
+                    set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, 'LeGUI (Davis 2021)'))); % set to LeGUI algorithm.
+                end
             else
-                set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.CT))); % set to PaCER algorithm.
+                if exist('uiprefs', 'var')
+                    % Find the index of the matching method (case-insensitive)
+                    idx = find(strcmpi(handles.reconmethod.String, uiprefs.reconmethod), 1);
+                
+                    if ~isempty(idx)
+                        set(handles.reconmethod, 'Value', idx);
+                    else
+                        set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.CT))); % set to PaCER algorithm.
+                    end
+                else
+                    set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.CT))); % set to PaCER algorithm.
+                end
             end
-            set(handles.targetpopup,'Enable','off');
-            set(handles.maskwindow_txt,'Enable','off');
+            if contains(handles.reconmethod.String{handles.reconmethod.Value}, 'TRAC')
+                set(handles.targetpopup,'Enable','on');
+                set(handles.maskwindow_txt,'Enable','on');
+            else
+                set(handles.targetpopup,'Enable','off');
+                set(handles.maskwindow_txt,'Enable','off');
+            end
         case 3 % None
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.coregctmethod,'Enable','off');
@@ -101,5 +149,25 @@ if  ~strcmp(handles.prod, 'anatomy')
             set(handles.reconmethod,'Enable','off');
             set(handles.targetpopup,'Enable','off');
             set(handles.maskwindow_txt,'Enable','off');
+    end
+
+    if handles.SEEGCheckBox.Value && strcmp(handles.reconmethod.String{handles.reconmethod.Value}, 'LeGUI (Davis 2021)') || postopModality == 3
+        set(handles.electrode_model_popup, 'Enable', 'off');
+
+        for i = 1:15
+            set(handles.(['side', num2str(i)]), 'Enable', 'off');
+        end
+
+        set(handles.refinelocalization, 'Value', 0);
+        set(handles.refinelocalization, 'Enable', 'off');
+    else
+        set(handles.electrode_model_popup, 'Enable', 'on');
+
+        for i = 1:15
+            set(handles.(['side', num2str(i)]), 'Enable', 'on');
+        end
+
+        set(handles.refinelocalization, 'Value', 0);
+        set(handles.refinelocalization, 'Enable', 'on');
     end
 end

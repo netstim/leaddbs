@@ -77,11 +77,18 @@ else
 end
 
 if isfield(options, 'elmodel')
-    value = find(ismember(handles.electrode_model_popup.String, options.elmodel));
-    if ~isempty(value)
-        set(handles.electrode_model_popup, 'Value', value);
+    if strcmpi(options.elmodel, 'SEEG')
+        % SEEG does not use the DBS electrode-model dropdown
+
     else
-        ea_cprintf('CmdWinWarnings', 'Specified electrode not found: %s\n', options.elmodel);
+        value = find(ismember(handles.electrode_model_popup.String, ...
+            options.elmodel));
+
+        if ~isempty(value)
+            set(handles.electrode_model_popup, 'Value', value);
+        else
+            ea_cprintf('CmdWinWarnings', 'Specified electrode not found: %s\n', options.elmodel);
+        end
     end
 end
 
@@ -94,26 +101,32 @@ if isfield(options, 'atlasset')
     end
 end
 
-if isfield(options, 'reconmethod') && ~isempty(options.reconmethod)
-    % Get the list of strings in the popup
-    reconList = handles.reconmethod.String;
+% SEEG / reconstruction method state
+isSEEG = false;
 
-    % Ensure reconList is a cell array of char
-    if isstring(reconList)
-        reconList = cellstr(reconList);
-    elseif ischar(reconList)
-        reconList = cellstr(reconList);
-    end
+% Read the saved SEEG flag directly from this patient's uiprefs
+try
+    bids = getappdata(handles.leadfigure, 'bids');
+    subjId = getappdata(handles.leadfigure, 'subjId');
 
-    % Find the index of the matching method (case-insensitive)
-    idx = find(strcmpi(reconList, options.reconmethod), 1);
+    if isscalar(subjId)
+        uiprefsFile = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
 
-    if ~isempty(idx)
-        set(handles.reconmethod, 'Value', idx);
-    else
-        % Option not found — set to first or append warning
-        set(handles.reconmethod, 'Value', 1);
-        ea_cprintf('CmdWinWarnings', ...
-            'Specified reconstruction method not found: %s\n', options.reconmethod);
+        if isfile(uiprefsFile)
+            seegPrefs = load(uiprefsFile, 'seeg');
+
+            if isfield(seegPrefs, 'seeg')
+                isSEEG = logical(seegPrefs.seeg);
+            end
+        end
     end
 end
+
+if isSEEG
+    % Saved SEEG patient: LeGUI only
+    set(handles.SEEGCheckBox, 'Value', 1);
+else
+    set(handles.SEEGCheckBox, 'Value', 0);
+end
+
+% Setup of recon related controls goes to ea_switchctmr

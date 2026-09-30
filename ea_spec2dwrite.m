@@ -22,7 +22,7 @@ function varargout = ea_spec2dwrite(varargin)
 
 % Edit the above text to modify the response to help ea_spec2dwrite
 
-% Last Modified by GUIDE v2.5 18-May-2017 12:54:46
+% Last Modified by GUIDE v2.5 23-Jul-2026 15:08:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,11 +77,31 @@ if get(handles.tdbackdrop,'Value')>length(backdrops)
 end
 
 try
-    d2=options.prefs.machine.d2;
-    ea_options2tdhandles(handles,d2);
+    d2 = options.prefs.machine.d2;
+    ea_options2tdhandles(handles, d2);
+
+    % Load the saved SEEG 3D rendering preference.
+    if isfield(d2, 'seegRenderMode') && ...
+            ~isempty(d2.seegRenderMode)
+
+        dropdownItems = get(handles.seegRenderMode, 'String');
+
+        savedIndex = find( ...
+            strcmpi(dropdownItems, d2.seegRenderMode), ...
+            1);
+
+        if ~isempty(savedIndex)
+            set(handles.seegRenderMode, 'Value', savedIndex);
+        end
+    end
+
+catch
+    % Older preferences may not contain this setting.
+    % Default to electrodes.
+    set(handles.seegRenderMode, 'Value', 1);
 end
 
-set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
+set(handles.ea_spec2dwrite,'Name','Visualization Options');
 
 ea_ListBoxRenderer(handles.tdbackdrop);
 
@@ -160,8 +180,19 @@ function savebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-d2=ea_tdhandles2options(handles);
-ea_setprefs('d2',d2);
+% Collect the existing 2D settings.
+d2 = ea_tdhandles2options(handles);
+
+% Save the SEEG 3D display selection.
+dropdownItems = get(handles.seegRenderMode, 'String');
+selectedIndex = get(handles.seegRenderMode, 'Value');
+
+d2.seegRenderMode = dropdownItems{selectedIndex};
+
+% Save all 2D/3D settings.
+ea_setprefs('d2', d2);
+
+% Close the settings window.
 delete(handles.ea_spec2dwrite);
 
 
@@ -195,3 +226,26 @@ function tdfidcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of tdfidcheck
+
+
+% --- Executes on selection change in seegRenderMode.
+function seegRenderMode_Callback(hObject, eventdata, handles)
+% hObject    handle to seegRenderMode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns seegRenderMode contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from seegRenderMode
+
+
+% --- Executes during object creation, after setting all properties.
+function seegRenderMode_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to seegRenderMode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

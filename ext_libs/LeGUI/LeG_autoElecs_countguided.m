@@ -87,22 +87,22 @@ end
 fprintf('[AutoElec] FINAL: %d shafts, %d contacts in %.1f s\n', ...
     numel(shafts), size(WC, 1), toc(StartTime));
 
-% Keep a lightweight threshold curve for backward-compatible diagnostics.
-if ~isempty(ThrR) && ~isempty(ThrHU)
-    try
-        NumObj = zeros(numel(ThrR), 1);
-        for kt = 1:numel(ThrR)
-            CC = bwconncomp(Img > ThrR(kt), 26);
-            if CC.NumObjects == 0
-                continue;
-            end
-            NumObj(kt) = CC.NumObjects;
-        end
-        [~, idxD] = min(abs(NumObj - size(WC,1)));
-        diagPlotCountGuided(app, ThrHU, NumObj, idxD, toc(StartTime));
-    catch
-    end
-end
+% % Keep a lightweight threshold curve for backward-compatible diagnostics.
+% if ~isempty(ThrR) && ~isempty(ThrHU)
+%     try
+%         NumObj = zeros(numel(ThrR), 1);
+%         for kt = 1:numel(ThrR)
+%             CC = bwconncomp(Img > ThrR(kt), 26);
+%             if CC.NumObjects == 0
+%                 continue;
+%             end
+%             NumObj(kt) = CC.NumObjects;
+%         end
+%         [~, idxD] = min(abs(NumObj - size(WC,1)));
+%         diagPlotCountGuided(app, ThrHU, NumObj, idxD, toc(StartTime));
+%     catch
+%     end
+% end
 
 end
 

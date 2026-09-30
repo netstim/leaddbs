@@ -25,7 +25,7 @@ if ~nargin
         'AdTech SD06R-SP26X', 'AdTech SD08R-SP05X', 'AdTech SD10R-SP05X', 'AdTech SD10R-SP05X Choi', 'AdTech SD14R-SP05X', ...
         'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead', ...
         'Aleva directSTIM Directed', ...
-        'SmartFlow Cannula NGS-NC-06'}';
+        'SmartFlow Cannula NGS-NC-06', 'SEEG'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'boston_vercise_cartesia_hx', 'boston_vercise_cartesia_x', ...
@@ -44,7 +44,7 @@ if ~nargin
         'adtech_sd06r_sp26x', 'adtech_sd08r_sp05x',  'adtech_sd10r_sp05x', 'adtech_sd10r_sp05x_choi', 'adtech_sd14r_sp05x', ...
         'elaine_rat_electrode', 'fhc_wu_rat_electrode', 'numed_minilead', ...
         'aleva_directstim_directed', ...
-        'smartflow_ngs-nc-06'}';
+        'smartflow_ngs-nc-06', 'seeg'}';
     return
 else
     options=varargin{1};
@@ -1514,6 +1514,50 @@ switch elmodel
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numContacts);
         elspec.forstimulation=1;
+
+    case 'SEEG'
+        % Generic compatibility specification for the SEEG workflow.
+        %
+        % IMPORTANT:
+        % This is NOT the true geometry for every SEEG shaft.
+        % Actual shaft-specific electrode geometry is stored and resolved
+        % separately from LeGUI ShaftModels.
+
+        elspec.matfname='sde_08_s10_legacy';
+
+        elspec.lead_diameter=0.8;
+        elspec.lead_color=0.7;
+
+        elspec.contact_length=2;
+        elspec.contact_diameter=0.8;
+        elspec.contact_color=0.3;
+
+        elspec.tip_diameter=0.8;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+
+        elspec.contact_spacing=1.5;
+        elspec.numContacts=10;
+        elspec.tipiscontact=0;
+
+        elspec.contactnames={ ...
+            'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)', ...
+            'K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)', ...
+            'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)', ...
+            'K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
+
+        elspec.isdirected=0;
+
+        elspec.etagenames{1}= ...
+            elspec.contactnames(1:length(elspec.contactnames)/2);
+
+        elspec.etagenames{2}= ...
+            elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+
+        elspec.etageidx=num2cell(1:elspec.numContacts);
+
+        % Generic SEEG spec should not be treated as a stimulation model.
+        elspec.forstimulation=0;
 end
 
 if ~isfield(elspec,'eldist') && numel(elspec.contact_spacing)>1
