@@ -49,6 +49,17 @@ end
 slabsupport = 1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
 is_segmentation = weights >= 3;
+% Skip FA from slab detection: whole-brain by definition, and may be on a
+% non-anchor grid — identify by BIDS suffix
+is_fa = false(length(movingimage),1);
+for mov = 1:length(movingimage)
+    if isBIDSFileName(movingimage{mov})
+        suf = parseBIDSFilePath(movingimage{mov}).suffix;
+    else
+        [~, suf] = ea_niifileparts(movingimage{mov});
+    end
+    is_fa(mov) = strcmpi(suf, 'fa');
+end
 is_slab = false(length(fixedimage),1);
 
 if slabsupport
@@ -60,7 +71,7 @@ if slabsupport
     end
     disp(['Checking for slabs among structural images (assuming anchor image ',anchorName,' is a whole-brain acquisition)...']);
     for mov = 1:length(movingimage)
-        if ~is_segmentation(mov)
+        if ~is_segmentation(mov) && ~is_fa(mov)
             mnii = ea_load_nii(movingimage{mov});
             mnii.img(abs(mnii.img)<0.0001)=nan;
             mnii.img=~isnan(mnii.img);

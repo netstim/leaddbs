@@ -44,6 +44,7 @@ matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = interp;
 matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
 matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
+spm_jobman('initcfg');
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 

@@ -36,11 +36,9 @@ end
 isBIDS = contains(directory, 'derivatives') || contains(directory, 'leaddbs');
 if isBIDS
     coregAnatDir = fullfile(directory, 'coregistration', 'anat');
-    if ~isfolder(coregAnatDir)
-        mkdir(coregAnatDir);
-    end
-    % BIDS-style name: sub-XXX_space-anchorNative_dwi_fa.nii
-    fa2anatName = [options.patientname, '_space-anchorNative_dwi_fa.nii'];
+    ea_mkdir(coregAnatDir);
+    % BIDS-style name: sub-XXX_ses-preop_space-anchorNative_fa.nii
+    fa2anatName = ['sub-', options.subj.subjId, '_ses-preop_space-anchorNative_fa.nii'];
     fa2anatPath = fullfile(coregAnatDir, fa2anatName);
     fa2anatRel  = fullfile('coregistration', 'anat', fa2anatName);
 else
@@ -48,6 +46,7 @@ else
     fa2anatRel  = options.prefs.fa2anat;
 end
 
+% If there is already a FA coregistration to anat
 if isfile(fa2anatPath)
     if isBIDS
         options.prefs.fa2anat = fa2anatRel;
@@ -55,26 +54,196 @@ if isfile(fa2anatPath)
     return;
 end
 
-% Anatomical reference (LC-only resolver; ignores SPM/coreg intermediates)
-[options, anatRel] = ea_lc_resolve_anat_anchor(options);
-if isempty(anatRel)
+% Use the same anchor normalization will use; prenii_unnormalized can
+% point to a different grid and cause a mismatch later.
+anatPath = '';
+if isfield(options.subj.coreg.anat.preop, options.subj.AnchorModality)
+    candidate = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+    if isfile(candidate)
+        anatPath = candidate;
+    end
+end
+if isempty(anatPath)
+    % Legacy fallback
+    candidate = fullfile(directory, options.prefs.prenii_unnormalized);
+    if isfile(candidate)
+        anatPath = candidate;
+    else
+        for subdir = {'preprocessing/anat', 'coregistration/anat'}
+            d = dir(fullfile(directory, subdir{1}, '*T1w.nii'));
+            if isempty(d), d = dir(fullfile(directory, subdir{1}, '*T2w.nii')); end
+            if ~isempty(d)
+                anatPath = fullfile(d(1).folder, d(1).name);
+                break;
+            end
+        end
+    end
+end
+if isempty(anatPath) || ~isfile(anatPath)
     warning('ea_ensure_fa_and_fa2anat: Anatomical reference not found. Skipping FA->anat coregistration.');
     return;
 end
-anatPath = fullfile(directory, anatRel);
-if ~isfile(anatPath)
-    warning('ea_ensure_fa_and_fa2anat: Anatomical reference not found (%s). Skipping FA->anat coregistration.', anatPath);
+fprintf('ea_ensure_fa_and_fa2anat: Using anchor reference: %s\n', anatPath);
+
+% Find the B0->T1 forward transform 
+transform = find_b0_t1_forward_transform(directory, options);
+if isempty(transform)
+    warning(['ea_ensure_fa_and_fa2anat: B0->T1 forward transform not found. ', ...
+             'Ensure B0 coregistration ran successfully.']);
     return;
 end
+fprintf('ea_ensure_fa_and_fa2anat: Using B0->T1 transform: %s\n', transform);
 
-% Run FA -> anat coregistration; write to fa2anat path
-fprintf('\nCoregistering FA to anatomical and saving to coregistration/anat...\n');
+% Apply transform to FA
+fprintf('ea_ensure_fa_and_fa2anat: Applying B0->T1 transform to FA...\n');
 try
-    ea_coregimages(options, faPath, anatPath, fa2anatPath, {}, 1, [], 1);
+    ea_apply_coregistration(anatPath, faPath, fa2anatPath, transform);
+
     if isBIDS
         options.prefs.fa2anat = fa2anatRel;
     end
-    fprintf('FA-in-anat saved: %s\n', fa2anatRel);
+
+    % Inject FA into the options structs so that ea_gencheckregfigs and
+    % ea_checkreg (called next in ea_autocoord) show FA on this same run,
+    % without waiting for a second call to ea_getptopts.
+    if isfield(options, 'subj') && ...
+            isfield(options.subj, 'coreg') && ...
+            isfield(options.subj.coreg, 'anat') && ...
+            isfield(options.subj.coreg.anat, 'preop') && ...
+            ~isfield(options.subj.coreg.anat.preop, 'fa') && ...
+            isfield(options.subj, 'preproc') && ...
+            isfield(options.subj.preproc, 'anat') && ...
+            isfield(options.subj.preproc.anat, 'preop')
+
+        options.subj.coreg.anat.preop.fa   = fa2anatPath;
+        options.subj.preproc.anat.preop.fa = faPath;
+
+        if isfield(options.subj, 'coregDir') && ...
+                isfield(options.subj.coreg, 'checkreg') && ...
+                isfield(options.subj.coreg.checkreg, 'preop')
+            [~, faCoregName] = fileparts(fa2anatPath);
+            options.subj.coreg.checkreg.preop.fa = fullfile( ...
+                options.subj.coregDir, 'checkreg', [faCoregName, '.png']);
+        end
+    end
 catch ME
-    warning('ea_ensure_fa_and_fa2anat: FA->anat coregistration failed: %s', ME.message);
+    warning('ea_ensure_fa_and_fa2anat: Failed to apply transform to FA: %s', ME.message);
+end
+
+function hit = find_b0_t1_forward_transform(directory, options)
+% Return full path to a B0->T1 forward transform file, or '' if none found.
+%
+% Strategy:
+%  1. Use options.subj.coreg.transform.b0.forwardBaseName directly
+%     (most reliable — already populated by ea_coregpreopmr).
+%  2. Fall back to a scored file-system search in coregistration/transformations/.
+
+hit = '';
+
+% Extract method string
+if isstruct(options) && isfield(options, 'coregmr') && isfield(options.coregmr, 'method')
+    method = options.coregmr.method;
+elseif ischar(options)
+    method = options;
+else
+    method = '';
+end
+methodHint = lower(regexp(method, '^[^\s\(]+', 'match', 'once'));
+
+% ── 1. Struct-based lookup (preferred) ───────────────────────────────────
+if isstruct(options) && isfield(options, 'subj') && ...
+        isfield(options.subj, 'coreg') && ...
+        isfield(options.subj.coreg, 'transform') && ...
+        isfield(options.subj.coreg.transform, 'b0')
+
+    base = options.subj.coreg.transform.b0.forwardBaseName;
+
+    % Map method string to the transform file suffix saved by ea_coregpreopmr
+    switch methodHint
+        case 'spm'
+            suffixes = {'spm.mat'};
+        case 'ants'
+            suffixes = {'ants.mat'};   % ITK affine – correct input for antsApplyTransforms
+        case {'flirt', 'flirtbbr', 'bbr', 'fsl'}
+            suffixes = {'flirt.mat'};
+        case 'brainsfit'
+            suffixes = {'brainsfit.mat'};
+        otherwise
+            suffixes = {'spm.mat', 'ants.mat', 'flirt.mat', 'brainsfit.mat'};
+    end
+
+    for k = 1:numel(suffixes)
+        candidate = [base, suffixes{k}];
+        if isfile(candidate)
+            hit = candidate;
+            return;
+        end
+    end
+end
+
+% ── 2. File-system search fallback ───────────────────────────────────────
+searchDir = fullfile(directory, 'coregistration', 'transformations');
+if ~isfolder(searchDir), return; end
+
+exts  = {'*.mat', '*.h5', '*.txt'};
+cands = {};
+for e = 1:numel(exts)
+    d = dir(fullfile(searchDir, '**', exts{e}));
+    for k = 1:numel(d)
+        cands{end+1} = fullfile(d(k).folder, d(k).name); %#ok<AGROW>
+    end
+end
+if isempty(cands), return; end
+
+bestScore = -Inf;
+for i = 1:numel(cands)
+    [~, name, ext] = fileparts(cands{i});
+    fname = lower([name, ext]);
+
+    % Must reference both B0/DWI and T1/anat side
+    hasB0   = contains(fname, 'b0') || contains(fname, 'dwi');
+    hasAnat = contains(fname, 't1') || contains(fname, 'anat') || ...
+              contains(fname, 'anchor') || contains(fname, 'native');
+    if ~hasB0 || ~hasAnat, continue; end
+
+    % Exclude inverse transforms
+    isInverse = startsWith(fname, 'anat') || startsWith(fname, 't1') || ...
+                contains(fname, 'from-anchor') || contains(fname, 'from-t1');
+    if isInverse, continue; end
+
+    % Exclude the ants44 / spm44 / flirt44 convenience copies — those are
+    % MATLAB-format 4x4 matrices, not suitable inputs for the apply functions.
+    if regexp(fname, '\d+\.mat$'), continue; end
+
+    score = 4; % baseline
+
+    if ~isempty(methodHint) && contains(fname, methodHint)
+        score = score + 1;
+    end
+
+    % For MATLAB-native .mat files (SPM), verify they contain a 4x4 matrix.
+    % ANTs ITK .mat files are binary and cannot be loaded by MATLAB — don't
+    % penalise them; their name already identifies them.
+    if strcmp(ext, '.mat') && ~contains(fname, 'ants')
+        try
+            S = load(cands{i});
+            has4x4 = any(structfun(@(v) isnumeric(v) && isequal(size(v), [4 4]), S));
+            if has4x4
+                score = score + 1;
+            else
+                score = score - 2;
+            end
+        catch
+            score = score - 3;
+        end
+    end
+
+    if score > bestScore
+        bestScore = score;
+        hit = cands{i};
+    end
+end
+
+if bestScore < 4
+    hit = '';
 end

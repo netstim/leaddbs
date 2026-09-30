@@ -60,8 +60,7 @@ handles.patientname.String = options.subj.subjId;
 set(handles.normsettings, 'Visible', 'off');
 
 % Get coregistered pre-op images (except for the anchor image)
-preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
-preopCoregImages = preopCoregImages(2:end);
+preopCoregImages = get_ordered_preop_coreg_images(options);
 
 % Get coregistered post-op images
 if strcmp(options.subj.postopModality, 'CT')
@@ -97,14 +96,6 @@ for irest = 1:options.prefs.n_rest
             checkregImages = [checkregImages;{['r',ea_stripext(restfiles(irest).name),'_t1']}];
             b0restanchor{length(checkregImages)} = ['mean',restfiles(irest).name];
         end
-    end
-end
-
-% b0 image
-if exist([ea_stripext(options.prefs.b0),'_t1'],'file')
-    if ~ea_reglocked(options,[ea_stripext(options.prefs.b0),'_t1'])
-        checkregImages = [checkregImages;{[ea_stripext(options.prefs.b0),'_t1']}];
-        b0restanchor{length(checkregImages)} = [options.prefs.b0];
     end
 end
 
@@ -211,11 +202,23 @@ else
             savejson('', json, options.subj.coreg.log.method);
         end
 
+        % Determine session from filename when possible; fall back to
+        % probing which checkreg sub-struct actually contains this modality
+        % (handles DWI-derived images whose path may not include 'ses-preop')
         if contains(currvol, 'ses-preop')
-            checkregFig = options.subj.coreg.checkreg.preop.(modality);
+            session = 'preop';
+        elseif contains(currvol, 'ses-postop')
+            session = 'postop';
+        elseif isfield(options.subj.coreg.checkreg, 'preop') && ...
+               isfield(options.subj.coreg.checkreg.preop, modality)
+            session = 'preop';
+        elseif isfield(options.subj.coreg.checkreg, 'postop') && ...
+               isfield(options.subj.coreg.checkreg.postop, modality)
+            session = 'postop';
         else
-            checkregFig = options.subj.coreg.checkreg.postop.(modality);
+            session = 'preop'; % safe default
         end
+        checkregFig = options.subj.coreg.checkreg.(session).(modality);
     end
 
     set(handles.normsettings, 'Visible', 'off');
@@ -451,6 +454,18 @@ else % MR
         session = regexp(currvol, '(?<=_ses-)(preop|postop)', 'match', 'once');
         modality = ea_getmodality(currvol);
 
+        % Fallback: infer session from which coreg struct has this modality
+        % (needed for DWI-derived images whose path may omit 'ses-preop').
+        if isempty(session)
+            if isfield(options.subj.coreg.anat, 'preop') && isfield(options.subj.coreg.anat.preop, modality)
+                session = 'preop';
+            elseif isfield(options.subj.coreg.anat, 'postop') && isfield(options.subj.coreg.anat.postop, modality)
+                session = 'postop';
+            else
+                session = 'preop'; % safe default
+            end
+        end
+
         if strcmp(session, 'preop')
             % Override preop preproc and coreg fields and then run coregpreopmr
             preopFields = fieldnames(options.subj.preproc.anat.preop);
@@ -460,6 +475,13 @@ else % MR
                 options.subj.coreg.anat.preop = rmfield(options.subj.coreg.anat.preop, preopFields{f});
             end
             ea_coregpreopmr(options);
+
+            % FA is derived in DWI space and brought into anchor space with
+            % the B0->anchor transform.  When that transform is recomputed,
+            % the existing FA-in-anchor image is stale and must be rebuilt.
+            if strcmpi(modality, 'b0') || endsWith(lower(modality), '_b0')
+                options = refresh_fa_after_b0_coreg(options);
+            end
         elseif strcmp(session, 'postop')
             % Override postop preproc and coreg fields and then run coregpostopmr
             postopFields = fieldnames(options.subj.preproc.anat.postop);
@@ -490,6 +512,79 @@ title = get(handles.leadfigure, 'Name');
 ea_chirp(options);
 ea_busyaction('off', handles.leadfigure, 'coreg');
 set(handles.leadfigure, 'Name', title);
+
+
+function options = refresh_fa_after_b0_coreg(options)
+% Reapply the newly computed B0->anchor transform to the FA map.
+
+% ea_ensure_fa_and_fa2anat deliberately reuses an existing output, so
+% remove that output first to force application of the updated transform.
+if ~isfield(options, 'prefs') || ~isfield(options.prefs, 'fa2anat') || ...
+        isempty(options.prefs.fa2anat)
+    return;
+end
+
+fa2anatPath = options.prefs.fa2anat;
+isAbsolutePath = startsWith(fa2anatPath, filesep) || ...
+    ~isempty(regexp(fa2anatPath, '^[A-Za-z]:[\\/]', 'once')) || ...
+    startsWith(fa2anatPath, '\\');
+if ~isAbsolutePath
+    fa2anatPath = fullfile(options.subj.subjDir, fa2anatPath);
+end
+
+ea_delete(fa2anatPath);
+options = ea_ensure_fa_and_fa2anat(options);
+
+if ~isfile(fa2anatPath)
+    warning('B0 coregistration was updated, but FA could not be regenerated with the new transform.');
+    return;
+end
+
+% Refresh the visual QC generated from the old FA resampling as well.
+[~, fa2anatName] = fileparts(fa2anatPath);
+faCheckregPath = fullfile(options.subj.coregDir, 'checkreg', [fa2anatName, '.png']);
+ea_delete(faCheckregPath);
+anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+ea_gencheckregpair(fa2anatPath, anchorImage, faCheckregPath);
+
+% A previously approved FA referred to the old transform. Mark the newly
+% generated result as unapproved so it is presented for review again.
+if isfile(options.subj.coreg.log.method)
+    json = loadjson(options.subj.coreg.log.method);
+    if isfield(json, 'approval') && isstruct(json.approval)
+        faModality = ea_getmodality(fa2anatPath);
+        json.approval.(faModality) = 0;
+        savejson('', json, options.subj.coreg.log.method);
+    end
+end
+
+fprintf('FA was regenerated using the updated B0->anchor transform.\n');
+
+
+function images = get_ordered_preop_coreg_images(options)
+% Return dependent DWI-derived images in QC order: B0, FA, then the rest.
+preop = options.subj.coreg.anat.preop;
+if isfield(preop, options.subj.AnchorModality)
+    preop = rmfield(preop, options.subj.AnchorModality);
+end
+
+fields = fieldnames(preop);
+images = struct2cell(preop);
+priority = repmat(3, size(fields));
+for i = 1:numel(fields)
+    fieldName = lower(fields{i});
+    modality = lower(ea_getmodality(images{i}));
+    if strcmp(fieldName, 'b0') || strcmp(modality, 'b0') || ...
+            endsWith(fieldName, '_b0') || endsWith(modality, '_b0')
+        priority(i) = 1;
+    elseif strcmp(fieldName, 'fa') || strcmp(modality, 'fa') || ...
+            endsWith(fieldName, '_fa') || endsWith(modality, '_fa')
+        priority(i) = 2;
+    end
+end
+
+[~, order] = sort(priority);
+images = images(order);
 
 
 function ea_cleandownstream(directory, thisrest)
@@ -560,8 +655,7 @@ activevolume = getappdata(handles.leadfigure, 'activevolume');
 currvol = checkregImages{activevolume};
 
 % Get coregistered pre-op images (except for the anchor image)
-preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
-preopCoregImages = preopCoregImages(2:end);
+preopCoregImages = get_ordered_preop_coreg_images(options);
 
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     json = loadjson(options.subj.norm.log.method);
@@ -729,8 +823,7 @@ activevolume = getappdata(handles.leadfigure,'activevolume');
 currvol = checkregImages{activevolume};
 
 % Get coregistered pre-op images (except for the anchor image)
-preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
-preopCoregImages = preopCoregImages(2:end);
+preopCoregImages = get_ordered_preop_coreg_images(options);
 
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     json = loadjson(options.subj.norm.log.method);

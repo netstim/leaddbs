@@ -489,7 +489,15 @@ classdef BIDSFetcher
             for i=1:length(fields)
                 modality = fields{i};
                 parsed = parseBIDSFilePath(preopAnat.(modality));
-                preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, '_', parsed.suffix, parsed.ext]);
+                hasAcq = isfield(parsed, 'acq') && ~isempty(parsed.acq);
+                hasSuf = isfield(parsed, 'suffix') && ~isempty(parsed.suffix);
+                if hasAcq && hasSuf
+                    preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, '_', parsed.suffix, parsed.ext]);
+                elseif hasAcq
+                    preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, parsed.ext]);
+                else
+                    preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, parsed.suffix, parsed.ext]);
+                end
             end
 
             if ~exist('preferMRCT', 'var')
