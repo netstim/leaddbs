@@ -11,7 +11,7 @@ function varargout = ea_normalize_ants(options)
 % normalization of such image data.
 %
 % The procedure used here uses the ANTs Syn approach to map a patient's
-% brain to MNI space directly.
+% brain to MNI space directly
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -31,6 +31,7 @@ usefa = options.prefs.machine.normsettings.ants_usefa;
 fa2anatPath = '';
 coregAnatDir = fullfile(options.subj.subjDir, 'coregistration', 'anat');
 faCoregFiles = dir(fullfile(coregAnatDir, '*_fa.nii'));
+faCoregFiles = faCoregFiles(~strncmp({faCoregFiles.name}, '._', 2));
 if ~isempty(faCoregFiles)
     fa2anatPath = fullfile(faCoregFiles(1).folder, faCoregFiles(1).name);
 elseif isfield(options.prefs, 'fa2anat') && ~isempty(options.prefs.fa2anat)

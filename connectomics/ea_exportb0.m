@@ -1,7 +1,13 @@
 function ea_exportb0(options)
 
 disp('Export b0...');
-bvals=load([options.root,options.patientname,filesep,options.prefs.bval]);
+bvalFile = [options.root, options.patientname, filesep, options.prefs.bval];
+% Guard against macOS metadata files (._filename)
+[bvalDir, bvalBase, bvalExt] = fileparts(bvalFile);
+if strncmp(bvalBase, '._', 2)
+    bvalFile = fullfile(bvalDir, [bvalBase(3:end), bvalExt]);
+end
+bvals=load(bvalFile);
 b0threshold = ea_detect_b0threshold(bvals);
 idx=find(bvals<=b0threshold);
 

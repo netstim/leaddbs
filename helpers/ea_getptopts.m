@@ -211,15 +211,18 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
             mkdir(derivDwiDir);
         end
 
-        % First check if DWI already exists in preprocessing/dwi
+        % First check if DWI already exists in preprocessing/dwi (exclude macOS metadata files)
         dwiFiles = dir(fullfile(derivDwiDir, '*_dwi.nii'));
+        dwiFiles = dwiFiles(~strncmp({dwiFiles.name}, '._', 2));
 
         if isempty(dwiFiles)
             % If not found, look in rawdata (search recursively)
             rawDataDir = fullfile(fileparts(fileparts(options.subj.subjDir)), 'rawdata', ['sub-', options.subj.subjId]);
             rawDwiFiles = dir(fullfile(rawDataDir, '**', '*_dwi.nii.gz'));
+            rawDwiFiles = rawDwiFiles(~strncmp({rawDwiFiles.name}, '._', 2));
             if isempty(rawDwiFiles)
                 rawDwiFiles = dir(fullfile(rawDataDir, '**', '*_dwi.nii'));
+                rawDwiFiles = rawDwiFiles(~strncmp({rawDwiFiles.name}, '._', 2));
             end
         else
             % DWI already in preprocessing - use it
@@ -459,6 +462,37 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
         if isfield(options.subj.coreg, 'checkreg') && ...
                 isfield(options.subj.coreg.checkreg, 'preop')
             options.subj.coreg.checkreg.preop.b0 = b0CheckregFig;
+        end
+    end
+
+    % Inject FA into coreg/checkreg structs when the coregistered FA exists on disk.
+    % FA is not coregistered independently — it inherits the B0->T1 transform.
+    if isfield(options.prefs, 'fa2anat') && ~isempty(options.prefs.fa2anat) && ...
+            isfield(options.subj, 'coregDir') && ...
+            isfield(options.subj, 'coreg') && ...
+            isfield(options.subj.coreg, 'anat') && ...
+            isfield(options.subj.coreg.anat, 'preop') && ...
+            ~isfield(options.subj.coreg.anat.preop, 'fa')
+
+        faCoregPath = fullfile(options.subj.subjDir, options.prefs.fa2anat);
+
+        if isfile(faCoregPath)
+            faPreprocessedPath = fullfile(options.subj.subjDir, options.prefs.fa);
+            [~, faCoregName]   = fileparts(faCoregPath);
+            faCheckregFig      = fullfile(options.subj.coregDir, 'checkreg', [faCoregName, '.png']);
+
+            if isfield(options.subj, 'preproc') && ...
+                    isfield(options.subj.preproc, 'anat') && ...
+                    isfield(options.subj.preproc.anat, 'preop')
+                options.subj.preproc.anat.preop.fa = faPreprocessedPath;
+            end
+
+            options.subj.coreg.anat.preop.fa = faCoregPath;
+
+            if isfield(options.subj.coreg, 'checkreg') && ...
+                    isfield(options.subj.coreg.checkreg, 'preop')
+                options.subj.coreg.checkreg.preop.fa = faCheckregFig;
+            end
         end
     end
 else

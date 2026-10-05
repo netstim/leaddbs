@@ -83,7 +83,11 @@ end
 
 % List pf images for checkreg
 checkregImages = [preopCoregImages; postopCoregImages; preopNormImage; brainshiftImage];
-checkregImages = checkregImages(cellfun(@(f) ea_reglocked(options, f)~=1 & isfile(f), checkregImages));
+if isfield(options, 'overwriteapproved') && options.overwriteapproved
+    checkregImages = checkregImages(cellfun(@(f) isfile(f), checkregImages));
+else
+    checkregImages = checkregImages(cellfun(@(f) (ea_reglocked(options, f)~=1 || ismember(ea_getmodality(f), {'b0','fa'})) & isfile(f), checkregImages));
+end
 
 % fMRI
 restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
@@ -413,11 +417,12 @@ elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj
         ea_cprintf('CmdWinWarnings', 'CT coregistration has been rerun. Please also rerun brain shift correction!\n');
     end
 
-elseif strcmp(ea_stripext(options.prefs.fa2anat), 'FA') % FA
-    options.coregmr.method=get(handles.coregmrmethod,'String');
-    options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
-    ea_backuprestore([directory,options.prefs.fa]);
-    ea_coregimages(options,[directory,options.prefs.fa],[directory,anchor],[directory,checkregImages{activevolume}],{},0);
+elseif is_fa_volume(currvol, options) % FA — rerun B0 coregistration, then reapply transform to FA
+    options.coregmr.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
+    % FA is not independently coregistered: it inherits the B0->T1 transform.
+    % Rerunning FA means rerunning B0 coregistration and then reapplying to FA.
+    options = ea_ensure_b0_coreg(options);
+    options = refresh_fa_after_b0_coreg(options);
 
 else % MR
     options.coregmr.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
@@ -512,6 +517,23 @@ title = get(handles.leadfigure, 'Name');
 ea_chirp(options);
 ea_busyaction('off', handles.leadfigure, 'coreg');
 set(handles.leadfigure, 'Name', title);
+
+
+function tf = is_fa_volume(currvol, options)
+% Returns true when the currently active checkreg volume is the FA map.
+% Handles both BIDS (coregistration/anat/*_fa.nii) and legacy (FA.nii) paths.
+tf = false;
+if isfield(options, 'prefs') && isfield(options.prefs, 'fa2anat') && ~isempty(options.prefs.fa2anat)
+    fa2anatAbs = fullfile(options.subj.subjDir, options.prefs.fa2anat);
+    if strcmp(currvol, fa2anatAbs) || strcmp(currvol, options.prefs.fa2anat)
+        tf = true; return;
+    end
+end
+% Legacy check: basename is 'FA'
+[~, name] = fileparts(currvol);
+if strcmpi(name, 'FA') || strcmpi(name, 'fa2anat')
+    tf = true;
+end
 
 
 function options = refresh_fa_after_b0_coreg(options)

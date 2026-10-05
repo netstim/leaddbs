@@ -7,8 +7,15 @@ if isfield(options, 'overwriteapproved') && options.overwriteapproved
     return
 end
 
-% Check pipeline keyword
-[~, pipeline] = fileparts(fileparts(fileparts(imagePath)));
+% Check pipeline keyword — image may be directly in pipeline/ (legacy)
+% or in a subdirectory like pipeline/anat/ (BIDS).
+[~, p1] = fileparts(fileparts(imagePath));        % one level up from file
+[~, p2] = fileparts(fileparts(fileparts(imagePath))); % two levels up
+if ismember(p1, {'coregistration', 'normalization', 'brainshift'})
+    pipeline = p1;
+else
+    pipeline = p2;
+end
 switch pipeline
     case 'coregistration'
         key = 'coreg';

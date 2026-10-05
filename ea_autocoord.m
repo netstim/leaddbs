@@ -300,6 +300,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.checkreg
+        % Ensure B0/FA are injected into options even when coregistration was not rerun
+        if ~isfield(options.subj.coreg.anat.preop, 'b0') || ~isfield(options.subj.coreg.anat.preop, 'fa')
+            options = ea_getptopts(options.subj.subjDir, options);
+        end
+
         % Export checkreg figures
         if isempty(ea_regexpdir([options.subj.coregDir, filesep, 'checkreg'], '^(?!\.).*\.png$'))
             ea_gencheckregfigs(options, 'coreg');
