@@ -1279,6 +1279,10 @@ classdef ea_unifiedmapping < handle
                     test = cvp.test{c};
                 end
 
+                % remember which patient(s) this fold held out, for the
+                % per-fold significant-fiber report below.
+                heldout{c} = patientsel(test);
+
                 % now do LOO within the training group
                 if obj.nestedLOO
                     % use all patients, but outer loop left-out is always 0
@@ -1350,12 +1354,67 @@ classdef ea_unifiedmapping < handle
                     end
                 end
                 fprintf('\nFibers kept for the model per fold (significance-thresholded):\n');
-                foldfmt = ['  Fold %0', num2str(numel(num2str(cvp.NumTestSets))), 'd: %s\n'];
+                foldfmt = ['  Fold %0', num2str(numel(num2str(cvp.NumTestSets))), 'd (held out: %s): %s\n'];
                 for foldidx=1:cvp.NumTestSets
-                    fprintf(foldfmt, foldidx, mat2str(nFibersPerFold(foldidx,:)));
+                    heldoutidx = heldout{foldidx};
+                    heldoutlabels = cell(1,numel(heldoutidx));
+                    for hk=1:numel(heldoutidx)
+                        if heldoutidx(hk) >= 1 && heldoutidx(hk) <= numel(obj.M.patient.list)
+                            heldoutlabels{hk} = regexp(obj.M.patient.list{heldoutidx(hk)}, '[^\\/]+$', 'match', 'once');
+                        else
+                            heldoutlabels{hk} = num2str(heldoutidx(hk));
+                        end
+                    end
+                    fprintf(foldfmt, foldidx, strjoin(heldoutlabels, ', '), mat2str(nFibersPerFold(foldidx,:)));
                 end
                 fprintf('  Mean across folds: %s\n', mat2str(round(mean(nFibersPerFold,1))));
                 fprintf('  Min / Max across folds: %s / %s\n\n', mat2str(min(nFibersPerFold,[],1)), mat2str(max(nFibersPerFold,[],1)));
+
+                % Plot each held-out patient's own outcome value against the
+                % fiber count of the fold they were held out of, to check
+                % whether fold-to-fold collapses (e.g. very low counts) track
+                % extreme/outlier response values rather than being noise.
+                try
+                    outcomeperfold = nan(cvp.NumTestSets,1);
+                    for foldidx=1:cvp.NumTestSets
+                        heldoutidx = heldout{foldidx};
+                        heldoutidx = heldoutidx(heldoutidx>=1 & heldoutidx<=size(obj.responsevar,1));
+                        if ~isempty(heldoutidx)
+                            outcomeperfold(foldidx) = mean(obj.responsevar(heldoutidx,1));
+                        end
+                    end
+                    keepfold = isfinite(outcomeperfold);
+                    if nnz(keepfold) >= 3
+                        hfig = figure('Name','Held-out outcome vs. fibers kept per fold','Color','w','NumberTitle','off');
+                        hold on
+                        sidecolors = lines(nSides);
+                        hs = gobjects(1,nSides);
+                        for side=1:nSides
+                            hs(side) = scatter(outcomeperfold(keepfold), nFibersPerFold(keepfold,side), 60, sidecolors(side,:), 'filled');
+                        end
+                        foldnums = find(keepfold);
+                        for fi=1:numel(foldnums)
+                            text(outcomeperfold(foldnums(fi)), max(nFibersPerFold(foldnums(fi),:)), ...
+                                ['  ',num2str(foldnums(fi))], 'FontSize',8);
+                        end
+                        xlabel(strrep(obj.responsevarlabel,'_',' '));
+                        ylabel('Fibers kept for the model (held-out fold)');
+                        legendlabels = arrayfun(@(s) sprintf('Side %d',s), 1:nSides, 'UniformOutput', false);
+                        legend(hs, legendlabels, 'Location','best');
+                        statlines = cell(1,nSides);
+                        for side=1:nSides
+                            [rho,pval] = corr(outcomeperfold(keepfold), nFibersPerFold(keepfold,side), ...
+                                'type','Spearman','rows','pairwise');
+                            statlines{side} = sprintf('Side %d: Spearman r=%.2f, p=%.3f', side, rho, pval);
+                        end
+                        title(['Held-out patient outcome vs. fold fiber count', newline, strjoin(statlines,' | ')], ...
+                            'FontSize',10);
+                        box on
+                        hold off
+                    end
+                catch ME
+                    ea_cprintf('CmdWinWarnings', 'Could not plot held-out outcome vs. fiber count: %s\n', ME.message);
+                end
             end
 
             % check if binary variable and not permutation test
