@@ -9,6 +9,12 @@ anchor = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
 % Set moving and output image
 preopImage = rmfield(options.subj.preproc.anat.preop, options.subj.AnchorModality);
 coregImage = rmfield(options.subj.coreg.anat.preop, options.subj.AnchorModality);
+
+% FA is registered by applying the B0->T1 transform (ea_ensure_fa_and_fa2anat),
+% not by an independent coregistration here. Remove it from both structs to
+% keep cell array sizes equal and avoid re-registration.
+if isfield(preopImage, 'fa'), preopImage = rmfield(preopImage, 'fa'); end
+if isfield(coregImage, 'fa'), coregImage = rmfield(coregImage, 'fa'); end
 moving = struct2cell(preopImage);
 output = struct2cell(coregImage);
 
@@ -35,6 +41,7 @@ end
 
 % Do coregistration
 ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
+
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
 
