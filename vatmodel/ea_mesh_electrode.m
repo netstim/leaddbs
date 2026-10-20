@@ -421,16 +421,23 @@ end
 % wmboundary(wmboundary==0)=[];
 % gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
 
-tissuetype=emesh(:,5);
+tissuetype=zeros(size(emesh,1),1);
 for tt=1:4
     tl=find(tissuelabels==tt);
     tissuetype(ismember(emesh(:,5),tl))=tt;
-    disp([num2str(length(tl)),' components with ',num2str(sum(tissuetype==tt)),' tetraeders total assigned to tissue type ',num2str(tt),'.']);
 end
 
 if ~all(tissuetype)
+    ea_cprintf('CmdWinWarnings', 'Assigning %d tetrahedra in unmapped regions %s to white matter.', ...
+        sum(tissuetype==0), mat2str(unique(emesh(tissuetype==0,5))'));
     tissuetype(tissuetype==0)=2; % assign misfit tetraeders to white matter.
 end
+
+for tt=1:4
+    tl=find(tissuelabels==tt);
+    disp([num2str(length(tl)),' components with ',num2str(sum(tissuetype==tt)),' tetraeders total assigned to tissue type ',num2str(tt),'.']);
+end
+
 oemesh=emesh;
 emesh(:,5)=tissuetype;
 
