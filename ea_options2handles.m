@@ -113,10 +113,10 @@ try
         uiprefsFile = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
 
         if isfile(uiprefsFile)
-            seegPrefs = load(uiprefsFile, 'seeg');
+            prefs = load(uiprefsFile);
 
-            if isfield(seegPrefs, 'seeg')
-                isSEEG = logical(seegPrefs.seeg);
+            if isfield(prefs, 'seeg')
+                isSEEG = logical(prefs.seeg);
             end
         end
     end
