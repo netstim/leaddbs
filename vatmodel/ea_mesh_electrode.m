@@ -433,9 +433,10 @@ if ~all(tissuetype)
     tissuetype(tissuetype==0)=2; % assign misfit tetraeders to white matter.
 end
 
+tissueTypeNames={'gray matter','white matter','contacts','insulation'};
 for tt=1:4
     tl=find(tissuelabels==tt);
-    disp([num2str(length(tl)),' components with ',num2str(sum(tissuetype==tt)),' tetraeders total assigned to tissue type ',num2str(tt),'.']);
+    disp([num2str(length(tl)),' components with ',num2str(sum(tissuetype==tt)),' tetraeders total assigned to tissue type ',num2str(tt),' (',tissueTypeNames{tt},').']);
 end
 
 oemesh=emesh;
