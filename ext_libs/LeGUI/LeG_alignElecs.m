@@ -21,28 +21,31 @@ elseif numel(d) ~= nContacts-1
            nContacts-1, nContacts);
 end
 
-lead_sm = zeros(size(lead));
-lead_sm(1,:) = lead(1,:);
-
-for j = 1:nContacts-1
-
-    a = lead_sm(j,:);
-
-    if j < nContacts-1
-        b = (lead(j+1,:) + lead(j+2,:)) ./ 2;
-    else
-        b = lead(j+1,:);
-    end
-
-    direction = b-a;
-    directionLength = norm(direction);
-
-    if directionLength == 0
-        error('Cannot align contacts because two trajectory points overlap.');
-    end
-
-    v = direction ./ directionLength;
-
-    lead_sm(j+1,:) = a + d(j).*v;
+% Validate spacing
+if any(~isfinite(d)) || any(d <= 0)
+    error('Contact spacing must be positive and finite.');
 end
+
+% Cumulative distances from the deepest contact
+s = [0; cumsum(d)];
+
+% Center original coordinates and cumulative distances
+center = mean(lead,1);
+lead_centered = lead - center;
+s_centered = s - mean(s);
+
+% Find optimal straight-line direction using least squares
+direction = s_centered' * lead_centered;
+directionLength = norm(direction);
+
+if directionLength < 1e-10
+    error('Cannot determine electrode trajectory.');
+end
+
+direction = direction ./ directionLength;
+
+% Reposition contacts along the fitted trajectory
+% with exact spacing and minimum total squared displacement
+lead_sm = center + s_centered * direction;
+
 end

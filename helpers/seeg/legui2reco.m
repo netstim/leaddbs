@@ -1,5 +1,5 @@
-
-function legui2reco(options)
+function saved = legui2reco(options)
+saved = false;
 load(fullfile(options.root, options.patientname, 'reconstruction', ...
     strcat(options.patientname, '_electrodes.mat')));
 
@@ -314,7 +314,7 @@ end
 
 % --- Save reconstruction ---------------------------------------------------
 save(reco_filepath, 'reco');
-
+saved = true;
 end % function
 
 
