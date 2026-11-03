@@ -149,14 +149,14 @@ elseif slicedim == 2 % j
   end
   sliceim = squeeze(vol(:,round(sliceidx),:,:));
 elseif slicedim == 1 % i
-  ij2xyz = I2X(:,[2 3]);
-  ij2xyz(:,3) = I2X*[sliceidx 0 0 1]';
-  if round(sliceidx)<1
-      sliceidx=1;
-  elseif round(sliceidx)>size(vol,1)
-      sliceidx=size(vol,1);
-  end
-  sliceim = squeeze(vol(round(sliceidx),:,:,:));
+    ij2xyz = I2X(:,[2 3]);
+    ij2xyz(:,3) = I2X*[sliceidx 0 0 1]';
+    if round(sliceidx)<1
+        sliceidx=1;
+    elseif round(sliceidx)>size(vol,1)
+        sliceidx=size(vol,1);
+    end
+    sliceim = squeeze(vol(round(sliceidx),:,:,:));
 else
     error('Slicedim should be 1, 2 or 3')
 end
@@ -172,22 +172,33 @@ end
 %     sliceim=ea_contrast(sliceim,c,o)*64;
 % end
 
-if length(size(sliceim))==2
-    sliceim=ea_contrast(sliceim,c,o)*length(gray);
+% Apply contrast while preserving existing grayscale/RGB handling.
+isGraySlice = ismatrix(sliceim);
+
+if isGraySlice
+    sliceim = ea_contrast(sliceim, c, o) * length(gray);
 else
-    sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
+    sliceim = uint8(ea_contrast(single(sliceim), c, o) * 255);
 end
 
-% Interpolate slice when it has low resolution
+% Preserve the original interpolation behavior.
 if size(sliceim,3)==1 && any(size(sliceim)<1000)
     if any(size(sliceim)<=256)
-        resdivs=2; % increase to 2 but would render a bit slow.
+        resdivs=2;
     else
         resdivs=1;
     end
     sliceim=interp2(sliceim,resdivs);
 else
     resdivs=0;
+end
+
+% Convert scalar anatomical slices into truecolor grayscale RGB.
+% This prevents changes to the axes colormap from recoloring MRI/CT.
+if isGraySlice
+    grayIntensity = min(max(double(sliceim) / length(gray), 0), 1);
+    grayRGB = uint8(round(grayIntensity * 255));
+    sliceim = repmat(grayRGB, [1 1 3]);
 end
 
 ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
