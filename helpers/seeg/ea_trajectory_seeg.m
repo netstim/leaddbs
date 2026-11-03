@@ -27,15 +27,27 @@ showSpheres = strcmpi(renderMode, 'Spheres');
 showElectrodeModel = ...
     strcmpi(renderMode, 'Electrode model');
 % Sphere resolution and size
-[Xs, Ys, Zs] = sphere(12);
-r_sphere = 1.2;  % mm
+% [Xs, Ys, Zs] = sphere(12);
+% r_sphere = 1.2;  % mm
 
 hold on
 
 Ncells = numel(elstruct.coords_mm);
 rendered_any = false;
+% Store SEEG shaft label positions for the 3D viewer.
+seegLabelPositions = nan(Ncells, 3);
 
-% Same shaft color palette used by LeGUI Assign/Check mode
+for i = 1:Ncells
+    coords = elstruct.coords_mm{i};
+
+    if ~isempty(coords) && size(coords,2) == 3
+        seegLabelPositions(i,:) = coords(end,:);
+    end
+end
+
+% Save positions so the existing Label button can access them.
+setappdata(gcf, 'SEEGLabelPositions', seegLabelPositions);
+% Same shaft color palette used by LeGUI Check mode
 nShafts = Ncells;
 
 hues = linspace(0, 1, nShafts + 1)';
@@ -86,22 +98,38 @@ for i = 1:Ncells
 
     end
 
+%     if showSpheres
+% 
+%         % Draw the original LeGUI contact spheres.
+%         for k = 1:size(coords,1)
+% 
+%             x = coords(k,1);
+%             y = coords(k,2);
+%             z = coords(k,3);
+% 
+%             surf( ...
+%                 r_sphere*Xs + x, ...
+%                 r_sphere*Ys + y, ...
+%                 r_sphere*Zs + z, ...
+%                 'FaceColor', ccol, ...
+%                 'EdgeColor', 'none');
+%         end
+%     end
+    
     if showSpheres
-
-        % Draw the original LeGUI contact spheres.
-        for k = 1:size(coords,1)
-
-            x = coords(k,1);
-            y = coords(k,2);
-            z = coords(k,3);
-
-            surf( ...
-                r_sphere*Xs + x, ...
-                r_sphere*Ys + y, ...
-                r_sphere*Zs + z, ...
-                'FaceColor', ccol, ...
-                'EdgeColor', 'none');
-        end
+    
+        % Render contacts using the plot5patients marker style.
+        scatter3( ...
+            coords(:,1), ...
+            coords(:,2), ...
+            coords(:,3), ...
+            300, ...
+            'o', ...
+            'MarkerFaceColor', ccol, ...
+            'MarkerEdgeColor', 'w', ...
+            'LineWidth', 0.6, ...
+            'HandleVisibility', 'off');
+    
     end
 
     % Build the curved centerline.
