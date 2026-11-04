@@ -61,7 +61,10 @@ if __name__ == '__main__':
     for cnt_i in range(len(contacts2simulate)):
     
         # electrode type and ID
-        oss_electrode = check_electrode_availability(SEEG_recos_df['electrode'][cnt_i])  
+        if 'model' in SEEG_recos_df:
+            oss_electrode = check_electrode_availability(SEEG_recos_df['model'][cnt_i])  
+        else:
+            oss_electrode = check_electrode_availability(SEEG_recos_df['electrode'][cnt_i])  
         if not Electrode_ID_given:
             # definition from the reconstruction sheet
             Electrode_ID = SEEG_recos_df['group'][cnt_i]

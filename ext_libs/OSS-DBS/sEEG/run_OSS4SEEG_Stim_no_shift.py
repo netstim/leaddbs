@@ -218,7 +218,10 @@ if __name__ == '__main__':
     for stim_i in range(SEEG_stim_df.shape[0]):
     
         # electrode type and ID
-        electrode = SEEG_recos_df.loc[SEEG_recos_df['group'] == Electrode_ID, 'electrode']
+        if 'model' in SEEG_recos_df:
+            electrode = SEEG_recos_df.loc[SEEG_recos_df['group'] == Electrode_ID, 'model']
+        else:
+            electrode = SEEG_recos_df.loc[SEEG_recos_df['group'] == Electrode_ID, 'electrode']
         oss_electrode = check_electrode_availability(electrode.iloc[0])  
         if not Electrode_ID_given:
             Electrode_ID = SEEG_recos_df['group'][stim_i]
