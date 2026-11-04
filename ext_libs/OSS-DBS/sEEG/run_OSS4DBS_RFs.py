@@ -332,7 +332,7 @@ if __name__ == '__main__':
             # grounding parameters
             if current_controlled:
                 # switch from mA to A
-                grounded_current = 0.001 * np.round(np.sum(stim_protocol), 9)  # could be 0
+                grounded_current = -0.001 * np.round(np.sum(stim_protocol), 9)  # could be 0
                 case_grounding = True # if no current is actually grounded, this is used to reference voltages 
             else:
                 grounded_current = 0.0 # not relevant
@@ -344,9 +344,7 @@ if __name__ == '__main__':
             if hemi_idx == 0:
                 contact_coords = contact_coords_rh
             else:
-                contact_coords = contact_coords_lh
-                
-                
+                contact_coords = contact_coords_lh             
             
             first_last_contact_coords = [list(contact_coords[:,0]),list(contact_coords[:,-1])]
             
@@ -383,7 +381,7 @@ if __name__ == '__main__':
             oss_params["Electrodes"][0]["TipPosition"]["y[mm]"] = tip_pos[hemi_idx, 1]
             oss_params["Electrodes"][0]["TipPosition"]["z[mm]"] = tip_pos[hemi_idx, 2]
             
-            oss_params["PointModel"]["Lattice"]["Active"] = not (bool(lead_settings.get_calc_axon_act()))
+            oss_params["PointModel"]["Lattice"]["Active"] = True
             oss_params["PointModel"]["Lattice"]["Center"]["x[mm]"] = grid_center[0]
             oss_params["PointModel"]["Lattice"]["Center"]["y[mm]"] = grid_center[1]
             oss_params["PointModel"]["Lattice"]["Center"]["z[mm]"] = grid_center[2]
@@ -396,6 +394,8 @@ if __name__ == '__main__':
             oss_params["StimulationSignal"]["CurrentControlled"] = current_controlled
             oss_params["Surfaces"][0]["Active"] = case_grounding
             oss_params["Surfaces"][0]["Current[A]"] = grounded_current
+            
+            oss_params["Solver"]["MaximumSteps"] = 2000
     
             oss_params["OutputPath"] = os.path.join(InputDict['stimFolder'],'Results_protocol_' + str(cnt_i) + HEMI_SUFFIX[hemi_idx])
     
@@ -419,6 +419,7 @@ if __name__ == '__main__':
                         "Current[A]": 0.0,
                         "Voltage[V]": 0.0,
                         "Floating": True,
+                        "MaxMeshSizeEdge": 1e6
                     }
                 else:
                     # for current-controlled, we have a pseudo non-active contact
@@ -429,7 +430,7 @@ if __name__ == '__main__':
                             "Current[A]": stim_protocol[i]*0.001,
                             "Voltage[V]": 0.0,
                             "Floating": True,
-                            "MaxMeshSizeEdge": 0.08545132017764238  # hardcoded for now,
+                            "MaxMeshSizeEdge": 1e6  # hardcoded for now,
                         }
                     else:
                         cntct_dicts[cntcts_made] = {
@@ -438,7 +439,7 @@ if __name__ == '__main__':
                             "Current[A]": 0.0,
                             "Voltage[V]": stim_protocol[i],
                             "Floating": False,
-                            "MaxMeshSizeEdge": 0.08545132017764238  # hardcoded for now,
+                            "MaxMeshSizeEdge": 1e6  # hardcoded for now,
                         }
             
                 cntcts_made += 1
@@ -455,7 +456,6 @@ if __name__ == '__main__':
     
             
     #         # clean-up
-    
     #         lead_settings.add_stim_center(np.array((contact_coords_rh[:,cnt_i],contact_coords_lh[:,cnt_i])))
             
     #         # save .mat

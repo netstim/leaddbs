@@ -22,12 +22,23 @@ function resliceNii2ROI(images2reslice,threshold,vox_size)
     all_max = [-Inf -Inf -Inf];
     
     for i = 1:length(images2reslice)
-        if strcmp(images2reslice{i}(end-2:end),'.gz')
-            %gunzip([images2reslice{i},'.gz'])
-                
-            gunzip(images2reslice{i});
-            images2reslice{i} = images2reslice{i}(1:end-3);
+        % if strcmp(images2reslice{i}(end-2:end),'.gz')
+        %     %gunzip([images2reslice{i},'.gz'])
+        % 
+        %     gunzip(images2reslice{i});
+        %     images2reslice{i} = images2reslice{i}(1:end-3);
+        % end
+
+        if strcmp(images2reslice{i}(end-3:end),'.nii')
+            % they are all gzipped already
+            images2reslice{i} = [images2reslice{i},'.gz'];
         end
+            %     %gunzip([images2reslice{i},'.gz'])
+        % 
+        gunzip(images2reslice{i});
+        images2reslice{i} = images2reslice{i}(1:end-3);
+
+
         V = spm_vol(images2reslice{i});
         img = spm_read_vols(V);
         
@@ -61,14 +72,14 @@ function resliceNii2ROI(images2reslice,threshold,vox_size)
     ea_write_nii(target_V);
     
     % --- Step 3: Reslice All Images to this Space ---
-    flags = struct('interp', 4, 'mask', 0, 'mean', 0, 'which', 1, 'prefix', 'resliced_');
+    %flags = struct('interp', 4, 'mask', 0, 'mean', 0, 'which', 1, 'prefix', 'resliced_');
     
     for i = 1:length(images2reslice)
         % fprintf('Reslicing %s...\n', subj_RFs{i});
         % % We pass [target_V; source_V] to spm_reslice
         % source_V = spm_vol(subj_RFs{i});
         % spm_reslice({target_V, source_V}, flags);
-        ea_conformspaceto(target_V.fname,images2reslice{i})
+        ea_conformspaceto(target_V.fname,images2reslice{i},0)
 
         nii_rescliced = ea_load_nii(images2reslice{i});
         nii_rescliced.img(isnan(nii_rescliced.img)) = 0.0;

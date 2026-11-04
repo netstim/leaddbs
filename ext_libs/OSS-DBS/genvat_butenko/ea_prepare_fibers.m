@@ -311,6 +311,14 @@ else % Multi-Tract connectome
                             [options.subj.subjDir, filesep, 'forwardTransform'], ...
                             preopAnchor)';
 
+
+                        % % if options.push_fibers
+                        % upscaling = 1.1;  % needed due to internal resampling in OSS
+                        % diameter = 1.36 * upscaling; % lead-diameter, take from ea_resolve_elspecs ?. 
+                        % [fibersOut, idxOut, diagnostics, meta] = ea_fiber_push_leaddbs(reco, options.native, fiberFiltered{i}, diameter);
+                        % fiberFiltered{i}.fibers = fibersOut;
+                        % fiberFiltered{i}.idx = idxOut;
+
                         % Re-filter by length in native space (the warp may have
                         % shortened fibers below the threshold)
                         fiberFiltered(i) = ea_filterfiber_len(fiberFiltered{i}, settings.axonLength(t)+inlay);

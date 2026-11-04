@@ -17,8 +17,8 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
 end
 
 fprintf("\n\nOSS-DBS v2 by J. Zimmermann, J.P. Payonk and K. Butenko\n")
-fprintf("Please cite 'Butenko et al. (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.'\n")
-fprintf("PLoS Comput Biol 16(7), https://doi.org/10.1371/journal.pcbi.1008023'\n\n\n")
+fprintf("Please cite 'Zimmermann et al. (2026) 'OSS-DBS v2: Simulation Platform for Biophysical Modelling of Deep Brain Stimulation.'\n")
+fprintf("medRxiv https://doi.org/10.64898/2026.10.10.26365197'\n\n\n")
 
 % get resultfig handle
 if exist('hFigure', 'var')

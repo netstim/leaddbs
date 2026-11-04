@@ -76,7 +76,7 @@ ea_checkprefs;
 
 ea_checkbuildspace;
 
-ea_checkspm;
+%ea_checkspm;
 
 % check existence of directories
 ea_checkleaddirs;

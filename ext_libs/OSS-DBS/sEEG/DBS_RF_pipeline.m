@@ -1,11 +1,12 @@
 cd([ea_getearoot, '/ext_libs/OSS-DBS/sEEG'])
 
 %% Inputs
-subjs = {'/home/forel/Documents/data/JB_project/JBK/localized_medtronic_rotated/sub019'};
-anchor = 'T1';
-removeElectrodeFromRF = true;
+subjs = {};
 
-space = 'mni';
+anchor = 'T1';
+removeElectrodeFromRF = false;
+
+space = 'native';
 BIDS_format = false;
 cleanup = true; % otherwise some large .nii files might remain
 
@@ -25,15 +26,15 @@ vox_size = [0.75,0.75,0.75];
 
 % hardcoded for now
 VTR = true;             % if true, computes recording fields (aka volume of tissue recorded)
-StimMode = 'VC';       % CC - current-controlled, VC - voltage-controlled
+StimMode = 'CC';       % CC - current-controlled, VC - voltage-controlled
 
 % auto-definitions
 if strcmp(space, 'native')
     image_folder = 'coregistration';
-    stimFolderSfx = fullfile('stimulations','native','RFs');
+    stimFolderSfx = fullfile('stimulations','native','BSS');
 else
     image_folder = 'normalization';
-    stimFolderSfx = fullfile('stimulations','MNI152NLin2009bAsym','RFs');
+    stimFolderSfx = fullfile('stimulations','MNI152NLin2009bAsym','BSS');
 end
 
 %% compute RFs for specified patients
@@ -43,11 +44,11 @@ if reslice2ROI && (warp2MNI || strcmp(space,'mni'))
     images2ROI = {};
 end  % otherwise this will be done within the subject
 
-for subj_inx = 1:size(subjs,1)
+for subj_inx = 1:size(subjs,2)
 
     % get the imaging
     if BIDS_format
-        all_images = dir_without_dots(fullfile(subjs{subj_inx,1},image_folder,'anat'));
+        all_images = dir_without_dots(fullfile(subjs{1,subj_inx},image_folder,'anat'));
         allNames = {all_images.name};
         logicalIndex = contains(allNames, 'T2starw.nii') | contains(allNames, 'T1w.nii') | contains(allNames, 'T2w.nii') | contains(allNames, 'FLAIR.nii');
         images = all_images(logicalIndex);
@@ -65,7 +66,7 @@ for subj_inx = 1:size(subjs,1)
             ea_warndlg(warn_msg)
         end
     else
-        all_images = dir_without_dots(fullfile(subjs{subj_inx,1}));
+        all_images = dir_without_dots(fullfile(subjs{1,subj_inx}));
         allNames = {all_images.name};
         if strcmp(space, 'native')
             logicalIndex = strcmp(allNames, 'anat_t1.nii') | strcmp(allNames, 'anat_t2.nii') | strcmp(allNames, 'anat_t2star.nii') | strcmp(allNames, 'anat_flair.nii');
@@ -99,14 +100,25 @@ for subj_inx = 1:size(subjs,1)
                 warn_msg = sprintf("The anchor modality %s is not supported, please use T1, T2 or FLAIR",anchor);
                 ea_warndlg(warn_msg)
             end
+
+            if isempty(idx)
+                if strcmp(anchor,'T1') || strcmp(anchor,'t1')
+                    idx = find(contains({images.name}, 'anat_t2.nii'));
+                else
+                    idx = find(contains({images.name}, 'anat_t1.nii'));
+                end
+            end
+
         end
     end
+
+
     anchorImage = fullfile(images(idx).folder,images(idx).name);
 
     % get the transform (if necessary)
     if warp2MNI == true
         if BIDS_format
-            all_transforms = dir_without_dots(fullfile(subjs{subj_inx,1},'normalization','transformations'));
+            all_transforms = dir_without_dots(fullfile(subjs{1,subj_inx},'normalization','transformations'));
             allNames = {all_transforms.name};
             % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
              % IMPORTANT: make sure ants is mentioned in the name and use single quote
@@ -117,7 +129,7 @@ for subj_inx = 1:size(subjs,1)
             end
             transform = fullfile(transform_file(1).folder,transform_file(1).name);
         else
-            transform = [subjs{subj_inx,1},filesep,'glanatInverseComposite.nii.gz'];
+            transform = [subjs{1,subj_inx},filesep,'glanatInverseComposite.nii.gz'];
             if ~isfile(transform)
                 transform = [path2patient,filesep,'glanatInverseComposite.mat'];
             end
@@ -125,8 +137,8 @@ for subj_inx = 1:size(subjs,1)
     end
 
     % create a segmask (if not available)
-    ea_mkdir(fullfile(subjs{subj_inx,1},stimFolderSfx))
-    segmaskFile = fullfile(subjs{subj_inx,1},stimFolderSfx,'segmask.nii');
+    ea_mkdir(fullfile(subjs{1,subj_inx},stimFolderSfx))
+    segmaskFile = fullfile(subjs{1,subj_inx},stimFolderSfx,'segmask.nii');
     
     if ~isfile(segmaskFile) || regenerate_segmask
         if Segment_SVD
@@ -150,25 +162,25 @@ for subj_inx = 1:size(subjs,1)
     ea_checkOSSDBSInstallv2(env);
 
     % call a python script to compute stim. volumes
-    OSS4DBS_RFs_script = [ea_getearoot, '/ext_libs/OSS-DBS/sEEG/run_OSS4DBS_RFs.py'];
+    OSS4DBS_RFs_script = [ea_getearoot, 'ext_libs/OSS-DBS/sEEG/run_OSS4DBS_RFs.py'];
     
     % prepare stim_json
-    stim_json.path2subject = subjs{subj_inx,1};
+    stim_json.path2subject = subjs{1,subj_inx};
     stim_json.path2segmask = segmaskFile;
     stim_json.space = space;
-    stim_json.stimFolder = fullfile(subjs{subj_inx,1},stimFolderSfx);
+    stim_json.stimFolder = fullfile(subjs{1,subj_inx},stimFolderSfx);
     stim_json.StimMode = StimMode;
     stim_json.remove_el = removeElectrodeFromRF;
     DictPath = fullfile(stim_json.stimFolder,'RF_Input.json');
 
     % get the electrode reconstructions
-    [~,subj_label,~] = fileparts(subjs{subj_inx,1});
+    [~,subj_label,~] = fileparts(subjs{1,subj_inx});
 
     if BIDS_format
-        [~,subj_label,~] = fileparts(subjs{subj_inx,1});
-        recon = [subjs{subj_inx,1},filesep,'reconstruction',filesep,subj_label,'_desc-reconstruction.mat'];
+        [~,subj_label,~] = fileparts(subjs{1,subj_inx});
+        recon = [subjs{1,subj_inx},filesep,'reconstruction',filesep,subj_label,'_desc-reconstruction.mat'];
     else
-        recon = [subjs{subj_inx,1},filesep,'ea_reconstruction.mat'];
+        recon = [subjs{1,subj_inx},filesep,'ea_reconstruction.mat'];
     end
 
     load(recon, 'reco');
@@ -261,6 +273,7 @@ for subj_inx = 1:size(subjs,1)
     % create niftis from Lattice (.csv)
     if VTR
         Result_folders = dir_without_dots([stim_json.stimFolder,filesep,'Results_protocol_*']);
+        ea_mkdir([stim_json.stimFolder,filesep,'RFs']); 
     else
         Result_folders = dir_without_dots([stim_json.stimFolder,filesep,'Results_VTA*']);
     end
@@ -284,15 +297,24 @@ for subj_inx = 1:size(subjs,1)
                 cnt_idx = counter_lh;
             end
 
-            field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'oss_potentials_Lattice.csv'];
-            file2save = [Result_folders(vtr_i).folder,filesep,'1V_c',num2str(cnt_idx),'_phi', hemi_sfx ,'.nii'];  % can be adjusted as you wish, this is just an output
+
+            file2save = [stim_json.stimFolder,filesep,'RFs',filesep,'1mA_c',num2str(cnt_idx),'_efield', hemi_sfx ,'.nii'];  % can be adjusted as you wish, this is just an output
+            %file2save_MNI = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1mA_c',num2str(cnt_idx),'_efield_wb_MNI.nii'];  % can be adjusted as you wish, this is just an output
+            field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'E_field_Lattice.csv'];
+
+            %field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'oss_potentials_Lattice.csv'];
+            %file2save = [Result_folders(vtr_i).folder,filesep,'1V_c',num2str(cnt_idx),'_phi', hemi_sfx ,'.nii'];  % can be adjusted as you wish, this is just an output
             subj_RFs{vtr_i,1} = file2save;
             if strcmp(space,'native') && warp2MNI 
-                stimFolderMNI = fullfile(subjs{subj_inx,1},'stimulations','MNI152NLin2009bAsym','RFs');
+                stimFolderMNI = fullfile(subjs{1,subj_inx},'stimulations','MNI152NLin2009bAsym','BSS');
                 if ~isfolder(stimFolderMNI)
                     ea_mkdir(stimFolderMNI)
                 end
-                file2save_MNI = [stimFolderMNI,filesep,'1V_c',num2str(cnt_idx),'_phi', hemi_sfx ,'.nii'];  
+                if ~isfolder([stimFolderMNI,filesep,'RFs'])
+                    ea_mkdir([stimFolderMNI,filesep,'RFs']);
+                end
+                %file2save_MNI = [stimFolderMNI,filesep,'1V_c',num2str(cnt_idx),'_phi', hemi_sfx ,'.nii'];  
+                file2save_MNI = [stimFolderMNI,filesep,'RFs',filesep,'1mA_c',num2str(cnt_idx),'_efield', hemi_sfx ,'.nii'];  % can be adjusted as you wish, this is just an output
             end
            
         else
@@ -301,12 +323,14 @@ for subj_inx = 1:size(subjs,1)
             field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'E_field_Lattice.csv'];
         end
     
-        get_sEEG_field_from_csv(field_in_csv, file2save, VTR, 0, 0, false)
+        %get_sEEG_field_from_csv(field_in_csv, file2save, VTR, 0, 0, false)
+        get_sEEG_field_from_csv(field_in_csv, file2save, 0, 0, 0, true)
     
         if warp2MNI
             % ToDo: Test!
             if ~isfile(file2save_MNI)
-                get_sEEG_field_in_MNI_from_csv(field_in_csv, file2save_MNI, VTR, anchorImage, transform, false)
+                get_sEEG_field_in_MNI_from_csv(field_in_csv, file2save_MNI, VTR, anchorImage, transform, true)
+                get_sEEG_field_in_MNI_from_csv(field_in_csv, file2save_MNI, 0, anchorImage, transform, true)
             end
             subj_RFs{vtr_i,1} = file2save_MNI;
             % if cleanup
@@ -318,8 +342,8 @@ for subj_inx = 1:size(subjs,1)
         % flip left RFs if required
         if flip_lh2rh && strcmp(hemi_sfx,'_left')
             if warp2MNI
-                file2save_MNI_fl = [file2save_MNI(1:end-4),'_fl.nii'];
-                ea_flip_lr_nonlinear(file2save_MNI,file2save_MNI_fl)
+                file2save_MNI_fl = [file2save_MNI(1:end-4),'_fl.nii.gz'];
+                ea_flip_lr_nonlinear([file2save_MNI,'.gz'],file2save_MNI_fl)
                 if cleanup
                     ea_delete(file2save_MNI);
                 end
@@ -328,8 +352,8 @@ for subj_inx = 1:size(subjs,1)
                 if strcmp(space,'native')
                     ea_error("LH2RH flip is only allowed in MNI space!")
                 else
-                    file2save_fl = [file2save(1:end-4),'_fl.nii'];
-                    ea_flip_lr_nonlinear(file2save,file2save_fl)
+                    file2save_fl = [file2save(1:end-4),'_fl.nii.gz'];
+                    ea_flip_lr_nonlinear([file2save,'.gz'],file2save_fl)
                     if cleanup
                         ea_delete(file2save);
                     end
@@ -342,15 +366,19 @@ for subj_inx = 1:size(subjs,1)
     if reslice2ROI && (warp2MNI || strcmp(space,'mni'))
         images2ROI = [images2ROI;subj_RFs];
         % will be resliced outside
+        if cleanup
+            ea_delete([stim_json.stimFolder,filesep,'Results_protocol_*'])
+        end
+
         continue
     elseif reslice2ROI
         % reslice to the common voxel space within subject
         resliceNii2ROI(subj_RFs,ROI_RF_threshold,vox_size)     
-    end
 
-    % if cleanup
-    %     ea_delete([stimFolder,filesep,'Results_protocol_*'])
-    % end
+        if cleanup
+            ea_delete([stim_json.stimFolder,filesep,'Results_protocol_*'])
+        end
+    end
 
 end
 

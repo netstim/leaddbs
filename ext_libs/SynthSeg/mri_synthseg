@@ -1415,6 +1415,8 @@ def load_volume(path_volume, im_only=True, squeeze=True, dtype=None, aff_ref=Non
             volume = np.round(volume)
         volume = volume.astype(dtype=dtype)
 
+    volume = np.nan_to_num(volume)
+
     # align image to reference affine matrix
     if aff_ref is not None:
         n_dims, _ = get_dims(list(volume.shape), max_channels=10)

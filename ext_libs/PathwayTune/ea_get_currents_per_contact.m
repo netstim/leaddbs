@@ -30,6 +30,8 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
     concentric4 = ['PINS_Medical_L303','PINS_Medical_L302','PINS_Medical_L301', 'Medtronic_3389','Medtronic_3387','Medtronic_3391','St._Jude ActiveTip_(6142-6145)', 'St._Jude_ActiveTip_(6146-6149)','Abbott ActiveTip (6146-6149)','Abbott ActiveTip (6142-6145)'];
     concentric8 = ['Boston_Scientific_Vercise'];
     segmented8 = ['St._Jude_Directed_6172_(short)', 'St._Jude_Directed_6180','St._Jude_Directed_6173_(long)','Boston_Scientific_Vercise_Directed','Abbott Directed 6172 (short)','Abbott Directed 6173 (long)', 'Medtronic_B33005', 'Medtronic_B33015'];
+    Cartesia_X = ['Boston_Scientific_Vercise_Cartesia_X'];
+    Cartesia_HX = ['Boston_Scientific_Vercise_Cartesia_HX'];
     
     % add a sanity check for current limits
 
@@ -121,6 +123,68 @@ function [min_bound_per_contact, max_bound_per_contact, S] = ea_get_currents_per
                 end   
             end
         end
+    elseif any(contains(Cartesia_X,el_models{1}))
+        min_bound_per_contact = ones(1,16);
+        min_bound_per_contact(1,16) = min_conc;
+        min_bound_per_contact(1,1:15) = min_segm;
+
+        max_bound_per_contact = ones(1,16);
+        max_bound_per_contact(1,16) = max_conc;
+        max_bound_per_contact(1,1:15) = max_segm;
+
+        if check_S == 1
+            load([ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'S_CX.mat']);
+            if min_conc < 0.0  % we assume that both concentric and segmented will have either both or one polarity
+                if length(side) == 2
+                    S.Rs1.amp = 1 * (max_conc - min_conc) + 15 * (max_segm - min_segm);
+                    S.Ls1.amp = 1 * (max_conc - min_conc) + 15 * (max_segm - min_segm);
+                elseif side == 0
+                    S.Rs1.amp = 1 * (max_conc - min_conc) + 15 * (max_segm - min_segm);
+                else
+                    S.Ls1.amp = 1 * (max_conc - min_conc) + 15 * (max_segm - min_segm);
+                end
+            else
+                if length(side) == 2
+                    S.Rs1.amp = 1 * (max_conc) + 15 * (max_segm);
+                    S.Ls1.amp = 1 * (max_conc) + 15 * (max_segm);
+                elseif side == 0
+                    S.Rs1.amp = 1 * (max_conc) + 15 * (max_segm);
+                else
+                    S.Ls1.amp = 1 * (max_conc) + 15 * (max_segm);
+                end   
+            end
+        end      
+    elseif any(contains(Cartesia_HX,el_models{1}))
+        min_bound_per_contact = ones(1,16);
+        min_bound_per_contact(1,13:16) = min_conc;
+        min_bound_per_contact(1,1:12) = min_segm;
+
+        max_bound_per_contact = ones(1,16);
+        max_bound_per_contact(1,13:16) = max_conc;
+        max_bound_per_contact(1,1:12) = max_segm;
+
+        if check_S == 1
+            load([ea_getearoot,'ext_libs',filesep,'PathwayTune',filesep,'S_CHX.mat']);
+            if min_conc < 0.0  % we assume that both concentric and segmented will have either both or one polarity
+                if length(side) == 2
+                    S.Rs1.amp = 12 * (max_conc - min_conc) + 4 * (max_segm - min_segm);
+                    S.Ls1.amp = 12 * (max_conc - min_conc) + 4 * (max_segm - min_segm);
+                elseif side == 0
+                    S.Rs1.amp = 12 * (max_conc - min_conc) + 4 * (max_segm - min_segm);
+                else
+                    S.Ls1.amp = 12 * (max_conc - min_conc) + 4 * (max_segm - min_segm);
+                end
+            else
+                if length(side) == 2
+                    S.Rs1.amp = 12 * (max_conc) + 4 * (max_segm);
+                    S.Ls1.amp = 12 * (max_conc) + 4 * (max_segm);
+                elseif side == 0
+                    S.Rs1.amp = 12 * (max_conc) + 4 * (max_segm);
+                else
+                    S.Ls1.amp = 12 * (max_conc) + 4 * (max_segm);
+                end   
+            end
+        end           
     else
         ea_warndlg('The electrode model is not recongnized')
         return

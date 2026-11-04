@@ -440,8 +440,8 @@ class ResultPAM:
                 if null_symptom_dist[symp_inx] == 0.0:
                     I_hat[symp_inx, 0] = 0.0
                 else:
-                    I_hat[symp_inx, 0] = (null_symptom_dist[symp_inx] - symp_dist[symp_inx]) / \
-                                             null_symptom_dist[symp_inx]
+                    I_hat[symp_inx, 0] = np.maximum((null_symptom_dist[symp_inx] - symp_dist[symp_inx]) / \
+                                             null_symptom_dist[symp_inx],-1)  # bound worsening by -1
 
             estim_symp_improv_dict[symptom] = I_hat[symp_inx, 0]
 

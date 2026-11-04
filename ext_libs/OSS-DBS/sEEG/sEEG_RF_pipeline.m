@@ -15,6 +15,7 @@ reslice2segmask = true; % if true, all VTRs are stored in the same voxel space d
                         % this is handy when voxelwise operations are used
                         % but each VTR nii is > 100 MBs
 zipIt = true;           % gzip niftis
+phi_field = false;      % store electric potential instead of the E-field
 
 warp2MNI = false;   % warp from the anchor space to MNI
 transform = '/home/forel/Documents/data/JohnDoe/JohnDoe_from-MNI152NLin2009bAsym_to-anchorNative-ANTS.nii.gz';      % from native to MNI, you need the opposite warp, i.e. from-MNI152NLin2009bAsym_to-anchorNative
@@ -74,13 +75,16 @@ mono_field = {};
 for vtr_i = 1:size(Result_folders,1)
 
     if VTR
-        %file2save = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_potential.nii'];  % can be adjusted as you wish, this is just an output
-        %file2save_MNI = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_potential_MNI.nii'];  % can be adjusted as you wish, this is just an output
-
         sim_labels = strsplit(Result_folders(vtr_i).name,'_');
-        file2save = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1V_c',sim_labels{1,5},'_phi_wb.nii'];  % can be adjusted as you wish, this is just an output
-        file2save_MNI = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1V_c',sim_labels{1,5},'_phi_wb_MNI.nii'];  % can be adjusted as you wish, this is just an output
-        field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'oss_potentials_Lattice.csv'];
+        if phi_field
+            file2save = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1V_c',sim_labels{1,5},'_phi_wb.nii'];  % can be adjusted as you wish, this is just an output
+            file2save_MNI = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1V_c',sim_labels{1,5},'_phi_wb_MNI.nii'];  % can be adjusted as you wish, this is just an output
+            field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'oss_potentials_Lattice.csv'];
+        else
+            file2save = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1mA_c',sim_labels{1,5},'_efield_wb.nii'];  % can be adjusted as you wish, this is just an output
+            file2save_MNI = [Result_folders(vtr_i).folder,filesep,'RFs',filesep,'1mA_c',sim_labels{1,5},'_efield_wb_MNI.nii'];  % can be adjusted as you wish, this is just an output
+            field_in_csv = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name,filesep,'E_field_Lattice.csv'];
+        end
     else
         file2save = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_efield.nii'];
         file2save_MNI = [Result_folders(vtr_i).folder,filesep,Result_folders(vtr_i).name(13:end),'_efield_MNI.nii'];  % can be adjusted as you wish, this is just an output
@@ -88,11 +92,10 @@ for vtr_i = 1:size(Result_folders,1)
     end
 
     if ~isfile(file2save)
-        get_sEEG_field_from_csv(field_in_csv, file2save, VTR, reslice2segmask, segmaskFile, zipIt)
+        get_sEEG_field_from_csv(field_in_csv, file2save, phi_field, reslice2segmask, segmaskFile, zipIt)
     end
 
     if warp2MNI
-        % ToDo: Test!
         if ~isfile(file2save_MNI)
             get_sEEG_field_in_MNI_from_csv(field_in_csv, file2save_MNI, VTR, anchor, transform, zipIt)
         end

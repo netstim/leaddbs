@@ -14,7 +14,7 @@ import re
 from run_OSS4SEEG_Stim_no_shift import check_electrode_availability, get_geom_definitions, extract_index
 from ossdbs.electrodes.defaults import default_electrode_parameters
 
-MAX_RF_CONTACT_INDEX = 2   # for single contact RFs, do not go above the 3rd contact for simulation to avoid extremelely large VCMs (but the lead location is adjusted to match the actual contact coordinate) 
+MAX_RF_CONTACT_INDEX = 3   # for single contact RFs, do not go above the 4th contact for simulation to avoid extremelely large VCMs (but the lead location is adjusted to match the actual contact coordinate) 
 
 if __name__ == '__main__':
 
@@ -41,7 +41,8 @@ if __name__ == '__main__':
     #     current_controlled = True
     # else:
     #     current_controlled = False
-    current_controlled = False   # always use VC for VTRs
+    #current_controlled = False   # always use VC for VTRs
+    current_controlled = True   # always use VC for VTRs
 
     if len(sys.argv) > 3:
         Electrode_ID = int(sys.argv[3])
@@ -53,13 +54,17 @@ if __name__ == '__main__':
     # some auto-definitions
     stim_folder = os.path.dirname(SEEG_recos)
     Amplitude = [1.0]  # 1 V. The exact value is not important for VTRs
+    Amplitude = [0.001]  # 1 V. The exact value is not important for VTRs
     contacts2simulate = SEEG_recos_df.name   # all reconstructed
 
     # we iterate over all contacts of all electrodes, but rebuilding the geometry everytime
     for cnt_i in range(len(contacts2simulate)):
     
         # electrode type and ID
-        oss_electrode = check_electrode_availability(SEEG_recos_df['electrode'][cnt_i])  
+        if 'model' in SEEG_recos_df:
+            oss_electrode = check_electrode_availability(SEEG_recos_df['model'][cnt_i])  
+        else:
+            oss_electrode = check_electrode_availability(SEEG_recos_df['electrode'][cnt_i])  
         if not Electrode_ID_given:
             # definition from the reconstruction sheet
             Electrode_ID = SEEG_recos_df['group'][cnt_i]
@@ -157,18 +162,19 @@ if __name__ == '__main__':
                       "Contacts": [         # we need only one contact! Move the forth one for now!
                         {
                           "Contact_ID": simulated_contact_index + 1,
-                          "Active": True,
-                          "Current[A]": False,
-                          "Voltage[V]": amp,
-                          "Floating": False,
+                          "Active": False,
+                          "Current[A]": amp,
+                          "Voltage[V]": 0.0,
+                          "Floating": True,
                           "SurfaceImpedance[Ohmm]": {
                             "real": 0.0,
                             "imag": 0.0
                           },
                           "MaxMeshSize": 1000000.0,
-                          "MaxMeshSizeEdge": 0.08545132017764238  # hardcoded for now
+                          "MaxMeshSizeEdge": 1000000.0  # hardcoded for now
                         }
-                      ],                      
+                      ],   
+                      "RequireAllContactsInBrain": False,
                       "EncapsulationLayer": {
                         "Thickness[mm]": 0.0,
                         "Material": "White matter",
@@ -183,7 +189,7 @@ if __name__ == '__main__':
                     {
                         "Name": "BrainSurface",
                         "Active": True,
-                        "Current[A]": False,
+                        "Current[A]": -1.0*amp,
                         "Voltage[V]": 0.0,
                     }
                 ],
@@ -200,12 +206,12 @@ if __name__ == '__main__':
                   "LoadMesh": False,
                   "LoadPath": "",
                   "MeshingHypothesis": {
-                    "Type": "Default",
+                    "Type": "Fine",
                     "MaxMeshSize": 1000000.0,
                     "MeshSizeFilename": ""
                   },
                   "HPRefinement": {
-                    "Active": False,
+                    "Active": True,
                     "Levels": 2,
                     "Factor": 0.125
                   },

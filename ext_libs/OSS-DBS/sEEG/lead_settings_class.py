@@ -194,9 +194,9 @@ class LeadSettings:
             or electrode_name == "BostonScientificVerciseCustom"
             or np.max(np.abs(phi_vector[~np.isnan(phi_vector)])) > 5.0
         ):
-            grid_resolution = 0.4
+            grid_resolution = 0.5
         else:
-            grid_resolution = 0.33
+            grid_resolution = 0.5
 
         return grid_center, grid_resolution
 

@@ -184,12 +184,12 @@ oss_params = {
     "LoadMesh": False,
     "LoadPath": "",
     "MeshingHypothesis": {
-      "Type": "Default",
+      "Type": "Fine",
       "MaxMeshSize": 1000000.0,
       "MeshSizeFilename": ""
     },
     "HPRefinement": {
-      "Active": False,
+      "Active": True,
       "Levels": 2,
       "Factor": 0.125
     },
@@ -198,7 +198,7 @@ oss_params = {
       "MaxIterations": 10,
       "ErrorTolerance": 0.1
     },
-    "MaterialRefinementSteps": 1,
+    "MaterialRefinementSteps": 0,
     "MeshSize": {
       "Edges": {},
       "Faces": {},
@@ -228,7 +228,7 @@ oss_params = {
     "Type": "CG",
     "Preconditioner": "local",
     "PreconditionerKwargs": {},
-    "MaximumSteps": 500,
+    "MaximumSteps": 1000,
     "Precision": 1e-10
   },
   "PointModel": {
