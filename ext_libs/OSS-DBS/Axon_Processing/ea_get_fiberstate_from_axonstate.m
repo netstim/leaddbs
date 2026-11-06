@@ -1,5 +1,19 @@
 function ea_get_fiberstate_from_axonstate(ConnectomeName,ID_no_sub,stimdir,side,stimSetMode,native,convert_to_MNI,prob_PAM)
 
+    % Convert AxonState files to fiberActivation
+    % By Butenko, konstantinmgtu@gmail.com
+    
+    arguments
+        ConnectomeName     % as stored in Lead-DBS
+        ID_no_sub          % subject's ID (without 'sub-')
+        stimdir            % full path to the stimulation folder
+        side               {mustBeNumeric} % hemisphere index (0 - rh, 1 - lh)
+        stimSetMode        {mustBeNumeric} % whether StimSets were used when calculating axonState (1 - yes)
+        native             {mustBeNumeric} % whether computations were done in native space (1 - yes)
+        convert_to_MNI     {mustBeNumeric} % whether fiberActivation should be also exported in the template space (1 - yes)
+        prob_PAM           {mustBeNumeric} % whether probabilistic PAM was used (1 - yes)
+    end
+
     settings.butenko_intersectStatus = 'damaged'; % or "activated"
 
     options.subj.subjID = ID_no_sub;
