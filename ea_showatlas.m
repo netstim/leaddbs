@@ -681,12 +681,7 @@ for nativemni=nm % switch between native and mni space atlases.
     % configure label button to work properly and hide labels as default.
     if ~atlases.discfibersonly % Doesn't exist for pure discfibers atlas
         atlabelsvisible([],[],atlaslabels(:),'off');
-        if ~isfield(atlases,'presets')
-            set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
-        else
-            presetShow = atlases.presets(atlases.defaultset).show;
-            set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(presetShow),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(presetShow),'off'},'State','off');
-        end
+        set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
         set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
 
         setappdata(resultfig,'atlassurfs',atlassurfs);
@@ -804,18 +799,7 @@ end
 
 
 function atlabelsvisible(hobj,ev,obj,onoff)
-labelInd = arrayfun(@(x) isa(x, 'matlab.graphics.primitive.Text'), obj);
-if isempty(hobj)
-    arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
-else
-    toggleState = flip(arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3)));
-
-    if strcmp(onoff, 'on')
-        arrayfun(@(label, state) set(label,'Visible',state), obj(labelInd), toggleState);
-    else
-        arrayfun(@(label) set(label,'Visible',onoff), obj(labelInd));
-    end
-end
+ea_atlaslabelvisible(hobj,ev,obj,onoff);
 
 
 function [sides,sidestr]=detsides(type)
