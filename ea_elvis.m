@@ -115,6 +115,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 ptidx = varargin{3};
                 % Only keep elstruct and isomatrix entries from selected patients
                 elstruct = elstruct(ptidx);
+                if isfield(options, 'patient_list')
+                    options.patient_list = options.patient_list(ptidx);
+                end
                 if ~isempty(options.d3.isomatrix)
                     for side=options.sides
                         % idx = setdiff(1:size(options.d3.isomatrix{1}{side},1), ptidx);
@@ -127,9 +130,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             if options.d3.mirrorsides
                 elstruct=ea_mirrorsides(elstruct);
-                options.patient_list = [options.patient_list; options.patient_list];
+                options.patient_list = [options.patient_list(:); options.patient_list(:)];
                 try options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             end
+            setappdata(resultfig,'options',options);
         else
             multiplemode=0;
             [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
