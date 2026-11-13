@@ -318,6 +318,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             catch MEb0
                 warning('Lead-Connectome DWI preparation: automatic b0 export failed (%s). Proceeding with existing configuration.', MEb0.message);
             end
+            % ea_getptopts only registers B0 once the volume exists.
+            % Refresh so coregistration and checkreg see that path.
+            if isfile(fullfile(options.subj.subjDir, options.prefs.b0))
+                options = ea_getptopts(options.subj.subjDir, options);
+            end
         end
 
         % Coregister all pre-op MRIs to anchor, including B0 
