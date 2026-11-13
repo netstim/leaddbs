@@ -21,6 +21,7 @@ if strcmp(options.leadprod,'group')
     % Determine sides from that geometry, including mirrored electrodes;
     % original patient folders may be unavailable or have different sides.
     popts.sides = find(~cellfun(@isempty,elstruct(pt).coords_mm));
+    popts.sides = popts.sides(:)';
     popts.subj.recon.recon = '';
     reconDir = fullfile(options.patient_list{pt}, 'reconstruction');
     if isfolder(reconDir)
