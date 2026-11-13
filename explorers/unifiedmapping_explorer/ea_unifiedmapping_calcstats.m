@@ -278,9 +278,13 @@ for group = groups
                 else % networkmapping: whole valsin matrix was tested, no subselection
                     permidx=(1:numel(vals{group,side}))';
                 end
+                % patient of each column: a mirrored copy (column index
+                % offset by the number of patients) belongs to the same
+                % patient, so the permutation gives both the same score.
+                patientidx=mod(gpatsel(:)-1,length(obj.allpatients))+1;
                 permdata{group,side}=struct('valsin',valsin,'outcomein',outcomein, ...
                     'statfile',char(stattests.file(idx)),'H0',obj.statsettings.H0, ...
-                    'nonemptyidx',permidx);
+                    'nonemptyidx',permidx,'patientidx',patientidx);
             end
 
         else
