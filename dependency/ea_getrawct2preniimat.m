@@ -2,7 +2,8 @@ function [tmat,postopct] = ea_getrawct2preniimat(options,inverse)
 % Gets the transformation from options.prefs.rawctnii_unnormalized to
 % options.prefs.prenii_unnormalized and extracts the transformation matrix
 %
-% Returns: transformation matrix in LPI- (= RAS+)
+% Returns: transformation matrix between SPM world coordinates in RAS+.
+% In particular, account for ANTs/ITK and SPM choosing different NIfTI forms.
 %
 % 2018, Andreas Husch, University of Luxembourg, Intenventional
 % Neuroscience Group
@@ -16,6 +17,8 @@ if ~inverse
 else
     prefix = 'inverse';
 end
+
+useANTsGeometry = false;
 
 switch options.prefs.reco.mancoruse
     case 'postop'
@@ -33,6 +36,7 @@ switch options.prefs.reco.mancoruse
                 tfields = fieldnames(t);
                 % affine         % fixed
                 tmat=ea_antsmat2mat(t.(tfields{1}),t.(tfields{2}));
+                useANTsGeometry = true;
 
             elseif contains(coreg_log.method.CT, 'BRAINSFit')
                 % Tranformation from BRAINSFit has been converted to MAT file
@@ -63,6 +67,7 @@ switch options.prefs.reco.mancoruse
                 tfields = fieldnames(t);
                 % affine         % fixed
                 tmat=ea_antsmat2mat(t.(tfields{1}),t.(tfields{2}));
+                useANTsGeometry = true;
             else
                 tmat = eye(4);
                 postopct = options.subj.coreg.anat.postop.CT;
@@ -72,4 +77,16 @@ switch options.prefs.reco.mancoruse
         tmat = eye(4);
         postopct = options.subj.coreg.anat.postop.CT;
 end
-     
+
+if useANTsGeometry
+    [antsMat, spmMat] = ea_ants_image_affine(postopct);
+    % ANTs' affine is defined in the physical space selected by ITK, while
+    % all consumers (manual reconstruction, PaCER, DiODe) read the CT via
+    % SPM. Convert that world space, retaining the original CT voxel grid.
+    % The resliced CT already records the fixed geometry written by ANTs.
+    if inverse
+        tmat = spmMat/antsMat*tmat;
+    else
+        tmat = tmat*antsMat/spmMat;
+    end
+end
