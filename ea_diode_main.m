@@ -17,21 +17,11 @@ else
     error(['No coregistered post-op CT found in folder for patient ' options.subj.subjId])
 end
 
-tol=0.0001; % tolerance of (rounding) difference in qform and sform matrices.
 if isfile(options.subj.preproc.anat.postop.CT)
     ct_org = ea_load_nii(options.subj.preproc.anat.postop.CT);
-    if sum(sum(abs(ct_org.mat-ct_org.private.mat0)))<tol
-        tmat_org = ct_org.mat;
-    else
-        msg = sprintf('Different sForm and qForm matrices found in:\n%s\nPlease select the matrix you want to use.', ct_org.fname);
-        choice = questdlg(msg, 'Warning!','sForm','qForm','sForm');
-        switch choice
-            case 'sForm'
-                tmat_org = ct_org.mat;
-            case 'qForm'
-                tmat_org = ct_org.private.mat0;
-        end
-    end
+    % ea_getrawct2preniimat converts ANTs geometry to SPM world coordinates.
+    % Use that same SPM geometry for voxel sampling and orientation vectors.
+    tmat_org = ct_org.mat;
     ct = ct_org;
 else
     msg = sprintf(['No post-op CT found for patient ' options.subj.subjId '\nScript will run using coregistered CT which may lead to inaccurate results.']);
@@ -56,7 +46,10 @@ try
     else
         ct = ct_reg;
     end
-catch
+catch ME
+    if startsWith(ME.identifier, 'LeadDBS:ANTsImageGeometry')
+        rethrow(ME);
+    end
     json = loadjson(options.subj.coreg.log.method);
     coregMethod = lower(regexprep(json.method.CT, ' \(.*$', ''));
     reg2org = load([options.subj.coreg.transform.CT.forwardBaseName, coregMethod, '.mat']);
