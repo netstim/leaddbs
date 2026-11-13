@@ -12,8 +12,8 @@ for branch=1:length(sels.branches)
 branchsel=[];
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side,atlases.types(leaf));
-            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons,0);
+            ixs=h.sgsubsurf{branch}{leaf}(side);
+            ixt=ixs;
             switch h.togglebuttons(ixt).State
                 case 'on'
                     set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.SELECTED)
@@ -53,9 +53,6 @@ branchsel=[];
                     else
                         set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.MIXED)
                     end
-                    if ~strcmp(h.atlassurfs{ixs}.Visible,'on'); % also make sure surface is right
-                        h.atlassurfs{ixs}.Visible='on';
-                    end
                     if ~strcmp(h.atlassurfs{ixs}.Visible,'off'); % also make sure surface is right
                         h.atlassurfs{ixs}.Visible='off';
                     end
@@ -79,24 +76,3 @@ branchsel=[];
 end
 jtree.updateUI
 ea_busyaction('off',handles.atlasselect,'atlcontrol');
-
-
-function sidec=getsidec(sel,side,type)
-
-if sel==2
-    switch side
-        case 1
-            sidec='_right';
-        case 2
-            sidec='_left';
-    end
-elseif sel==1
-    switch type
-        case 1
-            sidec='_right';
-        case 2
-            sidec='_left';
-        case 5
-            sidec='_midline';
-    end
-end
