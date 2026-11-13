@@ -39,6 +39,8 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     atlascnt=1;
+    atlasmap=zeros(0,2); % scene row -> atlas row and hemisphere
+    atlasNeedsSave=false;
     set(0,'CurrentFigure',resultfig)
     ht=getappdata(resultfig,'addht');
 
@@ -164,6 +166,15 @@ for nativemni=nm % switch between native and mni space atlases.
         ea_stats.electrodes=elstruct;
     end
 
+    % Configure the axes once; repeating this per structure can render the
+    % increasingly large scene over and over.
+    set(resultfig,'Renderer','OpenGL');
+    atlasAxes=gca;
+    axis(atlasAxes,'off');
+    axis(atlasAxes,'equal');
+    caxis(atlasAxes,[1 64]);
+    lastDraw=tic;
+
     % iterate through atlases, visualize them and write out stats.
     for atlas=1:length(atlases.names)
         [~,sidestr]=detsides(atlases.types(atlas));
@@ -185,9 +196,19 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
                 atlases.roi{atlas,side}.Tag=roiTag;
-                atlases.roi{atlas,side}.breathelife;
+                % Apply mesh settings before attaching listeners. The index
+                % already contains the full surface; only regenerate it when
+                % the requested smoothing differs or the cache is missing.
+                smoothingChanged=~isequal(atlases.roi{atlas,side}.smooth,options.prefs.hullsmooth);
                 atlases.roi{atlas,side}.smooth=options.prefs.hullsmooth;
-                atlases.roi{atlas,side}.update_roi;
+                if smoothingChanged
+                    atlases.roi{atlas,side}.update_roi;
+                    atlasNeedsSave=true;
+                else
+                    [~,geometryRebuilt]=atlases.roi{atlas,side}.update_roi('initialize');
+                    atlasNeedsSave=atlasNeedsSave || geometryRebuilt;
+                end
+                atlases.roi{atlas,side}.breathelife(false);
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
@@ -222,9 +243,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     'FontWeight', 'bold',...
                     'FontSize', 12,...
                     'Color', 'w');
-
-                % make fv compatible for stats
-                caxis([1 64]);
 
                 % gather contact statistics
                 if options.writeoutstats
@@ -274,14 +292,12 @@ for nativemni=nm % switch between native and mni space atlases.
                 catch
                     keyboard
                 end
+                atlasmap(atlascnt,:)=[atlas,side];
                 atlascnt=atlascnt+1;
 
-                set(gcf,'Renderer','OpenGL')
-                axis off
-                axis equal
-
-                if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
-                    drawnow
+                if toc(lastDraw)>0.5
+                    drawnow limitrate
+                    lastDraw=tic;
                 end
             elseif strcmp(atlases.pixdim{atlas,side}, 'surface')
                 
@@ -310,6 +326,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     keyboard
                 end
                 
+                atlasmap(atlascnt,:)=[atlas,side];
                 atlascnt=atlascnt+1;
             elseif strcmp(atlases.pixdim{atlas,side}, 'fibers')
                 fv=atlases.fv{atlas,side};
@@ -353,12 +370,8 @@ for nativemni=nm % switch between native and mni space atlases.
                 pixdim=atlases.pixdim{atlas,side};
                 colorc=nan;
 
-                if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
-                    try
-                        [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
-                    catch
-                        centroid=mean(XYZ.mm(:,1:3),1);
-                    end
+                if size(XYZ.mm,1)>1 % one cluster has its centroid at the mean
+                    centroid=mean(XYZ.mm(:,1:3),1);
                 else
                     try
                         centroid=XYZ.mm(:,1:3);
@@ -397,8 +410,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     'FontWeight', 'bold',...
                     'FontSize', 12,...
                     'Color','w');
-
-                caxis([1 64]);
 
                 % prepare colorbutton icon
                 try
@@ -476,14 +487,12 @@ for nativemni=nm % switch between native and mni space atlases.
                 catch
                     keyboard
                 end
+                atlasmap(atlascnt,:)=[atlas,side];
                 atlascnt=atlascnt+1;
 
-                set(gcf,'Renderer','OpenGL')
-                axis off
-                axis equal
-
-                if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
-                    drawnow
+                if toc(lastDraw)>0.5
+                    drawnow limitrate
+                    lastDraw=tic;
                 end
             elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
                 tractPath = [atlasFolder,options.atlasset,filesep,getsidec(side,sidestr)];
@@ -639,6 +648,12 @@ for nativemni=nm % switch between native and mni space atlases.
                 'OnCallback', {@showfiber, negdiscfiberset},'OffCallback', {@hidefiber, negdiscfiberset}, 'State', 'on');
     end
 
+    % Bind ROI toolbar context menus in one pass after all buttons exist.
+    % Per-ROI Java lookup forces a redraw of the growing scene.
+    if isfield(atlases,'roi')
+        ea_roi.bindcontextmenus(atlases.roi,resultfig);
+    end
+
     % configure label button to work properly and hide labels as default.
     if ~atlases.discfibersonly % Doesn't exist for pure discfibers atlas
         atlabelsvisible([],[],atlaslabels(:),'off');
@@ -651,6 +666,7 @@ for nativemni=nm % switch between native and mni space atlases.
         set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
 
         setappdata(resultfig,'atlassurfs',atlassurfs);
+        setappdata(resultfig,'atlasmap',atlasmap);
         setappdata(resultfig,'colorbuttons',colorbuttons);
         setappdata(resultfig,'addht',ht);
         setappdata(resultfig,'labelbutton',labelbutton);
@@ -666,9 +682,13 @@ for nativemni=nm % switch between native and mni space atlases.
         setappdata(resultfig,'atlases',atlases);
     end
 
-    try
-        atlases.rebuild=0; % always reset rebuild flag.
-        ea_saveatlas(atlasFolder,options.atlasset,atlases);
+    % ea_genatlastable saves newly built indices itself. A normal display
+    % must not rewrite a potentially gigabyte-sized, unchanged atlas index.
+    if atlasNeedsSave
+        try
+            atlases.rebuild=0;
+            ea_saveatlas(atlasFolder,options.atlasset,atlases);
+        end
     end
 
     if isfield(atlases, 'citation')
@@ -705,23 +725,16 @@ end
 
 atls=getappdata(resultfig,'atlassurfs');
 
-if(getappdata(resultfig,'altpressed'))
+if getappdata(resultfig,'altpressed')
     cbutn=getappdata(resultfig,'colorbuttons');
     set(cbutn,'State',onoff);
-    for el=1:length(atls)
-        for side=1:2
-            for atlshorz=1:size(atls,2)
-                try
-                    set(atls(atlscnt,atlshorz), 'Visible', onoff);
-                end
-            end
-        end
-    end
+    rows=1:size(atls,1);
 else
-    for atlshorz=1:size(atls,2)
-        try
-            set(atls(atlscnt,atlshorz), 'Visible', onoff);
-        end
+    rows=atlscnt;
+end
+for row=rows
+    for col=1:size(atls,2)
+        atls{row,col}.Visible=onoff;
     end
 end
 

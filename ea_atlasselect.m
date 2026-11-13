@@ -132,9 +132,8 @@ catch
     keyboard
 end
 
-for tb=1:length(togglebuttons)
-    tbcell{tb}=togglebuttons(tb).Tag;
-end
+resultfig=getappdata(handles.atlasselect,'resultfig');
+atlasmap=getappdata(resultfig,'atlasmap');
 
 atlchecks=cell(length(atlases.names),1);
 import com.mathworks.mwswing.checkboxtree.*
@@ -159,13 +158,14 @@ end
 for subgroup=1:length(atlases.subgroups)
     h.sg{subgroup} = DefaultCheckBoxNode(atlases.subgroups(subgroup).label);
     for node=1:length(atlases.subgroups(subgroup).entries)
-        [~,thisatlfname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
+        atlasindex=atlases.subgroups(subgroup).entries(node);
+        [~,thisatlfname]=fileparts(atlases.names{atlasindex});
         [~,thisatlfname]=fileparts(thisatlfname);
 
         if uselabelname == 0
             thisatlname = thisatlfname;
         else
-            thisatlname=atlases.labels{uselabelname}{node};
+            thisatlname=atlases.labels{uselabelname}{atlasindex};
         end
 
         % nii(.gz) support
@@ -182,60 +182,29 @@ for subgroup=1:length(atlases.subgroups)
             '</BODY></HTML>'];
         h.sgsub{subgroup}{node}=DefaultCheckBoxNode(atlaslabel,true);
         h.sg{subgroup}.add(h.sgsub{subgroup}{node});
-        switch atlases.types(atlases.subgroups(subgroup).entries(node))
-            case {3,4,6,10} % need lh and rh entries
-                [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
-                try
-                    checked=onoff2bool(togglebuttons(thistb).State);
-                catch
-                    keyboard
-                end
-                lrlabel = ['<HTML><BODY>' ...
-                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                    '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
-                    '</BODY></HTML>'];
-                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-                h.sgsubfi{subgroup}{node}=thisatlfname;
-
-                [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-                checked=onoff2bool(togglebuttons(thistb).State);
-                lrlabel = ['<HTML><BODY>' ...
-                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                    '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
-                    '</BODY></HTML>'];
-                h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode(lrlabel,checked);
-                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
-            case 1 % RH only
-                [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
-                checked=onoff2bool(togglebuttons(thistb).State);
-                lrlabel = ['<HTML><BODY>' ...
-                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                    '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
-                    '</BODY></HTML>'];
-                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-                h.sgsubfi{subgroup}{node}=thisatlfname;
-            case 2 % LH only
-                [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-                checked=onoff2bool(togglebuttons(thistb).State);
-                lrlabel = ['<HTML><BODY>' ...
-                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                    '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
-                    '</BODY></HTML>'];
-                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-                h.sgsubfi{subgroup}{node}=thisatlfname;
-            case 5 % Midline
-                [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
-                checked=onoff2bool(togglebuttons(thistb).State);
-                lrlabel = ['<HTML><BODY>' ...
-                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                    '<FONT color="black">&nbsp;&nbsp;Midline</FONT>' ...
-                    '</BODY></HTML>'];
-                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-                h.sgsubfi{subgroup}{node}=thisatlfname;
+        % Match the atlas row and hemisphere, not the display name/Tag.
+        % A volume and tract can share a basename (e.g. palhy.nii.gz and
+        % palhy.mat), and structures can occur in more than one subgroup.
+        surfaceindices=find(atlasmap(:,1)==atlasindex)';
+        h.sgsubindex{subgroup}{node}=atlasindex;
+        h.sgsubsurf{subgroup}{node}=surfaceindices;
+        h.sgsubfi{subgroup}{node}=thisatlfname;
+        for side=1:numel(surfaceindices)
+            surfaceindex=surfaceindices(side);
+            checked=onoff2bool(togglebuttons(surfaceindex).State);
+            if atlases.types(atlasindex)==5
+                sidename='Midline';
+            elseif atlasmap(surfaceindex,2)==1
+                sidename='RH';
+            else
+                sidename='LH';
+            end
+            lrlabel = ['<HTML><BODY>' ...
+                '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                '<FONT color="black">&nbsp;&nbsp;',sidename,'</FONT>' ...
+                '</BODY></HTML>'];
+            h.sgsubside{subgroup}{node}{side}=DefaultCheckBoxNode(lrlabel,checked);
+            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{side});
         end
         atlchecks{atlases.subgroups(subgroup).entries(node)}=...
             [atlchecks{atlases.subgroups(subgroup).entries(node)},h.sgsub{subgroup}{node}];
@@ -341,9 +310,8 @@ for branch=1:length(sels.branches)
         if ~isempty(sels.sides{branch}{leaf}) % has side children
             for side=1:length(sels.sides{branch}{leaf})
 
-                sidec=getsidec(length(sels.sides{branch}{leaf}),side,h.atlases.types(leaf));
-
-                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
+                ixs=h.sgsubsurf{branch}{leaf}(side);
+                ixt=ixs;
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs{ixs}.Visible,'on')
                         h.atlassurfs{ixs}.Visible='on';
@@ -365,32 +333,9 @@ for branch=1:length(sels.branches)
                 end
             end
 
-        else
-            keyboard
         end
     end
 
-end
-
-
-function sidec=getsidec(sel,side,type)
-
-if sel==2
-    switch side
-        case 1
-            sidec='_right';
-        case 2
-            sidec='_left';
-    end
-elseif sel==1
-    switch type
-        case 1
-            sidec='_right';
-        case 2
-            sidec='_left';
-        case 5
-            sidec='_midline';
-    end
 end
 
 
@@ -487,18 +432,12 @@ atlases=getappdata(handles.atlasselect,'atlases');
 pres.default='absolute';
 pres.show=[];
 pres.hide=[];
-[~,atlases.names]=cellfun(@fileparts,atlases.names,'Uniformoutput',0);
-[~,atlases.names]=cellfun(@fileparts,atlases.names,'Uniformoutput',0);
 
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
 
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side,atlases.types(leaf));
-
-            %[ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-
-            [~,ix]=ismember(char(h.sgsub{branch}{leaf}),atlases.names);
+            ix=h.sgsubindex{branch}{leaf};
             if strcmp(sels.sides{branch}{leaf}{side},'selected')
                 pres.show=[pres.show,ix];
 
@@ -510,6 +449,9 @@ for branch=1:length(sels.branches)
 
     end
 end
+
+pres.show=unique(pres.show,'stable');
+pres.hide=unique(pres.hide,'stable');
 
 try WinOnTop(handles.atlasselect,false); end
 
@@ -537,30 +479,23 @@ ea_busyaction('on',handles.atlasselect,'atlcontrol');
 h=getappdata(handles.atlasselect,'h');
 jtree=getappdata(handles.atlasselect,'jtree');
 atlases=getappdata(handles.atlasselect,'atlases');
-onatlasnames=atlases.names(preset.show);
-offatlasnames=atlases.names(preset.hide);
-% get rid of file extensions:
-[~,onatlasnames]=cellfun(@fileparts,onatlasnames,'Uniformoutput',0);
-[~,onatlasnames]=cellfun(@fileparts,onatlasnames,'Uniformoutput',0);
-[~,offatlasnames]=cellfun(@fileparts,offatlasnames,'Uniformoutput',0);
-[~,offatlasnames]=cellfun(@fileparts,offatlasnames,'Uniformoutput',0);
-
 % iterate through jTree to set selection according to preset:
 sels=ea_storeupdatemodel(jtree,h);
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
 
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side,atlases.types(leaf));
-            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
+            ixs=h.sgsubsurf{branch}{leaf}(side);
+            ixt=ixs;
+            atlasindex=h.sgsubindex{branch}{leaf};
 
-            if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
+            if ismember(atlasindex,preset.show)
                 h.atlassurfs{ixs}.Visible='on';
                 if strcmp(h.labelbutton.State, 'on')
                     h.atlaslabels(ixs).Visible='on';
                 end
                 h.togglebuttons(ixt).State='on';
-            elseif ismember(char(h.sgsubfi{branch}{leaf}),offatlasnames)
+            elseif ismember(atlasindex,preset.hide)
                 h.atlassurfs{ixs}.Visible='off';
                 h.atlaslabels(ixs).Visible='off';
                 h.togglebuttons(ixt).State='off';

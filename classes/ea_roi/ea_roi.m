@@ -36,6 +36,11 @@ classdef ea_roi < handle
         AmbientStrength=0.3 % patch property
     end
 
+    properties (Access = private, Transient)
+        listenersInitialized = false
+        contextToggleH = []
+    end
+
     methods(Static)
 
         function obj=loadobj(s)
@@ -50,6 +55,60 @@ classdef ea_roi < handle
                 obj=s;
             end
         end
+
+        function bindcontextmenus(rois,resultfig)
+            % Bind atlas toolbar right clicks in one Java lookup. findjobj
+            % flushes the renderer on every call, which is costly when a
+            % detailed atlas is still being assembled.
+            if ~isMatlabVer('<',[25,1]) || ~strcmp(resultfig.Visible,'on')
+                return
+            end
+            candidates = {};
+            for r = 1:numel(rois)
+                obj = rois{r};
+                if isa(obj,'ea_roi') && ~isempty(obj.toggleH) && ...
+                        ~isequal(obj.contextToggleH,obj.toggleH)
+                    candidates{end+1} = obj; %#ok<AGROW>
+                end
+            end
+            if isempty(candidates)
+                return
+            end
+
+            tooltips = cell(size(candidates));
+            for r = 1:numel(candidates)
+                tooltips{r} = get(candidates{r}.toggleH,'TooltipString');
+            end
+            cleanup = onCleanup(@() restoretooltips(candidates,tooltips));
+            for r = 1:numel(candidates)
+                % Temporary unique tooltips also distinguish repeated atlas
+                % names and left/right structures with identical labels.
+                set(candidates{r}.toggleH,'TooltipString',sprintf('ea_roi_context_%d',r));
+            end
+            try
+                jtoggles = findjobj(resultfig,'class','ToggleButton','nomenu');
+                for j = 1:numel(jtoggles)
+                    tooltip = char(jtoggles(j).getToolTipText);
+                    r = sscanf(tooltip,'ea_roi_context_%d');
+                    if isscalar(r) && r >= 1 && r <= numel(candidates) && ...
+                            strcmp(tooltip,sprintf('ea_roi_context_%d',r))
+                        obj = candidates{r};
+                        set(jtoggles(j),'MouseReleasedCallback',{@rightcallback,obj});
+                        jtoggles(j).setToolTipText(tooltips{r});
+                        obj.contextToggleH = obj.toggleH;
+                    end
+                end
+            catch
+                % Retain the established per-button lookup as a fallback
+                % for Java toolbar implementations with a different tree.
+            end
+            clear cleanup
+            for r = 1:numel(candidates)
+                if ~isequal(candidates{r}.contextToggleH,candidates{r}.toggleH)
+                    candidates{r}.breathelife;
+                end
+            end
+        end
     end
 
     methods
@@ -57,7 +116,8 @@ classdef ea_roi < handle
         function sobj = saveobj(obj)
             fn=fieldnames(obj);
             for f=1:length(fn)
-                if ~ismember(fn{f},{'plotFigureH','patchH','toggleH','htH','controlH'})
+                if ~ismember(fn{f},{'plotFigureH','patchH','toggleH','htH','controlH',...
+                        'listenersInitialized','contextToggleH'})
                     sobj.(fn{f})=obj.(fn{f});
                 end
             end
@@ -196,33 +256,22 @@ classdef ea_roi < handle
             end
         end
 
-        function breathelife(obj)
-            addlistener(obj,'Visible','PostSet',...
-                @changeevent);
-            addlistener(obj,'color','PostSet',...
-                @changeevent);
-            addlistener(obj,'usesolidcolor','PostSet',...
-                @changeevent);
-            addlistener(obj,'threshold','PostSet',...
-                @changeevent);
-            addlistener(obj,'smooth','PostSet',...
-                @changeevent);
-            addlistener(obj,'hullsimplify','PostSet',...
-                @changeevent);
-            addlistener(obj,'alpha','PostSet',...
-                @changeevent);
-            addlistener(obj,'SpecularColorReflectance','PostSet',...
-                @changeevent);
-            addlistener(obj,'SpecularExponent','PostSet',...
-                @changeevent);
-            addlistener(obj,'SpecularStrength','PostSet',...
-                @changeevent);
-            addlistener(obj,'DiffuseStrength','PostSet',...
-                @changeevent);
-            addlistener(obj,'AmbientStrength','PostSet',...
-                @changeevent);
-            addlistener(obj,'edgecolor','PostSet',...
-                @changeevent);
+        function breathelife(obj,bindJava)
+            if nargin < 2
+                bindJava = true;
+            end
+            % Loaded atlas ROIs may be attached more than once. A second
+            % listener would repeat every geometry rebuild and UI update.
+            if ~obj.listenersInitialized
+                observed = {'Visible','color','usesolidcolor','threshold',...
+                    'smooth','hullsimplify','alpha','SpecularColorReflectance',...
+                    'SpecularExponent','SpecularStrength','DiffuseStrength',...
+                    'AmbientStrength','edgecolor'};
+                for p = 1:numel(observed)
+                    addlistener(obj,observed{p},'PostSet',@changeevent);
+                end
+                obj.listenersInitialized = true;
+            end
 
             if isempty(obj.toggleH) && ~isempty(obj.htH)
                 obj.toggleH = uitoggletool(obj.htH);
@@ -230,18 +279,20 @@ classdef ea_roi < handle
 
             if ~isempty(obj.plotFigureH)
                 if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
-                    if isMatlabVer('<', [25,1])
+                    if bindJava && isMatlabVer('<', [25,1]) && ~isequal(obj.contextToggleH,obj.toggleH)
                         % Get the underlying java object using findobj
                         jtoggle = findjobj(obj.toggleH);
                         % Specify a callback to be triggered on any mouse release event
                         set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+                        obj.contextToggleH = obj.toggleH;
                     end
                 end
                 setappdata(obj.plotFigureH, 'addht', obj.htH);
             end
         end
 
-        function obj=update_roi(obj,evtnm) % update ROI
+        function [obj,geometryRebuilt]=update_roi(obj,evtnm) % update ROI
+            geometryRebuilt = false;
             if ~exist('evtnm','var')
                 evtnm='all';
             end
@@ -249,15 +300,67 @@ classdef ea_roi < handle
             if isempty(obj.patchH) && ~isempty(obj.plotFigureH)
                 obj.patchH = patch;
             end
+            if isempty(obj.toggleH) && ~isempty(obj.htH)
+                obj.toggleH = uitoggletool(obj.htH);
+            end
 
-            if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
+            % Visibility, appearance and toolbar state do not change the
+            % mesh. In particular, avoid resending large Faces/Vertices
+            % arrays to the renderer when checking an atlas item on/off.
+            if strcmp(evtnm,'Visible')
+                if ~isempty(obj.patchH)
+                    set(obj.patchH,'Visible',obj.Visible);
+                end
+                if ~isempty(obj.toggleH)
+                    set(obj.toggleH,'State',obj.Visible);
+                end
+                return
+            elseif ismember(evtnm,{'alpha','edgecolor','SpecularColorReflectance',...
+                    'SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength'})
+                if ~isempty(obj.patchH)
+                    patchProperty = evtnm;
+                    if strcmp(evtnm,'alpha')
+                        patchProperty = 'FaceAlpha';
+                    elseif strcmp(evtnm,'edgecolor') && isempty(obj.edgecolor)
+                        obj.edgecolor = 'none';
+                    end
+                    set(obj.patchH,patchProperty,obj.(evtnm));
+                end
+                return
+            elseif strcmp(evtnm,'color')
+                if ~isempty(obj.patchH) && (obj.binary || obj.usesolidcolor)
+                    set(obj.patchH,'FaceColor',obj.color);
+                end
+                if ~isempty(obj.toggleH)
+                    set(obj.toggleH,'CData',ea_get_icn('atlas',obj.color));
+                end
+                return
+            end
+
+            rebuildGeometry = ismember(evtnm,{'all','threshold','smooth','hullsimplify'});
+            if strcmp(evtnm,'initialize')
+                % Atlas indexes already contain both original and displayed
+                % meshes. The caller requests 'all' if mesh settings changed.
+                rebuildGeometry = ~isstruct(obj.fv) || ~isstruct(obj.sfv) || ...
+                    ~isfield(obj.fv,'vertices') || ~isfield(obj.fv,'faces') || ...
+                    ~isfield(obj.sfv,'vertices') || ~isfield(obj.sfv,'faces') || ...
+                    isempty(obj.sfv.vertices) || isempty(obj.sfv.faces);
+            end
+            geometryRebuilt = rebuildGeometry;
+            refreshColors = rebuildGeometry || strcmp(evtnm,'usesolidcolor') || ...
+                (strcmp(evtnm,'initialize') && ~(obj.binary || obj.usesolidcolor) && ...
+                size(obj.cdat,1) ~= size(obj.sfv.vertices,1));
+
+            if rebuildGeometry || (refreshColors && ~(obj.binary || obj.usesolidcolor))
                 img_size = size(obj.nii.img);
                 [X_vox, Y_vox, Z_vox] = meshgrid(1:img_size(1), 1:img_size(2), 1:img_size(3));
                 XYZ_mm = ea_vox2mm([X_vox(:), Y_vox(:), Z_vox(:)], obj.nii.mat);
                 X = reshape(XYZ_mm(:,1), size(X_vox));
                 Y = reshape(XYZ_mm(:,2), size(Y_vox));
                 Z = reshape(XYZ_mm(:,3), size(Z_vox));
-                
+            end
+
+            if rebuildGeometry
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
@@ -287,6 +390,9 @@ classdef ea_roi < handle
                     end
                 end
 
+            end
+
+            if refreshColors
                 if obj.binary || obj.usesolidcolor
                     obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
                         +randn(length(obj.sfv.vertices),1)*2)';
@@ -295,9 +401,23 @@ classdef ea_roi < handle
                         obj.colormap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
                     end
                     obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
-                    obj.cdat=round((ea_contrast(obj.cdat).*(length(gray)-1))+1);
+                    ncolors=size(obj.colormap,1);
+                    obj.cdat=round((ea_contrast(obj.cdat).*(ncolors-1))+1);
+                    obj.cdat(~isfinite(obj.cdat))=1;
+                    obj.cdat=max(1,min(ncolors,obj.cdat));
                     obj.cdat=obj.colormap(obj.cdat,:);
                 end
+            end
+
+            if strcmp(evtnm,'usesolidcolor')
+                if ~isempty(obj.patchH)
+                    if obj.binary || obj.usesolidcolor
+                        set(obj.patchH,'FaceColor',obj.color);
+                    else
+                        set(obj.patchH,'FaceVertexCData',obj.cdat,'FaceColor','interp');
+                    end
+                end
+                return
             end
 
             %co=ones(1,1,3);
@@ -362,6 +482,14 @@ end
 
 function ea_roivisible(~,~,onoff,obj)
     obj.Visible=onoff;
+end
+
+function restoretooltips(rois,tooltips)
+for r = 1:numel(rois)
+    if isgraphics(rois{r}.toggleH)
+        set(rois{r}.toggleH,'TooltipString',tooltips{r});
+    end
+end
 end
 
 function fn=stripext(fn)
