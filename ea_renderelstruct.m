@@ -14,18 +14,29 @@ end
 
 popts = options;
 if strcmp(options.leadprod,'group')
+    popts.nowrite = 1; % Group visualization must not change patient reconstructions.
     [popts.root, popts.patientname] = fileparts(options.patient_list{pt});
     popts.root = [popts.root, filesep];
-    recon = ea_regexpdir([options.patient_list{pt}, filesep, 'reconstruction'], ['^', popts.patientname,'_desc-reconstruction\.mat$'], 0, 'file');
-    popts.subj.recon.recon = recon{1};
-    popts = ea_detsides(popts);
+    % A saved group analysis already contains the geometry to display.
+    % Determine sides from that geometry, including mirrored electrodes;
+    % original patient folders may be unavailable or have different sides.
+    popts.sides = find(~cellfun(@isempty,elstruct(pt).coords_mm));
+    popts.subj.recon.recon = '';
+    reconDir = fullfile(options.patient_list{pt}, 'reconstruction');
+    if isfolder(reconDir)
+        recon = ea_regexpdir(reconDir, ['^', popts.patientname,'_desc-reconstruction\.mat$'], 0, 'file');
+        if ~isempty(recon)
+            popts.subj.recon.recon = recon{1};
+        end
+    end
 end
 
 elSide = popts.sides;
 
 for side=elSide
+    pobj = struct;
     try
-        pobj = ea_load_electrode(options.subj.recon.recon, side);
+        pobj = ea_load_electrode(popts.subj.recon.recon, side);
         pobj.hasPlanning = 1;
         pobj.showPlanning = strcmp(options.leadprod,'or');
     end

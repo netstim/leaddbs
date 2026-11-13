@@ -1,5 +1,9 @@
 function ea_save_electrode(obj)
 
+if isfield(obj.options,'nowrite') && obj.options.nowrite
+    return;
+end
+
 if isfile(obj.options.subj.recon.recon)
     d = load(obj.options.subj.recon.recon);
 else

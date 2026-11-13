@@ -173,7 +173,24 @@ for nativemni=nm % switch between native and mni space atlases.
     axis(atlasAxes,'off');
     axis(atlasAxes,'equal');
     caxis(atlasAxes,[1 64]);
+    % Keep the existing scene responsive without rendering the growing atlas
+    % at every drawnow. Individual object visibility remains independent.
+    atlasGroup=hggroup('Parent',atlasAxes,'Visible','off','Tag','LeadDBSAtlasGroup');
+    groupCleanup=onCleanup(@() revealatlasgroup(atlasGroup));
     lastDraw=tic;
+
+    indexFile=[atlasFolder,options.atlasset,filesep,'atlas_index.mat'];
+    fiberMeshes=[];
+    fiberCacheDirty=false;
+    fiberSignature=[];
+    hasFiberMeshes=any(cellfun(@(p) ischar(p) && strcmp(p,'fibers'),atlases.pixdim),'all');
+    if hasFiberMeshes
+        colormap(atlasAxes,gray);
+        [fiberMeshes,~,fiberSignature]=ea_atlasfiber_cache('load',indexFile,options.prefs.hullsimplify);
+        if ~iscell(fiberMeshes) || ~isequal(size(fiberMeshes),size(atlases.fv))
+            fiberMeshes=cell(size(atlases.fv));
+        end
+    end
 
     % iterate through atlases, visualize them and write out stats.
     for atlas=1:length(atlases.names)
@@ -196,6 +213,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
                 atlases.roi{atlas,side}.Tag=roiTag;
+                atlases.roi{atlas,side}.patchH=patch('Parent',atlasGroup);
                 % Apply mesh settings before attaching listeners. The index
                 % already contains the full surface; only regenerate it when
                 % the requested smoothing differs or the cache is missing.
@@ -212,7 +230,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
-                if ~any(atlases.roi{atlas,side}.nii.img(:)) % empty nucleus
+                if isempty(atlases.roi{atlas,side}.fv.vertices) && ...
+                        ~any(atlases.roi{atlas,side}.nii.img(:)) % empty nucleus
                     continue
                 end
                 clear centroid
@@ -237,6 +256,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 % Set atlaslabel
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(roiTag),...
+                    'Parent',atlasGroup,...
                     'Tag', roiTag,...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
@@ -309,7 +329,7 @@ for nativemni=nm % switch between native and mni space atlases.
                         visible='off';
                     end
                 end
-                atlassurfs{atlascnt,1}=patch('vertices',atlases.fv{atlas,side}.vertices,'faces',atlases.fv{atlas,side}.faces,...
+                atlassurfs{atlascnt,1}=patch('Parent',atlasGroup,'vertices',atlases.fv{atlas,side}.vertices,'faces',atlases.fv{atlas,side}.faces,...
                     'FaceVertexCData',atlases.fv{atlas,side}.facevertexcdata,'FaceColor','interp','EdgeColor','none',...
                     'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
 
@@ -329,21 +349,24 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlasmap(atlascnt,:)=[atlas,side];
                 atlascnt=atlascnt+1;
             elseif strcmp(atlases.pixdim{atlas,side}, 'fibers')
-                fv=atlases.fv{atlas,side};
-
-                if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
-                    % get to 700 faces
-                    simplify=700/length(fv.faces);
-                    if simplify < 1 % skip volumes with fewer than 700 faces
-                        fv=reducepatch(fv,simplify);
+                fv=fiberMeshes{atlas,side};
+                if isempty(fv)
+                    fv=atlases.fv{atlas,side};
+                    if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
+                        simplify=700/length(fv.faces);
+                        if simplify < 1
+                            fv=reducepatch(fv,simplify);
+                        end
+                    else
+                        if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                            fv=reducepatch(fv,options.prefs.hullsimplify);
+                        elseif options.prefs.hullsimplify>1
+                            simplify=options.prefs.hullsimplify/length(fv.faces);
+                            fv=reducepatch(fv,simplify);
+                        end
                     end
-                else
-                    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                        fv=reducepatch(fv,options.prefs.hullsimplify);
-                    elseif options.prefs.hullsimplify>1
-                        simplify=options.prefs.hullsimplify/length(fv.faces);
-                        fv=reducepatch(fv,simplify);
-                    end
+                    fiberMeshes{atlas,side}=fv;
+                    fiberCacheDirty=true;
                 end
 
                 rndfactor=0.2;
@@ -354,17 +377,13 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                cdat=repmat(atlases.colors(atlas),length(fv.vertices),1); % C-Data for surface
-
-                if size(cdat,2)==1
-                    if any(round(cdat)==0) % rounding error for large atlases.
-                        cdat(round(cdat)==0)=1;
-                    end
-                    cdat=atlases.colormap(round(cdat),:);
+                uniformColor=jetlist(max(1,round(atlases.colors(atlas))),:);
+                if rndfactor
+                    cdat=repmat(uniformColor,size(fv.vertices,1),1);
+                    cdat=cdat+randn(size(cdat))*rndfactor;
+                else
+                    cdat=[];
                 end
-
-                % add color jitter
-                cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
 
                 XYZ=atlases.XYZ{atlas,side};
                 pixdim=atlases.pixdim{atlas,side};
@@ -395,7 +414,11 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
                 if ~(atlases.types(atlas)>5)
-                    atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                    if rndfactor
+                        atlassurfs{atlascnt,1}=patch(fv,'Parent',atlasGroup,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                    else
+                        atlassurfs{atlascnt,1}=patch(fv,'Parent',atlasGroup,'FaceColor',uniformColor,'facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                    end
                 end
 
                 % Use fileparts to extract the name, fiber atlas files are
@@ -404,6 +427,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 fibTag=ea_stripext(fibTag);
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(fibTag),...
+                    'Parent',atlasGroup,...
                     'Tag', [fibTag,'_',sidestr{side}],...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
@@ -467,7 +491,11 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 if ~(atlases.types(atlas)>5)
-                    ea_spec_atlas(atlassurfs{atlascnt,1},atlases.names{atlas},atlases.colormap,setinterpol);
+                    if rndfactor
+                        ea_spec_atlas(atlassurfs{atlascnt,1},atlases.names{atlas},atlases.colormap,setinterpol);
+                    else
+                        ea_spec_atlas(atlassurfs{atlascnt,1},atlases.names{atlas},atlases.colormap,setinterpol,uniformColor);
+                    end
                 else
                     pobj.plotFigureH=resultfig;
                     pobj.color=atlasc;
@@ -476,6 +504,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     pobj.htH=ht;
                     obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
                     atlassurfs{atlascnt,1}=obj.patchH;
+                    obj.patchH.Parent=atlasGroup;
                     colorbuttons(atlascnt)=obj.toggleH;
                 end
 
@@ -566,6 +595,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
                     % Plot fibers
                     h = streamtube(fibcell{fibside}, options.prefs.d3.fiberwidth);
+                    set(h,'Parent',atlasGroup);
 
                     for fib=1:length(h)
                         if vals{fibside}(fib)>0
@@ -648,12 +678,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 'OnCallback', {@showfiber, negdiscfiberset},'OffCallback', {@hidefiber, negdiscfiberset}, 'State', 'on');
     end
 
-    % Bind ROI toolbar context menus in one pass after all buttons exist.
-    % Per-ROI Java lookup forces a redraw of the growing scene.
-    if isfield(atlases,'roi')
-        ea_roi.bindcontextmenus(atlases.roi,resultfig);
-    end
-
     % configure label button to work properly and hide labels as default.
     if ~atlases.discfibersonly % Doesn't exist for pure discfibers atlas
         atlabelsvisible([],[],atlaslabels(:),'off');
@@ -671,6 +695,16 @@ for nativemni=nm % switch between native and mni space atlases.
         setappdata(resultfig,'addht',ht);
         setappdata(resultfig,'labelbutton',labelbutton);
         setappdata(resultfig,'atlaslabels',atlaslabels);
+    end
+
+    revealatlasgroup(atlasGroup);
+    clear groupCleanup
+    % Bind context menus only after the complete atlas is ready to render.
+    if isfield(atlases,'roi')
+        ea_roi.bindcontextmenus(atlases.roi,resultfig);
+    end
+    if fiberCacheDirty
+        ea_atlasfiber_cache('save',indexFile,options.prefs.hullsimplify,fiberMeshes,[],fiberSignature);
     end
 
     % Remove empty toolbar
@@ -707,6 +741,20 @@ for nativemni=nm % switch between native and mni space atlases.
             save(statsFile,'ea_stats','-v7.3');
         end
     end
+end
+
+
+function revealatlasgroup(group)
+if isgraphics(group)
+    % Exporters and ROI tools expect patches to be direct axes children.
+    % Restore the original hierarchy and stacking order after construction.
+    ax=group.Parent;
+    children=group.Children(:);
+    previous=ax.Children(:);
+    previous(previous==group)=[];
+    set(children,'Parent',ax);
+    delete(group);
+    ax.Children=[children;previous];
 end
 
 

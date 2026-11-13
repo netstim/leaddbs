@@ -44,6 +44,13 @@ try
 end
 
 for side=options.sides
+    % Mirrored geometry comes from the contralateral source electrode.
+    % Apply the same contact mask to meshes and point clouds alike.
+    mside = side;
+    if isfield(elstruct,'name') && endsWith(elstruct.name,'_mirrored') && side <= 2
+        mside = 3-side;
+    end
+    activecontacts = find(elstruct.activecontacts{mside});
     try
         startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     catch
@@ -214,18 +221,7 @@ for side=options.sides
             if ~isempty(options.colorMacroContacts)
                 ea_specsurf(elrender(cnt),options.colorMacroContacts(con,:),1,'metal');
             else
-                if contains(nameprefix, '_mirrored_')
-                    % Mirror highlight contact
-                    if side == 1
-                        mside = 2;
-                    elseif side == 2
-                        mside = 1;
-                    end
-                else
-                    mside = side;
-                end
-
-                if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{mside})) % make active red contact without transparency
+                if options.d3.hlactivecontacts && ismember(con,activecontacts) % make active red contact without transparency
                     ea_specsurf(elrender(cnt),[0.8,0.2,0.2],1,'metal');
                 else
                     ea_specsurf(elrender(cnt),elspec.contact_color,aData,'metal');
@@ -301,11 +297,11 @@ for side=options.sides
             %maxval=1;
         end
         for cntct=1:elspec.numContacts-shifthalfup
-            if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
-                if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
+            if (options.d3.showactivecontacts && ismember(cntct,activecontacts)) || (options.d3.showpassivecontacts && ~ismember(cntct,activecontacts))
+                if options.d3.hlactivecontacts && ismember(cntct,activecontacts) % make active red contact without transparency
                     useedgecolor=[0.9,0.9,0.7];
                     ms=10;
-                elseif options.d3.hlactivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})) % make inactive grey and smaller contact without transparency
+                elseif options.d3.hlactivecontacts && ~ismember(cntct,activecontacts) % make inactive grey and smaller contact without transparency
                     useedgecolor='none';
                     ms=5;
                 else
@@ -330,7 +326,7 @@ for side=options.sides
                         usefacecolor=nan; % won't draw the point then.
                     end
                 else
-                    if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
+                    if options.d3.hlactivecontacts && ismember(cntct,activecontacts) % make active red contact without transparency
                         usefacecolor=[0.9,0.1,0.1];
                     else
                         if isfield(elstruct,'group')
