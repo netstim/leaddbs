@@ -318,6 +318,16 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             catch MEb0
                 warning('Lead-Connectome DWI preparation: automatic b0 export failed (%s). Proceeding with existing configuration.', MEb0.message);
             end
+
+            % Create the FA (DWI space) BEFORE the B0 coregistration, so that
+            % ea_coregpreopmr can carry it along with the B0 transform.
+            if ~isfile(fullfile(options.subj.subjDir, options.prefs.fa))
+                try
+                    ea_isolate_fa(options);
+                catch MEfa
+                    warning('Lead-Connectome DWI preparation: FA export failed (%s). Proceeding.', MEfa.message);
+                end
+            end
         end
 
         % Coregister all pre-op MRIs to anchor, including B0 
