@@ -471,12 +471,22 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
             isfield(options.subj, 'coregDir') && ...
             isfield(options.subj, 'coreg') && ...
             isfield(options.subj.coreg, 'anat') && ...
-            isfield(options.subj.coreg.anat, 'preop') && ...
-            ~isfield(options.subj.coreg.anat.preop, 'fa')
+            isfield(options.subj.coreg.anat, 'preop')
 
         faCoregPath = fullfile(options.subj.subjDir, options.prefs.fa2anat);
 
-        if isfile(faCoregPath)
+        % The 'fa' entry may already exist because an FA was also imported as
+        % an anatomical image (rawdata/anat/*_acq-fa.nii*). Its anchor-space
+        % file is never created (FA is not coregistered on its own), so the
+        % DWI-derived FA, which carries the B0 transform, replaces it.
+        hasOtherFa = isfield(options.subj.coreg.anat.preop, 'fa') && ...
+            ~strcmp(options.subj.coreg.anat.preop.fa, faCoregPath);
+        if hasOtherFa && isfile(faCoregPath)
+            fprintf('Using the DWI-derived FA (B0 transform) for coregistration checks instead of %s\n', ...
+                options.subj.coreg.anat.preop.fa);
+        end
+
+        if isfile(faCoregPath) && (~isfield(options.subj.coreg.anat.preop, 'fa') || hasOtherFa)
             faPreprocessedPath = fullfile(options.subj.subjDir, options.prefs.fa);
             [~, faCoregName]   = fileparts(faCoregPath);
             faCheckregFig      = fullfile(options.subj.coregDir, 'checkreg', [faCoregName, '.png']);

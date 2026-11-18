@@ -396,8 +396,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.checkreg
-        % Ensure B0/FA are injected into options even when coregistration was not rerun
-        if ~isfield(options.subj.coreg.anat.preop, 'b0') || ~isfield(options.subj.coreg.anat.preop, 'fa')
+        % Ensure B0/FA are injected into options even when coregistration was not rerun.
+        % Also when 'fa' points to a file that does not exist (e.g. an FA imported
+        % as anatomical image), so the DWI-derived FA (B0 transform) is used.
+        if ~isfield(options.subj.coreg.anat.preop, 'b0') || ~isfield(options.subj.coreg.anat.preop, 'fa') || ...
+                ~isfile(options.subj.coreg.anat.preop.fa)
             options = ea_getptopts(options.subj.subjDir, options);
         end
 
