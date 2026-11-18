@@ -52,6 +52,11 @@ if isfile(fa2anatPath)
     if isBIDS
         options.prefs.fa2anat = fa2anatRel;
     end
+    % Always add the existing FA to the options, so ea_gencheckregfigs and
+    % ea_checkreg (called next in ea_autocoord) include it. This matters on
+    % a first run: ea_getptopts ran before the coregistration, when the
+    % FA in anchor space (created together with the B0) did not exist yet.
+    options = add_fa_to_options(options, fa2anatPath, faPath);
     if ~fa_is_stale(fa2anatPath, options)
         return;
     end
@@ -109,30 +114,37 @@ try
     end
 
     % Inject FA into the options structs so that ea_gencheckregfigs and
-    % ea_checkreg (called next in ea_autocoord) show FA on this same run,
-    % without waiting for a second call to ea_getptopts.
-    if isfield(options, 'subj') && ...
-            isfield(options.subj, 'coreg') && ...
-            isfield(options.subj.coreg, 'anat') && ...
-            isfield(options.subj.coreg.anat, 'preop') && ...
-            ~isfield(options.subj.coreg.anat.preop, 'fa') && ...
-            isfield(options.subj, 'preproc') && ...
-            isfield(options.subj.preproc, 'anat') && ...
-            isfield(options.subj.preproc.anat, 'preop')
-
-        options.subj.coreg.anat.preop.fa   = fa2anatPath;
-        options.subj.preproc.anat.preop.fa = faPath;
-
-        if isfield(options.subj, 'coregDir') && ...
-                isfield(options.subj.coreg, 'checkreg') && ...
-                isfield(options.subj.coreg.checkreg, 'preop')
-            [~, faCoregName] = fileparts(fa2anatPath);
-            options.subj.coreg.checkreg.preop.fa = fullfile( ...
-                options.subj.coregDir, 'checkreg', [faCoregName, '.png']);
-        end
-    end
+    % ea_checkreg (called next in ea_autocoord) show FA on this same run.
+    options = add_fa_to_options(options, fa2anatPath, faPath);
 catch ME
     warning('ea_ensure_fa_and_fa2anat: Failed to apply transform to FA: %s', ME.message);
+end
+
+
+function options = add_fa_to_options(options, fa2anatPath, faPath)
+% Add the FA (anchor space) to the coreg/preproc/checkreg structs, the same
+% way ea_getptopts does, so it gets a checkreg figure and is reviewed.
+if ~isfile(fa2anatPath) || ...
+        ~isfield(options, 'subj') || ...
+        ~isfield(options.subj, 'coreg') || ...
+        ~isfield(options.subj.coreg, 'anat') || ...
+        ~isfield(options.subj.coreg.anat, 'preop') || ...
+        isfield(options.subj.coreg.anat.preop, 'fa') || ...
+        ~isfield(options.subj, 'preproc') || ...
+        ~isfield(options.subj.preproc, 'anat') || ...
+        ~isfield(options.subj.preproc.anat, 'preop')
+    return;
+end
+
+options.subj.coreg.anat.preop.fa   = fa2anatPath;
+options.subj.preproc.anat.preop.fa = faPath;
+
+if isfield(options.subj, 'coregDir') && ...
+        isfield(options.subj.coreg, 'checkreg') && ...
+        isfield(options.subj.coreg.checkreg, 'preop')
+    [~, faCoregName] = fileparts(fa2anatPath);
+    options.subj.coreg.checkreg.preop.fa = fullfile( ...
+        options.subj.coregDir, 'checkreg', [faCoregName, '.png']);
 end
 
 function [hit, method] = find_b0_t1_forward_transform(directory, options) %#ok<INUSD>
