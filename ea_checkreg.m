@@ -417,14 +417,7 @@ elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj
         ea_cprintf('CmdWinWarnings', 'CT coregistration has been rerun. Please also rerun brain shift correction!\n');
     end
 
-elseif is_fa_volume(currvol, options) % FA — rerun B0 coregistration, then reapply transform to FA
-    options.coregmr.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
-    % FA is not independently coregistered: it inherits the B0->T1 transform.
-    % Rerunning FA means rerunning B0 coregistration and then reapplying to FA.
-    options = ea_ensure_b0_coreg(options);
-    options = refresh_fa_after_b0_coreg(options);
-
-else % MR
+else % MR (including B0 and FA, see "other images" below)
     options.coregmr.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
 
     b0restanchor = getappdata(handles.leadfigure, 'b0restanchor');
@@ -456,6 +449,16 @@ else % MR
         % Override anchormodality
         options.subj.AnchorModality = handles.anchormod.String;
 
+        % FA is never coregistered on its own: it always gets the B0
+        % transform. Recomputing FA therefore means recomputing the B0
+        % (ea_coregpreopmr carries the FA along, refresh_fa_after_b0_coreg
+        % below updates its checkreg figure).
+        if is_fa_volume(currvol, options) && ...
+                isfield(options.subj.coreg.anat.preop, 'b0')
+            fprintf('\nFA follows the B0 coregistration: recomputing the B0 coregistration instead.\n');
+            currvol = options.subj.coreg.anat.preop.b0;
+        end
+
         session = regexp(currvol, '(?<=_ses-)(preop|postop)', 'match', 'once');
         modality = ea_getmodality(currvol);
 
@@ -485,7 +488,25 @@ else % MR
             % the B0->anchor transform.  When that transform is recomputed,
             % the existing FA-in-anchor image is stale and must be rebuilt.
             if strcmpi(modality, 'b0') || endsWith(lower(modality), '_b0')
-                options = refresh_fa_after_b0_coreg(options);
+                [options, faCoreg] = refresh_fa_after_b0_coreg(options);
+
+                % Make sure the (now unapproved) FA is offered for review
+                % right after the B0, even if it was approved (and thus
+                % left out of the list) when this window was opened.
+                if ~isempty(faCoreg) && isfile(faCoreg)
+                    checkregImages = getappdata(handles.leadfigure, 'checkregImages');
+                    if ~any(strcmp(checkregImages, faCoreg))
+                        b0Idx = find(strcmp(checkregImages, currvol), 1);
+                        if isempty(b0Idx)
+                            b0Idx = activevolume;
+                        end
+                        checkregImages = [checkregImages(1:b0Idx); {faCoreg}; checkregImages(b0Idx+1:end)];
+                        b0restanchor = getappdata(handles.leadfigure, 'b0restanchor');
+                        b0restanchor = [b0restanchor(1:b0Idx); {[]}; b0restanchor(b0Idx+1:end)];
+                        setappdata(handles.leadfigure, 'checkregImages', checkregImages);
+                        setappdata(handles.leadfigure, 'b0restanchor', b0restanchor);
+                    end
+                end
             end
         elseif strcmp(session, 'postop')
             % Override postop preproc and coreg fields and then run coregpostopmr
@@ -536,30 +557,32 @@ if strcmpi(name, 'FA') || strcmpi(name, 'fa2anat')
 end
 
 
-function options = refresh_fa_after_b0_coreg(options)
-% Reapply the newly computed B0->anchor transform to the FA map.
+function [options, fa2anatPath] = refresh_fa_after_b0_coreg(options)
+% After a B0 recompute: make sure the FA carries the new B0->anchor
+% transform, refresh its checkreg figure and mark it for review again.
+%
+% ea_coregpreopmr already coregisters the FA together with the B0 (same
+% call, same transform). ea_ensure_fa_and_fa2anat is only a fallback: it
+% keeps an FA that is up to date and rebuilds one that is older than the B0
+% (e.g. when the DWI-space FA did not exist yet during the B0 recompute).
 
-% ea_ensure_fa_and_fa2anat deliberately reuses an existing output, so
-% remove that output first to force application of the updated transform.
-if ~isfield(options, 'prefs') || ~isfield(options.prefs, 'fa2anat') || ...
-        isempty(options.prefs.fa2anat)
+[~, fa2anatPath] = ea_getfapaths(options);
+if isempty(fa2anatPath)
     return;
 end
 
-fa2anatPath = options.prefs.fa2anat;
-isAbsolutePath = startsWith(fa2anatPath, filesep) || ...
-    ~isempty(regexp(fa2anatPath, '^[A-Za-z]:[\\/]', 'once')) || ...
-    startsWith(fa2anatPath, '\\');
-if ~isAbsolutePath
-    fa2anatPath = fullfile(options.subj.subjDir, fa2anatPath);
-end
-
-ea_delete(fa2anatPath);
 options = ea_ensure_fa_and_fa2anat(options);
 
 if ~isfile(fa2anatPath)
-    warning('B0 coregistration was updated, but FA could not be regenerated with the new transform.');
+    warning('B0 coregistration was updated, but no FA in anchor space could be created.');
+    fa2anatPath = '';
     return;
+end
+
+b0Info = dir(options.subj.coreg.anat.preop.b0);
+faInfo = dir(fa2anatPath);
+if faInfo.datenum < b0Info.datenum - 2/86400
+    warning('B0 coregistration was updated, but the FA still has the OLD transform. Do not approve it; rerun the B0 coregistration.');
 end
 
 % Refresh the visual QC generated from the old FA resampling as well.
@@ -580,7 +603,7 @@ if isfile(options.subj.coreg.log.method)
     end
 end
 
-fprintf('FA was regenerated using the updated B0->anchor transform.\n');
+fprintf('FA checkreg figure refreshed for the updated B0->anchor transform.\n');
 
 
 function images = get_ordered_preop_coreg_images(options)

@@ -38,6 +38,11 @@ V.fname=[directory,options.prefs.fa];
 V.dt(1) = 16;
 spm_write_vol(V,FA);
 
-V.fname=[directory,options.prefs.b0];
-V.dt(1) = 16;
-spm_write_vol(V,Bo);
+% Only write the tensor-fit S0 as b0 if no b0 exists yet. An existing b0
+% (e.g. the mean b0 from ea_exportb0) is the image used for the B0->anchor
+% coregistration and must not be replaced by a different image.
+if ~isfile([directory,options.prefs.b0])
+    V.fname=[directory,options.prefs.b0];
+    V.dt(1) = 16;
+    spm_write_vol(V,Bo);
+end

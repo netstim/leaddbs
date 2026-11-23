@@ -26,25 +26,32 @@ if ismember('coreg', type)
         postop = struct;
     end
 
-    % Get paths of coregistered image
-    coregImage = [struct2cell(preop); struct2cell(postop)];
-
-    % Get paths of output figures
-    if isempty(struct2cell(preop)) && isempty(struct2cell(postop))
+    if isempty(fieldnames(preop)) && isempty(fieldnames(postop))
         ea_cprintf('CmdWinWarnings', 'No coregistration performed, checkcoreg shipped!\n');
         return;
-    elseif ~isempty(struct2cell(preop)) && ~isempty(struct2cell(postop))
-        checkregFigure = [struct2cell(options.subj.coreg.checkreg.preop); struct2cell(options.subj.coreg.checkreg.postop)];
-    elseif isempty(struct2cell(preop)) % Only one pre-op modality available
-        checkregFigure = struct2cell(options.subj.coreg.checkreg.postop);
-    elseif isempty(struct2cell(postop)) % Only one pre-op modality available
-        checkregFigure = struct2cell(options.subj.coreg.checkreg.preop);
     end
 
-    % Generate checkreg figures
-    for i=1:length(coregImage)
-        if isfile(coregImage{i})
-            ea_gencheckregpair(coregImage{i}, anchorImage, checkregFigure{i});
+    % Pair each coregistered image with its checkreg figure by modality
+    % name (not by position, which breaks as soon as one struct has an
+    % entry, e.g. b0 or fa, that the other one lacks).
+    sessions = {'preop', preop; 'postop', postop};
+    for s = 1:size(sessions, 1)
+        session = sessions{s, 1};
+        images = sessions{s, 2};
+        if ~isfield(options.subj.coreg.checkreg, session)
+            continue;
+        end
+        figures = options.subj.coreg.checkreg.(session);
+        modalities = fieldnames(images);
+        for m = 1:numel(modalities)
+            coregImage = images.(modalities{m});
+            if ~isfield(figures, modalities{m})
+                ea_cprintf('CmdWinWarnings', 'No checkreg figure path defined for %s (%s), skipped.\n', modalities{m}, session);
+                continue;
+            end
+            if isfile(coregImage)
+                ea_gencheckregpair(coregImage, anchorImage, figures.(modalities{m}));
+            end
         end
     end
 end

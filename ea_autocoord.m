@@ -318,6 +318,16 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             catch MEb0
                 warning('Lead-Connectome DWI preparation: automatic b0 export failed (%s). Proceeding with existing configuration.', MEb0.message);
             end
+
+            % Create the FA (DWI space) BEFORE the B0 coregistration, so that
+            % ea_coregpreopmr can carry it along with the B0 transform.
+            if ~isfile(fullfile(options.subj.subjDir, options.prefs.fa))
+                try
+                    ea_isolate_fa(options);
+                catch MEfa
+                    warning('Lead-Connectome DWI preparation: FA export failed (%s). Proceeding.', MEfa.message);
+                end
+            end
         end
 
         % Coregister all pre-op MRIs to anchor, including B0 
@@ -386,8 +396,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.checkreg
-        % Ensure B0/FA are injected into options even when coregistration was not rerun
-        if ~isfield(options.subj.coreg.anat.preop, 'b0') || ~isfield(options.subj.coreg.anat.preop, 'fa')
+        % Ensure B0/FA are injected into options even when coregistration was not rerun.
+        % Also when 'fa' points to a file that does not exist (e.g. an FA imported
+        % as anatomical image), so the DWI-derived FA (B0 transform) is used.
+        if ~isfield(options.subj.coreg.anat.preop, 'b0') || ~isfield(options.subj.coreg.anat.preop, 'fa') || ...
+                ~isfile(options.subj.coreg.anat.preop.fa)
             options = ea_getptopts(options.subj.subjDir, options);
         end
 
