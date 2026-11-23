@@ -10,9 +10,9 @@ anchor = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
 preopImage = rmfield(options.subj.preproc.anat.preop, options.subj.AnchorModality);
 coregImage = rmfield(options.subj.coreg.anat.preop, options.subj.AnchorModality);
 
-% FA is registered by applying the B0->T1 transform (ea_ensure_fa_and_fa2anat),
-% not by an independent coregistration here. Remove it from both structs to
-% keep cell array sizes equal and avoid re-registration.
+% FA is never coregistered on its own here: it is carried along with the B0
+% (same ea_coregimages call, same transform), see below. Remove it from both
+% structs to keep cell array sizes equal and avoid re-registration.
 if isfield(preopImage, 'fa'), preopImage = rmfield(preopImage, 'fa'); end
 if isfield(coregImage, 'fa'), coregImage = rmfield(coregImage, 'fa'); end
 moving = struct2cell(preopImage);
@@ -45,7 +45,40 @@ ea_mkdir(fullfile(options.subj.coregDir, 'transformations'));
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
 
-    affinefile = ea_coregimages(options, moving{i}, anchor, output{i},[],1);
+    % B0: apply the very same transform to the FA (DWI space) by passing it
+    % as 'otherfiles'. This works for every method, nonlinear included.
+    % The FA is processed in a temporary file and only renamed to its final
+    % (anchor space) name once the B0 coregistration succeeded, so a failed
+    % run never leaves a DWI-space FA under the anchor-space name.
+    otherfiles = {};
+    faCoreg = '';
+    if strcmpi(ea_getmodality(moving{i}), 'b0')
+        [faNative, faCoreg] = ea_getfapaths(options);
+        if isfile(faNative)
+            [faDir, faName, faExt] = fileparts(faCoreg);
+            ea_mkdir(faDir);
+            faTmp = fullfile(faDir, ['tmp_', faName, faExt]);
+            ea_delete(faTmp);
+            copyfile(faNative, faTmp);
+            otherfiles = {faTmp};
+        end
+    end
+
+    try
+        affinefile = ea_coregimages(options, moving{i}, anchor, output{i}, otherfiles, 1);
+    catch ME
+        ea_delete(otherfiles);
+        rethrow(ME);
+    end
+
+    if ~isempty(otherfiles)
+        movefile(otherfiles{1}, faCoreg, 'f');
+        otherfiles = {faCoreg};
+        % Log FA like any coregistered modality: method.fa = method used
+        % for the B0, approval.fa = 0 (the new FA has to be reviewed).
+        ea_dumpmethod(options, 'coreg', 'fa');
+        fprintf('FA coregistered with the B0->anchor transform: %s\n', faCoreg);
+    end
     %% save Transforms
     switch lower(options.coregmr.method)
         case lower({'ANTs (Avants 2008)', 'ANTs'})
@@ -90,6 +123,17 @@ for i=1:length(moving)
     nii = ea_load_nii(output{i});
     nii.img(abs(nii.img)<0.0001) = 0;
     ea_write_nii(nii);
+
+    % Write the FA after the B0, so the FA file is never older than the B0
+    % it belongs to (ea_ensure_fa_and_fa2anat uses this to detect stale FA).
+    for ofi = 1:length(otherfiles)
+        if isfile(otherfiles{ofi})
+            nii = ea_load_nii(otherfiles{ofi});
+            nii.img(isnan(nii.img)) = 0; % resampling can leave NaNs (outside DWI field of view)
+            nii.img(abs(nii.img)<0.0001) = 0;
+            ea_write_nii(nii);
+        end
+    end
 end
 
 if options.prefs.diary

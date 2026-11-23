@@ -46,12 +46,21 @@ else
     fa2anatRel  = options.prefs.fa2anat;
 end
 
-% If there is already a FA coregistration to anat
+% If there is already a FA coregistration to anat, reuse it unless it is
+% older than the coregistered B0 (i.e. the B0 transform changed since).
 if isfile(fa2anatPath)
     if isBIDS
         options.prefs.fa2anat = fa2anatRel;
     end
-    return;
+    % Always add the existing FA to the options, so ea_gencheckregfigs and
+    % ea_checkreg (called next in ea_autocoord) include it. This matters on
+    % a first run: ea_getptopts ran before the coregistration, when the
+    % FA in anchor space (created together with the B0) did not exist yet.
+    options = add_fa_to_options(options, fa2anatPath, faPath);
+    if ~fa_is_stale(fa2anatPath, options)
+        return;
+    end
+    fprintf('ea_ensure_fa_and_fa2anat: FA in anchor space is older than the coregistered B0. Rebuilding it.\n');
 end
 
 % Use the same anchor normalization will use; prenii_unnormalized can
@@ -86,10 +95,11 @@ end
 fprintf('ea_ensure_fa_and_fa2anat: Using anchor reference: %s\n', anatPath);
 
 % Find the B0->T1 forward transform 
-transform = find_b0_t1_forward_transform(directory, options);
+[transform, b0Method] = find_b0_t1_forward_transform(directory, options);
 if isempty(transform)
-    warning(['ea_ensure_fa_and_fa2anat: B0->T1 forward transform not found. ', ...
-             'Ensure B0 coregistration ran successfully.']);
+    warning(['ea_ensure_fa_and_fa2anat: No saved B0->anchor transform for the method used for the B0 ("%s"). ', ...
+             'The FA cannot be rebuilt on its own. Please rerun the B0 coregistration ', ...
+             '(the FA is carried along with it).'], b0Method);
     return;
 end
 fprintf('ea_ensure_fa_and_fa2anat: Using B0->T1 transform: %s\n', transform);
@@ -104,146 +114,107 @@ try
     end
 
     % Inject FA into the options structs so that ea_gencheckregfigs and
-    % ea_checkreg (called next in ea_autocoord) show FA on this same run,
-    % without waiting for a second call to ea_getptopts.
-    if isfield(options, 'subj') && ...
-            isfield(options.subj, 'coreg') && ...
-            isfield(options.subj.coreg, 'anat') && ...
-            isfield(options.subj.coreg.anat, 'preop') && ...
-            ~isfield(options.subj.coreg.anat.preop, 'fa') && ...
-            isfield(options.subj, 'preproc') && ...
-            isfield(options.subj.preproc, 'anat') && ...
-            isfield(options.subj.preproc.anat, 'preop')
-
-        options.subj.coreg.anat.preop.fa   = fa2anatPath;
-        options.subj.preproc.anat.preop.fa = faPath;
-
-        if isfield(options.subj, 'coregDir') && ...
-                isfield(options.subj.coreg, 'checkreg') && ...
-                isfield(options.subj.coreg.checkreg, 'preop')
-            [~, faCoregName] = fileparts(fa2anatPath);
-            options.subj.coreg.checkreg.preop.fa = fullfile( ...
-                options.subj.coregDir, 'checkreg', [faCoregName, '.png']);
-        end
-    end
+    % ea_checkreg (called next in ea_autocoord) show FA on this same run.
+    options = add_fa_to_options(options, fa2anatPath, faPath);
 catch ME
     warning('ea_ensure_fa_and_fa2anat: Failed to apply transform to FA: %s', ME.message);
 end
 
-function hit = find_b0_t1_forward_transform(directory, options)
-% Return full path to a B0->T1 forward transform file, or '' if none found.
+
+function options = add_fa_to_options(options, fa2anatPath, faPath)
+% Add the FA (anchor space) to the coreg/preproc/checkreg structs, the same
+% way ea_getptopts does, so it gets a checkreg figure and is reviewed.
+if ~isfile(fa2anatPath) || ...
+        ~isfield(options, 'subj') || ...
+        ~isfield(options.subj, 'coreg') || ...
+        ~isfield(options.subj.coreg, 'anat') || ...
+        ~isfield(options.subj.coreg.anat, 'preop') || ...
+        ~isfield(options.subj, 'preproc') || ...
+        ~isfield(options.subj.preproc, 'anat') || ...
+        ~isfield(options.subj.preproc.anat, 'preop')
+    return;
+end
+
+% Already the DWI-derived FA: nothing to do. Any other 'fa' entry (e.g. an FA
+% imported as anatomical image, whose anchor-space file never exists) is
+% replaced by the DWI-derived FA, which carries the B0 transform.
+if isfield(options.subj.coreg.anat.preop, 'fa') && ...
+        strcmp(options.subj.coreg.anat.preop.fa, fa2anatPath)
+    return;
+end
+
+options.subj.coreg.anat.preop.fa   = fa2anatPath;
+options.subj.preproc.anat.preop.fa = faPath;
+
+if isfield(options.subj, 'coregDir') && ...
+        isfield(options.subj.coreg, 'checkreg') && ...
+        isfield(options.subj.coreg.checkreg, 'preop')
+    [~, faCoregName] = fileparts(fa2anatPath);
+    options.subj.coreg.checkreg.preop.fa = fullfile( ...
+        options.subj.coregDir, 'checkreg', [faCoregName, '.png']);
+end
+
+function [hit, method] = find_b0_t1_forward_transform(directory, options) %#ok<INUSD>
+% Return the B0->anchor forward transform written by the B0 coregistration,
+% or '' if the method used for the B0 does not save a reusable transform.
 %
-% Strategy:
-%  1. Use options.subj.coreg.transform.b0.forwardBaseName directly
-%     (most reliable — already populated by ea_coregpreopmr).
-%  2. Fall back to a scored file-system search in coregistration/transformations/.
+% The method is taken from the coregistration log (method.b0), i.e. the
+% method that actually produced the current B0 — not the method currently
+% selected in the GUI. Transform files left over from other methods are
+% never used.
 
 hit = '';
 
-% Extract method string
-if isstruct(options) && isfield(options, 'coregmr') && isfield(options.coregmr, 'method')
+% 1. Method actually used for the B0
+method = '';
+if isfield(options, 'subj') && isfield(options.subj, 'coreg') && ...
+        isfield(options.subj.coreg, 'log') && isfile(options.subj.coreg.log.method)
+    try
+        json = loadjson(options.subj.coreg.log.method);
+        if isfield(json, 'method') && isfield(json.method, 'b0')
+            method = json.method.b0;
+        end
+    catch
+    end
+end
+if isempty(method) && isfield(options, 'coregmr') && isfield(options.coregmr, 'method')
     method = options.coregmr.method;
-elseif ischar(options)
-    method = options;
-else
-    method = '';
-end
-methodHint = lower(regexp(method, '^[^\s\(]+', 'match', 'once'));
-
-% ── 1. Struct-based lookup (preferred) ───────────────────────────────────
-if isstruct(options) && isfield(options, 'subj') && ...
-        isfield(options.subj, 'coreg') && ...
-        isfield(options.subj.coreg, 'transform') && ...
-        isfield(options.subj.coreg.transform, 'b0')
-
-    base = options.subj.coreg.transform.b0.forwardBaseName;
-
-    % Map method string to the transform file suffix saved by ea_coregpreopmr
-    switch methodHint
-        case 'spm'
-            suffixes = {'spm.mat'};
-        case 'ants'
-            suffixes = {'ants.mat'};   % ITK affine – correct input for antsApplyTransforms
-        case {'flirt', 'flirtbbr', 'bbr', 'fsl'}
-            suffixes = {'flirt.mat'};
-        case 'brainsfit'
-            suffixes = {'brainsfit.mat'};
-        otherwise
-            suffixes = {'spm.mat', 'ants.mat', 'flirt.mat', 'brainsfit.mat'};
-    end
-
-    for k = 1:numel(suffixes)
-        candidate = [base, suffixes{k}];
-        if isfile(candidate)
-            hit = candidate;
-            return;
-        end
-    end
 end
 
-% ── 2. File-system search fallback ───────────────────────────────────────
-searchDir = fullfile(directory, 'coregistration', 'transformations');
-if ~isfolder(searchDir), return; end
-
-exts  = {'*.mat', '*.h5', '*.txt'};
-cands = {};
-for e = 1:numel(exts)
-    d = dir(fullfile(searchDir, '**', exts{e}));
-    for k = 1:numel(d)
-        cands{end+1} = fullfile(d(k).folder, d(k).name); %#ok<AGROW>
-    end
-end
-if isempty(cands), return; end
-
-bestScore = -Inf;
-for i = 1:numel(cands)
-    [~, name, ext] = fileparts(cands{i});
-    fname = lower([name, ext]);
-
-    % Must reference both B0/DWI and T1/anat side
-    hasB0   = contains(fname, 'b0') || contains(fname, 'dwi');
-    hasAnat = contains(fname, 't1') || contains(fname, 'anat') || ...
-              contains(fname, 'anchor') || contains(fname, 'native');
-    if ~hasB0 || ~hasAnat, continue; end
-
-    % Exclude inverse transforms
-    isInverse = startsWith(fname, 'anat') || startsWith(fname, 't1') || ...
-                contains(fname, 'from-anchor') || contains(fname, 'from-t1');
-    if isInverse, continue; end
-
-    % Exclude the ants44 / spm44 / flirt44 convenience copies — those are
-    % MATLAB-format 4x4 matrices, not suitable inputs for the apply functions.
-    if regexp(fname, '\d+\.mat$'), continue; end
-
-    score = 4; % baseline
-
-    if ~isempty(methodHint) && contains(fname, methodHint)
-        score = score + 1;
-    end
-
-    % For MATLAB-native .mat files (SPM), verify they contain a 4x4 matrix.
-    % ANTs ITK .mat files are binary and cannot be loaded by MATLAB — don't
-    % penalise them; their name already identifies them.
-    if strcmp(ext, '.mat') && ~contains(fname, 'ants')
-        try
-            S = load(cands{i});
-            has4x4 = any(structfun(@(v) isnumeric(v) && isequal(size(v), [4 4]), S));
-            if has4x4
-                score = score + 1;
-            else
-                score = score - 2;
-            end
-        catch
-            score = score - 3;
-        end
-    end
-
-    if score > bestScore
-        bestScore = score;
-        hit = cands{i};
-    end
+% 2. Suffix written by ea_coregpreopmr for this method. Methods without a
+% saved transform (FLIRT BBR, hybrids, ANTs nonlinear) return ''.
+switch lower(method)
+    case lower({'ANTs (Avants 2008)', 'ANTs'})
+        suffix = 'ants.mat';
+    case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
+        suffix = 'flirt.mat';
+    case lower({'SPM (Friston 2007)', 'SPM'})
+        suffix = 'spm.mat';
+    case lower({'BRAINSFit (Johnson 2007)', 'BRAINSFit'})
+        suffix = 'brainsfit.mat';
+    otherwise
+        return;
 end
 
-if bestScore < 4
-    hit = '';
+if ~isfield(options.subj.coreg, 'transform') || ~isfield(options.subj.coreg.transform, 'b0')
+    return;
 end
+candidate = [options.subj.coreg.transform.b0.forwardBaseName, suffix];
+if isfile(candidate)
+    hit = candidate;
+end
+
+
+function stale = fa_is_stale(fa2anatPath, options)
+% FA in anchor space is stale when it is older than the coregistered B0.
+stale = false;
+if ~isfield(options, 'subj') || ~isfield(options.subj, 'coreg') || ...
+        ~isfield(options.subj.coreg.anat, 'preop') || ...
+        ~isfield(options.subj.coreg.anat.preop, 'b0') || ...
+        ~isfile(options.subj.coreg.anat.preop.b0)
+    return;
+end
+faInfo = dir(fa2anatPath);
+b0Info = dir(options.subj.coreg.anat.preop.b0);
+% 2 s tolerance for file system time stamp resolution
+stale = faInfo.datenum < b0Info.datenum - 2/86400;

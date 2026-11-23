@@ -91,6 +91,13 @@ switch lower(options.coregmr.method)
     case lower({'ANTs Nonlinear Coregistration', 'ANTsNonLinear'})
         transforms = ea_ants_nonlinear_coreg(fixed, moving, ofile, ...
             options.prefs.machine.normsettings, 'NULL', 'NULL', 'ea_antspreset_ants_wiki');
+
+        % Apply the same (nonlinear) transform to 'otherfiles' before the
+        % transform files are deleted, as the linear methods do.
+        for ofi = 1:length(otherfiles)
+            ea_ants_apply_transforms(options, otherfiles{ofi}, otherfiles{ofi}, 0, fixed, transforms{1}, 'Linear');
+        end
+
         ea_delete(transforms);
     otherwise
         warning('Coregistrion method not recognized...');
