@@ -119,8 +119,10 @@ try
         options.subj.preproc.anat.preop.fa = faPath;
 
         if isfield(options.subj, 'coregDir') && ...
-                isfield(options.subj.coreg, 'checkreg') && ...
-                isfield(options.subj.coreg.checkreg, 'preop')
+                isfield(options.subj.coreg, 'checkreg')
+            if ~isfield(options.subj.coreg.checkreg, 'preop')
+                options.subj.coreg.checkreg.preop = struct;
+            end
             [~, faCoregName] = fileparts(fa2anatPath);
             options.subj.coreg.checkreg.preop.fa = fullfile( ...
                 options.subj.coregDir, 'checkreg', [faCoregName, '.png']);

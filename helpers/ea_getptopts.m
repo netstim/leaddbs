@@ -429,39 +429,47 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
 
         b0PreprocessedPath = fullfile(options.subj.subjDir, options.prefs.b0);
 
-        coregAnatDir      = fullfile(options.subj.coregDir, 'anat');
-        coregTransformDir = fullfile(options.subj.coregDir, 'transformations');
-        coregCheckregDir  = fullfile(options.subj.coregDir, 'checkreg');
+        % Default prefs always define b0.nii. Only register B0 once that
+        % volume exists, otherwise checkreg generation looks up a preop
+        % figure path that was never created.
+        if isfile(b0PreprocessedPath)
+            coregAnatDir      = fullfile(options.subj.coregDir, 'anat');
+            coregTransformDir = fullfile(options.subj.coregDir, 'transformations');
+            coregCheckregDir  = fullfile(options.subj.coregDir, 'checkreg');
 
-        b0CoregPath   = fullfile(coregAnatDir, ...
-            ['sub-', subjId, '_ses-preop_space-anchorNative_b0.nii']);
-        fwdBase       = fullfile(coregTransformDir, ...
-            ['sub-', subjId, '_from-DWI_to-anchorNative_desc-']);
-        invBase       = fullfile(coregTransformDir, ...
-            ['sub-', subjId, '_from-anchorNative_to-DWI_desc-']);
-        [~, b0CoregName] = fileparts(b0CoregPath);
-        b0CheckregFig = fullfile(coregCheckregDir, [b0CoregName, '.png']);
+            b0CoregPath   = fullfile(coregAnatDir, ...
+                ['sub-', subjId, '_ses-preop_space-anchorNative_b0.nii']);
+            fwdBase       = fullfile(coregTransformDir, ...
+                ['sub-', subjId, '_from-DWI_to-anchorNative_desc-']);
+            invBase       = fullfile(coregTransformDir, ...
+                ['sub-', subjId, '_from-anchorNative_to-DWI_desc-']);
+            [~, b0CoregName] = fileparts(b0CoregPath);
+            b0CheckregFig = fullfile(coregCheckregDir, [b0CoregName, '.png']);
 
-        % Preprocessing source (input to ea_coregpreopmr)
-        if isfield(options.subj, 'preproc') && ...
-                isfield(options.subj.preproc, 'anat') && ...
-                isfield(options.subj.preproc.anat, 'preop')
-            options.subj.preproc.anat.preop.b0 = b0PreprocessedPath;
-        end
+            % Preprocessing source (input to ea_coregpreopmr)
+            if isfield(options.subj, 'preproc') && ...
+                    isfield(options.subj.preproc, 'anat') && ...
+                    isfield(options.subj.preproc.anat, 'preop')
+                options.subj.preproc.anat.preop.b0 = b0PreprocessedPath;
+            end
 
-        % Coregistered output path
-        options.subj.coreg.anat.preop.b0 = b0CoregPath;
+            % Coregistered output path
+            options.subj.coreg.anat.preop.b0 = b0CoregPath;
 
-        % Transform base names
-        if isfield(options.subj.coreg, 'transform')
-            options.subj.coreg.transform.b0.forwardBaseName = fwdBase;
-            options.subj.coreg.transform.b0.inverseBaseName = invBase;
-        end
+            % Transform base names
+            if isfield(options.subj.coreg, 'transform')
+                options.subj.coreg.transform.b0.forwardBaseName = fwdBase;
+                options.subj.coreg.transform.b0.inverseBaseName = invBase;
+            end
 
-        % Checkreg figure path
-        if isfield(options.subj.coreg, 'checkreg') && ...
-                isfield(options.subj.coreg.checkreg, 'preop')
-            options.subj.coreg.checkreg.preop.b0 = b0CheckregFig;
+            % Checkreg figure path. A single pre-op anchor leaves this field
+            % unset in BIDSFetcher, so create it with the B0 entry.
+            if isfield(options.subj.coreg, 'checkreg')
+                if ~isfield(options.subj.coreg.checkreg, 'preop')
+                    options.subj.coreg.checkreg.preop = struct;
+                end
+                options.subj.coreg.checkreg.preop.b0 = b0CheckregFig;
+            end
         end
     end
 
@@ -489,8 +497,10 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
 
             options.subj.coreg.anat.preop.fa = faCoregPath;
 
-            if isfield(options.subj.coreg, 'checkreg') && ...
-                    isfield(options.subj.coreg.checkreg, 'preop')
+            if isfield(options.subj.coreg, 'checkreg')
+                if ~isfield(options.subj.coreg.checkreg, 'preop')
+                    options.subj.coreg.checkreg.preop = struct;
+                end
                 options.subj.coreg.checkreg.preop.fa = faCheckregFig;
             end
         end
