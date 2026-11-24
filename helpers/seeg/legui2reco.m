@@ -99,18 +99,39 @@ for ii = 1:length(el_names)
             el_names{ii}, numel(el_idx));
         continue;
     end
-    native_coords = ElecXYZRaw(el_idx, :);
+      native_coords = ElecXYZProjRaw(el_idx, :);
 %     proj_coords   = ElecXYZProjRaw(el_idx, :);
 %     mni_coords    = ElecXYZMNIRaw(el_idx, :);
 
-    % Decide start contact: lateral vs vertical
-    if abs(max(native_coords(:,1)) - min(native_coords(:,1))) > 10
-        [~, start_idx] = max(abs(native_coords(:,1)));
-    else
-        [~, start_idx] = max(native_coords(:,3));
+%     % Decide start contact: lateral vs vertical
+%     if abs(max(native_coords(:,1)) - min(native_coords(:,1))) > 10
+%         [~, start_idx] = max(abs(native_coords(:,1)));
+%     else
+%         [~, start_idx] = max(native_coords(:,3));
+%     end
+%     d = sqrt(sum((native_coords - native_coords(start_idx,:)).^2, 2));
+%     [~, sort_idx] = sort(d, 'descend');
+
+% Sort contacts by their assigned label number
+contactLabels = string(ElecMapRaw(el_idx, 1));
+contactNums = nan(numel(contactLabels), 1);
+
+for k = 1:numel(contactLabels)
+    token = regexp(char(contactLabels(k)), '\d+$', 'match', 'once');
+    if ~isempty(token)
+        contactNums(k) = str2double(token);
     end
-    d = sqrt(sum((native_coords - native_coords(start_idx,:)).^2, 2));
-    [~, sort_idx] = sort(d, 'descend');
+end
+
+% Stop if numbering is missing, duplicated, or nonsequential
+n = numel(contactNums);
+if any(~isfinite(contactNums)) || ...
+        ~isequal(sort(contactNums(:)), (1:n)')
+    error('Invalid contact numbering for shaft %s', el_names{ii});
+end
+
+[~, sort_idx] = sort(contactNums);
+
 
     % Fill coordinates
     reco.native.coords_mm{ii} = native_coords(sort_idx, :);

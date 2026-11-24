@@ -1,125 +1,125 @@
-function [NiiFileOut,FlipB] = LeG_rotateImg2Standard(NiiFile,varargin)
-%Performs 90 deg rotations to place image in standard space with dim1 (x ->
-%saggital plane), dim2 (y -> coronal plane), dim3 (z -> axial plane). Finds
-%matrix to transform nifti affine matrix to identity matrix with 1st dim
-%mirrored ([-1 0 0; 0 1 0; 0 0 1]). Saves with "sd" prefix.
+
+function [NiiFileOut, FlipB] = LeG_rotateImg2Standard(NiiFile, varargin)
+% Reorient a NIfTI image to the orientation expected by LeGUI:
+% voxel dimension 1 -> negative world X
+% voxel dimension 2 -> positive world Y
+% voxel dimension 3 -> positive world Z
 %
-%Tyler Davis
-%20220310
+% IMPORTANT:
+% Permutes/flips voxel data and updates the affine consistently.
+% Preserves the physical world position of every voxel.
+% Does not modify the input image.
+%
+% Output: sd-prefixed NIfTI, plus indicator of X-axis reversal.
 
-imgInfo = spm_vol(NiiFile);
-img = spm_read_vols(imgInfo);
-imgSize = size(img);
-imgCenter = round(imgSize/2);
-imgScale = sqrt(sum(imgInfo.mat(1:3,1:3).^2));
-% imgCenterMM = imgCenter.*imgScale;
+    V = spm_vol(NiiFile);
+    img = spm_read_vols(V);
 
-% imgInfoNew = imgInfo;
+    oldMat = V.mat;
+    A = oldMat(1:3,1:3);
+    oldSize = size(img);
+    oldSize(end+1:3) = 1;
 
-[path,file,ext] = fileparts(imgInfo.fname);
-if isempty(regexp(file,'^sd','once'))
-    imgInfo.fname = fullfile(path,['sd',file,ext]);
-%     imgInfoNew.fname = fullfile(path,['nw',file,ext]);
-end
+    % Desired voxel directions in world coordinates
+    desiredSigns = [-1, 1, 1];
 
-%%%%%%%%%%%%%%%% Pre-rotation %%%%%%%%%%%%%%%%
-% x = imgInfo.mat(1:3,1); [~,xi] = max(abs(x)); xs = sign(x(xi));
-% y = imgInfo.mat(1:3,2); [~,yi] = max(abs(y)); ys = sign(y(yi));
-% z = imgInfo.mat(1:3,3); [~,zi] = max(abs(z)); zs = sign(z(zi));
-% 
-% nmat = zeros(4); %new (desired) matrix
-% nmat(xi,1) = imgScale(1)*xs;
-% nmat(yi,2) = imgScale(2)*ys;
-% nmat(zi,3) = imgScale(3)*zs;
-% nmat(1,4) = imgCenterMM(1)*sign(imgInfo.mat(1,4));
-% nmat(2,4) = imgCenterMM(2)*sign(imgInfo.mat(2,4));
-% nmat(3,4) = imgCenterMM(3)*sign(imgInfo.mat(3,4));
-% nmat(4,4) = 1;
-% 
-% % rmat = nmat\imgInfo.mat; %mapping from imgInfo.mat into nmat (vox2vox)
-% 
-% flags.mask = 1;
-% flags.interp = 4; %4th order bspline
-% flags.which = [1,0];
-% flags.wrap = [0,0,0];
-% flags.prefix = '';
-% 
-% imgInfo.mat(1:3,4) = nmat(1:3,4); %might want the translations to be the same and new matrix
-% imgInfoNew.mat = nmat; %write desired matrix to header
-% 
-% disp([imgInfo.mat,nan(4,1),nmat]);
-% mmvox = sqrt(sum((imgInfo.mat*ones(4,1)-(imgInfo.mat*(diag(ones(1,4))+1))).^2)); %calculating distance in mm between adjacent voxels along each dimension
-% mmvoxnew = sqrt(sum((nmat*ones(4,1)-(nmat*(diag(ones(1,4))+1))).^2));
-% disp([mmvox(1:3),nan,mmvoxnew(1:3)])
-% 
-% spm_write_vol(imgInfo,img); %create the nifti file (sdMR.nii) with the original matrix
-% spm_write_vol(imgInfoNew,img); %create the nifti file (orMR.nii) with the new matrix
-% 
-% P(1) = {[imgInfoNew.fname,',1']}; %contains the desired orientation
-% P(2) = {[imgInfo.fname,',1']}; %contains the sd prefix and the original orientation (this one is resliced)
-% 
-% fHProg = findobj('tag','Interactive');
-% if isempty(fHProg)
-%     fHProg = figure('tag','Interactive'); %progress figure
-% end
-% spm_reslice(P,flags);
-% 
-% imgInfo = spm_vol(imgInfo.fname);
-% img = spm_read_vols(imgInfo);
-% 
-% nSize = size(img);
-% nScale = sqrt(sum(imgInfo.mat(1:3,1:3).^2));
-% if any(nSize~=imgSize)||any(round(nScale,4)~=round(imgScale,4))||any(any(round(imgInfo.mat,4)~=round(nmat,4)))
-%     msgbox('Pre-rotation failed in LeG_rotateImg2Standard');
-% end
-% delete(imgInfoNew.fname);  
-% 
-% close(fHProg); pause(0.1);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Determine which voxel axis corresponds to each world axis.
+    axisLength = sqrt(sum(A.^2,1));
 
-
-%Performing 90 deg rotations to put in standard space
-eyemat = eye(4); 
-eyemat(1,1) = -1;
-rmat = imgInfo.mat\eyemat; %imgInfo.mat*rmat = eyemat (this might be reversed - eyemat\imgInfo.mat is voxvox transform from imgInfo to eyemat)
-b = spm_imatrix(rmat);
-rvec = b(4:6);
-
-imgR = img;
-nrot = round(rvec/(pi/2)); %number of rotations
-rvec = nrot*(pi/2); %rounded to nearest 90 deg rotation
-for m=1:3 %spm order (shear, scale, rotation, translation)
-    pmat = [setdiff(1:3,m),m];
-    if nrot(m)~=0
-        imgR = permute(imgR,pmat);
-        imgR = rot90(imgR,nrot(m));
-        imgR = ipermute(imgR,pmat);
+    if any(~isfinite(axisLength)) || any(axisLength <= 0)
+        error('Invalid input NIfTI affine.');
     end
+
+    dirs = A ./ axisLength;
+
+    [strength, oldAxis] = max(abs(dirs), [], 2);
+    oldAxis = oldAxis(:)';
+
+    % This method is intended for approximately axis-aligned
+    % images. Oblique images require a different strategy.
+    if numel(unique(oldAxis)) ~= 3 || any(strength < 0.98)
+        error(['Image is oblique or has ambiguous axes. ' ...
+               'Cannot safely reorient using 90-degree rotations.']);
+    end
+
+    % Reorder data so dimensions correspond to world X,Y,Z.
+    imgR = permute(img, oldAxis);
+
+    % T maps NEW voxel coordinates back to OLD voxel coordinates.
+    % SPM uses 1-based voxel indexing.
+    T = zeros(4);
+    T(4,4) = 1;
+
+    FlipB = false;
+
+    for k = 1:3
+        j = oldAxis(k);
+
+        currentSign = sign(A(k,j));
+        needsFlip = currentSign ~= desiredSigns(k);
+
+        if needsFlip
+            imgR = flip(imgR, k);
+
+            T(j,k) = -1;
+            T(j,4) = oldSize(j) + 1;
+        else
+            T(j,k) = 1;
+        end
+
+        if k == 1
+            FlipB = needsFlip;
+        end
+    end
+
+    % Update affine using exactly the same voxel transform.
+    newMat = oldMat * T;
+
+    % Sanity check: physical voxel positions must be preserved.
+    newSize = size(imgR);
+    newSize(end+1:3) = 1;
+
+    testVox = [
+        1, 1, 1;
+        newSize(1), 1, 1;
+        1, newSize(2), 1;
+        1, 1, newSize(3);
+        newSize(1:3)
+    ];
+
+    newVox = [testVox, ones(size(testVox,1),1)]';
+
+    oldWorld = oldMat * T * newVox;
+    newWorld = newMat * newVox;
+
+    err = max(abs(oldWorld(:) - newWorld(:)));
+
+    if err > 1e-6
+        error('Reorientation validation failed.');
+    end
+
+    % Save as sd* without modifying the original.
+    [folder, name, ext] = fileparts(V.fname);
+
+    if startsWith(name, 'sd')
+        error('Input already has sd prefix: %s', V.fname);
+    end
+
+    NiiFileOut = fullfile(folder, ['sd', name, ext]);
+
+    if isfile(NiiFileOut)
+        error('Output already exists: %s', NiiFileOut);
+    end
+
+    V.fname = NiiFileOut;
+    V.mat = newMat;
+    V.dim = newSize(1:3);
+
+    spm_write_vol(V, imgR);
+
+    fprintf('\nReorientation completed.\n');
+    fprintf('X-axis flip applied: %d\n', FlipB);
+    fprintf('Voxel/world coordinate error: %.3g mm\n', err);
+    fprintf('Output: %s\n', NiiFileOut);
+
 end
-
-b0 = zeros(1,12);
-b0(4:6) = rvec;
-b0(7:9) = 1;
-rmat0 = spm_matrix(b0); %this is now the rotation matrix rounded to nearest 90 deg
-
-trans = abs((imgCenter.*imgScale)*rmat0(1:3,1:3)); trans(2:3) = -trans(2:3);
-scl = abs(imgScale*rmat0(1:3,1:3)); scl(1) = -scl(1);
-
-eyemat = eye(4);
-eyemat(1:3,1:3) = diag(scl);
-eyemat(1:3,4) = trans;
-
-%%%%%%%%%%%%%%%%%%%%% check if a flip is needed %%%%%%%%%%%%%%%%%%%%%
-imat = imgInfo.mat*rmat0;
-x = imat(1:3,1); [~,xi] = max(abs(x)); xs = sign(x(xi));
-FlipB = false;
-if xs==1
-    FlipB = true;
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-imgInfo.mat = eyemat;
-imgInfo.dim = size(imgR);
-spm_write_vol(imgInfo,imgR);
-
-NiiFileOut = imgInfo.fname;
