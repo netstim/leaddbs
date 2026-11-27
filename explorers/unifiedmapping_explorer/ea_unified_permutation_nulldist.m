@@ -12,6 +12,12 @@ function nullvals = ea_unified_permutation_nulldist(permdata, obj)
 %              .statfile  name of the stat-test function (feval-able,
 %                         same interface as ea_explorer_stats_*.m)
 %              .H0        H0 argument passed through to the stat-test
+%              .patientidx (optional) N x 1 patient of each column. With
+%                         mirrored sides a patient has two columns (the
+%                         original and the mirrored copy); patients are
+%                         shuffled, so both copies always receive the same
+%                         permuted score. Without it, every column is
+%                         treated as its own patient.
 % obj      - explorer object; uses obj.multcompNperm, obj.rngseed and
 %            obj.multcompmaxworkers
 %
@@ -27,7 +33,9 @@ function nullvals = ea_unified_permutation_nulldist(permdata, obj)
 
 Nperm = obj.multcompNperm;
 
-Iperm = ea_shuffle_grouped(permdata.outcomein, Nperm, [], [], obj.rngseed);
+[outcomePatient, patientOfColumn] = local_patientoutcome(permdata);
+IpermPatient = ea_shuffle_grouped(outcomePatient, Nperm, [], [], obj.rngseed);
+Iperm = IpermPatient(patientOfColumn, :);
 
 statfile = permdata.statfile;
 valsin = permdata.valsin;
@@ -81,4 +89,31 @@ end
             fprintf('Permutation progress: %d/%d (%.0f%%)\n', progress, Nperm, 100*progress/Nperm);
         end
     end
+end
+
+
+function [outcomePatient, patientOfColumn] = local_patientoutcome(permdata)
+% One outcome value per patient, and the patient of each column of
+% permdata.valsin, so that shuffling happens across patients and every
+% copy of a patient (mirrored sides) receives the same permuted score.
+outcome = permdata.outcomein(:);
+if ~isfield(permdata, 'patientidx') || isempty(permdata.patientidx)
+    outcomePatient = outcome;
+    patientOfColumn = (1:numel(outcome))';
+    return
+end
+
+[~, firstColumn, patientOfColumn] = unique(permdata.patientidx(:), 'stable');
+outcomePatient = outcome(firstColumn);
+
+% All copies of a patient carry the same outcome (the outcome is
+% duplicated before mirroring); anything else would make a joint shuffle
+% ambiguous, so refuse instead of silently picking one copy's value.
+copyOutcome = outcomePatient(patientOfColumn);
+copiesDiffer = ~(outcome == copyOutcome | (isnan(outcome) & isnan(copyOutcome)));
+if any(copiesDiffer)
+    error('ea_unified_permutation_nulldist:copiesDiffer', ...
+        'The copies of %d patient(s) have different outcome values, so they cannot be shuffled together.', ...
+        numel(unique(patientOfColumn(copiesDiffer))));
+end
 end
