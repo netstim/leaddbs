@@ -156,6 +156,12 @@ coordsystemFiles = struct( ...
 
 destinations = {tsvFiles.native, coordsystemFiles.native, ...
     tsvFiles.mni, coordsystemFiles.mni};
+electrodesJsonFiles = struct( ...
+    'native', strrep(tsvFiles.native, '.tsv', '.json'), ...
+    'mni', strrep(tsvFiles.mni, '.tsv', '.json'));
+
+destinations = [destinations, ...
+    {electrodesJsonFiles.native, electrodesJsonFiles.mni}];
 if ~opts.Overwrite && any(cellfun(@isfile, destinations))
     error('sEEG:BIDS:Exists', ...
         'An iEEG export already exists. Pass Overwrite=true to replace it.');
@@ -198,6 +204,15 @@ if ~isfolder(outputDir)
         error('sEEG:BIDS:CreateDirectoryFailed', '%s', message);
     end
 end
+% Document the custom BIDS electrode model column
+modelMetadata = struct( ...
+    'model', struct( ...
+        'Description', 'Electrode model name as defined in Lead-DBS.'));
+
+modelJsonText = [jsonencode(modelMetadata), newline];
+
+writeTextAtomically(electrodesJsonFiles.native, modelJsonText);
+writeTextAtomically(electrodesJsonFiles.mni, modelJsonText);
 writeTextAtomically(tsvFiles.native, nativeText);
 writeTextAtomically(coordsystemFiles.native, [jsonencode(nativeMetadata), newline]);
 writeTextAtomically(tsvFiles.mni, mniText);
@@ -206,7 +221,7 @@ fprintf('Exported %d contacts in native and MNI spaces to %s\n', numel(nativeNam
 end
 
 function [text, names] = buildTsv(props, coordinateCells, contactArea)
-lines = {sprintf('name\tx\ty\tz\tsize\tgroup\ttype')};
+lines = {sprintf('name\tx\ty\tz\tsize\tgroup\ttype\tmodel')};
 names = strings(0,1);
 for electrodeIndex = 1:numel(props)
     prop = props(electrodeIndex);
@@ -224,6 +239,14 @@ for electrodeIndex = 1:numel(props)
         group = char(string(prop.elname));
     end
     assertTsvText(group, sprintf('electrode %d group', electrodeIndex));
+    % Electrode model from Lead-DBS reconstruction
+    model = 'n/a';
+
+    if isfield(prop, 'elmodel') && ~isempty(prop.elmodel)
+        model = char(string(prop.elmodel));
+    end
+
+    assertTsvText(model, sprintf('electrode %d model', electrodeIndex));
 
     labels = {};
     if isfield(prop, 'labels') && ~isempty(prop.labels)
@@ -265,7 +288,7 @@ for electrodeIndex = 1:numel(props)
         if isfinite(contactArea)
             area = sprintf('%.10g', contactArea);
         end
-        lines{end+1,1} = strjoin([{name}, xyz, {area, group, 'depth'}], sprintf('\t')); %#ok<AGROW>
+        lines{end+1,1} = strjoin([{name}, xyz, {area, group, 'depth', model}], sprintf('\t')); %#ok<AGROW>
     end
 end
 if isempty(names)
@@ -274,8 +297,35 @@ end
 if numel(unique(names)) ~= numel(names)
     error('sEEG:BIDS:DuplicateNames', 'Contact names must be unique across electrodes.');
 end
+
+% Sort contacts alphabetically by shaft, numerically by contact
+prefix = strings(numel(names),1);
+contactNum = inf(numel(names),1);
+
+for i = 1:numel(names)
+    tokens = regexp(char(names(i)), '^(.*?)(\d+)$', 'tokens', 'once');
+
+    if ~isempty(tokens)
+        prefix(i) = lower(string(tokens{1}));
+        contactNum(i) = str2double(tokens{2});
+    else
+        prefix(i) = lower(names(i));
+    end
+end
+
+sortKeys = table(prefix, contactNum, lower(names), ...
+    'VariableNames', {'prefix','contactNum','name'});
+
+[~, order] = sortrows(sortKeys, ...
+    {'prefix','contactNum','name'});
+
+% Reorder entire rows so coordinates and models stay matched
+lines = [lines(1); lines(order+1)];
+names = names(order);
+
 text = [strjoin(lines, newline), newline];
 end
+
 
 function metadata = makeCoordinateMetadata(coordinateSystem, description, sourceSpace)
 metadata = struct( ...
