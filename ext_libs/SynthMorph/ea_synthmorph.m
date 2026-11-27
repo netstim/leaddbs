@@ -64,9 +64,9 @@ end
 
 function [] = freesurfer_nii_to_itk_h5(warp_file_in, warp_file_out)
 
-% Subtract millimeter coordinates for each voxel
-n = load_nii(warp_file_in);
-out = n.img;
+% Load RAS displacement for each voxel
+n = load_untouch_nii(warp_file_in);
+out = apply_nifti_scaling(n);
 
 % reshape output
 out_rows = [-reshape(out(:,:,:,1),1,[]); -reshape(out(:,:,:,2),1,[]); reshape(out(:,:,:,3),1,[])];
@@ -81,5 +81,21 @@ h5write(warp_file_out, "/TransformGroup/0/TransformFixedParameters", ea_field_re
 % save TransformParameters in h5 
 h5create(warp_file_out,"/TransformGroup/0/TransformParameters", numel(out_column));
 h5write(warp_file_out, "/TransformGroup/0/TransformParameters", out_column);
+
+end
+
+
+function img = apply_nifti_scaling(nii)
+
+img = double(nii.img);
+slope = double(nii.hdr.dime.scl_slope);
+intercept = double(nii.hdr.dime.scl_inter);
+
+if isfinite(slope) && slope ~= 0
+    if ~isfinite(intercept)
+        intercept = 0;
+    end
+    img = img .* slope + intercept;
+end
 
 end
